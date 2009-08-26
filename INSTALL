@@ -1,0 +1,26 @@
+
+GSL shell is still in early developement and it is released for the people
+interested in its development.
+
+** BUILD INSTRUCTION
+
+To compile on linux simply type 'make'. In order to customize the build options
+you can edit the files Makefile and makeconfig.
+
+On WINDOWS platform you should be able to compile the software using the MINGW
+and MSYS tools. To build type :
+
+make target=mingw
+
+** LIBRARIES DEPENDENCIES
+
+GSL shell does depend on GSL, of course, and it is known to work with GSL 1.11
+and GSL 1.12.
+
+- http://www.gnu.org/software/gsl/
+
+LUA 5.1 is required. We currently use LUA 5.1.4 with the LNUM patch for complex
+numbers.
+
+- http://www.lua.org
+- http://luaforge.net/projects/lnum/
