@@ -31,17 +31,6 @@
 #define BASE_GSL_COMPLEX
 #include "template_matrix_on.h"
 
-static char const * const TYPE(name_matrix) = "GSL.cmatrix";
-
-TYPE (gsl_matrix) *
-TYPE (check_matrix) (lua_State *L, int index)
-{
-  void *p = luaL_checkudata (L, index, TYPE (name_matrix));
-  if (p == NULL)
-    luaL_typerror (L, index, "complex matrix");
-  return p;
-}
-
 #include "matrix_decls_source.c"
 #include "matrix_source.c"
 
@@ -68,21 +57,5 @@ TYPE (check_matrix) (lua_State *L, int index)
 #include "matrix_op_source.c"
 #include "template_matrix_oper_off.h"
 #undef OPER_DIV
-
-/* register matrix methods in a table (module) gives in the stack */
-void
-FUNCTION (matrix, register) (lua_State *L)
-{
-  luaL_newmetatable (L, TYPE (name_matrix));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, FUNCTION (matrix, methods));
-  lua_pop (L, 1);
-
-  luaL_getmetatable (L, TYPE (name_matrix));
-  lua_setfield (L, -2, "MatrixComplex");
-
-  luaL_register (L, NULL, FUNCTION (matrix, functions));
-}
 
 #undef BASE_GSL_COMPLEX

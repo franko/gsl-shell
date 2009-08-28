@@ -18,17 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef CMATRIX_H
-#define CMATRIX_H
+#ifndef CMATRIX_COMPLEX_H
+#define CMATRIX_COMPLEX_H
 
 #include <lua.h>
 #include <lauxlib.h>
 #include "defs.h"
 
-extern void                matrix_complex_register (lua_State *L);
+extern void                 matrix_complex_register  (lua_State *L);
+extern gsl_matrix_complex * matrix_complex_push      (lua_State *L,
+						      int n1, int n2);
+extern gsl_matrix_complex * matrix_complex_push_raw  (lua_State *L,
+						      int n1, int n2);
+extern void                 matrix_complex_push_view (lua_State *L, 
+						      gsl_matrix_complex *m);
 
-extern gsl_matrix_complex *push_matrix_complex   (lua_State *L, int n1, int n2);
+extern gsl_matrix_complex * matrix_complex_check     (lua_State *L, int index);
 
-extern gsl_matrix_complex *check_matrix_complex  (lua_State *L, int index);
+extern gsl_matrix_complex_view * \
+                            matrix_complex_check_view(lua_State *L, int idx);
 
 #endif

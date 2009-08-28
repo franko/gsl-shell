@@ -28,13 +28,15 @@ ifeq ($(target),mingw)
 endif
 
 ifeq ($(target),mingw)
-  TARGETS = lua-gsl.dll
+  TARGETS = gsl-shell.exe
 else
   TARGETS = lua-gsl.so
 endif
 
 LIBTOOL = libtool --silent --tag=CC
 LUADIR = lua-5.1.4
+AR= ar rcu
+RANLIB= ranlib
 
 ifeq ($(target),mingw)
   LUA_CFLAGS =
@@ -48,7 +50,8 @@ endif
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-LUAGSL_SRC_FILES = matrix.c cmatrix.c nlinfit.c lua-utils.c linalg.c lua-gsl.c
+LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c fdfsolver.c nlinfit.c \
+		cnlinfit.c lua-utils.c linalg.c lua-gsl.c
 
 SUBDIRS = 
 
@@ -64,6 +67,17 @@ GSL_LIBS = -lgsl -lgslcblas -lm
 all: $(TARGETS)
 
 ifeq ($(target),mingw)
+
+gsl-shell.o: gsl-shell.c
+	$(CC) -c --std=c99 $(CFLAGS) $(DEFS) -I$(LUADIR)/src $(INCLUDES) $(LUA_CFLAGS) $<
+
+gsl-shell.exe: $(LUAGSL_OBJ_FILES) gsl-shell.o
+	$(CC) -o $@ gsl-shell.o $(LUAGSL_OBJ_FILES) $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS)
+
+libluagsl.a: $(LUAGSL_OBJ_FILES)
+	$(AR) $@ $?
+	$(RANLIB) $@
+
 %.o: %.c
 	@echo $(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(LUA_CFLAGS) $<
 	@$(CC) -Wp,-MMD,.deps/$(*F).pp -c \

@@ -26,17 +26,19 @@
 
 #include "defs.h"
 
+#include "math-types.h"
+
 extern void              matrix_register       (lua_State *L);
 
-extern gsl_matrix *      push_matrix           (lua_State *L, int n1, int n2);
-extern gsl_matrix *      push_matrix_raw       (lua_State *L, int n1, int n2);
+extern gsl_matrix *      matrix_push           (lua_State *L, int n1, int n2);
+extern gsl_matrix *      matrix_push_raw       (lua_State *L, int n1, int n2);
 
-extern void              push_matrix_view      (lua_State *L, 
+extern void              matrix_push_view      (lua_State *L, 
 						gsl_matrix *m);
 
-extern gsl_matrix *      check_matrix          (lua_State *L, int index);
+extern gsl_matrix *      matrix_check          (lua_State *L, int index);
 
-extern gsl_matrix_view * check_matrix_view     (lua_State *L, int idx);
+extern gsl_matrix_view * matrix_check_view     (lua_State *L, int idx);
 
 
 #endif

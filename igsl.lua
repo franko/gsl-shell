@@ -18,7 +18,7 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-require 'lua-gsl'
+-- require 'lua-gsl'
 
 function matrix_rowiter(m)
    local i = 0
@@ -153,7 +153,7 @@ end
 
 local function add_method(s, m)
    gsl.Matrix[s] = m
-   gsl.MatrixComplex[s] = m
+   gsl.cMatrix[s] = m
 end
 
 add_method('rowiter',    matrix_rowiter)

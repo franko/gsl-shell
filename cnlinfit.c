@@ -1,5 +1,5 @@
 
-/* nlinfit.c
+/* cnlinfit.c
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -26,11 +26,12 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include "matrix.h"
+#include "cmatrix.h"
 #include "fdfsolver.h"
 #include "lua-utils.h"
 #include "math-types.h"
 
-#define BASE_DOUBLE
+#define BASE_GSL_COMPLEX
 #include "template_matrix_on.h"
 
 #include "nlinfit_decls_source.c"
@@ -39,18 +40,13 @@
 void
 FUNCTION (solver, register) (lua_State *L)
 {
-  /* fdfsolver declaration */
-  luaL_newmetatable (L, fdfsolver_mt_name);
-  luaL_register (L, NULL, fdfsolver_methods);
-  lua_pop (L, 1);
-
-  luaL_newmetatable (L, name_solver);
-  lua_pushcfunction (L, solver_index);
+  luaL_newmetatable (L, TYPE (name_solver));
+  lua_pushcfunction (L, FUNCTION (solver, index));
   lua_setfield (L, -2, "__index");
   lua_pop (L, 1);
 
   /* gsl module registration */
-  luaL_register (L, NULL, solver_functions);
+  luaL_register (L, NULL, FUNCTION (solver, functions));
 }
 
-#undef BASE_DOUBLE
+#undef BASE_GSL_COMPLEX

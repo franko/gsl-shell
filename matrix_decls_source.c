@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define NLINFIT_MAX_ITER 30
+
+static char const * const TYPE (name_matrix)      = "GSL." PREFIX "matrix";
+static char const * const FUNCTION (name_matrix, view) = "GSL." PREFIX "mview";
+
 static int  FUNCTION (matrix, get)               (lua_State *L);
 static int  FUNCTION (matrix, set)               (lua_State *L);
 static int  FUNCTION (matrix, free)              (lua_State *L);
@@ -50,7 +55,6 @@ static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
   {"set",           FUNCTION (matrix, set)},
   {"dims",          FUNCTION (matrix, dims)},
   {"copy",          FUNCTION (matrix, copy)},
-  {"inverse",       FUNCTION (matrix, inverse)},
   {NULL, NULL}
 };
 
@@ -58,5 +62,6 @@ static const struct luaL_Reg FUNCTION (matrix, functions)[] = {
   {PREFIX "matrix",        FUNCTION (matrix, new)},
   {PREFIX "mul",           FUNCTION (matrix, mul)},
   {PREFIX "solve",         FUNCTION (matrix, solve)},
+  {PREFIX "inverse",       FUNCTION (matrix, inverse)},
   {NULL, NULL}
 };

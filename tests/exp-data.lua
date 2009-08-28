@@ -79,11 +79,4 @@ function expf(x, f, J)
 end
 
 s = gsl.solver(20, 2)
-
 xt = tvector {15.0, -2.2}
-ft = gsl.matrix(20, 1)
-jt = gsl.matrix(20, 2)
-
-function sumsq(v)
-   gsl.prod(v, v)
-end

@@ -36,15 +36,15 @@ static const struct luaL_Reg linalg_functions[] = {
 int
 linalg_svd (lua_State *L)
 {
-  const gsl_matrix *a = check_matrix (L, 1);
+  const gsl_matrix *a = matrix_check (L, 1);
   int sm = a->size1, sn = a->size2;
   gsl_matrix *u, *v, *s;
   gsl_vector *s_vec, *work;
   int k;
 
-  u = push_matrix (L, sm, sn);
-  s = push_matrix (L, sn, sn);
-  v = push_matrix (L, sn, sn);
+  u = matrix_push_raw (L, sm, sn);
+  s = matrix_push_raw (L, sn, sn);
+  v = matrix_push_raw (L, sn, sn);
 
   s_vec = gsl_vector_alloc (sn);
   work = gsl_vector_alloc (sn);
@@ -67,9 +67,9 @@ linalg_svd (lua_State *L)
 int
 linalg_prod (lua_State *L)
 {
-  const gsl_matrix *a = check_matrix (L, 1);
-  const gsl_matrix *b = check_matrix (L, 2);
-  gsl_matrix *r = push_matrix (L, a->size2, b->size2);
+  const gsl_matrix *a = matrix_check (L, 1);
+  const gsl_matrix *b = matrix_check (L, 2);
+  gsl_matrix *r = matrix_push (L, a->size2, b->size2);
 
   if (a->size1 != b->size1)
     luaL_error (L, "incompatible matrix dimensions in multiplication");

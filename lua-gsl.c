@@ -33,6 +33,7 @@ luaopen_gsl (lua_State *L)
 {
   luaL_register (L, "gsl", gsl_methods_dummy);
   solver_register (L);
+  solver_complex_register (L);
   matrix_register (L);
   matrix_complex_register (L);
   linalg_register (L);

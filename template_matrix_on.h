@@ -30,6 +30,7 @@
 #define LUA_SHORTM Complex
 #define BLAS_ID z
 #define PREFIX "c"
+#define BASE_TYPE TYPE_COMPLEX
 
 static lua_Complex
 value_retrieve_complex (gsl_complex v)
@@ -54,6 +55,7 @@ value_assign_complex (lua_Complex v)
 #define LUA_SHORTM Number
 #define BLAS_ID d
 #define PREFIX ""
+#define BASE_TYPE TYPE_REAL
 
 #define value_retrieve(x) x
 #define value_assign(x) x

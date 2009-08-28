@@ -22,12 +22,12 @@
 static int
 FUNCTION (scalar_matrix, OPER) (lua_State *L, int index_scalar, int index_matrix)
 {
-  const TYPE (gsl_matrix) *m = TYPE (check_matrix) (L, index_matrix);
+  const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, index_matrix);
   LUA_TYPE val = LUA_FUNCTION (to) (L, index_scalar);
   BASE gval = TYPE (value_assign) (val);
   TYPE (gsl_matrix) *r;
 
-  r = TYPE (push_matrix) (L, m->size1, m->size2);
+  r = FUNCTION (matrix, push) (L, m->size1, m->size2);
 
   FUNCTION (gsl_matrix, memcpy) (r, m);
   FUNCTION (gsl_matrix, SCALAR_OP) (r, gval);
@@ -52,13 +52,13 @@ FUNCTION(matrix,OPER) (lua_State *L)
     }
 #endif
 
-  a = TYPE (check_matrix) (L, 1);
-  b = TYPE (check_matrix) (L, 2);
+  a = FUNCTION (matrix, check) (L, 1);
+  b = FUNCTION (matrix, check) (L, 2);
 
   if (a->size1 != b->size1 || a->size2 != b->size2)
     luaL_error (L, "matrices should have the same size in " OP_NAME);
 
-  r = TYPE (push_matrix) (L, a->size1, a->size2);
+  r = FUNCTION (matrix, push) (L, a->size1, a->size2);
 
   FUNCTION(gsl_matrix, memcpy) (r, a);
   FUNCTION(gsl_matrix, OPER) (r, b);
