@@ -1,5 +1,5 @@
 
-/* cnlinfit.c
+/* solver-impl.c
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -20,34 +20,42 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <assert.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
-#include <gsl/gsl_multifit_nlin.h>
 
-#include "matrix.h"
-#include "cmatrix.h"
-#include "fdfsolver.h"
 #include "solver-impl.h"
-#include "lua-utils.h"
-#include "math-types.h"
+#include "matrix.h"
 
-#define BASE_GSL_COMPLEX
-#include "template_matrix_on.h"
-
-#include "nlinfit_decls_source.c"
-#include "nlinfit_source.c"
-
-void
-FUNCTION (solver, register) (lua_State *L)
+size_t
+check_positive_arg (lua_State *L, const char *name, const char *fullname)
 {
-  luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushcfunction (L, FUNCTION (solver, index));
-  lua_setfield (L, -2, "__index");
+  int nb;
+  lua_getfield (L, 1, name);
+  nb = luaL_checkinteger (L, -1);
+  if (nb <= 0)
+    luaL_error (L, "the number of %s should be a number > 0", fullname);
   lua_pop (L, 1);
-
-  /* gsl module registration */
-  luaL_register (L, NULL, FUNCTION (solver, functions));
+  return (size_t) nb;
 }
 
-#undef BASE_GSL_COMPLEX
+void
+solver_get_n_and_p (lua_State *L, size_t *n, size_t *p)
+{
+  *n = check_positive_arg (L, "n", "observations");
+  *p = check_positive_arg (L, "p", "parameters");
+
+  if (*n < *p)
+    luaL_error (L, "insufficient data points, n < p");
+}
+
+void
+solver_get_x0 (lua_State *L, gsl_vector_view *x0, size_t p)
+{
+  gsl_matrix *m;
+  lua_getfield (L, 1, "x0");
+  m = matrix_check (L, -1);
+  if (m->size2 != 1 || m->size1 != p)
+    luaL_error (L, "x0 should be a vector of length %d", p);
+  *x0 = gsl_matrix_column (m, 0);
+  lua_pop (L, 1);
+}

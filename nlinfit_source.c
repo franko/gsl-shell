@@ -1,4 +1,23 @@
 
+/* nlinfit_source.c
+ * 
+ * Copyright (C) 2009 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #define NLINFIT_MAX_ITER 20
 
 static int
@@ -13,65 +32,93 @@ static int
 FUNCTION (solver, df_hook)  (const gsl_vector * x, void * params,
 			     gsl_matrix * J);
 
+static void
+FUNCTION (solver, push) (lua_State *L)
+{
+  lua_newtable (L);
+  luaL_getmetatable (L, TYPE (name_solver));
+  lua_setmetatable (L, -2);
+}
+
+static void
+FUNCTION (null_matrix, view) (lua_State *L, int index)
+{
+  VIEW (gsl_matrix) *m = FUNCTION (matrix, check_view) (L, index);
+  m->matrix.data = NULL;
+}
+
+static void
+null_fdf_arguments (lua_State *L, int index)
+{
+  gsl_matrix_view *m = matrix_check_view (L, index);
+  m->matrix.data = NULL;
+  FUNCTION (null_matrix, view) (L, index+1);
+  FUNCTION (null_matrix, view) (L, index+2);
+}
+
+static void
+push_fdf_arguments (lua_State *L)
+{
+  matrix_push_view (L, NULL);
+  FUNCTION (matrix, push_view) (L, NULL);
+  FUNCTION (matrix, push_view) (L, NULL);
+}
+
 int
 FUNCTION (solver, new) (lua_State *L)
 {
-  gsl_multifit_fdfsolver_type const * const T = gsl_multifit_fdfsolver_lmsder;
-  gsl_multifit_fdfsolver * s;
   struct fdfsolver *sext;
-  size_t n, p;
-  int nb;
+  gsl_vector_view x0;
+  size_t n, nreal, p;
 
-  nb = luaL_checkinteger (L, 1);
-  luaL_argcheck (L, nb > 0, 1, "the number of observations should be > 0");
-  n = nb * MULTIPLICITY;
+  luaL_checktype (L, 1, LUA_TTABLE);
 
-  nb = luaL_checkinteger (L, 2);
-  luaL_argcheck (L, nb > 0, 1, "the number of parameters should be > 0");
-  p = (size_t) nb;
+  solver_get_n_and_p (L, &n, &p);
+  nreal = n * MULTIPLICITY;
+
+  solver_get_x0 (L, &x0, p);
 
   /* main table to store the fit engine, i.e. the solver and the 
      accessory data */
-  lua_newtable (L);
+  FUNCTION (solver, push) (L);
 
-  if (n < p)
-    return luaL_error (L, "insufficient data points, n < p");
-
-  sext = lua_newuserdata (L, sizeof (struct fdfsolver));
-
-  s = gsl_multifit_fdfsolver_alloc (T, n, p);
-  if (s == NULL)
-    return luaL_error (L, OUT_OF_MEMORY_MSG);
-
-  sext->base = s;
-
-  /* when the following pointer is NULL it means that the
-     fit engine function is still not defined */
-  sext->fdf->fdf = NULL;
-  sext->fdf->n = n;
-  sext->fdf->p = p;
-
-  luaL_getmetatable (L, fdfsolver_mt_name);
-  lua_setmetatable (L, -2);
+  sext = push_new_fdfsolver (L, nreal, p);
 
   sext->fit_data->L = L;
-  sext->fit_data->n = n / MULTIPLICITY;
+  sext->fit_data->n = n;
   sext->fit_data->x = gsl_vector_alloc (p);
 #if MULTIPLICITY >= 2
-  sext->fit_data->j_raw = gsl_vector_alloc (n * p);
+  sext->fit_data->j_raw = gsl_vector_alloc (nreal * p);
 #else
   sext->fit_data->j_raw = NULL;
 #endif
+
+  sext->fdf->f      = & FUNCTION (solver, f_hook);
+  sext->fdf->df     = & FUNCTION (solver, df_hook);
+  sext->fdf->fdf    = & FUNCTION (solver, fdf_hook);
+  sext->fdf->n      = nreal;
+  sext->fdf->p      = p;
+  sext->fdf->params = sext->fit_data;
 
   sext->base_type = BASE_TYPE;
 
   /* set engine.solver */
   lua_setfield (L, -2, "solver");
 
-  luaL_getmetatable (L, TYPE (name_solver));
-  lua_setmetatable (L, -2);
+  lua_getfield (L, 1, "fdf");
 
-  /* return the fit engine table */
+  /* we get rid of the constructor spec */
+  lua_remove (L, 1);
+
+  push_fdf_arguments (L);
+  
+  gsl_multifit_fdfsolver_set (sext->base, sext->fdf, & x0.vector);
+
+  null_fdf_arguments (L, 3);
+  lua_pop (L, 3);
+
+  lua_setfield (L, 1, "fdf");
+
   return 1;
 }
 
@@ -90,68 +137,6 @@ FUNCTION (solver, check) (lua_State *L, int index)
     luaL_error (L, "expected %s type solver",  math_name[BASE_TYPE]);
 
   return sext;
-}
-
-static void
-null_matrix_view (lua_State *L, int index)
-{
-  VIEW (gsl_matrix) *m = FUNCTION (matrix, check_view) (L, index);
-  m->matrix.data = NULL;
-}
-
-static void
-null_fdf_arguments (lua_State *L, int index)
-{
-  gsl_matrix_view *m = matrix_check_view (L, index);
-  m->matrix.data = NULL;
-  null_matrix_view (L, index+1);
-  null_matrix_view (L, index+2);
-}
-
-static void
-push_fdf_arguments (lua_State *L)
-{
-  matrix_push_view (L, NULL);
-  FUNCTION (matrix, push_view) (L, NULL);
-  FUNCTION (matrix, push_view) (L, NULL);
-}
-
-int
-FUNCTION (solver, set) (lua_State *L)
-{
-  struct fdfsolver *sext; 
-  struct {
-    gsl_matrix *matrix;
-    gsl_vector_view view;
-  } x0;
-
-  sext = FUNCTION (solver, check) (L, 1);
-
-  x0.matrix = matrix_check (L, 3);
-  if (x0.matrix->size2 != 1)
-    luaL_typerror (L, 3, "vector");
-  x0.view = gsl_matrix_column (x0.matrix, 0);
-
-  lua_pop (L, 1);
-
-  sext->fdf->f      = & FUNCTION (solver, f_hook);
-  sext->fdf->df     = & FUNCTION (solver, df_hook);
-  sext->fdf->fdf    = & FUNCTION (solver, fdf_hook);
-  /* sext->fdf->n already ok */
-  /* sext->fdf->p already ok */
-  sext->fdf->params = sext->fit_data;
-
-  push_fdf_arguments (L);
-  
-  gsl_multifit_fdfsolver_set (sext->base, sext->fdf, & x0.view.vector);
-
-  null_fdf_arguments (L, 3);
-
-  lua_pop (L, 3);
-
-  lua_setfield (L, 1, "fdf");
-
-  return 0;
 }
 
 static void
@@ -206,8 +191,6 @@ FUNCTION (solver, fdf_hook) (const gsl_vector * x, void * _params,
   xview = matrix_check_view (L, 3);
   *xview = gsl_matrix_view_array (params->x->data, p, 1);
   lua_pushvalue (L, 3);
-
-  //  FUNCTION (set_matrix, view_and_push) (L, 3, params->x->data, p, 1);
 
   if (f)
     FUNCTION (set_matrix, view_and_push) (L, 4, f->data, n, 1);

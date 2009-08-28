@@ -1,5 +1,5 @@
 
-/* cnlinfit.c
+/* solver-impl.c
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -18,36 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef SOLVER_IMPL_H
+#define SOLVER_IMPL_H
+
+#include "defs.h"
+
 #include <lua.h>
-#include <lauxlib.h>
-#include <assert.h>
 #include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_multifit_nlin.h>
 
-#include "matrix.h"
-#include "cmatrix.h"
-#include "fdfsolver.h"
-#include "solver-impl.h"
-#include "lua-utils.h"
-#include "math-types.h"
+extern size_t
+check_positive_arg (lua_State *L, const char *name, const char *fullname);
 
-#define BASE_GSL_COMPLEX
-#include "template_matrix_on.h"
+extern void
+solver_get_n_and_p (lua_State *L, size_t *n, size_t *p);
 
-#include "nlinfit_decls_source.c"
-#include "nlinfit_source.c"
+extern void
+solver_get_x0 (lua_State *L, gsl_vector_view *x0, size_t p);
 
-void
-FUNCTION (solver, register) (lua_State *L)
-{
-  luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushcfunction (L, FUNCTION (solver, index));
-  lua_setfield (L, -2, "__index");
-  lua_pop (L, 1);
-
-  /* gsl module registration */
-  luaL_register (L, NULL, FUNCTION (solver, functions));
-}
-
-#undef BASE_GSL_COMPLEX
+#endif

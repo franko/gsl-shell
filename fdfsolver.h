@@ -7,6 +7,8 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "defs.h"
+
 struct fit_data {
   lua_State *L;
   gsl_vector *x;
@@ -21,8 +23,10 @@ struct fdfsolver {
   int base_type;
 };
 
-extern int                fdfsolver_dealloc       (lua_State *L);
-extern struct fdfsolver * check_fdfsolver         (lua_State *L, int index);
+extern int                fdfsolver_dealloc    (lua_State *L);
+extern struct fdfsolver * check_fdfsolver      (lua_State *L, int index);
+extern struct fdfsolver * push_new_fdfsolver   (lua_State *L, 
+						size_t n, size_t p);
 
 extern char const * const fdfsolver_mt_name;
 extern const struct luaL_Reg fdfsolver_methods[];

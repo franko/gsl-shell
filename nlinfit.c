@@ -27,12 +27,12 @@
 
 #include "matrix.h"
 #include "fdfsolver.h"
+#include "solver-impl.h"
 #include "lua-utils.h"
 #include "math-types.h"
 
 #define BASE_DOUBLE
 #include "template_matrix_on.h"
-
 #include "nlinfit_decls_source.c"
 #include "nlinfit_source.c"
 

@@ -33,3 +33,20 @@ check_fdfsolver (lua_State *L, int index)
 {
   return luaL_checkudata (L, index, fdfsolver_mt_name);
 }
+
+struct fdfsolver *
+push_new_fdfsolver (lua_State *L, size_t n, size_t p)
+{
+  gsl_multifit_fdfsolver_type const * const T = gsl_multifit_fdfsolver_lmsder;
+  struct fdfsolver *sext = lua_newuserdata (L, sizeof (struct fdfsolver));
+ 
+  sext->base = gsl_multifit_fdfsolver_alloc (T, n, p);
+
+  if (sext->base == NULL)
+    luaL_error (L, OUT_OF_MEMORY_MSG);
+
+  luaL_getmetatable (L, fdfsolver_mt_name);
+  lua_setmetatable (L, -2);
+
+  return sext;
+}

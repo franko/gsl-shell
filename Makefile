@@ -50,8 +50,8 @@ endif
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c fdfsolver.c nlinfit.c \
-		cnlinfit.c lua-utils.c linalg.c lua-gsl.c
+LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c solver-impl.c fdfsolver.c \
+		nlinfit.c cnlinfit.c lua-utils.c linalg.c lua-gsl.c
 
 SUBDIRS = 
 
