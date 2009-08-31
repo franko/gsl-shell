@@ -25,12 +25,14 @@ ifeq ($(target),mingw)
   DEFS += -DWIN32
   INCLUDES += -I/usr/include
   LIBS += -L/usr/lib
+else
+  INCLUDES += -DLUA_USE_LINUX
 endif
 
 ifeq ($(target),mingw)
   TARGETS = gsl-shell.exe
 else
-  TARGETS = lua-gsl.so
+  TARGETS = gsl-shell
 endif
 
 LIBTOOL = libtool --silent --tag=CC
@@ -50,8 +52,9 @@ endif
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c solver-impl.c fdfsolver.c \
-		nlinfit.c cnlinfit.c lua-utils.c linalg.c lua-gsl.c
+LUAGSL_SRC_FILES = math-types.c errors.c matrix.c cmatrix.c solver-impl.c \
+		fdfsolver.c nlinfit.c cnlinfit.c lua-utils.c linalg.c \
+		integ.c lua-gsl.c
 
 SUBDIRS = 
 
@@ -108,6 +111,12 @@ else
           | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
             >> .deps/$(*F).P; \
 	rm .deps/$(*F).pp
+
+gsl-shell.o: gsl-shell.c
+	$(CC) -c --std=c99 $(CFLAGS) $(DEFS) -I$(LUADIR)/src $(INCLUDES) $(LUA_CFLAGS) $<
+
+gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o
+	$(CC) -o $@ gsl-shell.o $(LUAGSL_OBJ_FILES) $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
 
 liblua-gsl.la lua-gsl.so: $(LUAGSL_LOBJ_FILES) $(LUAGSL_OBJ_FILES)
 	$(LIBTOOL) --mode=link $(CC) \

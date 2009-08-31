@@ -1,5 +1,5 @@
 /* 
- * GSL shell interactive prompt
+ * GSL shell interactive interface to GSL library
  * Based on LUA stand-alone interpreter
  *
  * Copyright (C) 2009 Francesco Abbate
@@ -389,7 +389,11 @@ static int pmain (lua_State *L) {
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
-  luaopen_gsl (L);
+
+   lua_pushcfunction(L, luaopen_gsl);
+   lua_pushstring(L, "gsl");
+   lua_call(L, 1, 0);
+
   lua_gc(L, LUA_GCRESTART, 0);
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;

@@ -21,21 +21,29 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "errors.h"
 #include "nlinfit.h"
+#include "cnlinfit.h"
 #include "matrix.h"
 #include "cmatrix.h"
 #include "linalg.h"
+#include "integ.h"
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 
 int
 luaopen_gsl (lua_State *L)
 {
+  set_gsl_error_handler (L);
+
   luaL_register (L, "gsl", gsl_methods_dummy);
+
   solver_register (L);
   solver_complex_register (L);
   matrix_register (L);
   matrix_complex_register (L);
   linalg_register (L);
+  integ_register (L);
+
   return 1;
 }

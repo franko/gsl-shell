@@ -27,6 +27,7 @@
 #include <gsl/gsl_linalg.h>
 
 #include "matrix.h"
+#include "lua-utils.h"
 
 #define BASE_DOUBLE
 #include "template_matrix_on.h"

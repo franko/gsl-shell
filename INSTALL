@@ -4,13 +4,22 @@ interested in its development.
 
 ** BUILD INSTRUCTION
 
-To compile on linux simply type 'make'. In order to customize the build options
-you can edit the files Makefile and makeconfig.
+To build GSL shell you need LUA 5.1.4 with the LNUM patch. Both of them are free software and can be found at the following URLs:
 
-On WINDOWS platform you should be able to compile the software using the MINGW
-and MSYS tools. To build type :
+- http://www.lua.org
+- http://luaforge.net/projects/lnum/
 
-make target=mingw
+Further, the LNUM patch should be configured to use 'double' for floating point numbers (this is the default behaviour) and to use complex numbers.
+
+In order to simplify the build process of 'GSL shell' we provide LUA 5.1.4 with the LNUM patch already configured in the distribution of the source code.
+
+So, in order to build GSL shell, you should do :
+- go in the lua-5.1.4 folder and build LUA. On linux just type 'make linux',
+  on windows, if you are using MinGW, just type make mingw
+- in the GSL shell root folder type 'make' to build everything. With MinGW
+  type 'make target=mingw'
+
+In order to customize the build options you can edit the files Makefile and makeconfig in the GSL shell root directory.
 
 ** LIBRARIES DEPENDENCIES
 

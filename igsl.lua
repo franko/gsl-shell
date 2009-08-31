@@ -97,6 +97,18 @@ function t(m)
    return tm
 end
 
+function h(m)
+   local r, c = m:dims()
+   local tm = gsl.cmatrix (c, r)
+   for i = 0, r-1 do
+      for j = 0, c-1 do
+	 local z = m:get(i, j)
+         tm:set(j, i, math.conj(z))
+      end
+   end
+   return tm
+end
+
 function diag(v)
    local n = v:dims()
    local m = gsl.matrix (n, n)

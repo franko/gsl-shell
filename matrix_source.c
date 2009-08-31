@@ -305,19 +305,49 @@ FUNCTION(matrix, solve) (lua_State *L)
   return 1;
 }
 
+int
+FUNCTION(matrix, index) (lua_State *L)
+{
+  TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
+
+  if (lua_isinteger (L, 2))
+    {
+      int index = lua_tointeger (L, 2);
+      BASE gslval;
+      LUA_TYPE v;
+
+      if (m->size2 != 1)
+	luaL_typerror (L, 1, "vector");
+
+      if (index >= m->size1 || index < 0)
+	luaL_error (L, INVALID_INDEX_MSG);
+
+      gslval = FUNCTION (gsl_matrix, get) (m, (size_t) index, 0);
+      v = TYPE (value_retrieve) (gslval);
+
+      LUA_FUNCTION (push) (L, v);
+      return 1;
+    }
+
+  lua_getmetatable (L, 1);
+  lua_replace (L, 1);
+  lua_gettable (L, 1);
+  return 1;
+}
+
 /* register matrix methods in a table (module) gives in the stack */
 void
 FUNCTION (matrix, register) (lua_State *L)
 {
   luaL_newmetatable (L, TYPE (name_matrix));
-  lua_pushvalue (L, -1);
+  lua_pushcfunction (L, FUNCTION (matrix, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (matrix, methods));
   luaL_register (L, NULL, FUNCTION (matrix, gc_methods));
   lua_pop (L, 1);
 
   luaL_newmetatable (L, FUNCTION (name_matrix, view));
-  lua_pushvalue (L, -1);
+  lua_pushcfunction (L, FUNCTION (matrix, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (matrix, methods));
   lua_pop (L, 1);

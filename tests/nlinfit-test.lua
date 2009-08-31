@@ -19,8 +19,8 @@ require 'igsl'
 function ctest()
    local data = {n= 50, a= (-1+4i) * 4, phi= 0.23, A= 1.55}
    local function cexpf(x, f, J)
-      for k=1, d.n do
-	 local t = k / d.n
+      for k=1, data.n do
+	 local t = k / data.n
 	 local y = data.A * math.exp(data.a * t + 1i * data.phi)
 	 local A, a, phi = x:get(0,0), x:get(1,0) + 1i * x:get(2,0), x:get(3,0)
 	 local e = math.exp(a * t + 1i * phi)
@@ -33,7 +33,16 @@ function ctest()
 	 end
       end
    end
-   return {fdf= cexpf, n= data.n, p= 4, x0= tvector {2.1, -2.8, 18, 0}}
+   local function print_state(s)
+      print ("x :\n", s.x)
+      print ("chi square: ", gsl.cmul(h(s.f), s.f))
+   end
+   s = gsl.csolver {fdf= cexpf, n= data.n, p= 4, x0= tvector {2.1, -2.8, 18, 0}}
+   repeat
+      print_state (s)
+      local status = s:iterate()
+   until status ~= 'continue'
+   print_state (s)
 end
 
 function test()
