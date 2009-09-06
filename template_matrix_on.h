@@ -32,20 +32,6 @@
 #define PREFIX "c"
 #define BASE_TYPE TYPE_COMPLEX
 
-static lua_Complex
-value_retrieve_complex (gsl_complex v)
-{
-  return GSL_REAL(v) + GSL_IMAG(v) * I;
-}
-
-static gsl_complex
-value_assign_complex (lua_Complex v)
-{
-  gsl_complex z;
-  GSL_SET_COMPLEX(&z, creal(v), cimag(v));
-  return z;
-}
-
 #elif defined(BASE_DOUBLE)
 #define BASE double
 #define SHORT
@@ -57,8 +43,8 @@ value_assign_complex (lua_Complex v)
 #define PREFIX ""
 #define BASE_TYPE TYPE_REAL
 
-#define value_retrieve(x) x
-#define value_assign(x) x
+#define value_retrieve(x) (x)
+#define value_assign(x) (x)
 
 #else
 #error unknown BASE_ directive
@@ -70,6 +56,8 @@ value_assign_complex (lua_Complex v)
 #define CONCAT3(a,b,c) CONCAT3x(a,b,c)
 #define CONCAT4x(a,b,c,d) a ## _ ## b ## _ ## c ## _ ## d
 #define CONCAT4(a,b,c,d) CONCAT4x(a,b,c,d)
+#define MYCATx(a,b) a ## b
+#define MYCAT(a,b) MYCATx(a,b)
 
 #if defined(BASE_DOUBLE)
 #define FUNCTION(dir,name) CONCAT2(dir,name)
@@ -86,8 +74,6 @@ value_assign_complex (lua_Complex v)
 #endif
 
 #define LUA_TYPE CONCAT2(lua,LUA_SHORTM)
-#define MYCATx(a,b) a ## b
-#define MYCAT(a,b) MYCATx(a,b)
 #define LUA_FUNCTION(oper) CONCAT2(lua,MYCAT(oper,LUA_SHORT))
 #define LUAL_FUNCTION(oper) CONCAT2(luaL,MYCAT(oper,LUA_SHORT))
 #define BLAS_FUNCTION(name) CONCAT2(gsl_blas,MYCAT(BLAS_ID,name))

@@ -1,5 +1,5 @@
 
-/* cnlinfit.c
+/* ode-solver.h
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -18,36 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef ODE_SOLVER_H
+#define ODE_SOLVER_H
+
 #include <lua.h>
-#include <lauxlib.h>
-#include <assert.h>
 #include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_odeiv.h>
+#include "defs.h"
 
-#include "matrix.h"
-#include "cmatrix.h"
-#include "fdfsolver.h"
-#include "nlinfit_helper.h"
-#include "lua-utils.h"
-#include "math-types.h"
+struct ode_solver {
+  gsl_odeiv_step    * step;
+  gsl_odeiv_control * ctrl;
+  gsl_odeiv_evolve  * evol;
 
-#define BASE_GSL_COMPLEX
-#include "template_matrix_on.h"
+  size_t dimension;
+};
 
-#include "nlinfit_decls_source.c"
-#include "nlinfit_source.c"
+extern struct ode_solver *
+ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
+		     size_t dim, double eps_abs, double eps_rel);
 
-void
-FUNCTION (solver, register) (lua_State *L)
-{
-  luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushcfunction (L, FUNCTION (solver, index));
-  lua_setfield (L, -2, "__index");
-  lua_pop (L, 1);
+extern struct ode_solver *
+check_ode_solver (lua_State *L, int index);
 
-  /* gsl module registration */
-  luaL_register (L, NULL, FUNCTION (solver, functions));
-}
+extern void
+ode_solver_register (lua_State *L);
 
-#undef BASE_GSL_COMPLEX
+extern const gsl_odeiv_step_type *
+method_lookup (const char *method, const gsl_odeiv_step_type *default_type);
+
+#endif

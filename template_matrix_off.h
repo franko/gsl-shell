@@ -17,3 +17,10 @@
 
 #undef LUA_TYPE
 #undef LUA_FUNCTION
+#undef LUAL_FUNCTION
+#undef BLAS_FUNCTION
+
+#ifdef value_retrieve
+#undef value_retrieve
+#undef value_assign
+#endif

@@ -139,41 +139,6 @@ FUNCTION (solver, check) (lua_State *L, int index)
   return sext;
 }
 
-static void
-FUNCTION (set_matrix, view_and_push) (lua_State *L, int index, 
-				      double *data, size_t n1, size_t n2)
-{
-  VIEW (gsl_matrix) *view = FUNCTION (matrix, check_view) (L, index);
-  *view = FUNCTION (gsl_matrix, view_array) (data, n1, n2);
-  lua_pushvalue (L, index);
-}
-
-#if MULTIPLICITY >= 2
-static void
-copy_jacobian (double *cmpl, double *real, size_t n, size_t p,
-	       size_t multiplicity, bool inverse)
-{
-  gsl_vector_view dview, sview;
-  double *cp, *rp;
-  size_t k, nu;
-
-  for (nu = 0; nu < multiplicity; nu++)
-    {
-      cp = cmpl + nu;
-      rp = real + p*nu;
-      for (k = 0; k < p; k++, rp += 1, cp += multiplicity)
-	{
-	  dview = gsl_vector_view_array_with_stride (cp, multiplicity * p, n);
-	  sview = gsl_vector_view_array_with_stride (rp, multiplicity * p, n);
-	  if (inverse)
-	    gsl_vector_memcpy (& sview.vector, & dview.vector);
-	  else
-	    gsl_vector_memcpy (& dview.vector, & sview.vector);
-	}
-    }
-}
-#endif
-
 int
 FUNCTION (solver, fdf_hook) (const gsl_vector * x, void * _params, 
 			     gsl_vector * f, gsl_matrix * J)
@@ -193,23 +158,25 @@ FUNCTION (solver, fdf_hook) (const gsl_vector * x, void * _params,
   lua_pushvalue (L, 3);
 
   if (f)
-    FUNCTION (set_matrix, view_and_push) (L, 4, f->data, n, 1);
+    FUNCTION (matrix, set_view_and_push) (L, 4, f->data, n, 1, NULL);
   else
     lua_pushnil (L);
 
   if (J)
     {
       double *jptr = (MULTIPLICITY >= 2 ? params->j_raw->data : J->data);
-      FUNCTION (set_matrix, view_and_push) (L, 5, jptr, n, p);
+      FUNCTION (matrix, set_view_and_push) (L, 5, jptr, n, p, NULL);
     }
 
   lua_call (L, nargs, 0);
 
 #if MULTIPLICITY >= 2
   if (J)
-    copy_jacobian (params->j_raw->data, J->data, n, p, MULTIPLICITY, true);
+    {
+      double *dst = J->data, *src = params->j_raw->data;
+      FUNCTION (matrix, jacob_copy_cmpl_to_real) (dst, src, n, p, MULTIPLICITY);
+    }
 #endif
-  
 
   return GSL_SUCCESS;
 }
@@ -364,11 +331,8 @@ FUNCTION (solver, get_jacob) (lua_State *L)
 
   m = FUNCTION (matrix, push) (L, n, p);
 
-#if MULTIPLICITY >= 2
-  copy_jacobian (m->data, src->data, n, p, MULTIPLICITY, false);
-#else
-  gsl_matrix_memcpy (m, src);
-#endif
+  FUNCTION (matrix, jacob_copy_real_to_cmpl) (m->data, src->data, n, p,
+					      MULTIPLICITY);
 
   return 1;
 }
@@ -376,25 +340,6 @@ FUNCTION (solver, get_jacob) (lua_State *L)
 int
 FUNCTION (solver, index) (lua_State *L)
 {
-  char const * key;
-  const struct luaL_Reg *reg;
-
-  key = lua_tostring (L, 2);
-  if (key == NULL)
-    return 0;
-
-  reg = mlua_find_method (FUNCTION (solver, properties), key);
-  if (reg)
-    {
-      return mlua_get_property (L, reg, true);
-    }
-  
-  reg = mlua_find_method (FUNCTION (solver, methods), key);
-  if (reg)
-    {
-      lua_pushcfunction (L, reg->func);
-      return 1;
-    }
-
-  return 0;
+  return mlua_index_with_properties (L, FUNCTION (solver, properties),
+				     FUNCTION (solver, methods));
 }

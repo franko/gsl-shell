@@ -22,20 +22,15 @@
 #define CMATRIX_COMPLEX_H
 
 #include <lua.h>
-#include <lauxlib.h>
+#include <gsl/gsl_matrix.h>
+
 #include "defs.h"
+#include "math-types.h"
 
-extern void                 matrix_complex_register  (lua_State *L);
-extern gsl_matrix_complex * matrix_complex_push      (lua_State *L,
-						      int n1, int n2);
-extern gsl_matrix_complex * matrix_complex_push_raw  (lua_State *L,
-						      int n1, int n2);
-extern void                 matrix_complex_push_view (lua_State *L, 
-						      gsl_matrix_complex *m);
-
-extern gsl_matrix_complex * matrix_complex_check     (lua_State *L, int index);
-
-extern gsl_matrix_complex_view * \
-                            matrix_complex_check_view(lua_State *L, int idx);
+#define BASE_GSL_COMPLEX
+#include "template_matrix_on.h"
+#include "matrix_headers_source.h"
+#include "template_matrix_off.h"
+#undef BASE_GSL_COMPLEX
 
 #endif

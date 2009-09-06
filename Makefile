@@ -52,9 +52,9 @@ endif
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-LUAGSL_SRC_FILES = math-types.c errors.c matrix.c cmatrix.c solver-impl.c \
+LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c cnlinfit.c lua-utils.c linalg.c \
-		integ.c lua-gsl.c
+		integ.c ode_solver.c ode.c lua-gsl.c
 
 SUBDIRS = 
 

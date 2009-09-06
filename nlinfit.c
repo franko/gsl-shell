@@ -27,7 +27,7 @@
 
 #include "matrix.h"
 #include "fdfsolver.h"
-#include "solver-impl.h"
+#include "nlinfit_helper.h"
 #include "lua-utils.h"
 #include "math-types.h"
 

@@ -20,7 +20,6 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
 
 #include "integ.h"

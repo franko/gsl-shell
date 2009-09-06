@@ -146,6 +146,20 @@ function matrix_columns (m, istart, iend)
    return mr
 end
 
+function set(d, s)
+   local r, c = s:dims()
+   for i=0,r-1 do
+      for j=0,c-1 do
+         d:set(i,j,s:get(i,j))
+      end
+   end
+end
+
+function null(m)
+   local r, c = m:dims()
+   for i=0,r-1 do for j=0,c-1 do m:set(i,j,0) end end
+end
+
 function chop(m, eps)
    eps = eps and eps or 1e-4
    m = m:copy()

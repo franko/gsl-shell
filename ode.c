@@ -1,5 +1,5 @@
 
-/* errors.h
+/* ode.c
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -18,12 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef ERRORS_H
-#define ERRORS_H
-
 #include <lua.h>
-#include "defs.h"
+#include <lauxlib.h>
+#include <assert.h>
 
-extern void set_gsl_error_handler (lua_State *L);
+#include "ode.h"
+#include "ode_solver.h"
+#include "matrix.h"
+#include "lua-utils.h"
 
-#endif
+#define BASE_DOUBLE
+#include "template_matrix_on.h"
+
+#include "ode_decls_source.c"
+#include "ode_source.c"
+
+#include "template_matrix_off.h"
+#undef BASE_DOUBLE

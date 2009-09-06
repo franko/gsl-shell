@@ -33,4 +33,20 @@ mlua_find_method (const struct luaL_Reg *p, const char *key);
 extern void
 mlua_null_cache (lua_State *L, int index);
 
+extern void
+mlua_check_field_type (lua_State *L, int index, const char *key, int type,
+		       const char *error_msg);
+
+extern int
+mlua_index_with_properties (lua_State *L,
+			    const struct luaL_Reg *properties,
+			    const struct luaL_Reg *methods);
+extern const char *
+mlua_named_optstring (lua_State *L, int index, const char *key, 
+		      const char * default_value);
+
+extern lua_Number
+mlua_named_optnumber (lua_State *L, int index, const char *key, 
+		      lua_Number default_value);
+
 #endif

@@ -21,6 +21,8 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <assert.h>
+#include <string.h>
+#include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
@@ -29,11 +31,26 @@
 #include "lua-utils.h"
 #include "cmatrix.h"
 
+static lua_Complex
+value_retrieve_complex (gsl_complex v)
+{
+  return GSL_REAL(v) + GSL_IMAG(v) * I;
+}
+
+static gsl_complex
+value_assign_complex (lua_Complex v)
+{
+  gsl_complex z;
+  GSL_SET_COMPLEX(&z, creal(v), cimag(v));
+  return z;
+}
+
 #define BASE_GSL_COMPLEX
 #include "template_matrix_on.h"
 
 #include "matrix_decls_source.c"
 #include "matrix_source.c"
+#include "matrix_helper_source.c"
 
 #define OPER_ADD
 #include "template_matrix_oper_on.h"
@@ -59,4 +76,5 @@
 #include "template_matrix_oper_off.h"
 #undef OPER_DIV
 
+#include "template_matrix_off.h"
 #undef BASE_GSL_COMPLEX

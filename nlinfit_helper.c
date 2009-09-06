@@ -23,7 +23,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include "solver-impl.h"
+#include "nlinfit_helper.h"
 #include "matrix.h"
 
 size_t

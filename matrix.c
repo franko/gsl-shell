@@ -21,6 +21,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <assert.h>
+#include <string.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
@@ -29,11 +30,28 @@
 #include "matrix.h"
 #include "lua-utils.h"
 
+/* danger: three mathematicians in the name of this function :-) */
+void
+matrix_jacob_copy_cauchy_riemann (gsl_matrix *jreal, gsl_matrix_complex *jcmpl,
+				  size_t n)
+{
+  size_t k;
+  for (k = 0; k < n; k++)
+    {
+      gsl_complex z = gsl_matrix_complex_get (jcmpl, k, k);
+      gsl_matrix_set (jreal, 2*k,   2*k,     GSL_REAL(z));
+      gsl_matrix_set (jreal, 2*k,   2*k+1, - GSL_IMAG(z));
+      gsl_matrix_set (jreal, 2*k+1, 2*k,     GSL_IMAG(z));
+      gsl_matrix_set (jreal, 2*k+1, 2*k+1,   GSL_REAL(z));
+    }
+}
+
 #define BASE_DOUBLE
 #include "template_matrix_on.h"
 
 #include "matrix_decls_source.c"
 #include "matrix_source.c"
+#include "matrix_helper_source.c"
 
 #define OPER_ADD
 #include "template_matrix_oper_on.h"
@@ -59,4 +77,5 @@
 #include "template_matrix_oper_off.h"
 #undef OPER_DIV
 
+#include "template_matrix_off.h"
 #undef BASE_DOUBLE

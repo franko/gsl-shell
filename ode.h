@@ -1,5 +1,5 @@
 
-/* lua-gsl.c
+/* ode.h
  * 
  * Copyright (C) 2009 Francesco Abbate
  * 
@@ -18,35 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef ODE_H
+#define ODE_H
+
 #include <lua.h>
-#include <lauxlib.h>
+#include "defs.h"
 
-#include "nlinfit.h"
-#include "cnlinfit.h"
-#include "matrix.h"
-#include "cmatrix.h"
-#include "linalg.h"
-#include "integ.h"
-#include "ode.h"
-#include "ode_solver.h"
+extern void ode_register (lua_State *L);
 
-static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
-
-int
-luaopen_gsl (lua_State *L)
-{
-  gsl_set_error_handler_off ();
-
-  luaL_register (L, "gsl", gsl_methods_dummy);
-
-  solver_register (L);
-  solver_complex_register (L);
-  matrix_register (L);
-  matrix_complex_register (L);
-  linalg_register (L);
-  integ_register (L);
-  ode_solver_register (L);
-  ode_register (L);
-
-  return 1;
-}
+#endif
