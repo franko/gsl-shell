@@ -27,8 +27,9 @@
 #include "cmatrix.h"
 #include "linalg.h"
 #include "integ.h"
-#include "ode.h"
 #include "ode_solver.h"
+#include "ode.h"
+#include "code.h"
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 
@@ -37,8 +38,11 @@ luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
+#if 0
   luaL_register (L, "gsl", gsl_methods_dummy);
-
+#endif
+  lua_getglobal (L, "_G");
+  
   solver_register (L);
   solver_complex_register (L);
   matrix_register (L);
@@ -47,6 +51,7 @@ luaopen_gsl (lua_State *L)
   integ_register (L);
   ode_solver_register (L);
   ode_register (L);
+  ode_complex_register (L);
 
   return 1;
 }

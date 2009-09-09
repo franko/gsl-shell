@@ -44,9 +44,12 @@ FUNCTION (solver, register) (lua_State *L)
   luaL_register (L, NULL, fdfsolver_methods);
   lua_pop (L, 1);
 
-  luaL_newmetatable (L, name_solver);
-  lua_pushcfunction (L, solver_index);
+  luaL_newmetatable (L, TYPE (name_solver));
+  lua_pushvalue (L, -1);
+  lua_setglobal (L, PREFIX "Solver");
+  lua_pushcfunction (L, FUNCTION (solver, index));
   lua_setfield (L, -2, "__index");
+  luaL_register (L, NULL, FUNCTION (solver, methods));
   lua_pop (L, 1);
 
   /* gsl module registration */

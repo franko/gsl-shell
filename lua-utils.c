@@ -82,9 +82,7 @@ mlua_null_cache (lua_State *L, int index)
 }
 
 int
-mlua_index_with_properties (lua_State *L,
-			    const struct luaL_Reg *properties,
-			    const struct luaL_Reg *methods)
+mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties)
 {
   char const * key;
   const struct luaL_Reg *reg;
@@ -98,15 +96,11 @@ mlua_index_with_properties (lua_State *L,
     {
       return mlua_get_property (L, reg, true);
     }
-  
-  reg = mlua_find_method (methods, key);
-  if (reg)
-    {
-      lua_pushcfunction (L, reg->func);
-      return 1;
-    }
 
-  return 0;
+  lua_getmetatable (L, 1);
+  lua_replace (L, 1);
+  lua_gettable (L, 1);
+  return 1;
 }
 
 void

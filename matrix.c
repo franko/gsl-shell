@@ -35,14 +35,17 @@ void
 matrix_jacob_copy_cauchy_riemann (gsl_matrix *jreal, gsl_matrix_complex *jcmpl,
 				  size_t n)
 {
-  size_t k;
-  for (k = 0; k < n; k++)
+  size_t i, j;
+  for (i = 0; i < n; i++)
     {
-      gsl_complex z = gsl_matrix_complex_get (jcmpl, k, k);
-      gsl_matrix_set (jreal, 2*k,   2*k,     GSL_REAL(z));
-      gsl_matrix_set (jreal, 2*k,   2*k+1, - GSL_IMAG(z));
-      gsl_matrix_set (jreal, 2*k+1, 2*k,     GSL_IMAG(z));
-      gsl_matrix_set (jreal, 2*k+1, 2*k+1,   GSL_REAL(z));
+      for (j = 0; j < n; j++)
+	{
+	  gsl_complex z = gsl_matrix_complex_get (jcmpl, i, j);
+	  gsl_matrix_set (jreal, 2*i,   2*j,     GSL_REAL(z));
+	  gsl_matrix_set (jreal, 2*i,   2*j+1, - GSL_IMAG(z));
+	  gsl_matrix_set (jreal, 2*i+1, 2*j,     GSL_IMAG(z));
+	  gsl_matrix_set (jreal, 2*i+1, 2*j+1,   GSL_REAL(z));
+	}
     }
 }
 

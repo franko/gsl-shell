@@ -41,19 +41,11 @@ FUNCTION (solver, push) (lua_State *L)
 }
 
 static void
-FUNCTION (null_matrix, view) (lua_State *L, int index)
-{
-  VIEW (gsl_matrix) *m = FUNCTION (matrix, check_view) (L, index);
-  m->matrix.data = NULL;
-}
-
-static void
 null_fdf_arguments (lua_State *L, int index)
 {
-  gsl_matrix_view *m = matrix_check_view (L, index);
-  m->matrix.data = NULL;
-  FUNCTION (null_matrix, view) (L, index+1);
-  FUNCTION (null_matrix, view) (L, index+2);
+  matrix_null_view (L, index);
+  FUNCTION (matrix, null_view) (L, index+1);
+  FUNCTION (matrix, null_view) (L, index+2);
 }
 
 static void
@@ -212,14 +204,14 @@ FUNCTION (solver, iterate) (lua_State *L)
   sext = FUNCTION (solver, check_defined) (L, 1);
 
   mlua_null_cache (L, 1);
-  lua_getfield (L, 1, "fdf");
+  lua_settop (L, 1);
 
+  lua_getfield (L, 1, "fdf");
   push_fdf_arguments (L);
 
   status = gsl_multifit_fdfsolver_iterate (sext->base);
 
   null_fdf_arguments (L, 3);
-
   lua_pop (L, 4);
 
   if (status)
@@ -250,8 +242,9 @@ FUNCTION (solver, run) (lua_State *L)
   max_iter = (lua_isnumber (L, 2) ? lua_tointeger (L, 2) : NLINFIT_MAX_ITER);
 
   mlua_null_cache (L, 1);
-  lua_getfield (L, 1, "fdf");
+  lua_settop (L, 1);
 
+  lua_getfield (L, 1, "fdf");
   push_fdf_arguments (L);
 
   do
@@ -272,7 +265,6 @@ FUNCTION (solver, run) (lua_State *L)
   while (fit_status == GSL_CONTINUE && iter < max_iter);
 
   null_fdf_arguments (L, 3);
-
   lua_pop (L, 4);
 
   return 0;
@@ -340,6 +332,5 @@ FUNCTION (solver, get_jacob) (lua_State *L)
 int
 FUNCTION (solver, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (solver, properties),
-				     FUNCTION (solver, methods));
+  return mlua_index_with_properties (L, FUNCTION (solver, properties));
 }

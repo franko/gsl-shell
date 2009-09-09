@@ -22,7 +22,7 @@ function ctest()
       for k=1, data.n do
 	 local t = k / data.n
 	 local y = data.A * math.exp(data.a * t + 1i * data.phi)
-	 local A, a, phi = x:get(0,0), x:get(1,0) + 1i * x:get(2,0), x:get(3,0)
+	 local A, a, phi = x[0], x[1] + 1i * x[2], x[3]
 	 local e = math.exp(a * t + 1i * phi)
 	 if f then f:set(k-1, 0, A * e - y) end
 	 if J then
@@ -35,9 +35,9 @@ function ctest()
    end
    local function print_state(s)
       print ("x :\n", s.x)
-      print ("chi square: ", gsl.cmul(h(s.f), s.f))
+      print ("chi square: ", cmul(h(s.f), s.f))
    end
-   s = gsl.csolver {fdf= cexpf, n= data.n, p= 4, x0= tvector {2.1, -2.8, 18, 0}}
+   s = csolver {fdf= cexpf, n= data.n, p= 4, x0= vector {2.1, -2.8, 18, 0}}
    repeat
       print_state (s)
       local status = s:iterate()
@@ -48,10 +48,10 @@ end
 function test()
    local data = {n= 50, a= -3.1, A= 1.55}
    local function expf(x, f, J)
-      for k=1, d.n do
-	 local t = k / d.n
+      for k=1, data.n do
+	 local t = k / data.n
 	 local y = data.A * math.exp(data.a * t)
-	 local A, a = x:get(0,0), x:get(1,0)
+	 local A, a = x[0], x[1]
 	 local e = math.exp(a * t)
 	 if f then f:set(k-1, 0, A * e - y) end
 	 if J then
@@ -60,5 +60,5 @@ function test()
 	 end
       end
    end
-   return {fdf= expf, n= data.n, p= 2, x0= tvector {2.2, -2.5}}
+   return {fdf= expf, n= data.n, p= 2, x0= vector {2.2, -2.5}}
 end

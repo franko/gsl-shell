@@ -45,6 +45,7 @@ extern void
 ode_solver_register (lua_State *L);
 
 extern const gsl_odeiv_step_type *
-method_lookup (const char *method, const gsl_odeiv_step_type *default_type);
+method_lookup (const char *method, const gsl_odeiv_step_type *default_type,
+	       bool *needs_jacobian);
 
 #endif

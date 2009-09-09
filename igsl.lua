@@ -18,8 +18,6 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
--- require 'lua-gsl'
-
 function matrix_rowiter(m)
    local i = 0
    local n = m:dims()
@@ -56,15 +54,15 @@ function matrix_print(m)
    return table.concat(lines, '\n')
 end
 
-function tvector(t)
-   local v = gsl.matrix (#t, 1)
+function vector(t)
+   local v = new (#t, 1)
    for i, x in ipairs(t) do v:set(i-1,0, x) end
    return v
 end
 
-function tmatrix(t)
+function matrix(t)
    local ncol = #t[1]
-   local m = gsl.matrix (#t, ncol)
+   local m = new (#t, ncol)
    for i, ln in ipairs(t) do 
       if not (#ln == ncol) then error('bad matrix specification') end
       for j, z in ipairs(ln) do
@@ -74,9 +72,9 @@ function tmatrix(t)
    return m
 end
 
-function tcmatrix(t)
+function cmatrix(t)
    local ncol = #t[1]
-   local m = gsl.cmatrix (#t, ncol)
+   local m = cnew (#t, ncol)
    for i, ln in ipairs(t) do 
       if not (#ln == ncol) then error('bad matrix specification') end
       for j, z in ipairs(ln) do
@@ -88,7 +86,7 @@ end
 
 function t(m)
    local r, c = m:dims()
-   local tm = gsl.matrix (c, r)
+   local tm = new (c, r)
    for i = 0, r-1 do
       for j = 0, c-1 do
          tm:set(j, i, m:get(i, j))
@@ -99,7 +97,7 @@ end
 
 function h(m)
    local r, c = m:dims()
-   local tm = gsl.cmatrix (c, r)
+   local tm = cnew (c, r)
    for i = 0, r-1 do
       for j = 0, c-1 do
 	 local z = m:get(i, j)
@@ -111,7 +109,7 @@ end
 
 function diag(v)
    local n = v:dims()
-   local m = gsl.matrix (n, n)
+   local m = new (n, n)
    for k=0, n-1 do
       m:set(k, k, v:get(k,0))
    end
@@ -119,7 +117,7 @@ function diag(v)
 end
 
 function unit(n)
-   local m = gsl.matrix(n,n)
+   local m = new(n,n)
    for k=0,n-1 do m:set(k,k,1) end
    return m
 end
@@ -137,7 +135,7 @@ end
 function matrix_columns (m, istart, iend)
    if (iend < istart) then error('invalid indexes') end
    local r, c = m:dims()
-   local mr = gsl.matrix (r, iend - istart + 1)
+   local mr = new (r, iend - istart + 1)
    for i = 0, r-1 do
       for j = istart, iend do 
          mr:set(i, j - istart, m:get(i, j))
@@ -178,8 +176,8 @@ function chop(m, eps)
 end
 
 local function add_method(s, m)
-   gsl.Matrix[s] = m
-   gsl.cMatrix[s] = m
+   Matrix[s] = m
+   cMatrix[s] = m
 end
 
 add_method('rowiter',    matrix_rowiter)

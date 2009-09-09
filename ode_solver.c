@@ -8,6 +8,7 @@
 struct method_entry {
   const char *name;
   const gsl_odeiv_step_type **method_type;
+  bool needs_jacobian;
 };
 
 static char const * const ode_solver_type_name = "GSL.ode_solver";
@@ -15,16 +16,16 @@ static char const * const ode_solver_type_name = "GSL.ode_solver";
 #define ODEIV_METHOD(t) #t, & gsl_odeiv_step_ ## t
 
 static struct method_entry methods_table[] = {
-  {ODEIV_METHOD (rk2)},
-  {ODEIV_METHOD (rk4)}, 
-  {ODEIV_METHOD (rkf45)},
-  {ODEIV_METHOD (rkck)},
-  {ODEIV_METHOD (rk8pd)},
-  {ODEIV_METHOD (rk2imp)},
-  {ODEIV_METHOD (rk4imp)},
-  {ODEIV_METHOD (bsimp)},
-  {ODEIV_METHOD (gear1)},
-  {ODEIV_METHOD (gear2)},
+  {ODEIV_METHOD (rk2),    false},
+  {ODEIV_METHOD (rk4),    false}, 
+  {ODEIV_METHOD (rkf45),  false},
+  {ODEIV_METHOD (rkck),   false},
+  {ODEIV_METHOD (rk8pd),  false},
+  {ODEIV_METHOD (rk2imp), false},
+  {ODEIV_METHOD (rk4imp), false},
+  {ODEIV_METHOD (bsimp),   true},
+  {ODEIV_METHOD (gear1),  false},
+  {ODEIV_METHOD (gear2),  false},
   {NULL, NULL}
 };
 #undef ODEIV_METHOD
@@ -77,13 +78,17 @@ ode_solver_dealloc (lua_State *L)
 }
 
 const gsl_odeiv_step_type *
-method_lookup (const char *method, const gsl_odeiv_step_type *default_type)
+method_lookup (const char *method, const gsl_odeiv_step_type *default_type,
+	       bool *needs_jacobian)
 {
   const struct method_entry *p;
   for (p = methods_table; p->name; p++)
     {
       if (strcmp (p->name, method) == 0)
-	return *(p->method_type);
+	{
+	  *needs_jacobian = p->needs_jacobian;
+	  return *(p->method_type);
+	}
     }
   return default_type;
 }
@@ -95,4 +100,5 @@ ode_solver_register (lua_State *L)
   luaL_newmetatable (L, ode_solver_type_name);
   luaL_register (L, NULL, ode_solver_methods);
   lua_pop (L, 1);
+
 }

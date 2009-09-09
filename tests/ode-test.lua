@@ -3,10 +3,10 @@ require 'igsl'
 
 function test_ode1()
    local k, w = -0.3, 4
-   local m = tmatrix {{k, -w}, {w, k}}
+   local m = matrix {{k, -w}, {w, k}}
 
    local function cexpf(t, y, f)
-      set(f, gsl.mul(m, y))
+      set(f, mul(m, y))
    end
 
    local function cexpdf(t, y, dfdy, dfdt)
@@ -14,7 +14,7 @@ function test_ode1()
       null(dfdt)
    end
 
-   return gsl.ode {f= cexpf, df= cexpdf, n= 2, method= 'bsimp', eps_abs= 1e-6}
+   return {f= cexpf, df= cexpdf, n= 2}
 end
 
 function test_ode2()
@@ -34,22 +34,58 @@ function test_ode2()
       null(dfdt)
    end
 
-   return gsl.ode {f= lorhf, df= lorhf, n= 2}
+   return {f= lorhf, df= lorhdf, n= 2}
 end
 
-function vai(s, tf, step)
-   local r = {}
-   repeat
-      s:evolve(tf, step)
-      r[#r+1] = string.format('%g, %g, %g', s.t, s.y[0], s.y[1])
-      io.write("\r" .. tostring(s.t))
-   until s.t >= tf
-   return table.concat(r, '\n')
+
+function test_code1()
+   local m = cmatrix {{4i, 0},{-0.3, 3i}}
+
+   local function myf(t, y, f)
+      set(f, cmul(m, y))
+   end
+
+   local function mydf(t, y, dfdy, dfdt)
+      set(dfdy, m)
+      null(dfdt)
+   end
+
+   return {f= myf, df= mydf, n= 2}
 end
 
-function ivai(s, tf)
-   repeat
-      s:evolve(tf)
-      print(string.format('%g, %g, %g', s.t, s.y[0], s.y[1]))
-   until s.t >= tf
+function ODE.iter(s, t0, y0, t1, th)
+   s:set(t0, y0)
+   return function()
+	     local t, y = s.t, s.y
+	     if s.t < t1 then
+		s:evolve(t1, th)
+		return t, y
+	     end
+	  end
 end
+
+function tystate(t, y)
+   local n = y:dims()
+   local r = { string.format('%g', t) }
+   for i=0,n-1 do r[#r+1] = string.format('%g', y[i]) end
+   return table.concat(r, ', ')
+end
+
+function tycstate(t, y)
+   local n = y:dims()
+   local r = { string.format('%g', t) }
+   for i=0,n-1 do
+      r[#r+1] = string.format('%g', math.real(y[i])) 
+      r[#r+1] = string.format('%g', math.imag(y[i])) 
+   end
+   return table.concat(r, ', ')
+end
+
+
+s1 = ode {f= function(t, y, f) set(f, math.cos(t)*y) end, n= 1}
+for t, y in s1:iter(0, vector {1}, 2, 0.01) do print(tystate(s1.t, s1.y)) end
+
+m = matrix {{-0.3, -4}, {4, -0.3}}
+s2 = ode {f= function(t, y, f) set(f, mul(m, y)) end, n= 2}
+y20 = vector {1, 0}
+for t, y in s2:iter(0, y20, 1, 0.01) do print(tystate(s2.t, s2.y)) end

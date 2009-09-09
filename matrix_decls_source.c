@@ -59,7 +59,7 @@ static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
 };
 
 static const struct luaL_Reg FUNCTION (matrix, functions)[] = {
-  {PREFIX "matrix",        FUNCTION (matrix, new)},
+  {PREFIX "new",           FUNCTION (matrix, new)},
   {PREFIX "mul",           FUNCTION (matrix, mul)},
   {PREFIX "solve",         FUNCTION (matrix, solve)},
   {PREFIX "inverse",       FUNCTION (matrix, inverse)},

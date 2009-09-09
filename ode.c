@@ -21,6 +21,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <assert.h>
+#include <math.h>
 
 #include "ode.h"
 #include "ode_solver.h"

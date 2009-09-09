@@ -113,6 +113,13 @@ FUNCTION (matrix, check_view) (lua_State *L, int idx)
   return luaL_checkudata (L, idx, FUNCTION (name_matrix, view));
 }
 
+void
+FUNCTION (matrix, null_view) (lua_State *L, int index)
+{
+  VIEW (gsl_matrix) *m = FUNCTION (matrix, check_view) (L, index);
+  m->matrix.data = NULL;
+}
+
 int
 FUNCTION(matrix, copy) (lua_State *L)
 {

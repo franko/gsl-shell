@@ -116,8 +116,9 @@ FUNCTION (ode, hook_jacob) (double t, const double y[], double *dfdy,
 
 #if MULTIPLICITY == 2
   {
-    gsl_matrix_view dfdy_view = gsl_matrix_view_array (dfdy, 2*n, 2*n);
-    matrix_jacob_copy_cauchy_riemann (& dfdy_view.matrix, jacob, n);
+    gsl_matrix_view dest = gsl_matrix_view_array (dfdy, 2*n, 2*n);
+    gsl_matrix_complex_view src = gsl_matrix_complex_view_array (jacob, n, n);
+    matrix_jacob_copy_cauchy_riemann (&dest.matrix, &src.matrix, n);
   }
 #elif MULTIPLICITY > 2
 #error MULTIPLICITY > 2 not supported
@@ -133,6 +134,7 @@ FUNCTION (ode, new) (lua_State *L)
   struct ode_solver *s;
   double eps_abs, eps_rel;
   const char *method;
+  bool needs_jacobian;
   int n;
 
   luaL_checktype (L, 1, LUA_TTABLE);
@@ -143,17 +145,19 @@ FUNCTION (ode, new) (lua_State *L)
   n = lua_tointeger (L, -1);
   lua_pop (L, 1);
 
-  mlua_check_field_type (L, 1, "f",  LUA_TFUNCTION, NULL);
-  mlua_check_field_type (L, 1, "df", LUA_TFUNCTION, 
-			 "Jacobian function expected");
-
   eps_abs = mlua_named_optnumber (L, 1, "eps_abs", ODE_DEFAULT_EPS_ABS);
   eps_rel = mlua_named_optnumber (L, 1, "eps_rel", ODE_DEFAULT_EPS_REL);
   method  = mlua_named_optstring (L, 1, "method",  ODE_DEFAULT_METHOD);
 
-  T = method_lookup (method, gsl_odeiv_step_rk8pd);
+  T = method_lookup (method, gsl_odeiv_step_rk8pd, & needs_jacobian);
 
-  s = ode_solver_push_new (L, T, n, eps_abs, eps_rel);
+  mlua_check_field_type (L, 1, "f",  LUA_TFUNCTION, NULL);
+
+  if (needs_jacobian)
+    mlua_check_field_type (L, 1, "df", LUA_TFUNCTION, 
+			   "Jacobian function expected");
+
+  s = ode_solver_push_new (L, T, MULTIPLICITY * n, eps_abs, eps_rel);
 
   lua_setfield (L, 1, "solver");
 
@@ -194,12 +198,13 @@ FUNCTION (ode, set) (lua_State *L)
   struct ode_solver *s = FUNCTION (ode, check) (L, 1);
   TYPE (ode_params) *p;
   TYPE (gsl_matrix) *y;
+  size_t n = s->dimension / MULTIPLICITY;
   double t;
 
   t = luaL_checknumber (L, 2);
   y = FUNCTION (matrix, check) (L, 3);
 
-  p = FUNCTION (ode_params, push) (L, s->dimension, 1e-6);
+  p = FUNCTION (ode_params, push) (L, n, 1e-6);
   
   p->t = t;
   FUNCTION (gsl_matrix, memcpy) (p->y, y);
@@ -239,8 +244,15 @@ FUNCTION (ode, evolve) (lua_State *L)
 				   system, & p->t, t1,
 				   & p->h, p->y->data);
 
+  FUNCTION (matrix, null_view) (L, 2);
+  FUNCTION (matrix, null_view) (L, 3);
+  FUNCTION (matrix, null_view) (L, 4);
+
   if (status != GSL_SUCCESS)
     luaL_error (L, "error in ODE evolve: %s", gsl_strerror (status));
+
+  if (isnan (s->evol->yerr[0]))
+    luaL_error (L, "failed to converge, step too big");
 
   mlua_null_cache (L, 1);
 
@@ -255,7 +267,6 @@ FUNCTION (ode, get_t) (lua_State *L)
   return 1;
 }
 
-
 int
 FUNCTION (ode, get_y) (lua_State *L)
 {
@@ -268,9 +279,7 @@ FUNCTION (ode, get_y) (lua_State *L)
 int
 FUNCTION (ode, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L,
-				     FUNCTION (ode, properties),
-				     FUNCTION (ode, methods));
+  return mlua_index_with_properties (L, FUNCTION (ode, properties));
 }
 
 void
@@ -283,6 +292,8 @@ FUNCTION (ode, register) (lua_State *L)
   lua_pop (L, 1);
 
   luaL_newmetatable (L, TYPE (name_ode));
+  lua_pushvalue (L, -1);
+  lua_setglobal (L, PREFIX "ODE");
   lua_pushcfunction (L, FUNCTION (ode, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (ode, methods));
