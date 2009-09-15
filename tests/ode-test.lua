@@ -53,17 +53,6 @@ function test_code1()
    return {f= myf, df= mydf, n= 2}
 end
 
-function ODE.iter(s, t0, y0, t1, th)
-   s:set(t0, y0)
-   return function()
-	     local t, y = s.t, s.y
-	     if s.t < t1 then
-		s:evolve(t1, th)
-		return t, y
-	     end
-	  end
-end
-
 function tystate(t, y)
    local n = y:dims()
    local r = { string.format('%g', t) }
@@ -82,10 +71,10 @@ function tycstate(t, y)
 end
 
 
-s1 = ode {f= function(t, y, f) set(f, math.cos(t)*y) end, n= 1}
-for t, y in s1:iter(0, vector {1}, 2, 0.01) do print(tystate(s1.t, s1.y)) end
+-- s1 = ode {f= function(t, y, f) set(f, math.cos(t)*y) end, n= 1}
+-- for t, y in s1:iter(0, vector {1}, 2, 0.01) do print(tystate(s1.t, s1.y)) end
 
-m = matrix {{-0.3, -4}, {4, -0.3}}
-s2 = ode {f= function(t, y, f) set(f, mul(m, y)) end, n= 2}
-y20 = vector {1, 0}
-for t, y in s2:iter(0, y20, 1, 0.01) do print(tystate(s2.t, s2.y)) end
+-- m = matrix {{-0.3, -4}, {4, -0.3}}
+-- s2 = ode {f= function(t, y, f) set(f, mul(m, y)) end, n= 2}
+-- y20 = vector {1, 0}
+-- for t, y in s2:iter(0, y20, 1, 0.01) do print(tystate(s2.t, s2.y)) end

@@ -34,11 +34,19 @@ function matrix_rowiter(m)
 	  end
 end
 
+function tostring_eps(z, eps)
+   local a, b = math.real(z), math.imag(z)
+   if math.abs(a) < eps then a = 0 end
+   if math.abs(b) < eps then b = 0 end
+   return tostring(a+1i*b)
+end
+
 function matrix_print(m)
+   local eps = m:norm() * 1e-8
    local width = 0
    for row in m:rowiter() do
       for val in row do
-	 local clen = # tostring(val)
+	 local clen = # tostring_eps(val, eps)
 	 width = clen > width and clen or width
       end
    end
@@ -46,7 +54,7 @@ function matrix_print(m)
    for row in m:rowiter() do
       local line = {}
       for v in row do
-	 local s = tostring(v)
+	 local s = tostring_eps(v, eps)
 	 line[#line+1] = string.rep(' ', width - #s) .. s 
       end
       lines[#lines+1] = '[ ' .. table.concat(line, ' ') .. ' ]'
@@ -82,6 +90,12 @@ function cmatrix(t)
       end
    end
    return m
+end
+
+function cvector(t)
+   local v = cnew (#t, 1)
+   for k, z in ipairs(t) do v:set(k-1,0, z) end
+   return v
 end
 
 function t(m)
@@ -129,7 +143,7 @@ function matrix_norm(m)
 	 norm = norm + v*math.conj(v)
       end
    end
-   return norm
+   return math.sqrt(norm)
 end
 
 function matrix_columns (m, istart, iend)
@@ -158,29 +172,26 @@ function null(m)
    for i=0,r-1 do for j=0,c-1 do m:set(i,j,0) end end
 end
 
-function chop(m, eps)
-   eps = eps and eps or 1e-4
-   m = m:copy()
-   local r, c = m:dims()
-   local norm = m:norm()
-   for i = 0, r-1 do
-      for j = 0, c-1 do
-	 local z = m:get(i,j)
-	 local a, b = math.real(z), math.imag(z)
-	 a = a*a > norm * eps and a or 0
-	 b = b*b > norm * eps and b or 0
-	 m:set(i,j,a + 1i * b)
-      end
-   end
-   return m
-end
-
-local function add_method(s, m)
+local function add_matrix_method(s, m)
    Matrix[s] = m
    cMatrix[s] = m
 end
 
-add_method('rowiter',    matrix_rowiter)
-add_method('__tostring', matrix_print)
-add_method('norm',       matrix_norm)
-add_method('columns',    matrix_columns)
+function ode_iter(s, t0, y0, t1, th)
+   s:set(t0, y0)
+   return function()
+	     local t, y = s.t, s.y
+	     if s.t < t1 then
+		s:evolve(t1, th)
+		return t, y
+	     end
+	  end
+end
+
+ODE.iter  = ode_iter
+cODE.iter = ode_iter
+
+add_matrix_method('rowiter',    matrix_rowiter)
+add_matrix_method('__tostring', matrix_print)
+add_matrix_method('norm',       matrix_norm)
+add_matrix_method('columns',    matrix_columns)
