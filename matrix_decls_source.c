@@ -29,6 +29,7 @@ static int  FUNCTION (matrix, free)              (lua_State *L);
 static int  FUNCTION (matrix, new)               (lua_State *L);
 static int  FUNCTION (matrix, dims)              (lua_State *L);
 static int  FUNCTION (matrix, copy)              (lua_State *L);
+static int  FUNCTION (matrix, slice)             (lua_State *L);
 
 static int  FUNCTION (matrix, add)               (lua_State *L);
 static int  FUNCTION (matrix, sub)               (lua_State *L);
@@ -55,6 +56,7 @@ static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
   {"set",           FUNCTION (matrix, set)},
   {"dims",          FUNCTION (matrix, dims)},
   {"copy",          FUNCTION (matrix, copy)},
+  {"slice",         FUNCTION (matrix, slice)},
   {NULL, NULL}
 };
 

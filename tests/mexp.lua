@@ -15,13 +15,12 @@
  -- along with this program; if not, write to the Free Software
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-function mexp(x, nmax)
-  local n = x:dims()
+function mexp(m, nmax)
+  local n = m:dims()
   local r = unit(n)
-  local p = r
-  local f = 1
+  local p, f = r, 1
   for i=1, nmax do
-    p = gsl.mul(p, x)
+    p = mul(p, m)
     f = f / i
     r = r + f * p
   end
@@ -34,6 +33,6 @@ th:set(0,1,  0.3)
 th:set(1,0, -0.3)
 th:set(1,1,  0.0)
 
-cr = tmatrix {{1.0000, -0.0985, 0.0600, -0.0412}, {-0.0985, 1.0000, -0.9865, -0.0923}, {0.0600, -0.9865, 1.0000, 0.1273}, {-0.0412, -0.0923, 0.1273, 1}}
+cr = matrix {{1.0000, -0.0985, 0.0600, -0.0412}, {-0.0985, 1.0000, -0.9865, -0.0923}, {0.0600, -0.9865, 1.0000, 0.1273}, {-0.0412, -0.0923, 0.1273, 1}}
 
-sg = tvector {0.0127919, 0.0682126, 0.562766, 0.000654265}
+sg = vector {0.0127919, 0.0682126, 0.562766, 0.000654265}

@@ -1,3 +1,6 @@
+
+ -- nlinfit.lua
+ -- 
  -- Copyright (C) 2009 Francesco Abbate
  -- 
  -- This program is free software; you can redistribute it and/or modify
@@ -34,8 +37,8 @@ function demo1()
       end
    end
    local function print_state(s)
-      print ("x :\n", s.x)
-      print ("chi square: ", cmul(h(s.f), s.f))
+      print ("x: ", s.x:row_print())
+      print ("chi square: ", cmul(h(s.f), s.f)[0])
    end
    s = csolver {fdf= cexpf, n= data.n, p= 4, x0= vector {2.1, -2.8, 18, 0}}
    repeat
@@ -61,8 +64,8 @@ function demo2()
       end
    end
    local function print_state(s)
-      print ("x :\n", s.x)
-      print ("chi square: ", prod(s.f, s.f))
+      print ("x: ", s.x:row_print())
+      print ("chi square: ", prod(s.f, s.f)[0])
    end
    s = solver {fdf= expf, n= data.n, p= 2, x0= vector {3.5, -2.5}}
    repeat

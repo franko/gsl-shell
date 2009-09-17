@@ -130,6 +130,28 @@ FUNCTION(matrix, copy) (lua_State *L)
 }
 
 int
+FUNCTION(matrix, slice) (lua_State *L)
+{
+  TYPE (gsl_matrix) *a = FUNCTION (matrix, check) (L, 1);
+  lua_Integer k1 = luaL_checkinteger (L, 2), k2 = luaL_checkinteger (L, 3);
+  lua_Integer n1 = luaL_checkinteger (L, 4), n2 = luaL_checkinteger (L, 5);
+  VIEW (gsl_matrix) view;
+
+  if (k1 < 0 || k2 < 0 || n1 < 0 || n2 < 0)
+    luaL_error (L, INVALID_INDEX_MSG);
+
+  if (k1 >= a->size1 || k2 >= a->size2 || 
+      k1 + n1 > a->size1 || k2 + n2 > a->size2)
+    luaL_error (L, INVALID_INDEX_MSG);
+
+  TYPE (gsl_matrix) *cp = FUNCTION (matrix, push_raw) (L, n1, n2);
+  view = FUNCTION (gsl_matrix, submatrix) (a, k1, k2, n1, n2);
+  FUNCTION (gsl_matrix, memcpy) (cp, & view.matrix);
+
+  return 1;
+}
+
+int
 FUNCTION(matrix, get) (lua_State *L)
 {
   const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
@@ -155,6 +177,7 @@ FUNCTION(matrix, dims) (lua_State *L)
   const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
   lua_pushinteger (L, m->size1);
   lua_pushinteger (L, m->size2);
+  /*  lua_pushstring (L, math_name[BASE_TYPE]); */
   return 2;
 }
 
@@ -194,7 +217,7 @@ FUNCTION(matrix, new) (lua_State *L)
   lua_Integer nc = luaL_checkinteger (L, 2);
 
   luaL_argcheck (L, nr > 0, 1, "row number should be positive");
-  luaL_argcheck (L, nc > 0, 1, "column number should be positive");
+  luaL_argcheck (L, nc > 0, 2, "column number should be positive");
 
   FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
 

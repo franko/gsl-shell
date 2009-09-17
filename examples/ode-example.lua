@@ -1,5 +1,5 @@
 
- -- ode-gsl-example.lua
+ -- ode-example.lua
  -- 
  -- Copyright (C) 2009 Francesco Abbate
  -- 
@@ -34,7 +34,7 @@ function demo1()
    local y0 = vector {1,0}
 
    for t, y in s:iter(t0, y0, t1) do
-      print(string.format('%g, %g, %g', t, y[0], y[1]))
+      print(t, y:row_print())
    end
 end
 
@@ -61,7 +61,7 @@ function demo2()
    local y0 = vector {1,0}
 
    for t, y in s:iter(t0, y0, t1) do
-      print(string.format('%g, %g, %g', t, y[0], y[1]))
+      print(t, y:row_print())
    end
 end
 
@@ -83,8 +83,6 @@ function demo3()
    local y0 = cvector {1,0}
 
    for t, y in s:iter(t0, y0, t1, 0.05) do
-      print(string.format('%g, %g, %g, %g, %g', t, 
-			  math.real(y[0]), math.imag(y[0]),
-			  math.real(y[1]), math.imag(y[1])))
+      print(t, y:row_print())
    end
 end
