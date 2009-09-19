@@ -35,6 +35,8 @@ else
   TARGETS = gsl-shell
 endif
 
+DIRS = doc
+
 LIBTOOL = libtool --silent --tag=CC
 LUADIR = lua-5.1.4
 AR= ar rcu

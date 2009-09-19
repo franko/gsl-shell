@@ -1,0 +1,31 @@
+Non-linear Least Squares fit
+---------------------------
+
+Some bla bla bla and introduction
+
+And some snippet code::
+
+    function fact(n)
+       if n <= 1 then return 1 else return n * fact(n-1) end
+    end
+
+and here it does continue.
+
+:func:`solver`
+^^^^^^^^^^^^^^
+.. class:: solver
+   
+   Create a non linear solver
+   with n variables.
+
+   .. method:: new(n[, p])
+      
+      with n variables
+
+   .. method:: run()
+      
+      start the solver
+ 
+      .. math::
+
+         \mathrm{erf}(x) = \frac{2}{\sqrt \pi} \int_0^x \exp(-t^2) \,dt
