@@ -22,4 +22,5 @@ Contents:
    :maxdepth: 2
 
    nlinfit.txt
+   matrices.txt
    acknowledgments.txt

@@ -1,0 +1,30 @@
+.. highlight:: lua
+
+.. include:: <isogrk1.txt>
+
+Matrices
+--------
+
+Overview
+........
+
+GSL Shell main data types are *real* and *complex* matrices and many of the GSL routines works on this kind of data. GSL Shell does not have a separate type to apresent a *vector* but we use column matrix for this purpose.
+
+Examples
+........
+
+Here an examples that shows how to calculate the exponential of a 2x2 matrix by using the elementary Taylor expansion of the exponentian function::
+
+  function mexp(m, nmax)
+    local n = m:dims()
+    local r = unit(n)
+    local p, f = r, 1
+    for i=1, nmax do
+      p = mul(p, m)
+      f = f / i
+      r = r + f * p
+    end
+    return r
+  end
+
+This function get two arguments.
