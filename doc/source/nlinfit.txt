@@ -46,8 +46,6 @@ any data to be fitted is denoted by t.
 With the definition above the Jacobian is
 :math:`J_{ij} =(1 / \sigma_i)  d Y_i / d x_j`, where :math:`Y_i = Y(x,t_i)`.
 
-Some bla bla bla and introduction
-
 Creating a nonlineat fit solver
 ...............................
 
@@ -121,17 +119,17 @@ Solver class definition
       Create a new solver for *real* data. The ``spec`` should be a table
       containing the following fields:
       
-      * fdf
+      fdf
           The function to calculate the residuals ``f``, and the jacobian matrix
           ``J`` of f with respect to the parameters.
 	  The function will be called in the form ``fdf(y,f,J)``, ``f`` or
 	  ``J`` can be :keyword:`nil` if they are not required so you should
 	  always check them.
-      * x0
+      x0
           The initial seed values of the parameters.
-      * n
+      n
           The number of data points.
-      * p
+      p
           The number of parameters.
 
    .. method:: iterate()

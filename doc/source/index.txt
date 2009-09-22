@@ -14,8 +14,6 @@ advanced functionalities like *closures*, prototypal inheritance. LUA is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL routines more effectively.
 
-For general information about mpmath, see the main page http://www.nongnu.org/gsl-shell/.
-
 Contents:
 
 .. toctree::
