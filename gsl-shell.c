@@ -390,9 +390,9 @@ static int pmain (lua_State *L) {
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
 
-   lua_pushcfunction(L, luaopen_gsl);
-   lua_pushstring(L, "gsl");
-   lua_call(L, 1, 0);
+  lua_pushcfunction(L, luaopen_gsl);
+  lua_pushstring(L, "gsl");
+  lua_call(L, 1, 0);
 
   lua_gc(L, LUA_GCRESTART, 0);
   s->status = handle_luainit(L);

@@ -35,8 +35,6 @@ else
   TARGETS = gsl-shell
 endif
 
-DIRS = doc
-
 LIBTOOL = libtool --silent --tag=CC
 LUADIR = lua-5.1.4
 AR= ar rcu
@@ -56,7 +54,7 @@ COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
 LUAGSL_SRC_FILES = math-types.c matrix.c cmatrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c cnlinfit.c lua-utils.c linalg.c \
-		integ.c ode_solver.c ode.c code.c lua-gsl.c
+		integ.c ode_solver.c ode.c code.c fft.c lua-gsl.c
 
 SUBDIRS = 
 

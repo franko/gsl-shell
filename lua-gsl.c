@@ -27,6 +27,7 @@
 #include "cmatrix.h"
 #include "linalg.h"
 #include "integ.h"
+#include "fft.h"
 #include "ode_solver.h"
 #include "ode.h"
 #include "code.h"
@@ -49,6 +50,7 @@ luaopen_gsl (lua_State *L)
   matrix_complex_register (L);
   linalg_register (L);
   integ_register (L);
+  fft_register (L);
   ode_solver_register (L);
   ode_register (L);
   ode_complex_register (L);

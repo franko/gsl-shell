@@ -34,7 +34,7 @@ function matrix_rowiter(m)
 	  end
 end
 
-local function _matrix_set(m, f)
+function matrix_f_set(m, f)
    local r, c = m:dims()
    for i = 0, r-1 do
       for j = 0, c-1 do
@@ -56,9 +56,9 @@ function matrix_accu(m, accu, f)
 end
 
 local function tostring_eps(z, eps)
-   local a, b = math.real(z), math.imag(z)
+   local a, b = real(z), imag(z)
    local f = function(x) return string.format('%g', x) end
-   local s = math.abs(a) > eps and f(a) or ''
+   local s = abs(a) > eps and f(a) or ''
    if b > eps then
       local sign = (s == '' and '' or '+')
       s = s .. string.format('%s%si', sign, f(b))
@@ -71,7 +71,7 @@ end
 local function matrix_from_table(ctor, t)
    local f = function(i, j) return t[i+1][j+1] end
    local m = ctor (#t, #t[1])
-   _matrix_set(m, f)
+   matrix_f_set(m, f)
    return m
 end
 
@@ -120,32 +120,32 @@ function t(m)
    local r, c = m:dims()
    local mn = new(c, r)
    local f = function(i,j) return m:get(j,i) end
-   return _matrix_set(mn, f)
+   return matrix_f_set(mn, f)
 end
 
 function h(m)
    local r, c = m:dims()
    local mn = cnew(c, r)
-   local f = function(i,j) return math.conj(m:get(j,i)) end
-   return _matrix_set(mn, f)
+   local f = function(i,j) return conj(m:get(j,i)) end
+   return matrix_f_set(mn, f)
 end
 
 function diag(v)
    local n = v:dims()
    local f = function(i,j) return i == j and v:get(i,0) or 0 end
    local mn = new(n, n)
-   return _matrix_set(mn, f)
+   return matrix_f_set(mn, f)
 end
 
 function unit(n)
    local f = function(i,j) return i == j and 1 or 0 end
    local mn = new(n, n)
-   return _matrix_set(mn, f)
+   return matrix_f_set(mn, f)
 end
 
 function matrix_norm(m)
-   local sq = matrix_accu(m, 0, function(p, z) return p + z*math.conj(z) end)
-   return math.sqrt(sq)
+   local sq = matrix_accu(m, 0, function(p, z) return p + z*conj(z) end)
+   return sqrt(sq)
 end
 
 function matrix_columns (m, cstart, cnb)
@@ -165,11 +165,11 @@ function matrix_row_print(m)
 end
 
 function set(d, s)
-   _matrix_set(d, function(i,j) return s:get(i,j) end)
+   matrix_f_set(d, function(i,j) return s:get(i,j) end)
 end
 
 function null(m)
-   _matrix_set(m, function(i,j) return 0 end)
+   matrix_f_set(m, function(i,j) return 0 end)
 end
 
 local function add_matrix_method(s, m)
