@@ -3,10 +3,10 @@
 .. include:: <isogrk1.txt>
 
 Nonlinear Least Squares fit
----------------------------
+===========================
 
 Overview
-........
+--------
 
 GSL Shell provides support for nonlinear least squares fitting for user-defined data and functions. The data to fit can be either *real* or *complex* while the fitting parameters should be *real* numbers.
 
@@ -47,7 +47,7 @@ With the definition above the Jacobian is
 :math:`J_{ij} =(1 / \sigma_i)  d Y_i / d x_j`, where :math:`Y_i = Y(x,t_i)`.
 
 Creating a nonlineat fit solver
-...............................
+-------------------------------
 
 In order to perform a non linear fitting with GSL Shell you should use a *solver* object. The logical steps to use a nonlinear fitting solver are:
 
@@ -59,23 +59,24 @@ In order to perform a non linear fitting with GSL Shell you should use a *solver
 
 Here an example::
 
-   local data = {n= 50, a= -3.1, A= 1.55}
+   local n = 50
+   local p = {a= -3.1, A= 1.55}
+   local y = new(n, 1, function (i,j) return p.A * exp(p.a * i/n) end)
 
    local function expf(x, f, J)
-      for k=1, data.n do
-	 local t = k / data.n
-	 local y = data.A * math.exp(data.a * t)
+      for k=0, n-1 do
+	 local t = k / n
 	 local A, a = x[0], x[1]
-	 local e = math.exp(a * t)
-	 if f then f:set(k-1, 0, A * e - y) end
+	 local e = exp(a * t)
+	 if f then f:set(k, 0, A * e - y[k]) end
 	 if J then
-	    J:set(k-1, 0, e)
-	    J:set(k-1, 1, t * A * e)
+	    J:set(k, 0, e)
+	    J:set(k, 1, t * A * e)
 	 end
       end
    end
 
-   s = solver {fdf= expf, n= data.n, p= 2, x0= vector {3.5, -2.5}}
+   s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}
 
    repeat
       print_state (s)
@@ -108,7 +109,7 @@ The output you obtain is::
 
 
 Solver class definition
-.......................
+-----------------------
 
 .. class:: solver
    

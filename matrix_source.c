@@ -219,8 +219,36 @@ FUNCTION(matrix, new) (lua_State *L)
   luaL_argcheck (L, nr > 0, 1, "row number should be positive");
   luaL_argcheck (L, nc > 0, 2, "column number should be positive");
 
-  FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
+  if (lua_gettop (L) == 3)
+    {
+      if (lua_isfunction (L, 3))
+	{
+	  size_t i, j;
 
+	  FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
+
+	  for (i = 0; i < nr; i++)
+	    {
+	      for (j = 0; j < nc; j++)
+		{
+		  lua_pushcfunction (L, FUNCTION (matrix, set));
+		  lua_pushvalue (L, 4);
+		  lua_pushnumber (L, i);
+		  lua_pushnumber (L, j);
+
+		  lua_pushvalue (L, 3);
+		  lua_pushnumber (L, i);
+		  lua_pushnumber (L, j);
+		  lua_call (L, 2, 1);
+
+		  lua_call (L, 4, 0);
+		}
+	    }
+	  return 1;
+	}
+    }
+
+  FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
   return 1;
 }
 

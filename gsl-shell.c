@@ -152,6 +152,7 @@ static int docall (lua_State *L, int narg, int clear) {
 
 static void print_version (void) {
   l_message(NULL, "GSL Shell, Copyright (C) 2009 Francesco Abbate");
+  l_message(NULL, "GNU Scientific Library (GSL). Copyright (C) The GSL Team.");
   l_message(NULL, LUA_RELEASE "  " LUA_COPYRIGHT);
 }
 
@@ -385,6 +386,8 @@ static int pmain (lua_State *L) {
   char **argv = s->argv;
   int script;
   int has_i = 0, has_v = 0, has_e = 0;
+  int status;
+
   globalL = L;
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
@@ -395,6 +398,11 @@ static int pmain (lua_State *L) {
   lua_call(L, 1, 0);
 
   lua_gc(L, LUA_GCRESTART, 0);
+
+  status = luaL_loadfile (L, "igsl.lua");
+  if (status == 0)
+    lua_call (L, 0, 0);
+
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
   script = collectargs(argv, &has_i, &has_v, &has_e);

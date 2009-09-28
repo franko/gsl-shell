@@ -118,29 +118,21 @@ end
 
 function t(m)
    local r, c = m:dims()
-   local mn = new(c, r)
-   local f = function(i,j) return m:get(j,i) end
-   return matrix_f_set(mn, f)
+   return new(c, r, function(i,j) return m:get(j,i) end)
 end
 
 function h(m)
    local r, c = m:dims()
-   local mn = cnew(c, r)
-   local f = function(i,j) return conj(m:get(j,i)) end
-   return matrix_f_set(mn, f)
+   return cnew(c, r, function(i,j) return conj(m:get(j,i)) end)
 end
 
 function diag(v)
    local n = v:dims()
-   local f = function(i,j) return i == j and v:get(i,0) or 0 end
-   local mn = new(n, n)
-   return matrix_f_set(mn, f)
+   return new(n, n, function(i,j) return i == j and v:get(i,0) or 0 end)
 end
 
 function unit(n)
-   local f = function(i,j) return i == j and 1 or 0 end
-   local mn = new(n, n)
-   return matrix_f_set(mn, f)
+   return new(n, n, function(i,j) return i == j and 1 or 0 end)
 end
 
 function matrix_norm(m)

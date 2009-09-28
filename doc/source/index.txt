@@ -1,5 +1,6 @@
+##################################
 Welcome to GSL shell documentation
-==================================
+##################################
 
 GSL shell is an interactive command line interface that gives easy access
 to the GNU Scientific Library (GSL) collection of mathematical methods for
@@ -10,7 +11,7 @@ vectors but it does allow also to write complex user defined functions with
 the LUA scripting interpreter.
 
 LUA is a very interesting and easy to learn scripting language that features
-advanced functionalities like *closures*, prototypal inheritance. LUA is very
+advanced functionalities like closures and metamethods. LUA is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL routines more effectively.
 
@@ -19,6 +20,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   nlinfit.txt
+   intro.txt
    matrices.txt
+   nlinfit.txt
+   fft.txt
+   ode.txt
    acknowledgments.txt

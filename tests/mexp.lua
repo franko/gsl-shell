@@ -15,6 +15,18 @@
  -- along with this program; if not, write to the Free Software
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+function mexpff(m, imax)
+   local n = m:dims()
+   local function fexp(accu, p, f, i)
+      if i >= imax then return accu else
+	 p, f = mul(p, m), f/i
+	 return fexp(accu + f * p, p, f, i+1)
+      end
+   end
+   local u = unit(n)
+   return fexp(u, u, 1, 1)
+end
+
 function mexp(m, nmax)
   local n = m:dims()
   local r = unit(n)
@@ -27,7 +39,7 @@ function mexp(m, nmax)
   return r
 end
 
-th = gsl.matrix (2, 2)
+th = new(2, 2)
 th:set(0,0,  0.0)
 th:set(0,1,  0.3)
 th:set(1,0, -0.3)
