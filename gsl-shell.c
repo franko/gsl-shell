@@ -386,7 +386,6 @@ static int pmain (lua_State *L) {
   char **argv = s->argv;
   int script;
   int has_i = 0, has_v = 0, has_e = 0;
-  int status;
 
   globalL = L;
   if (argv[0] && argv[0][0]) progname = argv[0];
@@ -399,9 +398,7 @@ static int pmain (lua_State *L) {
 
   lua_gc(L, LUA_GCRESTART, 0);
 
-  status = luaL_loadfile (L, "igsl.lua");
-  if (status == 0)
-    lua_call (L, 0, 0);
+  dolibrary (L, "igsl");
 
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;

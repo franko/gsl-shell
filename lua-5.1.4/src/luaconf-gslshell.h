@@ -51,7 +51,7 @@
 	".\\?.dll;"  LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 
 #else
-# define LUA_ROOT	"/usr/local/"
+# define LUA_ROOT	"/usr/"
 #define GSL_SHELL_CDIR	LUA_ROOT "lib/gsl-shell/"
 #define LUA_PATH_DEFAULT  \
 		"./?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?/init.lua"
