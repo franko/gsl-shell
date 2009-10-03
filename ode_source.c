@@ -292,12 +292,10 @@ FUNCTION (ode, register) (lua_State *L)
   lua_pop (L, 1);
 
   luaL_newmetatable (L, TYPE (name_ode));
-  lua_pushvalue (L, -1);
-  lua_setglobal (L, PREFIX "ODE");
   lua_pushcfunction (L, FUNCTION (ode, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (ode, methods));
-  lua_pop (L, 1);
+  lua_setfield (L, -2, PREFIX "ODE");
 
   luaL_register (L, NULL, FUNCTION (ode, functions));
 }

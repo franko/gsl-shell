@@ -1,0 +1,17 @@
+.. highlight:: lua
+
+.. include:: <isogrk1.txt>
+
+Linear Algebra
+==============
+
+Functions
+---------
+
+GSL Shell gives access to some functions of linear algebra based on GSL itself or on the BLAS routines.
+
+.. function:: inverse(m)
+
+   Returns the inverse of the matrix m.
+
+

@@ -39,11 +39,12 @@ luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
-#if 0
+#ifdef USE_SEPARATE_NAMESPACE
   luaL_register (L, "gsl", gsl_methods_dummy);
-#endif
+#else
   lua_getglobal (L, "_G");
-  
+#endif
+
   solver_register (L);
   solver_complex_register (L);
   matrix_register (L);

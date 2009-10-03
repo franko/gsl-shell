@@ -137,6 +137,11 @@ FUNCTION(matrix, slice) (lua_State *L)
   lua_Integer n1 = luaL_checkinteger (L, 4), n2 = luaL_checkinteger (L, 5);
   VIEW (gsl_matrix) view;
 
+#ifdef LUA_INDEX_CONVENTION
+  k1 -= 1;
+  k2 -= 1;
+#endif
+
   if (k1 < 0 || k2 < 0 || n1 < 0 || n2 < 0)
     luaL_error (L, INVALID_INDEX_MSG);
 
@@ -160,6 +165,11 @@ FUNCTION(matrix, get) (lua_State *L)
   LUA_TYPE v;
   BASE gslval;
 
+#ifdef LUA_INDEX_CONVENTION
+  r -= 1;
+  c -= 1;
+#endif
+
   if (r < 0 || r >= (int) m->size1 || c < 0 || c >= (int) m->size2)
     return 0;
 
@@ -177,7 +187,6 @@ FUNCTION(matrix, dims) (lua_State *L)
   const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
   lua_pushinteger (L, m->size1);
   lua_pushinteger (L, m->size2);
-  /*  lua_pushstring (L, math_name[BASE_TYPE]); */
   return 2;
 }
 
@@ -189,6 +198,11 @@ FUNCTION(matrix, set) (lua_State *L)
   lua_Integer c = luaL_checkinteger (L, 3);
   LUA_TYPE v = LUAL_FUNCTION(check) (L, 4);
   BASE gslval;
+
+#ifdef LUA_INDEX_CONVENTION
+  r -= 1;
+  c -= 1;
+#endif
 
   luaL_argcheck (L, r >= 0 && r < (int) m->size1, 2,
 		 "row index out of limits");
@@ -223,25 +237,33 @@ FUNCTION(matrix, new) (lua_State *L)
     {
       if (lua_isfunction (L, 3))
 	{
+	  TYPE (gsl_matrix) *m;
 	  size_t i, j;
 
-	  FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
+	  m = FUNCTION (matrix, push) (L, (size_t) nr, (size_t) nc);
 
 	  for (i = 0; i < nr; i++)
 	    {
 	      for (j = 0; j < nc; j++)
 		{
-		  lua_pushcfunction (L, FUNCTION (matrix, set));
-		  lua_pushvalue (L, 4);
-		  lua_pushnumber (L, i);
-		  lua_pushnumber (L, j);
+#ifdef LUA_INDEX_CONVENTION
+		  size_t ig = i+1, jg = j+1;
+#else
+		  size_t ig = i, jg = j;
+#endif
+		  LUA_TYPE z;
+		  BASE gslz;
 
 		  lua_pushvalue (L, 3);
-		  lua_pushnumber (L, i);
-		  lua_pushnumber (L, j);
+		  lua_pushnumber (L, ig);
+		  lua_pushnumber (L, jg);
 		  lua_call (L, 2, 1);
 
-		  lua_call (L, 4, 0);
+		  z = LUA_FUNCTION(to) (L, 5);
+		  gslz = TYPE (value_assign) (z);
+		  FUNCTION (gsl_matrix, set) (m, i, j, gslz);
+
+		  lua_pop (L, 1);
 		}
 	    }
 	  return 1;
@@ -373,6 +395,10 @@ FUNCTION(matrix, index) (lua_State *L)
       int index = lua_tointeger (L, 2);
       BASE gslval;
       LUA_TYPE v;
+
+#ifdef LUA_INDEX_CONVENTION
+      index -= 1;
+#endif
 
       if (m->size2 != 1)
 	luaL_typerror (L, 1, "vector");

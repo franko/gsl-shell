@@ -96,16 +96,6 @@ The output you obtain is::
    chi square: 	5.5968773129138e-08
    x: 	1.55, -3.1
    chi square: 	2.0533525307766e-16
-   x: 	3.5, -2.5
-   chi square: 	42.641185290635
-   x: 	1.53499, -2.71813
-   chi square: 	0.14091408323034
-   x: 	1.54408, -3.05951
-   chi square: 	0.0008951390111855
-   x: 	1.54994, -3.09966
-   chi square: 	5.5968773129138e-08
-   x: 	1.55, -3.1
-   chi square: 	2.0533525307766e-16
 
 
 Solver class definition

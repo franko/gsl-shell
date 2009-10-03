@@ -18,6 +18,9 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+for k, v in pairs(math) do _G[k] = v end
+math = nil
+
 function matrix_rowiter(m)
    local i = 0
    local n = m:dims()
@@ -27,7 +30,7 @@ function matrix_rowiter(m)
 		local j = 0
 		return function()
 			  j = j + 1
-			  local v = m:get(i-1, j-1)
+			  local v = m:get(i, j)
 			  if v then return v end
 		       end
 	     end
@@ -36,8 +39,8 @@ end
 
 function matrix_f_set(m, f)
    local r, c = m:dims()
-   for i = 0, r-1 do
-      for j = 0, c-1 do
+   for i = 1, r do
+      for j = 1, c do
 	 local z = f(i, j)
 	 m:set(i, j, z)
       end
@@ -47,8 +50,8 @@ end
 
 function matrix_accu(m, accu, f)
    local r, c = m:dims()
-   for i = 0, r-1 do
-      for j = 0, c-1 do
+   for i = 1, r do
+      for j = 1, c do
 	 accu = f(accu, m:get(i, j))
       end
    end
@@ -69,15 +72,13 @@ local function tostring_eps(z, eps)
 end
 
 local function matrix_from_table(ctor, t)
-   local f = function(i, j) return t[i+1][j+1] end
-   local m = ctor (#t, #t[1])
-   matrix_f_set(m, f)
-   return m
+   local f = function(i, j) return t[i][j] end
+   return matrix_f_set(ctor(#t, #t[1]), f)
 end
 
 local function vector_from_table(ctor, t)
    local v = ctor (#t, 1)
-   for i, x in ipairs(t) do v:set(i-1,0, x) end
+   for i, x in ipairs(t) do v:set(i,1, x) end
    return v
 end
 
@@ -128,7 +129,7 @@ end
 
 function diag(v)
    local n = v:dims()
-   return new(n, n, function(i,j) return i == j and v:get(i,0) or 0 end)
+   return new(n, n, function(i,j) return i == j and v:get(i,1) or 0 end)
 end
 
 function unit(n)
@@ -142,7 +143,7 @@ end
 
 function matrix_columns (m, cstart, cnb)
    local r = m:dims()
-   return m:slice(0, cstart, r, cnb)
+   return m:slice(1, cstart, r, cnb)
 end
 
 function matrix_unpack(m)
