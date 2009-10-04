@@ -1,0 +1,27 @@
+.. highlight:: lua
+
+.. include:: <isogrk1.txt>
+
+Numerical Integration
+=====================
+
+This chapter describes routines for performing numerical integration
+(quadrature) of a function in one dimension.  There are routines for
+adaptive and non-adaptive integration of general functions, with
+specialised routines for specific cases.  These include integration over
+infinite and semi-infinite ranges, singular integrals, including
+logarithmic singularities, computation of Cauchy principal values and
+oscillatory integrals.  The library reimplements the algorithms used in
+QUADPACK, a numerical integration package written by Piessens,
+Doncker-Kapenga, Uberhuber and Kahaner.  Fortran code for QUADPACK is
+available on Netlib.
+
+Functions
+---------
+
+The function to perform numerical integration if ``integ``.
+
+Here an example::
+
+  myf = function(x) return sin(x)/x end
+  x, err = integ {f= myf, points= {1e-6, 12*2*pi}, method='AG.GAUSS31'}
