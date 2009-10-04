@@ -24,6 +24,9 @@
 #include "defs.h"
 #include <lua.h>
 
+extern void
+mlua_openlibs (lua_State *L);
+
 extern int
 mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache);
 
@@ -47,5 +50,7 @@ mlua_named_optstring (lua_State *L, int index, const char *key,
 extern lua_Number
 mlua_named_optnumber (lua_State *L, int index, const char *key, 
 		      lua_Number default_value);
+
+#define MLUA_GSLLIBNAME "gsl"
 
 #endif

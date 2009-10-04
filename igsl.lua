@@ -18,25 +18,6 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-for k, v in pairs(math) do _G[k] = v end
-math = nil
-
-function matrix_rowiter(m)
-   local i = 0
-   local n = m:dims()
-   return function()
-	     if i < n then
-		i = i + 1
-		local j = 0
-		return function()
-			  j = j + 1
-			  local v = m:get(i, j)
-			  if v then return v end
-		       end
-	     end
-	  end
-end
-
 function matrix_f_set(m, f)
    local r, c = m:dims()
    for i = 1, r do
@@ -54,6 +35,14 @@ function matrix_accu(m, accu, f)
       for j = 1, c do
 	 accu = f(accu, m:get(i, j))
       end
+   end
+   return accu
+end
+
+function matrix_accu_row(m, i, accu, f)
+   local r, c = m:dims()
+   for j = 1, c do
+      accu = f(accu, m:get(i, j))
    end
    return accu
 end
@@ -106,10 +95,11 @@ function matrix_print(m)
 		  end
    local width = matrix_accu(m, 0, fwidth)
    local lines = {}
-   for row in m:rowiter() do
+   local r, c = m:dims()
+   for i=1,r do
       local line = {}
-      for v in row do
-	 local s = tostring_eps(v, eps)
+      for j=1,c do
+	 local s = tostring_eps(m:get(i,j), eps)
 	 line[#line+1] = string.rep(' ', width - #s) .. s 
       end
       lines[#lines+1] = '[ ' .. table.concat(line, ' ') .. ' ]'

@@ -21,6 +21,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "lua-utils.h"
 #include "nlinfit.h"
 #include "cnlinfit.h"
 #include "matrix.h"
@@ -40,7 +41,7 @@ luaopen_gsl (lua_State *L)
   gsl_set_error_handler_off ();
 
 #ifdef USE_SEPARATE_NAMESPACE
-  luaL_register (L, "gsl", gsl_methods_dummy);
+  luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
 #else
   lua_getglobal (L, "_G");
 #endif

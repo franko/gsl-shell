@@ -19,12 +19,48 @@
  */
 
 #include <lua.h>
+#include <lualib.h>
 #include <lauxlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "lua-utils.h"
 
+extern int luaopen_gsl (lua_State *L);
+
+static const luaL_Reg gshlibs[] = {
+  {"",               luaopen_base},
+  {LUA_LOADLIBNAME,  luaopen_package},
+  {LUA_TABLIBNAME,   luaopen_table},
+  {LUA_IOLIBNAME,    luaopen_io},
+  {LUA_OSLIBNAME,    luaopen_os},
+  {LUA_STRLIBNAME,   luaopen_string},
+#if 0
+  {LUA_MATHLIBNAME,  luaopen_math},
+  {LUA_DBLIBNAME,    luaopen_debug},
+#endif
+  {MLUA_GSLLIBNAME,  luaopen_gsl},
+  {NULL, NULL}
+};
+
 char const * const CACHE_FIELD_NAME = "__cache";
+
+void
+mlua_openlibs (lua_State *L) 
+{
+  const luaL_Reg *lib = gshlibs;
+  for (; lib->func; lib++) 
+    {
+      lua_pushcfunction(L, lib->func);
+      lua_pushstring(L, lib->name);
+      lua_call(L, 1, 0);
+    }
+
+  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
+  lua_setglobal (L, LUA_MATHLIBNAME);
+  luaopen_math (L);
+  lua_pushnil (L);                      /* remove math */
+  lua_setglobal (L, LUA_MATHLIBNAME);
+}
 
 const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key)

@@ -56,15 +56,13 @@
 #include "lua.h"
 
 #include "lauxlib.h"
-#include "lualib.h"
 #include "llimits.h"
+#include "lua-utils.h"
 
 
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
-
-extern int luaopen_gsl (lua_State *L);
 
 
 static void lstop (lua_State *L, lua_Debug *ar) {
@@ -390,11 +388,7 @@ static int pmain (lua_State *L) {
   globalL = L;
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-  luaL_openlibs(L);  /* open libraries */
-
-  lua_pushcfunction(L, luaopen_gsl);
-  lua_pushstring(L, "gsl");
-  lua_call(L, 1, 0);
+  mlua_openlibs (L);  /* open libraries */
 
   lua_gc(L, LUA_GCRESTART, 0);
 
