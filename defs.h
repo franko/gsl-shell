@@ -32,7 +32,6 @@
 #endif
 
 #define LUA_INDEX_CONVENTION
-/* #define USE_SEPARATE_NAMESPACE */
 
 #ifdef WIN32
 #undef bool

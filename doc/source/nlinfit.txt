@@ -61,17 +61,17 @@ Here an example::
 
    local n = 50
    local p = {a= -3.1, A= 1.55}
-   local y = new(n, 1, function (i,j) return p.A * exp(p.a * i/n) end)
+   local y = new(n, 1, function (i,j) return p.A * exp(p.a * (i-1)/n) end)
 
    local function expf(x, f, J)
-      for k=0, n-1 do
-	 local t = k / n
-	 local A, a = x[0], x[1]
+      for k= 1, n do
+	 local t = (k-1) / n
+	 local A, a = x[1], x[2]
 	 local e = exp(a * t)
-	 if f then f:set(k, 0, A * e - y[k]) end
+	 if f then f:set(k, 1, A * e - y[k]) end
 	 if J then
-	    J:set(k, 0, e)
-	    J:set(k, 1, t * A * e)
+	    J:set(k, 1, e)
+	    J:set(k, 2, t * A * e)
 	 end
       end
    end
@@ -83,6 +83,14 @@ Here an example::
       local status = s:iterate()
    until status ~= 'continue'
    print_state (s)
+
+where the function ``print_state`` could be defined like::
+
+   unction print_state(s)
+      print ("x: ", s.x:row_print())
+      print ("chi square: ", prod(s.f, s.f)[1])
+   end
+
 
 The output you obtain is::
 

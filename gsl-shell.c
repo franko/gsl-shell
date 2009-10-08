@@ -55,7 +55,8 @@
 
 #include "lua.h"
 
-#include "lauxlib.h"
+#include <lauxlib.h>
+#include <lualib.h>
 #include "llimits.h"
 #include "lua-utils.h"
 
@@ -63,6 +64,25 @@
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
+
+#define MLUA_GSLLIBNAME "gsl"
+
+extern int luaopen_gsl (lua_State *L);
+
+static const luaL_Reg gshlibs[] = {
+  {"",               luaopen_base},
+  {LUA_LOADLIBNAME,  luaopen_package},
+  {LUA_TABLIBNAME,   luaopen_table},
+  {LUA_IOLIBNAME,    luaopen_io},
+  {LUA_OSLIBNAME,    luaopen_os},
+  {LUA_STRLIBNAME,   luaopen_string},
+#if 0
+  {LUA_MATHLIBNAME,  luaopen_math},
+  {LUA_DBLIBNAME,    luaopen_debug},
+  {MLUA_GSLLIBNAME,  luaopen_gsl},
+#endif
+  {NULL, NULL}
+};
 
 
 static void lstop (lua_State *L, lua_Debug *ar) {
@@ -94,6 +114,28 @@ static void print_usage (void) {
   fflush(stderr);
 }
 
+
+void
+gsl_shell_openlibs (lua_State *L) 
+{
+  const luaL_Reg *lib = gshlibs;
+  for (; lib->func; lib++) 
+    {
+      lua_pushcfunction(L, lib->func);
+      lua_pushstring(L, lib->name);
+      lua_call(L, 1, 0);
+    }
+
+  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
+  lua_setglobal (L, LUA_MATHLIBNAME);
+  luaopen_math (L);
+  lua_pop (L, 1);
+
+  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open gsl in global scope */
+  lua_setglobal (L, MLUA_GSLLIBNAME);
+  luaopen_gsl (L);
+  lua_pop (L, 1);
+}
 
 static void l_message (const char *pname, const char *msg) {
   if (pname) fprintf(stderr, "%s: ", pname);
@@ -388,11 +430,12 @@ static int pmain (lua_State *L) {
   globalL = L;
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-  mlua_openlibs (L);  /* open libraries */
+  gsl_shell_openlibs (L);  /* open libraries */
 
   lua_gc(L, LUA_GCRESTART, 0);
 
   dolibrary (L, "igsl");
+  dolibrary (L, "integ");
 
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;

@@ -24,27 +24,27 @@ function demo1()
    local p = {a= (-1+4i) * 4, phi= 0.23, A= 0.55}
    local y = cnew(n, 1, 
 		  function (i,j)
-		     return p.A * exp(p.a * i/n + 1i * p.phi)
+		     return p.A * exp(p.a * (i-1)/n + 1i * p.phi)
 		  end)
 
    local function cexpf(x, f, J)
-      for k=0, n-1 do
-	 local t, y = k/n, y[k]
-	 local A, a, phi = x[0], x[1] + 1i * x[2], x[3]
+      for k=1, n do
+	 local t, y = (k-1)/n, y[k]
+	 local A, a, phi = x[1], x[2] + 1i * x[3], x[4]
 	 local e = exp(a * t + 1i * phi)
-	 if f then f:set(k, 0, A * e - y) end
+	 if f then f:set(k, 1, A * e - y) end
 	 if J then
-	    J:set(k, 0, e)
-	    J:set(k, 1, t * A * e)
-	    J:set(k, 2, 1i * t * A * e)
-	    J:set(k, 3, 1i * A * e)
+	    J:set(k, 1, e)
+	    J:set(k, 2, t * A * e)
+	    J:set(k, 3, 1i * t * A * e)
+	    J:set(k, 4, 1i * A * e)
 	 end
       end
    end
 
    local function print_state(s)
       print ("x: ", s.x:row_print())
-      print ("chi square: ", cmul(h(s.f), s.f)[0])
+      print ("chi square: ", cmul(h(s.f), s.f)[1])
    end
 
    s = csolver {fdf= cexpf, n= n, p= 4, x0= vector {2.1, -2.8, 18, 0}}
@@ -58,22 +58,22 @@ end
 function demo2()
    local n = 50
    local p = {a= -3.1, A= 1.55}
-   local y = new(n, 1, function (i,j) return p.A * exp(p.a * i/n) end)
+   local y = new(n, 1, function (i,j) return p.A * exp(p.a * (i-1)/n) end)
    local function expf(x, f, J)
-      for k=0, n-1 do
-	 local t = k / n
-	 local A, a = x[0], x[1]
+      for k=1, n do
+	 local t = (k-1) / n
+	 local A, a = x[1], x[2]
 	 local e = exp(a * t)
-	 if f then f:set(k, 0, A * e - y[k]) end
+	 if f then f:set(k, 1, A * e - y[k]) end
 	 if J then
-	    J:set(k, 0, e)
-	    J:set(k, 1, t * A * e)
+	    J:set(k, 1, e)
+	    J:set(k, 2, t * A * e)
 	 end
       end
    end
    local function print_state(s)
       print ("x: ", s.x:row_print())
-      print ("chi square: ", prod(s.f, s.f)[0])
+      print ("chi square: ", prod(s.f, s.f)[1])
    end
    s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}
    repeat

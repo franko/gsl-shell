@@ -24,8 +24,8 @@ function demo1()
    local mu = 10
 
    local odef = function(t,y,f)
-		   f:set(0,0, y[1])
-		   f:set(1,0, -y[0] - mu*y[1]*(y[0]*y[0]-1))
+		   f:set(1,1, y[2])
+		   f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
 		end
 
    local s = ode {f = odef, n= 2, eps_abs= 1e-6}
@@ -43,15 +43,15 @@ function demo2()
    local mu = 10
 
    local odef = function(t,y,f)
-		   f:set(0,0, y[1])
-		   f:set(1,0, -y[0] - mu*y[1]*(y[0]*y[0]-1))
+		   f:set(1,1, y[2])
+		   f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
 		end
 
    local odedf = function(t,y,dfdy,dfdt)
-		    dfdy:set(0,0, 0.0)
-		    dfdy:set(0,1, 1.0)
-		    dfdy:set(1,0, -2.0*mu*y[0]*y[1] - 1.0)
-		    dfdy:set(1,1, -mu*(y[0]*y[0] - 1.0))
+		    dfdy:set(1,1, 0)
+		    dfdy:set(1,2, 1)
+		    dfdy:set(2,1, -2*mu*y[1]*y[2] - 1)
+		    dfdy:set(2,2, -mu*(y[1]*y[1] - 1))
 		    null(dfdt)
 		 end
 

@@ -50,8 +50,6 @@ struct generic_array {
   void *heap;
 };
 
-// typedef void (*error_report_f)(const char *fmt, ...);
-
 extern void   generic_array_check_alloc   (struct generic_array *s, int index,
 					   size_t data_size);
 extern void * generic_array_new           (size_t data_size);

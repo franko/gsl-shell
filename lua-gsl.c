@@ -43,19 +43,22 @@ luaopen_gsl (lua_State *L)
 #ifdef USE_SEPARATE_NAMESPACE
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
 #else
-  lua_getglobal (L, "_G");
+  lua_pushvalue (L, LUA_GLOBALSINDEX);
 #endif
 
   solver_register (L);
-  solver_complex_register (L);
   matrix_register (L);
-  matrix_complex_register (L);
   linalg_register (L);
   integ_register (L);
-  fft_register (L);
   ode_solver_register (L);
   ode_register (L);
+
+#ifdef GSH_HAVE_COMPLEX
+  fft_register (L);
+  matrix_complex_register (L);
   ode_complex_register (L);
+  solver_complex_register (L);
+#endif
 
   return 1;
 }

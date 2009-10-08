@@ -19,48 +19,12 @@
  */
 
 #include <lua.h>
-#include <lualib.h>
 #include <lauxlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "lua-utils.h"
 
-extern int luaopen_gsl (lua_State *L);
-
-static const luaL_Reg gshlibs[] = {
-  {"",               luaopen_base},
-  {LUA_LOADLIBNAME,  luaopen_package},
-  {LUA_TABLIBNAME,   luaopen_table},
-  {LUA_IOLIBNAME,    luaopen_io},
-  {LUA_OSLIBNAME,    luaopen_os},
-  {LUA_STRLIBNAME,   luaopen_string},
-#if 0
-  {LUA_MATHLIBNAME,  luaopen_math},
-  {LUA_DBLIBNAME,    luaopen_debug},
-#endif
-  {MLUA_GSLLIBNAME,  luaopen_gsl},
-  {NULL, NULL}
-};
-
 char const * const CACHE_FIELD_NAME = "__cache";
-
-void
-mlua_openlibs (lua_State *L) 
-{
-  const luaL_Reg *lib = gshlibs;
-  for (; lib->func; lib++) 
-    {
-      lua_pushcfunction(L, lib->func);
-      lua_pushstring(L, lib->name);
-      lua_call(L, 1, 0);
-    }
-
-  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
-  lua_setglobal (L, LUA_MATHLIBNAME);
-  luaopen_math (L);
-  lua_pushnil (L);                      /* remove math */
-  lua_setglobal (L, LUA_MATHLIBNAME);
-}
 
 const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key)
@@ -173,6 +137,30 @@ mlua_named_optstring (lua_State *L, int index, const char *key,
   const char * r;
   lua_getfield (L, index, key);
   r = luaL_optstring (L, -1, default_value);
+  lua_pop (L, 1);
+  return r;
+}
+
+lua_Number
+mlua_named_number (lua_State *L, int index, const char *key)
+{
+  lua_Number r;
+  lua_getfield (L, index, key);
+  if (! lua_isnumber (L, -1))
+    luaL_error (L, "number expected");
+  r = lua_tonumber (L, -1);
+  lua_pop (L, 1);
+  return r;
+}
+
+const char *
+mlua_named_string (lua_State *L, int index, const char *key)
+{
+  const char * r;
+  lua_getfield (L, index, key);
+  if (! lua_isstring (L, -1))
+    luaL_error (L, "string expected");
+  r = lua_tostring (L, -1);
   lua_pop (L, 1);
   return r;
 }

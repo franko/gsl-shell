@@ -14,11 +14,11 @@ With matrix you can do basic algebraic operation just by using the '+' and '*' o
 
 In order to create a new matrix you should use the :func:`new` function for a *real* matrix and :func:`cnew` for a *complex* matrix. Most of GSL Shell function comes in two variants for complex and real number. Generally the *complex* variant has the same name of the real one but with 'c' prefix.
 
-The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialised to 0. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialise the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialise matrices. As an example, let us suppose that we want to define a matrix m of dimension :math:`n \times n` whose elements are given by :math:`m_{j,k} = \textrm{exp} (2 \pi i j k / n)`.
+The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialised to 0. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialise the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialise matrices. As an example, let us suppose that we want to define a matrix m of dimension :math:`n \times n` whose elements are given by :math:`m_{jk} = \textrm{exp} (2 \pi i j k / n)`.
 
 In GSL Shell we can define the matrix with the following command::
 
-   m = cnew(n, n, function (j,k) return exp(2i*pi*j*k/n) end)
+   m = cnew(n, n, function (j,k) return exp(2i*pi*(j-1)*(k-1)/n) end)
 
 where you have previously defined n to be a small integer number.
 
@@ -33,8 +33,7 @@ Here an examples that shows how to calculate the exponential of a 2x2 matrix by 
     local r = unit(n)
     local p, f = r, 1
     for i=1, nmax do
-      p = mul(p, m)
-      f = f / i
+      p, f = mul(p, m), f/i
       r = r + f * p
     end
     return r
@@ -47,7 +46,8 @@ Matrix methods
 
 .. method:: get(i, j)
    
-   This function returns the (i,j)-th element of a matrix.
+   This function returns the (i,j)-th element of a matrix. As a
+   general convention in GSL Shell the index of the first element is 1.
 
 .. method:: set(i, j, v)
 

@@ -29,11 +29,13 @@ Differential Equation (ODE) system. The ODE solver lets you solve the
 general n-dimensional first-order system,
 
 .. math::
-     dy_i(t)/dt = f_i(t, y_1(t), ..., y_n(t))
+     \frac{\textrm{d}y_i(t)}{\textrm{d}t} = f_i(t, y_1(t), ..., y_n(t))
 
 for :math:`i = 1, \dots, n`.  The stepping functions rely on the
 vector of derivatives :math:`f_i` and the Jacobian matrix,
-:math:`J_{ij} = df_i(t,y(t)) / dy_j`.
+
+.. math::
+   J_{ij} = \frac{\partial f_i}{\partial y_j}\left(t,y(t)\right)
 
 ODE solver usage example
 ------------------------
@@ -105,8 +107,8 @@ ODE Solver Class Definition
           This function get called
           with the arguments ``t``, ``y``, ``dfdy`` and ``dfdt``. It should store
 	  in the vector ``dfdy`` the values of the Jacobian of the system
-	  :math:`J_{ij} = df_i(t,y(t)) / dy_j` and in ``dfdt`` the
-          derivate :math:`df_i(t,y(t)) / dt`.
+	  :math:`J_{ij} = \textrm{d}f_i(t,y(t)) / \textrm{d}y_j` and in ``dfdt`` the
+          derivate :math:`\textrm{d}f_i(t,y(t)) / \textrm{d}t`.
       eps_abs, *optional*
           The maximum absolute error in the y that should be tolerated.
       eps_rel, *optional*

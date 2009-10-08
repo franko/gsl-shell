@@ -51,16 +51,10 @@ end
 function poly_add(p, q)
    local pdeg, qdeg = poly_degree(p), poly_degree(q)
    local rdeg = pdeg > qdeg and pdeg or qdeg
-   for k=0, rdeg do p[k+1] = poly_term(p, k) + poly_term(q, k) end
-   while rdeg >= 0 do
-      if p[rdeg+1] == 0 then 
-	 p[rdeg+1] = nil
-	 rdeg = rdeg - 1
-      else
-	 break
-      end
+   for k=0, rdeg do
+      local v = poly_term(p, k) + poly_term(q, k) 
+      p[k+1] = (v ~= 0 and v or nil) 
    end
-   return p
 end
 
 function poly_x_power_mul(p, coeff, xdeg)

@@ -33,14 +33,14 @@ source_suffix = '.txt'
 master_doc = 'index'
 
 # General substitutions.
-project = 'gsl-shell'
+project = 'GSL Shell'
 copyright = '2009, Francesco Abbate'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = 0.1
+version = 0.3
 # The full version, including alpha/beta/rc tags.
 release = version
 

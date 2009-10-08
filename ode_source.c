@@ -140,7 +140,7 @@ FUNCTION (ode, new) (lua_State *L)
   luaL_checktype (L, 1, LUA_TTABLE);
 
   lua_getfield (L, 1, "n");
-  if (! lua_isinteger (L, -1))
+  if (! lua_isnumber (L, -1))
     luaL_error (L, "missing dimension 'n' of the ODE system");
   n = lua_tointeger (L, -1);
   lua_pop (L, 1);

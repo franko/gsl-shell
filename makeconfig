@@ -3,5 +3,8 @@
 # $Id$
 #
 
+enable_complex = yes
+enable_shared = no
+
 CC = gcc
 CFLAGS = -g -Wall

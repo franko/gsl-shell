@@ -390,7 +390,7 @@ FUNCTION(matrix, index) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
 
-  if (lua_isinteger (L, 2))
+  if (lua_isnumber (L, 2))
     {
       int index = lua_tointeger (L, 2);
       BASE gslval;
