@@ -14,6 +14,10 @@ Further, the LNUM patch should be configured to use 'double' for floating point 
 In order to simplify the build process of 'GSL shell' we provide LUA 5.1.4 with the LNUM patch already configured in the distribution of the source code.
 
 So, in order to build GSL shell, you should do :
+- edit the file makeconfig
+  - use enable_shared if you want only a shared library to load in Lua
+  - use enable_complex if you want support for complex number. If
+    enabled requires Lua with LNUM patch
 - go in the lua-5.1.4 folder and build LUA. On linux just type 'make linux',
   on windows, if you are using MinGW, just type make mingw
 - in the GSL shell root folder type 'make' to build everything. With MinGW

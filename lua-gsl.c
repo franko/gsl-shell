@@ -22,6 +22,7 @@
 #include <lauxlib.h>
 
 #include "lua-utils.h"
+#include "lua-gsl.h"
 #include "nlinfit.h"
 #include "cnlinfit.h"
 #include "matrix.h"

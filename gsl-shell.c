@@ -58,14 +58,13 @@
 #include <lauxlib.h>
 #include <lualib.h>
 #include "llimits.h"
+#include "lua-gsl.h"
 #include "lua-utils.h"
 
 
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
-
-#define MLUA_GSLLIBNAME "gsl"
 
 extern int luaopen_gsl (lua_State *L);
 
