@@ -1,5 +1,5 @@
 
-ENABLE_COMPLEX = no
+ENABLE_COMPLEX = yes
 BUILD_LUA_DLL = no
 
 # PLATFORM should can be linux or mingw

@@ -101,7 +101,6 @@ lua/src/lparser.h
 lua/src/lundump.h
 lua/src/ltable.c
 lua/src/ltm.c
-lua/src/luaconf-gslshell.h
 lua/src/lzio.c
 lua/src/Makefile
 lua/src/luac.c

@@ -129,11 +129,15 @@ gsl_shell_openlibs (lua_State *L)
   lua_setglobal (L, LUA_MATHLIBNAME);
   luaopen_math (L);
   lua_pop (L, 1);
+  lua_pushnil (L);                      /* remove math */
+  lua_setglobal (L, LUA_MATHLIBNAME);
 
   lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open gsl in global scope */
   lua_setglobal (L, MLUA_GSLLIBNAME);
   luaopen_gsl (L);
   lua_pop (L, 1);
+  lua_pushnil (L);                      /* remove gsl */
+  lua_setglobal (L, MLUA_GSLLIBNAME);
 }
 
 static void l_message (const char *pname, const char *msg) {

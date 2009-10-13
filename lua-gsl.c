@@ -54,7 +54,7 @@ luaopen_gsl (lua_State *L)
   ode_solver_register (L);
   ode_register (L);
 
-#ifdef GSH_HAVE_COMPLEX
+#ifdef LNUM_COMPLEX
   lua_pushboolean (L, 1);
   lua_setfield (L, -2, "have_complex");
 

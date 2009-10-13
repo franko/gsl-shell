@@ -42,7 +42,7 @@ ifeq ($(strip $(PLATFORM)), mingw)
 else
   INCLUDES += -DLUA_USE_LINUX
   LUA_CFLAGS = -I$(LUADIR)/src
-  LUA_DLL = lua-gsl.so
+  LUA_DLL = gsl.so
   GSL_SHELL = gsl-shell
 endif
 
@@ -51,6 +51,7 @@ ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   DEFS += -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
 else
+  SUBDIRS_DEFS += -DGSL_SHELL
   TARGETS = $(GSL_SHELL)
 endif
 
@@ -60,7 +61,7 @@ LUAGSL_SRC_FILES = math-types.c matrix.c nlinfit_helper.c \
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
   LUAGSL_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
-  DEFS += -DGSH_HAVE_COMPLEX -DLNUM_COMPLEX
+  DEFS += -DLNUM_COMPLEX
   SUBDIRS_DEFS += -DLNUM_COMPLEX
 endif
 
@@ -96,9 +97,9 @@ else
 gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o
 	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
 
-lua-gsl.so: $(LUAGSL_OBJ_FILES)
-	$(CC) -shared -o .libs/liblua-gsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
-	ln -sf ./.libs/liblua-gsl.so $@
+gsl.so: $(LUAGSL_OBJ_FILES)
+	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
+	ln -sf ./.libs/libluagsl.so $@
 endif
 
 %.o: %.c
@@ -113,7 +114,7 @@ endif
 .PHONY: clean all $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) DEFS=$(SUBDIRS_DEFS) PLATFORM=$(strip $(PLATFORM)) -C $@
+	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
 
 clean:
 	$(MAKE) -C lua clean
