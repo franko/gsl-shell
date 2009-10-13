@@ -1,5 +1,5 @@
 /*
-** $Id$
+** $Id: luaconf.h,v 1.82.1.7 2008/02/11 16:25:08 roberto Exp $
 ** Configuration file for Lua (external)
 ** See Copyright Notice in lua.h
 */
@@ -44,19 +44,23 @@
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-#define GSL_SHELL_CDIR	"!\\"
+#define LUA_LDIR	"!\\lua\\"
+#define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT  \
-		".\\?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?\\init.lua"
+		".\\?.lua;"  LUA_LDIR"?.lua;"  LUA_LDIR"?\\init.lua;" \
+		             LUA_CDIR"?.lua;"  LUA_CDIR"?\\init.lua"
 #define LUA_CPATH_DEFAULT \
 	".\\?.dll;"  LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 
 #else
-# define LUA_ROOT	"/usr/"
-#define GSL_SHELL_CDIR	LUA_ROOT "lib/gsl-shell/"
+#define LUA_ROOT	"/usr/local/"
+#define LUA_LDIR	LUA_ROOT "share/lua/5.1/"
+#define LUA_CDIR	LUA_ROOT "lib/lua/5.1/"
 #define LUA_PATH_DEFAULT  \
-		"./?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?/init.lua"
+		"./?.lua;"  LUA_LDIR"?.lua;"  LUA_LDIR"?/init.lua;" \
+		            LUA_CDIR"?.lua;"  LUA_CDIR"?/init.lua"
 #define LUA_CPATH_DEFAULT \
-	"./?.so;"  GSL_SHELL_CDIR"?.so;" GSL_SHELL_CDIR"loadall.so"
+	"./?.so;"  LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
 #endif
 
 
@@ -71,7 +75,7 @@
 */
 #define LNUM_INT32
 #define LNUM_DOUBLE
-#define LNUM_COMPLEX
+/* #define LNUM_COMPLEX */
 
 
 

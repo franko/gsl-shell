@@ -18,6 +18,12 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+if not have_complex then
+   conj = |x| x
+   real = conj
+   imag = |x| 0
+end
+
 function matrix_f_set(m, f)
    local r, c = m:dims()
    for i = 1, r do
@@ -61,8 +67,7 @@ local function tostring_eps(z, eps)
 end
 
 local function matrix_from_table(ctor, t)
-   local f = function(i, j) return t[i][j] end
-   return matrix_f_set(ctor(#t, #t[1]), f)
+   return matrix_f_set(ctor(#t, #t[1]), |i,j| t[i][j])
 end
 
 local function vector_from_table(ctor, t)
@@ -109,25 +114,25 @@ end
 
 function t(m)
    local r, c = m:dims()
-   return new(c, r, function(i,j) return m:get(j,i) end)
+   return new(c, r, |i,j| m:get(j,i))
 end
 
 function h(m)
    local r, c = m:dims()
-   return cnew(c, r, function(i,j) return conj(m:get(j,i)) end)
+   return cnew(c, r, |i,j| conj(m:get(j,i)))
 end
 
 function diag(v)
    local n = v:dims()
-   return new(n, n, function(i,j) return i == j and v:get(i,1) or 0 end)
+   return new(n, n, |i,j| i == j and v:get(i,1) or 0)
 end
 
 function unit(n)
-   return new(n, n, function(i,j) return i == j and 1 or 0 end)
+   return new(n, n, |i,j| i == j and 1 or 0)
 end
 
 function matrix_norm(m)
-   local sq = matrix_accu(m, 0, function(p, z) return p + z*conj(z) end)
+   local sq = matrix_accu(m, 0, |p, z| p + z*conj(z))
    return sqrt(sq)
 end
 
@@ -148,16 +153,18 @@ function matrix_row_print(m)
 end
 
 function set(d, s)
-   matrix_f_set(d, function(i,j) return s:get(i,j) end)
+   matrix_f_set(d, |i,j| s:get(i,j))
 end
 
 function null(m)
-   matrix_f_set(m, function(i,j) return 0 end)
+   matrix_f_set(m, |i,j| 0)
 end
 
 local function add_matrix_method(s, m)
    Matrix[s] = m
-   cMatrix[s] = m
+   if have_complex then
+      cMatrix[s] = m
+   end
 end
 
 function ode_iter(s, t0, y0, t1, tstep)
@@ -172,7 +179,7 @@ function ode_iter(s, t0, y0, t1, tstep)
 end
 
 ODE.iter  = ode_iter
-cODE.iter = ode_iter
+if have_complex then cODE.iter = ode_iter end
 
 add_matrix_method('rowiter',    matrix_rowiter)
 add_matrix_method('__tostring', matrix_print)

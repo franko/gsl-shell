@@ -5,10 +5,10 @@
 # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
 
 # Your platform. See PLATS for possible values.
-PLAT= none
+PLATFORM = none
 
 CC= gcc --std=c99 -march=i586
-CFLAGS= -g $(MYCFLAGS)
+CFLAGS= -g $(DEFS) $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -f
@@ -39,7 +39,7 @@ ALL_O= $(CORE_O) $(LIB_O) $(LUA_O) $(LUAC_O)
 ALL_T= $(LUA_A) $(LUA_T) $(LUAC_T)
 ALL_A= $(LUA_A)
 
-default: $(PLAT)
+default: $(PLATFORM)
 
 all:	$(ALL_T)
 
@@ -64,7 +64,7 @@ depend:
 	@$(CC) $(CFLAGS) -MM l*.c print.c
 
 echo:
-	@echo "PLAT = $(PLAT)"
+	@echo "PLATFORM = $(PLATFORM)"
 	@echo "CC = $(CC)"
 	@echo "CFLAGS = $(CFLAGS)"
 	@echo "AR = $(AR)"

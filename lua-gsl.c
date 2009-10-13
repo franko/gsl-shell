@@ -55,10 +55,16 @@ luaopen_gsl (lua_State *L)
   ode_register (L);
 
 #ifdef GSH_HAVE_COMPLEX
+  lua_pushboolean (L, 1);
+  lua_setfield (L, -2, "have_complex");
+
   fft_register (L);
   matrix_complex_register (L);
   ode_complex_register (L);
   solver_complex_register (L);
+#else
+  lua_pushboolean (L, 0);
+  lua_setfield (L, -2, "have_complex");
 #endif
 
   return 1;

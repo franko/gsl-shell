@@ -20,11 +20,17 @@
 
 include makeconfig
 
-LUADIR = lua-5.1.4
+LUADIR = lua
 AR= ar rcu
 RANLIB= ranlib
 
-ifeq ($(target),mingw)
+ifeq ($(PLATFORM), none)
+nono:
+	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
+endif
+
+
+ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
   INCLUDES += -I/usr/include
@@ -36,11 +42,11 @@ ifeq ($(target),mingw)
 else
   INCLUDES += -DLUA_USE_LINUX
   LUA_CFLAGS = -I$(LUADIR)/src
-  LUA_DLL = gsl.so
+  LUA_DLL = lua-gsl.so
   GSL_SHELL = gsl-shell
 endif
 
-ifeq ($(enable_shared),yes)
+ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
   DEFS += -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
@@ -52,14 +58,15 @@ LUAGSL_SRC_FILES = math-types.c matrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c lua-gsl.c
 
-ifeq ($(enable_complex),yes)
+ifeq ($(strip $(ENABLE_COMPLEX)), yes)
   LUAGSL_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
-  DEFS += -DGSH_HAVE_COMPLEX
+  DEFS += -DGSH_HAVE_COMPLEX -DLNUM_COMPLEX
+  SUBDIRS_DEFS += -DLNUM_COMPLEX
 endif
 
 COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-SUBDIRS = 
+SUBDIRS = lua
 
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 
@@ -70,9 +77,9 @@ LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
 GSL_LIBS = -lgsl -lgslcblas -lm
 
-all: $(TARGETS)
+all: $(SUBDIRS) $(TARGETS)
 
-ifeq ($(target),mingw)
+ifeq ($(PLATFORM), mingw)
 
 gsl-shell.exe: $(LUAGSL_OBJ_FILES) gsl-shell.o
 	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS)
@@ -89,9 +96,9 @@ else
 gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o
 	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
 
-gsl.so: $(LUAGSL_OBJ_FILES)
-	$(CC) -shared -o .libs/gsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
-	ln -sf ./.libs/gsl.so $@
+lua-gsl.so: $(LUAGSL_OBJ_FILES)
+	$(CC) -shared -o .libs/liblua-gsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
+	ln -sf ./.libs/liblua-gsl.so $@
 endif
 
 %.o: %.c
@@ -106,10 +113,11 @@ endif
 .PHONY: clean all $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	$(MAKE) DEFS=$(SUBDIRS_DEFS) PLATFORM=$(strip $(PLATFORM)) -C $@
 
 clean:
-	$(RM) *.o *.lo *.la *.so $(TARGETS)
+	$(MAKE) -C lua clean
+	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
 	$(RM) -r ./.libs/
 
 -include $(DEP_FILES)

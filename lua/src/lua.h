@@ -13,7 +13,7 @@
 #include <stddef.h>
 
 
-#include "luaconf-gslshell.h"
+#include "luaconf.h"
 #if defined(LUA_CORE) || defined(LUA_LIB) || defined(lua_c)
 # include "luaconf_internal.h"
 #endif

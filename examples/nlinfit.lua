@@ -58,7 +58,7 @@ end
 function demo2()
    local n = 50
    local p = {a= -3.1, A= 1.55}
-   local y = new(n, 1, function (i,j) return p.A * exp(p.a * (i-1)/n) end)
+   local y = new(n, 1, |i,j| p.A * exp(p.a * (i-1)/n))
    local function expf(x, f, J)
       for k=1, n do
 	 local t = (k-1) / n
