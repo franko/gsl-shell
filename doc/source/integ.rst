@@ -165,24 +165,21 @@ All the numerical integration methods are available through the function ``integ
 
 Here some example::
 
-  fsin = function(x) return sin(x)/x end
-
-  -- simple integration of fsin between 0 and 24*pi
-  x, err = integ {f= fsin, points= {0, 24*pi}}
+  -- simple integration of sin(x)/x between 0 and 24*pi
+  x, err = integ {f= |x| sin(x)/x, points= {0, 24*pi}}
 
   -- integral of exp(-x)/sqrt(x) between 0 and 5, should give 
   -- sqrt(pi)*erf(sqrt(5)), the demonstration is left as exercise
-  x, err = integ {f= function(x) return exp(-x) end, points= {0, 5},
+  x, err = integ {f= |x| exp(-x), points= {0, 5},
                   weight = {type='alglog', alpha = -0.5}}
 
   -- the same of the first but uses a weight to trigger oscillatory method
-  x, err = integ {f= function(x) return 1/(x+1) end, points= {0, 24*pi},
+  x, err = integ {f= |x| 1/(x+1), points= {0, 24*pi},
                   weight = {type='sin', omega = 1}}
 
   -- a fourier integral
-  x, err = integ {f= function(x) exp(-x*x/2)*sin(5*x) end, 
-                  points= {'inf', '+inf'},
+  x, err = integ {f= |x| exp(-x*x/2)*sin(5*x), points= {'inf', '+inf'},
                   weight = {type='sin', omega = 4.5}}
 
   -- a famous integral, should gives sqrt(2*pi)
-  x, err = integ {f= function(x) exp(-x*x/2) end, points= {'inf', '+inf'}}
+  x, err = integ {f= |x| exp(-x*x/2), points= {'inf', '+inf'}}

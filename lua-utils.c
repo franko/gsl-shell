@@ -82,7 +82,8 @@ mlua_null_cache (lua_State *L, int index)
 }
 
 int
-mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties)
+mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
+			    bool use_cache)
 {
   char const * key;
   const struct luaL_Reg *reg;
@@ -94,7 +95,7 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties)
   reg = mlua_find_method (properties, key);
   if (reg)
     {
-      return mlua_get_property (L, reg, true);
+      return mlua_get_property (L, reg, use_cache);
     }
 
   lua_getmetatable (L, 1);

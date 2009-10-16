@@ -1,34 +1,37 @@
 
-GSL shell is still in early developement and it is released for the people
-interested in its development.
+GSL shell is still in early developement and it is released for the
+people interested in its development.
 
 ** BUILD INSTRUCTION
 
-To build GSL shell you need LUA 5.1.4 with the LNUM patch. Both of them are free software and can be found at the following URLs:
+To build GSL shell you need LUA 5.1.4 with the LNUM patch. Both of
+them are free software and can be found at the following URLs:
 
 - http://www.lua.org
 - http://luaforge.net/projects/lnum/
 
-Further, the LNUM patch should be configured to use 'double' for floating point numbers (this is the default behaviour) and to use complex numbers.
+Further, the LNUM patch should be configured to use 'double' for
+floating point numbers (this is the default behaviour) and to use
+complex numbers.
 
-In order to simplify the build process of 'GSL shell' we provide LUA 5.1.4 with the LNUM patch already configured in the distribution of the source code.
+In order to simplify the build process of 'GSL shell' we provide LUA
+5.1.4 with the LNUM patch already configured in the distribution of
+the source code.
 
 So, in order to build GSL shell, you should do :
 - edit the file makeconfig
-  - use enable_shared if you want only a shared library to load in Lua
-  - use enable_complex if you want support for complex number. If
-    enabled requires Lua with LNUM patch
-- go in the lua-5.1.4 folder and build LUA. On linux just type 'make linux',
-  on windows, if you are using MinGW, just type make mingw
-- in the GSL shell root folder type 'make' to build everything. With MinGW
-  type 'make target=mingw'
+  - use BUILD_LUA_DLL if you want only a shared library to load in Lua
+  - use ENABLE_COMPLEX if you want support for complex number
+    (recommended)
+- in the GSL shell root folder type 'make' to build everything
 
-In order to customize the build options you can edit the files Makefile and makeconfig in the GSL shell root directory.
+In order to customize the build options you can edit the files
+Makefile and makeconfig in the GSL shell root directory.
 
 ** LIBRARIES DEPENDENCIES
 
-GSL shell does depend on GSL, of course, and it is known to work with GSL 1.11
-and GSL 1.12.
+GSL shell does depend on GSL, of course, and it is known to work with
+GSL 1.11 and GSL 1.12.
 
 - http://www.gnu.org/software/gsl/
 

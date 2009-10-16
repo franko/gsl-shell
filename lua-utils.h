@@ -41,7 +41,8 @@ mlua_check_field_type (lua_State *L, int index, const char *key, int type,
 		       const char *error_msg);
 
 extern int
-mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties);
+mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
+			    bool use_cache);
 
 extern const char * mlua_named_optstring (lua_State *L, int index, 
 					  const char *key, 

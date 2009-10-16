@@ -279,7 +279,7 @@ FUNCTION (ode, get_y) (lua_State *L)
 int
 FUNCTION (ode, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (ode, properties));
+  return mlua_index_with_properties (L, FUNCTION (ode, properties), true);
 }
 
 void

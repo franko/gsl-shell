@@ -20,7 +20,7 @@
 
 #define NLINFIT_MAX_ITER 30
 
-static char const * const TYPE (name_matrix)      = "GSL." PREFIX "matrix";
+char const * const TYPE (name_matrix)      = "GSL." PREFIX "matrix";
 static char const * const FUNCTION (name_matrix, view) = "GSL." PREFIX "mview";
 
 static int  FUNCTION (matrix, get)               (lua_State *L);

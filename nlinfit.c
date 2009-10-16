@@ -45,12 +45,10 @@ FUNCTION (solver, register) (lua_State *L)
   lua_pop (L, 1);
 
   luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushvalue (L, -1);
-  lua_setglobal (L, PREFIX "Solver");
   lua_pushcfunction (L, FUNCTION (solver, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (solver, methods));
-  lua_pop (L, 1);
+  lua_setfield (L, -2, PREFIX "Solver");
 
   /* gsl module registration */
   luaL_register (L, NULL, solver_functions);

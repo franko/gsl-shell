@@ -32,3 +32,5 @@ FUNCTION (matrix, jacob_copy_real_to_cmpl) (double *dest_cmpl, double *src_real,
 extern void
 FUNCTION (matrix, jacob_copy_cmpl_to_real) (double *dest_real, double *src_cmpl,
 					   size_t n, size_t p, size_t mult);
+
+extern char const * const TYPE (name_matrix);

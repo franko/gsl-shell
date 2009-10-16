@@ -332,5 +332,5 @@ FUNCTION (solver, get_jacob) (lua_State *L)
 int
 FUNCTION (solver, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (solver, properties));
+  return mlua_index_with_properties (L, FUNCTION (solver, properties), true);
 }

@@ -24,6 +24,13 @@ if not have_complex then
    imag = |x| 0
 end
 
+local cat = table.concat
+local fmt = string.format
+local function push(ls, e)
+   ls[#ls+1] = e
+   return ls
+end
+
 function matrix_f_set(m, f)
    local r, c = m:dims()
    for i = 1, r do
@@ -35,7 +42,7 @@ function matrix_f_set(m, f)
    return m
 end
 
-function matrix_accu(m, accu, f)
+function matrix_reduce(m, f, accu)
    local r, c = m:dims()
    for i = 1, r do
       for j = 1, c do
@@ -45,23 +52,29 @@ function matrix_accu(m, accu, f)
    return accu
 end
 
-function matrix_accu_row(m, i, accu, f)
+function matrix_reduce_rowcol(m, fcol, ac0, frow, ar0)
    local r, c = m:dims()
-   for j = 1, c do
-      accu = f(accu, m:get(i, j))
+   local getnew = type(ar0) == 'table' and || {} or || ar0
+   for i=1, r do
+      local ar = getnew()
+      for j=1, c do
+	 local z = m:get(i,j)
+	 ar = frow(ar, z)
+      end
+      ac0 = fcol(ac0, ar)
    end
-   return accu
+   return ac0
 end
 
 local function tostring_eps(z, eps)
    local a, b = real(z), imag(z)
-   local f = function(x) return string.format('%g', x) end
+   local f = |x| fmt('%g', x)
    local s = abs(a) > eps and f(a) or ''
    if b > eps then
       local sign = (s == '' and '' or '+')
-      s = s .. string.format('%s%si', sign, f(b))
+      s = s .. fmt('%s%si', sign, f(b))
    elseif b < -eps then
-      s = s .. string.format('-%si', f(-b))
+      s = s .. fmt('-%si', f(-b))
    end
    return s == '' and '0' or s
 end
@@ -95,21 +108,18 @@ end
 function matrix_print(m)
    local eps = m:norm() * 1e-8
    local fwidth = function(w, val)
-		     local clen = # tostring_eps(val, eps)
-		     return (clen > w and clen or w)
+		     local ln = # tostring_eps(val, eps)
+		     return (ln > w and ln or w)
 		  end
-   local width = matrix_accu(m, 0, fwidth)
-   local lines = {}
-   local r, c = m:dims()
-   for i=1,r do
-      local line = {}
-      for j=1,c do
-	 local s = tostring_eps(m:get(i,j), eps)
-	 line[#line+1] = string.rep(' ', width - #s) .. s 
-      end
-      lines[#lines+1] = '[ ' .. table.concat(line, ' ') .. ' ]'
-   end
-   return table.concat(lines, '\n')
+   local width = matrix_reduce(m, fwidth, 0)
+   local pad = |s| string.rep(' ', width - #s) .. s
+   local lines = 
+      matrix_reduce_rowcol(m, 
+			   |lns, ln| push(lns, '[ ' .. cat(ln, ' ') .. ' ]'),
+			   {}, 
+			   |ln, z| push(ln, pad(tostring_eps(z, eps))),
+			   {})
+   return cat(lines, '\n')
 end
 
 function t(m)
@@ -132,7 +142,7 @@ function unit(n)
 end
 
 function matrix_norm(m)
-   local sq = matrix_accu(m, 0, |p, z| p + z*conj(z))
+   local sq = matrix_reduce(m, |p, z| p + z*conj(z), 0)
    return sqrt(sq)
 end
 
@@ -141,15 +151,10 @@ function matrix_columns (m, cstart, cnb)
    return m:slice(1, cstart, r, cnb)
 end
 
-function matrix_unpack(m)
-   local ls = matrix_accu(m, {}, function(p, z) p[#p+1] = z; return p end)
-   return unpack(ls)
-end
-
 function matrix_row_print(m)
    local eps = m:norm() * 1e-8
-   local f = function(p, z) p[#p+1] = tostring_eps(z, eps); return p end
-   return table.concat(matrix_accu(m, {}, f), ', ')
+   local f = |p, z| push(p, tostring_eps(z, eps))
+   return cat(matrix_reduce(m, f, {}), ', ')
 end
 
 function set(d, s)
@@ -178,6 +183,23 @@ function ode_iter(s, t0, y0, t1, tstep)
 	  end
 end
 
+local function hc_reduce(hc, f, accu)
+   local n = hc.length
+   for i=0, n do accu = f(accu, hc:get(i)) end
+   return accu
+end
+
+local function hc_print(hc)
+   local eps = 1e-8 * hc_reduce(hc, |p,z| p + z*conj(z), 0)
+   local f = |p,z| push(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+   return cat(hc_reduce(hc, f, {}), '\n')
+end
+
+if have_complex then
+   FFT_hc_mixed_radix.__tostring = hc_print
+   FFT_hc_radix2.__tostring = hc_print
+end
+
 ODE.iter  = ode_iter
 if have_complex then cODE.iter = ode_iter end
 
@@ -185,5 +207,4 @@ add_matrix_method('rowiter',    matrix_rowiter)
 add_matrix_method('__tostring', matrix_print)
 add_matrix_method('norm',       matrix_norm)
 add_matrix_method('columns',    matrix_columns)
-add_matrix_method('unpack',     matrix_unpack)
 add_matrix_method('row_print',  matrix_row_print)

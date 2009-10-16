@@ -14,23 +14,6 @@ static void
 TYPE (copy_jacobian_raw) (double *cmpl, double *real, size_t n, size_t p,
 			  size_t mult, bool inverse)
 {
-  /*
-  gsl_matrix_view rview, cview;
-  gsl_vector_view vview;
-  size_t nu;
-
-  for (nu = 0; nu < mult; nu++)
-    {
-      rview = gsl_matrix_view_array_with_tda (real + nu*p, n, p, p * mult);
-      vview = gsl_vector_view_array_with_stride (cmpl + nu, mult, n * p);
-      cview = gsl_matrix_view_vector (& vview.vector, n, p);
-
-      if (inverse)
-	gsl_matrix_memcpy (& rview.matrix, & cview.matrix);
-      else
-	gsl_matrix_memcpy (& cview.matrix, & rview.matrix);
-    }
-  */
   gsl_vector_view dview, sview;
   double *cp, *rp;
   size_t k, nu;
