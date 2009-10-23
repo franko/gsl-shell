@@ -68,14 +68,15 @@ All the numerical integration methods are available through the function ``integ
       In most case it shoud be a table of two values of the form ``{a, b}`` that
       indicates the extrema of integration. ``a`` should be numerical
       values or the string ``-inf`` to indicate that the integral should be
-      extended over a semi-infinite interval. The integral will be in this case:
+      extended indefinetely over the negative semi-axis. The integral will be
+      in this case:
 
       .. math::
           \int_{-\infty}^b f(x) \textrm{d}x
 
       The parameter ``b`` can be also ``+inf`` to perform an integration
       over the semi-infinite positive interval. You can also set both ``a`` 
-      and ``b`` can to infinity.
+      and ``b`` to infinite values.
 
       If points contains more that two values the intermediate values will be
       considered as singular points and a special algorithm, QAGP, will be used.

@@ -55,9 +55,9 @@ else
   TARGETS = $(GSL_SHELL)
 endif
 
-LUAGSL_SRC_FILES = math-types.c matrix.c nlinfit_helper.c \
+LUAGSL_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
-		integ.c ode_solver.c ode.c lua-gsl.c
+		integ.c ode_solver.c ode.c random.c randist.c lua-gsl.c
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
   LUAGSL_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c

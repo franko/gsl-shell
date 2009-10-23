@@ -60,6 +60,10 @@ defs.h
 errors.h
 common.h
 code.c
+random.c
+random.h
+randist.c
+randist.h
 lua/etc/min.c
 lua/etc/all.c
 lua/etc/README

@@ -32,6 +32,8 @@
 #include "fft.h"
 #include "ode_solver.h"
 #include "ode.h"
+#include "random.h"
+#include "randist.h"
 #include "code.h"
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
@@ -53,6 +55,8 @@ luaopen_gsl (lua_State *L)
   integ_register (L);
   ode_solver_register (L);
   ode_register (L);
+  random_register (L);
+  randist_register (L);
 
 #ifdef LNUM_COMPLEX
   lua_pushboolean (L, 1);

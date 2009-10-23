@@ -18,7 +18,8 @@ The :func:`new` function takes two mandatory arguments, the number of rows and o
 
 In GSL Shell we can define the matrix with the following command::
 
-   m = cnew(n, n, function (j,k) return exp(2i*pi*(j-1)*(k-1)/n) end)
+   -- we assume that n is a positive integer number
+   m = cnew(n, n, |j,k| exp(2i*pi*(j-1)*(k-1)/n))
 
 where you have previously defined n to be a small integer number.
 

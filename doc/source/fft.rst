@@ -37,10 +37,10 @@ inverse transform recreates the original function with simple fourier
 synthesis. Numerical Recipes uses the opposite convention, a positive
 exponential in the forward transform.
 
-GSL Shell way of working
-------------------------
+GSL Shell interface
+-------------------
 
-When you perform a Fourier transform different routines will be used depending on the size N of the sample. GSL features two kinds of routines, radix 2 and mixed radix. The radix 2 routines can be used if the size of the sample is a power of 2. The mixed radix routine can be used for any size of the input data but will be "fast" only if the size can be factorized into the product of small prime numbers.
+When you perform a Fourier transform different routines can be used depending on the size N of the sample. GSL features two kinds of routines, radix 2 and mixed radix. The radix 2 routine can be used if the size of the sample is a power of 2 while mixed radix can be used for any size of the input data but will be "fast" only if the size can be factorized into the product of small prime numbers.
 
 GSL Shell will select automatically the appropriate routine for you in a transparent way. But you should nevertheless be aware that the calculation will be fast only if the size of data can be factorised in small primes. You should also know that the mixed radix algorithm requires additional memory spaces so if you need to minimise memory usage you should feed only data of power of two size.
 
@@ -49,11 +49,11 @@ GSL shell manage automatically the additional memory of precomputed trigonometri
 Fourier Transform of Real Data
 ------------------------------
 
-In principle the Fourier Transform of real data is exactly the same of the Fourier transform of complex data, we only make de difference between them because:
+In principle the Fourier Transform of real data is exactly the same of the Fourier transform of complex data, we only make the difference between them because:
 
 - in GSL Shell real value matrix and complex value matrix are considered
   different types
-- specialised routines exists to work efficiently of the case of real value
+- specialised routines exists to work efficiently in the case of real value
   data
 
 Another important reason is *redundancy*, that is, because data are real the Fourier transform comes with a special symmetry:
@@ -64,7 +64,7 @@ Another important reason is *redundancy*, that is, because data are real the Fou
 so you don't need to store N complex values but only N/2.
 
 A sequence with this symmetry is called "conjugate-complex" or
-"half-complex". The results of a Fourier Transform of real data will be an half-complex array. In GSL Shell half-complex array are treated like special kind of arrays in order to be more efficient. To access element in half-complex array you can use the following modules:
+"half-complex". The results of a Fourier Transform of real data will be an half-complex array. In GSL Shell half-complex array are treated like special kind of arrays in order to be more efficient. To access element in half-complex array you can use the following functions:
 
 .. class:: half-complex array
 

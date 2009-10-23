@@ -31,6 +31,34 @@ local function push(ls, e)
    return ls
 end
 
+local function tos(t)    
+   if type(t) == 'table' then
+      local ls = {}
+      for k, v in pairs(t) do 
+	 if k ~= 'tag' then
+	    if type(k) ~= 'number' then 
+	       push(ls, k .. '= ' .. tos(v))
+	    else
+	       push(ls, tos(v))
+	    end
+	 end
+      end
+      return '{' .. cat(ls, ', ') .. '}'
+   else
+      return tostring(t)
+   end
+end
+
+local function myprint(...)
+   for i, v in ipairs(arg) do
+      if i > 1 then io.write(', ') end
+      io.write(tos(v))
+   end
+   io.write('\n')
+end
+
+print = myprint
+
 function matrix_f_set(m, f)
    local r, c = m:dims()
    for i = 1, r do
