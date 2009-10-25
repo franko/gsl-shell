@@ -33,6 +33,8 @@ Contents:
    intro.rst
    matrices.rst
    linalg.rst
+   random.rst
+   randist.rst
    nlinfit.rst
    fft.rst
    ode.rst

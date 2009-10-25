@@ -62,6 +62,7 @@ RAN_DECLARE (gaussian_tail);
 RAN_DECLARE (exppow);
 RAN_DECLARE (rayleigh);
 RAN_DECLARE (lognormal);
+RAN_DECLARE (flat);
 
 static const struct luaL_Reg randist_functions[] = {
   LUAREG_DECLARE (gaussian),
@@ -79,6 +80,7 @@ static const struct luaL_Reg randist_functions[] = {
   LUAREG_DECLARE (cauchy),
   LUAREG_DECLARE (rayleigh),
   LUAREG_DECLARE (lognormal),
+  LUAREG_DECLARE (flat),
   {NULL, NULL}
 };
 
@@ -117,6 +119,7 @@ RAN_IMPLEMENT_2P(beta)
 RAN_IMPLEMENT_2P(gaussian_tail)
 RAN_IMPLEMENT_2P(exppow)
 RAN_IMPLEMENT_2P(lognormal)
+RAN_IMPLEMENT_2P(flat)
 
 int
 randist_binomial (lua_State *L)

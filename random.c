@@ -133,14 +133,19 @@ random_rng_getint (lua_State *L)
 {
   struct boxed_rng *udata = luaL_checkudata (L, 1, RNG_MT_NAME);
   unsigned long int lmt = luaL_checkinteger (L, 2);
-  unsigned long int v = gsl_rng_uniform_int (udata->rng, lmt);
   unsigned long int genlmt = udata->max - udata->min;
+  unsigned long int j;
+  double v = 0.0, vmod;
 
-  if (v > genlmt)
-    luaL_error (L, "this generator cannot gives integer bigger than %u", 
-		genlmt);
+  for (j = lmt; j > 0; j = j / genlmt)
+    {
+      v *= genlmt;
+      v += gsl_rng_uniform_int (udata->rng, genlmt);
+    }
 
-  lua_pushnumber (L, (double) v);
+  vmod = fmod (v, (double) lmt);
+
+  lua_pushnumber (L, vmod);
   return 1;
 }
 

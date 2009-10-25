@@ -32,9 +32,11 @@
 #include "fft.h"
 #include "ode_solver.h"
 #include "ode.h"
+#include "code.h"
 #include "random.h"
 #include "randist.h"
-#include "code.h"
+#include "pdf.h"
+#include "cdf.h"
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 
@@ -57,6 +59,8 @@ luaopen_gsl (lua_State *L)
   ode_register (L);
   random_register (L);
   randist_register (L);
+  pdf_register (L);
+  cdf_register (L);
 
 #ifdef LNUM_COMPLEX
   lua_pushboolean (L, 1);

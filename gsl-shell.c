@@ -195,8 +195,8 @@ static int docall (lua_State *L, int narg, int clear) {
 
 static void print_version (void) {
   l_message(NULL, "GSL Shell, Copyright (C) 2009 Francesco Abbate");
-  l_message(NULL, "GNU Scientific Library (GSL). Copyright (C) The GSL Team.");
-  l_message(NULL, LUA_RELEASE "  " LUA_COPYRIGHT);
+  l_message(NULL, "GNU Scientific Library, Copyright (C) The GSL Team");
+  l_message(NULL, LUA_RELEASE ", " LUA_COPYRIGHT);
 }
 
 

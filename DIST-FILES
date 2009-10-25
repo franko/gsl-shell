@@ -64,6 +64,12 @@ random.c
 random.h
 randist.c
 randist.h
+pdf.c
+pdf.h
+cdf.c
+cdf.h
+distributions-list.c
+randist-source.c
 lua/etc/min.c
 lua/etc/all.c
 lua/etc/README

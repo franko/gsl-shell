@@ -31,19 +31,22 @@ local function push(ls, e)
    return ls
 end
 
-local function tos(t)    
+local function tos(t, maxdepth)
    if type(t) == 'table' then
+      if maxdepth <= 0 then return '<table>' end
       local ls = {}
       for k, v in pairs(t) do 
 	 if k ~= 'tag' then
 	    if type(k) ~= 'number' then 
-	       push(ls, k .. '= ' .. tos(v))
+	       push(ls, k .. '= ' .. tos(v, maxdepth-1))
 	    else
-	       push(ls, tos(v))
+	       push(ls, tos(v, maxdepth-1))
 	    end
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'
+   elseif type(t) == 'function' then
+      return '<function>'
    else
       return tostring(t)
    end
@@ -52,7 +55,7 @@ end
 local function myprint(...)
    for i, v in ipairs(arg) do
       if i > 1 then io.write(', ') end
-      io.write(tos(v))
+      io.write(tos(v, 2))
    end
    io.write('\n')
 end
