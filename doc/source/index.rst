@@ -35,6 +35,8 @@ Contents:
    linalg.rst
    random.rst
    randist.rst
+   pdf.rst
+   cdf.rst
    nlinfit.rst
    fft.rst
    ode.rst

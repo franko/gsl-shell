@@ -29,6 +29,8 @@ quantile functions.  The cumulative distribution functions and their
 inverses are computed separately for the upper and lower tails of the
 distribution, allowing full accuracy to be retained for small results.
 
+.. _rnd_gaussian:
+
 .. function:: gaussian(r [, sigma])
 
      This function returns a Gaussian random variate, with mean zero and
@@ -44,6 +46,8 @@ distribution, allowing full accuracy to be retained for small results.
      Box-Mueller algorithm which requires two calls to the random
      number generator R.
 
+.. _rnd_exponential:
+
 .. function:: exponential(r [, mu])
 
      This function returns a random variate from the exponential
@@ -53,6 +57,8 @@ distribution, allowing full accuracy to be retained for small results.
           p(x) dx = {1 \over \mu} \exp(-x/\mu) dx
 
      for x >= 0.
+
+.. _rnd_chisq:
 
 .. function:: chisq(r [, nu])
 
@@ -74,6 +80,8 @@ distribution, allowing full accuracy to be retained for small results.
 
    for x >= 0.
 
+.. _rnd_laplace:
+
 .. function:: laplace(r [, a])
 
      This function returns a random variate from the Laplace
@@ -83,6 +91,8 @@ distribution, allowing full accuracy to be retained for small results.
           p(x) dx = {1 \over 2 a}  \exp(-|x/a|) dx
 
      for -\ |infin| < x < +\ |infin|.
+
+.. _rnd_tdist:
 
 .. function:: tdist(r [, nu])
    
@@ -104,6 +114,8 @@ distribution, allowing full accuracy to be retained for small results.
 
    for -\ |infin| < x < +\ |infin|.
 
+.. _rnd_cauchy:
+
 .. function:: cauchy(r [, a])
 
      This function returns a random variate from the Cauchy
@@ -116,6 +128,8 @@ distribution, allowing full accuracy to be retained for small results.
      for x in the range -\infty to +\infty.  The Cauchy distribution is
      also known as the Lorentz distribution.
 
+.. _rnd_rayleigh:
+
 .. function:: rayleigh(r [, sigma])
 
      This function returns a random variate from the Rayleigh
@@ -125,6 +139,8 @@ distribution, allowing full accuracy to be retained for small results.
           p(x) dx = {x \over \sigma^2} \exp(- x^2/(2 \sigma^2)) dx
 
      for x > 0.
+
+.. _rnd_fdist:
 
 .. function:: fdist(r, nu1, nu2)
 
@@ -149,13 +165,108 @@ distribution, allowing full accuracy to be retained for small results.
 
    for x >= 0.
 
+.. _rnd_gamma:
 
-EXPAND_2P(fdist)
-EXPAND_2P(gamma)
-EXPAND_2P(beta)
-EXPAND_2P(gaussian_tail)
-EXPAND_2P(exppow)
-EXPAND_2P(lognormal)
+.. function:: gamma(r, a, b)
 
-EXPAND_OTHER(binomial)
-EXPAND_OTHER(poisson)
+   This function returns a random variate from the gamma
+   distribution. The distribution function is,
+
+   .. math::
+          p(x) dx = {1 \over \Gamma(a) b^a} x^{a-1} e^{-x/b} dx
+
+   for x > 0.
+
+   The gamma distribution with an integer parameter a is known as the
+   Erlang distribution. The variates are computed using the
+   Marsaglia-Tsang fast gamma method.
+
+.. _rnd_beta:
+
+.. function:: beta(r, a, b)
+
+    This function returns a random variate from the beta
+    distribution. The distribution function is,
+
+    .. math::
+        p(x) dx = {\Gamma(a+b) \over \Gamma(a) \Gamma(b)} x^{a-1} (1-x)^{b-1} dx
+
+    for 0 <= x <= 1.
+
+.. _rnd_gaussian_tail:
+
+.. function:: gaussian_tail(r, a, sigma)
+
+   This function provides random variates from the upper tail of a
+   Gaussian distribution with standard deviation sigma. The values
+   returned are larger than the lower limit a, which must be
+   positive. The method is based on Marsaglia's famous
+   rectangle-wedge-tail algorithm (Ann. Math. Stat. 32, 894–899
+   (1961)), with this aspect explained in Knuth, v2, 3rd ed, p139,586
+   (exercise 11).
+
+   The probability distribution for Gaussian tail random variates is,
+
+   .. math::
+          p(x) dx = {1 \over N(a;\sigma) \sqrt{2 \pi \sigma^2}}
+          \exp \left(- \frac{x^2}{2 \sigma^2}\right) dx
+
+   for x > a where N(a; |sgr|) is the normalization constant,
+
+   .. math::
+          N(a; \sigma) = (1/2) \textrm{erfc}(a / \sqrt{2 \sigma^2}).
+
+.. _rnd_exppow:
+
+.. function:: exppow(r, a, b)
+
+   This function returns a random variate from the exponential power
+   distribution with scale parameter a and exponent b. The
+   distribution is,
+
+   .. math::
+          p(x) dx = {1 \over 2 a \Gamma(1+1/b)} \exp(-|x/a|^b) dx
+
+   for x >= 0. For b = 1 this reduces to the Laplace distribution. For
+   b = 2 it has the same form as a gaussian distribution, but with
+   :math:`a = \sqrt{2} \sigma`.
+
+.. _rnd_lognormal:
+
+.. function:: lognormal(r, zeta, sigma)
+
+   This function returns a random variate from the lognormal
+   distribution. The distribution function is,
+
+   .. math::
+          p(x) dx = {1 \over x \sqrt{2 \pi \sigma^2} } 
+          \exp(-(\ln(x) - \zeta)^2/2 \sigma^2) dx
+
+   for x > 0.
+
+.. _rnd_binomial:
+
+.. function:: binomial(r, p, n)
+
+   This function returns a random integer from the binomial
+   distribution, the number of successes in n independent trials with
+   probability p. The probability distribution for binomial variates
+   is,
+
+   .. math::
+          p(k) = {n! \over k! (n-k)! } p^k (1-p)^{n-k}
+
+   for 0 <= k <= n.
+
+.. _rnd_poisson:
+
+.. function:: poisson(r [, mu])
+
+   This function returns a random integer from the Poisson
+   distribution with mean mu. The probability distribution for Poisson
+   variates is,
+
+   .. math::
+          p(k) = {\mu^k \over k!} \exp(-\mu)
+
+   for k >= 0.

@@ -17,8 +17,6 @@ local function type_check(v, mtype, name)
    end
 end
 
-local integ_raw = integ_module_init ()
-
 function integ(spec)
    local limit_min = 512
 

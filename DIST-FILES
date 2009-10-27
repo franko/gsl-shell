@@ -196,3 +196,7 @@ doc/source/nlinfit.rst
 doc/source/conf.py
 doc/source/integ.rst
 doc/source/matrices.rst
+doc/source/random.rst
+doc/source/randist.rst
+doc/source/pdf.rst
+doc/source/cdf.rst

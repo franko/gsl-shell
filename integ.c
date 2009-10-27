@@ -27,11 +27,16 @@
 #include "lua-utils.h"
 #include "integ.h"
 
-#define INTEG_CACHE_MT_NAME "gsl.integ_cache"
+#define INTEG_CACHE_MT_NAME "GSL.integ_cache"
 
 struct integ_ws_cache {
   gsl_integration_workspace *w;
   size_t limit;
+
+  gsl_integration_workspace *cycle_ws;
+  size_t cycle_ws_size;
+
+  gsl_integration_qaws_table *qaws_tb;
 
   gsl_integration_qawo_table *wf;
   size_t blevel;
@@ -45,10 +50,13 @@ struct integ_params_tr {
   double y_coeff;
 };
 
-static int integ_module_init (lua_State *L);
+static void integ_pushcache (lua_State *L);
+static struct integ_ws_cache * integ_retrieve_cache (lua_State *L);
+
+static int integ_raw(lua_State *L);
 
 static const struct luaL_Reg integ_functions[] = {
-  {"integ_module_init",     integ_module_init},
+  {"integ_raw",     integ_raw},
   {NULL, NULL}
 };
 
@@ -99,20 +107,31 @@ integ_get_gauss_rule (int n)
 static void
 integ_cache_check_workspace (struct integ_ws_cache *cache, int limit)
 {
-  if (! cache->w)
+  const int limit_min = 512;
+
+  if (limit < limit_min)
+    limit = limit_min;
+
+  if (cache->limit < limit)
     {
-      const int limit_min = 512;
-      cache->limit = (limit > limit_min ? limit : limit_min);
+      if (cache->w)
+	gsl_integration_workspace_free (cache->w);
+
+      cache->limit = limit;
       cache->w = gsl_integration_workspace_alloc (cache->limit);
     }
-  else
+}
+
+static void
+integ_cache_check_cycle_ws (struct integ_ws_cache *cache, int size)
+{
+  if (cache->cycle_ws_size < size)
     {
-      if (cache->limit < limit)
-	{
-	  gsl_integration_workspace_free (cache->w);
-	  cache->limit = limit;
-	  cache->w = gsl_integration_workspace_alloc (cache->limit);
-	}
+      if (cache->cycle_ws)
+	gsl_integration_workspace_free (cache->cycle_ws);
+
+      cache->cycle_ws_size = size;
+      cache->cycle_ws = gsl_integration_workspace_alloc (size);
     }
 }
 
@@ -134,6 +153,30 @@ integ_cache_check_qawo_workspace (struct integ_ws_cache *cache, int blevel)
     }
 }
 
+
+static gsl_integration_qaws_table *
+integ_cache_set_qaws_table (struct integ_ws_cache *cache, 
+			    double alpha, double beta, int mu, int nu)
+{
+  if (cache->qaws_tb != NULL)
+    gsl_integration_qaws_table_free (cache->qaws_tb);
+
+  cache->qaws_tb = gsl_integration_qaws_table_alloc (alpha, beta, mu, nu);
+
+  return cache->qaws_tb;
+}
+
+static void
+integ_cache_free_qaws_table (struct integ_ws_cache *cache)
+{
+  if (cache->qaws_tb != NULL)
+    {
+      gsl_integration_qaws_table_free (cache->qaws_tb);
+      cache->qaws_tb = NULL;
+    }
+}
+
+
 static void
 integ_cache_check_pts (struct integ_ws_cache *cache, int npts)
 {
@@ -149,20 +192,34 @@ integ_cache_check_pts (struct integ_ws_cache *cache, int npts)
     }
 }
 
+struct integ_ws_cache *
+integ_retrieve_cache (lua_State *L)
+{
+  struct integ_ws_cache *cache;
+  lua_getfield(L, LUA_ENVIRONINDEX, "cache");
+  cache = lua_touserdata (L, -1);
+  lua_pop (L, 1);
+  return cache;
+}
+
 int
 integ_cache_free (lua_State *L)
 {
   struct integ_ws_cache *cache = luaL_checkudata (L, 1, INTEG_CACHE_MT_NAME);
   if (cache->w)
     gsl_integration_workspace_free (cache->w);
+  if (cache->cycle_ws)
+    gsl_integration_workspace_free (cache->cycle_ws);
   if (cache->wf)
     gsl_integration_qawo_table_free (cache->wf);
   if (cache->pts)
     gsl_vector_free (cache->pts);
+  if (cache->qaws_tb)
+    gsl_integration_qaws_table_free (cache->qaws_tb);
   return 0;
 }
 
-static int
+int
 integ_raw(lua_State *L)
 {
   struct integ_ws_cache *cache = NULL;
@@ -189,7 +246,7 @@ integ_raw(lua_State *L)
   if (is_adaptive)
     {
       int limit = (int) mlua_named_number (L, 3, "limit");
-      cache = lua_touserdata (L, lua_upvalueindex(1));
+      cache = integ_retrieve_cache (L);
       integ_cache_check_workspace (cache, limit);
     }
 
@@ -258,28 +315,25 @@ integ_raw(lua_State *L)
       double omega = mlua_named_number (L, 4, "omega");
       const char *ftype = mlua_named_string (L, 4, "type");
       enum gsl_integration_qawo_enum sine;
-      gsl_integration_workspace * cycle_ws;
       const size_t n_bisect_max = 8;
       const size_t cycle_ws_limit = 512;
 
       sine = (strcmp (ftype, "sin") == 0 ? GSL_INTEG_SINE : GSL_INTEG_COSINE);
 
       integ_cache_check_qawo_workspace (cache, n_bisect_max);
-      cycle_ws = gsl_integration_workspace_alloc (cycle_ws_limit);
+      integ_cache_check_cycle_ws (cache, cycle_ws_limit);
+
       gsl_integration_qawo_table_set (cache->wf, omega, 1.0, sine);
 
       status = gsl_integration_qawf (f, a, epsabs, cache->limit, 
-				     cache->w, cycle_ws, cache->wf, 
+				     cache->w, cache->cycle_ws, cache->wf, 
 				     &result, &error);
-
-      gsl_integration_workspace_free (cycle_ws);
     }
   else if (strcmp (inttype, "awfl") == 0)
     {
       double omega = mlua_named_number (L, 4, "omega");
       const char *ftype = mlua_named_string (L, 4, "type");
       enum gsl_integration_qawo_enum sine;
-      gsl_integration_workspace * cycle_ws;
       const size_t n_bisect_max = 8;
       const size_t cycle_ws_limit = 512;
       struct integ_params_tr params[1] = {{L, -1.0, 1.0}};
@@ -299,14 +353,13 @@ integ_raw(lua_State *L)
       f->params   = params;
 
       integ_cache_check_qawo_workspace (cache, n_bisect_max);
-      cycle_ws = gsl_integration_workspace_alloc (cycle_ws_limit);
+      integ_cache_check_cycle_ws (cache, cycle_ws_limit);
+
       gsl_integration_qawo_table_set (cache->wf, omega, 1.0, sine);
 
       status = gsl_integration_qawf (f, -b, epsabs, cache->limit, 
-				     cache->w, cycle_ws, cache->wf, 
+				     cache->w, cache->cycle_ws, cache->wf, 
 				     &result, &error);
-
-      gsl_integration_workspace_free (cycle_ws);
     }
   else if (strcmp (inttype, "awc") == 0)
     {
@@ -322,14 +375,14 @@ integ_raw(lua_State *L)
       int mu = mlua_named_optnumber (L, 4, "mu", 0);
       int nu = mlua_named_optnumber (L, 4, "nu", 0);
 
-      t = gsl_integration_qaws_table_alloc (alpha, beta, mu, nu);
+      t = integ_cache_set_qaws_table (cache, alpha, beta, mu, nu);
       if (t == NULL)
 	luaL_error (L, "invalid algebraic-logarithmic coefficients");
 
       status = gsl_integration_qaws (f, a, b, t, epsabs, epsrel, cache->limit,
 			    cache->w, &result, &error);
 
-      gsl_integration_qaws_table_free (t);
+      integ_cache_free_qaws_table (cache);
     }
   else if (strcmp (inttype, "agi") == 0)
     {
@@ -360,11 +413,10 @@ integ_raw(lua_State *L)
   return 2;
 }
 
-int
-integ_module_init (lua_State *L)
+void
+integ_pushcache (lua_State *L)
 {
   struct integ_ws_cache *cache;
-
   cache = lua_newuserdata (L, sizeof(struct integ_ws_cache));
 
   luaL_getmetatable (L, INTEG_CACHE_MT_NAME);
@@ -372,12 +424,12 @@ integ_module_init (lua_State *L)
 
   cache->w = NULL;
   cache->limit = 0;
+  cache->cycle_ws = NULL;
+  cache->cycle_ws_size = 0;
+  cache->qaws_tb = NULL;
   cache->wf = NULL;
   cache->blevel = 0;
   cache->pts = NULL;
-
-  lua_pushcclosure (L, integ_raw, 1);
-  return 1;
 }
 
 void
@@ -387,6 +439,11 @@ integ_register (lua_State *L)
   lua_pushcfunction (L, integ_cache_free);
   lua_setfield (L, -2, "__gc");
   lua_pop (L, 1);
+
+  lua_newtable (L);
+  integ_pushcache (L);
+  lua_setfield (L, -2, "cache");
+  lua_replace (L, LUA_ENVIRONINDEX);
 
   /* gsl module registration */
   luaL_register (L, NULL, integ_functions);

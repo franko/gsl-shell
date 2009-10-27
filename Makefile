@@ -84,7 +84,7 @@ all: $(SUBDIRS) $(TARGETS)
 ifeq ($(PLATFORM), mingw)
 
 gsl-shell.exe: $(LUAGSL_OBJ_FILES) gsl-shell.o
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS)
+	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS)
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
 	$(AR) $@ $?
