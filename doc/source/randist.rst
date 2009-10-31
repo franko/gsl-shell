@@ -27,14 +27,14 @@ The library also provides cumulative distribution functions and
 inverse cumulative distribution functions, sometimes referred to as
 quantile functions.  The cumulative distribution functions and their
 inverses are computed separately for the upper and lower tails of the
-distribution, allowing full accuracy to be retained for small results.
+distribution, allowing full accuracy to be retained for small results. See the chapter :ref:`cdf-section` for more details.
 
 .. _rnd_gaussian:
 
 .. function:: gaussian(r [, sigma])
 
      This function returns a Gaussian random variate, with mean zero and
-     standard deviation SIGMA.  The probability distribution for
+     standard deviation 'sigma'.  The probability distribution for
      Gaussian random variates is,
 
      .. math::
@@ -42,16 +42,24 @@ distribution, allowing full accuracy to be retained for small results.
 
      for x in the range -\ |infin| to +\ |infin| .  Use the transformation z =
      |mgr| + x on the numbers returned by 'gsl_ran_gaussian' to obtain a
-     Gaussian distribution with mean \mu.  This function uses the
+     Gaussian distribution with mean |mgr|.  This function uses the
      Box-Mueller algorithm which requires two calls to the random
      number generator R.
+
+     .. figure:: gaussian-pdf.png
+
+        Probability distribution function
+
+     .. figure:: gaussian-cdf.png
+
+        Cumulative distribution function
 
 .. _rnd_exponential:
 
 .. function:: exponential(r [, mu])
 
      This function returns a random variate from the exponential
-     distribution with mean MU. The distribution is,
+     distribution with mean 'mu'. The distribution is,
 
      .. math::
           p(x) dx = {1 \over \mu} \exp(-x/\mu) dx
@@ -72,13 +80,17 @@ distribution, allowing full accuracy to be retained for small results.
    has a chi-squared distribution with n degrees of freedom.
 
    This function returns a random variate from the chi-squared
-   distribution with NU degrees of freedom. The distribution function
+   distribution with |ngr| degrees of freedom. The distribution function
    is,
 
    .. math::
         p(x) dx = {1 \over 2 \Gamma(\nu/2) } (x/2)^{\nu/2 - 1} \exp(-x/2) dx
 
    for x >= 0.
+
+   .. figure:: chisq-pdf.png
+
+      Probability distribution function
 
 .. _rnd_laplace:
 
@@ -125,7 +137,7 @@ distribution, allowing full accuracy to be retained for small results.
      .. math::
           p(x) dx = {1 \over a\pi (1 + (x/a)^2) } dx
 
-     for x in the range -\infty to +\infty.  The Cauchy distribution is
+     for x in the range - |infin| to + |infin| .  The Cauchy distribution is
      also known as the Lorentz distribution.
 
 .. _rnd_rayleigh:
@@ -133,7 +145,7 @@ distribution, allowing full accuracy to be retained for small results.
 .. function:: rayleigh(r [, sigma])
 
      This function returns a random variate from the Rayleigh
-     distribution with scale parameter SIGMA.  The distribution is,
+     distribution with scale parameter |sgr|.  The distribution is,
 
      .. math::
           p(x) dx = {x \over \sigma^2} \exp(- x^2/(2 \sigma^2)) dx
@@ -151,10 +163,11 @@ distribution, allowing full accuracy to be retained for small results.
    .. math::
      X = { (Y_1 / \nu_1) \over (Y_2 / \nu_2) }
 
-   has an F-distribution F(x; |ngr|\ :sub:`1`, |ngr|\ :sub:`1`).
+   has an F-distribution F(x; |ngr|\ :sub:`1`, |ngr|\ :sub:`2`).
 
-   This function returns a random variate from the F-distribution
-   with degrees of freedom NU1 and NU2. The distribution function is,
+   This function returns a random variate from the F-distribution with
+   degrees of freedom |ngr|\ :sub:`1` and |ngr|\ :sub:`2`. The
+   distribution function is,
 
    .. math::
           p(x) dx =

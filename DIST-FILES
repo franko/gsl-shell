@@ -200,3 +200,6 @@ doc/source/random.rst
 doc/source/randist.rst
 doc/source/pdf.rst
 doc/source/cdf.rst
+scripts/project-diff.sh
+scripts/makedist.sh
+scripts/www-cvs-sync.sh

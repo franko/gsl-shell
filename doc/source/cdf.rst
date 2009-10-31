@@ -2,12 +2,16 @@
 
 .. include:: <isogrk1.txt>
 
+.. _cdf-section:
+
 :mod:`cdf` -- Probability Distribution Functions
 ================================================
 
 .. module:: cdf
 
-The module ``cdf`` offer the same functions of the module ``pdf`` but the *culumative* probability is calculated for the given value of ``x``. So the cumulative probability is calculated like:
+The module ``cdf`` offer the same functions of the module ``pdf`` but
+the gives the *cumulative* probability for the given value of
+``x``. The cumulative probability is defined like:
 
 .. math::
    \int_a^x p(\xi) d\xi

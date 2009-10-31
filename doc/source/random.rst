@@ -6,10 +6,10 @@ Random Numbers
 ==============
 
 This chapter describes routines for generating random numbers. GSL
-provides use a large collection of random number generators which can
-be accessed through a uniform interface. You can select different
-generators and seeds very easily so that you can easily switch between
-generators without needing to change your program. 
+provides a large collection of random number generators that can be
+accessed through a uniform interface. You can choose very easily the
+generator you want to use and even switch between generators without
+needing to change your commands.
 
 Each instance of a generator keeps track of its own state so that you
 can have several different generators and they will not interfere with
@@ -73,7 +73,7 @@ So, if you want to generate random numbers the first step is to use the :func:`r
    This function returns a "random number generator" object of the
    specified type ``name``. If you do not specify a particular
    generator the default ``taus2`` generator will be used. See the
-   paragraph on :ref:`algorithms <rng_algorithms>` for a description
+   paragraph on :ref:`algorithms <rng-algorithms>` for a description
    of the different algorithms available.
 
 .. class:: rng
@@ -150,7 +150,7 @@ randomness.
      seeding procedure published by the two authors above in 2002.  The
      original seeding procedures could cause spurious artifacts for
      some seed values. They are still available through the alternative
-     generators 'mt19937\ :sub:`1999` ' and 'mt19937\ :sub:`1998` '.
+     generators 'mt19937_1999' and 'mt19937_1998'.
 
 **ranlxs0, ranlxs1, ranlxs2**
      The generator 'ranlxs0' is a second-generation version of the
