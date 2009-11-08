@@ -5,7 +5,10 @@
 GSL Shell introduction
 ======================
 
-In order to use GSL Shell effectively you need to know the basics of the LUA scripting language. Luckily LUA is very easy to learn so you can be productive with it in a very short time. In order to have an introduction to LUA you can look have a look at at `LUA.org <http://www.lua.org>`_.
+In order to use GSL Shell effectively you need to know the basics of
+the Lua scripting language. Luckily Lua is very easy to learn so you
+can be productive with it in a very short time. In order to have an
+introduction to Lua you can look have a look at at `Lua.org <http://www.lua.org>`_.
 
 First steps
 -----------

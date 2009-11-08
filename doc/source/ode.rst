@@ -46,8 +46,8 @@ Here an examples about the usage of an ODE solver for *real* numbers::
 
    -- define the ODE function
    function odef(t,y,f)
-      f:set(0,0, y[1])
-      f:set(1,0, -y[0] - mu*y[1]*(y[0]*y[0]-1))
+      f:set(1,1, y[2])
+      f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
    end
 
    -- create the ODE solver

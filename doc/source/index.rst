@@ -8,10 +8,10 @@ numerical computations.
 
 GSL shell can be used interactively to perform calculations with matrices or
 vectors but it does allow also to write complex user defined functions with
-the LUA scripting interpreter.
+the Lua scripting interpreter.
 
-LUA is a very interesting and easy to learn scripting language that features
-advanced functionalities like closures and metamethods. LUA is very
+Lua is a very interesting and easy to learn scripting language that features
+advanced functionalities like closures and metamethods. Lua is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL routines more effectively.
 
@@ -28,7 +28,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   author.rst
    news.rst
    intro.rst
    matrices.rst
@@ -41,4 +40,5 @@ Contents:
    fft.rst
    ode.rst
    integ.rst
+   examples.rst
    acknowledgments.rst
