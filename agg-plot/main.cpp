@@ -20,7 +20,7 @@
 #include "platform/agg_platform_support.h"
 
 #include "canvas.h"
-#include "cplot.h"
+#include "units_cplot.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -30,21 +30,86 @@ public:
   the_application(agg::pix_format_e format, bool flip_y) :
     agg::platform_support(format, flip_y), m_plot()
   {
-    line ln(agg::rgba(0.7, 0, 0));
-    agg::path_storage& p = ln.path;
-    p.move_to(0, 0);
+    {
+      line& ln = m_plot.new_line(agg::rgba(0.7, 0, 0));
+      agg::path_storage& p = ln.path;
+      const int npt = 512, ncycles = 12;
+      for (int j = 0; j < npt; j++)
+	{
+	  double x = j * 2 * M_PI * ncycles / npt;
+	  double y = exp(-0.05 * x) * sin(x) +3;
+	  if (j == 0)
+	    p.move_to(x, y);
+	  else
+	    p.line_to(x, y);
+	}
+    }
 
-    const int npt = 512, ncycles = 12;
-    for (int j = 1; j < npt; j++)
-      {
-	double x = j * 2 * M_PI * ncycles / npt;
-	double y = 70 * exp(-0.05 * x) * sin(x);
-	p.line_to(x, y);
-      }
+    {
+      line& ln = m_plot.new_line(agg::rgba(0, 0, 0.7));
+      agg::path_storage& p = ln.path;
 
-#warning A copy of the line is done!
-#warning The interface should be changed to avoid copying
-    m_plot.add_line(ln);
+      const int npt = 512, ncycles = 12;
+      for (int j = 0; j < npt; j++)
+	{
+	  double x = j * 2 * M_PI * ncycles / npt;
+	  double y = 1.8 * exp(-0.1 * x);
+	  if (j == 0)
+	    p.move_to(x, y);
+	  else
+	    p.line_to(x, y);
+	}
+    }
+
+    {
+      line& ln = m_plot.new_line(agg::rgba(0, 0.7, 0));
+      agg::path_storage& p = ln.path;
+
+      const int npt = 2, ncycles = 12;
+      for (int j = 0; j < npt; j++)
+	{
+	  double x = j * 2 * M_PI * ncycles / npt;
+	  double y = 1.8;
+	  if (j == 0)
+	    p.move_to(x, y);
+	  else
+	    p.line_to(x, y);
+	}
+    }
+    /*
+
+    {
+      line& ln = m_plot.new_line(agg::rgba(0, 0.7, 0));
+      agg::path_storage& p = ln.path;
+
+      const int npt = 1;
+      for (int j = 0; j <= npt; j++)
+	{
+	  double x = j * 1.0 / npt;
+	  double y = 1.0;
+	  if (j == 0)
+	    p.move_to(x, y);
+	  else
+	    p.line_to(x, y);
+	}
+    }
+
+    {
+      line& ln = m_plot.new_line(agg::rgba(0.7, 0, 0));
+      agg::path_storage& p = ln.path;
+
+      const int npt = 1;
+      for (int j = 0; j <= npt; j++)
+	{
+	  double x = j * 1.0 / npt;
+	  double y = 0.0;
+	  if (j == 0)
+	    p.move_to(x, y);
+	  else
+	    p.line_to(x, y);
+	}
+    }
+    */
   };
 
   virtual ~the_application()
@@ -59,7 +124,7 @@ public:
   }
 
 private:
-  cplot m_plot;
+  units_cplot m_plot;
 };
 
 int agg_main(int argc, char* argv[])

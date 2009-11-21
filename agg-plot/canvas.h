@@ -7,15 +7,12 @@
 
 #include "agg_rendering_buffer.h"
 #include "agg_rasterizer_scanline_aa.h"
-// #include "agg_ellipse.h"
-// #include "agg_trans_affine.h"
-// #include "agg_conv_transform.h"
-// #include "agg_conv_stroke.h"
 #include "agg_pixfmt_rgb.h"
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
-// #include "agg_image_filters.h"
+
+#include "utils.h"
 
 class canvas {
   typedef agg::pixfmt_bgr24 pixel_fmt;
@@ -60,6 +57,8 @@ public:
   void clear() { rb->clear(bg_color); };
 
   const agg::trans_affine& trans_matrix() const { return mtx; };
+  void scale(agg::trans_affine& m) const { trans_affine_compose (m, mtx); };
+
 
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)

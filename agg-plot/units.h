@@ -9,57 +9,35 @@
 #include <string>
 #include <vector>
 
+#include "utils.h"
+
 template<class num_type>
 class units {
 private:
-  int major;
+  int m_major;
   int order;
-  num_type dmajor; // equal to (major * 10^order)
-  int inf, sup; // expressed in the base of (major * 10^order)
+  num_type dmajor; // equal to (m_major * 10^order)
+  int m_inf, m_sup; // expressed in the base of (m_major * 10^order)
   int nb_decimals;
 
  private:
   void init(num_type min, num_type max, num_type spacefact);
 
 public:
-  units (std::vector<num_type> &x, num_type spacefact = 5.0);
+  units(): m_major(1), order(0), dmajor(1), m_inf(0), m_sup(1), nb_decimals(0) {}; 
   units (num_type min, num_type max, num_type spacefact = 5.0)
     { init(min, max, spacefact); };
 
-  void  limits(int &start, int &fin) { start = inf; fin = sup; };
+  int begin() const { return m_inf; };
+  int end()   const { return m_sup; };
+
   void  limits(int &start, int &fin, num_type &step) 
-  { start = inf; fin = sup; step = dmajor; };
+  { start = m_inf; fin = m_sup; step = dmajor; };
 
-  int      decimals () const { return nb_decimals; };
-  void     mark_label (std::string &label, int mark) const;
-  num_type mark_value (int mark) const { return dmajor * mark; };
+  void        mark_label (std::string& label, int mark) const;
+  num_type    mark_value (int mark) const { return dmajor * mark; };
+
   num_type mark_scale(num_type x);
-  
-  static void get_limits (std::vector<num_type> &x, num_type &inf, num_type &sup);
-
-};
-
-
-template<class num_type>
-void units<num_type>::get_limits (std::vector<num_type> &x, num_type &inf, num_type &sup)
-{
-  typename vector<num_type>::iterator j = x.begin();
-
-  if (j == x.end())
-    return;
-    
-  inf = x[j];
-  sup = x[j];
-  j++;
-    
-  for ( ; j != x.end(); j++)
-    {
-      num_type v = x[j];
-      if (inf > v)
-	inf = v;
-      if (sup < v)
-	sup = v;
-    }
 };
 
 template<class num_type>
@@ -78,33 +56,25 @@ void units<num_type>::init(num_type yinf, num_type ysup, num_type spacefact)
   num_type delr = del / expf;
 
   if (5 <= delr)
-    major = 5;
+    m_major = 5;
   else if (2 <= delr)
-    major = 2;
+    m_major = 2;
   else
-    major = 1;
+    m_major = 1;
 
-  inf = (int) floor(yinf / (major * expf));
-  sup = (int) ceil(ysup / (major * expf));
+  m_inf = (int) floor(yinf / (m_major * expf));
+  m_sup = (int) ceil(ysup / (m_major * expf));
 
   nb_decimals = (order < 0 ? -order : 0);
 
-  dmajor = major * expf;
+  dmajor = m_major * expf;
 }
 
 template<class num_type>
-units<num_type>::units (std::vector<num_type> &x, num_type spacefact)
+void units<num_type>::mark_label (std::string& lab, int mark) const
 {
-  num_type yinf, ysup;
-  units::get_limits (x, yinf, ysup);
-  init (yinf, ysup, spacefact);
-}
-
-template<class num_type>
-void units<num_type>::mark_label (std::string &lab, int mark) const
-{
-  bool minus = (inf < 0);
-  int asup = (minus ? -inf : sup);
+  bool minus = (m_inf < 0);
+  int asup = (minus ? -m_inf : m_sup);
   char fmt[8];
 
   if (nb_decimals == 0)
@@ -127,10 +97,8 @@ void units<num_type>::mark_label (std::string &lab, int mark) const
 template<class num_type>
 num_type units<num_type>::mark_scale (num_type x)
 {
-  int inf, sup;
-  num_type ef;
-  limits(inf, sup, ef);
-  return (x - inf * ef) / ((sup - inf) * ef);
+  num_type xinf = m_inf * dmajor, xsup = m_sup * dmajor;
+  return (x - xinf) / (xsup - xinf);
 }
 
 #endif

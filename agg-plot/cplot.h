@@ -8,6 +8,7 @@
 #include <list>
 
 #include "canvas.h"
+#include "units.h"
 
 #include "agg_conv_transform.h"
 #include "agg_color_rgba.h"
@@ -23,17 +24,26 @@ public:
 
 class cplot {
 public:
-  void add_line(line &ln);
-  void draw(canvas &canvas);
+  line& new_line(agg::rgba8 color);
+  
+  const agg::trans_affine& trans() const { return m_trans; };
 
-  cplot() : m_lines(), m_trans_matrix(), m_x1(0.0), m_y1(0.0), 
-	    m_x2(1.0), m_y2(1.0) {};
+  virtual void draw(canvas &canvas);
 
-private:
+  cplot() : m_lines(), m_trans(), m_bbox_set(false) {};
+
+protected:
+  void draw_lines(canvas &canvas);
+  bool bbox_update();
+  virtual bool update();
+
+  static void viewport_scale(agg::trans_affine& trans);
+
   std::list<line> m_lines;
-  agg::trans_affine m_trans_matrix;
+  agg::trans_affine m_trans;
 
   // bounding box
+  bool m_bbox_set;
   double m_x1, m_y1;
   double m_x2, m_y2;
 };

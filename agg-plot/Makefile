@@ -11,7 +11,7 @@ AGG_HOME = /home/francesco/src/agg-2.5
 
 AGG_TRANS_AFFINE = $(AGG_HOME)/src/agg_trans_affine.o
 
-SRC_FILES = utils.cpp cplot.cpp main.cpp
+SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp main.cpp
 
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
 

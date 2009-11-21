@@ -83,7 +83,8 @@
 
     int br_int= (int)br;
     
-    if ( ai!=0 && bi==0 && br_int==br && br_int!=0 && br_int!=INT_MIN ) { 
+//    if ( ai!=0 && bi==0 && br_int==br && br_int!=0 && br_int!=INT_MIN ) {
+    if ( ar==0 && ai!=0 && bi==0 && br_int==br && br_int!=0 && br_int!=INT_MIN ) {
         /* (a+bi)^N, N = { +-1,+-2, ... +-INT_MAX } 
         */
         lua_Number k= luai_numpow( _LF(sqrt) (ar*ar + ai*ai), br );
