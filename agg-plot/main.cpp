@@ -22,6 +22,8 @@
 #include "canvas.h"
 #include "units_cplot.h"
 
+#include "my_list.h"
+
 enum flip_y_e { flip_y = true };
 
 class the_application : public agg::platform_support
@@ -31,8 +33,19 @@ public:
     agg::platform_support(format, flip_y), m_plot()
   {
     {
-      line& ln = m_plot.new_line(agg::rgba(0.7, 0, 0));
-      agg::path_storage& p = ln.path;
+      poly_outline* ln = new poly_outline(agg::rgba(0.7, 0.5, 0.1), agg::rgba(0,0,0));
+      agg::path_storage& p = ln->path;
+
+      p.move_to(-3.0,  -0.7);
+      p.line_to(35.0, 2.5);
+      p.line_to(5.0,  4.0);
+      p.close_polygon();
+
+      m_plot.add(ln);
+    }
+    {
+      line* ln = new line(agg::rgba(0.7, 0, 0));
+      agg::path_storage& p = ln->path;
       const int npt = 512, ncycles = 12;
       for (int j = 0; j < npt; j++)
 	{
@@ -43,11 +56,12 @@ public:
 	  else
 	    p.line_to(x, y);
 	}
+      m_plot.add(ln);
     }
 
     {
-      line& ln = m_plot.new_line(agg::rgba(0, 0, 0.7));
-      agg::path_storage& p = ln.path;
+      line* ln = new line(agg::rgba(0, 0, 0.7));
+      agg::path_storage& p = ln->path;
 
       const int npt = 512, ncycles = 12;
       for (int j = 0; j < npt; j++)
@@ -59,57 +73,8 @@ public:
 	  else
 	    p.line_to(x, y);
 	}
+      m_plot.add(ln);
     }
-
-    {
-      line& ln = m_plot.new_line(agg::rgba(0, 0.7, 0));
-      agg::path_storage& p = ln.path;
-
-      const int npt = 2, ncycles = 12;
-      for (int j = 0; j < npt; j++)
-	{
-	  double x = j * 2 * M_PI * ncycles / npt;
-	  double y = 1.8;
-	  if (j == 0)
-	    p.move_to(x, y);
-	  else
-	    p.line_to(x, y);
-	}
-    }
-    /*
-
-    {
-      line& ln = m_plot.new_line(agg::rgba(0, 0.7, 0));
-      agg::path_storage& p = ln.path;
-
-      const int npt = 1;
-      for (int j = 0; j <= npt; j++)
-	{
-	  double x = j * 1.0 / npt;
-	  double y = 1.0;
-	  if (j == 0)
-	    p.move_to(x, y);
-	  else
-	    p.line_to(x, y);
-	}
-    }
-
-    {
-      line& ln = m_plot.new_line(agg::rgba(0.7, 0, 0));
-      agg::path_storage& p = ln.path;
-
-      const int npt = 1;
-      for (int j = 0; j <= npt; j++)
-	{
-	  double x = j * 1.0 / npt;
-	  double y = 0.0;
-	  if (j == 0)
-	    p.move_to(x, y);
-	  else
-	    p.line_to(x, y);
-	}
-    }
-    */
   };
 
   virtual ~the_application()
@@ -129,12 +94,12 @@ private:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
-    app.caption("My damn test");
+  the_application app(agg::pix_format_bgr24, flip_y);
+  app.caption("My damn test");
 
-    if(app.init(780, 400, agg::window_resize))
+  if(app.init(780, 400, agg::window_resize))
     {
-        return app.run();
+      return app.run();
     }
-    return 0;
+  return 0;
 }

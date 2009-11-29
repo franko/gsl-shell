@@ -18,6 +18,7 @@ trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b)
   a.ty = b.shy * a_tx + b.sy  * a_ty + b.ty;
 }
 
+/*
 void
 string_printf (std::string &s, const char *fmt, ...)
 {
@@ -38,3 +39,4 @@ string_printf (std::string &s, const char *fmt, ...)
   free (buf);
   va_end (ap);
 }
+*/

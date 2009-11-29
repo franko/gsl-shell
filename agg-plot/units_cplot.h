@@ -37,7 +37,7 @@ private:
     ys = iys * yd;
 
     double fx = 1/(xs - xi), fy = 1/(ys - yi);
-    m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -xi/fx, -yi/fy);
+    m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -xi*fx, -yi*fy);
 
     return true;
   }

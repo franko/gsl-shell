@@ -83,7 +83,6 @@ static const luaL_Reg gshlibs[] = {
   {NULL, NULL}
 };
 
-
 static void lstop (lua_State *L, lua_Debug *ar) {
   (void)ar;  /* unused arg. */
   lua_sethook(L, NULL, 0, 0);
@@ -489,4 +488,3 @@ int main (int argc, char **argv) {
   lua_close(L);
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-

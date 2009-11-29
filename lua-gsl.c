@@ -38,6 +38,8 @@
 #include "pdf.h"
 #include "cdf.h"
 
+#include "lua-cplot.h"
+
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 
 int
@@ -61,6 +63,8 @@ luaopen_gsl (lua_State *L)
   randist_register (L);
   pdf_register (L);
   cdf_register (L);
+
+  cplot_register (L);
 
 #ifdef LNUM_COMPLEX
   lua_pushboolean (L, 1);

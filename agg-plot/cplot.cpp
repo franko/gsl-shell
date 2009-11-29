@@ -3,15 +3,14 @@
 #include "cplot.h"
 
 #include "agg_conv_stroke.h"
+#include "agg_conv_dash.h"
+#include "agg_vcgen_markers_term.h"
 #include "agg_bounding_rect.h"
 
-line&
-cplot::new_line(agg::rgba8 color)
+void
+cplot::add(drawable *d)
 {
-  int n = m_lines.size();
-  m_lines.resize(n+1, color);
-  std::list<line>::iterator ln = -- m_lines.end();
-  return *ln;
+  m_lines.add(d);
 }
 
 bool
@@ -19,11 +18,12 @@ cplot::bbox_update()
 {
   bool updated = false;
 
-  for (std::list<line>::iterator j = m_lines.begin(); j != m_lines.end(); j++)
+  for (unsigned j = 0; j < m_lines.size(); j++)
     {
-      line& ln = *j;
+      drawable* d = m_lines[j];
+
       double x1, y1, x2, y2;
-      bounding_rect_single(ln.path, 0, &x1, &y1, &x2, &y2);
+      d->bounding_box(&x1, &y1, &x2, &y2);
       
       if (! m_bbox_set)
 	{
@@ -47,7 +47,7 @@ cplot::bbox_update()
 	  updated = true;
 	}
     }
-
+  
   return updated;
 }
 
@@ -60,13 +60,9 @@ cplot::draw_lines(canvas &canvas)
   viewport_scale(m);
   canvas.scale(m);
 
-  for (std::list<line>::iterator j = m_lines.begin(); j != m_lines.end(); j++)
+  for (unsigned j = 0; j < m_lines.size(); j++)
     {
-      line& ln = *j;
-      path_type& p = ln.path;
-      agg::conv_transform<path_type> ptr(p, m);
-      agg::conv_stroke<agg::conv_transform<path_type> > ps(ptr);
-      canvas.draw(ps, ln.color);
+      m_lines[j]->draw(canvas, m);
     }
 }
 
@@ -97,4 +93,57 @@ cplot::viewport_scale(agg::trans_affine& m)
   const double xoffs = 0.09375, yoffs = 0.09375;
   static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-2*yoffs, xoffs, yoffs);
   trans_affine_compose (m, rsz);
+}
+
+void
+line::draw(canvas& can, agg::trans_affine& t)
+{
+  typedef agg::path_storage path_type;
+
+  path_type& p = this->path;
+  agg::conv_transform<path_type> ptr(p, t);
+  agg::conv_stroke<agg::conv_transform<path_type> > ps(ptr);
+  can.draw(ps, this->color);
+}
+
+void
+line::bounding_box(double *x1, double *y1, double *x2, double *y2)
+{
+  bounding_rect_single(this->path, 0, x1, y1, x2, y2);
+}
+
+void
+dashed_line::draw(canvas& canvas, agg::trans_affine& t)
+{
+  typedef agg::path_storage path_type;
+  typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
+
+  path_type& ln = this->path;
+  agg::conv_transform<path_type> lntr(ln, t);
+  dash_type lndash(lntr);
+  agg::conv_stroke<dash_type> lns(lndash);
+
+  lndash.add_dash(m_l1, m_l2);
+  canvas.draw(lns, this->color);
+}
+
+void
+polygon::draw(canvas& canvas, agg::trans_affine& t)
+{
+  agg::path_storage& p = this->path;
+  agg::conv_transform<agg::path_storage> ptr(p, t);
+  canvas.draw(ptr, this->color);
+}
+
+void
+poly_outline::draw(canvas& canvas, agg::trans_affine& t)
+{
+  typedef agg::path_storage path_type;
+
+  path_type& p = this->path;
+  agg::conv_transform<path_type> ptr(p, t);
+  canvas.draw(ptr, this->color);
+
+  agg::conv_stroke<agg::conv_transform<path_type> > ps(ptr);
+  canvas.draw(ps, this->m_outline_color);
 }

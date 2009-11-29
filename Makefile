@@ -68,7 +68,7 @@ endif
 
 COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-SUBDIRS = lua
+SUBDIRS = lua agg-plot
 
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 
@@ -95,8 +95,10 @@ gsl.dll: $(LUAGSL_OBJ_FILES)
 		$(LUA_LIBS)
 else
 
-gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
+AGG_LIBS = -lagg -laggplatformX11 -lX11
+
+gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o agg-plot/libaggplot.a
+	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -Wl,--allow-multiple-definition -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
 
 gsl.so: $(LUAGSL_OBJ_FILES)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)

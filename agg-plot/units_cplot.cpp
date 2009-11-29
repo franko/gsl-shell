@@ -27,20 +27,21 @@ units_cplot::draw_axis(canvas &canvas)
 	double y = double(j - jinf) / double(jsup - jinf);
 	agg::gsv_text lab;
 	agg::conv_stroke<agg::gsv_text> labs(lab);
-	agg::conv_transform<agg::conv_stroke<agg::gsv_text> > labo(labs, m);
-	std::string lab_text;
-	
-        labs.line_join(agg::round_join);
-        labs.line_cap(agg::round_cap);
-        labs.approximation_scale(m.scale());
+	char lab_text[32];
+	double xlab = 0, ylab = y;
 
-	lab.size(0.03, 0.02);
-	labs.width(1.5 * 1/max(m.sx, m.sy));
-	m_uy.mark_label(lab_text, j);
-	lab.text(lab_text.c_str());
+	lab.size(10.0);
+	m_uy.mark_label(lab_text, 32, j);
+	lab.text(lab_text);
+	labs.width(0.7);
 
-	lab.start_point(-0.01 - lab.text_width(), y - 0.015);
-	canvas.draw(labo, agg::rgba(0, 0, 0));
+	m.transform(&xlab, &ylab);
+
+	xlab += -lab.text_width() - 8.0;
+	ylab += -10.0/2.0;
+
+	lab.start_point(xlab, ylab);
+	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	if (j > jinf && j < jsup)
 	  {
@@ -57,20 +58,21 @@ units_cplot::draw_axis(canvas &canvas)
 	double x = double(j - jinf) / double(jsup - jinf);
 	agg::gsv_text lab;
 	agg::conv_stroke<agg::gsv_text> labs(lab);
-	agg::conv_transform<agg::conv_stroke<agg::gsv_text> > labo(labs, m);
-	std::string lab_text;
-	
-        labs.line_join(agg::round_join);
-        labs.line_cap(agg::round_cap);
-        labs.approximation_scale(m.scale());
+	char lab_text[32];
+	double xlab = x, ylab = 0;
 
-	lab.size(0.03, 0.02);
-	labs.width(1.5 * 1/max(m.sx, m.sy));
-	m_ux.mark_label(lab_text, j);
-	lab.text(lab_text.c_str());
+	lab.size(10.0);
+	m_ux.mark_label(lab_text, 32, j);
+	lab.text(lab_text);
+	labs.width(0.7);
 
-	lab.start_point(x - lab.text_width()/2.0, -0.025 - 0.03);
-	canvas.draw(labo, agg::rgba(0, 0, 0));
+	m.transform(&xlab, &ylab);
+
+	xlab += -lab.text_width()/2.0;
+	ylab += -10.0 - 10.0;
+
+	lab.start_point(xlab, ylab);
+	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	if (j > jinf && j < jsup)
 	  {
@@ -83,7 +85,7 @@ units_cplot::draw_axis(canvas &canvas)
   lndash.add_dash(8.0, 4.0);
 
   lns.width(0.25);
-  canvas.draw(lns, agg::rgba8(0.8, 0.8, 0.8));
+  canvas.draw(lns, agg::rgba(0.2, 0.2, 0.2));
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);

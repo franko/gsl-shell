@@ -1,29 +1,92 @@
 
-CXX = g++
-CXXFLAGS = -g -Wall
+# Makefile
+# 
+# Copyright (C) 2009 Francesco Abbate
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or (at
+# your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+GSH_BASE_DIR = ..
+
+include $(GSH_BASE_DIR)/makeconfig
+
+LUADIR = $(GSH_BASE_DIR)/lua
+AR= ar rcu
+RANLIB= ranlib
+
+ifeq ($(PLATFORM), none)
+nono:
+	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
+endif
+
+ifeq ($(strip $(PLATFORM)), mingw)
+# Option for Windows Platform
+  DEFS += -DWIN32
+  INCLUDES += -I/usr/include
+  LIBS += -L/usr/lib
+endif
+
+INCLUDES += -I$(LUADIR)/src -I$(LUADIR)/etc
+
+AGGPLOT_SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp lua-cplot.cpp
+
+SUBDIRS = 
+
+AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
+
+DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 AGG_CFLAGS = -I/usr/include/agg2
 AGG_LIBS = -lagg -laggplatformX11 -lX11
 
-CXXCOMPILE = $(CXX) $(CXXFLAGS)
+CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) $(AGG_CFLAGS)
 
-AGG_HOME = /home/francesco/src/agg-2.5
+TARGETS = libaggplot.a
 
-AGG_TRANS_AFFINE = $(AGG_HOME)/src/agg_trans_affine.o
+all: $(SUBDIRS) $(TARGETS)
 
-SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp main.cpp
-
-OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
-
-.PHONY: clean all
-
-all: test.exe
+libaggplot.a: $(AGGPLOT_OBJ_FILES)
+	$(AR) $@ $?
+	$(RANLIB) $@
 
 %.o: %.cpp
-	$(CXXCOMPILE) -c $< $(AGG_CFLAGS)
+	@echo $(CXXCOMPILE) -c $< 
+	@$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+            >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
 
-test.exe: $(OBJ_FILES)
-	$(CXX) -o $@ $(OBJ_FILES) $(AGG_TRANS_AFFINE) $(AGG_LIBS)
+%.o: %.c
+	@echo $(COMPILE) -c $<
+	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+            >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+.PHONY: clean all $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
 
 clean:
-	rm *.o *.exe
+	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+
+-include $(DEP_FILES)

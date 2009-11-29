@@ -16,6 +16,4 @@ T min (T a, T b) {
 
 extern void trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b);
 
-extern void string_printf (std::string &s, const char *fmt, ...);
-
 #endif
