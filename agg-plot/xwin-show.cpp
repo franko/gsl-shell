@@ -68,6 +68,7 @@ xwin_thread_function (void *_cplot)
     }
 
   pthread_mutex_lock (cp->mutex);
+  cp->x_app = NULL;
   if (cp->lua_is_owner)
     {
       cp->is_shown = 0;
