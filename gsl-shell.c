@@ -465,7 +465,7 @@ static int pmain (lua_State *L) {
   return 0;
 }
 
-int main (int argc, char **argv) {
+int gsl_shell_main (int argc, char **argv) {
   int status;
   struct Smain s;
 

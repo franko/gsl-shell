@@ -34,15 +34,18 @@ endif
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
-  INCLUDES += -I/usr/include
-  LIBS += -L/usr/lib
+  INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
+
+  AGG_HOME = /c/fra/src/agg-2.5
+  AGG_CFLAGS = -I$(AGG_HOME)/include
+else
+  AGG_CFLAGS = -I/usr/include/agg2
 endif
 
-INCLUDES += -I$(LUADIR)/src -I$(LUADIR)/etc
+INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-AGGPLOT_SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp lua-cplot.cpp
-
-SUBDIRS = 
+AGGPLOT_SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp \
+		    cplot-cintfc.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
@@ -50,14 +53,11 @@ DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-AGG_CFLAGS = -I/usr/include/agg2
-AGG_LIBS = -lagg -laggplatformX11 -lX11
-
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) $(AGG_CFLAGS)
 
 TARGETS = libaggplot.a
 
-all: $(SUBDIRS) $(TARGETS)
+all: $(TARGETS)
 
 libaggplot.a: $(AGGPLOT_OBJ_FILES)
 	$(AR) $@ $?
@@ -81,10 +81,7 @@ libaggplot.a: $(AGGPLOT_OBJ_FILES)
             >> .deps/$(*F).P; \
 	rm .deps/$(*F).pp
 
-.PHONY: clean all $(SUBDIRS)
-
-$(SUBDIRS):
-	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
+.PHONY: clean all
 
 clean:
 	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)

@@ -1,19 +1,20 @@
 
 #include <pthread.h>
 
-extern "C" {
+#include "defs.h"
+#include "cplot-cintfc.h"
 
-  struct lcplot {
-    cplot *plot;
-    int lua_is_owner;
-    int is_shown;
-    pthread_mutex_t *mutex;
+__BEGIN_DECLS
 
-    void *x_app;
-  };
+struct lcplot {
+  cplot *plot;
+  int lua_is_owner;
+  int is_shown;
+  pthread_mutex_t *mutex;
+  void *x_app;
+};
 
-  extern void lcplot_destroy (struct lcplot *cp);
+extern void lcplot_destroy (struct lcplot *cp);
+extern void update_callback (void *_app);
 
-  extern void update_callback (void *_app);
-
-}
+__END_DECLS

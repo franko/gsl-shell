@@ -1,48 +1,43 @@
 
 #include <pthread.h>
 
-#include "lua.hpp"
-#include "units_cplot.h"
-#include "cplot.h"
-#include "lua-cplot-priv.h"
+#include "lua.h"
+#include "lauxlib.h"
 
+#include "common.h"
+#include "cplot-cintfc.h"
+#include "lua-cplot-priv.h"
 #include "xwin-show.h"
 
-extern int agg_main (int argc, char *argv[]);
+extern void cplot_register (lua_State *L);
 
-extern "C" {
+struct ldrawable {
+  line *element;
+  bool is_owner;
+};
 
-  extern void cplot_register (lua_State *L);
+static const char * const cplot_mt_name = "GSL.pl.cplot";
+static const char * const drawable_mt_name = "GSL.pl.draw";
 
-  struct ldrawable {
-    line *element;
-    bool is_owner;
-  };
+static int drawable_new     (lua_State *L);
+static int drawable_move_to (lua_State *L);
+static int drawable_line_to (lua_State *L);
+static int drawable_close   (lua_State *L);
+static int drawable_free    (lua_State *L);
 
-  static const char * const cplot_mt_name = "GSL.pl.cplot";
-  static const char * const drawable_mt_name = "GSL.pl.draw";
+static int lcplot_new     (lua_State *L);
+static int lcplot_show    (lua_State *L);
+static int lcplot_add     (lua_State *L);
+static int lcplot_free    (lua_State *L);
 
-  static int drawable_new     (lua_State *L);
-  static int drawable_move_to (lua_State *L);
-  static int drawable_line_to (lua_State *L);
-  static int drawable_close   (lua_State *L);
-  static int drawable_free    (lua_State *L);
-
-  static int cplot_new     (lua_State *L);
-  static int cplot_show    (lua_State *L);
-  static int cplot_add     (lua_State *L);
-  static int cplot_free    (lua_State *L);
-
-  struct ldrawable* check_drawable (lua_State *L, int index);
-  struct lcplot*    check_cplot    (lua_State *L, int index);
-}
+struct ldrawable* check_drawable (lua_State *L, int index);
+struct lcplot*    check_lcplot    (lua_State *L, int index);
 
 static const struct luaL_Reg cplot_functions[] = {
   {"line",      drawable_new},
-  {"cplot",     cplot_new},
+  {"cplot",     lcplot_new},
   {NULL, NULL}
 };
-
 
 static const struct luaL_Reg drawable_methods[] = {
   {"move_to",     drawable_move_to},
@@ -53,50 +48,19 @@ static const struct luaL_Reg drawable_methods[] = {
 };
 
 static const struct luaL_Reg cplot_methods[] = {
-  {"show",        cplot_show},
-  {"add",         cplot_add},
-  {"__gc",        cplot_free},
+  {"show",        lcplot_show},
+  {"add",         lcplot_add},
+  {"__gc",        lcplot_free},
   {NULL, NULL}
 };
-
-static agg::rgba8
-color_lookup (const char *color_str)
-{
-  const char *p = color_str;
-  agg::rgba8 c;
-  int val = 180;
-
-  if (strncmp (p, "light", 5) == 0)
-    {
-      val = 255;
-      p += 5;
-    }
-  else if (strncmp (p, "dark", 4) == 0)
-    {
-      val = 80;
-      p += 4;
-    }
-
-  if (strcmp (p, "red") == 0)
-    c = agg::rgba8(val, 0, 0);
-  else if (strcmp (p, "green") == 0)
-    c = agg::rgba8(0, val, 0);
-  else if (strcmp (p, "blue") == 0)
-    c = agg::rgba8(0, 0, val);
-  else
-    c = agg::rgba8(0, 0, 0);
-
-  return c;
-}
 
 int
 drawable_new (lua_State *L)
 {
   struct ldrawable *d = (struct ldrawable *) lua_newuserdata (L, sizeof (struct ldrawable));
   const char *color_str = luaL_optstring (L, 1, "black");
-  agg::rgba8 color = color_lookup (color_str);
 
-  d->element  = new line(color);
+  d->element = line_new (color_str);
   d->is_owner = true;
 
   luaL_getmetatable (L, drawable_mt_name);
@@ -112,7 +76,7 @@ check_drawable (lua_State *L, int index)
 }
 
 struct lcplot *
-check_cplot (lua_State *L, int index)
+check_lcplot (lua_State *L, int index)
 {
   return (struct lcplot *) luaL_checkudata (L, index, cplot_mt_name);
 }
@@ -122,7 +86,7 @@ drawable_free (lua_State *L)
 {
   struct ldrawable *d = check_drawable (L, 1);
   if (d->is_owner)
-    delete d->element;
+    line_free (d->element);
   return 0;
 }
 
@@ -132,8 +96,7 @@ drawable_move_to (lua_State *L)
   struct ldrawable *d = check_drawable (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
-  agg::path_storage& p = d->element->path;
-  p.move_to(x, y);
+  line_move_to (d->element, x, y);
   return 0;
 }
 
@@ -143,8 +106,7 @@ drawable_line_to (lua_State *L)
   struct ldrawable *d = check_drawable (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
-  agg::path_storage& p = d->element->path;
-  p.line_to(x, y);
+  line_line_to (d->element, x, y);
   return 0;
 }
 
@@ -152,31 +114,23 @@ int
 drawable_close (lua_State *L)
 {
   struct ldrawable *d = check_drawable (L, 1);
-  agg::path_storage& p = d->element->path;
-  p.close_polygon();
+  line_close (d->element);
   return 0;
 }
 
 int
-cplot_new (lua_State *L)
+lcplot_new (lua_State *L)
 {
   lua_Integer use_units = luaL_optinteger (L, 1, 0);
   struct lcplot *cp = (struct lcplot *) lua_newuserdata (L, sizeof (struct lcplot));
 
-  if (use_units)
-    {
-      cp->plot = new units_cplot();
-    }
-  else
-    {
-      cp->plot = new cplot();
-    }
+  cp->plot = cplot_new (use_units);
 
   cp->lua_is_owner = 1;
   cp->is_shown = 0;
   cp->x_app = NULL;
 
-  cp->mutex = new pthread_mutex_t;
+  cp->mutex = emalloc (sizeof(pthread_mutex_t));
   pthread_mutex_init (cp->mutex, NULL);
 
   luaL_getmetatable (L, cplot_mt_name);
@@ -188,15 +142,15 @@ cplot_new (lua_State *L)
 void
 lcplot_destroy (struct lcplot *cp)
 {
-  delete cp->plot;
+  cplot_free (cp->plot);
   pthread_mutex_destroy (cp->mutex);
   free (cp->mutex);
 }
 
 int
-cplot_free (lua_State *L)
+lcplot_free (lua_State *L)
 {
-  struct lcplot *cp = check_cplot (L, 1);
+  struct lcplot *cp = check_lcplot (L, 1);
   if (cp->lua_is_owner && cp->is_shown)
     {
       cp->lua_is_owner = 0;
@@ -205,12 +159,13 @@ cplot_free (lua_State *L)
     {
       lcplot_destroy (cp);
     }
+  return 0;
 }
 
 int
-cplot_add (lua_State *L)
+lcplot_add (lua_State *L)
 {
-  struct lcplot *cp = check_cplot (L, 1);
+  struct lcplot *cp = check_lcplot (L, 1);
   struct ldrawable *d = check_drawable (L, 2);
   cplot *p = cp->plot;
 
@@ -218,13 +173,13 @@ cplot_add (lua_State *L)
 
   if (d->is_owner)
     {
-      p->add(d->element);
+      cplot_add (p, d->element);
       d->is_owner = false;
     }
   else
     {
-      line* ln_copy = new line(*d->element);
-      p->add(ln_copy);
+      line *ln_copy = line_copy (d->element);
+      cplot_add (p, ln_copy);
     }
 
   pthread_mutex_unlock (cp->mutex);
@@ -236,10 +191,9 @@ cplot_add (lua_State *L)
 }
 
 int
-cplot_show (lua_State *L)
+lcplot_show (lua_State *L)
 {
-  struct lcplot *cp = check_cplot (L, 1);
-  cplot *p = cp->plot;
+  struct lcplot *cp = check_lcplot (L, 1);
   pthread_t xwin_thread[1];
   pthread_attr_t attr[1];
 
@@ -253,12 +207,6 @@ cplot_show (lua_State *L)
     }
 
   pthread_attr_destroy (attr);
-  return 0;
-}
-
-int
-agg_main (int argc, char *argv[])
-{
   return 0;
 }
 

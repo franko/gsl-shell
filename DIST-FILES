@@ -69,6 +69,7 @@ cdf.c
 cdf.h
 distributions-list.c
 randist-source.c
+lua-cplot.h
 lua/etc/min.c
 lua/etc/all.c
 lua/etc/README
@@ -204,3 +205,16 @@ scripts/project-diff.sh
 scripts/makedist.sh
 scripts/www-cvs-sync.sh
 scripts/makedist.sh
+agg-plot/Makefile
+agg-plot/canvas.h
+agg-plot/cplot.cpp
+agg-plot/cplot.h
+agg-plot/lua-cplot-priv.h
+agg-plot/lua-cplot.cpp
+agg-plot/units.h
+agg-plot/units_cplot.cpp
+agg-plot/units_cplot.h
+agg-plot/utils.cpp
+agg-plot/utils.h
+agg-plot/xwin-show.cpp
+agg-plot/xwin-show.h

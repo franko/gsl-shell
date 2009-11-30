@@ -33,18 +33,32 @@ endif
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
-  INCLUDES += -I/usr/include
-  LIBS += -L/usr/lib
+  INCLUDES += -I. -I/usr/include -I/usr/pthreads-w32/include
+  LIBS += -L/usr/lib -L/usr/pthreads-w32/lib
+
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_LIBS = -L$(LUADIR)/src -llua51
   LUA_DLL = gsl.dll
+
+  AGG_HOME = /c/fra/src/agg-2.5
+  AGG_CFLAGS = -I$(AGG_HOME)/include
+  AGG_LIBS = -L$(AGG_HOME)/src  -L$(AGG_HOME)/src/platform/win32 \
+		-lagg -laggplatformwin32
+  AGG_TRANS_AFFINE = $(AGG_HOME)/src/agg_trans_affine.o
+
   GSL_SHELL = gsl-shell.exe
 else
-  INCLUDES += -DLUA_USE_LINUX
+  INCLUDES += -I. -DLUA_USE_LINUX
+
+  AGG_LIBS = -lagg -laggplatformX11 -lX11
+
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_DLL = gsl.so
+
   GSL_SHELL = gsl-shell
 endif
+
+INCLUDES += -Iagg-plot
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
@@ -58,7 +72,10 @@ endif
 LUAGSL_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
-		pdf.c cdf.c lua-gsl.c
+		pdf.c cdf.c lua-gsl.c lua-cplot.c gsl-shell.c
+
+AGGMAIN_SRC = agg_main.cpp
+AGGMAIN_OBJ = agg_main.o
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
   LUAGSL_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
@@ -67,12 +84,13 @@ ifeq ($(strip $(ENABLE_COMPLEX)), yes)
 endif
 
 COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+CXXCOMPILE = $(CXX) -c
 
 SUBDIRS = lua agg-plot
 
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 
-DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)
+DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P) $(AGGMAIN_SRC:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
@@ -83,8 +101,8 @@ all: $(SUBDIRS) $(TARGETS)
 
 ifeq ($(PLATFORM), mingw)
 
-gsl-shell.exe: $(LUAGSL_OBJ_FILES) gsl-shell.o
-	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a $(LIBS) $(GSL_LIBS)
+gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ)
+	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a $(LUADIR)/src/liblua.a -lpthreadGC2 $(LIBS) $(GSL_LIBS) $(AGG_LIBS) -lgdi32 -lsupc++
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
 	$(AR) $@ $?
@@ -95,10 +113,8 @@ gsl.dll: $(LUAGSL_OBJ_FILES)
 		$(LUA_LIBS)
 else
 
-AGG_LIBS = -lagg -laggplatformX11 -lX11
-
-gsl-shell: $(LUAGSL_OBJ_FILES) gsl-shell.o agg-plot/libaggplot.a
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) gsl-shell.o $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -Wl,--allow-multiple-definition -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
+gsl-shell: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a
+	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -Wl,--allow-multiple-definition -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
 
 gsl.so: $(LUAGSL_OBJ_FILES)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
@@ -108,6 +124,15 @@ endif
 %.o: %.c
 	@echo $(COMPILE) -c $<
 	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+            >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.o: %.cpp
+	@echo $(CXXCOMPILE) -c $< 
+	@$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
 	@-cp .deps/$(*F).pp .deps/$(*F).P; \
 	tr ' ' '\012' < .deps/$(*F).pp \
           | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
