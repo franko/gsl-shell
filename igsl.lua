@@ -214,6 +214,18 @@ function ode_iter(s, t0, y0, t1, tstep)
 	  end
 end
 
+function sample(f, xi, xs, n)
+   local k = 0
+   local cf = (xs-xi)/n
+   return function()
+	     if k <= n then
+		local x = xi + k*cf
+		k = k+1
+		return x, f(x)
+	     end
+	  end
+end
+
 local function hc_reduce(hc, f, accu)
    local n = hc.length
    for i=0, n do accu = f(accu, hc:get(i)) end

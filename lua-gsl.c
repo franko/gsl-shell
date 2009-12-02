@@ -81,6 +81,7 @@ luaopen_gsl (lua_State *L)
   lua_pushboolean (L, 0);
   lua_setfield (L, -2, "have_complex");
 #endif
+  lua_pop (L, 1);
 
   return 1;
 }

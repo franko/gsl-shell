@@ -2,7 +2,7 @@
 #include <pthread.h>
 
 #include "defs.h"
-#include "cplot-cintfc.h"
+#include "agg-cplot.h"
 
 __BEGIN_DECLS
 

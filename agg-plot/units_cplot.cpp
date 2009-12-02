@@ -15,6 +15,10 @@ units_cplot::draw_axis(canvas &canvas)
   viewport_scale(m);
   canvas.scale(m);
 
+  agg::path_storage mark;
+  agg::conv_transform<path_type> mark_tr(mark, m);
+  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+
   agg::path_storage ln;
   agg::conv_transform<path_type> lntr(ln, m);
   dash_type lndash(lntr);
@@ -42,6 +46,9 @@ units_cplot::draw_axis(canvas &canvas)
 
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
+
+	mark.move_to(0.0, y);
+	mark.line_to(-0.01, y);
 
 	if (j > jinf && j < jsup)
 	  {
@@ -74,6 +81,9 @@ units_cplot::draw_axis(canvas &canvas)
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
 
+	mark.move_to(x, 0.0);
+	mark.line_to(x, -0.01);
+
 	if (j > jinf && j < jsup)
 	  {
 	    ln.move_to(x, 0.0);
@@ -86,6 +96,9 @@ units_cplot::draw_axis(canvas &canvas)
 
   lns.width(0.25);
   canvas.draw(lns, agg::rgba(0.2, 0.2, 0.2));
+
+  mark_stroke.width(1.0);
+  canvas.draw(mark_stroke, agg::rgba8(0, 0, 0));
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);

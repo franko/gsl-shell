@@ -45,7 +45,7 @@ endif
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
 AGGPLOT_SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp \
-		    cplot-cintfc.cpp
+		    agg-cplot.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 

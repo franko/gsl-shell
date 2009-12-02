@@ -6,4 +6,5 @@ BUILD_LUA_DLL = no
 PLATFORM = none
 
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -O2 -fomit-frame-pointer -Wall
+CXXFLAGS = -O2

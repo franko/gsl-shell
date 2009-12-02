@@ -101,7 +101,7 @@ all: $(SUBDIRS) $(TARGETS)
 
 ifeq ($(PLATFORM), mingw)
 
-gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ)
+gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a
 	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a $(LUADIR)/src/liblua.a -lpthreadGC2 $(LIBS) $(GSL_LIBS) $(AGG_LIBS) -lgdi32 -lsupc++
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
@@ -114,7 +114,7 @@ gsl.dll: $(LUAGSL_OBJ_FILES)
 else
 
 gsl-shell: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -Wl,--allow-multiple-definition -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
+	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
 
 gsl.so: $(LUAGSL_OBJ_FILES)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
@@ -145,7 +145,7 @@ $(SUBDIRS):
 	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
 
 clean:
-	$(MAKE) -C lua clean
+	$(MAKE) -C agg-plot clean
 	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
 	$(RM) -r ./.libs/
 

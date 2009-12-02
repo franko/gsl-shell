@@ -5,45 +5,47 @@
 #include "lauxlib.h"
 
 #include "common.h"
-#include "cplot-cintfc.h"
+#include "agg-cplot.h"
 #include "lua-cplot-priv.h"
 #include "xwin-show.h"
 
 extern void cplot_register (lua_State *L);
 
-struct ldrawable {
+struct lline {
   line *element;
   bool is_owner;
 };
 
 static const char * const cplot_mt_name = "GSL.pl.cplot";
-static const char * const drawable_mt_name = "GSL.pl.draw";
+static const char * const line_mt_name = "GSL.pl.draw";
 
-static int drawable_new     (lua_State *L);
-static int drawable_move_to (lua_State *L);
-static int drawable_line_to (lua_State *L);
-static int drawable_close   (lua_State *L);
-static int drawable_free    (lua_State *L);
+static int lline_new     (lua_State *L);
+static int lpoly_new     (lua_State *L);
+static int lline_move_to (lua_State *L);
+static int lline_line_to (lua_State *L);
+static int lline_close   (lua_State *L);
+static int lline_free    (lua_State *L);
 
 static int lcplot_new     (lua_State *L);
 static int lcplot_show    (lua_State *L);
 static int lcplot_add     (lua_State *L);
 static int lcplot_free    (lua_State *L);
 
-struct ldrawable* check_drawable (lua_State *L, int index);
+struct lline* check_drawable (lua_State *L, int index);
 struct lcplot*    check_lcplot    (lua_State *L, int index);
 
 static const struct luaL_Reg cplot_functions[] = {
-  {"line",      drawable_new},
+  {"line",      lline_new},
+  {"poly",      lpoly_new},
   {"cplot",     lcplot_new},
   {NULL, NULL}
 };
 
-static const struct luaL_Reg drawable_methods[] = {
-  {"move_to",     drawable_move_to},
-  {"line_to",     drawable_line_to},
-  {"close",       drawable_close},
-  {"__gc",        drawable_free},
+static const struct luaL_Reg lline_methods[] = {
+  {"move_to",     lline_move_to},
+  {"line_to",     lline_line_to},
+  {"close",       lline_close},
+  {"__gc",        lline_free},
   {NULL, NULL}
 };
 
@@ -55,24 +57,40 @@ static const struct luaL_Reg cplot_methods[] = {
 };
 
 int
-drawable_new (lua_State *L)
+lline_new (lua_State *L)
 {
-  struct ldrawable *d = (struct ldrawable *) lua_newuserdata (L, sizeof (struct ldrawable));
   const char *color_str = luaL_optstring (L, 1, "black");
+  struct lline *d = (struct lline *) lua_newuserdata (L, sizeof (struct lline));
 
   d->element = line_new (color_str);
   d->is_owner = true;
 
-  luaL_getmetatable (L, drawable_mt_name);
+  luaL_getmetatable (L, line_mt_name);
   lua_setmetatable (L, -2);
 
   return 1;
 }
 
-struct ldrawable *
+int
+lpoly_new (lua_State *L)
+{
+  const char *color_str = luaL_checkstring (L, 1);
+  const char *outline_color_str = luaL_optstring (L, 2, NULL);
+  struct lline *d = (struct lline *) lua_newuserdata (L, sizeof (struct lline));
+
+  d->element = poly_new (color_str, outline_color_str);
+  d->is_owner = true;
+
+  luaL_getmetatable (L, line_mt_name);
+  lua_setmetatable (L, -2);
+
+  return 1;
+}
+
+struct lline *
 check_drawable (lua_State *L, int index)
 {
-  return (struct ldrawable*) luaL_checkudata (L, index, drawable_mt_name);
+  return (struct lline*) luaL_checkudata (L, index, line_mt_name);
 }
 
 struct lcplot *
@@ -82,18 +100,18 @@ check_lcplot (lua_State *L, int index)
 }
 
 int
-drawable_free (lua_State *L)
+lline_free (lua_State *L)
 {
-  struct ldrawable *d = check_drawable (L, 1);
+  struct lline *d = check_drawable (L, 1);
   if (d->is_owner)
     line_free (d->element);
   return 0;
 }
 
 int
-drawable_move_to (lua_State *L)
+lline_move_to (lua_State *L)
 {
-  struct ldrawable *d = check_drawable (L, 1);
+  struct lline *d = check_drawable (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
   line_move_to (d->element, x, y);
@@ -101,9 +119,9 @@ drawable_move_to (lua_State *L)
 }
 
 int
-drawable_line_to (lua_State *L)
+lline_line_to (lua_State *L)
 {
-  struct ldrawable *d = check_drawable (L, 1);
+  struct lline *d = check_drawable (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
   line_line_to (d->element, x, y);
@@ -111,9 +129,9 @@ drawable_line_to (lua_State *L)
 }
 
 int
-drawable_close (lua_State *L)
+lline_close (lua_State *L)
 {
-  struct ldrawable *d = check_drawable (L, 1);
+  struct lline *d = check_drawable (L, 1);
   line_close (d->element);
   return 0;
 }
@@ -121,8 +139,11 @@ drawable_close (lua_State *L)
 int
 lcplot_new (lua_State *L)
 {
-  lua_Integer use_units = luaL_optinteger (L, 1, 0);
+  lua_Integer use_units = 1;
   struct lcplot *cp = (struct lcplot *) lua_newuserdata (L, sizeof (struct lcplot));
+
+  if (lua_isboolean (L, 1))
+    use_units = lua_toboolean (L, 1);
 
   cp->plot = cplot_new (use_units);
 
@@ -166,7 +187,7 @@ int
 lcplot_add (lua_State *L)
 {
   struct lcplot *cp = check_lcplot (L, 1);
-  struct ldrawable *d = check_drawable (L, 2);
+  struct lline *d = check_drawable (L, 2);
   cplot *p = cp->plot;
 
   pthread_mutex_lock (cp->mutex);
@@ -221,10 +242,10 @@ cplot_register (lua_State *L)
   lua_pop (L, 1);
 
   /* drawable declaration */
-  luaL_newmetatable (L, drawable_mt_name);
+  luaL_newmetatable (L, line_mt_name);
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, drawable_methods);
+  luaL_register (L, NULL, lline_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */

@@ -2,9 +2,7 @@
 #include "units_cplot.h"
 #include "cplot.h"
 
-#include "cplot-cintfc.h"
-
-extern int agg_main (int argc, char *argv[]);
+#include "agg-cplot.h"
 
 static agg::rgba8
 color_lookup (const char *color_str)
@@ -20,7 +18,7 @@ color_lookup (const char *color_str)
     }
   else if (strncmp (p, "dark", 4) == 0)
     {
-      val = 80;
+      val = 120;
       p += 4;
     }
 
@@ -30,6 +28,12 @@ color_lookup (const char *color_str)
     c = agg::rgba8(0, val, 0);
   else if (strcmp (p, "blue") == 0)
     c = agg::rgba8(0, 0, val);
+  else if (strcmp (p, "cyan") == 0)
+    c = agg::rgba8(0, val, val);
+  else if (strcmp (p, "magenta") == 0)
+    c = agg::rgba8(val, 0, val);
+  else if (strcmp (p, "yellow") == 0)
+    c = agg::rgba8(val, val, 0);
   else
     c = agg::rgba8(0, 0, 0);
 
@@ -54,57 +58,69 @@ void cplot_free (CCPLOT* _d)
   delete cp;
 }
 
-void cplot_add(CCPLOT *_p, CDRAW *_d)
+void cplot_add(CCPLOT *_p, CLINE *_d)
 {
   cplot *p = (cplot *) _p;
   line *d = (line *) _d;
   p->add(d);
 }
 
-CDRAW* line_new(const char *color_str)
+CLINE* line_new(const char *color_str)
 {
   agg::rgba8 c = color_lookup (color_str);
   line* ln = new line(c);
-  return (CDRAW *) ln;
+  return (CLINE *) ln;
+}
+
+CLINE* poly_new(const char *color_str, const char *outline_color_str)
+{
+  agg::rgba8 fill_col = color_lookup (color_str);
+  line* ln;
+
+  if (outline_color_str)
+    {
+      agg::rgba8 outline_col = color_lookup (outline_color_str);
+      ln = new poly_outline(fill_col, outline_col);
+    }
+  else
+    {
+      ln = new polygon(fill_col);
+    }
+
+  return (CLINE *) ln;
 }
 
 
-CDRAW* line_copy(CDRAW *_src)
+CLINE* line_copy(CLINE *_src)
 {
   line* src = (line*) _src;
   line* ln = new line(*src);
-  return (CDRAW *) ln;
+  return (CLINE *) ln;
 }
 
-void line_free (CDRAW* _d)
+void line_free (CLINE* _d)
 {
   line* ln = (line*) _d;
   delete ln;
 }
 
-void line_move_to (CDRAW* _d, double x, double y)
+void line_move_to (CLINE* _d, double x, double y)
 {
   line* ln = (line*) _d;
   agg::path_storage& p = ln->path;
   p.move_to(x, y);
 }
 
-void line_line_to (CDRAW* _d, double x, double y)
+void line_line_to (CLINE* _d, double x, double y)
 {
   line* ln = (line*) _d;
   agg::path_storage& p = ln->path;
   p.line_to(x, y);
 }
 
-void line_close (CDRAW* _d)
+void line_close (CLINE* _d)
 {
   line* ln = (line*) _d;
   agg::path_storage& p = ln->path;
   p.close_polygon();
-}
-
-int
-agg_main (int argc, char *argv[])
-{
-  return 0;
 }
