@@ -1,11 +1,11 @@
 
-ENABLE_COMPLEX = yes
+ENABLE_COMPLEX = no
 ENABLE_AGG_PLOT = yes
-BUILD_LUA_DLL = no
+BUILD_LUA_DLL = yes
 
 # PLATFORM should can be linux or mingw
 PLATFORM = none
 
 CC = gcc
-CFLAGS = -O2 -fomit-frame-pointer -Wall
+CFLAGS = -O2 -Wall
 CXXFLAGS = -O2

@@ -7,7 +7,7 @@
 # Your platform. See PLATS for possible values.
 PLATFORM = none
 
-CC= gcc --std=c99 -march=i586
+CC= gcc --std=c99
 CFLAGS= -g $(DEFS) $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib

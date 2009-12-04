@@ -579,8 +579,9 @@ namespace agg
         if(m_specific->m_sys_format == pix_format_undefined)
         {
             fprintf(stderr,
-                   "RGB masks are not compatible with AGG pixel formats:\n"
-                   "R=%08x, R=%08x, B=%08x\n", r_mask, g_mask, b_mask);
+		    "RGB masks are not compatible with AGG pixel formats:\n"
+		    "R=%08x, R=%08x, B=%08x\n", 
+		    (unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
             XCloseDisplay(m_specific->m_display);
             return false;
         }
