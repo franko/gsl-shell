@@ -33,7 +33,7 @@ endif
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
-  INCLUDES += -I. -I/usr/include -I/usr/pthreads-w32/include
+  INCLUDES += -I. -I/usr/include
   LIBS += -L/usr/lib -L/usr/pthreads-w32/lib
 
   LUA_CFLAGS = -I$(LUADIR)/src
@@ -42,82 +42,84 @@ ifeq ($(strip $(PLATFORM)), mingw)
 
   AGG_HOME = /c/fra/src/agg-2.5
   AGG_CFLAGS = -I$(AGG_HOME)/include
-  AGG_LIBS = -L$(AGG_HOME)/src  -L$(AGG_HOME)/src/platform/win32 \
-		-lagg -laggplatformwin32
-  AGG_TRANS_AFFINE = $(AGG_HOME)/src/agg_trans_affine.o
+  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lpthreadGC2 -lgdi32 -lsupc++
 
   GSL_SHELL = gsl-shell.exe
 else
   INCLUDES += -I. -DLUA_USE_LINUX
-
-  AGG_LIBS = -lagg -laggplatformX11 -lX11
-
+  AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_DLL = gsl.so
-
   GSL_SHELL = gsl-shell
 endif
 
-INCLUDES += -Iagg-plot
+SUBDIRS = lua
+
+LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
+
+C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
+		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
+		integ.c ode_solver.c ode.c random.c randist.c \
+		pdf.c cdf.c lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
-  CFLAGS += -fpic
+#  CFLAGS += -fpic
   DEFS += -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
 else
+  C_SRC_FILES += gsl-shell.c
   SUBDIRS_DEFS += -DGSL_SHELL
   TARGETS = $(GSL_SHELL)
 endif
 
-LUAGSL_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
-		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
-		integ.c ode_solver.c ode.c random.c randist.c \
-		pdf.c cdf.c lua-gsl.c lua-cplot.c gsl-shell.c
-
-AGGMAIN_SRC = agg_main.cpp
-AGGMAIN_OBJ = agg_main.o
+ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
+  C_SRC_FILES += lua-cplot.c
+  INCLUDES += -I/usr/pthreads-w32/include -Iagg-plot
+  SUBDIRS += agg-plot
+  DEFS += -DAGG_PLOT_ENABLED
+  LUAGSL_LIBS += agg-plot/libaggplot.a
+  LIBS += $(AGG_LIBS)
+endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
-  LUAGSL_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
+  C_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
   DEFS += -DLNUM_COMPLEX
   SUBDIRS_DEFS += -DLNUM_COMPLEX
 endif
 
 COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
-CXXCOMPILE = $(CXX) -c
+CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
 
-SUBDIRS = lua agg-plot
+LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 
-LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
-
-DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P) $(AGGMAIN_SRC:%.cpp=.deps/%.P)
+DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
 GSL_LIBS = -lgsl -lgslcblas -lm
+LIBS += $(GSL_LIBS)
 
 all: $(SUBDIRS) $(TARGETS)
 
 ifeq ($(PLATFORM), mingw)
 
-gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a
-	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a $(LUADIR)/src/liblua.a -lpthreadGC2 $(LIBS) $(GSL_LIBS) $(AGG_LIBS) -lgdi32 -lsupc++
+gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
 	$(AR) $@ $?
 	$(RANLIB) $@
 
-gsl.dll: $(LUAGSL_OBJ_FILES)
-	$(CC) -O -shared -o $@ $(LUAGSL_OBJ_FILES) $(LIBS) $(GSL_LIBS) \
-		$(LUA_LIBS)
+gsl.dll: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 else
 
-gsl-shell: $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) agg-plot/libaggplot.a
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(AGGMAIN_OBJ) $(LUADIR)/src/liblua.a agg-plot/libaggplot.a $(LIBS) $(GSL_LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses $(AGG_LIBS) -lpthread -lsupc++
+gsl-shell: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
 
-gsl.so: $(LUAGSL_OBJ_FILES)
-	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(GSL_LIBS)
+gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 	ln -sf ./.libs/libluagsl.so $@
 endif
 
@@ -146,7 +148,8 @@ $(SUBDIRS):
 
 clean:
 	$(MAKE) -C agg-plot clean
-	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+	$(MAKE) -C lua clean
+	$(RM) *.o $(TARGETS)
 	$(RM) -r ./.libs/
 
 -include $(DEP_FILES)

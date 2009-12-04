@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -8,6 +7,9 @@
 #include "canvas.h"
 #include "cplot.h"
 #include "lua-cplot-priv.h"
+
+
+extern void platform_support_prepare();
 
 enum flip_y_e { flip_y = true };
 
@@ -49,6 +51,8 @@ void *
 xwin_thread_function (void *_cplot) 
 {
   struct lcplot *cp = (struct lcplot *) _cplot;
+
+  platform_support_prepare();
 
   pthread_mutex_lock (cp->mutex);
   cp->is_shown = 1;

@@ -18,10 +18,20 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+gsl.real_env = _G
+setfenv(1, gsl)
+
+local table  = real_env.table
+local math   = real_env.math
+local string = real_env.string
+local type   = real_env.type
+
+real_env = nil
+
 if not have_complex then
-   conj = |x| x
-   real = conj
-   imag = |x| 0
+   math.conj = function(x) return x end
+   math.real = math.conj
+   math.imag = function(x) return 0 end
 end
 
 local cat = table.concat
@@ -85,7 +95,7 @@ end
 
 function matrix_reduce_rowcol(m, fcol, ac0, frow, ar0)
    local r, c = m:dims()
-   local getnew = type(ar0) == 'table' and (|| {}) or (|| ar0)
+   local getnew = type(ar0) == 'table' and (function() return {} end) or (function() return ar0 end)
    for i=1, r do
       local ar = getnew()
       for j=1, c do
@@ -98,9 +108,9 @@ function matrix_reduce_rowcol(m, fcol, ac0, frow, ar0)
 end
 
 local function tostring_eps(z, eps)
-   local a, b = real(z), imag(z)
-   local f = |x| fmt('%g', x)
-   local s = abs(a) > eps and f(a) or ''
+   local a, b = math.real(z), math.imag(z)
+   local f = function(x) return fmt('%g', x) end
+   local s = math.abs(a) > eps and f(a) or ''
    if b > eps then
       local sign = (s == '' and '' or '+')
       s = s .. fmt('%s%si', sign, f(b))
@@ -111,7 +121,7 @@ local function tostring_eps(z, eps)
 end
 
 local function matrix_from_table(ctor, t)
-   return matrix_f_set(ctor(#t, #t[1]), |i,j| t[i][j])
+   return matrix_f_set(ctor(#t, #t[1]), function(i,j) return t[i][j] end)
 end
 
 local function vector_from_table(ctor, t)
@@ -143,38 +153,40 @@ function matrix_print(m)
 		     return (ln > w and ln or w)
 		  end
    local width = matrix_reduce(m, fwidth, 0)
-   local pad = |s| string.rep(' ', width - #s) .. s
+   local pad = function(s) return string.rep(' ', width - #s) .. s end
+   local function colls(lns, ln)
+      return push(lns, '[ ' .. cat(ln, ' ') .. ' ]')
+   end
+   local function coll(ln, z)
+      return push(ln, pad(tostring_eps(z, eps)))
+   end
    local lines = 
-      matrix_reduce_rowcol(m, 
-			   |lns, ln| push(lns, '[ ' .. cat(ln, ' ') .. ' ]'),
-			   {}, 
-			   |ln, z| push(ln, pad(tostring_eps(z, eps))),
-			   {})
+      matrix_reduce_rowcol(m, colls, {}, coll, {})
    return cat(lines, '\n')
 end
 
 function t(m)
    local r, c = m:dims()
-   return new(c, r, |i,j| m:get(j,i))
+   return new(c, r, function(i,j) return m:get(j,i) end)
 end
 
 function h(m)
    local r, c = m:dims()
-   return cnew(c, r, |i,j| conj(m:get(j,i)))
+   return cnew(c, r, function(i,j) return math.conj(m:get(j,i)) end)
 end
 
 function diag(v)
    local n = v:dims()
-   return new(n, n, |i,j| i == j and v:get(i,1) or 0)
+   return new(n, n, function(i,j) return i == j and v:get(i,1) or 0 end)
 end
 
 function unit(n)
-   return new(n, n, |i,j| i == j and 1 or 0)
+   return new(n, n, function(i,j) return i == j and 1 or 0 end)
 end
 
 function matrix_norm(m)
-   local sq = matrix_reduce(m, |p, z| p + z*conj(z), 0)
-   return sqrt(sq)
+   local sq = matrix_reduce(m, function(p, z) return p + z*math.conj(z) end, 0)
+   return math.sqrt(sq)
 end
 
 function matrix_columns (m, cstart, cnb)
@@ -184,16 +196,16 @@ end
 
 function matrix_row_print(m)
    local eps = m:norm() * 1e-8
-   local f = |p, z| push(p, tostring_eps(z, eps))
+   local f = function(p, z) return push(p, tostring_eps(z, eps)) end
    return cat(matrix_reduce(m, f, {}), ', ')
 end
 
 function set(d, s)
-   matrix_f_set(d, |i,j| s:get(i,j))
+   matrix_f_set(d, function(i,j) return s:get(i,j) end)
 end
 
 function null(m)
-   matrix_f_set(m, |i,j| 0)
+   matrix_f_set(m, function(i,j) return 0 end)
 end
 
 local function add_matrix_method(s, m)
@@ -233,8 +245,11 @@ local function hc_reduce(hc, f, accu)
 end
 
 local function hc_print(hc)
-   local eps = 1e-8 * hc_reduce(hc, |p,z| p + z*conj(z), 0)
-   local f = |p,z| push(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+   local ccadd = function(p,z) return p + z*math.conj(z) end
+   local eps = 1e-8 * hc_reduce(hc, ccadd, 0)
+   local function f(p,z) 
+      return push(p, fmt('%6i: %s', #p, tostring_eps(z, eps))) 
+   end
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 

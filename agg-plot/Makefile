@@ -35,17 +35,18 @@ ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
-
   AGG_HOME = /c/fra/src/agg-2.5
   AGG_CFLAGS = -I$(AGG_HOME)/include
+  PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
   AGG_CFLAGS = -I/usr/include/agg2
+  PLATSUP_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-AGGPLOT_SRC_FILES = utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp \
-		    agg-cplot.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp cplot.cpp units_cplot.cpp \
+                    xwin-show.cpp agg-cplot.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 

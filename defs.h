@@ -40,11 +40,9 @@ typedef int bool;
 #define false 0
 #define true 1
 #endif
-#define AGG_PLOT_ENABLED
 #else
 /* linux */
 #include <stdbool.h>
-#define AGG_PLOT_ENABLED
 #endif
 
 #define OUT_OF_MEMORY_MSG "out of memory"

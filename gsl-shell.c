@@ -61,7 +61,6 @@
 #include "lua-gsl.h"
 #include "lua-utils.h"
 
-
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
@@ -465,7 +464,7 @@ static int pmain (lua_State *L) {
   return 0;
 }
 
-int gsl_shell_main (int argc, char **argv) {
+int main (int argc, char **argv) {
   int status;
   struct Smain s;
 
