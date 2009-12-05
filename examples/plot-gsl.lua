@@ -13,7 +13,7 @@ end
 function demo1()
    local f = function(t) return math.exp(-0.3*t) * math.sin(2*math.pi*t) end
    local p = gsl.cplot()
-   p:add( fline(f, 0, 15) )
+   p:add( fline(f, 0, 15, 'red', 512) )
    return p
 end
 

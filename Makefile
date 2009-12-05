@@ -42,7 +42,10 @@ ifeq ($(strip $(PLATFORM)), mingw)
 
   AGG_HOME = /c/fra/src/agg-2.5
   AGG_CFLAGS = -I$(AGG_HOME)/include
-  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lpthreadGC2 -lgdi32 -lsupc++
+  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
+
+  PTHREAD_CFLAGS = -I/usr/pthreads-w32/include
+  PTHREAD_LIBS = -lpthreadGC2 
 
   GSL_SHELL = gsl-shell.exe
 else
@@ -51,6 +54,7 @@ else
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_DLL = gsl.so
   GSL_SHELL = gsl-shell
+  PTHREAD_LIBS = -lpthread
 endif
 
 SUBDIRS = lua
@@ -63,7 +67,7 @@ C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 		pdf.c cdf.c lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
-#  CFLAGS += -fpic
+  CFLAGS += -fpic
   DEFS += -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
 else
@@ -74,11 +78,11 @@ endif
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   C_SRC_FILES += lua-cplot.c
-  INCLUDES += -I/usr/pthreads-w32/include -Iagg-plot
+  INCLUDES += $(PTHREAD_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED
   LUAGSL_LIBS += agg-plot/libaggplot.a
-  LIBS += $(AGG_LIBS)
+  LIBS += $(PTHREAD_LIBS) $(AGG_LIBS)
 endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
