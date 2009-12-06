@@ -18,7 +18,7 @@ extern void cplot_free (CCPLOT *p);
 extern CLINE *line_new  (const char *color_str);
 extern CLINE *line_copy (CLINE *d);
 extern CLINE *poly_new(const char *color_str, const char *outline_color);
-// extern CLINE *dashed_new(const char *color_str, const char *outline_color);
+extern CLINE* dashed_line_new(const char *color_str, double l1, double l2);
 
 extern void line_free    (CLINE *d);
 extern void line_move_to (CLINE *d, double x, double y);

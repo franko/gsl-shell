@@ -4,6 +4,7 @@
 
 #include "agg_conv_stroke.h"
 #include "agg_conv_dash.h"
+#include "agg_conv_contour.h"
 #include "agg_vcgen_markers_term.h"
 #include "agg_bounding_rect.h"
 
@@ -144,6 +145,13 @@ poly_outline::draw(canvas& canvas, agg::trans_affine& t)
   agg::conv_transform<path_type> ptr(p, t);
   canvas.draw(ptr, this->color);
 
+#if 0
+  agg::conv_contour<agg::conv_transform<path_type> > contour(ptr);
+  agg::conv_stroke<agg::conv_contour<agg::conv_transform<path_type> > > ps(contour);
+  contour.width(-1.0);
+  contour.auto_detect_orientation(true);
+#else
   agg::conv_stroke<agg::conv_transform<path_type> > ps(ptr);
+#endif
   canvas.draw(ps, this->m_outline_color);
 }

@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <pthread.h>
 
 #include "lua.h"
@@ -60,13 +61,41 @@ int
 lline_new (lua_State *L)
 {
   const char *color_str = luaL_optstring (L, 1, "black");
-  struct lline *d = (struct lline *) lua_newuserdata (L, sizeof (struct lline));
+  struct lline *d;
 
-  d->element = line_new (color_str);
+  d = (struct lline *) lua_newuserdata (L, sizeof (struct lline));
+
+  if (lua_gettop (L) > 1)
+    {
+      double ll[2] = {10.0, 10.0};
+      size_t j, n;
+
+      if (! lua_istable (L, 2))
+	return luaL_error (L, "second argument of line should be a list of numbers"
+			   "to define dashed lines.");
+
+      n = lua_objlen (L, 2);
+      for (j = 1; j <= n && j <= 2; j++)
+	{
+	  lua_rawgeti (L, 2, j);
+	  if (lua_isnumber (L, -1))
+	    ll[j-1] = lua_tonumber (L, -1);
+	  lua_pop (L, 1);
+	}
+
+      d->element = dashed_line_new (color_str, ll[0], ll[1]);
+    }
+  else
+    {
+      d->element = line_new (color_str);
+    }
+
   d->is_owner = true;
 
   luaL_getmetatable (L, line_mt_name);
   lua_setmetatable (L, -2);
+
+  printf ("created lline: %p\n", d);
 
   return 1;
 }
@@ -93,18 +122,20 @@ check_drawable (lua_State *L, int index)
   return (struct lline*) luaL_checkudata (L, index, line_mt_name);
 }
 
-struct lcplot *
-check_lcplot (lua_State *L, int index)
-{
-  return (struct lcplot *) luaL_checkudata (L, index, cplot_mt_name);
-}
-
 int
 lline_free (lua_State *L)
 {
   struct lline *d = check_drawable (L, 1);
+  printf ("%p, line free... ", d);
   if (d->is_owner)
-    line_free (d->element);
+    {
+      printf ("actually\n");
+      line_free (d->element);
+    }
+  else
+    {
+      printf ("not really\n");
+    }
   return 0;
 }
 
@@ -124,6 +155,7 @@ lline_line_to (lua_State *L)
   struct lline *d = check_drawable (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
+  /*  printf ("%la %la\n", x, y); */
   line_line_to (d->element, x, y);
   return 0;
 }
@@ -136,26 +168,37 @@ lline_close (lua_State *L)
   return 0;
 }
 
+struct lcplot *
+check_lcplot (lua_State *L, int index)
+{
+  struct lcplot **ptr = luaL_checkudata (L, index, cplot_mt_name);
+  return *ptr;
+}
+
 int
 lcplot_new (lua_State *L)
 {
   lua_Integer use_units = 1;
-  struct lcplot *cp = (struct lcplot *) lua_newuserdata (L, sizeof (struct lcplot));
+  struct lcplot **cpptr = lua_newuserdata (L, sizeof(void *));
+  struct lcplot *cp;
 
   if (lua_isboolean (L, 1))
     use_units = lua_toboolean (L, 1);
 
+  cp = emalloc (sizeof(struct lcplot));
+  *cpptr = cp;
+
   cp->plot = cplot_new (use_units);
+  pthread_mutex_init (cp->mutex, NULL);
 
   cp->lua_is_owner = 1;
   cp->is_shown = 0;
-  cp->x_app = NULL;
-
-  cp->mutex = emalloc (sizeof(pthread_mutex_t));
-  pthread_mutex_init (cp->mutex, NULL);
+  cp->window = NULL;
 
   luaL_getmetatable (L, cplot_mt_name);
   lua_setmetatable (L, -2);
+
+  printf ("created lcplot: %p\n", cp);
 
   return 1;
 }
@@ -163,23 +206,36 @@ lcplot_new (lua_State *L)
 void
 lcplot_destroy (struct lcplot *cp)
 {
+  printf ("lcplot destroy %p\n", cp);
   cplot_free (cp->plot);
   pthread_mutex_destroy (cp->mutex);
-  free (cp->mutex);
+  free (cp);
 }
 
 int
 lcplot_free (lua_State *L)
 {
   struct lcplot *cp = check_lcplot (L, 1);
-  if (cp->lua_is_owner && cp->is_shown)
+
+  printf ("%p, cplot free... ", cp);
+  pthread_mutex_lock (cp->mutex);
+
+  assert (cp->lua_is_owner);
+
+  if (cp->is_shown)
     {
+      printf ("thread taking ownership of lcplot %p\n", cp);
       cp->lua_is_owner = 0;
     }
   else
     {
+      printf ("really\n");
+      pthread_mutex_unlock (cp->mutex);
       lcplot_destroy (cp);
+      return 0;
     }
+
+  pthread_mutex_unlock (cp->mutex);
   return 0;
 }
 
@@ -203,10 +259,10 @@ lcplot_add (lua_State *L)
       cplot_add (p, ln_copy);
     }
 
-  pthread_mutex_unlock (cp->mutex);
+  if (cp->window)
+    update_callback (cp->window);
 
-  if (cp->x_app)
-    update_callback (cp->x_app);
+  pthread_mutex_unlock (cp->mutex);
 
   return 0;
 }
@@ -218,16 +274,25 @@ lcplot_show (lua_State *L)
   pthread_t xwin_thread[1];
   pthread_attr_t attr[1];
 
-  pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+  pthread_mutex_lock (cp->mutex);
 
-  if (pthread_create(xwin_thread, attr, xwin_thread_function, (void*) cp))
+  if (! cp->is_shown)
     {
+      pthread_attr_init (attr);
+      pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+      if (pthread_create(xwin_thread, attr, xwin_thread_function, (void*) cp))
+	{
+	  pthread_attr_destroy (attr);
+	  return luaL_error(L, "error creating thread.");
+	}
+      
+      cp->is_shown = 1;
       pthread_attr_destroy (attr);
-      return luaL_error(L, "error creating thread.");
     }
 
-  pthread_attr_destroy (attr);
+  pthread_mutex_unlock (cp->mutex);
+
   return 0;
 }
 

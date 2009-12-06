@@ -19,6 +19,7 @@
 #
 
 include makeconfig
+include makeflags
 
 LUADIR = lua
 AR= ar rcu

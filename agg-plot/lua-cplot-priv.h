@@ -8,10 +8,10 @@ __BEGIN_DECLS
 
 struct lcplot {
   cplot *plot;
+  pthread_mutex_t mutex[1];
   int lua_is_owner;
   int is_shown;
-  pthread_mutex_t *mutex;
-  void *x_app;
+  void *window;
 };
 
 extern void lcplot_destroy (struct lcplot *cp);

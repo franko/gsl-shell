@@ -5,7 +5,4 @@ BUILD_LUA_DLL = no
 
 # PLATFORM should can be linux or mingw
 PLATFORM = none
-
-CC = gcc
-CFLAGS = -O2 -Wall
-CXXFLAGS = -O2
+DEBUG = yes

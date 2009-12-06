@@ -34,6 +34,8 @@ color_lookup (const char *color_str)
     c = agg::rgba8(val, 0, val);
   else if (strcmp (p, "yellow") == 0)
     c = agg::rgba8(val, val, 0);
+  else if (strcmp (p, "gray") == 0)
+    c = agg::rgba8(val, val, val);
   else
     c = agg::rgba8(0, 0, 0);
 
@@ -55,6 +57,7 @@ cplot_new(int with_units)
 void cplot_free (CCPLOT* _d)
 {
   cplot* cp = (cplot*) _d;
+  printf ("cplot: %p freed\n", _d);
   delete cp;
 }
 
@@ -69,6 +72,13 @@ CLINE* line_new(const char *color_str)
 {
   agg::rgba8 c = color_lookup (color_str);
   line* ln = new line(c);
+  return (CLINE *) ln;
+}
+
+CLINE* dashed_line_new(const char *color_str, double l1, double l2)
+{
+  agg::rgba8 c = color_lookup (color_str);
+  line* ln = new dashed_line(l1, l2, c);
   return (CLINE *) ln;
 }
 
@@ -101,6 +111,7 @@ CLINE* line_copy(CLINE *_src)
 void line_free (CLINE* _d)
 {
   line* ln = (line*) _d;
+  printf ("line: %p freed\n", _d);
   delete ln;
 }
 

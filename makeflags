@@ -1,0 +1,8 @@
+
+ifeq ($(strip $(DEBUG)), yes)
+  CFLAGS = -O2 -Wall
+  CXXFLAGS = -O2 -Wall
+else
+  CFLAGS = -g -Wall
+  CXXFLAGS = -g -Wall
+endif

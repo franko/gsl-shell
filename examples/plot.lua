@@ -1,36 +1,32 @@
 
-local function fline(f, xi, xs, color, n)
-   color = color and color or 'red'
-   n = n and n or 256
-   local ln = line(color)
-   ln:move_to(xi, f(xi))
-   for x, y in sample(f, xi, xs, n) do
-      ln:line_to(x, y)
-   end
-   return ln
-end
+require 'draw'
 
 function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
-   local p = cplot()
-   p:add( fline(f, 0, 15) )
-   return p
+   return plot(fxline(f, 0, 15, 'red', 512))
 end
 
 function demo2()
+   local N = 800
+   local r = rng()
    local f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
    local p = cplot()
    local b = poly('darkgreen', 'black')
-   for x, y in sample(f, -3, 3, 15) do
-      local hw = 3/15
-      b:move_to(x-hw, 0)
-      b:line_to(x+hw, 0)
-      b:line_to(x+hw, y)
-      b:line_to(x-hw, y)
+   local lx, rx
+   for x, y in sample(f, -3, 3, 25) do
+      local hw = 3/25
+      lx = rx and rx or x - hw
+      rx = lx + 2*hw
+      y = rnd.poisson(r, floor(2*hw*y*N)) / (N*2*hw)
+      b:move_to(lx, 0)
+      b:line_to(rx, 0)
+      b:line_to(rx, y)
+      b:line_to(lx, y)
       b:close()
    end
    p:add(b)
-   p:add( fline(f, -4, 4) )
+   p:add(fxline(f, -4, 4))
+   p:show()
    return p
 end
 
@@ -65,21 +61,9 @@ function vonkoch(n)
 end
 
 function demo3()
-   local p = cplot()
-   local ln = line('blue')
-   ln:move_to(0, 0)
-   for x, y in vonkoch(4) do
-      ln:line_to(x, y)
-   end
-   p:add(ln)
-   return p
+   return plot(iline(vonkoch(4), 'blue'))
 end
 
 p1 = demo1()
-p1:show()
-
 p2 = demo2()
-p2:show()
-
 p3 = demo3()
-p3:show()
