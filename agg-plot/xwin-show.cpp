@@ -58,7 +58,6 @@ xwin_thread_function (void *_cplot)
 
   platform_support_prepare();
 
-  printf("locking for cplot: %p\n", _cplot);
   pthread_mutex_lock (cp->mutex);
 
   the_application app(agg::pix_format_bgr24, flip_y, cp);
@@ -75,22 +74,15 @@ xwin_thread_function (void *_cplot)
       pthread_mutex_unlock (cp->mutex);
     }
 
-  printf("thread finishing, locking for cplot: %p...", _cplot);
-  fflush(stdout);
   pthread_mutex_lock (cp->mutex);
-  printf("locked!\n");
-  fflush(stdout);
   cp->window = NULL;
   if (cp->lua_is_owner)
     {
-      printf ("thread finished, Lua is still owner for %p\n", _cplot);
       cp->is_shown = 0;
       pthread_mutex_unlock (cp->mutex);
     }
   else
     {
-      printf ("thread finished, destroying plot and resources for %p\n", 
-	      _cplot);
       pthread_mutex_unlock (cp->mutex);
       lcplot_destroy (cp);
     }

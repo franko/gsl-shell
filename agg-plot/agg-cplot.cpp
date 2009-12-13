@@ -1,5 +1,6 @@
 
 #include "units_cplot.h"
+#include "lua-cplot-priv.h"
 #include "cplot.h"
 
 #include "agg-cplot.h"
@@ -57,32 +58,24 @@ cplot_new(int with_units)
 void cplot_free (CCPLOT* _d)
 {
   cplot* cp = (cplot*) _d;
-  printf ("cplot: %p freed\n", _d);
   delete cp;
 }
 
-void cplot_add(CCPLOT *_p, CLINE *_d)
+void cplot_add(CCPLOT *_p, CDRAW *_d)
 {
   cplot *p = (cplot *) _p;
-  line *d = (line *) _d;
+  drawable *d = (drawable *) _d;
   p->add(d);
 }
 
-CLINE* line_new(const char *color_str)
+CPATH* line_new(const char *color_str)
 {
   agg::rgba8 c = color_lookup (color_str);
   line* ln = new line(c);
-  return (CLINE *) ln;
+  return (CPATH *) ln;
 }
 
-CLINE* dashed_line_new(const char *color_str, double l1, double l2)
-{
-  agg::rgba8 c = color_lookup (color_str);
-  line* ln = new dashed_line(l1, l2, c);
-  return (CLINE *) ln;
-}
-
-CLINE* poly_new(const char *color_str, const char *outline_color_str)
+CPATH* poly_new(const char *color_str, const char *outline_color_str)
 {
   agg::rgba8 fill_col = color_lookup (color_str);
   line* ln;
@@ -97,41 +90,70 @@ CLINE* poly_new(const char *color_str, const char *outline_color_str)
       ln = new polygon(fill_col);
     }
 
-  return (CLINE *) ln;
+  return (CPATH *) ln;
 }
 
 
-CLINE* line_copy(CLINE *_src)
+CPATH* line_copy(CPATH *_src)
 {
   line* src = (line*) _src;
   line* ln = new line(*src);
-  return (CLINE *) ln;
+  return (CPATH *) ln;
 }
 
-void line_free (CLINE* _d)
+void line_free (CPATH* _d)
 {
   line* ln = (line*) _d;
-  printf ("line: %p freed\n", _d);
   delete ln;
 }
 
-void line_move_to (CLINE* _d, double x, double y)
+void
+line_cmd (CPATH *_d, struct cmd_call_stack *s)
 {
   line* ln = (line*) _d;
   agg::path_storage& p = ln->path;
-  p.move_to(x, y);
+
+  switch (s->cmd)
+    {
+    case CMD_MOVE_TO:
+      p.move_to (s->f[0], s->f[1]);
+      break;
+    case CMD_LINE_TO:
+      p.line_to (s->f[0], s->f[1]);
+      break;
+    case CMD_CLOSE:
+      p.close_polygon ();
+      break;
+    case CMD_SET_DASH:
+      ln->set_dash (s->f[0], s->f[1]);
+      break;
+    case CMD_ADD_DASH:
+      ln->add_dash (s->f[0], s->f[1]);
+      break;
+    case CMD_ARC_TO:
+      p.arc_to (s->f[0], s->f[1], s->f[2], s->b[0], s->b[1], s->f[3], s->f[4]);
+      break;
+    case CMD_CURVE3:
+      p.curve3 (s->f[0], s->f[1], s->f[2], s->f[3]);
+      break;
+    case CMD_CURVE4:
+      p.curve4 (s->f[0], s->f[1], s->f[2], s->f[3], s->f[4], s->f[5]);
+    }
 }
 
-void line_line_to (CLINE* _d, double x, double y)
+CDRAW *
+ellipse_new (double x, double y, double rx, double ry)
 {
-  line* ln = (line*) _d;
-  agg::path_storage& p = ln->path;
-  p.line_to(x, y);
+	drawable* d = 
 }
 
-void line_close (CLINE* _d)
+extern void     ellipse_free (CDRAW *e);
+
+
+CDRAW *
+drawable_copy (CDRAW *_d)
 {
-  line* ln = (line*) _d;
-  agg::path_storage& p = ln->path;
-  p.close_polygon();
+  drawable *src = (drawable *) _d;
+  drawable *dst = src->copy();
+  return (CDRAW *) dst;
 }

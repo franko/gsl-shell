@@ -4,32 +4,39 @@
 #include "defs.h"
 
 #define CCPLOT struct _cplot
-#define CLINE  struct _line
+#define CPATH  struct _cpath
+#define CDRAW  struct _cdraw
 
 __BEGIN_DECLS
 
+struct cmd_call_stack;
+
 CCPLOT;
-CLINE;
+CPATH;
+CDRAW;
 
-extern CCPLOT * cplot_new(int with_units);
-extern void cplot_add  (CCPLOT *p, CLINE *d);
-extern void cplot_free (CCPLOT *p);
+extern CCPLOT * cplot_new  (int with_units);
+extern void     cplot_add  (CCPLOT *p, CDRAW *d);
+extern void     cplot_free (CCPLOT *p);
 
-extern CLINE *line_new  (const char *color_str);
-extern CLINE *line_copy (CLINE *d);
-extern CLINE *poly_new(const char *color_str, const char *outline_color);
-extern CLINE* dashed_line_new(const char *color_str, double l1, double l2);
+extern CPATH *  poly_new  (const char *color_str, const char *outline_color);
 
-extern void line_free    (CLINE *d);
-extern void line_move_to (CLINE *d, double x, double y);
-extern void line_line_to (CLINE *d, double x, double y);  
-extern void line_close   (CLINE *d);
+extern CPATH *  path_new  (const char *color_str);
+extern CPATH *  path_copy (CPATH *p);
+extern void     path_free (CPATH *p);
+extern void     path_cmd  (CPATH *p, struct cmd_call_stack *stack);
+
+extern CDRAW *  ellipse_new  (double x, double y, double rx, double ry);
+extern void     ellipse_free (CDRAW *e);
+
+extern CDRAW *  drawable_copy (CDRAW *d);
 
 __END_DECLS
 
 #ifndef __cplusplus
 typedef CCPLOT cplot;
-typedef CLINE line;
+typedef CPATH path;
+typedef CDRAW drawable;
 #endif
 
 #endif

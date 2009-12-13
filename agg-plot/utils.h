@@ -14,6 +14,7 @@ T min (T a, T b) {
   return (b > a) ? a : b;
 }
 
-extern void trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b);
+extern void   trans_affine_compose  (agg::trans_affine& a, const agg::trans_affine& b);
+extern double trans_affine_max_norm (agg::trans_affine& m);
 
 #endif

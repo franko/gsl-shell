@@ -26,6 +26,8 @@ LUADIR = $(GSH_BASE_DIR)/lua
 AR= ar rcu
 RANLIB= ranlib
 
+CXXFLAGS = -g -Wall
+
 ifeq ($(PLATFORM), none)
 nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
@@ -45,8 +47,8 @@ endif
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp cplot.cpp units_cplot.cpp \
-                    xwin-show.cpp agg-cplot.cpp
+# AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp agg-cplot.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp plot.cpp test.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
@@ -56,9 +58,13 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) $(AGG_CFLAGS)
 
-TARGETS = libaggplot.a
+#TARGETS = libaggplot.a
+TARGETS = test
 
 all: $(TARGETS)
+
+test: $(AGGPLOT_OBJ_FILES)
+	gcc -o test $(AGGPLOT_OBJ_FILES) -lagg -lX11 -lm -lsupc++
 
 libaggplot.a: $(AGGPLOT_OBJ_FILES)
 	$(AR) $@ $?
