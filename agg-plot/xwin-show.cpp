@@ -6,8 +6,8 @@
 
 #include "xwin-show.h"
 #include "canvas.h"
-#include "cplot.h"
-#include "lua-cplot-priv.h"
+#include "plot.h"
+#include "lua-plot-priv.h"
 
 
 extern void platform_support_prepare();
@@ -17,8 +17,8 @@ enum flip_y_e { flip_y = true };
 class the_application : public agg::platform_support
 {
 public:
-  the_application(agg::pix_format_e format, bool flip_y, struct lcplot *cp) :
-    agg::platform_support(format, flip_y), m_cp(cp)
+  the_application(agg::pix_format_e format, bool flip_y, struct agg_plot *p) :
+    agg::platform_support(format, flip_y), m_plot(p)
   {
   };
 
@@ -30,18 +30,19 @@ public:
   {
     canvas can(rbuf_window(), width(), height(), agg::rgba(1.0, 1.0, 1.0));
     can.clear();
-    m_cp->plot->draw(can);
+    plot_type* plot = (plot_type*) m_plot->plot;
+    plot->draw(can);
   }
   
   virtual void on_draw()
   {
-    pthread_mutex_lock (m_cp->mutex);
+    pthread_mutex_lock (m_plot->mutex);
     on_draw_unprotected();
-    pthread_mutex_unlock (m_cp->mutex);
+    pthread_mutex_unlock (m_plot->mutex);
   }
   
 private:
-  struct lcplot *m_cp;
+  struct agg_plot *m_plot;
 };
 
 void update_callback (void *_app)
@@ -52,39 +53,39 @@ void update_callback (void *_app)
 };
 			
 void *
-xwin_thread_function (void *_cplot) 
+xwin_thread_function (void *_plot) 
 {
-  struct lcplot *cp = (struct lcplot *) _cplot;
+  struct agg_plot *p = (struct agg_plot *) _plot;
 
   platform_support_prepare();
 
-  pthread_mutex_lock (cp->mutex);
+  pthread_mutex_lock (p->mutex);
 
-  the_application app(agg::pix_format_bgr24, flip_y, cp);
+  the_application app(agg::pix_format_bgr24, flip_y, p);
   app.caption("GSL shell plot");
 
   if(app.init(780, 400, agg::window_resize))
     {
-      cp->window = (void *) &app;
-      pthread_mutex_unlock (cp->mutex);
+      p->window = (void *) &app;
+      pthread_mutex_unlock (p->mutex);
       app.run();
     }
   else
     {
-      pthread_mutex_unlock (cp->mutex);
+      pthread_mutex_unlock (p->mutex);
     }
 
-  pthread_mutex_lock (cp->mutex);
-  cp->window = NULL;
-  if (cp->lua_is_owner)
+  pthread_mutex_lock (p->mutex);
+  p->window = NULL;
+  if (p->lua_is_owner)
     {
-      cp->is_shown = 0;
-      pthread_mutex_unlock (cp->mutex);
+      p->is_shown = 0;
+      pthread_mutex_unlock (p->mutex);
     }
   else
     {
-      pthread_mutex_unlock (cp->mutex);
-      lcplot_destroy (cp);
+      pthread_mutex_unlock (p->mutex);
+      agg_plot_destroy (p);
     }
 
   return NULL;

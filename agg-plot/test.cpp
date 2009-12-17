@@ -48,7 +48,7 @@ public:
     my::text txt(-0.5, 1.5);
     txt.set_text("Hello world!");
 
-    plot plot;
+    plot<vertex_source> plot;
     plot.add(&ttri,    agg::rgba8(0,180,0));
     plot.add(&tris,    agg::rgba8(0,0,120));
     plot.add(&tris2,   agg::rgba8(0,0,0));
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
   the_application app(agg::pix_format_bgr24, flip_y);
   app.caption("GSL shell plot - TESTING");
 
-  if(app.init(600, 600, agg::window_resize))
+  if(app.init(300, 300, agg::window_resize))
     {
       app.run();
     }

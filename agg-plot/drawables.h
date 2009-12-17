@@ -15,14 +15,17 @@
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
 
+#include "utils.h"
+
 namespace my {
 
 template <class T>
 class vs_proxy : public vertex_source {
   T* m_source;
+  unsigned ref_count;
 
 public:
-  vs_proxy(): vertex_source(), m_source(NULL) {};
+  vs_proxy(): vertex_source(), m_source(NULL), ref_count(0) {};
 
   void set_source(T* src) { m_source = src; };
 
@@ -34,6 +37,14 @@ public:
   {
 #warning should loop through all the pah_ids
     agg::bounding_rect_single(*m_source, 0, x1, y1, x2, y2);
+  };
+
+  virtual void ref() { ref_count++; };
+  virtual unsigned unref()
+  {
+    if (ref_count > 0)
+      ref_count--;
+    return ref_count;
   };
 };
 
@@ -99,6 +110,8 @@ public:
     m_text.start_point(x, y);
     m_stroke.approximation_scale(trans_affine_max_norm(m));
   };
+
+  virtual bool need_resize() { return false; };
 
   void set_text(const char *s) { m_text.text(s); };
 };

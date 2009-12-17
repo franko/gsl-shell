@@ -7,7 +7,7 @@
 
 __BEGIN_DECLS
 
-extern void cplot_register (lua_State *L);
+extern void plot_register (lua_State *L);
 
 __END_DECLS
 

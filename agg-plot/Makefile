@@ -39,6 +39,7 @@ ifeq ($(strip $(PLATFORM)), mingw)
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   AGG_HOME = /c/fra/src/agg-2.5
   AGG_CFLAGS = -I$(AGG_HOME)/include
+  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
   PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
   AGG_CFLAGS = -I/usr/include/agg2
@@ -47,8 +48,8 @@ endif
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-# AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp cplot.cpp units_cplot.cpp xwin-show.cpp agg-cplot.cpp
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp plot.cpp test.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp plot.cpp xwin-show.cpp
+# AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp test.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
@@ -58,13 +59,13 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) $(AGG_CFLAGS)
 
-#TARGETS = libaggplot.a
-TARGETS = test
+TARGETS = libaggplot.a
+#TARGETS = test.exe
 
 all: $(TARGETS)
 
-test: $(AGGPLOT_OBJ_FILES)
-	gcc -o test $(AGGPLOT_OBJ_FILES) -lagg -lX11 -lm -lsupc++
+#test.exe: $(AGGPLOT_OBJ_FILES)
+#	gcc -o test.exe $(AGGPLOT_OBJ_FILES) $(AGG_LIBS)
 
 libaggplot.a: $(AGGPLOT_OBJ_FILES)
 	$(AR) $@ $?
