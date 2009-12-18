@@ -204,6 +204,24 @@ path_cmd (CPATH *_p, int _cmd, struct cmd_call_stack *s)
     }
 }
 
+CTEXT* text_new (double size, double width)
+{
+  my::text *t = new my::text(size, width);
+  return (CTEXT *) t;
+}
+
+void text_set_text (CTEXT *_t, const char *text)
+{
+  my::text *t = (my::text *) _t;
+  t->set_text(text);
+}
+
+void text_set_point (CTEXT *_t, double x, double y)
+{
+  my::text *t = (my::text *) _t;
+  t->start_point (x, y);
+}
+
 CVERTSRC *
 ellipse_new (double x, double y, double rx, double ry)
 {

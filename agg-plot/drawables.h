@@ -46,19 +46,6 @@ namespace my {
       return ref_count;
     };
   };
-  /*
-  class path : public vertex_source {
-  public:
-    agg::path_storage& get_path() = 0;
-  };
-
-  template <class T>
-  class path_proxy : public vs_proxy<T> {
-    agg::path_storage m_path;
-    virtual agg::path_storage& get_path() { return m_path; };
-    
-  }; 
-  */
 
   class path : public vs_proxy<agg::path_storage> {
     typedef vs_proxy<agg::path_storage> vs_base;
@@ -100,13 +87,19 @@ namespace my {
     double m_x, m_y;
   
   public:
-    text(double x, double y, double size = 10.0, double width = 1.0): 
-      vs_text(), m_text(), m_stroke(m_text), m_x(x), m_y(y)
+    text(double size = 10.0, double width = 1.0): 
+      vs_text(), m_text(), m_stroke(m_text), m_x(0.0), m_y(0.0)
     { 
       set_source(&m_stroke);
       m_stroke.width(width);
       m_stroke.line_cap(agg::round_cap);
       m_text.size(size);
+    };
+
+    void start_point(double x, double y) 
+    { 
+      m_x = x; 
+      m_y = y;
     };
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
@@ -127,33 +120,6 @@ namespace my {
 
     void set_text(const char *s) { m_text.text(s); };
   };
-
-
-  /*
-  typedef vs_proxy<agg::conv_stroke<agg::conv_transform<agg::path_storage> > > vs_line;
-
-  // ---------------------------------------------------- line class
-  class line : public vs_line {
-    typedef agg::path_storage path_type;
-    typedef agg::conv_transform<path_type> trans_type;
-    typedef agg::conv_stroke<agg::conv_transform<path_type> > line_type;
-
-    agg::trans_affine m_mtx;
-
-    path_type  m_path;
-    trans_type m_trans;
-    line_type  m_line;
-
-  public:
-    line(): vs_line(),
-	    m_mtx(), m_path(), m_trans(m_path, m_mtx), m_line(m_trans)
-    {
-      set_source(&m_line);
-    };
-
-    virtual void apply_transform(agg::trans_affine& m, double as) { m_mtx = m; };
-  };
-  */
 
 }
 

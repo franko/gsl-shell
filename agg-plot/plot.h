@@ -44,7 +44,7 @@ public:
   plot() : m_elements(), m_trans(), m_bbox_updated(true) { };
   virtual ~plot() 
   {
-    for (unsigned j; j < m_elements.size(); j++)
+    for (unsigned j = 0; j < m_elements.size(); j++)
       {
 	container& d = m_elements[j];
 	resource_manager::dispose(d.vs);

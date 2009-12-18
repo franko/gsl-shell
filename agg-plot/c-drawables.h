@@ -6,6 +6,7 @@
 #define CPLOT    struct my_c_plot
 #define CVERTSRC struct my_c_vs
 #define CPATH    struct my_c_path
+#define CTEXT    struct my_c_text
 
 #ifdef __cplusplus
 typedef plot<vertex_source, ref_manager> plot_type;
@@ -37,7 +38,9 @@ extern void     path_cmd   (CPATH *p, int cmd, struct cmd_call_stack *stack);
 extern CVERTSRC *  ellipse_new  (double x, double y, double rx, double ry);
 extern void        ellipse_free (CVERTSRC *e);
 
-extern CVERTSRC *  text_new  (double x, double y, double size);
+extern CTEXT *     text_new        (double size, double width);
+extern void        text_set_text   (CTEXT *t, const char *text);
+extern void        text_set_point  (CTEXT *t, double x, double y);
 
 __END_DECLS
 

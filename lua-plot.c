@@ -39,6 +39,9 @@ static int agg_obj_index     (lua_State *L);
 static int agg_path_new      (lua_State *L);
 static int agg_path_index    (lua_State *L);
 
+static int agg_text_new      (lua_State *L);
+static int agg_text_index    (lua_State *L);
+
 static int agg_plot_new      (lua_State *L);
 static int agg_plot_show     (lua_State *L);
 static int agg_plot_add      (lua_State *L);
@@ -47,6 +50,7 @@ static int agg_plot_free     (lua_State *L);
 
 struct agg_obj*  check_agg_obj  (lua_State *L, int index);
 path *           check_agg_path (lua_State *L, int index);
+CTEXT *          check_agg_text (lua_State *L, int index);
 struct agg_plot* check_agg_plot (lua_State *L, int index);
 
 static struct path_cmd_reg cmd_table[] = {
@@ -61,6 +65,7 @@ static struct path_cmd_reg cmd_table[] = {
 
 static const struct luaL_Reg plot_functions[] = {
   {"path",     agg_path_new},
+  {"text",     agg_text_new},
   {"plot",     agg_plot_new},
   {NULL, NULL}
 };
@@ -200,6 +205,76 @@ agg_path_index (lua_State *L)
   return 0;
 }
 
+CTEXT *
+check_agg_text (lua_State *L, int index)
+{
+  struct agg_obj *d = luaL_checkudata (L, index, vertex_source_mt_name);
+  if (d->tag == AGG_TEXT)
+    return (CTEXT *) d->vs;
+  luaL_error (L, "expected object of type 'text' as argument #%i", index);
+  return NULL;
+}
+
+int
+agg_text_new (lua_State *L)
+{
+  double size  = luaL_optnumber (L, 1, 10.0);
+  double width = luaL_optnumber (L, 2, 1.0);
+  struct agg_obj *d = lua_newuserdata (L, sizeof (struct agg_obj));
+
+  d->vs = (vertex_source *) text_new (size, width);
+  d->tag = AGG_TEXT;
+
+  vertex_source_ref (d->vs);
+
+  luaL_getmetatable (L, vertex_source_mt_name);
+  lua_setmetatable (L, -2);
+
+  return 1;
+}
+
+int
+agg_text_set_text (lua_State *L)
+{
+  CTEXT *t = check_agg_text (L, 1);
+  const char *text = luaL_checkstring (L, 2);
+  text_set_text (t, text);
+  return 0;
+}
+
+int
+agg_text_set_point (lua_State *L)
+{
+  CTEXT *t = check_agg_text (L, 1);
+  double x = luaL_checknumber (L, 2);
+  double y = luaL_checknumber (L, 3);
+  text_set_point (t, x, y);
+  return 0;
+}
+
+int
+agg_text_index (lua_State *L)
+{
+  const char *key;
+
+  if (! lua_isstring (L, 2))
+    return 0;
+
+  key = lua_tostring (L, 2);
+  if (strcmp (key, "set_point") == 0)
+    {
+      lua_pushcfunction (L, agg_text_set_point);
+      return 1;
+    }
+  if (strcmp (key, "set_text") == 0)
+    {
+      lua_pushcfunction (L, agg_text_set_text);
+      return 1;
+    }
+
+  return 0;
+}
+
 struct agg_plot *
 check_agg_plot (lua_State *L, int index)
 {
@@ -251,7 +326,7 @@ agg_plot_free (lua_State *L)
   assert (p->lua_is_owner);
   p->lua_is_owner = 0;
 
-  if (p->is_shown)
+  if (! p->is_shown)
     {
       pthread_mutex_unlock (p->mutex);
       agg_plot_destroy (p);
@@ -460,6 +535,9 @@ plot_register (lua_State *L)
   luaL_newmetatable (L, vertex_source_mt_name);
   lua_pushinteger (L, (int) AGG_PATH);
   lua_pushcfunction (L, agg_path_index);
+  lua_settable (L, -3);
+  lua_pushinteger (L, (int) AGG_TEXT);
+  lua_pushcfunction (L, agg_text_index);
   lua_settable (L, -3);
   luaL_register (L, NULL, agg_vertex_source_methods);
   lua_pop (L, 1);
