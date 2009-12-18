@@ -1,13 +1,29 @@
 
 #include "agg_color_rgba.h"
+#include "agg_math_stroke.h"
 
 // #include "units-plot.h"
 #include "plot.h"
 #include "trans.h"
 #include "vertex-source.h"
 #include "lua-plot-priv.h"
-
 #include "c-drawables.h"
+
+struct property_reg line_cap_properties[] = {
+  {(int) agg::butt_cap,   "butt"  },
+  {(int) agg::square_cap, "square"},
+  {(int) agg::round_cap,  "round" },
+  {0, NULL}
+};
+
+struct property_reg line_join_properties[] = {
+  {(int) agg::miter_join,        "miter"      },
+  {(int) agg::miter_join_revert, "miter.rev"  },
+  {(int) agg::round_join,        "round"      },
+  {(int) agg::bevel_join,        "bevel"      },
+  {(int) agg::miter_join_round,  "miter.round"},
+  {0, NULL}
+};
 
 typedef my::path path_type;
 typedef my::ellipse ellipse_type;
@@ -82,14 +98,24 @@ build_pipeline (vertex_source* in, struct trans_spec *base)
     {
       switch (spec->tag)
 	{
+	  double *len;
+	  trans::dash* ds;
+	  trans::stroke* stroke;
 	case trans_stroke:
-	  curr = new trans::stroke(in, spec->content.stroke.width);
+	  stroke = new trans::stroke(in, spec->content.stroke.width);
+	  stroke->line_cap((agg::line_cap_e) spec->content.stroke.line_cap);
+	  stroke->line_join((agg::line_join_e) spec->content.stroke.line_join);
+	  curr = stroke;
 	  break;
 	case trans_curve:
 	  curr = new trans::curve(in);
 	  break;
-	case trans_resize:
-	  curr = new trans::resize(in);
+	case trans_dash:
+	  ds = new trans::dash(in);
+	  len = spec->content.dash.len;
+	  ds->add_dash(len[0], len[1]);
+	  curr = ds;
+	  break;
 	case trans_end:
 	  ;
 	}
@@ -115,6 +141,15 @@ void plot_add(CPLOT *_p, CVERTSRC *_vs, const char *color,
   curr = build_pipeline (curr, post);
 
   p->add(curr, color_lookup(color));
+}
+
+void plot_add_line (CPLOT *_p, CVERTSRC *_vs, const char *color)
+{
+  plot_type* p = (plot_type*) _p;
+  vertex_source* vs = (vertex_source*) _vs;
+
+  trans::line* line = new trans::line(vs);
+  p->add(line, color_lookup(color));
 }
 
 CPATH* path_new()

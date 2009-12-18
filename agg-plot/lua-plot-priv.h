@@ -35,24 +35,34 @@ enum trans_type {
   trans_end = -1,
   trans_stroke = 0,
   trans_curve,
-  trans_resize,
+  trans_dash,
+};
+
+struct property_reg {
+  int id;
+  const char *name;
 };
 
 struct stroke_spec {
   double width;
+  int line_cap;
+  int line_join;
 };
 
-struct curve_spec {
-  int stub;
+struct dash_spec {
+  double len[2];
 };
 
 struct trans_spec {
   enum trans_type tag;
   union {
     struct stroke_spec stroke;
-    struct curve_spec  curve;
+    struct dash_spec   dash;
   } content;
 };
+
+extern struct property_reg line_cap_properties[];
+extern struct property_reg line_join_properties[];
 
 extern void agg_plot_destroy (struct agg_plot *cp);
 extern void update_callback (void *_app);

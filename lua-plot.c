@@ -7,6 +7,7 @@
 #include "lauxlib.h"
 
 #include "common.h"
+#include "lua-utils.h"
 #include "lua-plot-priv.h"
 #include "xwin-show.h"
 
@@ -32,16 +33,17 @@ struct path_cmd_reg {
 static const char * const plot_mt_name          = "GSL.pl.plot";
 static const char * const vertex_source_mt_name = "GSL.pl.vs";
 
-static int agg_obj_free     (lua_State *L);
-static int agg_obj_index    (lua_State *L);
+static int agg_obj_free      (lua_State *L);
+static int agg_obj_index     (lua_State *L);
 
-static int agg_path_new     (lua_State *L);
-static int agg_path_index   (lua_State *L);
+static int agg_path_new      (lua_State *L);
+static int agg_path_index    (lua_State *L);
 
-static int agg_plot_new     (lua_State *L);
-static int agg_plot_show    (lua_State *L);
-static int agg_plot_add     (lua_State *L);
-static int agg_plot_free    (lua_State *L);
+static int agg_plot_new      (lua_State *L);
+static int agg_plot_show     (lua_State *L);
+static int agg_plot_add      (lua_State *L);
+static int agg_plot_add_line (lua_State *L);
+static int agg_plot_free     (lua_State *L);
 
 struct agg_obj*  check_agg_obj  (lua_State *L, int index);
 path *           check_agg_path (lua_State *L, int index);
@@ -72,6 +74,7 @@ static const struct luaL_Reg agg_vertex_source_methods[] = {
 static const struct luaL_Reg agg_plot_methods[] = {
   {"show",        agg_plot_show},
   {"add",         agg_plot_add},
+  {"add_line",    agg_plot_add_line},
   {"__gc",        agg_plot_free},
   {NULL, NULL}
 };
@@ -259,6 +262,23 @@ agg_plot_free (lua_State *L)
   return 0;
 }
 
+static int
+property_lookup (struct property_reg *prop, const char *key)
+{
+  int default_value = prop->id;
+
+  if (key == NULL)
+    return default_value;
+
+  for ( ; prop->name; prop++)
+    {
+      if (strcmp (prop->name, key) == 0)
+	return prop->id;
+    }
+
+  return default_value;
+}
+
 struct trans_spec *
 parse_spec (lua_State *L, int index, struct trans_spec *spec)
 {
@@ -276,26 +296,32 @@ parse_spec (lua_State *L, int index, struct trans_spec *spec)
 
   if (strcmp (tag, "stroke") == 0)
     {
-      lua_pushstring (L, "width");
-      lua_rawget (L, index);
-      if (lua_isnumber (L, -1))
-	{
-	  struct stroke_spec *prop = &spec->content.stroke;
-	  spec->tag = trans_stroke;
-	  prop->width = lua_tonumber (L, -1);
-	  lua_pop (L, 1);
-	  return spec;
-	}
-      lua_pop (L, 1);
+      struct stroke_spec *prop = &spec->content.stroke;
+      const char *prop_key;
+      prop->width = mlua_named_optnumber (L, index, "width", 1.0);
+
+      prop_key = mlua_named_optstring (L, index, "cap", NULL);
+      prop->line_cap = property_lookup (line_cap_properties, prop_key);
+
+      prop_key = mlua_named_optstring (L, index, "join", NULL);
+      prop->line_join = property_lookup (line_join_properties, prop_key);
+
+      spec->tag = trans_stroke;
+      return spec;
     }
   else if (strcmp (tag, "curve") == 0)
     {
       spec->tag = trans_curve;
       return spec;
     }
-  else if (strcmp (tag, "resize") == 0)
+  else if (strcmp (tag, "dash") == 0)
     {
-      spec->tag = trans_resize;
+      struct dash_spec *prop = &spec->content.dash;
+      double a = mlua_named_optnumber (L, index, "a", 8.0);
+      double b = mlua_named_optnumber (L, index, "b", a);
+      prop->len[0] = a;
+      prop->len[1] = b;
+      spec->tag = trans_dash;
       return spec;
     }
 
@@ -307,6 +333,13 @@ parse_spec_pipeline (lua_State *L, int index)
 {
   size_t k, nb;
   struct trans_spec *spec;
+
+  if (lua_gettop (L) < index)
+    {
+      spec = emalloc (sizeof(struct trans_spec));
+      spec->tag = trans_end;
+      return spec;
+    }
 
   if (lua_type (L, index) != LUA_TTABLE)
     return NULL;
@@ -331,29 +364,57 @@ parse_spec_pipeline (lua_State *L, int index)
   return spec;
 }
 
-int
-agg_plot_add (lua_State *L)
+static int
+agg_plot_add_gener (lua_State *L, bool as_line)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
   const char *color = luaL_checkstring (L, 3);
-  struct trans_spec *post, *pre;
   
-  post = parse_spec_pipeline (L, 4);
-  if (post == NULL)
-    luaL_error (L, "error in definition of post transforms");
+  if (as_line)
+    {
+      pthread_mutex_lock (p->mutex);
+      plot_add_line (p->plot, d->vs, color);
+    }
+  else
+    {
+      struct trans_spec *post, *pre;
+      
+      post = parse_spec_pipeline (L, 4);
+      if (post == NULL)
+	luaL_error (L, "error in definition of post transforms");
+      
+      pre = parse_spec_pipeline (L, 5);
+      if (pre == NULL)
+	{
+	  free (post);
+	  luaL_error (L, "error in definition of pre transforms");
+	}
 
-  pre = parse_spec_pipeline (L, 5);
-  if (pre == NULL)
-    luaL_error (L, "error in definition of pre transforms");
-  
-  pthread_mutex_lock (p->mutex);
-  plot_add (p->plot, d->vs, color, post, pre);
+      pthread_mutex_lock (p->mutex);
+      plot_add (p->plot, d->vs, color, post, pre);
+
+      free (post);
+      free (pre);
+    }
+
   if (p->window)
     update_callback (p->window);
   pthread_mutex_unlock (p->mutex);
 
   return 0;
+}
+ 
+int
+agg_plot_add (lua_State *L)
+{
+  return agg_plot_add_gener (L, false);
+}
+ 
+int
+agg_plot_add_line (lua_State *L)
+{
+  return agg_plot_add_gener (L, true);
 }
 
 int
