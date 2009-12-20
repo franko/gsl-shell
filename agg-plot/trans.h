@@ -7,6 +7,9 @@
 #include "agg_conv_dash.h"
 #include "agg_conv_transform.h"
 #include "agg_vcgen_markers_term.h"
+#include "agg_arrowhead.h"
+
+#include "my_conv_simple_marker.h"
 
 #include "utils.h"
 #include "vertex-source.h"
@@ -107,12 +110,11 @@ namespace trans {
 
   class line_base {
     agg::trans_affine m_mtx;
-
     agg::conv_transform<vertex_source> m_trans;
     agg::conv_stroke<agg::conv_transform<vertex_source> > m_stroke;
 
   public:
-    line_base(vertex_source& src): m_mtx(), m_trans(src, m_mtx), m_stroke(m_trans)
+    line_base(vertex_source& src): m_trans(src, m_mtx), m_stroke(m_trans)
     {};
 
     void width(double w) { m_stroke.width(w); };
@@ -137,6 +139,43 @@ namespace trans {
     {
       self().set_matrix(m);
       as *= trans_affine_max_norm(m);
+      m_source->apply_transform(m, as);
+    };
+  };
+#if 0
+  template <class MarkerLocator, class MarkerShapes>
+  class marker_curve_base {
+    my::conv_simple_marker<MarkerLocator, MarkerShapes> m_marker;
+    agg::conv_curve<my::conv_simple_marker<MarkerLocator, MarkerShapes> > m_curve;
+  public:
+    marker_curve_base(MarkerLocator& src, MarkerShapes& ms): 
+      m_marker(src, ms), m_curve(m_marker)
+    {};
+
+    void approximation_scale(double as) 
+    { 
+      m_curve.approximation_scale(as);
+    };
+
+    void rewind(unsigned path_id) { m_curve.rewind(path_id); };
+    unsigned vertex(double* x, double* y) { return m_curve.vertex(x, y); };
+  };
+#endif
+
+  typedef vs_trans_proxy<my::conv_simple_marker<vertex_source, agg::ellipse> > vs_marker_ellipse;
+
+  class marker : public vs_marker_ellipse {
+    agg::ellipse m_ellipse;
+
+  public:
+    marker(vertex_source* src, double size): vs_marker_ellipse(src, m_ellipse)
+    {
+      m_ellipse.init(0.0, 0.0, size/2, size/2);
+    };
+
+    virtual void apply_transform(agg::trans_affine& m, double as)
+    { 
+      m_ellipse.approximation_scale(as);
       m_source->apply_transform(m, as);
     };
   };

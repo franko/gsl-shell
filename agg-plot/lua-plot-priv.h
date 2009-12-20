@@ -25,7 +25,6 @@ struct cmd_call_stack {
 
 struct agg_plot {
   CPLOT *plot;
-  pthread_mutex_t mutex[1];
   int lua_is_owner;
   int is_shown;
   void *window;
@@ -36,6 +35,7 @@ enum trans_type {
   trans_stroke = 0,
   trans_curve,
   trans_dash,
+  trans_marker,
 };
 
 struct property_reg {
@@ -53,11 +53,16 @@ struct dash_spec {
   double len[2];
 };
 
+struct marker_spec {
+  double size;
+};
+
 struct trans_spec {
   enum trans_type tag;
   union {
     struct stroke_spec stroke;
     struct dash_spec   dash;
+    struct marker_spec marker;
   } content;
 };
 
@@ -66,6 +71,8 @@ extern struct property_reg line_join_properties[];
 
 extern void agg_plot_destroy (struct agg_plot *cp);
 extern void update_callback (void *_app);
+
+extern pthread_mutex_t agg_mutex[1];
 
 __END_DECLS
 

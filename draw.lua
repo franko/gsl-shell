@@ -1,6 +1,6 @@
 
-function iline(f, color)
-   local ln = line(color and color or 'red')
+function ipath(f)
+   local ln = path()
    ln:move_to(f())
    for x, y in f do
       ln:line_to(x, y)
@@ -8,40 +8,27 @@ function iline(f, color)
    return ln
 end   
 
-function fxline(f, xi, xs, color, n)
+function fxline(f, xi, xs, n)
    n = n and n or 256
-   return iline(sample(f, xi, xs, n), color)
+   return ipath(sample(f, xi, xs, n))
 end
 
---[[
-local function mrline(m, rx, ry, color)
-   local i = 0
+function matrix_xy_bycol (m, c1, c2)
    local r, c = m:dims()
-   local f = function()
-		i = i + 1
-		if i <= c then 
-		   return m:get(rx, i), m:get(ry, i) 
-		end
-	     end
-   return iline(f, color)
+   local k = 0
+   return function()
+	     k = k+1
+	     if k <= r then return m:get(k,c1), m:get(k,c2) end
+	  end
 end
 
-local function mcline(m, cx, cy, color)
-   local i = 0
-   local r, c = m:dims()
-   local f = function()
-		i = i + 1
-		if i <= r then 
-		   return m:get(i, cx), m:get(i, cy) 
-		end
-	     end
-   return iline(f, color)
-end
---]]
+local mt = getmetatable(path())
 
-function plot(ln)
-   local p = cplot()
-   p:add(ln)
-   p:show()
-   return p
-end
+mt.plot = function (p, color)
+	     color = color and color or 'black'
+	     local pl = plot()
+	     pl:add(p, color)
+	     pl:show()
+	     return pl
+	  end
+

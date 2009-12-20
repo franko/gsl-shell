@@ -107,6 +107,9 @@ build_pipeline (vertex_source* in, struct trans_spec *base)
 	  stroke->line_join((agg::line_join_e) spec->content.stroke.line_join);
 	  curr = stroke;
 	  break;
+	case trans_marker:
+	  curr = new trans::marker(in, spec->content.marker.size);
+	  break;
 	case trans_curve:
 	  curr = new trans::curve(in);
 	  break;

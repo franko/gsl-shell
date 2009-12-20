@@ -36,9 +36,9 @@ public:
   
   virtual void on_draw()
   {
-    pthread_mutex_lock (m_plot->mutex);
+    pthread_mutex_lock (agg_mutex);
     on_draw_unprotected();
-    pthread_mutex_unlock (m_plot->mutex);
+    pthread_mutex_unlock (agg_mutex);
   }
   
 private:
@@ -59,7 +59,7 @@ xwin_thread_function (void *_plot)
 
   platform_support_prepare();
 
-  pthread_mutex_lock (p->mutex);
+  pthread_mutex_lock (agg_mutex);
 
   the_application app(agg::pix_format_bgr24, flip_y, p);
   app.caption("GSL shell plot");
@@ -67,24 +67,24 @@ xwin_thread_function (void *_plot)
   if(app.init(780, 400, agg::window_resize))
     {
       p->window = (void *) &app;
-      pthread_mutex_unlock (p->mutex);
+      pthread_mutex_unlock (agg_mutex);
       app.run();
     }
   else
     {
-      pthread_mutex_unlock (p->mutex);
+      pthread_mutex_unlock (agg_mutex);
     }
 
-  pthread_mutex_lock (p->mutex);
+  pthread_mutex_lock (agg_mutex);
   p->window = NULL;
   if (p->lua_is_owner)
     {
       p->is_shown = 0;
-      pthread_mutex_unlock (p->mutex);
+      pthread_mutex_unlock (agg_mutex);
     }
   else
     {
-      pthread_mutex_unlock (p->mutex);
+      pthread_mutex_unlock (agg_mutex);
       agg_plot_destroy (p);
     }
 

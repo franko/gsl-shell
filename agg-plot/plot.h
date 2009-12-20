@@ -56,7 +56,6 @@ public:
     container d(vs, color);
     m_elements.add(d);
     m_bbox_updated = false;
-    resource_manager::acquire(vs);
   };
 
   virtual void draw(canvas &canvas)

@@ -13,6 +13,8 @@
 
 extern void plot_register (lua_State *L);
 
+pthread_mutex_t agg_mutex[1];
+
 enum agg_type {
   AGG_PATH = 1,
   AGG_ELLIPSE,
@@ -296,7 +298,6 @@ agg_plot_new (lua_State *L)
   *pptr = p;
 
   p->plot = plot_new (use_units);
-  pthread_mutex_init (p->mutex, NULL);
 
   p->lua_is_owner = 1;
   p->is_shown = 0;
@@ -312,7 +313,6 @@ void
 agg_plot_destroy (struct agg_plot *p)
 {
   plot_free (p->plot);
-  pthread_mutex_destroy (p->mutex);
   free (p);
 }
 
@@ -321,19 +321,17 @@ agg_plot_free (lua_State *L)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
 
-  pthread_mutex_lock (p->mutex);
+  pthread_mutex_lock (agg_mutex);
 
   assert (p->lua_is_owner);
   p->lua_is_owner = 0;
 
   if (! p->is_shown)
     {
-      pthread_mutex_unlock (p->mutex);
       agg_plot_destroy (p);
-      return 0;
     }
 
-  pthread_mutex_unlock (p->mutex);
+  pthread_mutex_unlock (agg_mutex);
   return 0;
 }
 
@@ -382,6 +380,13 @@ parse_spec (lua_State *L, int index, struct trans_spec *spec)
       prop->line_join = property_lookup (line_join_properties, prop_key);
 
       spec->tag = trans_stroke;
+      return spec;
+    }
+  else if (strcmp (tag, "marker") == 0)
+    {
+      struct marker_spec *prop = &spec->content.marker;
+      prop->size = mlua_named_optnumber (L, index, "size", 3.0);
+      spec->tag = trans_marker;
       return spec;
     }
   else if (strcmp (tag, "curve") == 0)
@@ -445,10 +450,12 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
   const char *color = luaL_checkstring (L, 3);
+
+  vertex_source_ref (d->vs);
   
   if (as_line)
     {
-      pthread_mutex_lock (p->mutex);
+      pthread_mutex_lock (agg_mutex);
       plot_add_line (p->plot, d->vs, color);
     }
   else
@@ -466,7 +473,7 @@ agg_plot_add_gener (lua_State *L, bool as_line)
 	  luaL_error (L, "error in definition of pre transforms");
 	}
 
-      pthread_mutex_lock (p->mutex);
+      pthread_mutex_lock (agg_mutex);
       plot_add (p->plot, d->vs, color, post, pre);
 
       free (post);
@@ -475,7 +482,7 @@ agg_plot_add_gener (lua_State *L, bool as_line)
 
   if (p->window)
     update_callback (p->window);
-  pthread_mutex_unlock (p->mutex);
+  pthread_mutex_unlock (agg_mutex);
 
   return 0;
 }
@@ -499,7 +506,7 @@ agg_plot_show (lua_State *L)
   pthread_t xwin_thread[1];
   pthread_attr_t attr[1];
 
-  pthread_mutex_lock (cp->mutex);
+  pthread_mutex_lock (agg_mutex);
 
   if (! cp->is_shown)
     {
@@ -516,7 +523,7 @@ agg_plot_show (lua_State *L)
       pthread_attr_destroy (attr);
     }
 
-  pthread_mutex_unlock (cp->mutex);
+  pthread_mutex_unlock (agg_mutex);
 
   return 0;
 }
@@ -524,6 +531,8 @@ agg_plot_show (lua_State *L)
 void
 plot_register (lua_State *L)
 {
+  pthread_mutex_init (agg_mutex, NULL);
+
   /* plot declaration */
   luaL_newmetatable (L, plot_mt_name);
   lua_pushvalue (L, -1);

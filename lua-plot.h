@@ -1,6 +1,8 @@
 #ifndef LUA_CPLOT_H
 #define LUA_CPLOT_H
 
+#include <pthread.h>
+
 #include "lua.h"
 
 #include "defs.h"
