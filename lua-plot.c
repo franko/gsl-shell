@@ -178,15 +178,6 @@ agg_path_cmd (lua_State *L)
   return 0;
 }
 
-/*
-static int
-agg_path_cmd_makeclosure (lua_State *L)
-{
-  lua_pushcclosure (L, agg_path_cmd, 2);
-  return 1;
-}
-*/
-
 static int
 agg_obj_pcall (lua_State *L)
 {

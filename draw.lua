@@ -8,31 +8,31 @@ function ipath(f)
    return ln
 end   
 
-function igpath(f, s, i0)
-   local ln = path()
-   local i1, x, y = f(s, i0)
-   ln:move_to(x, y)
-   for i, x, y in f, s, i1 do
-      ln:line_to(x, y)
-   end
-   return ln
-end   
-
 function fxline(f, xi, xs, n)
    n = n and n or 256
    return ipath(sample(f, xi, xs, n))
 end
 
---[[
-function matrix_xy_bycol (m, c1, c2)
-   local r, c = m:dims()
-   local k = 0
-   return function()
-	     k = k+1
-	     if k <= r then return m:get(k,c1), m:get(k,c2) end
-	  end
+local function add_bar(p, lx, rx, y)
+   p:move_to(lx, 0)
+   p:line_to(rx, 0)
+   p:line_to(rx, y)
+   p:line_to(lx, y)
+   p:close()
 end
---]]
+
+function ibars(f)
+   local b = path()
+   local lx, ly = f()
+   local first = true
+   for rx, ry in f do
+      local dx = (rx-lx)/2
+      if first then add_bar(b, lx-dx, lx+dx, ly); first = false end
+      add_bar(b, lx+dx, rx+dx, ry)
+      lx, ly = rx, ry
+   end
+   return b
+end
 
 local mt = getmetatable(path())
 

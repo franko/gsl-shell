@@ -226,6 +226,15 @@ function sample(f, xi, xs, n)
 	  end
 end
 
+function irow(m, f)
+   local r, c = m:dims()
+   local i = 0
+   return function()
+	     i = i+1
+	     if i <= r then return f(m, i) end
+	  end
+end
+
 local function hc_reduce(hc, f, accu)
    local n = hc.length
    for i=0, n do accu = f(accu, hc:get(i)) end
