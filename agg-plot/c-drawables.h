@@ -21,11 +21,12 @@ CPLOT;
 CVERTSRC;
 CPATH;
 
-extern CPLOT *  plot_new      (int with_units);
-extern void     plot_free     (CPLOT *p);
-extern void     plot_add      (CPLOT *p, CVERTSRC *src, const char *color,
-			       struct trans_spec *post, struct trans_spec *pre);
-extern void     plot_add_line (CPLOT *p, CVERTSRC *src, const char *color);
+extern CPLOT *  plot_new        (int with_units);
+extern void     plot_free       (CPLOT *p);
+extern void     plot_add        (CPLOT *p, CVERTSRC *src, const char *color,
+				 struct trans_spec *post, struct trans_spec *pre);
+extern void     plot_add_line   (CPLOT *p, CVERTSRC *src, const char *color);
+extern void     plot_remove_all (CPLOT *p);
 
 extern void     vertex_source_ref   (CVERTSRC *p);
 extern void     vertex_source_unref (CVERTSRC *p);

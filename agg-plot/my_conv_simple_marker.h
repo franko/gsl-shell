@@ -7,7 +7,7 @@
 using namespace agg;
 
 namespace my {
-  //-------------------------------------------------------------conv_simple_marker
+  //---------------------------------------------------------conv_simple_marker
   template<class MarkerLocator, class MarkerShapes>
   class conv_simple_marker
   {
@@ -33,7 +33,7 @@ namespace my {
     MarkerLocator* m_marker_locator;
     MarkerShapes*  m_marker_shapes;
     status_e       m_status;
-    double m_x1, m_y1;
+    double         m_x1, m_y1;
   };
 
 

@@ -31,7 +31,7 @@ public:
   virtual void rewind(unsigned path_id) { m_output.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_output.vertex(x, y); };
 
-  virtual void ref() {};
+  virtual void ref() { m_source->ref(); };
   virtual unsigned unref() 
   { 
     unsigned rc = m_source->unref();

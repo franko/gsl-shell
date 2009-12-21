@@ -7,6 +7,7 @@
 #include "lauxlib.h"
 
 #include "common.h"
+#include "gsl-shell.h"
 #include "lua-utils.h"
 #include "lua-plot-priv.h"
 #include "xwin-show.h"
@@ -23,7 +24,7 @@ enum agg_type {
 
 struct agg_obj {
   enum agg_type tag;
-  vertex_source *vs;
+  CVERTSRC *vs;
 };
 
 struct path_cmd_reg {
@@ -35,20 +36,25 @@ struct path_cmd_reg {
 static const char * const plot_mt_name          = "GSL.pl.plot";
 static const char * const vertex_source_mt_name = "GSL.pl.vs";
 
-static int agg_obj_free      (lua_State *L);
-static int agg_obj_index     (lua_State *L);
+extern int push_new_agg_obj   (lua_State *L, enum agg_type tag, CVERTSRC *vs);
 
-static int agg_path_new      (lua_State *L);
-static int agg_path_index    (lua_State *L);
+static int agg_obj_free       (lua_State *L);
+static int agg_obj_index      (lua_State *L);
 
-static int agg_text_new      (lua_State *L);
-static int agg_text_index    (lua_State *L);
+static int agg_path_new       (lua_State *L);
+static int agg_path_index     (lua_State *L);
 
-static int agg_plot_new      (lua_State *L);
-static int agg_plot_show     (lua_State *L);
-static int agg_plot_add      (lua_State *L);
-static int agg_plot_add_line (lua_State *L);
-static int agg_plot_free     (lua_State *L);
+static int agg_text_new       (lua_State *L);
+static int agg_text_index     (lua_State *L);
+static int agg_text_set_text  (lua_State *L);
+static int agg_text_set_point (lua_State *L);
+
+static int agg_plot_new        (lua_State *L);
+static int agg_plot_show       (lua_State *L);
+static int agg_plot_add        (lua_State *L);
+static int agg_plot_remove_all (lua_State *L);
+static int agg_plot_add_line   (lua_State *L);
+static int agg_plot_free       (lua_State *L);
 
 struct agg_obj*  check_agg_obj  (lua_State *L, int index);
 path *           check_agg_path (lua_State *L, int index);
@@ -79,26 +85,41 @@ static const struct luaL_Reg agg_vertex_source_methods[] = {
 };
 
 static const struct luaL_Reg agg_plot_methods[] = {
-  {"show",        agg_plot_show},
-  {"add",         agg_plot_add},
-  {"add_line",    agg_plot_add_line},
-  {"__gc",        agg_plot_free},
+  {"show",        agg_plot_show       },
+  {"add",         agg_plot_add        },
+  {"clear",       agg_plot_remove_all },
+  {"add_line",    agg_plot_add_line   },
+  {"__gc",        agg_plot_free       },
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg agg_text_methods[] = {
+  {"set_point",   agg_text_set_point},
+  {"set_text",    agg_text_set_text},
   {NULL, NULL}
 };
 
 int
-agg_path_new (lua_State *L)
+push_new_agg_obj (lua_State *L, enum agg_type tag, CVERTSRC *vs)
 {
   struct agg_obj *d = lua_newuserdata (L, sizeof (struct agg_obj));
 
-  d->vs = (vertex_source *) path_new ();
-  d->tag = AGG_PATH;
+  d->vs = vs;
+  d->tag = tag;
 
   vertex_source_ref (d->vs);
 
   luaL_getmetatable (L, vertex_source_mt_name);
   lua_setmetatable (L, -2);
 
+  return 1;
+}
+
+int
+agg_path_new (lua_State *L)
+{
+  CPATH *vs = path_new ();
+  push_new_agg_obj (L, AGG_PATH, (CVERTSRC *) vs);
   return 1;
 }
 
@@ -151,32 +172,64 @@ agg_path_cmd (lua_State *L)
 	}
     }
 
+  pthread_mutex_lock (agg_mutex);
   path_cmd (p, id, s);
+  pthread_mutex_unlock (agg_mutex);
   return 0;
 }
 
+/*
 static int
 agg_path_cmd_makeclosure (lua_State *L)
 {
   lua_pushcclosure (L, agg_path_cmd, 2);
   return 1;
 }
+*/
+
+static int
+agg_obj_pcall (lua_State *L)
+{
+  int narg_out, narg_in = lua_gettop (L);
+  int status;
+
+  pthread_mutex_lock (agg_mutex);
+  lua_pushvalue (L, lua_upvalueindex(1));
+  lua_insert (L, 1);
+  status = lua_pcall (L, narg_in, LUA_MULTRET, 0);
+  pthread_mutex_unlock (agg_mutex);
+  if (status != 0)
+    {
+      error_report (L, status);
+      return 0;
+    }
+  narg_out = lua_gettop (L);
+  return narg_out;
+}
+
 
 int
 agg_obj_index (lua_State *L)
 {
   struct agg_obj *d = check_agg_obj (L, 1);
-  int narg;
 
   lua_getmetatable (L, 1);
   lua_rawgeti (L, -1, (int) d->tag);
   lua_remove (L, -2);
   lua_insert (L, 1);
 
-  lua_call (L, 2, LUA_MULTRET);
-  narg = lua_gettop (L);
+  lua_call (L, 2, 1);
 
-  return narg;
+  if (d->tag == AGG_PATH)
+    return 1;
+
+  if (! lua_isnil (L, -1))
+    {
+      lua_pushcclosure (L, agg_obj_pcall, 1);
+      return 1;
+    }
+
+  return 0;
 }
 
 int
@@ -197,10 +250,9 @@ agg_path_index (lua_State *L)
 
   if (r->cmd)
     {
-      lua_pushcfunction (L, agg_path_cmd_makeclosure);
       lua_pushinteger (L, (int) r->id);
       lua_pushstring (L, r->signature);
-      lua_call (L, 2, 1);
+      lua_pushcclosure (L, agg_path_cmd, 2);
       return 1;
     }
 
@@ -222,16 +274,8 @@ agg_text_new (lua_State *L)
 {
   double size  = luaL_optnumber (L, 1, 10.0);
   double width = luaL_optnumber (L, 2, 1.0);
-  struct agg_obj *d = lua_newuserdata (L, sizeof (struct agg_obj));
-
-  d->vs = (vertex_source *) text_new (size, width);
-  d->tag = AGG_TEXT;
-
-  vertex_source_ref (d->vs);
-
-  luaL_getmetatable (L, vertex_source_mt_name);
-  lua_setmetatable (L, -2);
-
+  CVERTSRC *vs = (CVERTSRC *) text_new (size, width);
+  push_new_agg_obj (L, AGG_TEXT, vs);
   return 1;
 }
 
@@ -257,20 +301,17 @@ agg_text_set_point (lua_State *L)
 int
 agg_text_index (lua_State *L)
 {
+  const struct luaL_Reg *reg;
   const char *key;
 
   if (! lua_isstring (L, 2))
     return 0;
 
   key = lua_tostring (L, 2);
-  if (strcmp (key, "set_point") == 0)
+  reg = mlua_find_method (agg_text_methods, key);
+  if (reg)
     {
-      lua_pushcfunction (L, agg_text_set_point);
-      return 1;
-    }
-  if (strcmp (key, "set_text") == 0)
-    {
-      lua_pushcfunction (L, agg_text_set_text);
+      lua_pushcfunction (L, reg->func);
       return 1;
     }
 
@@ -450,8 +491,6 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
   const char *color = luaL_checkstring (L, 3);
-
-  vertex_source_ref (d->vs);
   
   if (as_line)
     {
@@ -497,6 +536,14 @@ int
 agg_plot_add_line (lua_State *L)
 {
   return agg_plot_add_gener (L, true);
+}
+
+int
+agg_plot_remove_all (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  plot_remove_all (p->plot);
+  return 0;
 }
 
 int

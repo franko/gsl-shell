@@ -18,6 +18,7 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 require 'igsl'
+require 'draw'
 
 function demo1()
    local n = 50
@@ -84,57 +85,6 @@ function demo2()
 end
 
 function demo2plot()
-   local r = rng()
-   local n = 50
-   local p = {a= -3.1, A= 1.55}
-   local y = new(n, 2, function(i,j) 
-			  local x = (i-1)/n 
-			  local e = p.A * 0.1 * rnd.gaussian(r)
-			  return j == 1 and x or p.A * exp(p.a * x) + e
-		       end)
-   local function expf(x, f, J)
-      for k=1, n do
-	 local t = (k-1) / n
-	 local A, a = x[1], x[2]
-	 local e = exp(a * t)
-	 if f then f:set(k, 1, A * e - y:get(k,2)) end
-	 if J then
-	    J:set(k, 1, e)
-	    J:set(k, 2, t * A * e)
-	 end
-      end
-   end
-   local function print_state(s)
-      print ("x: ", s.x:row_print())
-      print ("chi square: ", prod(s.f, s.f)[1])
-   end
-   s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}
-   repeat
-      print_state (s)
-      local status = s:iterate()
-   until status ~= 'continue'
-   print_state (s)
-
-   local mrowxy = function(m)
-		     local r,c = m:dims()
-		     local k = 0
-		     return function()
-			       k = k+1
-			       if k <= r then return m:get(k,1), m:get(k,2) end
-			    end
-		  end
-   pts = ipath(mrowxy(y))
-   ln = ipath(sample(function(t)
-			local A, a = s.x[1], s.x[2]
-			return A * exp(a * t)
-		     end, 0, 1, 128))
-   p = plot()
-   p:add(pts, 'black', {{'stroke'}, {'marker'}})
-   p:add_line(ln, 'red')
-   p:show()
-end
-
-function demo2plot_new()
    local x0, x1, n = 0, 1.5, 50
    local P = vector {1.55, -3.1}
    local model =
@@ -171,11 +121,18 @@ function demo2plot_new()
       local status = s:iterate()
    until status ~= 'continue'
    print_state (s)
-   pts = ipath(matrix_xy_bycol(xy, 1, 2))
+
+   local fmget = function(m, i)
+		    local a, b = m:get(i+1,1), m:get(i+1,2)
+		    if a then return i+1, a, b end 
+		 end
+
+   pts = igpath(fmget, xy, 0)
    ln_result = ipath(sample(|t| model.f(s.x, t), x0, x1, 128))
 --   ln_theory = ipath(sample(|t| model.f(P, t),   x0, x1, 128))
    p = plot()
    p:add(pts, 'black', {{'stroke'}, {'marker', size=5}})
    p:add_line(ln_result, 'red')
    p:show()
+   return p
 end

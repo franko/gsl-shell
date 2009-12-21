@@ -2,7 +2,7 @@
 #include "agg_color_rgba.h"
 #include "agg_math_stroke.h"
 
-// #include "units-plot.h"
+#include "units-plot.h"
 #include "plot.h"
 #include "trans.h"
 #include "vertex-source.h"
@@ -75,7 +75,14 @@ color_lookup (const char *color_str)
 CPLOT *
 plot_new(int with_units)
 {
-  plot_type *p = new plot_type();
+  typedef units_plot<vertex_source, ref_manager> units_plot_type;
+  plot_type *p;
+
+  if (with_units)
+    p = new units_plot_type();
+  else
+    p = new plot_type();
+
   return (CPLOT *) p; 
 }
 
@@ -153,6 +160,12 @@ void plot_add_line (CPLOT *_p, CVERTSRC *_vs, const char *color)
 
   trans::line* line = new trans::line(vs);
   p->add(line, color_lookup(color));
+}
+
+void plot_remove_all(CPLOT *_p)
+{
+  plot_type* p = (plot_type*) _p;
+  p->remove_all();
 }
 
 CPATH* path_new()
