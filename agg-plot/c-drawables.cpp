@@ -108,6 +108,7 @@ build_pipeline (vertex_source* in, struct trans_spec *base)
 	  double *len;
 	  trans::dash* ds;
 	  trans::stroke* stroke;
+	  trans::affine* trans;
 	case trans_stroke:
 	  stroke = new trans::stroke(in, spec->content.stroke.width);
 	  stroke->line_cap((agg::line_cap_e) spec->content.stroke.line_cap);
@@ -125,6 +126,16 @@ build_pipeline (vertex_source* in, struct trans_spec *base)
 	  len = spec->content.dash.len;
 	  ds->add_dash(len[0], len[1]);
 	  curr = ds;
+	  break;
+	case trans_rotate:
+	  trans = new trans::affine(in);
+	  trans->rotate(spec->content.rotate.angle);
+	  curr = trans;
+	  break;
+	case trans_translate:
+	  trans = new trans::affine(in);
+	  trans->translate(spec->content.translate.x, spec->content.translate.y);
+	  curr = trans;
 	  break;
 	case trans_end:
 	  ;

@@ -36,6 +36,8 @@ enum trans_type {
   trans_curve,
   trans_dash,
   trans_marker,
+  trans_rotate,
+  trans_translate,
 };
 
 struct property_reg {
@@ -57,12 +59,23 @@ struct marker_spec {
   double size;
 };
 
+struct rotate_spec {
+  double angle;
+};
+
+
+struct translate_spec {
+  double x, y;
+};
+
 struct trans_spec {
   enum trans_type tag;
   union {
-    struct stroke_spec stroke;
-    struct dash_spec   dash;
-    struct marker_spec marker;
+    struct stroke_spec    stroke;
+    struct dash_spec      dash;
+    struct marker_spec    marker;
+    struct translate_spec translate;
+    struct rotate_spec    rotate;
   } content;
 };
 

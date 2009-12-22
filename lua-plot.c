@@ -49,6 +49,8 @@ static int agg_text_index     (lua_State *L);
 static int agg_text_set_text  (lua_State *L);
 static int agg_text_set_point (lua_State *L);
 
+static int agg_ellipse_new    (lua_State *L);
+
 static int agg_plot_new        (lua_State *L);
 static int agg_plot_show       (lua_State *L);
 static int agg_plot_add        (lua_State *L);
@@ -74,6 +76,7 @@ static struct path_cmd_reg cmd_table[] = {
 static const struct luaL_Reg plot_functions[] = {
   {"path",     agg_path_new},
   {"text",     agg_text_new},
+  {"ellipse",  agg_ellipse_new},
   {"plot",     agg_plot_new},
   {NULL, NULL}
 };
@@ -309,6 +312,19 @@ agg_text_index (lua_State *L)
   return 0;
 }
 
+int
+agg_ellipse_new (lua_State *L)
+{
+  double x  = luaL_checknumber (L, 1);
+  double y  = luaL_checknumber (L, 2);
+  double rx = luaL_checknumber (L, 3);
+  double ry = luaL_checknumber (L, 4);
+  CVERTSRC *vs = ellipse_new (x, y, rx, ry);
+  push_new_agg_obj (L, AGG_ELLIPSE, vs);
+  return 1;
+  
+}
+
 struct agg_plot *
 check_agg_plot (lua_State *L, int index)
 {
@@ -421,22 +437,35 @@ parse_spec (lua_State *L, int index, struct trans_spec *spec)
       spec->tag = trans_marker;
       return spec;
     }
+  else if (strcmp (tag, "dash") == 0)
+    {
+      struct dash_spec *prop = &spec->content.dash;
+      prop->len[0] = mlua_named_optnumber (L, index, "a", 10.0);
+      prop->len[1] = mlua_named_optnumber (L, index, "b", prop->len[0]);
+      spec->tag = trans_dash;
+      return spec;
+    }
   else if (strcmp (tag, "curve") == 0)
     {
       spec->tag = trans_curve;
       return spec;
     }
-  else if (strcmp (tag, "dash") == 0)
+  else if (strcmp (tag, "rotate") == 0)
     {
-      struct dash_spec *prop = &spec->content.dash;
-      double a = mlua_named_optnumber (L, index, "a", 8.0);
-      double b = mlua_named_optnumber (L, index, "b", a);
-      prop->len[0] = a;
-      prop->len[1] = b;
-      spec->tag = trans_dash;
+      double a = mlua_named_number (L, index, "angle");
+      spec->tag = trans_rotate;
+      spec->content.rotate.angle = a;
       return spec;
     }
-
+  else if (strcmp (tag, "translate") == 0)
+    {
+      double x = mlua_named_number (L, index, "x");
+      double y = mlua_named_number (L, index, "y");
+      spec->tag = trans_translate;
+      spec->content.translate.x = x;
+      spec->content.translate.y = y;
+      return spec;
+    }
   return NULL;
 }
 

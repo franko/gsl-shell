@@ -142,25 +142,6 @@ namespace trans {
       m_source->apply_transform(m, as);
     };
   };
-#if 0
-  template <class MarkerLocator, class MarkerShapes>
-  class marker_curve_base {
-    my::conv_simple_marker<MarkerLocator, MarkerShapes> m_marker;
-    agg::conv_curve<my::conv_simple_marker<MarkerLocator, MarkerShapes> > m_curve;
-  public:
-    marker_curve_base(MarkerLocator& src, MarkerShapes& ms): 
-      m_marker(src, ms), m_curve(m_marker)
-    {};
-
-    void approximation_scale(double as) 
-    { 
-      m_curve.approximation_scale(as);
-    };
-
-    void rewind(unsigned path_id) { m_curve.rewind(path_id); };
-    unsigned vertex(double* x, double* y) { return m_curve.vertex(x, y); };
-  };
-#endif
 
   typedef vs_trans_proxy<my::conv_simple_marker<vertex_source, agg::ellipse> > vs_marker_ellipse;
 
@@ -197,6 +178,51 @@ namespace trans {
     {
       agg::bounding_rect_single(*m_source, 0, x1, y1, x2, y2);
     };
+  };
+
+  
+  class affine : public vs_transform {
+    agg::trans_affine m_matrix;
+    
+  public:
+    affine(vertex_source* src): vs_transform(src, m_matrix), m_matrix() {};
+
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+    {
+      agg::bounding_rect_single(m_output, 0, x1, y1, x2, y2);
+    };
+
+#if 0
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+    {
+      double tx1, ty1, tx2, ty2;
+      m_source->bounding_box(&tx1, &ty1, &tx2, &ty2);
+
+      *x1 = *x2 = tx1;
+      *y1 = *y2 = ty1;
+
+      double x = tx1, y = ty1;
+      m_matrix.transform(&x, &y);
+      bbox_enlarge(x1, y1, x2, y2, x, y);
+
+      x = tx2; y = ty1;
+      m_matrix.transform(&x, &y);
+      bbox_enlarge(x1, y1, x2, y2, x, y);
+
+      x = tx2; y = ty2;
+      m_matrix.transform(&x, &y);
+      bbox_enlarge(x1, y1, x2, y2, x, y);
+
+      x = tx1; y = ty2;
+      m_matrix.transform(&x, &y);
+      bbox_enlarge(x1, y1, x2, y2, x, y);
+    };
+
+    void init(agg::trans_affine& m) { m_matrix = m; };
+#endif
+    
+    const trans_affine& rotate(double a) { return m_matrix.rotate(a); };
+    const trans_affine& translate(double x, double y) { return m_matrix.translate(x, y); };
   };
 }
 

@@ -7,6 +7,7 @@
 
 #include "vertex-source.h"
 
+#include "utils.h"
 #include "drawables.h"
 #include "canvas.h"
 #include "units.h"
@@ -144,12 +145,10 @@ void plot<VS,RM>::calc_bounding_box()
 
       is_set = true;
     }
-    else if (sx2 > m_x2 || sx1 < m_x1 || sy2 > m_y2 || sy1 < m_y1)
+    else
     {
-      m_x1 = min(sx1, m_x1);
-      m_y1 = min(sy1, m_y1);
-      m_x2 = max(sx2, m_x2);
-      m_y2 = max(sy2, m_y2);
+      bbox_enlarge(&m_x1, &m_y1, &m_x2, &m_y2, sx1, sy1);
+      bbox_enlarge(&m_x1, &m_y1, &m_x2, &m_y2, sx2, sy2);
     }
   }
 }
