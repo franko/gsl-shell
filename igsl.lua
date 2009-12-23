@@ -247,6 +247,16 @@ local function hc_print(hc)
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 
+function iter(f, i1, i2)
+   local i = i1
+   return function()
+	     if i <= i2 then 
+		i = i+1
+		return f(i-1)
+	     end
+	  end
+end
+
 if have_complex then
    FFT_hc_mixed_radix.__tostring = hc_print
    FFT_hc_radix2.__tostring = hc_print

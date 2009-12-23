@@ -14,19 +14,7 @@ function demo2()
    local r = rng()
    local f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
    local p = plot()
-   local b = path()
-   local lx, rx
-   for x, y in sample(f, -3, 3, 25) do
-      local hw = 3/25
-      lx = rx and rx or x - hw
-      rx = lx + 2*hw
-      y = rnd.poisson(r, floor(2*hw*y*N)) / (N*2*hw)
-      b:move_to(lx, 0)
-      b:line_to(rx, 0)
-      b:line_to(rx, y)
-      b:line_to(lx, y)
-      b:close()
-   end
+   local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
    p:add(b, 'black', {{'stroke', width= 0.5}})
    p:add_line(fxline(f, -4, 4), 'red')
@@ -82,19 +70,10 @@ function demo4()
    local pt, pf = plot(), plot()
    pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
 
-   local hcnorm = function(hc, n)
-		     local i = 0
-		     return function()
-			       local z = hc:get(i)
-			       if i <= n/2 then 
-				  i = i+1
-				  return i-1, sqrt(z*conj(z))
-			       end
-			    end
-		  end
+   local cmod = |z| sqrt(z*conj(z))
 
    fft(sqf)
-   pf:add(ibars(hcnorm(sqf, n)), 'black')
+   pf:add(ibars(iter(function(i) return i, cmod(sqf:get(i)) end, 0, n/2)), 'black')
    for k=ncut, n/2 do sqf:set(k,0) end
    fft_inv(sqf)
 

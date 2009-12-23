@@ -469,6 +469,32 @@ parse_spec (lua_State *L, int index, struct trans_spec *spec)
   return NULL;
 }
 
+int
+lparse_spec_pipeline (lua_State *L)
+{
+  struct trans_spec *spec;
+  size_t k, nb;
+
+  if (lua_type (L, 1) == LUA_TTABLE)
+    nb = lua_objlen (L, 1);
+  else
+    return luaL_error (L, "post transform argument should be an array");
+
+  spec = lua_newuserdata (L, (nb+1) * sizeof(struct trans_spec));
+  for (k = 0; k < nb; k++)
+    {
+      lua_rawgeti (L, 1, k+1);
+      if (parse_spec (L, lua_gettop (L), spec + k) == NULL)
+	return luaL_error (L, "error in definition of post transforms");
+      lua_pop (L, 1);
+    }
+
+  spec[k].tag = trans_end;
+
+  return 1;
+}
+
+/*
 struct trans_spec *
 parse_spec_pipeline (lua_State *L, int index)
 {
@@ -504,6 +530,16 @@ parse_spec_pipeline (lua_State *L, int index)
 
   return spec;
 }
+*/
+
+static struct trans_spec *
+push_empty_pipeline (lua_State *L)
+{
+  struct trans_spec *spec;
+  spec = lua_newuserdata (L, sizeof(struct trans_spec));
+  spec->tag = trans_end;
+  return spec;
+}
 
 static int
 agg_plot_add_gener (lua_State *L, bool as_line)
@@ -511,6 +547,7 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
   const char *color = luaL_checkstring (L, 3);
+  int narg = lua_gettop (L);
   
   if (as_line)
     {
@@ -520,23 +557,37 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   else
     {
       struct trans_spec *post, *pre;
-      
-      post = parse_spec_pipeline (L, 4);
-      if (post == NULL)
-	luaL_error (L, "error in definition of post transforms");
-      
-      pre = parse_spec_pipeline (L, 5);
-      if (pre == NULL)
+
+      if (narg > 3)
 	{
-	  free (post);
-	  luaL_error (L, "error in definition of pre transforms");
+	  lua_pushcfunction (L, lparse_spec_pipeline);
+	  lua_pushvalue (L, 4);
+	  lua_call (L, 1, 1);
+	  post = lua_touserdata (L, -1);
 	}
+      else
+	{
+	  post = push_empty_pipeline (L);
+	}
+      
+      assert (post != NULL);
+      
+      if (narg > 4)
+	{
+	  lua_pushcfunction (L, lparse_spec_pipeline);
+	  lua_pushvalue (L, 5);
+	  lua_call (L, 1, 1);
+	  pre = lua_touserdata (L, -1);
+	}
+      else
+	{
+	  pre = push_empty_pipeline (L);
+	}
+
+      assert (pre != NULL);
 
       pthread_mutex_lock (agg_mutex);
       plot_add (p->plot, d->vs, color, post, pre);
-
-      free (post);
-      free (pre);
     }
 
   if (p->window)
