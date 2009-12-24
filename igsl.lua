@@ -226,6 +226,15 @@ function sample(f, xi, xs, n)
 	  end
 end
 
+function irow(m, f)
+   local r, c = m:dims()
+   local i = 0
+   return function()
+	     i = i+1
+	     if i <= r then return f(m, i) end
+	  end
+end
+
 local function hc_reduce(hc, f, accu)
    local n = hc.length
    for i=0, n do accu = f(accu, hc:get(i)) end
@@ -236,6 +245,16 @@ local function hc_print(hc)
    local eps = 1e-8 * hc_reduce(hc, |p,z| p + z*conj(z), 0)
    local f = |p,z| push(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
    return cat(hc_reduce(hc, f, {}), '\n')
+end
+
+function iter(f, i1, i2)
+   local i = i1
+   return function()
+	     if i <= i2 then 
+		i = i+1
+		return f(i-1)
+	     end
+	  end
 end
 
 if have_complex then

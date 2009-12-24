@@ -1,5 +1,10 @@
 
-ifeq ($(strip $(DEBUG)), yes)
+CC = gcc
+CXX = g++
+
+DEBUG = yes
+
+ifeq ($(strip $(DEBUG)), no)
   CFLAGS = -O2 -Wall
   CXXFLAGS = -O2 -Wall
 else

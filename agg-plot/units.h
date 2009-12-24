@@ -69,16 +69,21 @@ void units<T>::mark_label (char *lab, unsigned size, int mark) const
 {
   bool minus = (m_inf < 0);
   int asup = (minus ? -m_inf : m_sup);
-  char fmt[8];
+  char fmt[16];
 
   if (size < 16)
     return;
 
   if (nb_decimals == 0)
     {
+#if 0
       int space = (int)log10(asup * dmajor) + (minus ? 1 : 0) + 1;
-      sprintf (fmt, "%%%id", space);
+      snprintf (fmt, 16, "%%%id", space);
+      fmt[15] = '\0';
       snprintf (lab, size, fmt, int(mark * dmajor));
+#else
+      snprintf (lab, size, "%d", int(mark * dmajor));
+#endif
       lab[size-1] = '\0';
     }
   else
@@ -87,7 +92,8 @@ void units<T>::mark_label (char *lab, unsigned size, int mark) const
       int base = (int) floor(asup * dmajor);
       int space = dec + (base > 0 ? (int)log10(base): 0) + 1 \
 	+ (minus ? 1 : 0) + 1;
-      sprintf (fmt, "%%%i.%if", space, dec);
+      snprintf (fmt, 16, "%%%i.%if", space, dec);
+      fmt[15] = '\0';
       snprintf (lab, size, fmt, mark * dmajor);
       lab[size-1] = '\0';
     }

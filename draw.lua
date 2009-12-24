@@ -1,6 +1,6 @@
 
-function iline(f, color)
-   local ln = line(color and color or 'red')
+function ipath(f)
+   local ln = path()
    ln:move_to(f())
    for x, y in f do
       ln:line_to(x, y)
@@ -8,40 +8,39 @@ function iline(f, color)
    return ln
 end   
 
-function fxline(f, xi, xs, color, n)
+function fxline(f, xi, xs, n)
    n = n and n or 256
-   return iline(sample(f, xi, xs, n), color)
+   return ipath(sample(f, xi, xs, n))
 end
 
---[[
-local function mrline(m, rx, ry, color)
-   local i = 0
-   local r, c = m:dims()
-   local f = function()
-		i = i + 1
-		if i <= c then 
-		   return m:get(rx, i), m:get(ry, i) 
-		end
-	     end
-   return iline(f, color)
+local function add_bar(p, lx, rx, y)
+   p:move_to(lx, 0)
+   p:line_to(rx, 0)
+   p:line_to(rx, y)
+   p:line_to(lx, y)
+   p:close()
 end
 
-local function mcline(m, cx, cy, color)
-   local i = 0
-   local r, c = m:dims()
-   local f = function()
-		i = i + 1
-		if i <= r then 
-		   return m:get(i, cx), m:get(i, cy) 
-		end
-	     end
-   return iline(f, color)
+function ibars(f)
+   local b = path()
+   local lx, ly = f()
+   local first = true
+   for rx, ry in f do
+      local dx = (rx-lx)/2
+      if first then add_bar(b, lx-dx, lx+dx, ly); first = false end
+      add_bar(b, lx+dx, rx+dx, ry)
+      lx, ly = rx, ry
+   end
+   return b
 end
---]]
 
-function plot(ln)
-   local p = cplot()
-   p:add(ln)
-   p:show()
-   return p
-end
+local mt = getmetatable(path())
+
+mt.plot = function (p, color)
+	     color = color and color or 'black'
+	     local pl = plot()
+	     pl:add(p, color)
+	     pl:show()
+	     return pl
+	  end
+

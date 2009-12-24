@@ -1,18 +1,63 @@
-#include "units_cplot.h"
+#ifndef AGG_PLOT_UNITS_PLOT_H
+#define AGG_PLOT_UNITS_PLOT_H
 
 #include "agg_vcgen_markers_term.h"
 #include "agg_conv_stroke.h"
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
-void
-units_cplot::draw_axis(canvas &canvas)
+#include "plot.h"
+#include "units.h"
+
+template<class VertexSource, class ResourceManager = no_management>
+class units_plot : public plot<VertexSource, ResourceManager> {
+
+public:
+  virtual void draw(canvas &canvas);
+
+private:
+  void draw_axis(canvas& can);
+
+  virtual void trans_matrix_update()
+  {
+    if (this->m_bbox_updated)
+      return;
+
+    this->calc_bounding_box();
+
+    m_ux = units<double>(this->m_x1, this->m_x2);
+    m_uy = units<double>(this->m_y1, this->m_y2);
+
+    int ixi, ixs;
+    double xi, xs, xd;
+    m_ux.limits(ixi, ixs, xd);
+    xi = ixi * xd;
+    xs = ixs * xd;
+
+    int iyi, iys;
+    double yi, ys, yd;
+    m_uy.limits(iyi, iys, yd);
+    yi = iyi * yd;
+    ys = iys * yd;
+
+    double fx = 1/(xs - xi), fy = 1/(ys - yi);
+    this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -xi*fx, -yi*fy);
+
+    this->m_bbox_updated = true;
+  }
+
+  units<double> m_ux;
+  units<double> m_uy;
+};
+
+template <class VS, class RM>
+void units_plot<VS,RM>::draw_axis(canvas &canvas)
 {
   typedef agg::path_storage path_type;
   typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
 
   agg::trans_affine m;
-  viewport_scale(m);
+  this->viewport_scale(m);
   canvas.scale(m);
 
   agg::path_storage mark;
@@ -112,3 +157,13 @@ units_cplot::draw_axis(canvas &canvas)
 
   canvas.draw(boxs, agg::rgba8(0, 0, 0));
 };
+
+template <class VS, class RM>
+void units_plot<VS,RM>::draw(canvas &canvas)
+  {
+    trans_matrix_update();
+    draw_axis(canvas);
+    this->draw_elements(canvas);
+  };
+
+#endif

@@ -78,7 +78,7 @@ else
 endif
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-  C_SRC_FILES += lua-cplot.c
+  C_SRC_FILES += lua-plot.c
   INCLUDES += $(PTHREAD_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED

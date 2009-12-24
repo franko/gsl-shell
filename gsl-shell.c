@@ -61,6 +61,8 @@
 #include "lua-gsl.h"
 #include "lua-utils.h"
 
+#define report error_report
+
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
@@ -145,7 +147,7 @@ static void l_message (const char *pname, const char *msg) {
 }
 
 
-static int report (lua_State *L, int status) {
+int error_report (lua_State *L, int status) {
   if (status && !lua_isnil(L, -1)) {
     const char *msg = lua_tostring(L, -1);
     if (msg == NULL) msg = "(error object is not a string)";

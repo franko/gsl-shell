@@ -1,6 +1,6 @@
 
 function vonkoch(n, color)
-   local ln = line(color and color or 'blue')
+   local ln = path()
    local sx = {2, 1, -1, -2, -1,  1}
    local sy = {0, 1,  1,  0, -1, -1}
    local w = {}
