@@ -46,14 +46,6 @@ distribution, allowing full accuracy to be retained for small results. See the c
      Box-Mueller algorithm which requires two calls to the random
      number generator R.
 
-     .. figure:: gaussian-pdf.png
-
-        Probability distribution function
-
-     .. figure:: gaussian-cdf.png
-
-        Cumulative distribution function
-
 .. _rnd_exponential:
 
 .. function:: exponential(r [, mu])
@@ -87,10 +79,6 @@ distribution, allowing full accuracy to be retained for small results. See the c
         p(x) dx = {1 \over 2 \Gamma(\nu/2) } (x/2)^{\nu/2 - 1} \exp(-x/2) dx
 
    for x >= 0.
-
-   .. figure:: chisq-pdf.png
-
-      Probability distribution function
 
 .. _rnd_laplace:
 

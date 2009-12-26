@@ -42,6 +42,7 @@ extern void        ellipse_free (CVERTSRC *e);
 extern CTEXT *     text_new        (double size, double width);
 extern void        text_set_text   (CTEXT *t, const char *text);
 extern void        text_set_point  (CTEXT *t, double x, double y);
+extern void        text_rotate     (CTEXT *t, double angle);
 
 __END_DECLS
 

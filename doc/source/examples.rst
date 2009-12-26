@@ -22,7 +22,21 @@ We can use this definition to define our home-made Bessel function. To perform t
       return 1/pi * integ {f= f, points={0, pi}}
    end
 
-The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can calculate a matrix with the tabulated values. For examples we can use the columns of the matrix to span different values of n. We write then::
+The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
+
+   require 'draw'
+   p = plot()
+   color = {'red', 'green', 'blue', 'cyan', 'magenta'}
+   for n=0, 5 do
+      p:add_line(fxline(|x| bessJ(x,n), 0, 20), color[n+1])
+   end
+   p:show()
+
+to obtain the following result:
+
+.. figure:: example-bessJ-plot.png
+
+Then we can also calculate a matrix with the tabulated values. For examples we can use the columns of the matrix to span different values of n. We write then::
 
    m = new(200, 6, |k,n| bessJ((k-1)/10, n-1))
 
@@ -40,3 +54,51 @@ And we obtain the following matrix::
   [    0.807524     0.40595   0.0945863    0.014434  0.00164055 0.000148658 ]
   [    0.765198    0.440051    0.114903   0.0195634  0.00247664 0.000249758 ]
   [ ... ]
+
+The Von-Koch curve
+------------------
+
+The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the swedish mathematician Helge von Koch.
+
+Here an example to plot it with GSL Shell::
+
+  require 'draw'
+
+  function vonkoch(n)
+     local sx = {2, 1, -1, -2, -1,  1}
+     local sy = {0, 1,  1,  0, -1, -1}
+     local w = {}
+     for k=1,n+1 do w[#w+1] = 0 end
+     local sh = {1, -2, 1}
+     local a = 0
+     local x, y = 0, 0
+
+     local s = 1 / (3^n)
+     for k=1, 6 do
+	sx[k] = s * 0.5 * sx[k]
+	sy[k] = s * sqrt(3)/2 * sy[k]
+     end
+
+     return function()
+	       if w[n+1] == 0 then
+		  x, y = x + sx[a+1], y + sy[a+1]
+		  for k=1,n+1 do
+		     w[k] = (w[k] + 1) % 4
+		     if w[k] ~= 0 then
+			a = (a + sh[w[k]]) % 6
+			break
+		     end
+		  end
+		  return x, y
+	       end
+	    end
+  end
+
+  p = plot()
+  p:add_line(ipath(vonkoch(4)), 'blue')
+  p:show()
+
+And here the result:
+
+.. figure:: examples-von-koch-plot.png
+

@@ -249,6 +249,12 @@ void text_set_point (CTEXT *_t, double x, double y)
   t->start_point (x, y);
 }
 
+void text_rotate (CTEXT *_t, double angle)
+{
+  my::text *t = (my::text *) _t;
+  t->rotate(angle);
+}
+
 CVERTSRC *
 ellipse_new (double x, double y, double rx, double ry)
 {

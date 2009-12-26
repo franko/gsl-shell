@@ -40,5 +40,6 @@ Contents:
    fft.rst
    ode.rst
    integ.rst
+   graphics.rst
    examples.rst
    acknowledgments.rst

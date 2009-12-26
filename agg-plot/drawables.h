@@ -78,17 +78,21 @@ namespace my {
     };
   };
 
-  typedef vs_proxy<agg::conv_stroke<agg::gsv_text> > vs_text;
+  typedef vs_proxy<agg::conv_stroke<agg::conv_transform<agg::gsv_text> > > vs_text;
 
   /* text drawable */
   class text : public vs_text {
+    agg::trans_affine m_matrix;
     agg::gsv_text m_text;
-    agg::conv_stroke<agg::gsv_text> m_stroke;
+    agg::conv_transform<agg::gsv_text> m_trans;
+    agg::conv_stroke<agg::conv_transform<agg::gsv_text> > m_stroke;
+    double m_angle;
     double m_x, m_y;
   
   public:
     text(double size = 10.0, double width = 1.0): 
-      vs_text(), m_text(), m_stroke(m_text), m_x(0.0), m_y(0.0)
+      vs_text(), m_matrix(),
+      m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans)
     { 
       set_source(&m_stroke);
       m_stroke.width(width);
@@ -98,9 +102,17 @@ namespace my {
 
     void start_point(double x, double y) 
     { 
-      m_x = x; 
+      m_x = x;
       m_y = y;
     };
+
+    void translate(double dx, double dy) 
+    { 
+      m_x += dx;
+      m_y += dy;
+    };
+
+    void rotate(double a) { m_matrix.rotate(a); };
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
@@ -110,10 +122,10 @@ namespace my {
 
     virtual void apply_transform(agg::trans_affine& m, double as)
     {
-      double x = m_x, y = m_y;
-      m.transform(&x, &y);
-      m_text.start_point(x, y);
-      m_stroke.approximation_scale(trans_affine_max_norm(m));
+      m_matrix.tx = m_x;
+      m_matrix.ty = m_y;
+      m.transform(&m_matrix.tx, &m_matrix.ty);
+      m_text.start_point(0.0, 0.0);
     };
 
     virtual bool need_resize() { return false; };

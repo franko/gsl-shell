@@ -90,7 +90,7 @@ function demo5()
    local x0, x1, n = 0, 1.5, 50
    local P = vector {1.55, -3.1}
    local model =
-      {f = |p, x| p[1] * exp(p[2] * x),
+      {f = function(p, x) return p[1] * exp(p[2] * x) end,
        J = function(p, x)
 	      local e = exp(p[2] * x)
 	      return e, x * p[1] * e

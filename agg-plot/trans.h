@@ -191,35 +191,6 @@ namespace trans {
     {
       agg::bounding_rect_single(m_output, 0, x1, y1, x2, y2);
     };
-
-#if 0
-    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
-    {
-      double tx1, ty1, tx2, ty2;
-      m_source->bounding_box(&tx1, &ty1, &tx2, &ty2);
-
-      *x1 = *x2 = tx1;
-      *y1 = *y2 = ty1;
-
-      double x = tx1, y = ty1;
-      m_matrix.transform(&x, &y);
-      bbox_enlarge(x1, y1, x2, y2, x, y);
-
-      x = tx2; y = ty1;
-      m_matrix.transform(&x, &y);
-      bbox_enlarge(x1, y1, x2, y2, x, y);
-
-      x = tx2; y = ty2;
-      m_matrix.transform(&x, &y);
-      bbox_enlarge(x1, y1, x2, y2, x, y);
-
-      x = tx1; y = ty2;
-      m_matrix.transform(&x, &y);
-      bbox_enlarge(x1, y1, x2, y2, x, y);
-    };
-
-    void init(agg::trans_affine& m) { m_matrix = m; };
-#endif
     
     const trans_affine& rotate(double a) { return m_matrix.rotate(a); };
     const trans_affine& translate(double x, double y) { return m_matrix.translate(x, y); };

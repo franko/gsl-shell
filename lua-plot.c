@@ -48,6 +48,7 @@ static int agg_text_new       (lua_State *L);
 static int agg_text_index     (lua_State *L);
 static int agg_text_set_text  (lua_State *L);
 static int agg_text_set_point (lua_State *L);
+static int agg_text_rotate    (lua_State *L);
 
 static int agg_ellipse_new    (lua_State *L);
 
@@ -99,6 +100,7 @@ static const struct luaL_Reg agg_plot_methods[] = {
 static const struct luaL_Reg agg_text_methods[] = {
   {"set_point",   agg_text_set_point},
   {"set_text",    agg_text_set_text},
+  {"rotate",      agg_text_rotate},
   {NULL, NULL}
 };
 
@@ -291,6 +293,15 @@ agg_text_set_point (lua_State *L)
   text_set_point (t, x, y);
   return 0;
 }
+
+int
+agg_text_rotate (lua_State *L)
+{
+  CTEXT *t = check_agg_text (L, 1);
+  double a = luaL_checknumber (L, 2);
+  text_rotate (t, a);
+  return 0;
+};
 
 int
 agg_text_index (lua_State *L)
