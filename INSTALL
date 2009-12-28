@@ -23,6 +23,8 @@ So, in order to build GSL shell, you should do :
   - use BUILD_LUA_DLL if you want only a shared library to load in Lua
   - use ENABLE_COMPLEX if you want support for complex number
     (recommended)
+  - use ENABLE_AGG_PLOT to activate or disactivate the AGG graphical
+    module
 - in the GSL shell root folder type 'make' to build everything
 
 In order to customize the build options you can edit the files
@@ -31,7 +33,7 @@ Makefile and makeconfig in the GSL shell root directory.
 ** LIBRARIES DEPENDENCIES
 
 GSL shell does depend on GSL, of course, and it is known to work with
-GSL 1.11 and GSL 1.12.
+GSL from 1.11 to 1.13 .
 
 - http://www.gnu.org/software/gsl/
 
@@ -40,3 +42,6 @@ numbers.
 
 - http://www.lua.org
 - http://luaforge.net/projects/lnum/
+
+You will need also the AGG library:
+- http://www.antigrain.com/

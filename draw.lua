@@ -9,8 +9,17 @@ function ipath(f)
 end   
 
 function fxline(f, xi, xs, n)
-   n = n and n or 256
+   n = n and n or 512
    return ipath(sample(f, xi, xs, n))
+end
+
+function fxplot(f, xi, xs, color, n)
+   n = n and n or 512
+   color = color and color or 'red'
+   local p = plot()
+   p:add_line(ipath(sample(f, xi, xs, n)), color)
+   p:show()
+   return p
 end
 
 local function add_bar(p, lx, rx, y)
@@ -34,13 +43,11 @@ function ibars(f)
    return b
 end
 
-local mt = getmetatable(path())
+local bcolors = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
+local mcolors = {'dark', '', 'light'}
 
-mt.plot = function (p, color)
-	     color = color and color or 'black'
-	     local pl = plot()
-	     pl:add(p, color)
-	     pl:show()
-	     return pl
-	  end
-
+function rainbow(n)
+   local p = #bcolors
+   local q = floor(n/p) % #mcolors
+   return mcolors[q+1] .. bcolors[n % p + 1]
+end

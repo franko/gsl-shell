@@ -65,7 +65,7 @@ LUAGSL_LIBS = $(LUADIR)/src/liblua.a
 C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
-		pdf.c cdf.c lua-gsl.c
+		pdf.c cdf.c sf.c lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic

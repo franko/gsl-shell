@@ -439,6 +439,7 @@ static int pmain (lua_State *L) {
 
   dolibrary (L, "igsl");
   dolibrary (L, "integ");
+  dolibrary (L, "draw");
 
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
