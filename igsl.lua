@@ -83,20 +83,6 @@ function matrix_reduce(m, f, accu)
    return accu
 end
 
-function matrix_reduce_rowcol(m, fcol, ac0, frow, ar0)
-   local r, c = m:dims()
-   local getnew = type(ar0) == 'table' and (|| {}) or (|| ar0)
-   for i=1, r do
-      local ar = getnew()
-      for j=1, c do
-	 local z = m:get(i,j)
-	 ar = frow(ar, z)
-      end
-      ac0 = fcol(ac0, ar)
-   end
-   return ac0
-end
-
 local function tostring_eps(z, eps)
    local a, b = real(z), imag(z)
    local f = |x| fmt('%g', x)
@@ -144,12 +130,15 @@ function matrix_print(m)
 		  end
    local width = matrix_reduce(m, fwidth, 0)
    local pad = |s| string.rep(' ', width - #s) .. s
-   local lines = 
-      matrix_reduce_rowcol(m, 
-			   |lns, ln| push(lns, '[ ' .. cat(ln, ' ') .. ' ]'),
-			   {}, 
-			   |ln, z| push(ln, pad(tostring_eps(z, eps))),
-			   {})
+   local r, c = m:dims()
+   local lines = {}
+   for i=1,r do
+      local ln = {}
+      for j=1,c do
+	 push(ln, pad(tostring_eps(m:get(i,j), eps)))
+      end
+      push(lines, '[ ' .. cat(ln, ' ') .. ' ]')
+   end
    return cat(lines, '\n')
 end
 

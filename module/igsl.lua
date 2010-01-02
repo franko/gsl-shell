@@ -18,6 +18,8 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+require 'gsl'
+
 gsl.real_env = _G
 setfenv(1, gsl)
 
@@ -25,6 +27,7 @@ local table  = real_env.table
 local math   = real_env.math
 local string = real_env.string
 local type   = real_env.type
+local ipairs = real_env.ipairs
 
 real_env = nil
 
@@ -93,20 +96,6 @@ function matrix_reduce(m, f, accu)
    return accu
 end
 
-function matrix_reduce_rowcol(m, fcol, ac0, frow, ar0)
-   local r, c = m:dims()
-   local getnew = type(ar0) == 'table' and (function() return {} end) or (function() return ar0 end)
-   for i=1, r do
-      local ar = getnew()
-      for j=1, c do
-	 local z = m:get(i,j)
-	 ar = frow(ar, z)
-      end
-      ac0 = fcol(ac0, ar)
-   end
-   return ac0
-end
-
 local function tostring_eps(z, eps)
    local a, b = math.real(z), math.imag(z)
    local f = function(x) return fmt('%g', x) end
@@ -154,14 +143,15 @@ function matrix_print(m)
 		  end
    local width = matrix_reduce(m, fwidth, 0)
    local pad = function(s) return string.rep(' ', width - #s) .. s end
-   local function colls(lns, ln)
-      return push(lns, '[ ' .. cat(ln, ' ') .. ' ]')
+   local r, c = m:dims()
+   local lines = {}
+   for i=1,r do
+      local ln = {}
+      for j=1,c do
+	 push(ln, pad(tostring_eps(m:get(i,j), eps)))
+      end
+      push(lines, '[ ' .. cat(ln, ' ') .. ' ]')
    end
-   local function coll(ln, z)
-      return push(ln, pad(tostring_eps(z, eps)))
-   end
-   local lines = 
-      matrix_reduce_rowcol(m, colls, {}, coll, {})
    return cat(lines, '\n')
 end
 
@@ -234,6 +224,25 @@ function sample(f, xi, xs, n)
 		local x = xi + k*cf
 		k = k+1
 		return x, f(x)
+	     end
+	  end
+end
+
+function irow(m, f)
+   local r, c = m:dims()
+   local i = 0
+   return function()
+	     i = i+1
+	     if i <= r then return f(m, i) end
+	  end
+end
+
+function iter(f, i1, i2)
+   local i = i1
+   return function()
+	     if i <= i2 then 
+		i = i+1
+		return f(i-1)
 	     end
 	  end
 end

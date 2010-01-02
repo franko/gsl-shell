@@ -53,7 +53,18 @@ namespace my {
     agg::path_storage m_path;
 
   public:
-    path(): vs_base(), m_path() { set_source(&m_path); };
+    path(): vs_base(), m_path() 
+    { 
+#ifdef DEBUG_PLOT
+      fprintf(stderr, "creating path: %p\n", this);
+#endif
+      set_source(&m_path); 
+    };
+
+#ifdef DEBUG_PLOT
+    ~path() { fprintf(stderr, "freeing path: %p\n", this); };
+#endif
+
 
     agg::path_storage& get_path() { return m_path; };
   };

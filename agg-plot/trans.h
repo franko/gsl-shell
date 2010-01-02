@@ -21,7 +21,17 @@ protected:
   vertex_source* m_source;
 
 public:
-  vs_trans_proxy(vertex_source* src): m_output(*src), m_source(src) {};
+  vs_trans_proxy(vertex_source* src): m_output(*src), m_source(src) 
+  {
+#ifdef DEBUG_PLOT
+    fprintf(stderr, "creating trans: %p\n", this);
+#endif
+  };
+#ifdef DEBUG_PLOT
+  ~vs_trans_proxy() { fprintf(stderr, "freeing trans: %p\n", this); };
+#endif
+
+
 
   template <class init_type>
   vs_trans_proxy(vertex_source* src, init_type& val):

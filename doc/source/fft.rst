@@ -154,3 +154,52 @@ The Fourier trasform is made using the function :func:`cfft` that provides both 
    positive a direct transformation will be done, this is the defaut
    case. If sign is negative the inverse transfrmations will be done
    and a factor 1/N will be used to scale the results.
+
+FFT example
+-----------
+
+In this example we will treat a square pulse in the temporal domain. To illustrate a typical example of FFT usage we perform the Fourier Transform of the signal and we cut the higher order frequencies. Than we perform the inverse transform and we compare the result with the original time signal.
+
+So, first we define our square pulse in the time domain. Actually it will be a matrix with just one column::
+
+   n = 256
+   ncut = 16
+
+   -- we create a pulse signal in the time domain
+   sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+
+Than we create two new plots, one for the Fourier transform and one for the signal itself::
+
+   pt, pf = plot(), plot()
+   pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
+
+Now we are ready to perform:
+
+  - the Fourier transform
+  - cut the higher frequencies
+  - transform back the signal in the time domain
+
+and plot the results::
+
+   -- a convenience function, the norm of a complex number
+   cmod = |z| sqrt(z*conj(z))
+
+   fft(sq)
+   pf:add(ibars(iter(function(i) return i, cmod(sq:get(i)) end, 0, n/2)), 'black')
+   for k=ncut, n/2 do sq:set(k,0) end
+   fft_inv(sq)
+
+   pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'red')
+
+   pf:show()
+   pt:show()
+
+.. figure:: fft-example-power-spectrum.png
+
+   Fourier transform spectrum
+
+.. figure:: fft-example-time-signal.png
+
+   Time signal before (black) and after (red) the transformation
+
+You can observe in the reconstructed signal (the red curve) that we obtain approximatively the square pulse but with a lot of oscillations. Of course this is an artifact of our transformations. The reason is that in order to reproduce prefectly a sharp signal we need also all the high frequencies of the Fourier transform.

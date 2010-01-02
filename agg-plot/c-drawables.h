@@ -2,6 +2,7 @@
 #define CPLOT_CINTFC_H
 
 #include "defs.h"
+#include "colors.h"
 
 #define CPLOT    struct my_c_plot
 #define CVERTSRC struct my_c_vs
@@ -23,9 +24,9 @@ CPATH;
 
 extern CPLOT *  plot_new        (int with_units);
 extern void     plot_free       (CPLOT *p);
-extern void     plot_add        (CPLOT *p, CVERTSRC *src, const char *color,
+extern void     plot_add        (CPLOT *p, CVERTSRC *src, struct color *color,
 				 struct trans_spec *post, struct trans_spec *pre);
-extern void     plot_add_line   (CPLOT *p, CVERTSRC *src, const char *color);
+extern void     plot_add_line   (CPLOT *p, CVERTSRC *src, struct color *color);
 extern void     plot_remove_all (CPLOT *p);
 
 extern void     vertex_source_ref   (CVERTSRC *p);

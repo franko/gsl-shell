@@ -1,14 +1,19 @@
 
-function ipath(f)
-   local ln = path(f())
+require 'module/igsl'
+
+draw = {}
+
+function draw.ipath(f)
+   local ln = gsl.path()
+   ln:move_to(f())
    for x, y in f do
       ln:line_to(x, y)
    end
    return ln
 end   
 
-function ipathp(f)
-   local ln = path()
+function draw.ipathp(f)
+   local ln = gsl.path()
    local success = false
    local x, y
    repeat
@@ -25,15 +30,16 @@ function ipathp(f)
    return ln
 end   
 
-function fxline(f, xi, xs, n)
+function draw.fxline(f, xi, xs, n)
    n = n and n or 512
-   return ipath(sample(f, xi, xs, n))
+   return draw.ipath(gsl.sample(f, xi, xs, n))
 end
 
-function fxplot(f, xi, xs, color, n)
+function draw.fxplot(f, xi, xs, color, n)
    n = n and n or 512
-   local p = plot()
-   p:add_line(ipathp(sample(f, xi, xs, n)), color)
+   color = color and color or 'red'
+   local p = gsl.plot()
+   p:add_line(draw.ipathp(gsl.sample(f, xi, xs, n)), color)
    p:show()
    return p
 end
@@ -46,8 +52,8 @@ local function add_bar(p, lx, rx, y)
    p:close()
 end
 
-function ibars(f)
-   local b = path()
+function draw.ibars(f)
+   local b = gsl.path()
    local lx, ly = f()
    local first = true
    for rx, ry in f do
@@ -62,18 +68,8 @@ end
 local bcolors = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
 local mcolors = {'dark', '', 'light'}
 
-function rainbow(n)
+function draw.rainbow(n)
    local p = #bcolors
-   local q = floor((n-1)/p) % #mcolors
-   return mcolors[q+1] .. bcolors[(n-1) % p + 1]
-end
-
-
-function plot_lines(ln)
-   local p = plot()
-   for k=1, #ln do
-      p:add_line(ln[k], rainbow(k))
-   end
-   p:show()
-   return p
+   local q = floor(n/p) % #mcolors
+   return mcolors[q+1] .. bcolors[n % p + 1]
 end

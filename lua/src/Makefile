@@ -8,7 +8,7 @@
 PLATFORM = none
 
 CC= gcc --std=c99
-CFLAGS= -g $(DEFS) $(MYCFLAGS)
+CFLAGS= -g -Wall $(DEFS) $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -f

@@ -3,10 +3,7 @@ require 'draw'
 
 function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
-   p = plot()
-   p:add_line(fxline(f, 0, 15, 512), 'red')
-   p:show()
-   return p
+   return fxplot(f, 0, 15,'red')
 end
 
 function demo2()
@@ -37,7 +34,10 @@ function vonkoch(n)
       sy[k] = s * sqrt(3)/2 * sy[k]
    end
 
+   local first = true
+
    return function()
+	     if first then first = false; return x, y end
 	     if w[n+1] == 0 then
 		x, y = x + sx[a+1], y + sy[a+1]
 		for k=1,n+1 do
@@ -53,8 +53,27 @@ function vonkoch(n)
 end
 
 function demo3()
-   pl = plot()
-   pl:add_line(ipath(vonkoch(4)), 'blue')
+   local pl = plot()
+
+   local t = path()
+   t:move_to(0,0)
+   t:line_to(1,0)
+   t:line_to(0.5,-sqrt(3)/2)
+   t:close()
+
+   local v = ipath(vonkoch(4))
+   local c = rgba(0,0,0.7,0.2)
+   pl:add(v, c)
+   pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+   pl:add(t, c)
+
+   c = rgb(0,0,0.7)
+
+   pl:add(v, c, {{'stroke'}})
+   pl:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:add(v, c, {{'stroke'}}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+
    pl:show()
    return pl
 end

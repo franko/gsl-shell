@@ -45,6 +45,10 @@ public:
   plot() : m_elements(), m_trans(), m_bbox_updated(true) { };
   virtual ~plot() 
   {
+#ifdef DEBUG_PLOT
+    fprintf(stderr, "freeing plot: %p\n", this);
+#endif
+
     for (unsigned j = 0; j < m_elements.size(); j++)
       {
 	container& d = m_elements[j];

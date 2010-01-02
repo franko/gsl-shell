@@ -44,8 +44,9 @@ end
 function levyc(n)
    local p = plot()
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
-   p:add(c, 'red', {{'stroke'}}, {{'rotate', angle= -pi/4}})
-   p:add(c, 'red', {{'stroke'}}, {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
+   p:add(c, 'red', {{'stroke', width=0.7}}, {{'rotate', angle= -pi/4}})
+   p:add(c, 'red', {{'stroke', width=0.7}}, 
+	           {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
    p:show()
    return p
 end

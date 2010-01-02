@@ -21,12 +21,11 @@
 GSH_BASE_DIR = ..
 
 include $(GSH_BASE_DIR)/makeconfig
+include $(GSH_BASE_DIR)/makeflags
 
 LUADIR = $(GSH_BASE_DIR)/lua
 AR= ar rcu
 RANLIB= ranlib
-
-CXXFLAGS = -g -Wall
 
 ifeq ($(PLATFORM), none)
 nono:
@@ -48,7 +47,7 @@ endif
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp plot.cpp xwin-show.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp plot.cpp colors.cpp xwin-show.cpp
 # AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp test.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)

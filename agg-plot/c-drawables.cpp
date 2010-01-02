@@ -28,50 +28,6 @@ struct property_reg line_join_properties[] = {
 typedef my::path path_type;
 typedef my::ellipse ellipse_type;
 
-static agg::rgba8
-color_lookup (const char *color_str)
-{
-  const char *p = color_str;
-  agg::rgba8 c;
-  int val = 180;
-
-  if (strcmp (p, "white") == 0)
-    {
-      c = agg::rgba8(255, 255, 255);
-      return c;
-    }
-
-  if (strncmp (p, "light", 5) == 0)
-    {
-      val = 255;
-      p += 5;
-    }
-  else if (strncmp (p, "dark", 4) == 0)
-    {
-      val = 120;
-      p += 4;
-    }
-
-  if (strcmp (p, "red") == 0)
-    c = agg::rgba8(val, 0, 0);
-  else if (strcmp (p, "green") == 0)
-    c = agg::rgba8(0, val, 0);
-  else if (strcmp (p, "blue") == 0)
-    c = agg::rgba8(0, 0, val);
-  else if (strcmp (p, "cyan") == 0)
-    c = agg::rgba8(0, val, val);
-  else if (strcmp (p, "magenta") == 0)
-    c = agg::rgba8(val, 0, val);
-  else if (strcmp (p, "yellow") == 0)
-    c = agg::rgba8(val, val, 0);
-  else if (strcmp (p, "gray") == 0)
-    c = agg::rgba8(val, val, val);
-  else
-    c = agg::rgba8(0, 0, 0);
-
-  return c;
-}
-
 CPLOT *
 plot_new(int with_units)
 {
@@ -82,6 +38,10 @@ plot_new(int with_units)
     p = new units_plot_type();
   else
     p = new plot_type();
+
+#ifdef DEBUG_PLOT
+  fprintf(stderr, "Creating plot: %p\n", p);
+#endif
 
   return (CPLOT *) p; 
 }
@@ -147,7 +107,12 @@ build_pipeline (vertex_source* in, struct trans_spec *base)
   return in;
 }
 
-void plot_add(CPLOT *_p, CVERTSRC *_vs, const char *color,
+static agg::rgba8 new_color(struct color *c)
+{
+  return agg::rgba8(c->r, c->g, c->b, c->a);
+}
+
+void plot_add(CPLOT *_p, CVERTSRC *_vs, struct color *color,
 	      struct trans_spec *post, struct trans_spec *pre)
 {
   plot_type* p = (plot_type*) _p;
@@ -161,16 +126,17 @@ void plot_add(CPLOT *_p, CVERTSRC *_vs, const char *color,
 
   curr = build_pipeline (curr, post);
 
-  p->add(curr, color_lookup(color));
+  p->add(curr, new_color(color));
 }
 
-void plot_add_line (CPLOT *_p, CVERTSRC *_vs, const char *color)
+void plot_add_line (CPLOT *_p, CVERTSRC *_vs, struct color *color)
 {
   plot_type* p = (plot_type*) _p;
   vertex_source* vs = (vertex_source*) _vs;
 
   trans::line* line = new trans::line(vs);
-  p->add(line, color_lookup(color));
+  line->self().width(0.7);
+  p->add(line, new_color(color));
 }
 
 void plot_remove_all(CPLOT *_p)

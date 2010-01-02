@@ -11,6 +11,7 @@
 #include "lua-utils.h"
 #include "lua-plot-priv.h"
 #include "xwin-show.h"
+#include "colors.h"
 
 extern void plot_register (lua_State *L);
 
@@ -35,6 +36,7 @@ struct path_cmd_reg {
 
 static const char * const plot_mt_name          = "GSL.pl.plot";
 static const char * const vertex_source_mt_name = "GSL.pl.vs";
+static const char * const rgba_mt_name          = "GSL.pl.rgba";
 
 extern int push_new_agg_obj   (lua_State *L, enum agg_type tag, CVERTSRC *vs);
 
@@ -59,6 +61,9 @@ static int agg_plot_remove_all (lua_State *L);
 static int agg_plot_add_line   (lua_State *L);
 static int agg_plot_free       (lua_State *L);
 
+static int agg_rgb_new         (lua_State *L);
+static int agg_rgba_new        (lua_State *L);
+
 struct agg_obj*  check_agg_obj  (lua_State *L, int index);
 path *           check_agg_path (lua_State *L, int index);
 CTEXT *          check_agg_text (lua_State *L, int index);
@@ -78,6 +83,8 @@ static const struct luaL_Reg plot_functions[] = {
   {"path",     agg_path_new},
   {"text",     agg_text_new},
   {"ellipse",  agg_ellipse_new},
+  {"rgba",     agg_rgba_new},
+  {"rgb",      agg_rgb_new},
   {"plot",     agg_plot_new},
   {NULL, NULL}
 };
@@ -94,6 +101,10 @@ static const struct luaL_Reg agg_plot_methods[] = {
   {"clear",       agg_plot_remove_all },
   {"add_line",    agg_plot_add_line   },
   {"__gc",        agg_plot_free       },
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg rgba_methods[] = {
   {NULL, NULL}
 };
 
@@ -125,6 +136,19 @@ agg_path_new (lua_State *L)
 {
   CPATH *vs = path_new ();
   push_new_agg_obj (L, AGG_PATH, (CVERTSRC *) vs);
+
+  if (lua_gettop (L) >= 2)
+    {
+      double x = luaL_checknumber (L, 1);
+      double y = luaL_checknumber (L, 2);
+      struct cmd_call_stack s[1];
+      
+      s->f[0] = x;
+      s->f[1] = y;
+
+      path_cmd (vs, CMD_MOVE_TO, s);
+    }
+
   return 1;
 }
 
@@ -148,6 +172,9 @@ int
 agg_obj_free (lua_State *L)
 {
   struct agg_obj *d = check_agg_obj (L, 1);
+#ifdef DEBUG_PLOT
+  fprintf(stderr, "lua dispose drawable %p\n", d->vs);
+#endif
   vertex_source_unref (d->vs);
   return 0;
 }
@@ -196,7 +223,11 @@ agg_obj_pcall (lua_State *L)
   pthread_mutex_unlock (agg_mutex);
   if (status != 0)
     {
+#ifndef LUA_MODULE
       error_report (L, status);
+#else
+      luaL_error (L, "error in graphical object method");
+#endif
       return 0;
     }
   narg_out = lua_gettop (L);
@@ -380,6 +411,10 @@ agg_plot_free (lua_State *L)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
 
+#ifdef DEBUG_PLOT
+  fprintf(stderr, "lua dispose plot %p", p->plot);
+#endif
+
   pthread_mutex_lock (agg_mutex);
 
   assert (p->lua_is_owner);
@@ -387,8 +422,17 @@ agg_plot_free (lua_State *L)
 
   if (! p->is_shown)
     {
+#ifdef DEBUG_PLOT
+      fprintf(stderr, ": destroying\n", p);
+#endif
       agg_plot_destroy (p);
     }
+#ifdef DEBUG_PLOT
+  else
+    {
+      fprintf(stderr, ": plot is shown\n", p);
+    }
+#endif
 
   pthread_mutex_unlock (agg_mutex);
   return 0;
@@ -505,44 +549,6 @@ lparse_spec_pipeline (lua_State *L)
   return 1;
 }
 
-/*
-struct trans_spec *
-parse_spec_pipeline (lua_State *L, int index)
-{
-  size_t k, nb;
-  struct trans_spec *spec;
-
-  if (lua_gettop (L) < index)
-    {
-      spec = emalloc (sizeof(struct trans_spec));
-      spec->tag = trans_end;
-      return spec;
-    }
-
-  if (lua_type (L, index) != LUA_TTABLE)
-    return NULL;
-  nb = lua_objlen (L, index);
-
-  spec = emalloc ((nb+1) * sizeof(struct trans_spec));
-  for (k = 0; k < nb; k++)
-    {
-      int subindex;
-      lua_rawgeti (L, index, k+1);
-      subindex = lua_gettop (L);
-      if (parse_spec (L, subindex, spec + k) == NULL)
-	{
-	  free (spec);
-	  return NULL;
-	}
-      lua_pop (L, 1);
-    }
-
-  spec[k].tag = trans_end;
-
-  return spec;
-}
-*/
-
 static struct trans_spec *
 push_empty_pipeline (lua_State *L)
 {
@@ -552,13 +558,37 @@ push_empty_pipeline (lua_State *L)
   return spec;
 }
 
+static void
+check_color (lua_State *L, int index, struct color *c)
+{
+  if (lua_isnil (L, index))
+    {
+      set_color_default (c);
+    }
+  else if (lua_isstring (L, index))
+    {
+      const char *cstr = lua_tostring (L, index);
+      color_lookup (c, cstr);
+    }
+  else
+    {
+      struct color *userc = luaL_checkudata (L, index, rgba_mt_name);
+      *c = *userc; /* struct assignement is ok in ANSI C */
+    }
+}
+
 static int
 agg_plot_add_gener (lua_State *L, bool as_line)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
-  const char *color = luaL_checkstring (L, 3);
   int narg = lua_gettop (L);
+  struct color color[1];
+
+  if (narg <= 2)
+    set_color_default (color);
+  else
+    check_color (L, 3, color);
   
   if (as_line)
     {
@@ -657,6 +687,53 @@ agg_plot_show (lua_State *L)
   return 0;
 }
 
+static unsigned int double2uint8 (double x)
+{
+  int u = x * 255.0;
+  if (u > 255)
+    u = 255;
+  else if (u < 0)
+    u = 0;
+  return (unsigned int) u;
+}
+
+int
+agg_rgba_new (lua_State *L)
+{
+  double r = luaL_checknumber (L, 1);
+  double g = luaL_checknumber (L, 2);
+  double b = luaL_checknumber (L, 3);
+  double a = luaL_checknumber (L, 4);
+  struct color *c = lua_newuserdata (L, sizeof(struct color));
+  c->r = double2uint8 (r);
+  c->g = double2uint8 (g);
+  c->b = double2uint8 (b);
+  c->a = double2uint8 (a);
+
+  luaL_getmetatable (L, rgba_mt_name);
+  lua_setmetatable (L, -2);
+
+  return 1;
+}
+
+int
+agg_rgb_new (lua_State *L)
+{
+  double r = luaL_checknumber (L, 1);
+  double g = luaL_checknumber (L, 2);
+  double b = luaL_checknumber (L, 3);
+  struct color *c = lua_newuserdata (L, sizeof(struct color));
+  c->r = double2uint8 (r);
+  c->g = double2uint8 (g);
+  c->b = double2uint8 (b);
+  c->a = 255;
+
+  luaL_getmetatable (L, rgba_mt_name);
+  lua_setmetatable (L, -2);
+
+  return 1;
+}
+
 void
 plot_register (lua_State *L)
 {
@@ -678,6 +755,10 @@ plot_register (lua_State *L)
   lua_pushcfunction (L, agg_text_index);
   lua_settable (L, -3);
   luaL_register (L, NULL, agg_vertex_source_methods);
+  lua_pop (L, 1);
+
+  luaL_newmetatable (L, rgba_mt_name);
+  luaL_register (L, NULL, rgba_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */

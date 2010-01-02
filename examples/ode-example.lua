@@ -19,6 +19,27 @@
  --
 
 require 'igsl'
+require 'draw'
+
+function ode_lines(s, t0, y0, t1, tstep)
+   local r = y0:dims()
+   local p = {}
+   for k=1,r do p[k] = path(t0, y0[k]) end
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      for k=1,r do p[k]:line_to(t, y[k]) end
+   end
+   return p
+end
+
+function code_lines(s, t0, y0, t1, tstep)
+   local r = y0:dims()
+   local p = {}
+   for k=1,r do p[2*k-1] = path(t0, real(y0[k])); p[2*k] = path(t0, imag(y0[k])) end
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      for k=1,r do p[2*k-1]:line_to(t, real(y[k])); p[2*k]:line_to(t, imag(y[k])) end
+   end
+   return p
+end
 
 function demo1()
    local mu = 10
@@ -30,12 +51,11 @@ function demo1()
 
    local s = ode {f = odef, n= 2, eps_abs= 1e-6}
 
-   local t0, t1 = 0, 100
+   local t0, t1 = 0, 50
    local y0 = vector {1,0}
 
-   for t, y in s:iter(t0, y0, t1) do
-      print(t, y:row_print())
-   end
+   local ln = ode_lines(s, t0, y0, t1)
+   return plot_lines(ln)
 end
 
 
@@ -57,16 +77,15 @@ function demo2()
 
    local s = ode {f = odef, df= odedf, n= 2, eps_abs= 1e-6, method='bsimp'}
 
-   local t0, t1 = 0, 100
+   local t0, t1 = 0, 50
    local y0 = vector {1,0}
 
-   for t, y in s:iter(t0, y0, t1) do
-      print(t, y:row_print())
-   end
+   local ln = ode_lines(s, t0, y0, t1)
+   return plot_lines(ln)
 end
 
 function demo3()
-   local m = cmatrix {{4i, 0},{-0.3, 3i}}
+   local m = cmatrix {{4i, 0},{-0.6, 8.2i}}
 
    local myf = function(t, y, f)
 		  set(f, cmul(m, y))
@@ -79,10 +98,9 @@ function demo3()
 
    local s = code {f= myf, df= mydf, n= 2, method='bsimp'}
 
-   local t0, t1 = 0, 5
+   local t0, t1 = 0, 16
    local y0 = cvector {1,0}
 
-   for t, y in s:iter(t0, y0, t1, 0.05) do
-      print(t, y:row_print())
-   end
+   local ln = code_lines(s, t0, y0, t1, 0.04)
+   return plot_lines(ln)
 end
