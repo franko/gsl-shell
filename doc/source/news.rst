@@ -3,6 +3,20 @@
 News
 ====
 
+**2 Janvier 2010**
+  GSL Shell version 0.9.6 released.
+
+  A lot of exciting features have been introduced:
+
+  * a new module for producing beautiful plots have been implemented.
+    You can look at the many examples to see how does it works
+
+    - in version 0.9.6 we have also introduced the support for alpha blending.
+
+  * many :ref:`special functions <special-functions>` defined in the GSL library are now available from GSL shell.
+
+  * the chapter with the :ref:`examples <gsl-shell-examples>` have been updated with some examples to produce beautiful fractals curves.
+
 **16 October 2009**
   GSL Shell version alpha 0.6 released.
 
@@ -24,7 +38,7 @@ News
 
   you can use the following syntax::
  
-    |x,y| 2*x+1
+    |x,y| 2*x+y
 
   This allows to write very simple one-line definition. For example to define
   the complex matrix of Fourier transform you can write::

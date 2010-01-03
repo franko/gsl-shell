@@ -1,75 +1,199 @@
-GSH_SF_MODE(D, airy_Ai, airyAi)
-GSH_SF_MODE(D, airy_Bi, airyBi)
-GSH_SF_ZERO_COMP(U, airy, Ai)
+.. highlight:: lua
 
-GSH_SF_ZERO_COMP(U, airy, Bi)
+.. include:: <isogrk1.txt>
 
-GSH_SF_COMP(D,  bessel, J0)
-GSH_SF_COMP(D,  bessel, J1)
-GSH_SF_COMP(ID, bessel, Jn)
-GSH_SF_COMP(D,  bessel, Y0)
-GSH_SF_COMP(D,  bessel, Y1)
-GSH_SF_COMP(ID, bessel, Yn)
-GSH_SF_COMP(D,  bessel, I0)
-GSH_SF_COMP(D,  bessel, I1)
-GSH_SF_COMP(ID, bessel, In)
-GSH_SF_COMP(D,  bessel, K0)
-GSH_SF_COMP(D,  bessel, K1)
-GSH_SF_COMP(ID, bessel, Kn)
-GSH_SF_ZERO_COMP(U,  bessel, J0)
-GSH_SF_ZERO_COMP(U,  bessel, J1)
-GSH_SF_ZERO_COMP(DU, bessel, Jnu)
+.. _special-functions:
 
-GSH_SF(D, clausen)
-GSH_SF(D, dawson)
+Special functions
+=================
 
-GSH_SF_CUSTOM(laguerre)
-GSH_SF_CUSTOM(debye)
-GSH_SF_CUSTOM(fermi_dirac)
+The library includes routines for calculating the values of Airy
+functions, Bessel functions, Clausen functions, Coulomb wave
+functions, Coupling coefficients, the Dawson function, Debye
+functions, Dilogarithms, Elliptic integrals, Jacobi elliptic
+functions, Error functions, Exponential integrals, Fermi-Dirac
+functions, Gamma functions, Gegenbauer functions, Hypergeometric
+functions, Laguerre functions, Legendre functions and Spherical
+Harmonics, the Psi (Digamma) Function, Synchrotron functions,
+Transport functions, Trigonometric functions and Zeta functions.  Each
+routine also computes an estimate of the numerical error in the
+calculated value of the function.
 
-GSH_SF(D, dilog)
+Functions
+---------
 
-GSH_SF(D, erf)
+.. _sf_airy:
 
-GSH_SF_COMP(D,expint, E1)
-GSH_SF_COMP(D,expint, E2)
-GSH_SF_COMP(ID,expint, En)
-GSH_SF_COMP(D,expint, Ei)
-GSH_SF_COMP(D,expint, 3)
+.. function:: airyAi(x)
 
-GSH_SF(D, Shi)
-GSH_SF(D, Chi)
-GSH_SF(D, Si)
-GSH_SF(D, Ci)
-GSH_SF(D, atanint)
+.. function:: airyBi(x)
 
-GSH_SF(U, fact)
-GSH_SF(U, doublefact)
-GSH_SF(U, lnfact)
-GSH_SF(U, lndoublefact)
-GSH_SF(UU, choose)
-GSH_SF(UU, lnchoose)
+    The Airy functions Ai(x) and Bi(x) are defined by the integral representations,
 
-GSH_SF(D, gamma)
-GSH_SF(D, lngamma)
-GSH_SF(DD, beta)
-GSH_SF(DD, lnbeta)
+    .. math::
+      Ai(x) = {1 \over \pi} \int_0^\infty \cos({1 \over 3} t^3 + xt) dt
 
-GSH_SF_COMP(D,legendre, P1)
-GSH_SF_COMP(D,legendre, P2)
-GSH_SF_COMP(D,legendre, P3)
-GSH_SF_COMP(ID,legendre, Pl)
-GSH_SF_COMP(D,legendre, Q0)
-GSH_SF_COMP(D,legendre, Q1)
-GSH_SF_COMP(ID,legendre, Ql)
+    .. math::
+      Bi(x) = {1 \over \pi} \int_0^\infty \left( e^{-{1 \over 3} t^3} + \sin(1/3 \, t^3 + xt) \right) dt
 
-GSH_SF_COMP(DD, hyperg, 0F1)
-GSH_SF_CUSTOM(hyperg1F1)
-GSH_SF_CUSTOM(hypergU)
-// GSH_SF_IID_SUFFIX(hyperg, 1F1, int)
-/* GSH_SF_COMP(DDD,hyperg, 1F1) */
-// GSH_SF_IID_SUFFIX(hyperg, U, int)
-/* GSH_SF_COMP(DDD,hyperg, U) */
+    For further information see Abramowitz & Stegun, Section 10.4.
 
-/* GSH_SF_I_SIMPLE_SUFFIX(zeta, int) */
-GSH_SF(D, zeta)
+.. function:: airyAizero(n)
+
+.. function:: airyBizero(n)
+
+   Return the n-th zero of the respectives functions.
+
+   .. figure:: examples-airy-functions-plot.png
+   
+      Airy functions Ai and Bi.
+
+.. function::  besselJ(n, x)
+
+   These routines compute the regular cylindrical Bessel function of
+   n-th order, J\ :sub:`0`\ (x)
+
+   .. figure:: sf-besselJ-functions.png
+
+      Bessel functions J0(red), J1(green), J2(blue)
+
+.. function::  besselJzero(n, s)
+
+   Return the s-th zero of the Bessel J\ :sub:`n` function.
+
+.. function::  besselY(n, x)
+
+   These routines compute the irregular cylindrical Bessel function of
+   n-th order, Y\ :sub:`0`\ (x)
+
+   .. figure:: sf-bessel-Y.png
+
+      Bessel functions Y0(red), Y1(green), Y2(blue)
+
+.. function::  besselI(n, x)
+
+   Regular modified cylindrical Bessel function.
+
+.. function::  besselK(n, x)
+
+   Irregular modified cylindrical Bessel function.
+
+.. function::  clausen(x)
+
+   The Clausen function is defined by the following integral,
+
+   .. math::
+     Cl_2(x) = - \int_0^x dt \log(2 \sin(t/2))
+
+   It is related to the dilogarithm by :math:`Cl_2(\theta) = \Im Li_2(\exp(i\theta))`.
+
+.. function:: dawson(x)
+
+   The Dawson integral is defined by
+
+   .. math::
+       \exp(-x^2) \int_0^x dt \exp(t^2)
+
+   A table of Dawson's integral can be found in Abramowitz & Stegun, Table 7.5.
+
+
+.. function:: laguerre(n, a, x)
+
+   The generalized Laguerre polynomials are defined in terms of confluent hypergeometric functions as 
+
+   .. math::
+      L^a_n(x) = {(a+1)_n \over n!} {}_1 F_1(-n,a+1,x)
+
+   and are sometimes referred to as the associated Laguerre polynomials. They are related to the plain Laguerre polynomials :math:`L_n(x)` by
+
+   .. math::
+      L^0_n(x) = L_n(x)
+
+   and
+
+   .. math::
+       L^k_n(x) = (-1)^k {d^k \over dx^k} L_{n+k}(x)
+
+   For more information see Abramowitz & Stegun, Chapter 22.
+
+.. function:: debye(n, x)
+
+   The Debye functions D\ :sub:`n`\ (x) are defined by the following integral,
+
+   .. math::
+     D_n(x) = {n \over x^n} \int_0^x dt {t^n \over e^t - 1}
+
+   For further information see Abramowitz & Stegun, Section 27.1.
+
+.. function:: fermi_dirac(n, x)
+
+   The complete Fermi-Dirac integral F\ :sub:`n`\ (x) is given by,
+
+   .. math::
+      F_n(x) = {1 \over \Gamma(n+1)} \int_0^\infty dt {t^n \over e^{t-x} + 1}
+
+   Note that the Fermi-Dirac integral is sometimes defined without the normalisation factor in other texts.
+
+.. function:: dilog(x)
+
+     These routines compute the dilogarithm for a real argument. In
+     Lewin's notation this is Li\ :sub:`2`\ (x), the real part of the dilogarithm
+     of a real x.  It is defined by the integral representation
+
+     .. math::
+       Li_2(x) = - \Re \int_0^x ds {\log(1-s) \over s}
+
+     Note that Im(Li\ :sub:`2`\ (x)) = 0 for x <= 1, and -|pgr| log(x) for x > 1.
+
+     Note that Abramowitz & Stegun refer to the Spence integral
+     S(x)= Li\ :sub:`2`\ (1-x) as the dilogarithm rather than  Li\ :sub:`2`\ (x).
+
+.. function:: cdilog(z)
+
+   Compute the dilogarithm for a complex argument.
+
+.. function:: erf(x)
+
+   The error function erf(x)
+
+   .. math::
+     {2 \over \sqrt{\pi}} \int_0^x dt e^{-t^2}
+
+.. function:: expintE1(x)
+.. function:: expintE2(x)
+.. function:: expintEn(n, x)
+.. function:: expintEi(x)
+.. function:: expint3(x)
+
+.. function:: Shi(x)
+.. function:: Chi(x)
+.. function:: Si(x)
+.. function:: Ci(x)
+.. function:: atanint(x)
+
+.. function:: fact(n)
+.. function:: doublefact(n)
+.. function:: lnfact(n)
+.. function:: lndoublefact(n)
+.. function:: choose(n, k)
+.. function:: lnchoose(n, k)
+
+.. function:: gamma(x)
+.. function:: lngamma(x)
+.. function:: beta(a, b)
+.. function:: lnbeta(a, b)
+
+.. function:: legendreP1(x)
+.. function:: legendreP2(x)
+.. function:: legendreP3(x)
+.. function:: legendrePl(n, x)
+.. function:: legendreQ0(x)
+.. function:: legendreQ1(x)
+.. function:: legendreQl(n, x)
+
+.. function:: hyperg0F1(a, b)
+.. function:: hyperg1F1(m, n, x)
+.. function:: hypergU(m, n, x)
+
+.. function:: zeta(n)
+

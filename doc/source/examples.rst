@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. _gsl-shell-examples:
+
 GSL Shell Examples
 ==================
 
@@ -60,45 +62,72 @@ The Von-Koch curve
 
 The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the swedish mathematician Helge von Koch.
 
-Here an example to plot it with GSL Shell::
+Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
 
-  require 'draw'
+   require 'draw'
 
-  function vonkoch(n)
-     local sx = {2, 1, -1, -2, -1,  1}
-     local sy = {0, 1,  1,  0, -1, -1}
-     local w = {}
-     for k=1,n+1 do w[#w+1] = 0 end
-     local sh = {1, -2, 1}
-     local a = 0
-     local x, y = 0, 0
+   function vonkoch(n)
+      local sx = {2, 1, -1, -2, -1,  1}
+      local sy = {0, 1,  1,  0, -1, -1}
+      local w = {}
+      for k=1,n+1 do w[#w+1] = 0 end
+      local sh = {1, -2, 1}
+      local a = 0
+      local x, y = 0, 0
 
-     local s = 1 / (3^n)
-     for k=1, 6 do
-	sx[k] = s * 0.5 * sx[k]
-	sy[k] = s * sqrt(3)/2 * sy[k]
-     end
+      local s = 1 / (3^n)
+      for k=1, 6 do
+	 sx[k] = s * 0.5 * sx[k]
+	 sy[k] = s * sqrt(3)/2 * sy[k]
+      end
 
-     return function()
-	       if w[n+1] == 0 then
-		  x, y = x + sx[a+1], y + sy[a+1]
-		  for k=1,n+1 do
-		     w[k] = (w[k] + 1) % 4
-		     if w[k] ~= 0 then
-			a = (a + sh[w[k]]) % 6
-			break
-		     end
-		  end
-		  return x, y
-	       end
-	    end
-  end
+      local first = true
 
-  p = plot()
-  p:add_line(ipath(vonkoch(4)), 'blue')
-  p:show()
+      return function()
+		if first then first = false; return x, y end
+		if w[n+1] == 0 then
+		   x, y = x + sx[a+1], y + sy[a+1]
+		   for k=1,n+1 do
+		      w[k] = (w[k] + 1) % 4
+		      if w[k] ~= 0 then
+			 a = (a + sh[w[k]]) % 6
+			 break
+		      end
+		   end
+		   return x, y
+		end
+	     end
+   end
+
+Then we need to produce the plot. Since we want to make something cool we produce a closed Von Koch triangle by using always the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here the code::
+
+   local pl = plot()
+
+   local t = path()
+   t:move_to(0,0)
+   t:line_to(1,0)
+   t:line_to(0.5,-sqrt(3)/2)
+   t:close()
+
+   local v = ipath(vonkoch(4))
+   local c = rgba(0,0,0.7,0.2)
+   pl:add(v, c)
+   pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+   pl:add(t, c)
+
+   c = rgb(0,0,0.7)
+
+   pl:add(v, c, {{'stroke'}})
+   pl:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:add(v, c, {{'stroke'}}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+
+   pl:show()
 
 And here the result:
 
-.. figure:: examples-von-koch-plot.png
+.. figure:: examples-von-koch-complete.png
 
+With a similar procedure, the code is in ``examples/fractals.lua`` we can produce  beautiful Levy C curve:
+
+.. figure:: examples-levy-c-curve-1.png

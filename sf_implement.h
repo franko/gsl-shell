@@ -353,6 +353,93 @@ int GSH_LUA_NAME(laguerre) (lua_State *L)
   return push_gsl_result (L, &res);
 }
 
+#define BESSEL_KIND(letter)					\
+  int GSH_LUA_NAME(bessel ## letter) (lua_State *L)		\
+  {								\
+    int n = luaL_checkinteger (L, 1);	\
+    double x = luaL_checknumber (L, 2); \
+    gsl_sf_result res;			\
+    int status;				\
+    switch (n)				\
+      {					\
+      case 0:						\
+      status = gsl_sf_bessel_ ## letter ## 0_e (x, &res);	\
+      break; \
+      case 1:						\
+      status = gsl_sf_bessel_ ## letter ## 1_e (x, &res);	\
+      break; \
+    default: \
+      status = gsl_sf_bessel_ ## letter ## n_e (n, x, &res); \
+    }; \
+  if (status != GSL_SUCCESS) \
+    return luaL_error (L, "bessel" #letter ": %s", gsl_strerror (status)); \
+  return push_gsl_result (L, &res); \
+}
+
+BESSEL_KIND(J)
+BESSEL_KIND(Y)
+BESSEL_KIND(I)
+BESSEL_KIND(K)
+
+/*
+int GSH_LUA_NAME(besselJ) (lua_State *L)
+{
+  int n = luaL_checkinteger (L, 1);
+  double x = luaL_checknumber (L, 2);
+  gsl_sf_result res;
+  int status;
+
+  switch (n)
+    {
+    case 0:
+      status = gsl_sf_bessel_J0_e (x, &res);
+      break;
+    case 1:
+      status = gsl_sf_bessel_J1_e (x, &res);
+      break;
+    default:
+      status = gsl_sf_bessel_Jn_e (n, x, &res);
+    };
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "bessel: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
+*/
+
+int GSH_LUA_NAME(besselJzero) (lua_State *L)
+{
+  double nu = luaL_checknumber (L, 1);
+  int is = luaL_checkinteger (L, 2);
+  unsigned int s;
+  gsl_sf_result res;
+  int status;
+
+  if (is <= 0)
+    return luaL_typerror (L, 1, "positive integer");
+
+  s = (unsigned int) is;
+
+  if (nu == 0.0)
+    {
+      status = gsl_sf_bessel_zero_J0_e (s, &res);
+    }
+  else if (nu == 1.0)
+    {
+      status = gsl_sf_bessel_zero_J1_e (s, &res);
+    }
+  else
+    {
+      status = gsl_sf_bessel_zero_Jnu_e (nu, s, &res);
+    }
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "besselJzero: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
+
 int GSH_LUA_NAME(zeta) (lua_State *L)
 {
   gsl_sf_result res;
@@ -374,3 +461,21 @@ int GSH_LUA_NAME(zeta) (lua_State *L)
 
   return push_gsl_result (L, &res);
 }
+
+#ifdef LNUM_COMPLEX
+int GSH_LUA_NAME(cdilog) (lua_State *L)
+{
+  lua_Complex z = luaL_checkcomplex (L, 1);
+  gsl_sf_result rr, ri;
+  double r = sqrt(CSQABS(z)), th = atan2(cimag(z), creal(z));
+  int status;
+
+  status = gsl_sf_complex_dilog_e (r, th, &rr, &ri);
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "cdilog: %s", gsl_strerror (status));
+
+  lua_pushcomplex (L, rr.val + I * ri.val);
+  return 1;
+}
+#endif
