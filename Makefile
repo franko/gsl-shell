@@ -25,7 +25,7 @@ LUADIR = lua
 AR= ar rcu
 RANLIB= ranlib
 
-ifeq ($(PLATFORM), none)
+ifeq ($(strip $(PLATFORM)), none)
 nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
@@ -69,7 +69,7 @@ C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
-  DEFS += -DUSE_SEPARATE_NAMESPACE
+  DEFS += -DLUA_MODULE -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
 else
   C_SRC_FILES += gsl-shell.c
