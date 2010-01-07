@@ -116,6 +116,9 @@ Functions
 
    For more information see Abramowitz & Stegun, Chapter 22.
 
+.. function:: legendreP(n, x)
+.. function:: legendreQ(n, x)
+
 .. function:: debye(n, x)
 
    The Debye functions D\ :sub:`n`\ (x) are defined by the following integral,
@@ -159,10 +162,22 @@ Functions
    .. math::
      {2 \over \sqrt{\pi}} \int_0^x dt e^{-t^2}
 
-.. function:: expintE1(x)
-.. function:: expintE2(x)
-.. function:: expintEn(n, x)
+.. function:: expint(n, x)
+
+   Compute the exponential integral E\ :sub:`n`\ (x) of order n,
+
+   .. math::
+      E_n(x) = \Re \int_1^\infty dt {\exp(-xt) \over t^n}
+
 .. function:: expintEi(x)
+
+    Computes the exponential integral Ei(x),
+
+    .. math::
+       Ei(x) = - PV \int_{-x}^\infty dt {\exp(-t) \over t}
+
+    where PV denotes the principal value of the integral.
+
 .. function:: expint3(x)
 
 .. function:: Shi(x)
@@ -182,14 +197,6 @@ Functions
 .. function:: lngamma(x)
 .. function:: beta(a, b)
 .. function:: lnbeta(a, b)
-
-.. function:: legendreP1(x)
-.. function:: legendreP2(x)
-.. function:: legendreP3(x)
-.. function:: legendrePl(n, x)
-.. function:: legendreQ0(x)
-.. function:: legendreQ1(x)
-.. function:: legendreQl(n, x)
 
 .. function:: hyperg0F1(a, b)
 .. function:: hyperg1F1(m, n, x)

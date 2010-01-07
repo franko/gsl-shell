@@ -99,7 +99,7 @@ static const struct luaL_Reg agg_plot_methods[] = {
   {"show",        agg_plot_show       },
   {"add",         agg_plot_add        },
   {"clear",       agg_plot_remove_all },
-  {"add_line",    agg_plot_add_line   },
+  {"addline",     agg_plot_add_line   },
   {"__gc",        agg_plot_free       },
   {NULL, NULL}
 };
@@ -582,6 +582,7 @@ agg_plot_add_gener (lua_State *L, bool as_line)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
   struct agg_obj *d = check_agg_obj (L, 2);
+  struct trans_spec *post, *pre;
   int narg = lua_gettop (L);
   struct color color[1];
 
@@ -589,47 +590,37 @@ agg_plot_add_gener (lua_State *L, bool as_line)
     set_color_default (color);
   else
     check_color (L, 3, color);
-  
-  if (as_line)
+
+  if (narg > 3)
     {
-      pthread_mutex_lock (agg_mutex);
-      plot_add_line (p->plot, d->vs, color);
+      lua_pushcfunction (L, lparse_spec_pipeline);
+      lua_pushvalue (L, 4);
+      lua_call (L, 1, 1);
+      post = lua_touserdata (L, -1);
     }
   else
     {
-      struct trans_spec *post, *pre;
-
-      if (narg > 3)
-	{
-	  lua_pushcfunction (L, lparse_spec_pipeline);
-	  lua_pushvalue (L, 4);
-	  lua_call (L, 1, 1);
-	  post = lua_touserdata (L, -1);
-	}
-      else
-	{
-	  post = push_empty_pipeline (L);
-	}
-      
-      assert (post != NULL);
-      
-      if (narg > 4)
-	{
-	  lua_pushcfunction (L, lparse_spec_pipeline);
-	  lua_pushvalue (L, 5);
-	  lua_call (L, 1, 1);
-	  pre = lua_touserdata (L, -1);
-	}
-      else
-	{
-	  pre = push_empty_pipeline (L);
-	}
-
-      assert (pre != NULL);
-
-      pthread_mutex_lock (agg_mutex);
-      plot_add (p->plot, d->vs, color, post, pre);
+      post = push_empty_pipeline (L);
     }
+      
+  assert (post != NULL);
+      
+  if (narg > 4)
+    {
+      lua_pushcfunction (L, lparse_spec_pipeline);
+      lua_pushvalue (L, 5);
+      lua_call (L, 1, 1);
+      pre = lua_touserdata (L, -1);
+    }
+  else
+    {
+      pre = push_empty_pipeline (L);
+    }
+
+  assert (pre != NULL);
+  
+  pthread_mutex_lock (agg_mutex);
+  plot_add (p->plot, d->vs, color, post, pre, as_line);
 
   if (p->window)
     update_callback (p->window);

@@ -113,7 +113,8 @@ static agg::rgba8 new_color(struct color *c)
 }
 
 void plot_add(CPLOT *_p, CVERTSRC *_vs, struct color *color,
-	      struct trans_spec *post, struct trans_spec *pre)
+	      struct trans_spec *post, struct trans_spec *pre,
+	      int outline)
 {
   plot_type* p = (plot_type*) _p;
   vertex_source* vs = (vertex_source*) _vs;
@@ -126,17 +127,7 @@ void plot_add(CPLOT *_p, CVERTSRC *_vs, struct color *color,
 
   curr = build_pipeline (curr, post);
 
-  p->add(curr, new_color(color));
-}
-
-void plot_add_line (CPLOT *_p, CVERTSRC *_vs, struct color *color)
-{
-  plot_type* p = (plot_type*) _p;
-  vertex_source* vs = (vertex_source*) _vs;
-
-  trans::line* line = new trans::line(vs);
-  line->self().width(0.7);
-  p->add(line, new_color(color));
+  p->add(curr, new_color(color), (bool) outline);
 }
 
 void plot_remove_all(CPLOT *_p)

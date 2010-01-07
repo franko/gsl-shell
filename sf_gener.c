@@ -28,9 +28,8 @@ GSH_SF_CUSTOM(cdilog)
 
 GSH_SF(D, erf)
 
-GSH_SF_COMP(D,expint, E1)
-GSH_SF_COMP(D,expint, E2)
-GSH_SF_COMP(ID,expint, En)
+GSH_SF_CUSTOM(expint)
+
 GSH_SF_COMP(D,expint, Ei)
 GSH_SF_COMP(D,expint, 3)
 
@@ -52,13 +51,8 @@ GSH_SF(D, lngamma)
 GSH_SF(DD, beta)
 GSH_SF(DD, lnbeta)
 
-GSH_SF_COMP(D,  legendre, P1)
-GSH_SF_COMP(D,  legendre, P2)
-GSH_SF_COMP(D,  legendre, P3)
-GSH_SF_COMP(ID, legendre, Pl)
-GSH_SF_COMP(D,  legendre, Q0)
-GSH_SF_COMP(D,  legendre, Q1)
-GSH_SF_COMP(ID, legendre, Ql)
+GSH_SF_CUSTOM(legendreP)
+GSH_SF_CUSTOM(legendreQ)
 
 GSH_SF_COMP(DD, hyperg, 0F1)
 GSH_SF_CUSTOM(hyperg1F1)

@@ -14,7 +14,7 @@ function demo2()
    local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
    p:add(b, 'black', {{'stroke', width= 0.5}})
-   p:add_line(fxline(f, -4, 4), 'red')
+   p:addline(fxline(f, -4, 4), 'red')
    p:show()
    return p
 end
@@ -70,9 +70,9 @@ function demo3()
 
    c = rgb(0,0,0.7)
 
-   pl:add(v, c, {{'stroke'}})
-   pl:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:add(v, c, {{'stroke'}}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+   pl:addline(v, c)
+   pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:addline(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
 
    pl:show()
    return pl
@@ -87,7 +87,7 @@ function demo4()
    local sqf = sq:copy()
 
    local pt, pf = plot(), plot()
-   pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
+   pt:addline(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
 
    local cmod = |z| sqrt(z*conj(z))
 
@@ -96,7 +96,7 @@ function demo4()
    for k=ncut, n/2 do sqf:set(k,0) end
    fft_inv(sqf)
 
-   pt:add_line(ipath(irow(sqf, function(m,i) return i, m:get(i,1) end)), 'red')
+   pt:addline(ipath(irow(sqf, function(m,i) return i, m:get(i,1) end)), 'red')
 
    pf:show()
    pt:show()
@@ -146,8 +146,8 @@ function demo5()
    pts = ipath(irow(xy, function(m,i) return m:get(i,1), m:get(i,2) end))
    ln = ipath(sample(|t| model.f(s.x, t), x0, x1, 128))
    p = plot()
-   p:add(pts, 'black', {{'stroke'}, {'marker', size=5}})
-   p:add_line(ln, 'red')
+   p:addline(pts, 'black', {{'marker', size=5}})
+   p:addline(ln, 'red')
    p:show()
    return p
 end

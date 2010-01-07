@@ -11,6 +11,8 @@
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
+#include "agg_rasterizer_outline_aa.h"
+#include "agg_renderer_outline_aa.h"
 
 #include "utils.h"
 
@@ -18,10 +20,16 @@ class canvas {
   typedef agg::pixfmt_bgr24 pixel_fmt;
   typedef agg::renderer_base<pixel_fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
+  typedef agg::renderer_outline_aa<renderer_base> renderer_oaa;
+  typedef agg::rasterizer_outline_aa<renderer_oaa> rasterizer_outline_aa;
 
-  pixel_fmt *pixf;
-  renderer_base *rb;
-  renderer_solid *rs;
+  pixel_fmt pixf;
+  renderer_base rb;
+  renderer_solid rs;
+
+  agg::line_profile_aa prof;
+  renderer_oaa ren_oaa;
+  rasterizer_outline_aa ras_oaa;
 
   agg::rasterizer_scanline_aa<> ras;
   agg::scanline_p8 sl;
@@ -36,25 +44,19 @@ class canvas {
 public:
   canvas(agg::rendering_buffer& ren_buf, double width, double height, 
 	 agg::rgba bgcol): 
-    ras(), sl(), bg_color(bgcol), mtx(), m_width(width), m_height(height)
+    pixf(ren_buf), rb(pixf), rs(rb),
+    prof(), ren_oaa(rb, prof), ras_oaa(ren_oaa),
+    ras(), sl(), bg_color(bgcol),
+    m_width(width), m_height(height)
   {
-    pixf = new pixel_fmt(ren_buf);
-    rb   = new renderer_base(*pixf);
-    rs   = new renderer_solid(*rb);
-
     mtx.scale(width, height);
-  };
-
-  ~canvas() {
-    free (rs);
-    free (rb);
-    free (pixf);
+    prof.width(1.0);
   };
 
   double width() const { return m_width; };
   double height() const { return m_height; };
 
-  void clear() { rb->clear(bg_color); };
+  void clear() { rb.clear(bg_color); };
 
   const agg::trans_affine& trans_matrix() const { return mtx; };
   void scale(agg::trans_affine& m) const { trans_affine_compose (m, mtx); };
@@ -62,12 +64,16 @@ public:
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)
   {
-    if (rs == NULL)
-      return;
-
     ras.add_path(vs);
-    rs->color(c);
-    agg::render_scanlines(ras, sl, *rs);
+    rs.color(c);
+    agg::render_scanlines(ras, sl, rs);
+  };
+
+  template<class VertexSource>
+  void draw_outline(VertexSource& vs, agg::rgba8 c)
+  {
+    ren_oaa.color(c);
+    ras_oaa.add_path(vs);
   };
 };
 

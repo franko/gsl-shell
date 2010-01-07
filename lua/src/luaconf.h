@@ -39,7 +39,7 @@
 ** hierarchy or if you want to install your libraries in
 ** non-conventional directories.
 */
-#ifdef GSL_SHELL
+#ifdef GSL_SHELL_LUA
 #if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the

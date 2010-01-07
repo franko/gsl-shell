@@ -26,7 +26,6 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include "matrix.h"
-#include "fdfsolver.h"
 #include "nlinfit_helper.h"
 #include "lua-utils.h"
 #include "math-types.h"
@@ -39,14 +38,7 @@
 void
 FUNCTION (solver, register) (lua_State *L)
 {
-  /* fdfsolver declaration */
-  luaL_newmetatable (L, fdfsolver_mt_name);
-  luaL_register (L, NULL, fdfsolver_methods);
-  lua_pop (L, 1);
-
   luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushcfunction (L, FUNCTION (solver, index));
-  lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (solver, methods));
   lua_setfield (L, -2, PREFIX "Solver");
 

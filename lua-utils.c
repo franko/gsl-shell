@@ -46,15 +46,19 @@ mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache)
   if (! use_cache)
     return p->func (L);
 
-  lua_getfield (L, 1, CACHE_FIELD_NAME);
+  lua_getfenv (L, 1);
+  lua_getfield (L, -1, CACHE_FIELD_NAME);
   if (lua_isnil (L, -1))
     {
       lua_pop (L, 1);
       lua_newtable (L);
       lua_pushvalue (L, -1);
-      lua_setfield (L, 1, CACHE_FIELD_NAME);
+      lua_setfield (L, -3, CACHE_FIELD_NAME);
       cache_is_new = true;
     }
+
+  /* remove the fenv table */
+  //  lua_remove (L, -2); not needed
 
   if (! cache_is_new)
     {
@@ -77,8 +81,10 @@ mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache)
 void
 mlua_null_cache (lua_State *L, int index)
 {
+  lua_getfenv (L, index);
   lua_pushnil (L);
-  lua_setfield (L, index, CACHE_FIELD_NAME);
+  lua_setfield (L, -2, CACHE_FIELD_NAME);
+  lua_pop (L, 1);
 }
 
 int

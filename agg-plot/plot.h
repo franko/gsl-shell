@@ -26,9 +26,13 @@ class plot {
   public:
     VertexSource* vs;
     agg::rgba8 color;
+    bool outline;
 
-    container(): vs(NULL), color() {};
-    container(VertexSource* vs, agg::rgba8 c): vs(vs), color(c) {};
+    container(): vs(NULL), color(), outline(false) {};
+
+    container(VertexSource* vs, agg::rgba8 c, bool as_outline): 
+      vs(vs), color(c), outline(as_outline)
+    {};
 
     ~container() {};
 
@@ -56,9 +60,9 @@ public:
       }
   };
 
-  void add(VertexSource* vs, agg::rgba8 color) 
+  void add(VertexSource* vs, agg::rgba8 color, bool outline = false) 
   { 
-    container d(vs, color);
+    container d(vs, color, outline);
     m_elements.add(d);
     m_bbox_updated = false;
     resource_manager::acquire(vs);
@@ -109,7 +113,11 @@ void plot<VS,RM>::draw_elements(canvas &canvas)
       container& d = m_elements[j];
       VS& vs = d.get_vertex_source();
       vs.apply_transform(m, 1.0);
-      canvas.draw(vs, d.color);
+
+      if (d.outline)
+	canvas.draw_outline(vs, d.color);
+      else
+	canvas.draw(vs, d.color);
     }
 }
 

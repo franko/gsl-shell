@@ -118,41 +118,6 @@ namespace trans {
     }
   };
 
-  class line_base {
-    agg::trans_affine m_mtx;
-    agg::conv_transform<vertex_source> m_trans;
-    agg::conv_stroke<agg::conv_transform<vertex_source> > m_stroke;
-
-  public:
-    line_base(vertex_source& src): m_trans(src, m_mtx), m_stroke(m_trans)
-    {};
-
-    void width(double w) { m_stroke.width(w); };
-
-    void set_matrix(agg::trans_affine& m) { m_mtx = m; };
-
-    void rewind(unsigned path_id) { m_stroke.rewind(path_id); };
-    unsigned vertex(double* x, double* y) { return m_stroke.vertex(x, y); };
-  };
-
-  typedef vs_trans_proxy<line_base> vs_line;
-
-  class line : public vs_line {
-  public:
-    line(vertex_source* src, double width = 1.0): vs_line(src) 
-    {
-      line_base& ln = self();
-      ln.width(width);
-    };
-
-    virtual void apply_transform(agg::trans_affine& m, double as) 
-    {
-      self().set_matrix(m);
-      as *= trans_affine_max_norm(m);
-      m_source->apply_transform(m, as);
-    };
-  };
-
   typedef vs_trans_proxy<my::conv_simple_marker<vertex_source, agg::ellipse> > vs_marker_ellipse;
 
   class marker : public vs_marker_ellipse {

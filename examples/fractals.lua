@@ -35,8 +35,8 @@ function vonkoch(n)
    local p = plot()
    local b = path()
    b:move_to (0, -0.05)
-   p:add_line(b, 'white')
-   p:add_line(ipath(c_generator(n, 6, 1/3, {0,1,-1,0})), 'blue')
+   p:addline(b, 'white')
+   p:addline(ipath(c_generator(n, 6, 1/3, {0,1,-1,0})), 'blue')
    p:show()
    return p
 end
@@ -44,9 +44,8 @@ end
 function levyc(n)
    local p = plot()
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
-   p:add(c, 'red', {{'stroke', width=0.7}}, {{'rotate', angle= -pi/4}})
-   p:add(c, 'red', {{'stroke', width=0.7}}, 
-	           {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
+   p:addline(c, 'red', {}, {{'rotate', angle= -pi/4}})
+   p:addline(c, 'red', {}, {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
    p:show()
    return p
 end

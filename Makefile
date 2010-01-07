@@ -20,10 +20,13 @@
 
 include makeconfig
 include makeflags
+include make-packages
 
 LUADIR = lua
 AR= ar rcu
 RANLIB= ranlib
+
+SUBDIRS_DEFS = -DGSL_SHELL
 
 ifeq ($(strip $(PLATFORM)), none)
 nono:
@@ -35,18 +38,11 @@ ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
   DEFS += -DWIN32
   INCLUDES += -I. -I/usr/include
-  LIBS += -L/usr/lib -L/usr/pthreads-w32/lib
+  LIBS += -L/usr/lib
 
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_LIBS = -L$(LUADIR)/src -llua51
   LUA_DLL = gsl.dll
-
-  AGG_HOME = /c/fra/src/agg-2.5
-  AGG_CFLAGS = -I$(AGG_HOME)/include
-  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
-
-  PTHREAD_CFLAGS = -I/usr/pthreads-w32/include
-  PTHREAD_LIBS = -lpthreadGC2 
 
   GSL_SHELL = gsl-shell.exe
 else
@@ -55,7 +51,7 @@ else
   LUA_CFLAGS = -I$(LUADIR)/src
   LUA_DLL = gsl.so
   GSL_SHELL = gsl-shell
-  PTHREAD_LIBS = -lpthread
+  PTHREADS_LIBS = -lpthread
 endif
 
 SUBDIRS = lua
@@ -63,9 +59,9 @@ SUBDIRS = lua
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
 C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
-		fdfsolver.c nlinfit.c lua-utils.c linalg.c \
+		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
-		pdf.c cdf.c sf.c lua-gsl.c
+		pdf.c cdf.c sf.c multimin.c lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
@@ -73,17 +69,17 @@ ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   TARGETS = $(LUA_DLL)
 else
   C_SRC_FILES += gsl-shell.c
-  SUBDIRS_DEFS += -DGSL_SHELL
+  SUBDIRS_DEFS += -DGSL_SHELL_LUA
   TARGETS = $(GSL_SHELL)
 endif
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   C_SRC_FILES += lua-plot.c
-  INCLUDES += $(PTHREAD_CFLAGS) -Iagg-plot
+  INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED
   LUAGSL_LIBS += agg-plot/libaggplot.a
-  LIBS += $(PTHREAD_LIBS) $(AGG_LIBS)
+  LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
@@ -148,13 +144,8 @@ endif
 
 .PHONY: clean all $(SUBDIRS)
 
-ifdef SUBDIRS_DEFS
 $(SUBDIRS):
 	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
-else
-$(SUBDIRS):
-	$(MAKE) PLATFORM=$(strip $(PLATFORM)) -C $@
-endif
 
 clean:
 	$(MAKE) -C agg-plot clean

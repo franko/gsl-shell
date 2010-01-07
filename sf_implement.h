@@ -381,33 +381,6 @@ BESSEL_KIND(Y)
 BESSEL_KIND(I)
 BESSEL_KIND(K)
 
-/*
-int GSH_LUA_NAME(besselJ) (lua_State *L)
-{
-  int n = luaL_checkinteger (L, 1);
-  double x = luaL_checknumber (L, 2);
-  gsl_sf_result res;
-  int status;
-
-  switch (n)
-    {
-    case 0:
-      status = gsl_sf_bessel_J0_e (x, &res);
-      break;
-    case 1:
-      status = gsl_sf_bessel_J1_e (x, &res);
-      break;
-    default:
-      status = gsl_sf_bessel_Jn_e (n, x, &res);
-    };
-
-  if (status != GSL_SUCCESS)
-    return luaL_error (L, "bessel: %s", gsl_strerror (status));
-
-  return push_gsl_result (L, &res);
-}
-*/
-
 int GSH_LUA_NAME(besselJzero) (lua_State *L)
 {
   double nu = luaL_checknumber (L, 1);
@@ -458,6 +431,84 @@ int GSH_LUA_NAME(zeta) (lua_State *L)
 
   if (status != GSL_SUCCESS)
     return luaL_error (L, "zeta: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
+
+int GSH_LUA_NAME(expint) (lua_State *L)
+{
+  int n = luaL_checkinteger (L, 1);
+  double x = luaL_checknumber (L, 2);
+  gsl_sf_result res;
+  int status;
+
+  switch (n)
+    {
+    case 1:
+      status = gsl_sf_expint_E1_e (x, &res);
+      break;
+    case 2:
+      status = gsl_sf_expint_E2_e (x, &res);
+      break;
+    default:
+      status = gsl_sf_expint_En_e (n, x, &res);
+    };
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "expint: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
+
+int GSH_LUA_NAME(legendreP) (lua_State *L)
+{
+  int n = luaL_checkinteger (L, 1);
+  double x = luaL_checknumber (L, 2);
+  gsl_sf_result res;
+  int status;
+
+  switch (n)
+    {
+    case 1:
+      status = gsl_sf_legendre_P1_e (x, &res);
+      break;
+    case 2:
+      status = gsl_sf_legendre_P2_e (x, &res);
+      break;
+    case 3:
+      status = gsl_sf_legendre_P3_e (x, &res);
+      break;
+    default:
+      status = gsl_sf_legendre_Pl_e (n, x, &res);
+    };
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "legendreP: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
+
+int GSH_LUA_NAME(legendreQ) (lua_State *L)
+{
+  int n = luaL_checkinteger (L, 1);
+  double x = luaL_checknumber (L, 2);
+  gsl_sf_result res;
+  int status;
+
+  switch (n)
+    {
+    case 0:
+      status = gsl_sf_legendre_Q0_e (x, &res);
+      break;
+    case 1:
+      status = gsl_sf_legendre_Q1_e (x, &res);
+      break;
+    default:
+      status = gsl_sf_legendre_Ql_e (n, x, &res);
+    };
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "legendreQ: %s", gsl_strerror (status));
 
   return push_gsl_result (L, &res);
 }

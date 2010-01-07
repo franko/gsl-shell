@@ -33,7 +33,7 @@ end
 function fxplot(f, xi, xs, color, n)
    n = n and n or 512
    local p = plot()
-   p:add_line(ipathp(sample(f, xi, xs, n)), color)
+   p:addline(ipathp(sample(f, xi, xs, n)), color)
    p:show()
    return p
 end
@@ -72,7 +72,7 @@ end
 function plot_lines(ln)
    local p = plot()
    for k=1, #ln do
-      p:add_line(ln[k], rainbow(k))
+      p:addline(ln[k], rainbow(k))
    end
    p:show()
    return p

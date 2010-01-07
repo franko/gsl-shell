@@ -22,6 +22,7 @@ static char const * const TYPE (name_solver) = "GSL." PREFIX "solver";
 
 /* declaration of lua function for solver methods */
 static int FUNCTION (solver, new)                (lua_State *);
+static int FUNCTION (solver, free)               (lua_State *);
 static int FUNCTION (solver, run)                (lua_State *);
 static int FUNCTION (solver, iterate)            (lua_State *);
 static int FUNCTION (solver, index)              (lua_State *);
@@ -31,6 +32,8 @@ static int FUNCTION (solver, get_f)              (lua_State *);
 static int FUNCTION (solver, get_jacob)          (lua_State *);
 
 static const struct luaL_Reg FUNCTION (solver, methods)[] = {
+  {"__gc",         FUNCTION (solver, free)},
+  {"__index",      FUNCTION (solver, index)},
   {"iterate",      FUNCTION (solver, iterate)},
   {"run",          FUNCTION (solver, run)},
   {NULL, NULL}
