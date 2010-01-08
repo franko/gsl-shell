@@ -1,4 +1,5 @@
 #!/bin/bash
 
-#tar czvf $1 `find . -type f -not -regex '.*\.\(o\|exe\|dll\|a\|so\)' -a -not -regex '.*\.\(svn\|libs\|deps\).*' -not -name '*~' -a -not -regex '\(html|lua\)'`
-tar czvf $1 `find . -type f -regex '.*\.\(c\|cpp\|lua\)' -or -iname 'make*'`
+find gsl-shell -not -regex '.*\.\(dll\|exe\|a\|o\)' -a -not -name '*~' -a -not -regex '.*\/\.\(deps\|svn\|libs\).*' > /c/temp/list.txt
+
+tar czvT /c/temp/$1  /c/temp/list.txt

@@ -117,6 +117,11 @@ Functions
    For more information see Abramowitz & Stegun, Chapter 22.
 
 .. function:: legendreP(n, x)
+
+   .. figure:: examples-legendre-polynomials.png
+
+      Legendre polynomials  
+
 .. function:: legendreQ(n, x)
 
 .. function:: debye(n, x)

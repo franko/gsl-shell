@@ -24,6 +24,7 @@
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_deriv.h>
 
 #include "multimin.h"
 #include "lua-utils.h"
@@ -43,6 +44,8 @@ static int    multimin_get_x        (lua_State *L);
 static int    multimin_get_value    (lua_State *L);
 static int    multimin_get_gradient (lua_State *L);
 
+static int    multimin_check_gradient (lua_State *L);
+
 
 static double multimin_f_hook   (const gsl_vector * x, void * p);
 static void   multimin_df_hook  (const gsl_vector * x, void * p, gsl_vector *G);
@@ -59,6 +62,18 @@ struct fdf_multimin {
   gsl_multimin_fdfminimizer *s;
   gsl_multimin_function_fdf fdf[1];
   struct params p[1];
+};
+
+struct grad_check {
+  lua_State *L;
+  int f_index, x_index;
+  int var_vector_index;
+};
+
+enum fenvidx {
+  FENV_FUNCTION = 1,
+  FENV_X        = 2,
+  FENV_GRAD     = 3
 };
 
 static char const * const fdf_multimin_mt_name = "GSL.mmin";
@@ -81,6 +96,7 @@ static const struct luaL_Reg multimin_methods[] = {
 
 static const struct luaL_Reg multimin_functions[] = {
   {"minimizer",    multimin_new},
+  {"gradcheck",    multimin_check_gradient},
   {NULL, NULL}
 };
 
@@ -102,13 +118,13 @@ push_new_fdf_multimin (lua_State *L, int findex, size_t n,
   lua_newtable (L);
 
   lua_pushvalue (L, findex);
-  lua_rawseti (L, -2, 1); // 1 <- f
+  lua_rawseti (L, -2, FENV_FUNCTION);
 
   matrix_push_raw (L, n, 1);
-  lua_rawseti (L, -2, 2); // 2 <- x
+  lua_rawseti (L, -2, FENV_X);
 
   matrix_push_view (L, NULL);
-  lua_rawseti (L, -2, 3); // 3 <- G
+  lua_rawseti (L, -2, FENV_GRAD);
 
   lua_setfenv (L, -2);
 
@@ -223,9 +239,9 @@ fcall_args_prepare (lua_State *L, int index)
 {
   lua_settop  (L, index);
   lua_getfenv (L, index);
-  lua_rawgeti (L, index+1, 1);
-  lua_rawgeti (L, index+1, 2);
-  lua_rawgeti (L, index+1, 3);
+  lua_rawgeti (L, index+1, FENV_FUNCTION);
+  lua_rawgeti (L, index+1, FENV_X);
+  lua_rawgeti (L, index+1, FENV_GRAD);
   lua_remove  (L, index+1);
 } 
 
@@ -254,6 +270,81 @@ multimin_set (lua_State *L)
 
   if (status != GSL_SUCCESS)
     return luaL_error (L, "minimizer:set %s", gsl_strerror (status));
+
+  return 0;
+}
+
+static double
+f_check_hook (double x, void *_p)
+{
+  struct grad_check *p = _p;
+  lua_State *L = p->L;
+  gsl_matrix *xm = matrix_check (L, p->x_index);
+  gsl_matrix_set (xm, p->var_vector_index, 0, x);
+  lua_pushvalue (L, p->f_index);
+  lua_pushvalue (L, p->x_index);
+  lua_call (p->L, 1, 1);
+
+  if (lua_isnumber (L, -1))
+    {
+      double v = lua_tonumber (L, -1);
+      lua_pop (L, 1);
+      return v;
+    }
+  
+  return luaL_error (L, "function should return a real number");
+}
+
+int
+multimin_check_gradient (lua_State *L)
+{
+  struct fdf_multimin *m = check_init_fdf_multimin (L, 1);
+  gsl_matrix *xf, *x0 = matrix_check (L, 2);
+  double step_size = luaL_checknumber (L, 3);
+  struct grad_check gc[1];
+  gsl_matrix *gnum, *gfunc;
+  size_t k, n = m->p->n;
+  gsl_function F[1];
+  const double abs_err = 1e-5, rel_err = 1e-5;
+
+  gnum = matrix_push_raw (L, n, 1);
+
+  lua_getfenv (L, 1);
+  lua_rawgeti (L, -1, FENV_FUNCTION);
+
+  xf = matrix_push_raw (L, n, 1);
+
+  gc->L = L;
+  gc->x_index = lua_gettop(L);
+  gc->f_index = gc->x_index - 1;
+
+  F->function = & f_check_hook;
+  F->params   = gc;
+
+  for (k = 0; k < n; k++)
+    {
+      double result, abserr;
+      gc->var_vector_index = (int) k;
+      gsl_matrix_memcpy (xf, x0);
+      gsl_deriv_central (F, gsl_matrix_get (x0, k, 0), step_size / 50.0,
+			 &result, &abserr);
+      gsl_matrix_set (gnum, k, 0, result);
+    }
+
+  gfunc = matrix_push_raw (L, n, 1);
+
+  gsl_matrix_memcpy (xf, x0);
+
+  lua_call (L, 2, 1);
+
+  for (k = 0; k < n; k++)
+    {
+      double gn, gf;
+      gn = gsl_matrix_get (gnum,  k, 0);
+      gf = gsl_matrix_get (gfunc, k, 0);
+      if (fabs(gn - gf) > abs_err && fabs(gn - gf) >= fabs(gn) * rel_err)
+	return luaL_error (L, "gradient function is wrong");
+    }
 
   return 0;
 }

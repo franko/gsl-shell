@@ -6,6 +6,45 @@ f = function(x, g)
        return prod(y, y)[1]
     end
 
-x0 = vector {-1, 0.9}
-m = minimizer(f, x0:dims())
-m:set(x0, 0.5)
+
+fex = function(x, g)
+	 local x1, x2 = x[1], x[2]
+	 local z = 4*x1^2 + 2*x2^2 + 4*x1*x2 + 2*x2 + 1
+	 local e = exp(x1)
+	 if g then 
+	    g:set(1,1, e * (z + 8*x1 + 4*x2))
+	    g:set(2,1, e * (4*x2 + 4*x1 + 2))
+	 end
+	 return e * z
+      end
+
+frosenbrock = function(x, g)
+		 local x, y = x[1], x[2]
+		 local v = 100*(y-x^2)^2 + (1-x)^2
+		 if (g) then
+		    g:set(1,1, -4*100*(y-x^2)*x - 2*(1-x))
+		    g:set(2,1,  2*100*(y-x^2))
+		 end
+		 return v
+	      end
+
+x0 = vector {-1.2, 1.0}
+m = minimizer(frosenbrock, x0:dims())
+m:set(x0, 0.2)
+
+gradcheck(m, vector {1.3, 0.9}, 0.5)
+gradcheck(m, vector {1.0, 0.9}, 0.5)
+
+p=plot()
+c=path(m.x[1], m.x[2])
+while m:step() == 'continue' do
+   print(m.x[1], m.x[2])
+   c:line_to(m.x[1], m.x[2])
+end
+c:line_to(m.x[1], m.x[2])
+print(m.x[1], m.x[2], m.value)
+
+p:addline(c, 'black', {{'marker', size=5}})
+p:addline(c, 'red')
+
+p:show()
