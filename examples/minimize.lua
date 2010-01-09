@@ -32,8 +32,8 @@ x0 = vector {-1.2, 1.0}
 m = minimizer(frosenbrock, x0:dims())
 m:set(x0, 0.2)
 
-gradcheck(m, vector {1.3, 0.9}, 0.5)
-gradcheck(m, vector {1.0, 0.9}, 0.5)
+m:check(vector {1.3, 0.9}, 0.5)
+m:check(vector {1.0, 0.9}, 0.5)
 
 p=plot()
 c=path(m.x[1], m.x[2])
