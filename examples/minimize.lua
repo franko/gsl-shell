@@ -29,8 +29,7 @@ frosenbrock = function(x, g)
 	      end
 
 x0 = vector {-1.2, 1.0}
--- m = fdfminimizer(frosenbrock, x0:dims())
-m = fminimizer(frosenbrock, x0:dims())
+m = minimizer {fdf= frosenbrock, n= 2}
 m:set(x0, vector {1, 1})
 
 p=plot()

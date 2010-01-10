@@ -24,11 +24,15 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include <gsl/gsl_vector.h>
+
 #include "defs.h"
 
 extern void multimin_register (lua_State *L);
 extern int  fdfmultimin_new   (lua_State *L);
 extern int  fmultimin_new     (lua_State *L);
+
+extern double geometric_mean (lua_State *L, gsl_vector *v);
 
 extern char const * const fmultimin_mt_name;
 extern char const * const fdfmultimin_mt_name;
