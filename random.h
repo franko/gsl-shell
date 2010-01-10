@@ -12,6 +12,8 @@ struct boxed_rng {
 
 extern void random_register (lua_State *L);
 
+extern gsl_rng *push_rng (lua_State *L, const gsl_rng_type *T);
+
 extern const char * const RNG_MT_NAME;
 
 #endif

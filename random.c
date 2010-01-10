@@ -53,6 +53,7 @@ static const struct luaL_Reg rng_methods[] = {
   {"get",       random_rng_get},
   {"getint",    random_rng_getint},
   {"set",       random_rng_set},
+  {"__gc",      random_rng_free},
   {NULL, NULL}
 };
 
@@ -79,6 +80,23 @@ random_rng_type_list (lua_State *L)
   return 1;
 }
 
+gsl_rng *
+push_rng (lua_State *L, const gsl_rng_type *T)
+{
+  struct boxed_rng *r;
+
+  r = lua_newuserdata (L, sizeof(struct boxed_rng));
+  r->rng = gsl_rng_alloc (T);
+
+  r->min = gsl_rng_min (r->rng);
+  r->max = gsl_rng_max (r->rng);
+
+  luaL_getmetatable (L, RNG_MT_NAME);
+  lua_setmetatable (L, -2);
+
+  return r->rng;
+}
+
 int
 random_rng_new (lua_State *L)
 {
@@ -90,17 +108,7 @@ random_rng_new (lua_State *L)
       struct rng_type_info *inf = & rng_table[k];
       if (strcmp (inf->name, reqname) == 0)
 	{
-	  struct boxed_rng *udata;
-
-	  udata = lua_newuserdata (L, sizeof(struct boxed_rng));
-	  udata->rng = gsl_rng_alloc (inf->t);
-
-	  udata->min = gsl_rng_min (udata->rng);
-	  udata->max = gsl_rng_max (udata->rng);
-
-	  luaL_getmetatable (L, RNG_MT_NAME);
-	  lua_setmetatable (L, -2);
-
+	  push_rng (L, inf->t);
 	  return 1;
 	}
     }
@@ -158,8 +166,6 @@ random_register (lua_State *L)
   luaL_newmetatable (L, RNG_MT_NAME);
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
-  lua_pushcfunction (L, random_rng_free);
-  lua_setfield (L, -2, "__gc");
   luaL_register (L, NULL, rng_methods);
   lua_pop (L, 1);
 
