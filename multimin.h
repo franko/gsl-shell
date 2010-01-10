@@ -21,8 +21,19 @@
 #ifndef MULTIMIN_H
 #define MULTIMIN_H
 
+#include <lua.h>
+#include <lauxlib.h>
+
 #include "defs.h"
 
 extern void multimin_register (lua_State *L);
+extern int  fdfmultimin_new   (lua_State *L);
+extern int  fmultimin_new     (lua_State *L);
+
+extern char const * const fmultimin_mt_name;
+extern char const * const fdfmultimin_mt_name;
+
+extern const struct luaL_Reg fmultimin_methods[];
+extern const struct luaL_Reg fdfmultimin_methods[];
 
 #endif
