@@ -1,4 +1,6 @@
 
+require 'contour/vectors'
+
 frosenbrock = function(p, g)
 		 local x, y = p:coords()
 		 local v = 100*(y-x^2)^2 + (1-x)^2
@@ -8,49 +10,6 @@ frosenbrock = function(p, g)
 		 end
 		 return v
 	      end
-
-function module2d()
-   local point_mt = {}
-   point_mt.__index = point_mt
-
-   local vector_mt = {}
-   vector_mt.__index = vector_mt
-
-   function point(x, y)
-      local p = {x= x, y= y}
-      setmetatable(p, point_mt)
-      return p
-   end
-
-   function vector(dx, dy)
-      local v = {dx= dx, dy= dy}
-      setmetatable(v, vector_mt)
-      return v
-   end
-
-   function scalarprod(u, v) return u.dx*v.dx + u.dy*v.dy end
-
-   point_mt.coords = function(p)
-			return p.x, p.y
-		     end
-
-   vector_mt.__mul = function(a, b)
-			return vector(a * b.dx, a * b.dy)
-		     end
-
-   point_mt.__add = function(p, v)
-		       return point(p.x + v.dx, p.y + v.dy)
-		    end
-
-   point_mt.__sub = function(p, v)
-		       return point(p.x - v.dx, p.y - v.dy)
-		    end
-
-   vector_mt.norm   = function(v) return sqrt(v.dx^2 + v.dy^2) end
-   vector_mt.square = function(v) return v.dx^2 + v.dy^2 end
-end
-
-module2d()
 
 local function quad_root_solve(f, f0, p, d)
    local pl, pr = p-d, p+d
@@ -64,7 +23,7 @@ local function segment_solve(f, f0, p, d)
    local pz = quad_root_solve(f, f0, p, d)
    local g = vector()
    local z = f(pz, g) - f0
-   print('looking between:',p-d,p+d)
+--   print('looking between:',p-d,p+d)
 --   print('first appr:', f(pz), 'target', f0)
 --   print('gradient:', g)
    g = (z / g:square()) * g
@@ -73,7 +32,7 @@ local function segment_solve(f, f0, p, d)
 --   print('gradient projection:', d)
    pz = quad_root_solve(f, f0, pz - d, d)
 --   print('second appr:', f(pz), 'target', f0)
-   print('found:',pz)
+--   print('found:',pz)
    return pz
 end
 
@@ -130,8 +89,6 @@ function stepper_set(s, p)
    s.z0 = s.f(p)
 end
 
-debug_cross = path()
-
 function grid_create(f, left, right, nx, ny, nlevels)
    local g = {z= {}, cross= {}, zmin= f(left), zmax= f(right), levels= {}}
    local dx = vector((right.x - left.x) / nx, 0)
@@ -165,12 +122,12 @@ function grid_create(f, left, right, nx, ny, nlevels)
 	 for j=0,nx do
 	    local a, b = edge_values(i, j, 'h')
 	    if a and z >= a and z < b then
-	       print(string.format('H: %f < %f < %f', a, z, b), i, j)
+--	       print(string.format('H: %f < %f < %f', a, z, b), i, j)
 	       add_cross(g, i, j, 'h', k)
 	    end
 	    local a, b = edge_values(i, j, 'v')
 	    if a and z >= a and z < b then
-	       print(string.format('V: %f < %f < %f', a, z, b), i, j)
+--	       print(string.format('V: %f < %f < %f', a, z, b), i, j)
 	       add_cross(g, i, j, 'v', k)
 	    end
 	 end
@@ -203,15 +160,11 @@ function grid_create(f, left, right, nx, ny, nlevels)
 
    local function grid_remove_cross(i, j, dir, level)
       local si = segment_index(i, j, dir)
-      local p = left + j*dx + i*dy
-      debug_cross:move_to(p.x, p.y)
-      p = p + (dir == 'h' and dx or dy)
-      debug_cross:line_to(p.x, p.y)
       if g.cross[si] then g.cross[si][level] = nil end
    end
 
    local function grid_cross_check(cell, p1, p2)
-      if cell.i > ny or cell.i < 0 or cell.j > nx or cell.i < 0 then
+      if cell.i > ny or cell.i < 0 or cell.j > nx or cell.j < 0 then
 	 return true -- true= it is outside of the boundaries
       end
 
@@ -223,10 +176,12 @@ function grid_create(f, left, right, nx, ny, nlevels)
       local axl = alpha(a.x, p1.x, p2.x, -1)
       local ayb = alpha(a.y, p1.y, p2.y, -1)
 
-      -- print(p1, p2, a, b)
-      -- print(axr); print(ayt); print(axl); print(ayb)
-      -- print(cell)
-      -- io.read('*l')
+      if debug_cross then
+	 print(p1, p2, a, b)
+	 print(axr); print(ayt); print(axl); print(ayb)
+	 print(cell)
+	 io.read('*l')
+      end
 
       if test(axr, ayt, ayb) then
 	 grid_remove_cross(cell.i, cell.j+1, 'v', cell.level)
@@ -249,9 +204,7 @@ function grid_create(f, left, right, nx, ny, nlevels)
       return false
    end
 
-   local function inner_cell(i, j, level)
-      if j+1 > nx then j = j-1 end
-      if i+1 > ny then i = i-1 end
+   local function get_cell(i, j, level)
       return {i= i, j= j, level= level}
    end
 
@@ -262,21 +215,53 @@ function grid_create(f, left, right, nx, ny, nlevels)
 	    if g.cross[si] and g.cross[si][level] then
 	       grid_remove_cross(i, j, 'h', level)
 	       local p = left + (j+0.5)*dx + i*dy
-	       --		  print(p, f(p - 0.5*dx), f(p + 0.5*dx))
 	       p = segment_solve(f, g.levels[level], p, 0.5 * dx)
-	       return p, inner_cell(i, j, level)
+	       return p, get_cell(i, j, level), 'h'
 	    end
 	    si = segment_index(i, j, 'v')
 	    if g.cross[si] and g.cross[si][level] then
 	       grid_remove_cross(i, j, 'v', level)
 	       local p = left + j*dx + (i+0.5)*dy
---		  print(p, f(p - 0.5*dy), f(p + 0.5*dy))
 	       p = segment_solve(f, g.levels[level], p, 0.5 * dy)
-	       return p, inner_cell(i, j, level)
+	       return p, get_cell(i, j, level), 'v'
 	    end
 	 end
       end
    end
+
+   local function start_point_iter()
+      local level = 1
+      local p, c, u
+      local flip = {}
+      local udir = {h= vector(0,1), v= vector(1,0)}
+      local function get()
+	 if flip.v then
+	    flip.v = false
+	    u = (-1) * u
+	    c.j = c.j - 1
+	 elseif flip.h then
+	    flip.h = false
+	    u = (-1) * u
+	    c.i = c.i - 1
+	 else
+	    while level < nlevels do
+	       p, c, dir = grid_next_point(level)
+	       if p then
+		  flip[dir] = true
+		  u = udir[dir]
+		  break
+	       end
+	       level = level + 1
+	    end
+	 end
+	 if u.dx ==  1 and c.j >= nx then return get() end
+	 if u.dx == -1 and c.j <= 0  then return get() end
+	 if u.dy ==  1 and c.i >= ny then return get() end
+	 if u.dy == -1 and c.i <= 0  then return get() end
+	 return p, {i= c.i, j= c.j, level= c.level}, u
+      end
+      return get
+   end      
 
    local function debug_print_cross()
       local pl = plot()
@@ -285,14 +270,14 @@ function grid_create(f, left, right, nx, ny, nlevels)
 	 for i=0,ny do
 	    for j=0,nx do
 	       local ls = g.cross[segment_index(i,j,'h')]
-	       if ls and ls[k] then print('cross level:',k,i,j,'h',ls[k]) end
+--	       if ls and ls[k] then print('cross level:',k,i,j,'h',ls[k]) end
 	       if ls and ls[k] then
 		  local p = left + j*dx + i*dy
 		  line:move_to(p.x, p.y)
 		  line:line_to(p.x + dx.dx, p.y)
 	       end
 	       ls = g.cross[segment_index(i,j,'v')]
-	       if ls and ls[k] then print('cross level:',k,i,j,'v',ls[k]) end
+--	       if ls and ls[k] then print('cross level:',k,i,j,'v',ls[k]) end
 	       if ls and ls[k] then
 		  local p = left + j*dx + i*dy
 		  line:move_to(p.x, p.y)
@@ -308,7 +293,8 @@ function grid_create(f, left, right, nx, ny, nlevels)
 	 
    return {cross_check = grid_cross_check, 
 	   print_cross = debug_print_cross,
-	   next        = grid_next_point}
+	   points      = start_point_iter}
+--	   next        = grid_next_point}
 end
 
 function contour_step_check (s, dir, g, cell)
