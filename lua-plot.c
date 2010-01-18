@@ -423,14 +423,14 @@ agg_plot_free (lua_State *L)
   if (! p->is_shown)
     {
 #ifdef DEBUG_PLOT
-      fprintf(stderr, ": destroying\n", p);
+      fprintf(stderr, ": destroying\n");
 #endif
       agg_plot_destroy (p);
     }
 #ifdef DEBUG_PLOT
   else
     {
-      fprintf(stderr, ": plot is shown\n", p);
+      fprintf(stderr, ": plot is shown\n");
     }
 #endif
 
@@ -620,11 +620,20 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   assert (pre != NULL);
   
   pthread_mutex_lock (agg_mutex);
+#ifdef DEBUG_PLOT
+  printf("acquired mutex\n");
+#endif
   plot_add (p->plot, d->vs, color, post, pre, as_line);
 
+#ifdef DEBUG_PLOT
+  printf("drawing\n");
+#endif
   if (p->window)
     update_callback (p->window);
   pthread_mutex_unlock (agg_mutex);
+#ifdef DEBUG_PLOT
+  printf("unlocked mutex\n");
+#endif
 
   return 0;
 }

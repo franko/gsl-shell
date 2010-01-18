@@ -1,4 +1,9 @@
 
+local setmetatable = setmetatable
+local sqrt         = sqrt
+
+module 'geom'
+
 local point_mt = {}
 point_mt.__index = point_mt
 
@@ -20,8 +25,11 @@ end
 function scalarprod(u, v) return u.dx*v.dx + u.dy*v.dy end
 
 point_mt.coords = function(p) return p.x, p.y end
-point_mt.__add = function(p, v) return point(p.x + v.dx, p.y + v.dy) end
-point_mt.__sub = function(p, v) return point(p.x - v.dx, p.y - v.dy) end
+point_mt.__add  = function(p, v) return point(p.x + v.dx, p.y + v.dy) end
+point_mt.__sub  = function(p, v) 
+		     if v.x then return vector(p.x - v.x, p.y - v.y) end
+		     return point(p.x - v.dx, p.y - v.dy) 
+		  end
 
 vector_mt.norm   = function(v) return sqrt(v.dx^2 + v.dy^2) end
 vector_mt.square = function(v) return v.dx^2 + v.dy^2 end
