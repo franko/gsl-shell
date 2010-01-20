@@ -5,15 +5,7 @@ pt2  = geom.point
 vec2 = geom.vector
 local scalar = geom.scalarprod
 
-frosenbrock = function(p, g)
-		 local x, y = p:coords()
-		 local v = 100*(y-x^2)^2 + (1-x)^2
-		 if (g) then
-		    g.dx = -4*100*(y-x^2)*x - 2*(1-x)
-		    g.dy =  2*100*(y-x^2)
-		 end
-		 return v
-	      end
+local CROSS_NO, CROSS_YES, CROSS_NOSTART = 0, 1, 2
 
 local function quad_root_solve(f, f0, p, d)
    local pl, pr = p-d, p+d
@@ -65,12 +57,6 @@ function contour_step(s, dir)
    s.p = quad_root_solve(s.f, s.z0, pz, g)
 end
 
-function contour_dir(s)
-   local g = vec2()
-   s.f(s.p, g)
-   return vec2(g.dy, -g.dx)
-end
-
 function stepper(f, p0, step, z_spacing)
    local s = {f         = f, 
 	      p         = p0, 
@@ -81,15 +67,11 @@ function stepper(f, p0, step, z_spacing)
    return s
 end
 
-function stepper_set(s, p)
-   s.p  = p
-   s.z0 = s.f(p)
-end
-
 function grid_create(f, left, right, nx, ny, nlevels)
    local g = {z= {}, cross= {}, zmin= f(left), zmax= f(right), levels= {}}
    local dx = vec2((right.x - left.x) / nx, 0)
    local dy = vec2(0, (right.y - left.y) / ny)
+   local ds = sqrt(dx.dx^2 + dy.dy^2)
 
    local function index(i,j) return j + i * (nx+1) end
    local function segment_index(i,j,dir)
@@ -153,10 +135,32 @@ function grid_create(f, left, right, nx, ny, nlevels)
       if a then return (not a1 or a < a1) and (not a2 or a < a2) end
    end
 
-   local function grid_remove_cross(i, j, dir, level)
-      local si = segment_index(i, j, dir)
-      if g.cross[si] then g.cross[si][level] = nil end
+   local function grid_get_point_index(p)
+      local jx, ix = (p.x - left.x) / dx.dx, (p.y - left.y) / dy.dy
+      local c = {}
+      c.i, c.j = floor(ix), floor(jx)
+      c.di, c.dj = (ix - c.i > 0 and 1 or 0), (jx - c.j > 0 and 1 or 0)
+      return c
    end
+
+   local function segment_remove(i, j, dir, level)
+      local si = segment_index(i, j, dir)
+      if si and g.cross[si] then g.cross[si][level] = nil end
+   end
+
+   local function grid_remove_cross(p, level)
+      local jx, ix = (p.x - left.x) / dx.dx, (p.y - left.y) / dy.dy
+      local i, j = floor(ix+0.5), floor(jx+0.5)
+
+      if abs(jx - j) < 0.05 then 
+	 segment_remove(i, j,   'v', level) 
+	 segment_remove(i-1, j, 'v', level) 
+      end
+      if abs(ix - i) < 0.05 then 
+	 segment_remove(i, j,   'h', level)
+	 segment_remove(i, j-1, 'h', level)
+      end
+   end      
 
    local function cut_at_boundary(p1, p2, alpha)
       local p = p1 + alpha * (p2 - p1)
@@ -174,30 +178,23 @@ function grid_create(f, left, right, nx, ny, nlevels)
       local axl = alpha(a.x, p1.x, p2.x, -1)
       local ayb = alpha(a.y, p1.y, p2.y, -1)
 
-      if my_debug then
-	 print(p1, p2, a, b)
-	 print(axr); print(ayt); print(axl); print(ayb)
-	 print(cell)
-	 io.read('*l')
-      end
-
       if test(axr, ayt, ayb) then
-	 grid_remove_cross(cell.i, cell.j+1, 'v', cell.level)
+	 grid_remove_cross(p1 + axr * (p2 - p1), cell.level)
 	 cell.j = cell.j + 1
 	 if (cell.j >= nx) then return cut_at_boundary(p1, p2, axr) end
 	 return grid_cross_check(cell, p1, p2)
       elseif test(ayt, axl, axr) then
-	 grid_remove_cross(cell.i+1, cell.j, 'h', cell.level)
+	 grid_remove_cross(p1 + ayt * (p2 - p1), cell.level)
 	 cell.i = cell.i + 1
 	 if (cell.i >= ny) then return cut_at_boundary(p1, p2, ayt) end
 	 return grid_cross_check(cell, p1, p2)
       elseif test(axl, ayt, ayb) then
-	 grid_remove_cross(cell.i, cell.j,   'v', cell.level)
+	 grid_remove_cross(p1 + axl * (p2 - p1), cell.level)
 	 cell.j = cell.j - 1
 	 if (cell.j < 0) then return cut_at_boundary(p1, p2, axl) end
 	 return grid_cross_check(cell, p1, p2)
       elseif test(ayb, axl, axr) then
-	 grid_remove_cross(cell.i, cell.j,   'h', cell.level)
+	 grid_remove_cross(p1 + ayb * (p2 - p1), cell.level)
 	 cell.i = cell.i - 1
 	 if (cell.i < 0) then return cut_at_boundary(p1, p2, ayb) end
 	 return grid_cross_check(cell, p1, p2)
@@ -206,28 +203,20 @@ function grid_create(f, left, right, nx, ny, nlevels)
       return false
    end
 
-   local function get_segment(i, j, dir, level)
-      local c = {i1= i, j1= j, level= level}
-      if dir == 'h' then c.i2, c.j2 = i, j+1 else c.i2, c.j2 = i+1, j end
-      return c
-   end
-
    local function grid_next_point (level)
       for i= 0, ny do
 	 for j= 0, nx do
 	    local si = segment_index(i, j, 'h')
 	    if g.cross[si] and g.cross[si][level] then
-	       grid_remove_cross(i, j, 'h', level)
 	       local p = left + (j+0.5)*dx + i*dy
 	       p = segment_solve(f, g.levels[level], p, 0.5 * dx)
-	       return p, get_segment(i, j, 'h', level)
+	       return p
 	    end
 	    si = segment_index(i, j, 'v')
 	    if g.cross[si] and g.cross[si][level] then
-	       grid_remove_cross(i, j, 'v', level)
 	       local p = left + j*dx + (i+0.5)*dy
 	       p = segment_solve(f, g.levels[level], p, 0.5 * dy)
-	       return p, get_segment(i, j, 'v', level)
+	       return p
 	    end
 	 end
       end
@@ -235,23 +224,33 @@ function grid_create(f, left, right, nx, ny, nlevels)
 
    local function start_point_iter()
       local level = 1
-      local p, sg
+      local p
       return function()
 	 while true do
-	    p, sg = grid_next_point(level)
+	    p = grid_next_point(level)
 	    if p then break end
 	    level = level + 1
 	    if level >= nlevels then return end
 	 end
-	 return p, sg
+	 return p, level
       end
    end      
 
    local function grid_cell_verify(c)
       if c.j >= 0 and c.j + 1 <= nx then
-	 if c.i >= 0 and c.i + 1 <= ny then
-	    return true
-	 end
+   	 if c.i >= 0 and c.i + 1 <= ny then
+   	    return true
+   	 end
+      end
+   end
+
+   local function grid_does_close(a, b, c)
+      local v, z = b - a, c - a
+      local q = scalar(z, v) / v:square()
+      if q > 0 and q <= 1 then
+	 local w = vec2(v.dy, -v.dx)
+	 local p = scalar(z, w) / w:square()
+	 if abs(p) < 0.2 * ds then return true end
       end
    end
 
@@ -281,77 +280,100 @@ function grid_create(f, left, right, nx, ny, nlevels)
       return pl
    end
 	 
-   return {cross_check = grid_cross_check, 
-	   print_cross = debug_print_cross,
-	   points      = start_point_iter,
-	   cell_verify = grid_cell_verify}
+   return {cross_check  = grid_cross_check, 
+	   print_cross  = debug_print_cross,
+	   points       = start_point_iter,
+	   cell_verify  = grid_cell_verify,
+	   point_index  = grid_get_point_index,
+	   remove_cross = grid_remove_cross,
+	   does_close   = grid_does_close,
+	   ds           = ds,
+	   zstep        = zstep}
 end
 
-function contour_step_check (s, dir, g, cell)
+function contour_step_check (s, dir, g, level)
    local p = pt2(s.p.x, s.p.y)
    contour_step(s, dir)
-   return g.cross_check(cell, p, s.p)
-end
 
-local function verify_if_close(a, b, c)
-   if (b.x - c.x) * (a.x - c.x) <= 0 and (b.y - c.y) * (a.y - c.y) <= 0 then
-      return true
+   local cell = g.point_index(p)
+   cell.level = level
+
+   if cell.dj == 0 then
+      if s.p.x < p.x then cell.j = cell.j - 1 end
    end
-end
-
-local function get_oriented_cell(sg, u)
-   local c = {i= sg.i1, j= sg.j1, level= sg.level}
-   if sg.i1 == sg.i2 then
-      if u.dy < 0 then c.i = c.i - 1 end
-   else
-      if u.dx < 0 then c.j = c.j - 1 end
+   if cell.di == 0 then
+      if s.p.y < p.y then cell.i = cell.i - 1 end
    end
-   return c
+
+   if not g.cell_verify(cell) then return CROSS_NOSTART end
+
+   if g.cross_check(cell, p, s.p) then return CROSS_YES else return CROSS_NO end
 end
 
-function contour_find(s, g, sg)
+function contour_find(s, g, level)
    local ln = path()
-   local u = contour_dir(s)
    local p0 = s.p
  
-   local a, hit, closed
+   local closed
    for _, dir in ipairs {1, -1} do
       s.p = p0
-      cell = get_oriented_cell(sg, u)
 
-      if my_debug then
-	 print(s.p, cell, dir, sg, u)
-	 io.read('*l')
-      end
+      g.remove_cross(s.p, level)
 
-      if g.cell_verify(cell) then
+      local a, hit
+      ln:move_to(s.p.x, s.p.y)
+      while true do
+	 hit = contour_step_check(s, dir, g, level)
 
-	 ln:move_to(s.p.x, s.p.y)
+	 if hit == CROSS_NOSTART then break end
 
-	 repeat
-	    hit = contour_step_check(s, dir, g, cell)
-
-	    if my_debug then
-	       print('RESULT: ', s.p, cell, hit)
-	       io.read('*l')
+	 if hit == CROSS_NO and a then
+	    closed = g.does_close(a, s.p, p0)
+	    if closed then 
+	       ln:close()
+	       break
 	    end
+	 end
 
-	    if not hit and a then
-	       closed = verify_if_close(a, s.p, p0)
-	       if closed then 
-		  ln:close()
-		  break
-	       end
-	    end
+	 ln:line_to(s.p.x, s.p.y)
 
-	    ln:line_to(s.p.x, s.p.y)
-	    a = s.p
-	 until hit
+	 if hit == CROSS_YES then break end
+	 a = s.p
       end
 
       if closed then break end
-      u, a = (-1) * u, nil
    end
 
    return ln
+end
+
+function contour(f, a, b, ngridx, ngridy, nlevels)
+   ngridx = ngridx and ngridx or 20
+   ngridy = ngridy and ngridy or 20
+   nlevels = nlevels and nlevels or 12
+   local g = grid_create(f, a, b, ngridx, ngridy, nlevels)
+   local pl = plot()
+   for p, level in g.points() do
+      local s = stepper(f, p, g.ds, g.zstep)
+      pl:addline(contour_find(s, g, level), 'gray')
+   end
+   pl:show()
+   return pl
+end
+
+
+function debug_contour(f, a, b, ngridx, ngridy, nlevels)
+   ngridx = ngridx and ngridx or 20
+   ngridy = ngridy and ngridy or 20
+   nlevels = nlevels and nlevels or 12
+   local g = grid_create(f, a, b, ngridx, ngridy, nlevels)
+   local pl = g.print_cross()
+   for p, level in g.points() do
+      local s = stepper(f, p, g.ds, g.zstep)
+      local ln = contour_find(s, g, level)
+      pl:addline(ln, 'gray')
+      pl:addline(ln, 'black', {{'marker', size=4}})
+   end
+   pl:show()
+   return pl
 end
