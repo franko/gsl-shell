@@ -10,7 +10,10 @@
 #include "lua-plot-priv.h"
 
 
-extern void platform_support_prepare();
+extern void platform_support_prepare   ();
+extern void platform_support_lock      (agg::platform_support *app);
+extern void platform_support_unlock    (agg::platform_support *app);
+extern bool platform_support_is_mapped (agg::platform_support *app);
 
 enum flip_y_e { flip_y = true };
 
@@ -48,8 +51,13 @@ private:
 void update_callback (void *_app)
 {
   the_application *app = (the_application *) _app;
-  app->on_draw_unprotected();
-  app->update_window();
+  if (platform_support_is_mapped (app))
+    {
+      platform_support_lock (app);
+      app->on_draw_unprotected();
+      app->update_window();
+      platform_support_unlock (app);
+    }
 };
 			
 void *
@@ -69,13 +77,9 @@ xwin_thread_function (void *_plot)
       p->window = (void *) &app;
       pthread_mutex_unlock (agg_mutex);
       app.run();
-    }
-  else
-    {
-      pthread_mutex_unlock (agg_mutex);
+      pthread_mutex_lock (agg_mutex);
     }
 
-  pthread_mutex_lock (agg_mutex);
   p->window = NULL;
   if (p->lua_is_owner)
     {

@@ -4,8 +4,6 @@ CXX = g++
 
 DEBUG = yes
 
-# DEFS = -DDEBUG_PLOT
-
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall

@@ -56,8 +56,8 @@ void units<T>::init(T yinf, T ysup, T spacefact)
   else
     m_major = 1;
 
-  m_inf = (int) floor(yinf / (m_major * expf));
-  m_sup = (int) ceil(ysup / (m_major * expf));
+  m_inf = (int) floor(yinf / (m_major * expf) + 1e-5);
+  m_sup = (int) ceil (ysup / (m_major * expf) - 1e-5);
 
   nb_decimals = (order < 0 ? -order : 0);
 
@@ -76,14 +76,7 @@ void units<T>::mark_label (char *lab, unsigned size, int mark) const
 
   if (nb_decimals == 0)
     {
-#if 0
-      int space = (int)log10(asup * dmajor) + (minus ? 1 : 0) + 1;
-      snprintf (fmt, 16, "%%%id", space);
-      fmt[15] = '\0';
-      snprintf (lab, size, fmt, int(mark * dmajor));
-#else
       snprintf (lab, size, "%d", int(mark * dmajor));
-#endif
       lab[size-1] = '\0';
     }
   else

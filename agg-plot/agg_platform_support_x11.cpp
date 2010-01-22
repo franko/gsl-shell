@@ -31,6 +31,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#include <pthread.h>
 #include "agg_basics.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "platform/agg_platform_support.h"
@@ -70,8 +71,11 @@ namespace agg
         bool m_update_flag;
         bool m_resize_flag;
         bool m_initialized;
-        //bool m_wait_mode;
+        bool m_is_mapped;
         clock_t m_sw_start;
+
+        pthread_mutex_t m_mutex[1];
+
     };
 
 
@@ -97,8 +101,8 @@ namespace agg
         
         m_update_flag(true), 
         m_resize_flag(true),
-        m_initialized(false)
-        //m_wait_mode(true)
+        m_initialized(false),
+	m_is_mapped(false)
     {
         memset(m_buf_img, 0, sizeof(m_buf_img));
 
@@ -196,26 +200,20 @@ namespace agg
             break;
         }
         m_sw_start = clock();
+
+	pthread_mutex_init (m_mutex, NULL);
     }
 
     //------------------------------------------------------------------------
     platform_specific::~platform_specific()
     {
+      pthread_mutex_destroy (m_mutex);
     }
 
     //------------------------------------------------------------------------
     void platform_specific::caption(const char* capt)
     {
-        //XTextProperty tp;
-        //tp.value = (unsigned char *)capt;
-        //tp.encoding = XA_WM_NAME;
-        //tp.format = 8;
-        //tp.nitems = strlen(capt);
-        //XSetWMName(m_display, m_window, &tp);
-        //XStoreName(m_display, m_window, capt);
-        //XSetIconName(m_display, m_window, capt);
-        //XSetWMIconName(m_display, m_window, &tp);
-        // Fixed by Enno Fennema
+        // Fixed by Enno Fennema (in original AGG library)
         XStoreName(m_display, m_window, capt);
         XSetIconName(m_display, m_window, capt);
     }
@@ -355,7 +353,6 @@ namespace agg
             delete [] buf_tmp;
         }
     }
-    
 
     //------------------------------------------------------------------------
     platform_support::platform_support(pix_format_e format, bool flip_y) :
@@ -423,67 +420,6 @@ namespace agg
         unsigned long r_mask = m_specific->m_visual->red_mask;
         unsigned long g_mask = m_specific->m_visual->green_mask;
         unsigned long b_mask = m_specific->m_visual->blue_mask;
-                
-//printf("depth=%d, red=%08x, green=%08x, blue=%08x\n",
-//       m_specific->m_depth,
-//       m_specific->m_visual->red_mask,
-//       m_specific->m_visual->green_mask,
-//       m_specific->m_visual->blue_mask);
-           
-
-//         // NOT COMPLETED YET!
-//         // Try to find an appropriate Visual if the default doesn't fit.
-//         if(m_specific->m_depth < 15 ||
-//            r_mask == 0 || g_mask == 0 || b_mask == 0)
-//         {
-//             
-//             // This is an attempt to find an appropriate Visual if         
-//             // the default one doesn't match the minumum requirements
-//             static int depth[] = { 32, 24, 16, 15 };
-//             int i;
-//             for(int i = 0; i < 4; i++)
-//             {
-//                 XVisualInfo vi;
-//                 if(XMatchVisualInfo(m_specific->m_display, 
-//                                     m_specific->m_screen, 
-//                                     depth[i], 
-//                                     TrueColor, 
-//                                     &vi)) 
-//                 {
-// //                     printf("TrueColor  depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
-// //                         vi.depth,
-// //                         vi.visual->red_mask,
-// //                         vi.visual->green_mask,
-// //                         vi.visual->blue_mask,
-// //                         vi.bits_per_rgb);
-//                     m_specific->m_depth  = vi.depth;
-//                     m_specific->m_visual = vi.visual;
-//                     r_mask = m_specific->m_visual->red_mask;
-//                     g_mask = m_specific->m_visual->green_mask;
-//                     b_mask = m_specific->m_visual->blue_mask;
-//                     break;
-//                 }
-//                 if(XMatchVisualInfo(m_specific->m_display, 
-//                                     m_specific->m_screen, 
-//                                     depth[i], 
-//                                     DirectColor, 
-//                                     &vi)) 
-//                 {
-// //                     printf("DirectColor depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
-// //                         vi.depth,
-// //                         vi.visual->red_mask,
-// //                         vi.visual->green_mask,
-// //                         vi.visual->blue_mask,
-// //                         vi.bits_per_rgb);
-//                     m_specific->m_depth  = vi.depth;
-//                     m_specific->m_visual = vi.visual;
-//                     r_mask = m_specific->m_visual->red_mask;
-//                     g_mask = m_specific->m_visual->green_mask;
-//                     b_mask = m_specific->m_visual->blue_mask;
-//                     break;
-//                 }
-//             }
-//         }
 
         if(m_specific->m_depth < 15 ||
            r_mask == 0 || g_mask == 0 || b_mask == 0)
@@ -708,20 +644,25 @@ namespace agg
     //------------------------------------------------------------------------
     void platform_support::update_window()
     {
-        m_specific->put_image(&m_rbuf_window);
+      if (! m_specific->m_is_mapped)
+	return;
+
+      m_specific->put_image(&m_rbuf_window);
         
-        // When m_wait_mode is true we can discard all the events 
-        // came while the image is being drawn. In this case 
-        // the X server does not accumulate mouse motion events.
-        // When m_wait_mode is false, i.e. we have some idle drawing
-        // we cannot afford to miss any events
-        XSync(m_specific->m_display, m_wait_mode);
+      // When m_wait_mode is true we can discard all the events 
+      // came while the image is being drawn. In this case 
+      // the X server does not accumulate mouse motion events.
+      // When m_wait_mode is false, i.e. we have some idle drawing
+      // we cannot afford to miss any events
+      XSync(m_specific->m_display, m_wait_mode);
     }
 
 
     //------------------------------------------------------------------------
     int platform_support::run()
     {
+	pthread_mutex_lock (m_specific->m_mutex);
+
         XFlush(m_specific->m_display);
         
         bool quit = false;
@@ -731,7 +672,7 @@ namespace agg
 
         while(!quit)
         {
-            if(m_specific->m_update_flag)
+            if(m_specific->m_update_flag && m_specific->m_is_mapped)
             {
                 on_draw();
                 update_window();
@@ -748,7 +689,9 @@ namespace agg
             }
 
             XEvent x_event;
+	    pthread_mutex_unlock (m_specific->m_mutex);
             XNextEvent(m_specific->m_display, &x_event);
+	    pthread_mutex_lock (m_specific->m_mutex);
             
             // In the Idle mode discard all intermediate MotionNotify events
             if(!m_wait_mode && x_event.type == MotionNotify)
@@ -765,6 +708,15 @@ namespace agg
 
             switch(x_event.type) 
             {
+            case MapNotify: 
+                {
+		  on_draw();
+		  update_window();
+		  m_specific->m_is_mapped = true;
+		  m_specific->m_update_flag = false;
+		}
+		break;
+
             case ConfigureNotify: 
                 {
                     if(x_event.xconfigure.width  != int(m_rbuf_window.width()) ||
@@ -997,6 +949,8 @@ namespace agg
         XFreeGC(m_specific->m_display, m_specific->m_gc);
         XDestroyWindow(m_specific->m_display, m_specific->m_window);
         XCloseDisplay(m_specific->m_display);
+
+	pthread_mutex_unlock (m_specific->m_mutex);
         
         return 0;
     }
@@ -1291,4 +1245,19 @@ namespace agg
 
 void platform_support_prepare()
 {
+}
+
+void platform_support_lock(agg::platform_support *app)
+{ 
+  pthread_mutex_lock (app->m_specific->m_mutex); 
+}
+
+void platform_support_unlock(agg::platform_support *app)
+{ 
+  pthread_mutex_unlock (app->m_specific->m_mutex); 
+}
+
+bool platform_support_is_mapped(agg::platform_support *app)
+{ 
+  return app->m_specific->m_is_mapped;
 }

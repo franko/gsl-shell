@@ -26,7 +26,7 @@ LUADIR = lua
 AR= ar rcu
 RANLIB= ranlib
 
-SUBDIRS_DEFS = -DGSL_SHELL
+SUBDIRS_DEFS += -DGSL_SHELL
 
 ifeq ($(strip $(PLATFORM)), none)
 nono:

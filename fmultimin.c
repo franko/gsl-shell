@@ -254,7 +254,7 @@ fmultimin_set (lua_State *L)
 int
 fmultimin_step (lua_State *L)
 {
-  struct fmultimin *m = check_fmultimin (L, 1);
+  struct fmultimin *m = check_init_fmultimin (L, 1);
   double size;
   int status;
 
@@ -267,7 +267,6 @@ fmultimin_step (lua_State *L)
     return luaL_error (L, "minimizer:step %s", gsl_strerror (status));
 
   size = gsl_multimin_fminimizer_size (m->s);
-  printf ("size: %lf\n", size);
   status = gsl_multimin_test_size (size, m->step_tol);
 
   if (status == GSL_CONTINUE)
@@ -287,7 +286,7 @@ fmultimin_step (lua_State *L)
 int
 fmultimin_run (lua_State *L)
 {
-  struct fmultimin *m = check_fmultimin (L, 1);
+  struct fmultimin *m = check_init_fmultimin (L, 1);
   size_t iter = 0;
   double size;
   int status;
