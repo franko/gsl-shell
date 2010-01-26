@@ -26,23 +26,31 @@
 #include <gsl/gsl_odeiv.h>
 #include "defs.h"
 
-struct ode_solver {
+struct params {
+  lua_State *L;
+  size_t n;
+};
+
+struct solver {
   gsl_odeiv_step    * step;
   gsl_odeiv_control * ctrl;
   gsl_odeiv_evolve  * evol;
 
+  gsl_odeiv_system system[1];
+  struct params params[1];
+
+  double t, h;
   size_t dimension;
 };
 
-extern struct ode_solver *
+struct solver_type {
+  const char * const metatable_name;
+};
+
+extern struct solver *
 ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
-		     size_t dim, double eps_abs, double eps_rel);
-
-extern struct ode_solver *
-check_ode_solver (lua_State *L, int index);
-
-extern void
-ode_solver_register (lua_State *L);
+		     size_t dim, double eps_abs, double eps_rel,
+		     struct solver_type *st);
 
 extern const gsl_odeiv_step_type *
 method_lookup (const char *method, const gsl_odeiv_step_type *default_type,

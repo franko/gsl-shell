@@ -57,9 +57,6 @@ mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache)
       cache_is_new = true;
     }
 
-  /* remove the fenv table */
-  //  lua_remove (L, -2); not needed
-
   if (! cache_is_new)
     {
       lua_getfield (L, -1, p->name);
@@ -170,4 +167,21 @@ mlua_named_string (lua_State *L, int index, const char *key)
   r = lua_tostring (L, -1);
   lua_pop (L, 1);
   return r;
+}
+
+void
+mlua_fenv_set (lua_State *L, int index, int fenv_index)
+{
+  lua_getfenv (L, index);
+  lua_insert (L, -2);
+  lua_rawseti (L, -2, fenv_index);
+  lua_pop (L, 1);
+}
+
+void
+mlua_fenv_get (lua_State *L, int index, int fenv_index)
+{
+  lua_getfenv (L, index);
+  lua_rawgeti (L, -1, fenv_index);
+  lua_remove (L, -2);
 }

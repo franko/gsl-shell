@@ -61,7 +61,6 @@ luaopen_gsl (lua_State *L)
   matrix_register (L);
   linalg_register (L);
   integ_register (L);
-  ode_solver_register (L);
   ode_register (L);
   random_register (L);
   randist_register (L);

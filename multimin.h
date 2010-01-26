@@ -28,9 +28,11 @@
 
 #include "defs.h"
 
-extern void multimin_register (lua_State *L);
-extern int  fdfmultimin_new   (lua_State *L);
-extern int  fmultimin_new     (lua_State *L);
+extern void multimin_register    (lua_State *L);
+extern int  fdfmultimin_new      (lua_State *L);
+extern int  fmultimin_new        (lua_State *L);
+extern int  gradient_auto_check  (lua_State *L);
+
 
 extern double geometric_mean (lua_State *L, gsl_vector *v);
 

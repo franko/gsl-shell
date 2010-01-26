@@ -259,3 +259,5 @@ add_matrix_method('__tostring', matrix_print)
 add_matrix_method('norm',       matrix_norm)
 add_matrix_method('columns',    matrix_columns)
 add_matrix_method('row_print',  matrix_row_print)
+
+my_tostring = function(x) return tos(x, 2) end

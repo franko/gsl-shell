@@ -11,8 +11,6 @@ struct method_entry {
   bool needs_jacobian;
 };
 
-static char const * const ode_solver_type_name = "GSL.ode_solver";
-
 #define ODEIV_METHOD(t) #t, & gsl_odeiv_step_ ## t
 
 static struct method_entry methods_table[] = {
@@ -30,21 +28,14 @@ static struct method_entry methods_table[] = {
 };
 #undef ODEIV_METHOD
 
-static int
-ode_solver_dealloc (lua_State *L);
-
-static const struct luaL_Reg ode_solver_methods[] = {
-  {"__gc",          ode_solver_dealloc},
-  {NULL, NULL}
-};
-
-struct ode_solver *
+struct solver *
 ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
-		     size_t dim, double eps_abs, double eps_rel)
+		     size_t dim, double eps_abs, double eps_rel,
+		     struct solver_type *st)
 {
-  struct ode_solver *s;
+  struct solver *s;
 
-  s = lua_newuserdata (L, sizeof (struct ode_solver));
+  s = lua_newuserdata (L, sizeof (struct solver));
 
   s->step = gsl_odeiv_step_alloc (type, dim);
   s->ctrl = gsl_odeiv_control_y_new (eps_abs, eps_rel);
@@ -52,29 +43,10 @@ ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
 
   s->dimension = dim;
 
-  luaL_getmetatable (L, ode_solver_type_name);
+  luaL_getmetatable (L, st->metatable_name);
   lua_setmetatable (L, -2);
 
   return s;
-}
-
-
-struct ode_solver *
-check_ode_solver (lua_State *L, int index)
-{
-  return luaL_checkudata (L, index, ode_solver_type_name);
-}
-
-int
-ode_solver_dealloc (lua_State *L)
-{
-  struct ode_solver *s = check_ode_solver (L, 1);
-
-  gsl_odeiv_evolve_free  (s->evol);
-  gsl_odeiv_control_free (s->ctrl);
-  gsl_odeiv_step_free    (s->step);
-
-  return 0;
 }
 
 const gsl_odeiv_step_type *
@@ -91,14 +63,4 @@ method_lookup (const char *method, const gsl_odeiv_step_type *default_type,
 	}
     }
   return default_type;
-}
-
-void
-ode_solver_register (lua_State *L)
-{
-  /* ode solver declaration */
-  luaL_newmetatable (L, ode_solver_type_name);
-  luaL_register (L, NULL, ode_solver_methods);
-  lua_pop (L, 1);
-
 }

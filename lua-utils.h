@@ -58,4 +58,7 @@ extern lua_Number   mlua_named_optnumber (lua_State *L, int index,
 extern lua_Number   mlua_named_number    (lua_State *L, int index, 
 					  const char *key);
 
+extern void         mlua_fenv_set        (lua_State *L, int index, int fenv_index);
+extern void         mlua_fenv_get        (lua_State *L, int index, int fenv_index);
+
 #endif

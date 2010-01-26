@@ -10,6 +10,16 @@ FUNCTION (matrix, set_view_and_push) (lua_State *L, int index, double *data,
   lua_pushvalue (L, index);
 }
 
+void
+FUNCTION (matrix, set_view) (lua_State *L, int index, double *data,
+			     size_t n1, size_t n2, const double *src)
+{
+  VIEW (gsl_matrix) *view = FUNCTION (matrix, check_view) (L, index);
+  *view = FUNCTION (gsl_matrix, view_array) (data, n1, n2);
+  if (src)
+    memcpy (data, src, n1 * n2 * sizeof(BASE));
+}
+
 static void
 TYPE (copy_jacobian_raw) (double *cmpl, double *real, size_t n, size_t p,
 			  size_t mult, bool inverse)

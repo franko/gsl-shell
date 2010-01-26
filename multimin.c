@@ -25,9 +25,8 @@
 static int multimin_new (lua_State *L);
 
 static const struct luaL_Reg multimin_functions[] = {
-  //  {"fminimizer",    fmultimin_new},
-  // {"fdfminimizer",  fdfmultimin_new},
-  {"minimizer",  multimin_new},
+  {"minimizer",      multimin_new},
+  {"gradcheck",      gradient_auto_check},
   {NULL, NULL}
 };
 

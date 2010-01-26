@@ -18,9 +18,6 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-require 'igsl'
-require 'draw'
-
 function ode_lines(s, t0, y0, t1, tstep)
    local r = y0:dims()
    local p = {}
@@ -37,6 +34,16 @@ function code_lines(s, t0, y0, t1, tstep)
    for k=1,r do p[2*k-1] = path(t0, real(y0[k])); p[2*k] = path(t0, imag(y0[k])) end
    for t, y in s:iter(t0, y0, t1, tstep) do
       for k=1,r do p[2*k-1]:line_to(t, real(y[k])); p[2*k]:line_to(t, imag(y[k])) end
+   end
+   return p
+end
+
+function code_lines_re(s, t0, y0, t1, tstep)
+   local r = y0:dims()
+   local p = {}
+   for k=1,r do p[k] = path(t0, real(y0[k])) end
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      for k=1,r do p[k]:line_to(t, real(y[k])) end
    end
    return p
 end
@@ -102,5 +109,27 @@ function demo3()
    local y0 = cvector {1,0}
 
    local ln = code_lines(s, t0, y0, t1, 0.04)
+   return plot_lines(ln)
+end
+
+
+function demo4()
+   local m = cmatrix {{12i-0.4, 1},{-1, 12i}}
+
+   local myf = function(t, y, f)
+		  set(f, cmul(m, y))
+	       end
+
+   local mydf = function(t, y, dfdy, dfdt)
+		   set(dfdy, m)
+		   null(dfdt)
+		end
+
+   local s = code {f= myf, df= mydf, n= 2, method='bsimp'}
+
+   local t0, t1 = 0, 10
+   local y0 = cvector {0.5+0.1i, 0}
+
+   local ln = code_lines_re(s, t0, y0, t1, 0.01)
    return plot_lines(ln)
 end

@@ -18,70 +18,59 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-TYPE (ode_params) *
-FUNCTION (ode_params, push) (lua_State *L, size_t dim, double h)
+void
+FUNCTION (linear, array_copy) (TYPE (gsl_matrix) *dest, const double *src, size_t n)
 {
-  TYPE (ode_params) *p = lua_newuserdata (L, sizeof(TYPE (ode_params)));
-
-  p->L = L;
-  p->n = dim;
-  p->h = h;
-  p->y = FUNCTION (gsl_matrix, alloc) (dim, 1);
-  p->ybuff = FUNCTION (gsl_matrix, alloc) (dim, 1);
-#if MULTIPLICITY >= 2
-  p->J = FUNCTION (gsl_matrix, alloc) (dim, dim);
-#endif
-
-  luaL_getmetatable (L, TYPE (name_ode_params));
-  lua_setmetatable (L, -2);
-
-  return p;
+  FUNCTION (gsl_matrix, const_view) srcv = FUNCTION (gsl_matrix, const_view_array) (src, n, 1);
+  FUNCTION (gsl_matrix, memcpy) (dest, &srcv.matrix);
 }
 
-int
-FUNCTION (ode_params, free) (lua_State *L)
+void
+FUNCTION (ode, fenv_setup) (lua_State *L, int n)
 {
-  TYPE (ode_params) *p = FUNCTION (ode_params, check) (L, 1);
-  FUNCTION (gsl_matrix, free) (p->y);
-  FUNCTION (gsl_matrix, free) (p->ybuff);
-#if MULTIPLICITY >= 2
-  FUNCTION (gsl_matrix, free) (p->J);
-#endif
-  return 0;
-}
+  lua_newtable (L);
 
-TYPE (ode_params) *
-FUNCTION (ode_params, check) (lua_State *L, int index)
-{
-  return luaL_checkudata (L, index, TYPE (name_ode_params));
-}
+  FUNCTION (matrix, push_raw) (L, n, 1);
+  lua_rawseti (L, -2, FENV_Y);
 
-static TYPE (ode_params) *
-FUNCTION (ode_params, get) (lua_State *L, int index)
-{
-  TYPE (ode_params) *p;
-  lua_getfield (L, index, "params");
-  p = luaL_checkudata (L, -1, TYPE (name_ode_params));
-  lua_pop (L, 1);
-  return p;
+  FUNCTION (matrix, push_raw) (L, n, 1);
+  lua_rawseti (L, -2, FENV_Y_BUFFER);
+
+  FUNCTION (matrix, push_view) (L, NULL);
+  lua_rawseti (L, -2, FENV_DYDT);
+
+  FUNCTION (matrix, push_view) (L, NULL);
+  lua_rawseti (L, -2, FENV_DFDY);
+
+  FUNCTION (matrix, push_view) (L, NULL);
+  lua_rawseti (L, -2, FENV_DFDT);
+
+  /* if multiplicity is 1 this is not really needed */
+  FUNCTION (matrix, push_raw) (L, n, n);
+  lua_rawseti (L, -2, FENV_DFDY_BUFFER);
+
+  lua_setfenv (L, -2);
 }
 
 static int
-FUNCTION (ode, hook_f) (double t, const double y[], double f[],
-			void *params)
+FUNCTION (ode, hook_f) (double t, const double y[], double f[], void *params)
 {
-  TYPE (ode_params) *p = params;
-  const int args_index = 2;
+  struct params *p = params;
+  TYPE (gsl_matrix) *ym;
   lua_State *L = p->L;
+  size_t n = p->n;
 
-  /* push the ode system function */
-  lua_getfield (L, 1, "f");
+  /* push the ode system f function */
+  lua_rawgeti (L, 2, FENV_F);
 
   lua_pushnumber (L, t);
   
-  FUNCTION (matrix, set_view_and_push) (L, args_index, p->ybuff->data, 
-					p->n, 1, y);
-  FUNCTION (matrix, set_view_and_push) (L, args_index+1, f, p->n, 1, NULL);
+  lua_rawgeti (L, 2, FENV_Y_BUFFER);
+  ym = FUNCTION (matrix, check) (L, -1);
+  FUNCTION (linear, array_copy) (ym, y, n);
+
+  lua_rawgeti (L, 2, FENV_DYDT);
+  FUNCTION (matrix, set_view) (L, -1, f, n, 1, NULL);
   
   lua_call (L, 3, 0);
 
@@ -92,25 +81,37 @@ static int
 FUNCTION (ode, hook_jacob) (double t, const double y[], double *dfdy, 
 			    double dfdt[], void *params)
 {
-  TYPE (ode_params) *p = params;
-  const int args_index = 2;
+  struct params *p = params;
   lua_State *L = p->L;
   size_t n = p->n;
+  TYPE (gsl_matrix) *ym;
+  double *jacob;
+
 #if MULTIPLICITY >= 2
-  double *jacob = p->J->data;
+  {
+    lua_rawgeti (L, 2, FENV_DFDY_BUFFER);
+    TYPE (gsl_matrix) *jm = FUNCTION (matrix, check) (L, -1);
+    jacob = jm->data;
+    lua_pop (L, 1);
+  }
 #else
-  double *jacob = dfdy;
+  jacob = dfdy;
 #endif
 
-  /* push the ode system function */
-  lua_getfield (L, 1, "df");
+  /* push the ode system df function */
+  lua_rawgeti (L, 2, FENV_DF);
 
   lua_pushnumber (L, t);
 
-  FUNCTION (matrix, set_view_and_push) (L, args_index, p->ybuff->data, 
-					n, 1, y);
-  FUNCTION (matrix, set_view_and_push) (L, args_index+1, jacob, n, n, NULL);
-  FUNCTION (matrix, set_view_and_push) (L, args_index+2, dfdt, n, 1, NULL);
+  lua_rawgeti (L, 2, FENV_Y_BUFFER);
+  ym = FUNCTION (matrix, check) (L, -1);
+  FUNCTION (linear, array_copy) (ym, y, n);
+  
+  lua_rawgeti (L, 2, FENV_DFDY);
+  FUNCTION (matrix, set_view) (L, -1, jacob, n, n, NULL);
+
+  lua_rawgeti (L, 2, FENV_DFDT);
+  FUNCTION (matrix, set_view) (L, -1, dfdt, n, 1, NULL);
   
   lua_call (L, 4, 0);
 
@@ -120,8 +121,6 @@ FUNCTION (ode, hook_jacob) (double t, const double y[], double *dfdy,
     gsl_matrix_complex_view src = gsl_matrix_complex_view_array (jacob, n, n);
     matrix_jacob_copy_cauchy_riemann (&dest.matrix, &src.matrix, n);
   }
-#elif MULTIPLICITY > 2
-#error MULTIPLICITY > 2 not supported
 #endif
 
   return GSL_SUCCESS;
@@ -131,7 +130,7 @@ int
 FUNCTION (ode, new) (lua_State *L)
 {
   const gsl_odeiv_step_type * T;
-  struct ode_solver *s;
+  struct solver *s;
   double eps_abs, eps_rel;
   const char *method;
   bool needs_jacobian;
@@ -151,39 +150,52 @@ FUNCTION (ode, new) (lua_State *L)
 
   T = method_lookup (method, gsl_odeiv_step_rk8pd, & needs_jacobian);
 
-  mlua_check_field_type (L, 1, "f",  LUA_TFUNCTION, NULL);
+  s = ode_solver_push_new (L, T, MULTIPLICITY * n, eps_abs, eps_rel, 
+			   TYPE (ode_solver_type));
+
+  FUNCTION (ode, fenv_setup) (L, n);
+
+  lua_getfield (L, 1, "f");
+  if (lua_type (L, -1) != LUA_TFUNCTION)
+    return luaL_error (L, "field \"f\" should be a function");
+
+  mlua_fenv_set (L, -2, FENV_F);
 
   if (needs_jacobian)
-    mlua_check_field_type (L, 1, "df", LUA_TFUNCTION, 
-			   "Jacobian function expected");
+    {
+      lua_getfield (L, 1, "df");
+      if (lua_type (L, -1) != LUA_TFUNCTION)
+	return luaL_error (L, "field \"df\" should be a function (jacobian)");
+      mlua_fenv_set (L, -2, FENV_DF);
+    }
 
-  s = ode_solver_push_new (L, T, MULTIPLICITY * n, eps_abs, eps_rel);
+  s->h = -1;
 
-  lua_setfield (L, 1, "solver");
+  s->params->L = L;
+  s->params->n = n;
 
-  luaL_getmetatable (L, TYPE (name_ode));
-  lua_setmetatable (L, -2);
+  s->system->function  = & FUNCTION (ode, hook_f);
+  s->system->jacobian  = & FUNCTION (ode, hook_jacob);
+  s->system->dimension = s->dimension;
+  s->system->params    = s->params;
 
   return 1;
 }
 
-struct ode_solver *
+struct solver *
 FUNCTION (ode, check) (lua_State *L, int index)
 {
   if (lua_getmetatable(L, index))
     {
-      struct ode_solver *s;
+      struct solver_type *tp = TYPE (ode_solver_type);
+      struct solver *s;
 
-      lua_getfield(L, LUA_REGISTRYINDEX, TYPE (name_ode));
+      lua_getfield(L, LUA_REGISTRYINDEX, tp->metatable_name);
       if (! lua_rawequal(L, -1, -2))
 	luaL_typerror (L, index, "ODE solver");
       lua_pop (L, 2);
 
-      lua_getfield (L, 1, "solver");
-      s = check_ode_solver (L, -1);
-      lua_pop (L, 1);
-
-      assert (s != NULL);
+      s = lua_touserdata (L, index);
 
       return s;
     }
@@ -193,25 +205,30 @@ FUNCTION (ode, check) (lua_State *L, int index)
 }
 
 int
+FUNCTION (ode, free) (lua_State *L)
+{
+  struct solver *s = FUNCTION (ode, check) (L, 1);
+
+  gsl_odeiv_evolve_free  (s->evol);
+  gsl_odeiv_control_free (s->ctrl);
+  gsl_odeiv_step_free    (s->step);
+
+  return 0;
+}
+
+int
 FUNCTION (ode, set) (lua_State *L)
 {
-  struct ode_solver *s = FUNCTION (ode, check) (L, 1);
-  TYPE (ode_params) *p;
-  TYPE (gsl_matrix) *y;
-  size_t n = s->dimension / MULTIPLICITY;
-  double t;
+  struct solver *s = FUNCTION (ode, check) (L, 1);
+  TYPE (gsl_matrix) *y, *yode;
 
-  t = luaL_checknumber (L, 2);
-  y = FUNCTION (matrix, check) (L, 3);
-
-  p = FUNCTION (ode_params, push) (L, n, 1e-6);
+  s->t = luaL_checknumber (L, 2);
+  s->h = luaL_optnumber (L, 4, ODE_DEFAULT_STEP);
   
-  p->t = t;
-  FUNCTION (gsl_matrix, memcpy) (p->y, y);
-
-  lua_setfield (L, 1, "params");
-
-  mlua_null_cache (L, 1);
+  y = FUNCTION (matrix, check) (L, 3);
+  mlua_fenv_get (L, 1, FENV_Y);
+  yode = FUNCTION (matrix, check) (L, -1);
+  FUNCTION (gsl_matrix, memcpy) (yode, y);
 
   return 0;
 }
@@ -219,34 +236,23 @@ FUNCTION (ode, set) (lua_State *L)
 int
 FUNCTION (ode, evolve) (lua_State *L)
 {
-  struct ode_solver *s = FUNCTION (ode, check) (L, 1);
-  TYPE (ode_params) *p = FUNCTION (ode_params, get) (L, 1);
-  gsl_odeiv_system system[1];
-  double t1;
+  struct solver *s = FUNCTION (ode, check) (L, 1);
+  TYPE (gsl_matrix) *y;
   int status;
+  double t1;
 
   t1 = luaL_checknumber (L, 2);
-
-  p->h = luaL_optnumber (L, 3, p->h);
+  s->h = luaL_optnumber (L, 3, s->h);
 
   lua_settop (L, 1);
+  lua_getfenv (L, 1);
 
-  FUNCTION (matrix, push_view) (L, NULL);
-  FUNCTION (matrix, push_view) (L, NULL);
-  FUNCTION (matrix, push_view) (L, NULL);
-
-  system->function  = & FUNCTION (ode, hook_f);
-  system->jacobian  = & FUNCTION (ode, hook_jacob);
-  system->dimension = s->dimension;
-  system->params    = p;
+  lua_rawgeti (L, 2, FENV_Y);
+  y = FUNCTION (matrix, check) (L, -1);
+  lua_pop (L, 1);
 
   status = gsl_odeiv_evolve_apply (s->evol, s->ctrl, s->step,
-				   system, & p->t, t1,
-				   & p->h, p->y->data);
-
-  FUNCTION (matrix, null_view) (L, 2);
-  FUNCTION (matrix, null_view) (L, 3);
-  FUNCTION (matrix, null_view) (L, 4);
+				   s->system, & s->t, t1, & s->h, y->data);
 
   if (status != GSL_SUCCESS)
     luaL_error (L, "error in ODE evolve: %s", gsl_strerror (status));
@@ -254,44 +260,37 @@ FUNCTION (ode, evolve) (lua_State *L)
   if (isnan (s->evol->yerr[0]))
     luaL_error (L, "failed to converge, step too big");
 
-  mlua_null_cache (L, 1);
-
   return 0;
 }
 
 int
 FUNCTION (ode, get_t) (lua_State *L)
 {
-  TYPE (ode_params) *p = FUNCTION (ode_params, get) (L, 1);
-  lua_pushnumber (L, p->t);
+  struct solver *s = FUNCTION (ode, check) (L, 1);
+  lua_pushnumber (L, s->t);
   return 1;
 }
 
 int
 FUNCTION (ode, get_y) (lua_State *L)
 {
-  TYPE (ode_params) *p = FUNCTION (ode_params, get) (L, 1);
-  TYPE (gsl_matrix) *y = FUNCTION (matrix, push) (L, p->n, 1);
-  FUNCTION (gsl_matrix, memcpy) (y, p->y);
+  FUNCTION (ode, check) (L, 1);
+  mlua_fenv_get (L, 1, FENV_Y);
   return 1;
 }
 
 int
 FUNCTION (ode, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (ode, properties), true);
+  return mlua_index_with_properties (L, FUNCTION (ode, properties), false);
 }
 
 void
 FUNCTION (ode, register) (lua_State *L)
 {
-  luaL_newmetatable (L, TYPE (name_ode_params));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, FUNCTION (ode_params, methods));
-  lua_pop (L, 1);
+  struct solver_type *st = TYPE (ode_solver_type);
 
-  luaL_newmetatable (L, TYPE (name_ode));
+  luaL_newmetatable (L, st->metatable_name);
   lua_pushcfunction (L, FUNCTION (ode, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (ode, methods));
@@ -299,3 +298,7 @@ FUNCTION (ode, register) (lua_State *L)
 
   luaL_register (L, NULL, FUNCTION (ode, functions));
 }
+
+#if MULTIPLICITY != 2 && MULTIPLICITY != 1
+#error MULTIPLICITY not supported
+#endif

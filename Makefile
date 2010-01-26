@@ -26,7 +26,7 @@ LUADIR = lua
 AR= ar rcu
 RANLIB= ranlib
 
-SUBDIRS_DEFS += -DGSL_SHELL
+SUBDIRS_DEFS = -DGSL_SHELL
 
 ifeq ($(strip $(PLATFORM)), none)
 nono:
@@ -61,7 +61,7 @@ LUAGSL_LIBS = $(LUADIR)/src/liblua.a
 C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
-		pdf.c cdf.c sf.c fmultimin.c fdfmultimin.c multimin.c \
+		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c multimin.c \
 		lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)

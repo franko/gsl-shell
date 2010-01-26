@@ -31,10 +31,10 @@ frosenbrock = function(x, g)
 
 function demo1()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {fdf= frosenbrock, n= 2}
+   m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(frosenbrock, {-1.5, -0.5}, {1.5, 2})
+   p=contour(frosenbrock, {-1.5, -1}, {1.5, 2}, 20, 20, 30)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -46,15 +46,16 @@ function demo1()
    p:addline(c, 'red')
 
    p:show()
+   return p
 end
 
 
 function demo2()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {fdf= f, n= 2}
+   m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(f, {-1.5, -2}, {8, 2})
+   p=contour(f, {-2, -2}, {8, 2})
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -66,6 +67,7 @@ function demo2()
    p:addline(c, 'red')
 
    p:show()
+   return p
 end
 
 
@@ -86,4 +88,5 @@ function demo3()
    p:addline(c, 'red')
 
    p:show()
+   return p
 end
