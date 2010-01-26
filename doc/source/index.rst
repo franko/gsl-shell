@@ -41,6 +41,7 @@ Contents:
    ode.rst
    integ.rst
    sf.rst
+   minim.rst
    graphics.rst
    examples.rst
    acknowledgments.rst

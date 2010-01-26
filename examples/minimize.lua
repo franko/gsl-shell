@@ -31,7 +31,7 @@ frosenbrock = function(x, g)
 
 function demo1()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= frosenbrock, n= 2}
+   m = minimizer {fdf= frosenbrock, n= 2}
    m:set(x0, vector {1, 1})
 
    p=contour(frosenbrock, {-1.5, -0.5}, {1.5, 2})
