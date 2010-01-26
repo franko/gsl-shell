@@ -1,8 +1,27 @@
 
-require 'contour/geom'
+-- contour.lua
+--  
+-- Copyright (C) 2009, 2010 Francesco Abbate
+--  
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3 of the License, or (at
+-- your option) any later version.
+--  
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--  
+-- You should have received a copy of the GNU General Public License
+-- along with this program; if not, write to the Free Software
+-- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+--
 
-pt2  = geom.point
-vec2 = geom.vector
+require 'geom'
+
+local point  = geom.point
+local vector = geom.vector
 local scalar = geom.scalarprod
 
 local CROSS_NO, CROSS_YES, CROSS_NOSTART = 0, 1, 2
@@ -17,7 +36,7 @@ end
 
 local function segment_solve(f, f0, p, d)
    local pz = quad_root_solve(f, f0, p, d)
-   local g = vec2()
+   local g = vector()
    local z = f(pz, g) - f0
    g = (z / g:square()) * g
    d = (g:square() / scalar(g, d)) * d
@@ -25,13 +44,13 @@ local function segment_solve(f, f0, p, d)
    return pz
 end
 
-function contour_step(s, dir)
-   local g, gt = vec2(), vec2()
+local function contour_step(s, dir)
+   local g, gt = vector(), vector()
 
    s.f(s.p, g)
 
    local gnrm = g:norm()
-   local u = dir * vec2(g.dy / gnrm, - g.dx / gnrm)
+   local u = dir * vector(g.dy / gnrm, - g.dx / gnrm)
 
    local zdelmax = s.z_spacing / 20
    local step = s.step
@@ -57,7 +76,7 @@ function contour_step(s, dir)
    s.p = quad_root_solve(s.f, s.z0, pz, g)
 end
 
-function stepper(f, p0, step, z_spacing)
+local function stepper(f, p0, step, z_spacing)
    local s = {f         = f, 
 	      p         = p0, 
 	      z0        = f(p0), 
@@ -67,10 +86,10 @@ function stepper(f, p0, step, z_spacing)
    return s
 end
 
-function grid_create(f, left, right, nx, ny, nlevels)
+local function grid_create(f, left, right, nx, ny, nlevels)
    local g = {z= {}, cross= {}, zmin= f(left), zmax= f(right), levels= {}}
-   local dx = vec2((right.x - left.x) / nx, 0)
-   local dy = vec2(0, (right.y - left.y) / ny)
+   local dx = vector((right.x - left.x) / nx, 0)
+   local dy = vector(0, (right.y - left.y) / ny)
    local ds = sqrt(dx.dx^2 + dy.dy^2)
 
    local function index(i,j) return j + i * (nx+1) end
@@ -248,7 +267,7 @@ function grid_create(f, left, right, nx, ny, nlevels)
       local v, z = b - a, c - a
       local q = scalar(z, v) / v:square()
       if q > 0 and q <= 1 then
-	 local w = vec2(v.dy, -v.dx)
+	 local w = vector(v.dy, -v.dx)
 	 local p = scalar(z, w) / w:square()
 	 if abs(p) < 0.2 * ds then return true end
       end
@@ -291,8 +310,8 @@ function grid_create(f, left, right, nx, ny, nlevels)
 	   zstep        = zstep}
 end
 
-function contour_step_check (s, dir, g, level)
-   local p = pt2(s.p.x, s.p.y)
+local function contour_step_check (s, dir, g, level)
+   local p = point(s.p.x, s.p.y)
    contour_step(s, dir)
 
    local cell = g.point_index(p)
@@ -310,7 +329,7 @@ function contour_step_check (s, dir, g, level)
    if g.cross_check(cell, p, s.p) then return CROSS_YES else return CROSS_NO end
 end
 
-function contour_find(s, g, level)
+local function contour_find(s, g, level)
    local ln = path()
    local p0 = s.p
  
@@ -347,32 +366,32 @@ function contour_find(s, g, level)
    return ln
 end
 
-function contour(f, a, b, ngridx, ngridy, nlevels)
-   ngridx = ngridx and ngridx or 20
-   ngridy = ngridy and ngridy or 20
-   nlevels = nlevels and nlevels or 12
-   local g = grid_create(f, a, b, ngridx, ngridy, nlevels)
-   local pl = plot()
-   for p, level in g.points() do
-      local s = stepper(f, p, g.ds, g.zstep)
-      pl:addline(contour_find(s, g, level), 'gray')
-   end
-   pl:show()
-   return pl
+local function wrap_function(f)
+   local pv, gv = new(2, 1), new(2, 1)
+   return function(p, g)
+	     pv:set(1,1, p.x)
+	     pv:set(2,1, p.y)
+	     if g then 
+		local z = f(pv, gv)
+		g.dx, g.dy = gv[1], gv[2]
+		return z
+	     else
+		return f(pv)
+	     end
+	  end
 end
 
-
-function debug_contour(f, a, b, ngridx, ngridy, nlevels)
+function contour(f, av, bv, ngridx, ngridy, nlevels)
    ngridx = ngridx and ngridx or 20
    ngridy = ngridy and ngridy or 20
    nlevels = nlevels and nlevels or 12
-   local g = grid_create(f, a, b, ngridx, ngridy, nlevels)
-   local pl = g.print_cross()
+   local a, b = point(av[1], av[2]), point(bv[1], bv[2])
+   local fw = wrap_function(f)
+   local g = grid_create(fw, a, b, ngridx, ngridy, nlevels)
+   local pl = plot()
    for p, level in g.points() do
-      local s = stepper(f, p, g.ds, g.zstep)
-      local ln = contour_find(s, g, level)
-      pl:addline(ln, 'gray')
-      pl:addline(ln, 'black', {{'marker', size=4}})
+      local s = stepper(fw, p, g.ds, g.zstep)
+      pl:addline(contour_find(s, g, level), 'gray')
    end
    pl:show()
    return pl
