@@ -54,7 +54,7 @@ else
   PTHREADS_LIBS = -lpthread
 endif
 
-SUBDIRS = lua
+SUBDIRS = lua disp
 
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
