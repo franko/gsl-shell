@@ -22,7 +22,6 @@
 #define CMPL_VECTOR_H
 
 #include <math.h>
-#include <gsl/gsl_vector_complex_double.h>
 
 #ifdef __cplusplus
 #define complex _Complex
@@ -37,9 +36,6 @@ __BEGIN_DECLS
 #define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
 
 typedef double complex cmpl;
-
-extern void vec_complex_set (gsl_vector_complex *v, int i, cmpl val);
-extern cmpl vec_complex_get (gsl_vector_complex *v, int i);
 
 __END_DECLS
 

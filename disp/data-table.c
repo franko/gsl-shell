@@ -7,45 +7,48 @@
 
 #include "data-table.h"
 
+#include "vector_float.h"
+
 struct data_table empty_data_table[1] = {{0, 0, -1, {0.0}}};
 
 struct data_table *
 data_table_read_lines (FILE *f, const char *fmt, int row_start, int columns)
 {
-  struct generic_array *data = ARRAY_NEW(float);
+  struct vector_float row[1];
   struct data_table *r = NULL;
   int rows, nread, j;
+
+  vector_float_init (row, 0);
 
   for (j = 0, rows = 0; /* */; rows++, j += columns)
     {
       float *val;
 
-      ARRAY_CHECK_ALLOC(data, float, j + columns - 1);
+      vector_float_check_size (row, j + columns - 1);
 
-      data->number += columns;
+      row->len += columns;
 
-      val = ((float *) data->heap) + j;
+      val = ((float *) row->data) + j;
 
       if (columns == 2)
-		nread = fscanf(f, fmt, & val[0], & val[1]);
+	nread = fscanf(f, fmt, & val[0], & val[1]);
       else if (columns == 3)
-		nread = fscanf(f, fmt, & val[0], & val[1], & val[2]);
+	nread = fscanf(f, fmt, & val[0], & val[1], & val[2]);
       else
-		assert (0);
+	assert (0);
 
-      if (nread < columns) {
-		  if (feof (f) && rows >= 2) {
-			  r = data_table_new (rows + row_start, columns);
-			  memcpy (r->heap + columns * row_start,
-					  data->heap,
-                      rows * columns * sizeof(float));
-			}
-
-		break;
+      if (nread < columns) 
+	{
+	  if (feof (f) && rows >= 2) {
+	    r = data_table_new (rows + row_start, columns);
+	    memcpy (r->heap + columns * row_start, row->data,
+		    rows * columns * sizeof(float));
 	  }
+	  break;
+	}
     }
 
-  ARRAY_FREE(data);
+  vector_float_free (row);
 
   return r;
 }

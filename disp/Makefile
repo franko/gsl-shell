@@ -32,26 +32,52 @@ nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
 
-INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
+LUA_CFLAGS  = -I$(LUADIR)/src
+LUA_AR_LIBS = $(LUADIR)/src/liblua.a
 
-DISP_SRC_FILES = dispers.c disp-ho.c disp-library.c disp-table.c lua-disp.c
+INCLUDES += -I$(LUADIR)/src -I$(LUADIR)/etc
+
+ifeq ($(PLATFORM), mingw)
+CFLAGS += -I/usr/include
+LIBS += -L/usr/lib
+endif
+
+DISP_SRC_FILES = vector_float.c disp-utils.c data-table.c dispers.c disp-ho.c disp-library.c disp-table.c lua-disp.c
 
 DISP_OBJ_FILES := $(DISP_SRC_FILES:%.c=%.o)
 DEP_FILES      := $(DISP_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
+COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+
+GSL_LIBS = -lgsl -lgslcblas -lm
+LIBS += $(GSL_LIBS)
+
+ifeq ($(PLATFORM), mingw)
+TARGETS = disp.dll
+else
 TARGETS = disp.so
+endif
 
 all: $(TARGETS)
 
-disp.so: $(DISP_OBJ_FILES)
-	$(CC) -shared -o .libs/libluadisp.so $(DISP_OBJ_FILES) $(LIBS)
+ifeq ($(PLATFORM), mingw)
+
+disp.dll: $(DISP_OBJ_FILES) $(LUA_AR_LIBS)
+	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(DISP_OBJ_FILES) $(LUA_AR_LIBS) $(LIBS)
+
+else
+
+disp.so: $(DISP_OBJ_FILES)  $(LUA_AR_LIBS)
+	$(CC) -shared -o .libs/libluadisp.so $(DISP_OBJ_FILES) $(LUA_AR_LIBS) $(LIBS)
 	ln -sf ./.libs/libluadisp.so $@
+
+endif
 
 %.o: %.c
 	@echo $(COMPILE) -c $<
-	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
 	@-cp .deps/$(*F).pp .deps/$(*F).P; \
 	tr ' ' '\012' < .deps/$(*F).pp \
           | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \

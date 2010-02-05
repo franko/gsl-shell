@@ -1,7 +1,7 @@
 
-#include "lua.h"
-#include "lauxlib.h"
-#include "common.h"
+#include <lua.h>
+#include <lauxlib.h>
+#include "disp-utils.h"
 #include "disp-ho.h"
 #include "disp-table.h"
 #include "disp-library.h"
@@ -27,7 +27,8 @@ static void ho_retrieve_param (lua_State *L, const char *name,
 			       double *ptrval, int is_optional);
 
 
-static const struct luaL_Reg displib_methods[] = {
+static const struct luaL_Reg disp_methods[] = {
+  {"__gc",          disp_lua_dealloc},
   {"get_n",         get_n_value},
   {"get_n_deriv",   get_n_deriv},
   {"fit_params_nb", disp_lua_fp_number},
@@ -38,13 +39,13 @@ static const struct luaL_Reg displib_methods[] = {
   {NULL, NULL}
 };
 
-static const struct luaL_Reg displib_functions[] = {
+static const struct luaL_Reg disp_functions[] = {
   {"ho",      ho_builder},
   {"load_nk", lua_load_nk},
   {NULL, NULL}
 };
 
-const char *disp_mt_name = "LuaRegress.disp";
+const char *disp_mt_name = "Disp.t";
 
 int
 get_n_value (lua_State *L)
@@ -282,22 +283,11 @@ luaopen_disp (lua_State *L)
   int j;
 
   luaL_newmetatable (L, disp_mt_name);
-
-  lua_pushcfunction (L, disp_lua_dealloc);
-  lua_setfield (L, -2, "__gc");
-
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
+  luaL_register (L, NULL, disp_methods);
 
-  luaL_register (L, NULL, displib_methods);
-
-  for (j = 0; displib_functions[j].name; j++)
-    {
-      lua_pushcfunction (L, displib_functions[j].func);
-      lua_setglobal (L, displib_functions[j].name);
-    }
-
-  //  luaL_register (L, "disp", displib_functions);
+  luaL_register (L, "disp", disp_functions);
 
   disp_library_init (L);
 

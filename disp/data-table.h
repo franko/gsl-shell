@@ -6,7 +6,7 @@
 #define DATA_TABLE_H
 
 #include <stdio.h>
-#include "common.h"
+#include "disp-utils.h"
 
 __BEGIN_DECLS
 

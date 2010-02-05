@@ -3,9 +3,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include "disp-utils.h"
 #include "disp-ho.h"
-#include "common.h"
-#include "cmpl.h"
 
 static void          ho_free          (struct disp *d);
 static void          ho_dealloc       (struct disp *d);
@@ -60,6 +59,7 @@ static const char *ho_param_names[] = {"nosc", "en", "eg", "nu", "phi"};
 #define NU(p)   (*p)[HO_NU_OFFS]
 #define PHI(p)  (*p)[HO_PHI_OFFS]
 
+#define SQR(x) ((x)*(x))
 
 #define HO_PARAM_NB(hn,pn) (HO_NB_PARAMS * (hn) + pn)
 
@@ -240,7 +240,7 @@ ho_decode_param_string (const char *param)
     {
       const char *pname = ho_param_names[j];
 
-      if (strncasecmp (param, pname, slen) == 0)
+      if (strncmp (param, pname, slen) == 0)
 	  break;
     }
 

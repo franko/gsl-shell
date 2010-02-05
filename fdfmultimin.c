@@ -64,8 +64,6 @@ static void   fdfmultimin_df_hook  (const gsl_vector * x, void * p, gsl_vector *
 static void   fdfmultimin_fdf_hook (const gsl_vector * x, void * p, double *f, 
 				    gsl_vector *G);
 
-static void   fdfmultimin_check_gradient (lua_State *L, struct grad_check *gc);
-
 char const * const fdfmultimin_mt_name = "GSL.mmin";
 
 static const struct luaL_Reg fdfmultimin_properties[] = {

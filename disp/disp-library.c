@@ -35,7 +35,7 @@ disp_library_init (lua_State *L)
 
   luaL_getmetatable (L, disp_mt_name);
   lua_setmetatable (L, -2);
-  lua_setglobal (L, "si");
+  lua_setfield (L, -2, "si");
 
   sio2 = lua_newuserdata (L, ho_disp_class->instance_size);
   disp_ho_init (sio2, 1);
@@ -44,7 +44,7 @@ disp_library_init (lua_State *L)
 
   luaL_getmetatable (L, disp_mt_name);
   lua_setmetatable (L, -2);
-  lua_setglobal (L, "sio2");
+  lua_setfield (L, -2, "sio2");
 
   vac = lua_newuserdata (L, ho_disp_class->instance_size);
   disp_ho_init (vac, 2);
@@ -53,7 +53,7 @@ disp_library_init (lua_State *L)
 
   luaL_getmetatable (L, disp_mt_name);
   lua_setmetatable (L, -2);
-  lua_setglobal (L, "void");
+  lua_setfield (L, -2, "void");
 
   return 0;
 }

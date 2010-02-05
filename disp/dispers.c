@@ -1,7 +1,6 @@
 
 #include <string.h>
 #include <assert.h>
-#include "common.h"
 #include "dispers.h"
 
 struct disp *

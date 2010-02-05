@@ -5,7 +5,6 @@
 #ifndef DISP_TABLE_H
 #define DISP_TABLE_H
 
-#include "cmpl.h"
 #include "dispers.h"
 #include "data-table.h"
 

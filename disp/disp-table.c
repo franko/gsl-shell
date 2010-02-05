@@ -174,21 +174,22 @@ struct sample *
 disp_table_get_sample (struct disp *_d, int index)
 {
   struct disp_table *d = (struct disp_table *) _d;
+  int cindex = index - 1;
   double lmin, lmax, dlam;
   double nr, ni;
   int nb;
 
   dt_get_range (d, &lmin, &lmax, &nb);
 
-  if (index >= nb)
+  if (index > nb)
     return NULL;
 
   dlam = (lmax - lmin) / (nb - 1);
 
-  d->sample->lambda = lmin + index * dlam;
+  d->sample->lambda = lmin + cindex * dlam;
 
-  nr = data_table_get (d->table_ref, index, 0);
-  ni = data_table_get (d->table_ref, index, 1);
+  nr = data_table_get (d->table_ref, cindex, 0);
+  ni = data_table_get (d->table_ref, cindex, 1);
   d->sample->n = nr + I * ni;
 
   return d->sample;

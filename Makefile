@@ -146,7 +146,7 @@ endif
 .PHONY: clean all $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) DEFS='"$(SUBDIRS_DEFS)"' PLATFORM=$(strip $(PLATFORM)) -C $@
+	cd $@; $(MAKE) DEFS="$(SUBDIRS_DEFS)" PLATFORM=$(strip $(PLATFORM))
 
 clean:
 	$(MAKE) -C agg-plot clean

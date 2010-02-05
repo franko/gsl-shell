@@ -1,7 +1,7 @@
 #ifndef DISPERS_H
 #define DISPERS_H
 
-#include "cmpl.h"
+#include "disp-utils.h"
 
 struct disp;
 
