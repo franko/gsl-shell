@@ -1215,3 +1215,16 @@ void platform_support_prepare()
       agg::g_windows_cmd_show = SW_SHOWNORMAL;
     }
 }
+
+void platform_support_lock(agg::platform_support *app)
+{ 
+}
+
+void platform_support_unlock(agg::platform_support *app)
+{ 
+}
+
+bool platform_support_is_mapped(agg::platform_support *app)
+{ 
+  return true;
+}

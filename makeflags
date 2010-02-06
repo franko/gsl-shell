@@ -4,12 +4,10 @@ CXX = g++
 
 DEBUG = yes
 
-# DEFS = -DDEBUG_PLOT
-
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall
 else
-  CFLAGS = -g -O2 -Wall
-  CXXFLAGS = -g -O2 -fno-exceptions -fno-rtti -Wall
+  CFLAGS = -O2 -Wall
+  CXXFLAGS = -O2 -fno-exceptions -fno-rtti -Wall
 endif

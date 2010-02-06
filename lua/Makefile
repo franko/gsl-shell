@@ -53,7 +53,7 @@ R= 5.1.4
 all:	$(PLATFORM)
 
 $(PLATS) clean:
-	cd src && $(MAKE) DEFS=$(DEFS) $@
+	cd src && $(MAKE) DEFS="$(DEFS)" $@
 
 test:	dummy
 	src/lua test/hello.lua

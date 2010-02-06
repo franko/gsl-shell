@@ -30,13 +30,8 @@ __BEGIN_DECLS
 #define DEGREE(d) ((d) * M_PI / 180.0)
 #define SQR(x) ((x) * (x))
 
-#ifdef DEBUG_MEM
-#define emalloc(n) malloc((size_t) (n))
-#define erealloc(x,n) realloc(x,(size_t) (n))
-#else
 #define emalloc(n) erealloc(NULL, n);
 extern void *   erealloc                (void *p, int n);
-#endif
 
 #ifdef WIN32
 #define DIR_SEPARATOR '\\'

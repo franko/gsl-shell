@@ -25,7 +25,6 @@
 
 #include "common.h"
 
-#ifndef DEBUG_MEM
 void *
 erealloc (void *p, int n)
 {
@@ -43,4 +42,3 @@ erealloc (void *p, int n)
     }
   return newp;
 }
-#endif
