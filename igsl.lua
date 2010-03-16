@@ -36,12 +36,10 @@ local function tos(t, maxdepth)
       if maxdepth <= 0 then return '<table>' end
       local ls = {}
       for k, v in pairs(t) do 
-	 if k ~= 'tag' then
-	    if type(k) ~= 'number' then 
-	       push(ls, k .. '= ' .. tos(v, maxdepth-1))
-	    else
-	       push(ls, tos(v, maxdepth-1))
-	    end
+	 if type(k) ~= 'number' then 
+	    push(ls, k .. '= ' .. tos(v, maxdepth-1))
+	 else
+	    push(ls, tos(v, maxdepth-1))
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'

@@ -13,9 +13,6 @@ extern void                FUNCTION (matrix, push_view)  (lua_State *L,
 extern TYPE (gsl_matrix) * FUNCTION (matrix, check)      (lua_State *L, 
 							  int index);
 
-extern VIEW (gsl_matrix) * FUNCTION (matrix, check_view) (lua_State *L,
-							  int idx);
-
 extern void                FUNCTION (matrix, null_view)  (lua_State *L,
 							  int index);
 

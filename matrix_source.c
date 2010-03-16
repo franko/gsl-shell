@@ -34,7 +34,7 @@ TYPE (_push_matrix) (lua_State *L, int n1, int n2, bool clean)
   m->data = m->block->data;
   m->size1 = n1;
   m->size2 = n2;
-  m->tda = n2; 
+  m->tda   = n2; 
   m->owner = 1;
 
   luaL_getmetatable (L, TYPE (name_matrix));
@@ -58,66 +58,38 @@ FUNCTION (matrix, push) (lua_State *L, int n1, int n2)
 TYPE (gsl_matrix) *
 FUNCTION (matrix, check) (lua_State *L, int index)
 {
-  void *p = lua_touserdata (L, index);
-
-  if (p == NULL)
-    luaL_typerror(L, index, "matrix");
-
-  if (lua_getmetatable(L, index))
-    {
-      lua_getfield(L, LUA_REGISTRYINDEX, TYPE(name_matrix));
-      if (lua_rawequal(L, -1, -2)) 
-	{
-	  lua_pop (L, 2);
-	  return p;
-	}
-      lua_pop (L, 1);
-      lua_getfield(L, LUA_REGISTRYINDEX, FUNCTION(name_matrix, view));
-      if (lua_rawequal(L, -1, -2)) 
-	{
-	  VIEW (gsl_matrix) *mv = p;
-	  lua_pop (L, 2);
-	  return & mv->matrix;
-	}
-      lua_pop (L, 2);
-    }
-
-  luaL_typerror (L, index, "matrix");
-  return NULL;
+  return luaL_checkudata (L, index, TYPE (name_matrix));
 }
 
 void
 FUNCTION (matrix, push_view) (lua_State *L, TYPE (gsl_matrix) *m)
 {
-  VIEW (gsl_matrix) *mview;
+  TYPE (gsl_matrix) *mview;
 
   mview = lua_newuserdata (L, sizeof(TYPE (gsl_matrix)));
 
   if (m)
     {
-      *mview = FUNCTION (gsl_matrix, view_array) (m->data, m->size1, m->size2);
+      *mview = *m;
     }
   else
     {
-      mview->matrix.data = NULL;
-      mview->matrix.block = NULL;
+      mview->data  = NULL;
+      mview->block = NULL;
     }
 
-  luaL_getmetatable (L, FUNCTION (name_matrix, view));
-  lua_setmetatable (L, -2);
-}
+  mview->owner = 0;
 
-VIEW (gsl_matrix) *
-FUNCTION (matrix, check_view) (lua_State *L, int idx)
-{
-  return luaL_checkudata (L, idx, FUNCTION (name_matrix, view));
+  luaL_getmetatable (L, TYPE (name_matrix));
+  lua_setmetatable (L, -2);
 }
 
 void
 FUNCTION (matrix, null_view) (lua_State *L, int index)
 {
-  VIEW (gsl_matrix) *m = FUNCTION (matrix, check_view) (L, index);
-  m->matrix.data = NULL;
+  TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, index);
+  assert (m->owner == 0);
+  m->data = NULL;
 }
 
 int
@@ -127,6 +99,15 @@ FUNCTION(matrix, copy) (lua_State *L)
   TYPE (gsl_matrix) *cp = FUNCTION (matrix, push_raw) (L, a->size1, a->size2);
   FUNCTION (gsl_matrix, memcpy) (cp, a);
   return 1;
+}
+
+void
+FUNCTION (matrix, set_ref) (lua_State *L, int index)
+{
+  lua_newtable (L);
+  lua_pushvalue (L, index);
+  lua_rawseti (L, -2, 1);
+  lua_setfenv (L, -2);
 }
 
 int
@@ -149,9 +130,9 @@ FUNCTION(matrix, slice) (lua_State *L)
       k1 + n1 > a->size1 || k2 + n2 > a->size2)
     luaL_error (L, INVALID_INDEX_MSG);
 
-  TYPE (gsl_matrix) *cp = FUNCTION (matrix, push_raw) (L, n1, n2);
   view = FUNCTION (gsl_matrix, submatrix) (a, k1, k2, n1, n2);
-  FUNCTION (gsl_matrix, memcpy) (cp, & view.matrix);
+  FUNCTION (matrix, push_view) (L, &view.matrix);
+  FUNCTION (matrix, set_ref) (L, 1);
 
   return 1;
 }
@@ -219,8 +200,11 @@ int
 FUNCTION(matrix, free) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
-  assert (m->block);
-  FUNCTION (gsl_block, free) (m->block);
+  if (m->owner)
+    {
+      assert (m->block);
+      FUNCTION (gsl_block, free) (m->block);
+    }
   return 0;
 };
 
@@ -282,8 +266,7 @@ FUNCTION(matrix, unm) (lua_State *L)
   LUA_TYPE fact = -1.0;
   BASE gslfact = TYPE (value_assign) (fact);
 
-  /* matrix does not need to be cleared, could be fixed */
-  r = FUNCTION (matrix, push) (L, a->size1, a->size2);
+  r = FUNCTION (matrix, push_raw) (L, a->size1, a->size2);
 
   FUNCTION (gsl_matrix, memcpy) (r, a);
   FUNCTION (gsl_matrix, scale) (r, gslfact);
@@ -424,13 +407,6 @@ void
 FUNCTION (matrix, register) (lua_State *L)
 {
   luaL_newmetatable (L, TYPE (name_matrix));
-  lua_pushcfunction (L, FUNCTION (matrix, index));
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, FUNCTION (matrix, methods));
-  luaL_register (L, NULL, FUNCTION (matrix, gc_methods));
-  lua_pop (L, 1);
-
-  luaL_newmetatable (L, FUNCTION (name_matrix, view));
   lua_pushcfunction (L, FUNCTION (matrix, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (matrix, methods));

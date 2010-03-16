@@ -21,7 +21,6 @@
 #define NLINFIT_MAX_ITER 30
 
 char const * const TYPE (name_matrix)      = "GSL." PREFIX "matrix";
-static char const * const FUNCTION (name_matrix, view) = "GSL." PREFIX "mview";
 
 static int  FUNCTION (matrix, get)               (lua_State *L);
 static int  FUNCTION (matrix, set)               (lua_State *L);
@@ -41,10 +40,7 @@ static int  FUNCTION (matrix, mul)               (lua_State *L);
 static int  FUNCTION (matrix, inverse)           (lua_State *L);
 static int  FUNCTION (matrix, solve)             (lua_State *L);
 
-static const struct luaL_Reg FUNCTION (matrix, gc_methods)[] = {
-  {"__gc",          FUNCTION (matrix, free)},
-  {NULL, NULL}
-};
+static void FUNCTION (matrix, set_ref)           (lua_State *L, int index);
 
 static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
   {"__add",         FUNCTION (matrix, add)},
@@ -52,6 +48,7 @@ static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
   {"__mul",         FUNCTION (matrix, mul_elements)},
   {"__div",         FUNCTION (matrix, div_elements)},
   {"__unm",         FUNCTION (matrix, unm)},
+  {"__gc",          FUNCTION (matrix, free)},
   {"get",           FUNCTION (matrix, get)},
   {"set",           FUNCTION (matrix, set)},
   {"dims",          FUNCTION (matrix, dims)},

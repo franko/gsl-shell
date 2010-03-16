@@ -3,10 +3,19 @@ void
 FUNCTION (matrix, set_view_and_push) (lua_State *L, int index, double *data,
 				      size_t n1, size_t n2, const double *src)
 {
-  VIEW (gsl_matrix) *view = FUNCTION (matrix, check_view) (L, index);
-  *view = FUNCTION (gsl_matrix, view_array) (data, n1, n2);
+  TYPE (gsl_matrix) *view = FUNCTION (matrix, check) (L, index);
+
+  assert (view->owner == 0);
+
+  view->data  = data;
+  view->size1 = n1;
+  view->size2 = n2;
+  view->tda   = n2;
+  view->block = NULL;
+  
   if (src)
     memcpy (data, src, n1 * n2 * sizeof(BASE));
+
   lua_pushvalue (L, index);
 }
 
@@ -14,8 +23,16 @@ void
 FUNCTION (matrix, set_view) (lua_State *L, int index, double *data,
 			     size_t n1, size_t n2, const double *src)
 {
-  VIEW (gsl_matrix) *view = FUNCTION (matrix, check_view) (L, index);
-  *view = FUNCTION (gsl_matrix, view_array) (data, n1, n2);
+  TYPE (gsl_matrix) *view = FUNCTION (matrix, check) (L, index);
+
+  assert (view->owner == 0);
+
+  view->data  = data;
+  view->size1 = n1;
+  view->size2 = n2;
+  view->tda   = n2;
+  view->block = NULL;
+  
   if (src)
     memcpy (data, src, n1 * n2 * sizeof(BASE));
 }

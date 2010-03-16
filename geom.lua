@@ -52,4 +52,5 @@ point_mt.__sub  = function(p, v)
 
 vector_mt.norm   = function(v) return sqrt(v.dx^2 + v.dy^2) end
 vector_mt.square = function(v) return v.dx^2 + v.dy^2 end
-vector_mt.__mul = function(a, b) return vector(a * b.dx, a * b.dy) end
+vector_mt.__mul  = function(a, b) return vector(a * b.dx, a * b.dy) end
+vector_mt.__add  = function(a, b) return vector(a.dx + b.dx, a.dy + b.dy) end

@@ -24,25 +24,68 @@ local point  = geom.point
 local vector = geom.vector
 local scalar = geom.scalarprod
 
-local CROSS_NO, CROSS_YES, CROSS_NOSTART = 0, 1, 2
+-- local function quad_root_solve(f, f0, p, d)
+--    local pl, pr = p-d, p+d
+--    local fl, fc, fr = f(pl), f(p), f(pr)
+--    local a0, a1, a2 = (fr + 2*fc + fl)/4 - f0, (fr - fl)/2, (fr - 2*fc + fl)/4
+--    local q = -(a0 - a2)/a1 - 2*a2* (a0 - a2)^2 / a1^3
+--    return p + q * d
+-- end
 
 local function quad_root_solve(f, f0, p, d)
    local pl, pr = p-d, p+d
    local fl, fc, fr = f(pl), f(p), f(pr)
    local a0, a1, a2 = (fr + 2*fc + fl)/4 - f0, (fr - fl)/2, (fr - 2*fc + fl)/4
-   local q = -(a0 - a2)/a1 - 6*a2* (a0 - a2)^2 / a1^3
+   local rad = sqrt(a1^2 - 8*a2*(a0 - a2))
+   local q = a1 > 0 and (-a1 + rad)/(4*a2) or (-a1 - rad)/(4*a2)
    return p + q * d
 end
 
-local function segment_solve(f, f0, p, d)
-   local pz = quad_root_solve(f, f0, p, d)
-   local g = vector()
-   local z = f(pz, g) - f0
-   g = (z / g:square()) * g
-   d = (g:square() / scalar(g, d)) * d
-   pz = quad_root_solve(f, f0, pz - d, d)
-   return pz
+local function segment_solve(f, z0, p, d, z_eps)
+   local pl, pr = p-d, p+d
+   local fl, fc, fr
+
+   local function quad_root_solve_raw(p, d)
+      local a0, a1, a2 = (fr + 2*fc + fl)/4 - z0, (fr - fl)/2, (fr - 2*fc + fl)/4
+      if abs(a2) > 0.01 * abs(a1) then return end
+      local q = -(a0 - a2)/a1 - 2*a2* (a0 - a2)^2 / a1^3
+      if q < -1 - 1e-4 or q > 1 + 1e-4 then return end
+      return p + q * d
+   end
+
+   for k=1,10 do
+      fl, fc, fr = f(pl), f(p), f(pr)
+
+      if abs(fl - z0) < z_eps then 
+	 return pl 
+      elseif abs(fr - z0) < z_eps then
+	 return pr
+      end
+
+      local pz = quad_root_solve_raw(p, d)
+      if pz then return pz end
+      
+      if (fc - z0) * (fl - z0) < 0 then
+	 p, pr = pl + 0.5 * d, p
+      else
+	 pl, p = p, pr - 0.5 * d
+      end
+
+      d = 0.5 * d
+   end
+
+   error 'segment_solve failed to converge'
 end
+
+-- local function segment_solve(f, f0, p, d)
+--    local pz = quad_root_solve(f, f0, p, d)
+--    local g = vector()
+--    local z = f(pz, g) - f0
+--    g = (z / g:square()) * g
+--    d = (g:square() / scalar(g, d)) * d
+--    pz = quad_root_solve(f, f0, pz - d, d)
+--    return pz
+-- end
 
 local function contour_step(s, dir)
    local g, gt = vector(), vector()
@@ -141,6 +184,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 
    local zstep = (g.zmax - g.zmin) / nlevels
+   local zeps = 1e-4 * zstep
    for k=0, nlevels do g.levels[k] = g.zmin + k * zstep end
 
    for k, z in pairs(g.levels) do populate_grid(g, k, z) end
@@ -228,13 +272,13 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 	    local si = segment_index(i, j, 'h')
 	    if g.cross[si] and g.cross[si][level] then
 	       local p = left + (j+0.5)*dx + i*dy
-	       p = segment_solve(f, g.levels[level], p, 0.5 * dx)
+	       p = segment_solve(f, g.levels[level], p, 0.5 * dx, zeps)
 	       return p
 	    end
 	    si = segment_index(i, j, 'v')
 	    if g.cross[si] and g.cross[si][level] then
 	       local p = left + j*dx + (i+0.5)*dy
-	       p = segment_solve(f, g.levels[level], p, 0.5 * dy)
+	       p = segment_solve(f, g.levels[level], p, 0.5 * dy, zeps)
 	       return p
 	    end
 	 end
@@ -324,9 +368,9 @@ local function contour_step_check (s, dir, g, level)
       if s.p.y < p.y then cell.i = cell.i - 1 end
    end
 
-   if not g.cell_verify(cell) then return CROSS_NOSTART end
+   if not g.cell_verify(cell) then return 'bad' end
 
-   if g.cross_check(cell, p, s.p) then return CROSS_YES else return CROSS_NO end
+   if g.cross_check(cell, p, s.p) then return true end
 end
 
 local function contour_find(s, g, level)
@@ -344,9 +388,9 @@ local function contour_find(s, g, level)
       while true do
 	 hit = contour_step_check(s, dir, g, level)
 
-	 if hit == CROSS_NOSTART then break end
+	 if hit == 'bad' then break end
 
-	 if hit == CROSS_NO and a then
+	 if not hit and a then
 	    closed = g.does_close(a, s.p, p0)
 	    if closed then 
 	       ln:close()
@@ -356,7 +400,7 @@ local function contour_find(s, g, level)
 
 	 ln:line_to(s.p.x, s.p.y)
 
-	 if hit == CROSS_YES then break end
+	 if hit then break end
 	 a = s.p
       end
 
