@@ -87,16 +87,16 @@ function demo4()
    local sqf = sq:copy()
 
    local pt, pf = plot(), plot()
-   pt:addline(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
+   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
 
    local cmod = |z| sqrt(z*conj(z))
 
    fft(sqf)
-   pf:add(ibars(iter(function(i) return i, cmod(sqf:get(i)) end, 0, n/2)), 'black')
+   pf:add(ibars(sample(|i| cmod(sqf:get(i)), 0, n/2, n/2-1)), 'black')
    for k=ncut, n/2 do sqf:set(k,0) end
    fft_inv(sqf)
 
-   pt:addline(ipath(irow(sqf, function(m,i) return i, m:get(i,1) end)), 'red')
+   pt:addline(ipath(sample(|i| sqf[i], 1, n, n-1)), 'red')
 
    pf:show()
    pt:show()
@@ -133,7 +133,7 @@ function demo5()
       end
    end
    local function print_state(s)
-      print ("x: ", s.x:row_print())
+      print ("x: ", t(s.x))
       print ("chi square: ", prod(s.f, s.f)[1])
    end
    s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}
@@ -143,7 +143,15 @@ function demo5()
    until status ~= 'continue'
    print_state (s)
 
-   pts = ipath(irow(xy, function(m,i) return m:get(i,1), m:get(i,2) end))
+   local function xy_iter(xy)
+      local i = 0
+      return function()
+		i = i+1
+		if i <= n then return xy:get(i,1), xy:get(i,2) end
+	     end
+   end
+
+   pts = ipath(xy_iter(xy))
    ln = ipath(sample(|t| model.f(s.x, t), x0, x1, 128))
    p = plot()
    p:addline(pts, 'black', {{'marker', size=5}})

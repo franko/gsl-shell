@@ -44,7 +44,7 @@ function demo1()
    end
 
    local function print_state(s)
-      print ("x: ", s.x:row_print())
+      print ("x: ", t(s.x))
       print ("chi square: ", cmul(h(s.f), s.f)[1])
    end
 
@@ -73,7 +73,7 @@ function demo2()
       end
    end
    local function print_state(s)
-      print ("x: ", s.x:row_print())
+      print ("x: ", t(s.x))
       print ("chi square: ", prod(s.f, s.f)[1])
    end
    s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}

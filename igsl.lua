@@ -36,10 +36,12 @@ local function tos(t, maxdepth)
       if maxdepth <= 0 then return '<table>' end
       local ls = {}
       for k, v in pairs(t) do 
-	 if type(k) ~= 'number' then 
-	    push(ls, k .. '= ' .. tos(v, maxdepth-1))
-	 else
-	    push(ls, tos(v, maxdepth-1))
+	 if k ~= 'tag' then
+	    if type(k) ~= 'number' then 
+	       push(ls, k .. '= ' .. tos(v, maxdepth-1))
+	    else
+	       push(ls, tos(v, maxdepth-1))
+	    end
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'
@@ -164,15 +166,23 @@ function matrix_norm(m)
    return sqrt(sq)
 end
 
-function matrix_columns (m, cstart, cnb)
+function matrix_column (m, c)
    local r = m:dims()
-   return m:slice(1, cstart, r, cnb)
+   return m:slice(1, c, r, 1)
 end
 
-function matrix_row_print(m)
-   local eps = m:norm() * 1e-8
-   local f = |p, z| push(p, tostring_eps(z, eps))
-   return cat(matrix_reduce(m, f, {}), ', ')
+function matrix_row (m, r)
+   local _, c = m:dims()
+   return m:slice(r, 1, 1, c)
+end
+
+function matrix_rows(m)
+   local r, c = m:dims()
+   local i = 0
+   return function()
+	     i = i+1
+	     if i <= r then return m:slice(i, 1, 1, c) end
+	  end
 end
 
 function set(d, s)
@@ -201,6 +211,8 @@ function ode_iter(s, t0, y0, t1, tstep)
 	  end
 end
 
+-- take the function f and return an iterator that gives the couple (x, f(x))
+-- for x going from 'xi' to 'xs' with n sampling points
 function sample(f, xi, xs, n)
    local k = 0
    local cf = (xs-xi)/n
@@ -210,15 +222,6 @@ function sample(f, xi, xs, n)
 		k = k+1
 		return x, f(x)
 	     end
-	  end
-end
-
-function irow(m, f)
-   local r, c = m:dims()
-   local i = 0
-   return function()
-	     i = i+1
-	     if i <= r then return f(m, i) end
 	  end
 end
 
@@ -234,16 +237,6 @@ local function hc_print(hc)
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 
-function iter(f, i1, i2)
-   local i = i1
-   return function()
-	     if i <= i2 then 
-		i = i+1
-		return f(i-1)
-	     end
-	  end
-end
-
 if have_complex then
    FFT_hc_mixed_radix.__tostring = hc_print
    FFT_hc_radix2.__tostring = hc_print
@@ -252,10 +245,8 @@ end
 ODE.iter  = ode_iter
 if have_complex then cODE.iter = ode_iter end
 
-add_matrix_method('rowiter',    matrix_rowiter)
 add_matrix_method('__tostring', matrix_print)
 add_matrix_method('norm',       matrix_norm)
-add_matrix_method('columns',    matrix_columns)
-add_matrix_method('row_print',  matrix_row_print)
-
-my_tostring = function(x) return tos(x, 2) end
+add_matrix_method('column',     matrix_column)
+add_matrix_method('row',        matrix_row)
+add_matrix_method('rows',       matrix_rows)
