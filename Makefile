@@ -58,7 +58,7 @@ SUBDIRS = lua
 
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
-C_SRC_FILES = common.c math-types.c matrix.c nlinfit_helper.c \
+C_SRC_FILES = common.c math-types.c gs-types.c matrix.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
@@ -100,6 +100,7 @@ DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
+#GSL_LIBS = -lgsl -L/usr/lib/ATLAS_P4SSE2 -lcblas -latlas -lm
 GSL_LIBS = -lgsl -lgslcblas -lm
 LIBS += $(GSL_LIBS)
 

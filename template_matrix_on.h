@@ -30,6 +30,7 @@
 #define LUA_SHORTM Complex
 #define BLAS_ID z
 #define PREFIX "c"
+#define GSPREFIX C
 #define BASE_TYPE TYPE_COMPLEX
 
 #elif defined(BASE_DOUBLE)
@@ -41,6 +42,7 @@
 #define LUA_SHORTM Number
 #define BLAS_ID d
 #define PREFIX ""
+#define GSPREFIX 
 #define BASE_TYPE TYPE_REAL
 
 #define value_retrieve(x) (x)
@@ -65,12 +67,16 @@
 #define TYPE(dir) dir
 #define VIEW(dir) CONCAT2(dir,view)
 #define CONST_VIEW(dir) CONCAT3(dir,const,view)
+#define GS_TYPE(tp) CONCAT2(GS,tp)
+#define GS_TYPENAME(tp) GS_METATABLE(CONCAT2(GS,tp))
 #else
 #define FUNCTION(a,c) CONCAT3(a,SHORT,c)
 #define CONST_FUNCTION(a,c) CONCAT4(a,SHORT,const,c)
 #define TYPE(dir) CONCAT2(dir,SHORT)
 #define VIEW(dir) CONCAT3(dir,SHORT,view)
 #define CONST_VIEW(dir) CONCAT4(dir,SHORT,const,view)
+#define GS_TYPE(tp) CONCAT2(GS,MYCAT(GSPREFIX,tp))
+#define GS_TYPENAME(tp) GS_METATABLE(GS_TYPE(tp))
 #endif
 
 #define LUA_TYPE CONCAT2(lua,LUA_SHORTM)

@@ -56,7 +56,7 @@ FUNCTION (solver, push) (lua_State *L, size_t n, size_t p,
   if (s->base == NULL)
     luaL_error (L, OUT_OF_MEMORY_MSG);
 
-  luaL_getmetatable (L, TYPE (name_solver));
+  luaL_getmetatable (L, GS_TYPENAME(NLINFIT));
   lua_setmetatable (L, -2);
 
   lua_newtable (L);
@@ -140,12 +140,7 @@ FUNCTION (solver, new) (lua_State *L)
 static struct solver *
 FUNCTION (solver, check) (lua_State *L, int index)
 {
-  struct solver *s = luaL_checkudata (L, index, TYPE (name_solver));
-
-  if (s->base_type != BASE_TYPE)
-    luaL_error (L, "expected %s type solver",  math_name[BASE_TYPE]);
-
-  return s;
+  return gs_check_userdata (L, index, GS_TYPE(NLINFIT));
 }
 
 int

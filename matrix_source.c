@@ -37,7 +37,7 @@ TYPE (_push_matrix) (lua_State *L, int n1, int n2, bool clean)
   m->tda   = n2; 
   m->owner = 1;
 
-  luaL_getmetatable (L, TYPE (name_matrix));
+  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
   lua_setmetatable (L, -2);
 
   return m;
@@ -58,7 +58,7 @@ FUNCTION (matrix, push) (lua_State *L, int n1, int n2)
 TYPE (gsl_matrix) *
 FUNCTION (matrix, check) (lua_State *L, int index)
 {
-  return luaL_checkudata (L, index, TYPE (name_matrix));
+  return gs_check_userdata (L, index, GS_TYPE(MATRIX));
 }
 
 void
@@ -80,7 +80,7 @@ FUNCTION (matrix, push_view) (lua_State *L, TYPE (gsl_matrix) *m)
 
   mview->owner = 0;
 
-  luaL_getmetatable (L, TYPE (name_matrix));
+  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
   lua_setmetatable (L, -2);
 }
 
@@ -406,13 +406,13 @@ FUNCTION(matrix, index) (lua_State *L)
 void
 FUNCTION (matrix, register) (lua_State *L)
 {
-  luaL_newmetatable (L, TYPE (name_matrix));
+  luaL_newmetatable (L, GS_TYPENAME(MATRIX));
   lua_pushcfunction (L, FUNCTION (matrix, index));
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, FUNCTION (matrix, methods));
   lua_pop (L, 1);
 
-  luaL_getmetatable (L, TYPE (name_matrix));
+  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
   lua_setfield (L, -2, PREFIX "Matrix");
 
   luaL_register (L, NULL, FUNCTION (matrix, functions));

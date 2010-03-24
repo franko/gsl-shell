@@ -25,6 +25,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
+#include "gs-types.h"
 #include "multimin.h"
 #include "random.h"
 #include "lua-utils.h"
@@ -64,8 +65,6 @@ static void   fdfmultimin_df_hook  (const gsl_vector * x, void * p, gsl_vector *
 static void   fdfmultimin_fdf_hook (const gsl_vector * x, void * p, double *f, 
 				    gsl_vector *G);
 
-char const * const fdfmultimin_mt_name = "GSL.mmin";
-
 static const struct luaL_Reg fdfmultimin_properties[] = {
   {"x",            fdfmultimin_get_x},
   {"value",        fdfmultimin_get_value},
@@ -94,7 +93,7 @@ push_new_fdf_multimin (lua_State *L, int findex, size_t n,
   if (m->s == NULL)
     luaL_error (L, OUT_OF_MEMORY_MSG);
 
-  luaL_getmetatable (L, fdfmultimin_mt_name);
+  luaL_getmetatable (L, GS_METATABLE(GS_FDFMULTIMIN));
   lua_setmetatable (L, -2);
 
   lua_newtable (L);
@@ -116,13 +115,13 @@ push_new_fdf_multimin (lua_State *L, int findex, size_t n,
 static struct fdfmultimin *
 check_fdf_multimin (lua_State *L, int index)
 {
-  return luaL_checkudata (L, index, fdfmultimin_mt_name);
+  return luaL_checkudata (L, index, GS_METATABLE(GS_FDFMULTIMIN));
 }
 
 static struct fdfmultimin *
 check_init_fdf_multimin (lua_State *L, int index)
 {
-  struct fdfmultimin *m = luaL_checkudata (L, index, fdfmultimin_mt_name);
+  struct fdfmultimin *m = luaL_checkudata (L, index, GS_METATABLE(GS_FDFMULTIMIN));
   if (m->fdf->params == NULL)
     luaL_error (L, "minimizer is not initialised");
   return m;

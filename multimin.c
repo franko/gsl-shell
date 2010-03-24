@@ -20,6 +20,8 @@
 
 #include <math.h>
 
+#include <lua.h>
+#include "gs-types.h"
 #include "multimin.h"
 
 static int multimin_new (lua_State *L);
@@ -80,11 +82,11 @@ multimin_new (lua_State *L)
 void
 multimin_register (lua_State *L)
 {
-  luaL_newmetatable (L, fmultimin_mt_name);
+  luaL_newmetatable (L, GS_METATABLE(GS_FMULTIMIN));
   luaL_register (L, NULL, fmultimin_methods);
   lua_pop (L, 1);
 
-  luaL_newmetatable (L, fdfmultimin_mt_name);
+  luaL_newmetatable (L, GS_METATABLE(GS_FDFMULTIMIN));
   luaL_register (L, NULL, fdfmultimin_methods);
   lua_pop (L, 1);
 

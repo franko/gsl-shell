@@ -27,6 +27,7 @@
 #include <gsl/gsl_deriv.h>
 #include <gsl/gsl_rng.h>
 
+#include "gs-types.h"
 #include "multimin.h"
 #include "random.h"
 #include "lua-utils.h"
@@ -65,8 +66,6 @@ enum fenvidx {
   FENV_X        = 2,
 };
 
-char const * const fmultimin_mt_name = "GSL.mminf";
-
 static const struct luaL_Reg fmultimin_properties[] = {
   {"x",            fmultimin_get_x},
   {"value",        fmultimin_get_value},
@@ -94,7 +93,7 @@ push_new_fmultimin (lua_State *L, int findex, size_t n,
   if (m->s == NULL)
     luaL_error (L, OUT_OF_MEMORY_MSG);
 
-  luaL_getmetatable (L, fmultimin_mt_name);
+  luaL_getmetatable (L, GS_METATABLE(GS_FMULTIMIN));
   lua_setmetatable (L, -2);
 
   lua_newtable (L);
@@ -113,13 +112,13 @@ push_new_fmultimin (lua_State *L, int findex, size_t n,
 static struct fmultimin *
 check_fmultimin (lua_State *L, int index)
 {
-  return luaL_checkudata (L, index, fmultimin_mt_name);
+  return luaL_checkudata (L, index, GS_METATABLE(GS_FMULTIMIN));
 }
 
 static struct fmultimin *
 check_init_fmultimin (lua_State *L, int index)
 {
-  struct fmultimin *m = luaL_checkudata (L, index, fmultimin_mt_name);
+  struct fmultimin *m = luaL_checkudata (L, index, GS_METATABLE(GS_FMULTIMIN));
   if (m->f->params == NULL)
     luaL_error (L, "minimizer is not initialised");
   return m;

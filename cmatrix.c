@@ -28,6 +28,7 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_linalg.h>
 
+#include "gs-types.h"
 #include "lua-utils.h"
 #include "cmatrix.h"
 

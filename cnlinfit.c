@@ -25,6 +25,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit_nlin.h>
 
+#include "gs-types.h"
 #include "matrix.h"
 #include "cmatrix.h"
 #include "nlinfit_helper.h"
@@ -40,9 +41,7 @@
 void
 FUNCTION (solver, register) (lua_State *L)
 {
-  luaL_newmetatable (L, TYPE (name_solver));
-  lua_pushcfunction (L, FUNCTION (solver, index));
-  lua_setfield (L, -2, "__index");
+  luaL_newmetatable (L, GS_TYPENAME(NLINFIT));
   luaL_register (L, NULL, FUNCTION (solver, methods));
   lua_setfield (L, -2, PREFIX "Solver");
 

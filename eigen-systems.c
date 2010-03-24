@@ -6,6 +6,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_complex_math.h>
+#include <gsl/gsl_linalg.h>
 
 #include "matrix.h"
 #include "cmatrix.h"
@@ -60,13 +61,13 @@ static const struct luaL_Reg eigen_cache_methods[] = {
 };  
 
 static const struct luaL_Reg eigen_functions[] = {
-  {"eigsymm",        eigen_symm},
-  {"eigsymmv",       eigen_symmv},
-  {"eigherm",        eigen_herm},
-  {"eighermv",       eigen_hermv},
-  {"eignonsymm",     eigen_nonsymm},
-  {"eignonsymmv",    eigen_nonsymmv},
-  {"schur",          schur_decomp},
+  {"eigs",        eigen_symm},
+  {"eigsv",       eigen_symmv},
+  {"eigh",        eigen_herm},
+  {"eighv",       eigen_hermv},
+  {"eigns",       eigen_nonsymm},
+  {"eignsv",      eigen_nonsymmv},
+  {"schur",       schur_decomp},
   {NULL, NULL}
 };  
 
@@ -411,6 +412,8 @@ schur_decomp (lua_State *L)
       return luaL_error (L, "error during Schur decomposition: %s", 
 			 gsl_strerror (status));
     }
+
+  gsl_linalg_hessenberg_set_zero (t);
 
   return 2;
 }

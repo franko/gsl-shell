@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-static char const * const TYPE (name_solver) = "GSL." PREFIX "solver";
-
 /* declaration of lua function for solver methods */
 static int FUNCTION (solver, new)                (lua_State *);
 static int FUNCTION (solver, free)               (lua_State *);

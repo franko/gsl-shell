@@ -25,13 +25,12 @@
 #include <gsl/gsl_fft_complex.h>
 #include <gsl/gsl_fft_halfcomplex.h>
 
+#include "gs-types.h"
 #include "matrix.h"
 #include "cmatrix.h"
 #include "fft.h"
 #include "lua-utils.h"
 
-#define FFT_HC_RADIX2 "GSL.ffthcr2"
-#define FFT_HC_MIXED_RADIX "GSL.ffthcmr"
 #define FFT_CACHE_MT_NAME "GSL.fftcache"
 
 struct fft_cache {
@@ -210,13 +209,14 @@ fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
 {
   const char * const user_name = "half-complex vector";
   void *p = lua_touserdata (L, index);
+  const char *msg;
 
   if (p == NULL)
     luaL_typerror(L, index, user_name);
 
   if (lua_getmetatable(L, index))
     {
-      lua_getfield(L, LUA_REGISTRYINDEX, FFT_HC_RADIX2);
+      lua_getfield(L, LUA_REGISTRYINDEX, GS_METATABLE(GS_HALFCMPL_R2));
       if (lua_rawequal(L, -1, -2)) 
 	{
 	  if (selptr)
@@ -225,7 +225,7 @@ fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
 	  return p;
 	}
       lua_pop (L, 1);
-      lua_getfield(L, LUA_REGISTRYINDEX, FFT_HC_MIXED_RADIX);
+      lua_getfield(L, LUA_REGISTRYINDEX, GS_METATABLE(GS_HALFCMPL_MR));
       if (lua_rawequal(L, -1, -2)) 
 	{
 	  if (selptr)
@@ -236,7 +236,11 @@ fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
       lua_pop (L, 2);
     }
 
-  luaL_typerror (L, index, user_name);
+  msg = lua_pushfstring(L, "%s or %s", 
+			type_qualified_name (GS_HALFCMPL_R2),
+			type_qualified_name (GS_HALFCMPL_MR));
+
+  gs_type_error (L, index, msg);
   return NULL;
 }
 
@@ -383,14 +387,14 @@ fft_real (lua_State *L)
   if (is_twopower (n))
     {
       gsl_fft_real_radix2_transform (v->data, 1, n);
-      luaL_getmetatable (L, FFT_HC_RADIX2);
+      luaL_getmetatable (L, GS_METATABLE(GS_HALFCMPL_R2));
       lua_setmetatable (L, -2);
     }
   else
     {
       struct fft_cache *cache = check_fft_cache_dim (L, n, false);
       gsl_fft_real_transform (v->data, 1, n, cache->rwt, cache->ws);
-      luaL_getmetatable (L, FFT_HC_MIXED_RADIX);
+      luaL_getmetatable (L, GS_METATABLE(GS_HALFCMPL_MR));
       lua_setmetatable (L, -2);
     }
 
@@ -403,7 +407,7 @@ fft_real_inverse (lua_State *L)
   struct fft_hc_sel *sel;
   gsl_matrix *hc = fft_hc_check (L, 1, &sel);
   sel->transform (L, hc);
-  luaL_getmetatable (L, name_matrix);
+  luaL_getmetatable (L, GS_METATABLE(GS_MATRIX));
   lua_setmetatable (L, -2);
   return 0;
 }
@@ -474,11 +478,11 @@ fft_pushcache (lua_State *L)
 void
 fft_register (lua_State *L)
 {
-  luaL_newmetatable (L, FFT_HC_RADIX2);
+  luaL_newmetatable (L, GS_METATABLE(GS_HALFCMPL_R2));
   luaL_register (L, NULL, fft_hc_methods);
   lua_setfield (L, -2, "FFT_hc_radix2");
 
-  luaL_newmetatable (L, FFT_HC_MIXED_RADIX);
+  luaL_newmetatable (L, GS_METATABLE(GS_HALFCMPL_MR));
   luaL_register (L, NULL, fft_hc_methods);
   lua_setfield (L, -2, "FFT_hc_mixed_radix");
 
