@@ -40,6 +40,7 @@
 #include "sf.h"
 #include "multimin.h"
 #include "eigen-systems.h"
+#include "mlinear.h"
 
 #ifdef AGG_PLOT_ENABLED
 #include "lua-plot.h"
@@ -70,6 +71,7 @@ luaopen_gsl (lua_State *L)
   sf_register (L);
   multimin_register (L);
   eigen_register (L);
+  mlinear_register (L);
 #ifdef AGG_PLOT_ENABLED
   plot_register (L);
 #endif

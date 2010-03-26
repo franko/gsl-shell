@@ -30,6 +30,13 @@ function fxline(f, xi, xs, n)
    return ipath(sample(f, xi, xs, n))
 end
 
+function xyline(x, y)
+   local n = x:dims()
+   local ln = path(x[1], y[1])
+   for i=2, n do ln:line_to(x[i], y[i]) end
+   return ln
+end
+
 function fxplot(f, xi, xs, color, n)
    n = n and n or 512
    local p = plot()

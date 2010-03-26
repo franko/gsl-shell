@@ -27,7 +27,6 @@ struct solver {
   gsl_multifit_fdfsolver *base;
   gsl_multifit_function_fdf fdf[1];
   struct params p[1];
-  int base_type;
 };
 
 static int
@@ -125,8 +124,6 @@ FUNCTION (solver, new) (lua_State *L)
   s->fdf->n      = nreal;
   s->fdf->p      = p;
   s->fdf->params = s->p;
-
-  s->base_type = BASE_TYPE;
 
   fcall_args_prepare (L, 5);
   

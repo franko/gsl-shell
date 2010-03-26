@@ -31,7 +31,6 @@
 #define BLAS_ID z
 #define PREFIX "c"
 #define GSPREFIX C
-#define BASE_TYPE TYPE_COMPLEX
 
 #elif defined(BASE_DOUBLE)
 #define BASE double
@@ -43,7 +42,6 @@
 #define BLAS_ID d
 #define PREFIX ""
 #define GSPREFIX 
-#define BASE_TYPE TYPE_REAL
 
 #define value_retrieve(x) (x)
 #define value_assign(x) (x)

@@ -29,7 +29,6 @@
 #include "matrix.h"
 #include "nlinfit_helper.h"
 #include "lua-utils.h"
-#include "math-types.h"
 
 #define BASE_DOUBLE
 #include "template_matrix_on.h"

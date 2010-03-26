@@ -10,6 +10,7 @@
 
 #include "matrix.h"
 #include "cmatrix.h"
+#include "eigen-systems.h"
 
 struct eigen_symm_cache {
   size_t n;

@@ -230,6 +230,19 @@ function sample(f, xi, xs, n)
 	  end
 end
 
+--[[
+function isample(f, i0, i1)
+   local i = i0
+   return function()
+	     if i <= i1 then
+		local x, y = f(i)
+		i = i + 1
+		return x, y
+	     end
+	  end
+end
+--]]
+
 local function hc_reduce(hc, f, accu)
    local n = hc.length
    for i=0, n do accu = f(accu, hc:get(i)) end
@@ -252,6 +265,6 @@ if have_complex then cODE.iter = ode_iter end
 
 add_matrix_method('__tostring', matrix_print)
 add_matrix_method('norm',       matrix_norm)
-add_matrix_method('column',     matrix_column)
+add_matrix_method('col',        matrix_column)
 add_matrix_method('row',        matrix_row)
 add_matrix_method('rows',       matrix_rows)

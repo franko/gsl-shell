@@ -25,7 +25,6 @@
 #include <gsl/gsl_matrix.h>
 
 #include "defs.h"
-#include "math-types.h"
 
 extern void
 matrix_jacob_copy_cauchy_riemann (gsl_matrix *jreal, gsl_matrix_complex *jcmpl,

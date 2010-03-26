@@ -3,6 +3,7 @@
 #include <lauxlib.h>
 #include <assert.h>
 #include "gs-types.h"
+#include <gsl/gsl_errno.h>
 
 #define GS_MATRIX_NAME_DEF      "GSL.matrix"
 #define GS_CMATRIX_NAME_DEF     "GSL.cmatrix"
@@ -132,4 +133,15 @@ gs_check_userdata (lua_State *L, int index, int typeid)
 
   gs_type_error (L, index, type_qualified_name (typeid));
   return NULL;
+}
+
+int
+gs_gsl_errorcheck (lua_State *L, const char *routine, int status)
+{
+  if (status)
+    {
+      return luaL_error (L, "error during %s: %s", routine,
+			 gsl_strerror (status));
+    }
+  return 0;
 }

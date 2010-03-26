@@ -35,6 +35,7 @@ struct gs_type {
 extern const char * type_qualified_name (int typeid);
 extern int gs_type_error (lua_State *L, int narg, const char *req_type);
 extern void * gs_check_userdata (lua_State *L, int index, int typeid);
+extern int gs_gsl_errorcheck (lua_State *L, const char *routine, int status);
 
 extern const struct gs_type gs_type_table[];
 

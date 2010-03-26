@@ -8,7 +8,6 @@
 #undef BLAS_ID
 #undef PREFIX
 #undef GSPREFIX
-#undef BASE_TYPE
 
 #undef FUNCTION
 #undef CONST_FUNCTION

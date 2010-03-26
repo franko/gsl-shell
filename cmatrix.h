@@ -25,7 +25,6 @@
 #include <gsl/gsl_matrix.h>
 
 #include "defs.h"
-#include "math-types.h"
 
 #define BASE_GSL_COMPLEX
 #include "template_matrix_on.h"
