@@ -16,6 +16,10 @@ extern TYPE (gsl_matrix) * FUNCTION (matrix, check)      (lua_State *L,
 extern void                FUNCTION (matrix, null_view)  (lua_State *L,
 							  int index);
 
+extern void                FUNCTION (matrix, check_size) (lua_State *L,
+							  TYPE (gsl_matrix) *m,
+							  size_t n1, size_t n2);
+
 
 /* matrix helper functions */
 extern void

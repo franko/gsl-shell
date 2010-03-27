@@ -37,8 +37,7 @@ TYPE (_push_matrix) (lua_State *L, int n1, int n2, bool clean)
   m->tda   = n2; 
   m->owner = 1;
 
-  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_TYPE(MATRIX));
 
   return m;
 }
@@ -62,6 +61,17 @@ FUNCTION (matrix, check) (lua_State *L, int index)
 }
 
 void
+FUNCTION (matrix, check_size) (lua_State *L, TYPE (gsl_matrix) *m,
+			       size_t n1, size_t n2)
+{
+  if (m->size1 != n1 || m->size2 != n2)
+    {
+      luaL_error (L, "expecting matrix %ux%u, got matrix %ux%u",
+		  n1, n2, m->size1, m->size2);
+    }
+}
+
+void
 FUNCTION (matrix, push_view) (lua_State *L, TYPE (gsl_matrix) *m)
 {
   TYPE (gsl_matrix) *mview;
@@ -80,8 +90,7 @@ FUNCTION (matrix, push_view) (lua_State *L, TYPE (gsl_matrix) *m)
 
   mview->owner = 0;
 
-  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_TYPE(MATRIX));
 }
 
 void

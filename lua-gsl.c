@@ -21,6 +21,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "gs-types.h"
 #include "lua-utils.h"
 #include "lua-gsl.h"
 #include "nlinfit.h"
@@ -41,6 +42,7 @@
 #include "multimin.h"
 #include "eigen-systems.h"
 #include "mlinear.h"
+#include "bspline.h"
 
 #ifdef AGG_PLOT_ENABLED
 #include "lua-plot.h"
@@ -59,6 +61,8 @@ luaopen_gsl (lua_State *L)
   lua_pushvalue (L, LUA_GLOBALSINDEX);
 #endif
 
+  luaL_register (L, NULL, gs_type_functions);
+
   solver_register (L);
   matrix_register (L);
   linalg_register (L);
@@ -72,6 +76,7 @@ luaopen_gsl (lua_State *L)
   multimin_register (L);
   eigen_register (L);
   mlinear_register (L);
+  bspline_register (L);
 #ifdef AGG_PLOT_ENABLED
   plot_register (L);
 #endif

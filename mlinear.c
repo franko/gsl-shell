@@ -33,18 +33,12 @@ mlinear_fit (lua_State *L)
   int status;
 
   if (!lua_isnil (L, 3))
-    w = matrix_check (L, 3);
-
-  if (y->size1 != n || y->size2 != 1)
-    return luaL_error (L, "expecting y vector of length %u, got %ux%u matrix",
-		       n, y->size1, y->size2);
-
-  if (w != NULL)
     {
-      if (w->size1 != n || w->size2 != 1)
-	return luaL_error (L, "expecting w vector of length %u, got %ux%u matrix",
-			   n, w->size1, w->size2);
+      w = matrix_check (L, 3);
+      matrix_check_size (L, w, n, 1);
     }
+
+  matrix_check_size (L, y, n, 1);
 
   ws = gsl_multifit_linear_alloc (n, p);
 

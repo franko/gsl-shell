@@ -23,6 +23,7 @@
 #include <string.h>
 #include <gsl/gsl_rng.h>
 
+#include "gs-types.h"
 #include "common.h"
 #include "random.h"
 
@@ -32,8 +33,6 @@ struct rng_type_info {
 };
 
 struct rng_type_info *rng_table;
-
-const char * const RNG_MT_NAME = "GSL.rng";
 
 static int random_rng_free      (lua_State *L);
 static int random_rng_new       (lua_State *L);
@@ -60,7 +59,7 @@ static const struct luaL_Reg rng_methods[] = {
 int
 random_rng_free (lua_State *L)
 {
-  struct boxed_rng *rng_udata = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *rng_udata = gs_check_userdata (L, 1, GS_RNG);
   gsl_rng_free (rng_udata->rng);
   return 0;
 }
@@ -91,8 +90,7 @@ push_rng (lua_State *L, const gsl_rng_type *T)
   r->min = gsl_rng_min (r->rng);
   r->max = gsl_rng_max (r->rng);
 
-  luaL_getmetatable (L, RNG_MT_NAME);
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_RNG);
 
   return r->rng;
 }
@@ -121,7 +119,7 @@ random_rng_new (lua_State *L)
 int
 random_rng_get (lua_State *L)
 {
-  struct boxed_rng *udata = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   double v = gsl_rng_uniform (udata->rng);
   lua_pushnumber (L, v);
   return 1;
@@ -130,7 +128,7 @@ random_rng_get (lua_State *L)
 int
 random_rng_set (lua_State *L)
 {
-  struct boxed_rng *udata = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   unsigned long int seed = luaL_checkinteger (L, 2);
   gsl_rng_set (udata->rng, seed);
   return 0;
@@ -139,7 +137,7 @@ random_rng_set (lua_State *L)
 int
 random_rng_getint (lua_State *L)
 {
-  struct boxed_rng *udata = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   unsigned long int lmt = luaL_checkinteger (L, 2);
   unsigned long int genlmt = udata->max - udata->min;
   unsigned long int j;
@@ -163,7 +161,7 @@ random_register (lua_State *L)
   const gsl_rng_type **t, **t0;
   size_t rng_type_count, k;
 
-  luaL_newmetatable (L, RNG_MT_NAME);
+  luaL_newmetatable (L, GS_METATABLE(GS_RNG));
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, rng_methods);

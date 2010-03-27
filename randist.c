@@ -26,6 +26,7 @@
 #include <gsl/gsl_cdf.h>
 
 #include "common.h"
+#include "gs-types.h"
 #include "random.h"
 #include "randist.h"
 
@@ -87,7 +88,7 @@ static const struct luaL_Reg randist_functions[] = {
 static int
 randist_gener_raw (lua_State *L, gsl_ran_func_t func)
 {
-  struct boxed_rng *urng = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *urng = gs_check_userdata (L, 1, GS_RNG);
   double param = luaL_optnumber (L, 2, 1.0);
   double v = func (urng->rng, param);
   lua_pushnumber (L, v);
@@ -97,7 +98,7 @@ randist_gener_raw (lua_State *L, gsl_ran_func_t func)
 static int
 randist_gener_raw_2p (lua_State *L, gsl_ran_func_2p_t func)
 {
-  struct boxed_rng *urng = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *urng = gs_check_userdata (L, 1, GS_RNG);
   double p1 = luaL_checknumber (L, 2);
   double p2 = luaL_checknumber (L, 3);
   double v = func (urng->rng, p1, p2);
@@ -124,7 +125,7 @@ RAN_IMPLEMENT_2P(flat)
 int
 randist_binomial (lua_State *L)
 {
-  struct boxed_rng *urng = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *urng = gs_check_userdata (L, 1, GS_RNG);
   double p1 = luaL_checknumber (L, 2);
   int p2 = luaL_checkinteger (L, 3);
   double v;
@@ -140,7 +141,7 @@ randist_binomial (lua_State *L)
 static int
 randist_poisson (lua_State *L)
 {
-  struct boxed_rng *urng = luaL_checkudata (L, 1, RNG_MT_NAME);
+  struct boxed_rng *urng = gs_check_userdata (L, 1, GS_RNG);
   double param = luaL_optnumber (L, 2, 1.0);
   unsigned int v = gsl_ran_poisson (urng->rng, param);
   lua_pushnumber (L, (double) v);

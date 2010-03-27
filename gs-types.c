@@ -5,8 +5,11 @@
 #include "gs-types.h"
 #include <gsl/gsl_errno.h>
 
+static int gs_type_string (lua_State *L);
+
 #define GS_MATRIX_NAME_DEF      "GSL.matrix"
 #define GS_CMATRIX_NAME_DEF     "GSL.cmatrix"
+#define GS_RNG_NAME_DEF         "GSL.rng"
 #define GS_NLINFIT_NAME_DEF     "GSL.solver"
 #define GS_CNLINFIT_NAME_DEF    "GSL.csolver"
 #define GS_ODESOLV_NAME_DEF     "GSL.ode"
@@ -15,10 +18,12 @@
 #define GS_HALFCMPL_MR_NAME_DEF "GSL.ffthcmr"
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
+#define GS_BSPLINE_NAME_DEF     "GSL.bspline"
 
 const struct gs_type gs_type_table[] = {
   {GS_MATRIX,      GS_MATRIX_NAME_DEF,      "real matrix"},
   {GS_CMATRIX,     GS_CMATRIX_NAME_DEF,     "complex matrix"},
+  {GS_RNG,         GS_RNG_NAME_DEF,         "random number generator"},
   {GS_NLINFIT,     GS_NLINFIT_NAME_DEF,     "real values non-linear solver"},
   {GS_CNLINFIT,    GS_CNLINFIT_NAME_DEF,    "complex values non-linear solver"},
   {GS_ODESOLV,     GS_ODESOLV_NAME_DEF,     "real values ODE solver"},
@@ -26,20 +31,14 @@ const struct gs_type gs_type_table[] = {
   {GS_HALFCMPL_R2, GS_HALFCMPL_R2_NAME_DEF, "half complex array (radix2)"},
   {GS_HALFCMPL_MR, GS_HALFCMPL_MR_NAME_DEF, "half complex array (mixed radix)"},
   {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
-  {GS_FDFMULTIMIN, GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
+  {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
+  {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
 };
 
-/*
-const char * const GS_MATRIX_NAME      = GS_MATRIX_NAME_DEF;
-const char * const GS_CMATRIX_NAME     = GS_CMATRIX_NAME_DEF;
-const char * const GS_NLINFIT_NAME     = GS_NLINFIT_NAME_DEF;
-const char * const GS_CNLINFIT_NAME    = GS_CNLINFIT_NAME_DEF;
-const char * const GS_ODESOLV_NAME     = GS_ODESOLV_NAME_DEF;
-const char * const GS_CODESOLV_NAME    = GS_CODESOLV_NAME_DEF;
-const char * const GS_HALFCMPL_R2_NAME = GS_HALFCMPL_R2_NAME_DEF;
-const char * const GS_HALFCMPL_MR_NAME = GS_HALFCMPL_MR_NAME_DEF;
-const char * const GS_FDFMULTIMIN_NAME = GS_FDFMULTIMIN_DEF;
-*/
+const struct luaL_Reg gs_type_functions[] = {
+  {"gsltype",        gs_type_string},
+  {NULL, NULL}
+};  
 
 const char *
 type_qualified_name (int typeid)
@@ -144,4 +143,19 @@ gs_gsl_errorcheck (lua_State *L, const char *routine, int status)
 			 gsl_strerror (status));
     }
   return 0;
+}
+
+void
+gs_set_metatable (lua_State *L, int typeid)
+{
+  luaL_getmetatable (L, GS_METATABLE(typeid));
+  lua_setmetatable (L, -2);
+}
+
+int
+gs_type_string (lua_State *L)
+{
+  const char *name = full_type_name (L, 1);
+  lua_pushstring (L, name);
+  return 1;
 }
