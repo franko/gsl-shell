@@ -271,10 +271,7 @@ static int pushline (lua_State *L, int firstline) {
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
     b[l-1] = '\0';  /* remove it */
-  if (firstline && b[0] == '=')  /* first line starts with `=' ? */
-    lua_pushfstring(L, "return %s", b+1);  /* change it to `return' */
-  else
-    lua_pushstring(L, b);
+  lua_pushstring(L, b);
   lua_freeline(L, b);
   return 1;
 }
@@ -285,6 +282,18 @@ static int loadline (lua_State *L) {
   lua_settop(L, 0);
   if (!pushline(L, 1))
     return -1;  /* no input */
+
+  lua_pushfstring(L, "return %s", lua_tostring(L, 1));
+  status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
+  if (status == 0)
+    {
+      lua_saveline(L, 1);
+      lua_replace (L, 1);
+      lua_settop (L, 1);
+      return 0;
+    }
+
+  lua_settop (L, 1);
   for (;;) {  /* repeat until gets a complete line */
     status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
     if (!incomplete(L, status)) break;  /* cannot try to add lines? */

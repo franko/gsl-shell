@@ -31,6 +31,8 @@ local function push(ls, e)
    return ls
 end
 
+local posinf, neginf, nan = 1/0, -1/0, 0/0
+
 local function tos(t, maxdepth)
    if type(t) == 'table' then
       if maxdepth <= 0 then return '<table>' end
@@ -48,7 +50,10 @@ local function tos(t, maxdepth)
    elseif type(t) == 'function' then
       return '<function>'
    elseif type(t) == 'userdata' then
-      return fmt('<%s>', gsltype(t))
+      local ftostr = getmetatable(t).__tostring
+      if ftostr then return ftostr(t) else
+	 return fmt('<%s>', gsltype(t))
+      end
    else
       return tostring(t)
    end
@@ -124,7 +129,7 @@ function cmatrix(t)
    return matrix_from_table(cnew, t)
 end
 
-function matrix_print(m)
+function matrix_to_string(m)
    local eps = m:norm() * 1e-8
    local fwidth = function(w, val)
 		     local ln = # tostring_eps(val, eps)
@@ -227,7 +232,11 @@ function sample(f, xi, xs, n)
 	     if k <= n then
 		local x = xi + k*cf
 		k = k+1
-		return x, f(x)
+		local y = f(x)
+		if y == posinf or y == neginf or y ~= y then
+		   error 'singular value'
+		end
+		return x, y
 	     end
 	  end
 end
@@ -265,7 +274,7 @@ end
 ODE.iter  = ode_iter
 if have_complex then cODE.iter = ode_iter end
 
-add_matrix_method('__tostring', matrix_print)
+add_matrix_method('__tostring', matrix_to_string)
 add_matrix_method('norm',       matrix_norm)
 add_matrix_method('col',        matrix_column)
 add_matrix_method('row',        matrix_row)

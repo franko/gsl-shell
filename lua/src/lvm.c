@@ -508,8 +508,12 @@ static void Arith (lua_State *L, StkId ra, const TValue *rb,
 #ifdef LNUM_COMPLEX
 static inline int arith_mode( const TValue *rb, const TValue *rc ) {
   if (ttisint(rb) && ttisint(rc)) return TK_INT;
-  if (ttiscomplex(rb) || ttiscomplex(rc)) return TK_NUMBER2;
-  if (ttisnumber(rb) && ttisnumber(rc)) return TK_NUMBER;
+  if (ttype(rb) == LUA_TNUMBER &&  ttype(rc) == LUA_TNUMBER)
+    {
+      if (nvalue_img_fast(rb) == 0 && nvalue_img_fast(rc) == 0)
+        return TK_NUMBER;
+      return TK_NUMBER2;
+    }
   return 0;
 }
 static inline int arith_mode1( const TValue *rb ) {

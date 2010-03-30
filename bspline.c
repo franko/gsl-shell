@@ -82,8 +82,7 @@ bspline_unif_new (lua_State *L)
 
   gsl_bspline_knots_uniform (a, b, bs->ws);
 
-  luaL_getmetatable (L, GS_METATABLE(GS_BSPLINE));
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_BSPLINE);
 
   return 1;
 }
