@@ -9,19 +9,19 @@ end
 
 function ipathp(f)
    local ln = path()
-   local success = false
-   local x, y
-   repeat
-      local cont = success
-      success, x, y = pcall(f)
-      if success and x and y then
-	 if cont then
-	    ln:line_to(x, y)
-	 else
-	    ln:move_to(x, y)
-	 end
+   local move, line = ln.move_to, ln.line_to
+   local function next(op)
+      local x, y = f()
+      if x and y then
+	 op(ln, x, y)
+	 return true
       end
-   until success and (not x or not y)
+   end
+   local success
+   repeat
+      success, more = pcall(next, success and line or move)
+      if not success then print('warning:', more) end
+   until not more
    return ln
 end   
 

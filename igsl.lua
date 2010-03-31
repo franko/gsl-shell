@@ -31,8 +31,6 @@ local function push(ls, e)
    return ls
 end
 
-local posinf, neginf, nan = 1/0, -1/0, 0/0
-
 local function tos(t, maxdepth)
    if type(t) == 'table' then
       if maxdepth <= 0 then return '<table>' end
@@ -232,11 +230,7 @@ function sample(f, xi, xs, n)
 	     if k <= n then
 		local x = xi + k*cf
 		k = k+1
-		local y = f(x)
-		if y == posinf or y == neginf or y ~= y then
-		   error 'singular value'
-		end
-		return x, y
+		return x, f(x)
 	     end
 	  end
 end

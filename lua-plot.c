@@ -6,6 +6,7 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+#include "gs-types.h"
 #include "common.h"
 #include "gsl-shell.h"
 #include "lua-utils.h"
@@ -34,9 +35,11 @@ struct path_cmd_reg {
   const char *signature;
 };
 
+/*
 static const char * const plot_mt_name          = "GSL.pl.plot";
 static const char * const vertex_source_mt_name = "GSL.pl.vs";
 static const char * const rgba_mt_name          = "GSL.pl.rgba";
+*/
 
 extern int push_new_agg_obj   (lua_State *L, enum agg_type tag, CVERTSRC *vs);
 
@@ -125,8 +128,7 @@ push_new_agg_obj (lua_State *L, enum agg_type tag, CVERTSRC *vs)
 
   vertex_source_ref (d->vs);
 
-  luaL_getmetatable (L, vertex_source_mt_name);
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_DRAW_OBJ);
 
   return 1;
 }
@@ -139,8 +141,8 @@ agg_path_new (lua_State *L)
 
   if (lua_gettop (L) >= 2)
     {
-      double x = luaL_checknumber (L, 1);
-      double y = luaL_checknumber (L, 2);
+      double x = gs_check_number (L, 1, FP_CHECK_NORMAL);
+      double y = gs_check_number (L, 2, FP_CHECK_NORMAL);
       struct cmd_call_stack s[1];
       
       s->f[0] = x;
@@ -155,13 +157,13 @@ agg_path_new (lua_State *L)
 struct agg_obj *
 check_agg_obj (lua_State *L, int index)
 {
-  return (struct agg_obj *) luaL_checkudata (L, index, vertex_source_mt_name);
+  return gs_check_userdata (L, index, GS_DRAW_OBJ);
 }
 
 path *
 check_agg_path (lua_State *L, int index)
 {
-  struct agg_obj *d = luaL_checkudata (L, index, vertex_source_mt_name);
+  struct agg_obj *d = gs_check_userdata (L, index, GS_DRAW_OBJ);
   if (d->tag == AGG_PATH)
     return (path *) d->vs;
   luaL_error (L, "expected object of type 'path' as argument #%i", index);
@@ -194,7 +196,7 @@ agg_path_cmd (lua_State *L)
       switch (fc[0])
 	{
 	case 'f':
-	  s->f[f_count++] = luaL_checknumber (L, argc++);
+	  s->f[f_count++] = gs_check_number (L, argc++, FP_CHECK_NORMAL);
 	  break;
 	case 'b':
 	  if (lua_isboolean (L, argc))
@@ -289,7 +291,7 @@ agg_path_index (lua_State *L)
 CTEXT *
 check_agg_text (lua_State *L, int index)
 {
-  struct agg_obj *d = luaL_checkudata (L, index, vertex_source_mt_name);
+  struct agg_obj *d = gs_check_userdata (L, index, GS_DRAW_OBJ);
   if (d->tag == AGG_TEXT)
     return (CTEXT *) d->vs;
   luaL_error (L, "expected object of type 'text' as argument #%i", index);
@@ -370,7 +372,7 @@ agg_ellipse_new (lua_State *L)
 struct agg_plot *
 check_agg_plot (lua_State *L, int index)
 {
-  struct agg_plot **ptr = luaL_checkudata (L, index, plot_mt_name);
+  struct agg_plot **ptr = gs_check_userdata (L, index, GS_PLOT);
   return *ptr;
 }
 
@@ -393,8 +395,7 @@ agg_plot_new (lua_State *L)
   p->is_shown = 0;
   p->window = NULL;
 
-  luaL_getmetatable (L, plot_mt_name);
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_PLOT);
 
   return 1;
 }
@@ -572,7 +573,7 @@ check_color (lua_State *L, int index, struct color *c)
     }
   else
     {
-      struct color *userc = luaL_checkudata (L, index, rgba_mt_name);
+      struct color *userc = gs_check_userdata (L, index, GS_RGBA_COLOR);
       *c = *userc; /* struct assignement is ok in ANSI C */
     }
 }
@@ -710,8 +711,7 @@ agg_rgba_new (lua_State *L)
   c->b = double2uint8 (b);
   c->a = double2uint8 (a);
 
-  luaL_getmetatable (L, rgba_mt_name);
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_RGBA_COLOR);
 
   return 1;
 }
@@ -728,8 +728,7 @@ agg_rgb_new (lua_State *L)
   c->b = double2uint8 (b);
   c->a = 255;
 
-  luaL_getmetatable (L, rgba_mt_name);
-  lua_setmetatable (L, -2);
+  gs_set_metatable (L, GS_RGBA_COLOR);
 
   return 1;
 }
@@ -740,14 +739,14 @@ plot_register (lua_State *L)
   pthread_mutex_init (agg_mutex, NULL);
 
   /* plot declaration */
-  luaL_newmetatable (L, plot_mt_name);
+  luaL_newmetatable (L, GS_METATABLE(GS_PLOT));
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, agg_plot_methods);
   lua_pop (L, 1);
 
   /* line declaration */
-  luaL_newmetatable (L, vertex_source_mt_name);
+  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_OBJ));
   lua_pushinteger (L, (int) AGG_PATH);
   lua_pushcfunction (L, agg_path_index);
   lua_settable (L, -3);
@@ -757,7 +756,7 @@ plot_register (lua_State *L)
   luaL_register (L, NULL, agg_vertex_source_methods);
   lua_pop (L, 1);
 
-  luaL_newmetatable (L, rgba_mt_name);
+  luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));
   luaL_register (L, NULL, rgba_methods);
   lua_pop (L, 1);
 

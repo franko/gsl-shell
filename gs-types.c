@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "gs-types.h"
 #include <gsl/gsl_errno.h>
+#include <math.h>
 
 static int gs_type_string (lua_State *L);
 
@@ -19,6 +20,9 @@ static int gs_type_string (lua_State *L);
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
+#define GS_PLOT_NAME_DEF        "GSL.plot"
+#define GS_DRAW_OBJ_NAME_DEF   "GSL.path"
+#define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
 
 const struct gs_type gs_type_table[] = {
   {GS_MATRIX,      GS_MATRIX_NAME_DEF,      "real matrix"},
@@ -33,6 +37,9 @@ const struct gs_type gs_type_table[] = {
   {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
   {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
   {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
+  {GS_PLOT,        GS_PLOT_NAME_DEF,        "plot"},
+  {GS_DRAW_OBJ,    GS_DRAW_OBJ_NAME_DEF,    "drawing element"},
+  {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
 };
 
 const struct luaL_Reg gs_type_functions[] = {
@@ -158,4 +165,21 @@ gs_type_string (lua_State *L)
   const char *name = full_type_name (L, 1);
   lua_pushstring (L, name);
   return 1;
+}
+
+double
+gs_check_number (lua_State *L, int index, int check_normal)
+{
+  double v;
+  int fpclass;
+  if (!lua_isnumber (L, index))
+    return gs_type_error (L, index, "real number");
+  v = lua_tonumber (L, index);
+  if (check_normal)
+    {
+      fpclass = fpclassify (v);
+      if (fpclass == FP_NAN || fpclass == FP_INFINITE)
+	return luaL_error (L, "arg #%d: invalid FP number", index);
+    }
+  return v;
 }
