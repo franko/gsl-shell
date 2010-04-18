@@ -179,7 +179,7 @@ gs_check_number (lua_State *L, int index, int check_normal)
     {
       fpclass = fpclassify (v);
       if (fpclass == FP_NAN || fpclass == FP_INFINITE)
-	return luaL_error (L, "arg #%d: invalid FP number", index);
+	return luaL_error (L, "invalid 'nan' or 'inf' number", index);
     }
   return v;
 }

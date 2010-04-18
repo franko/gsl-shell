@@ -1,5 +1,5 @@
 
-	function ipath(f)
+function ipath(f)
    local ln = path(f())
    for x, y in f do
       ln:line_to(x, y)

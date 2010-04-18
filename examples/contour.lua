@@ -95,15 +95,15 @@ ftwopeaksslp = fpeaksslopemake({{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}}, 0.3,
 -- ftwopeaksslp = fpeaksslopemake({{6, 0, 0, 1, 1}, {-2, 1.5, 1, 1.45, 1.15}}, 0.3, 0.2)
 fthreepeaks = fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {1.5, 2, -2, 0.5, 0.8}}
 
-contour.plot(fex, {-2, -2.5}, {1, 1}, 40, 40, 24)
+--contour.plot(fex, {-2, -2.5}, {1, 1}, 40, 40, 24)
 -- contour.plot(ftwopeaksslp, {-3, -2}, {3, 2}, 40, 40, 12)
 -- contour.plot(ftwopeaks, {-4, -4}, {5, 4}, 40, 40, 16)
-contour.plot(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 16)
+--contour.plot(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 16)
 -- contour.plot(flin, {-4, -4}, {4, 4})
 -- contour.plot(fsqr, {-4, -4}, {4, 4})
 -- contour.plot(flin, {-4, -4}, {4, 4}, 8, 16, 24)
 -- contour.plot(flinm, {-4, -4}, {4, 4}, 8, 16, 24)
--- contour.plot(frosenbrock, {-1.5, -1}, {1.5, 2}, 40, 40, 32)
+contour.plot(frosenbrock, {0, 0}, {1.4, 2}, 40, 40, 24)
 
 
 -- NICE PLOT WITH THREE PEAKS

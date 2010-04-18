@@ -31,6 +31,11 @@ local function push(ls, e)
    return ls
 end
 
+function divmod(n, p)
+   local r = n % p
+   return (n-r)/p, r
+end
+
 local function tos(t, maxdepth)
    if type(t) == 'table' then
       if maxdepth <= 0 then return '<table>' end
@@ -60,7 +65,7 @@ end
 local function myprint(...)
    for i, v in ipairs(arg) do
       if i > 1 then io.write(', ') end
-      io.write(tos(v, 2))
+      io.write(tos(v, 3))
    end
    io.write('\n')
 end
@@ -147,17 +152,17 @@ function matrix_to_string(m)
    return cat(lines, '\n')
 end
 
-function t(m)
+function tr(m)
    local r, c = m:dims()
    return new(c, r, |i,j| m:get(j,i))
 end
 
-function h(m)
+function hc(m)
    local r, c = m:dims()
    return cnew(c, r, |i,j| conj(m:get(j,i)))
 end
 
-function c(m)
+function tocomplex(m)
    local r, c = m:dims()
    return cnew(r, c, |i,j| m:get(i,j))
 end
@@ -224,6 +229,7 @@ end
 -- take the function f and return an iterator that gives the couple (x, f(x))
 -- for x going from 'xi' to 'xs' with n sampling points
 function sample(f, xi, xs, n)
+   n = n and n or xs - xi
    local k = 0
    local cf = (xs-xi)/n
    return function()
@@ -234,19 +240,6 @@ function sample(f, xi, xs, n)
 	     end
 	  end
 end
-
---[[
-function isample(f, i0, i1)
-   local i = i0
-   return function()
-	     if i <= i1 then
-		local x, y = f(i)
-		i = i + 1
-		return x, y
-	     end
-	  end
-end
---]]
 
 local function hc_reduce(hc, f, accu)
    local n = hc.length

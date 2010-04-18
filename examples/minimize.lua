@@ -1,4 +1,4 @@
-require 'contour'
+local contour = require 'contour'
 
 f = function(x, g)
        local xc = vector {4.45, -1.2}
@@ -34,7 +34,7 @@ function demo1()
    m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(frosenbrock, {-1.5, -1}, {1.5, 2}, 20, 20, 30)
+   p=contour.plot(frosenbrock, {-1.5, -1}, {1.5, 2}, 20, 20, 30)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -55,7 +55,7 @@ function demo2()
    m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(f, {-2, -2}, {8, 2})
+   p=contour.plot(f, {-2, -2}, {8, 2})
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -76,7 +76,7 @@ function demo3()
    m = minimizer {fdf= fex, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(fex, {-2, -2.5}, {1, 1}, 30, 30, 40)
+   p=contour.plot(fex, {-2, -2.5}, {1, 1}, 30, 30, 40)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -85,7 +85,7 @@ function demo3()
    print(m.x[1], m.x[2], m.value)
 
    p:addline(c, 'black', {{'marker', size=5}})
-   p:addline(c, 'red')
+   p:addline(c, 'green')
 
    p:show()
    return p

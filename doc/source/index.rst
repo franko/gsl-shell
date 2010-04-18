@@ -17,7 +17,7 @@ to use the GSL routines more effectively.
 
 GSL Shell is hosted at `Savannah <http://savannah.nongnu.org>`_, here is the `project page <https://savannah.nongnu.org/projects/gsl-shell/>`_.
 
-You can download the first developer preview release of GSL Shell in the `download page <https://savannah.nongnu.org/files/?group=gsl-shell>`_. You will find the source code, a binary package that require GSL 1.12 and readline5 and a DEBIAN package for ubuntu.
+You can download the first developer preview release of GSL Shell in the `download page <https://savannah.nongnu.org/files/?group=gsl-shell>`_. You will find the source code, a binary package that require GSL 1.13 and readline5 and a DEBIAN package for ubuntu.
 
 GSL Shell is currently developed by Francesco Abbate. You can contact him at the followng address:
 

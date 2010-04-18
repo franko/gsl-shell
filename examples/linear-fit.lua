@@ -11,14 +11,19 @@ p = fxplot(myf, 1, 33)
 p:addline(fxline(|i| meval[i], 1, 33, 32), 'blue', {{'marker', size=6}})
 --]]
 
-x = new(33, 1, |i| (i-1)/32*2*pi)
-y = new(33, 1, |i| sin((i-1)/32*2*pi))
+local order, x0, x1, n = 3, 0.0, 16.0, 32
+local bess = |x| besselJ(order, x)
+local xsmp = |i| (i-1)/n * x1
+
+x = new(n, 1, xsmp)
+y = new(n, 1, |i| besselJ(order, xsmp(i)))
 fit = linfit(|x| {1, x, x^2, x^3}, x, y)
 
-p = fxplot(fit, 0, 2*pi)
+p = fxplot(fit, x0, x1)
 p:addline(xyline(x, y), 'blue', {{'marker', size=6}})
 
-leg = function(n) return |x| legendreP(n, x/pi - 1) end
+local xnorm = |x| 2*(x - (x0+x1)/2) / (x1-x0)
+leg = function(n) return |x| legendreP(n, xnorm(x)) end
 legmodel = function(n) 
 	      return function(x)
 			local s={1}
@@ -27,6 +32,6 @@ legmodel = function(n)
 		     end
 	   end
 -- fitleg = linfit(|x| {1, leg(1)(x), leg(2)(x), leg(3)(x), leg(4)(x), leg(5)(x)}, x, y)
-fitleg = linfit(legmodel(5), x, y)
-p = fxplot(fitleg, 0, 2*pi)
+fitleg = linfit(legmodel(8), x, y)
+p = fxplot(fitleg, x0, x1)
 p:addline(xyline(x, y), 'darkgreen', {{'marker', size=6}})

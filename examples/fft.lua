@@ -18,3 +18,30 @@ function demo1()
 
    return p
 end
+
+function demo2()
+   local n, ncut, order = 512, 16, 8
+   local x1 = besselJzero(order, 14)
+   local xsmp = |k| x1*(k-1)/n
+
+   local bess = new(n, 1, |i| besselJ(order, xsmp(i)))
+
+   local p = plot()
+   p:addline(ipath(sample(|i| bess[i], 1, n, n-1)), 'black')
+
+   fft(bess)
+
+   fftplot = plot()
+   bars = ibars(sample(|k| abs(bess:get(k)), 0, 60, 60))
+   fftplot:add(bars, 'darkblue')
+   fftplot:addline(bars, 'black')
+   fftplot:show()
+
+   for k=ncut, n/2 do bess:set(k,0) end
+   fft_inv(bess)
+
+   p:addline(ipath(sample(|i| bess[i], 1, n, n-1)), 'red', {{'dash', a=7, b=3}})
+   p:show()
+
+   return p, fftplot
+end
