@@ -21,18 +21,7 @@
 local M = {}
 
 local function scalar(x, y) return prod(x, y)[1] end
-
 local function square(x) return prod(x, x)[1] end
-
-local function stepper(f, p0, step, z_spacing)
-   local s = {f         = f, 
-	      p         = p0, 
-	      z0        = f(p0), 
-	      step      = step, 
-	      z_spacing = z_spacing,
-	      z_tol     = z_spacing * 1e-6}
-   return s
-end
 
 local function qeval_closure(f, f0, p, d)
    local pe = p:copy()
@@ -48,8 +37,9 @@ end
 local function quad_root_solve(f, f0, p, d)
    local qeval, yield = qeval_closure(f, f0, p, d)
    local fl, fc, fr = qeval(-1), qeval(0), qeval(1)
-   local a0, a1, a2 = (fr + 2*fc + fl)/4 - z0, (fr - fl)/2, (fr - 2*fc + fl)/4
-   local q = -(a0-a2)/a1 - 2*a2*(a0-a2)^2/a1^3 - 8*a2^2*(a0-a2)^3/a1^5
+   local a0, a1, a2 = (fr + 2*fc + fl)/4, (fr - fl)/2, (fr - 2*fc + fl)/4
+   local r0, r2 = (a0-a2)/a1, 2*a2/a1
+   local q = -r0 - r2*r0^2 - 2*r2^2*r0^3
    return yield(q)
 end
 
@@ -58,16 +48,6 @@ local function segment_root_francesco(f, z0, p0, d0, z_eps)
    local p, d = p0:copy(), d0:copy()
    local qeval, yield = qeval_closure(f, z0, p, d)
    local fl, fc, fr
-
-   -- exact solution for quadratic equation
-   -- the problem is that is singular when a2 = 0
-   -- local function quad_root_solve_raw()
-   --    local a0, a1, a2 = (fr + 2*fc + fl)/4 - z0, (fr - fl)/2, (fr - 2*fc + fl)/4
-   --    if abs(a2) > 0.05 * abs(a1) then return end
-   --    local rad = sqrt(a1^2 - 8*a2*(a0 - a2))
-   --    local q = a1 > 0 and (-a1 + rad)/(4*a2) or (-a1 - rad)/(4*a2)
-   --    if q >= -1 and q <= 1 then return q end
-   -- end
 
    local function quad_root_solve_raw()
       local a0, a1, a2 = (fr + 2*fc + fl)/4, (fr - fl)/2, (fr - 2*fc + fl)/4
@@ -159,47 +139,91 @@ end
 
 M.segment_root = segment_root_francesco
 
-function M.step(s, dir)
+function M.stepper(f, p0, step0, z_spacing)
+
+   local p, z0 = p0:copy(), f(p0)
+   local z_tol = z_spacing * 1e-6
+
    local g, gt = new(2,1), new(2,1)
 
-   s.f(s.p, g)
+   local function stepper_advance(dir)
 
-   local gnrm = g:norm()
-   local u = dir * vector {g[2] / gnrm, - g[1] / gnrm}
+--      print('STEPPER initial point', tr(p))
 
-   local zdelmax = s.z_spacing / 20
-   local step = s.step
-   local zr, pt
-   for k=1,20 do
-      pt = s.p + step * u
-      zr = s.f(pt, gt) - s.z0
-      if abs(zr) < zdelmax then
-	 local abserr = 1e-4 * s.z_spacing / s.step
-	 if abs(gt[1] - g[1]) < abserr + 0.05 * gnrm and 
-	    abs(gt[1] - g[2]) < abserr + 0.05 * gnrm then
+      f(p, g)
+
+--      print('gradient', tr(g))
+
+      local gnrm = g:norm()
+      local u = dir * vector {g[2] / gnrm, - g[1] / gnrm}
+
+--      print('initial step', step0)
+
+      local zdelmax = z_spacing / 20
+      local zr, pt
+      local step = step0
+
+--      print('z delta max', zdelmax)
+--      print('abserr', 1e-4 * z_spacing / step0)
+
+      for k=1,20 do
+	 pt = p + step * u
+	 zr = f(pt, gt) - z0
+--	 print('iteration', k, 'z residual', zr, 'gradient', tr(gt))
+	 if abs(zr) < zdelmax then
+	    local abserr = 1e-4 * z_spacing / step0
+--	    print('DELTA', tr(gt - g), 'tolerance', abserr + 0.05 * gnrm)
+	    if abs(gt[1] - g[1]) < abserr + 0.05 * gnrm and 
+	       abs(gt[2] - g[2]) < abserr + 0.05 * gnrm then
 	    break
+	    end
 	 end
+	 step = step / 2
       end
-      step = step / 2
+
+--      print('final step', step)
+--      print('Z residual', zr, 'gradient', gt)
+
+--     print('point estimation', tr(pt))
+
+      pt = pt - (zr / square(gt)) * gt
+
+--     print('point estimation corrected', tr(pt))
+
+      -- the following steps does improve the estimation the search interval.
+      -- this is probably not needed.
+      f(pt, gt)
+      gt = (zr / square(gt)) * gt
+
+      set(p, quad_root_solve(f, z0, pt, gt))
+
+--      print('final point', tr(p), 'z residual', f(p) - z0)
+--      io.read('*l')
    end
 
-   pz = pt - (zr / square(gt)) * gt
+   local function stepper_point()
+      return p
+   end
 
--- the following steps does improve the estimation the search interval.
--- this is probably not needed.
--- s.f(pz, g)
--- g = (zr / square(g)) * g
+   local function stepper_set(px)
+      set(p, px)
+   end
 
-   s.p = quad_root_solve(s.f, s.z0, pz, g)
+   return {advance= stepper_advance,
+	   point  = stepper_point,
+	   set    = stepper_set}
 end
 
-
 function M.does_close(a, b, c, xy_spacing)
+--   print('does close testing', tr(a), tr(b), tr(c), xy_spacing)
    local v, z = b - a, c - a
    local q = scalar(z, v) / square(v)
+--   print('q', q)
+--   io.read('*l')
    if q > 0 and q <= 1 + 1e-4 then
       local w = vector {v[2], -v[1]}
       local p = scalar(z, w) / w:norm()
+--      print('p', p)
       if abs(p) < 0.1 * xy_spacing then return true end
    end
 end

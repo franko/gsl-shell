@@ -5,6 +5,12 @@
 GSL Shell introduction
 ======================
 
+GSL Shell is an interactive interface that gives access to the GSL numerical routines by using a simple programming language, Lua. With GSL Shell you can access very easily the functions provided by the GSL library without the need of writing and compile a stand-alone C application.
+In addition the power and expressivity of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines. Then, with the AGG graphical module, you can easily create almost any sort of graphs.
+
+GSL Shell is still a young project and it is currently not widely used. It still lacks many important features but we believe that it is very promising because it is built on top of three outstanding free software libraries: the GSL library, Lua and the AGG library. By using and combining together these different software components GSL Shell gives the opportunity of doing advanced numerical calculations and produce easily plot of the data.
+
+TO BE REMOVED ?
 In order to use GSL Shell effectively you need to know the basics of
 the Lua scripting language. Luckily Lua is very easy to learn, its syntax is very simple and easy to understand and most people will be able to understand it with little of no efforts. In this chapter we will learn you about the fundamentals of Lua in order to be able to use GSL Shell. If you want to get a better understanding of Lua you can look have a look at at `Lua.org <http://www.lua.org>`_.
 
