@@ -46,7 +46,7 @@ struct fft_cache {
 
 struct fft_hc_sel {
   int (*length)(gsl_matrix *);
-  int (*get_index)(size_t, int, int *, int *);
+  int (*get_index)(size_t, int, int *, int *, int *);
   void (*transform)(lua_State *, gsl_matrix *);
 };
 
@@ -69,11 +69,11 @@ static int fft_cache_free        (lua_State *L);
 
 static int fft_hc_mixed_radix_length (gsl_matrix *v);
 static int fft_hc_mixed_radix_get_index (size_t n, int index, 
-					 int *rindex, int *cindex);
+					 int *rindex, int *cindex, int *csign);
 static void fft_hc_mixed_radix_transform (lua_State *L, gsl_matrix *hc);
 static int fft_hc_radix2_length (gsl_matrix *v);
 static int fft_hc_radix2_get_index (size_t n, int index, 
-				    int *rindex, int *cindex);
+				    int *rindex, int *cindex, int *csign);
 static void fft_hc_radix2_transform (lua_State *L, gsl_matrix *hc);
 
 static struct fft_hc_sel fft_hc_radix2_sel[1] = {{
@@ -132,28 +132,34 @@ fft_hc_radix2_length (gsl_matrix *v)
 };
 
 int
-fft_hc_radix2_get_index (size_t _n, int index, int *rindex, int *cindex)
+fft_hc_radix2_get_index (size_t _n, int index,
+			 int *rindex, int *cindex, int *csign)
 {
   const int n = (int) _n;
-  int is = - n/2 + 1;
-  int i = ((index - is) % n) + is;
+  //  int is = - n/2 + 1;
+  int i = index; //((index - is) % n) + is;
+
+  if (i < -n/2+1 || i >= n/2+1)
+    return 1;
 
   if (i > 0)
     {
       *rindex = i;
       *cindex = n-i;
-      if (i == n/2)
-	return 0;
-      return 1;
+      *csign  = (i == n/2 ? 0 : 1);
     }
   else if (i < 0)
     {
       *rindex = -i;
       *cindex = n+i;
-      return -1;
+      *csign  = -1;
+    }
+  else
+    {
+      *rindex = 0;
+      *csign  = 0;
     }
 
-  *rindex = 0;
   return 0;
 };
 
@@ -170,28 +176,34 @@ fft_hc_mixed_radix_length (gsl_matrix *v)
 };
 
 int
-fft_hc_mixed_radix_get_index (size_t _n, int index, int *rindex, int *cindex)
+fft_hc_mixed_radix_get_index (size_t _n, int index, 
+			      int *rindex, int *cindex, int *csign)
 {
   int n = (int) _n;
   int is = (n % 2 == 0 ? -n/2 + 1 : -(n-1)/2);
-  int i = ((index - is) % n) + is;
+  int i = index; // ((index - is) % n) + is;
+
+  if (i < is || i >= is + n)
+    return 1;
 
   if (i > 0)
     {
       *rindex = 2*i-1;
       *cindex = 2*i;
-      if (n % 2 == 0 && i == n/2)
-	return 0;
-      return 1;
+      *csign  = (n % 2 == 0 && i == n/2 ? 0 : 1);
     }
   else if (i < 0)
     {
       *rindex = -2*i-1;
       *cindex = -2*i;
-      return -1;
+      *csign  = -1;
+    }
+  else
+    {
+      *rindex = 0;
+      *csign  = 0;
     }
 
-  *rindex = 0;
   return 0;
 };
 
@@ -263,8 +275,11 @@ fft_hc_get (lua_State *L)
   lua_Complex r;
   int rindex, cindex;
   int csign;
+  int status;
 
-  csign = sel->get_index (n, hcindex, &rindex, &cindex);
+  status = sel->get_index (n, hcindex, &rindex, &cindex, &csign);
+  if (status)
+    return luaL_error (L, "index out of range");
 
   if (csign != 0)
     r = hc->data[rindex] + csign * hc->data[cindex] * I;
@@ -285,8 +300,11 @@ fft_hc_set (lua_State *L)
   size_t n = hc->size1;
   int rindex, cindex;
   int csign;
+  int status;
 
-  csign = sel->get_index (n, hcindex, &rindex, &cindex);
+  status = sel->get_index (n, hcindex, &rindex, &cindex, &csign);
+  if (status)
+    return luaL_error (L, "index out of range");
 
   if (csign != 0)
     {
@@ -296,7 +314,7 @@ fft_hc_set (lua_State *L)
   else
     {
       if (cimag(val) != 0)
-	luaL_error (L, "imaginary part should be 0 for this term");
+	return luaL_error (L, "imaginary part should be 0 for this term");
       hc->data[rindex] = creal(val);
     }
 

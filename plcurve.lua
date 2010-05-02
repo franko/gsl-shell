@@ -23,13 +23,36 @@ local M = {}
 local function scalar(x, y) return prod(x, y)[1] end
 local function square(x) return prod(x, x)[1] end
 
+local function set_lininterp(p, p1, p2, a)
+   p:set(1,1, (1-a) * p1[1] + a * p2[1])
+   p:set(2,1, (1-a) * p1[2] + a * p2[2])
+end
+
+local function set_affine_trans(p, p1, d, q)
+   p:set(1,1, p1[1] + q * d[1])
+   p:set(2,1, p1[2] + q * d[2])
+end
+
+local function translate(p, d, q)
+   p:set(1,1, p[1] + q * d[1])
+   p:set(2,1, p[2] + q * d[2])
+end
+
+local function scale(v, a)
+   v:set(1,1, a * v[1])
+   v:set(2,1, a * v[2])
+end
+
+local function set_orthogonal(v, w, a)
+   v:set(1,1,   a * w[2])
+   v:set(2,1, - a * w[1])
+end
+
 local function qeval_closure(f, f0, p, d)
    local pe = p:copy()
-   local set = function(q)
-		  pe:set(1,1, p[1] + q * d[1])
-		  pe:set(2,1, p[2] + q * d[2])
-		end
+   local set   = function(q) set_affine_trans(pe, p, d, q) end
    local eval  = function(q) set(q); return f(pe) - f0 end
+--   local diag  = function(q) print('>>', -log(abs(f(pe) - f0)), f(pe), f0) end
    local yield = function(q) set(q); return pe end
    return eval, yield
 end
@@ -64,18 +87,12 @@ local function segment_root_francesco(f, z0, p0, d0, z_eps)
       elseif abs(fr) < z_eps then return yield( 1) end
 
       local q = quad_root_solve_raw()
-      if q then return yield(q) end
---	 print('root:', -log(abs(f(pz) - z0)), f(pz), z0);	 
-
-      d:set(1,1, 0.5*d[1])
-      d:set(2,1, 0.5*d[2])
-      
-      if fc * fl < 0 then
-	 p:set(1,1, p[1] - d[1])
-	 p:set(2,1, p[2] - d[2])
+      if q then 
+	 return yield(q)
       else
-	 p:set(1,1, p[1] + d[1])
-	 p:set(2,1, p[2] + d[2])
+	 scale(d, 0.5)
+	 local sign = (fc * fl < 0 and -1 or 1)
+	 translate(p, d, sign)
       end
    end
 
@@ -134,45 +151,34 @@ local function segment_root_brent(f, z0, p, dv, z_eps)
    end
 
    return yield(b)
-   --   print('root:', -log(abs(f(pz) - z0)), f(pz), z0)
 end
 
-M.segment_root = segment_root_francesco
+M.segment_root = segment_root_brent
 
 function M.stepper(f, p0, step0, z_spacing)
 
    local p, z0 = p0:copy(), f(p0)
    local z_tol = z_spacing * 1e-6
+   local zdelmax = z_spacing / 20
+   local abserr = 1e-4 * z_spacing / step0
 
-   local g, gt = new(2,1), new(2,1)
+   local g, gt, u = new(2,1), new(2,1), new(2,1)
+   local pt = new(2,1)
 
    local function stepper_advance(dir)
 
---      print('STEPPER initial point', tr(p))
-
       f(p, g)
 
---      print('gradient', tr(g))
-
       local gnrm = g:norm()
-      local u = dir * vector {g[2] / gnrm, - g[1] / gnrm}
+      set_orthogonal(u, g, dir / gnrm)
 
---      print('initial step', step0)
-
-      local zdelmax = z_spacing / 20
-      local zr, pt
+      local zr
       local step = step0
 
---      print('z delta max', zdelmax)
---      print('abserr', 1e-4 * z_spacing / step0)
-
       for k=1,20 do
-	 pt = p + step * u
+	 set_affine_trans(pt, p, u, step)
 	 zr = f(pt, gt) - z0
---	 print('iteration', k, 'z residual', zr, 'gradient', tr(gt))
 	 if abs(zr) < zdelmax then
-	    local abserr = 1e-4 * z_spacing / step0
---	    print('DELTA', tr(gt - g), 'tolerance', abserr + 0.05 * gnrm)
 	    if abs(gt[1] - g[1]) < abserr + 0.05 * gnrm and 
 	       abs(gt[2] - g[2]) < abserr + 0.05 * gnrm then
 	    break
@@ -181,24 +187,15 @@ function M.stepper(f, p0, step0, z_spacing)
 	 step = step / 2
       end
 
---      print('final step', step)
---      print('Z residual', zr, 'gradient', gt)
-
---     print('point estimation', tr(pt))
-
-      pt = pt - (zr / square(gt)) * gt
-
---     print('point estimation corrected', tr(pt))
+      scale(gt, zr/square(gt))
+      translate(pt, gt, -1)
 
       -- the following steps does improve the estimation the search interval.
       -- this is probably not needed.
-      f(pt, gt)
-      gt = (zr / square(gt)) * gt
+      -- f(pt, gt)
+      -- scale(gt, zr/square(gt))
 
       set(p, quad_root_solve(f, z0, pt, gt))
-
---      print('final point', tr(p), 'z residual', f(p) - z0)
---      io.read('*l')
    end
 
    local function stepper_point()
@@ -215,15 +212,11 @@ function M.stepper(f, p0, step0, z_spacing)
 end
 
 function M.does_close(a, b, c, xy_spacing)
---   print('does close testing', tr(a), tr(b), tr(c), xy_spacing)
    local v, z = b - a, c - a
    local q = scalar(z, v) / square(v)
---   print('q', q)
---   io.read('*l')
    if q > 0 and q <= 1 + 1e-4 then
       local w = vector {v[2], -v[1]}
       local p = scalar(z, w) / w:norm()
---      print('p', p)
       if abs(p) < 0.1 * xy_spacing then return true end
    end
 end
