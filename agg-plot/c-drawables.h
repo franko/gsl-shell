@@ -27,18 +27,12 @@ extern void     plot_free       (CPLOT *p);
 extern void     plot_add        (CPLOT *p, CVERTSRC *src, struct color *color,
 				 struct trans_spec *post, struct trans_spec *pre, 
 				 int outline);
-extern void     plot_remove_all (CPLOT *p);
 
 extern void     vertex_source_ref   (CVERTSRC *p);
 extern void     vertex_source_unref (CVERTSRC *p);
 
 extern CPATH *  path_new  ();
 extern void     path_cmd   (CPATH *p, int cmd, struct cmd_call_stack *stack);
-
-
-
-extern CVERTSRC *  ellipse_new  (double x, double y, double rx, double ry);
-extern void        ellipse_free (CVERTSRC *e);
 
 extern CTEXT *     text_new        (double size, double width);
 extern void        text_set_text   (CTEXT *t, const char *text);

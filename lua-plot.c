@@ -20,7 +20,6 @@ pthread_mutex_t agg_mutex[1];
 
 enum agg_type {
   AGG_PATH = 1,
-  AGG_ELLIPSE,
   AGG_TEXT,
 };
 
@@ -34,12 +33,6 @@ struct path_cmd_reg {
   const char *cmd;
   const char *signature;
 };
-
-/*
-static const char * const plot_mt_name          = "GSL.pl.plot";
-static const char * const vertex_source_mt_name = "GSL.pl.vs";
-static const char * const rgba_mt_name          = "GSL.pl.rgba";
-*/
 
 extern int push_new_agg_obj   (lua_State *L, enum agg_type tag, CVERTSRC *vs);
 
@@ -55,12 +48,10 @@ static int agg_text_set_text  (lua_State *L);
 static int agg_text_set_point (lua_State *L);
 static int agg_text_rotate    (lua_State *L);
 
-static int agg_ellipse_new    (lua_State *L);
-
 static int agg_plot_new        (lua_State *L);
 static int agg_plot_show       (lua_State *L);
 static int agg_plot_add        (lua_State *L);
-static int agg_plot_remove_all (lua_State *L);
+static int agg_plot_update     (lua_State *L);
 static int agg_plot_add_line   (lua_State *L);
 static int agg_plot_free       (lua_State *L);
 
@@ -85,7 +76,6 @@ static struct path_cmd_reg cmd_table[] = {
 static const struct luaL_Reg plot_functions[] = {
   {"path",     agg_path_new},
   {"text",     agg_text_new},
-  {"ellipse",  agg_ellipse_new},
   {"rgba",     agg_rgba_new},
   {"rgb",      agg_rgb_new},
   {"plot",     agg_plot_new},
@@ -101,8 +91,8 @@ static const struct luaL_Reg agg_vertex_source_methods[] = {
 static const struct luaL_Reg agg_plot_methods[] = {
   {"show",        agg_plot_show       },
   {"add",         agg_plot_add        },
-  {"clear",       agg_plot_remove_all },
   {"addline",     agg_plot_add_line   },
+  {"update",      agg_plot_update     },
   {"__gc",        agg_plot_free       },
   {NULL, NULL}
 };
@@ -354,19 +344,6 @@ agg_text_index (lua_State *L)
     }
 
   return 0;
-}
-
-int
-agg_ellipse_new (lua_State *L)
-{
-  double x  = luaL_checknumber (L, 1);
-  double y  = luaL_checknumber (L, 2);
-  double rx = luaL_checknumber (L, 3);
-  double ry = luaL_checknumber (L, 4);
-  CVERTSRC *vs = ellipse_new (x, y, rx, ry);
-  push_new_agg_obj (L, AGG_ELLIPSE, vs);
-  return 1;
-  
 }
 
 struct agg_plot *
@@ -646,17 +623,20 @@ agg_plot_add (lua_State *L)
 }
  
 int
+agg_plot_update (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  pthread_mutex_lock (agg_mutex);
+  if (p->window)
+    update_callback (p->window);
+  pthread_mutex_unlock (agg_mutex);
+  return 0;
+}
+ 
+int
 agg_plot_add_line (lua_State *L)
 {
   return agg_plot_add_gener (L, true);
-}
-
-int
-agg_plot_remove_all (lua_State *L)
-{
-  struct agg_plot *p = check_agg_plot (L, 1);
-  plot_remove_all (p->plot);
-  return 0;
 }
 
 int

@@ -30,13 +30,13 @@ local function order_add_relation(t, a, b)
    t[b].inf[a] = true
 end
 
-local function grid_create(f, left, right, nx, ny, nlevels)
+local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    local cross, roots = {}, {}
-   local g = {z= {}, zmin= f(left), zmax= f(right), levels= {}}
+   local g = {z= {}, zmin= f(left), zmax= f(right)}
    local dx = vector {(right[1] - left[1]) / nx, 0}
    local dy = vector {0, (right[2] - left[2]) / ny}
    local ds = sqrt(dx[1]^2 + dy[2]^2)
-   local zstep, z_eps
+   local zlevels, zstep, z_eps
    local order_tree
 
    local function get_root(id, si)
@@ -141,7 +141,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
    local function grid_intersect(si, level)
       local i1, j1, i2, j2 = segment_index_lookup_i(si)
-      local z = g.levels[level]
+      local z = zlevels[level]
       local p0 = grid_point((i1 + i2)/2, (j1 + j2)/2)
       local d = (j2 - j1)/2 * dx + (i2 - i1)/2 * dy
       return plcurve.segment_root(f, z, p0, d, z_eps)
@@ -381,9 +381,18 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       g.z[index(i,j)] = z
    end
 
-   zstep = (g.zmax - g.zmin) / nlevels
+   zlevels = {}
+   if type(nlevels_or_levels) == 'table' then
+      table.sort(nlevels_or_levels)
+      nlevels = #nlevels_or_levels - 1
+      for k=0, nlevels do zlevels[k] = nlevels_or_levels[k+1] end
+      zstep = (zlevels[nlevels] - zlevels[0]) / nlevels
+   else
+      nlevels = nlevels_or_levels
+      zstep = (g.zmax - g.zmin) / nlevels
+      for k=0, nlevels do zlevels[k] = g.zmin + k * zstep end
+   end
    z_eps = 1e-5 * zstep
-   for k=0, nlevels do g.levels[k] = g.zmin + k * zstep end
 
    local function grid_populate(level, z)
       for s in grid_iter_segments(level) do
@@ -401,10 +410,10 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       end
    end
 
-   for k, z in pairs(g.levels) do grid_populate(k, z) end
+   for k, z in pairs(zlevels) do grid_populate(k, z) end
 
    local function find_inner_level(s, level)
-      local z2, zc = g.z[index(s.i2, s.j2)], g.levels[level]
+      local z2, zc = g.z[index(s.i2, s.j2)], zlevels[level]
       return (z2 > zc and -1 or 1)
    end
 
@@ -425,7 +434,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 	 local a, b = curve_extrema(crv, dir)
 
 	 local i, j = segment_index_lookup_acw(nodes[b].si)
-	 local zb, zc = g.z[index(i, j)], g.levels[crv.level]
+	 local zb, zc = g.z[index(i, j)], zlevels[crv.level]
 	 dom.level = crv.level + (zb < zc and 0 or -1)
 
 	 local a0 = a
@@ -458,13 +467,13 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       if #domains == 0 then 
 	 local z, lev = g.z[index(0,0)], 0
-	 while g.levels[lev+1] and g.levels[lev+1] < z do lev = lev+1 end
+	 while zlevels[lev+1] and zlevels[lev+1] < z do lev = lev+1 end
 	 insert(domains, {level= lev}) 
       end
    end
 
    local function curve_join(s0, level, id)
-      local z0 = g.levels[level]
+      local z0 = zlevels[level]
       local si0 = segment_index(s0)
 
       local irt, jrt = s0.i1, s0.j1
@@ -585,17 +594,6 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       table.sort(searchlist, function(ia, ib) return #curves[ia] < #curves[ib] end)
 
-      local function make_row_iter(i)
-	 local j = 0
-	 return function()
-		   if j+1 <= nx then
-		      local si = segment_index_i(i, j, i, j+1)
-		      j = j+1
-		      return si
-		   end
-		end
-      end
-
       local function make_col_iter(j)
 	 local i = 0
 	 return function()
@@ -622,17 +620,20 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 	 local id = searchlist[1]
 	 if not id then break end
 
-	 local i1, j1, i2, j2 = segment_index_lookup_i(curves[id][1])
+	 local i1, j1, i2, j2
 
-	 local line_iter, field
-	 if i1 == i2 then 
-	    line_iter, field, j1 = make_row_iter(i1), 1, 0
-	 else
-	    line_iter, field, i1 = make_col_iter(j1), 2, 0
+	 for _, si in ipairs(curves[id]) do
+	    i1, j1, i2, j2 = segment_index_lookup_i(si)
+	    if j1 == j2 then break end
 	 end
 
+	 if not j1 then error 'cannot find vertical cross' end
+
+	 local line_iter, field = make_col_iter(j1), 2
+	 local i, j = 0, j1
+
 	 local st = {}
-	 local domid = bord_domain_lookup(i1, j1)
+	 local domid = bord_domain_lookup(i, j)
 	 for id, si in line_scan_roots_iter(line_iter, field) do
 	    if not curves[id].closed and is_member_of_domain(domid, id) then
 	       domid = curve_opposite_domain(id, domid)
@@ -654,7 +655,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 
    local function grid_find_curves()
-      for level=1, nlevels do
+      for level=0, nlevels do
 	 for s, _ in grid_iter_intersects(level) do
 	    local id = curve_next_id()
 	    local curve = curve_join(s, level, id)
@@ -678,44 +679,6 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       find_domains()
 
       order_tree = order_curves()
-   end
-
-   local function debug_print_cross(color_function)
-      local pl = plot()
-      for k = 0, nlevels do
-	 local line = path()
-	 local dline = path()
-	 for i=0,ny do
-	    for j=0,nx do
-	       local ls = cross[segment_index_i(i,j,i,j+1)]
-	       local p = grid_point(i, j)
-	       if ls and ls[k] then
-		  if ls[k] == 'undef' then
-		     dline:move_to(p[1], p[2])
-		     dline:line_to(p[1] + dx[1], p[2])
-		  else
-		     line:move_to(p[1], p[2])
-		     line:line_to(p[1] + dx[1], p[2])
-		  end
-	       end
-	       ls = cross[segment_index_i(i,j,i+1,j)]
-	       if ls and ls[k] then
-		  if ls[k] == 'undef' then
-		     dline:move_to(p[1], p[2])
-		     dline:line_to(p[1], p[2] + dy[2])
-		  else
-		     line:move_to(p[1], p[2])
-		     line:line_to(p[1], p[2] + dy[2])
-		  end
-	       end
-	    end
-	 end
-	 local col = color_function(k+1)
-	 pl:addline(dline, col)
-	 pl:addline(line, col, {{'dash', a=3, b=3}})
-      end
-      pl:show()
-      return pl
    end
 
    local function curve_points(id, dir)
@@ -820,20 +783,19 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 	 
    return {
-	   print_cross    = debug_print_cross,
            find_curves    = grid_find_curves,
            draw_regions   = grid_draw_regions,
            draw_lines     = grid_draw_lines}
 end
 
 function M.plot(f, a, b, ngridx, ngridy, nlevels)
-   ngridx = ngridx and ngridx or 20
-   ngridy = ngridy and ngridy or 20
-   nlevels = nlevels and nlevels or 12
-   local g = grid_create(f, vector(a), vector(b), ngridx, ngridy, nlevels)
+   ngridx = ngridx and ngridx or 40
+   ngridy = ngridy and ngridy or 40
+   nlevels = nlevels and nlevels or 10
 
---   local p = g.print_cross(rainbow)
---   io.read('*l')
+   local fwrap = function(p) return f(p[1], p[2]) end
+
+   local g = grid_create(fwrap, vector(a), vector(b), ngridx, ngridy, nlevels)
 
    g.find_curves()
 

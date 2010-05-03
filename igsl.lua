@@ -287,3 +287,6 @@ function sampmodel(f, xs)
    end
    return A
 end
+
+local _contour = require 'contour'
+contour = _contour.plot

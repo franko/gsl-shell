@@ -24,6 +24,7 @@
 
 #include <windows.h>
 #include <string.h>
+#include <pthread.h>
 #include "platform/agg_platform_support.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
@@ -43,6 +44,7 @@ namespace agg
     {
     public:
         platform_specific(pix_format_e format, bool flip_y);
+        ~platform_specific();
 
         void create_pmap(unsigned width, unsigned height, 
                          rendering_buffer* wnd);
@@ -73,6 +75,8 @@ namespace agg
         HDC           m_current_dc;
         LARGE_INTEGER m_sw_freq;
         LARGE_INTEGER m_sw_start;
+
+      pthread_mutex_t m_mutex[1];
     };
 
 
@@ -214,7 +218,15 @@ namespace agg
         }
         ::QueryPerformanceFrequency(&m_sw_freq);
         ::QueryPerformanceCounter(&m_sw_start);
+
+	pthread_mutex_init (m_mutex, NULL);
     }
+
+  //------------------------------------------------------------------------
+  platform_specific::~platform_specific()
+  {
+    pthread_mutex_destroy (m_mutex);
+  }
 
 
     //------------------------------------------------------------------------
@@ -1075,16 +1087,24 @@ namespace agg
     {
         MSG msg;
 
+	pthread_mutex_lock (m_specific->m_mutex);
+
         for(;;)
         {
             if(m_wait_mode)
             {
-                if(!::GetMessage(&msg, 0, 0, 0))
+	      bool status;
+
+	      pthread_mutex_unlock (m_specific->m_mutex);
+	      status = ::GetMessage(&msg, 0, 0, 0);
+	      pthread_mutex_lock (m_specific->m_mutex);
+
+	      if(! status)
                 {
-                    break;
+		  break;
                 }
-                ::TranslateMessage(&msg);
-                ::DispatchMessage(&msg);
+	      ::TranslateMessage(&msg);
+	      ::DispatchMessage(&msg);
             }
             else
             {
@@ -1103,6 +1123,9 @@ namespace agg
                 }
             }
         }
+
+	pthread_mutex_unlock (m_specific->m_mutex);
+
         return (int)msg.wParam;
     }
 
@@ -1218,10 +1241,12 @@ void platform_support_prepare()
 
 void platform_support_lock(agg::platform_support *app)
 { 
+  pthread_mutex_lock (app->m_specific->m_mutex); 
 }
 
 void platform_support_unlock(agg::platform_support *app)
 { 
+  pthread_mutex_unlock (app->m_specific->m_mutex); 
 }
 
 bool platform_support_is_mapped(agg::platform_support *app)

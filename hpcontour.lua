@@ -1,5 +1,5 @@
 
--- contour-impcurve.lua
+-- hpcontour.lua
 --  
 -- Copyright (C) 2009, 2010 Francesco Abbate
 --  
@@ -30,19 +30,18 @@ local function order_add_relation(t, a, b)
    t[b].inf[a] = true
 end
 
-local function grid_create(f, left, right, nx, ny, nlevels)
+local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    local cross, roots, lncross = {}, {}, {h= {}, v= {}}
-   local g = {z= {}, zmin= f(left), zmax= f(right), levels= {}}
+   local g = {z= {}, zmin= f(left), zmax= f(right)}
    local dx = vector {(right[1] - left[1]) / nx, 0}
    local dy = vector {0, (right[2] - left[2]) / ny}
    local ds = sqrt(dx[1]^2 + dy[2]^2)
-   local zstep, z_eps
+   local zlevels, zstep, z_eps
    local order_tree
 
-   for i=0, ny do lncross.h[i] = {} end
-   for i=0, nx do lncross.v[i] = {} end
+   for i=0, nx do lncross[i] = {} end
 
-   local DEBUG_PLOT = plot()
+   local DEBUG_PLOT = nil -- plot()
    local ECHO_DEBUG = false
 
    local function get_root(id, si)
@@ -167,7 +166,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
    local function grid_intersect(si, level)
       local i1, j1, i2, j2 = segment_index_lookup_i(si)
-      local z = g.levels[level]
+      local z = zlevels[level]
       local p0 = grid_point((i1 + i2)/2, (j1 + j2)/2)
       local d = (j2 - j1)/2 * dx + (i2 - i1)/2 * dy
       return plcurve.segment_root(f, z, p0, d, z_eps)
@@ -335,10 +334,10 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       return cross[idx] and cross[idx][k] == id 
    end
 
-   local function add_line_cross(id, i, x, dir)
+   local function add_vline_cross(id, i, x)
       local neps = 20
-      local epsilon = (dir == 'h' and dx[1] or dy[2]) / neps
-      local list = lncross[dir][i]
+      local epsilon = dy[2] / neps
+      local list = lncross[i]
       for k, c in ipairs(list) do
 	 if x < c[2] + epsilon then
 	    if id ~= c[1] or (x < c[2] - epsilon) then
@@ -406,9 +405,18 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       g.z[index(i,j)] = z
    end
 
-   zstep = (g.zmax - g.zmin) / nlevels
+   zlevels = {}
+   if type(nlevels_or_levels) == 'table' then
+      table.sort(nlevels_or_levels)
+      nlevels = #nlevels_or_levels - 1
+      for k=0, nlevels do zlevels[k] = nlevels_or_levels[k+1] end
+      zstep = (zlevels[nlevels] - zlevels[0]) / nlevels
+   else
+      nlevels = nlevels_or_levels
+      zstep = (g.zmax - g.zmin) / nlevels
+      for k=0, nlevels do zlevels[k] = g.zmin + k * zstep end
+   end
    z_eps = 1e-5 * zstep
-   for k=0, nlevels do g.levels[k] = g.zmin + k * zstep end
 
    local function grid_populate(level, z)
       for s in grid_iter_segments(level) do
@@ -426,10 +434,10 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       end
    end
 
-   for k, z in pairs(g.levels) do grid_populate(k, z) end
+   for k, z in pairs(zlevels) do grid_populate(k, z) end
 
    local function inner_level_sign(s, level)
-      local z2, zc = g.z[index(s.i2, s.j2)], g.levels[level]
+      local z2, zc = g.z[index(s.i2, s.j2)], zlevels[level]
       return (z2 > zc and -1 or 1)
    end
 
@@ -483,19 +491,17 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       if #domains == 0 then 
 	 local z, lev = g.z[index(0,0)], 0
-	 while g.levels[lev+1] and g.levels[lev+1] < z do lev = lev+1 end
+	 while zlevels[lev+1] and zlevels[lev+1] < z do lev = lev+1 end
 	 insert(domains, {level= lev}) 
       end
    end
 
-   local function grid_remove_cross(p, level, id, dir)
+   local function grid_remove_cross(p, level, id, add_vcross)
       local i, j, di, dj = grid_snap(p, 0.1)
       local st
 
-      if dir then
-	 local k, ci
-	 if dir == 'h' then k, ci = i, 1 else k, ci = j, 2 end
-	 add_line_cross(id, k, p[ci], dir)
+      if add_vcross then
+	 add_vline_cross(id, j, p[2])
       end
 
       if dj == 0 then 
@@ -529,7 +535,6 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       local function cut_at_boundary(beta)
 	 set(p2, p1 + beta * (p2 - p1))
---	 grid_remove_cross(p2, level, id)
 	 return true
       end
     
@@ -539,22 +544,22 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       local ayb = alpha(a[2], p1[2], p2[2], -1)
 
       if alphatest(axr, ayt, ayb) then
-	 grid_remove_cross(p1 + axr * (p2 - p1), level, id, 'v')
+	 grid_remove_cross(p1 + axr * (p2 - p1), level, id, true)
 	 j = j + 1
 	 if j >= nx then return cut_at_boundary(axr) end
 	 return grid_cross_check(i, j, p1, p2, level, id)
       elseif alphatest(ayt, axl, axr) then
-	 grid_remove_cross(p1 + ayt * (p2 - p1), level, id, 'h')
+	 grid_remove_cross(p1 + ayt * (p2 - p1), level, id)
 	 i = i + 1
 	 if i >= ny then return cut_at_boundary(ayt) end
 	 return grid_cross_check(i, j, p1, p2, level, id)
       elseif alphatest(axl, ayt, ayb) then
-	 grid_remove_cross(p1 + axl * (p2 - p1), level, id, 'v')
+	 grid_remove_cross(p1 + axl * (p2 - p1), level, id, true)
 	 j = j - 1
 	 if j < 0 then return cut_at_boundary(axl) end
 	 return grid_cross_check(i, j, p1, p2, level, id)
       elseif alphatest(ayb, axl, axr) then
-	 grid_remove_cross(p1 + ayb * (p2 - p1), level, id, 'h')
+	 grid_remove_cross(p1 + ayb * (p2 - p1), level, id)
 	 i = i - 1
 	 if i < 0 then return cut_at_boundary(ayb) end
 	 return grid_cross_check(i, j, p1, p2, level, id)
@@ -564,7 +569,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 
    local function curve_join(s0, level, id)
-      local z0 = g.levels[level]
+      local z0 = zlevels[level]
       local si0 = segment_index(s0)
 
       local irt, jrt = s0.i1, s0.j1
@@ -642,7 +647,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 
    local function curve_join_implicit(s0, level, id)
-      local z0 = g.levels[level]
+      local z0 = zlevels[level]
       local si0 = segment_index(s0)
       local cw = 0
 
@@ -670,7 +675,6 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       local function run(curve, si0, dir)
 	 local debug_curve = path()
-	 local fake_point = path(left[1], left[2])
 	 local debug_n = 0
 
 	 local function add_point(plt, p)
@@ -705,7 +709,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 		  DEBUG_PLOT:addline(debug_curve, 'gray')
 	       else
 		  debug_curve:line_to(pb[1], pb[2])
-		  DEBUG_PLOT:add(fake_point)
+		  DEBUG_PLOT:update()
 	       end
 
 	       for k=debug_n+1, #curve do
@@ -758,7 +762,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       curve.points = { {px[1], px[2]} }
 
       local ss = segment_index_lookup(si0)
-      grid_remove_cross(px, level, id, ss.i1 == ss.i2 and 'h' or 'v')
+      grid_remove_cross(px, level, id, ss.j1 == ss.j2)
 
       if DEBUG_PLOT then
 	 print('curve', id)
@@ -786,8 +790,8 @@ local function grid_create(f, left, right, nx, ny, nlevels)
       return curve
    end
 
-   local function line_scan_points_iter(p, dir)
-      local csicross = lncross[dir][p]
+   local function vline_scan_points_iter(p)
+      local csicross = lncross[p]
       local q = 1
       return function()
 		if q <= #csicross then
@@ -836,17 +840,6 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 
       table.sort(searchlist, function(ia, ib) return #curves[ia] < #curves[ib] end)
 
-      local function make_row_iter(i)
-	 local j = 0
-	 return function()
-		   if j+1 <= nx then
-		      local si = segment_index_i(i, j, i, j+1)
-		      j = j+1
-		      return si
-		   end
-		end
-      end
-
       local function make_col_iter(j)
 	 local i = 0
 	 return function()
@@ -873,19 +866,17 @@ local function grid_create(f, left, right, nx, ny, nlevels)
 	 local id = searchlist[1]
 	 if not id then break end
 
-	 local i1, j1, i2, j2 = segment_index_lookup_i(curves[id][1])
+	 local i1, j1, i2, j2
 
---	 local line_iter, field
-	 local kf
-	 if i1 == i2 then 
-	    kf, j1 = line_scan_points_iter(i1, 'h'), 0
---	    line_iter, field, j1 = make_row_iter(i1), 1, 0
-	    print('scan along row', i1)
-	 else
-	    kf, i1 = line_scan_points_iter(j1, 'v'), 0
---	    line_iter, field, i1 = make_col_iter(j1), 2, 0
-	    print('scan along column', j1)
+	 for _, si in ipairs(curves[id]) do
+	    i1, j1, i2, j2 = segment_index_lookup_i(si)
+	    if j1 == j2 then break end
 	 end
+
+	 if not j1 then error 'cannot find vertical cross' end
+
+	 local kf
+	 kf, i1 = vline_scan_points_iter(j1), 0
 
 	 local st = {}
 	 local domid = bord_domain_lookup(i1, j1)
@@ -930,7 +921,7 @@ local function grid_create(f, left, right, nx, ny, nlevels)
    end
 
    local function grid_find_curves()
-      for level=1, nlevels do
+      for level=0, nlevels do
 	 for s, _ in grid_iter_intersects(level) do
 	    local id = curve_next_id()
 	    local curve = curve_join_implicit(s, level, id, true)

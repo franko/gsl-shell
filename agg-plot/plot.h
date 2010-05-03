@@ -16,7 +16,6 @@
 #include "agg_conv_transform.h"
 #include "agg_color_rgba.h"
 #include "agg_path_storage.h"
-#include "agg_ellipse.h"
 #include "agg_array.h"
 
 template<class VertexSource, class resource_manager = no_management>
@@ -66,17 +65,6 @@ public:
     m_elements.add(d);
     m_bbox_updated = false;
     resource_manager::acquire(vs);
-  };
-
-  void remove_all()
-  {
-    for (unsigned j = 0; j < m_elements.size(); j++)
-      {
-	container& d = m_elements[j];
-	resource_manager::dispose(d.vs);
-      }
-
-    m_elements.remove_all();
   };
 
   virtual void draw(canvas &canvas)

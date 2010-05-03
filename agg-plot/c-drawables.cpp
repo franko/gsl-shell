@@ -26,7 +26,6 @@ struct property_reg line_join_properties[] = {
 };
 
 typedef my::path path_type;
-typedef my::ellipse ellipse_type;
 
 CPLOT *
 plot_new(int with_units)
@@ -130,12 +129,6 @@ void plot_add(CPLOT *_p, CVERTSRC *_vs, struct color *color,
   p->add(curr, new_color(color), (bool) outline);
 }
 
-void plot_remove_all(CPLOT *_p)
-{
-  plot_type* p = (plot_type*) _p;
-  p->remove_all();
-}
-
 CPATH* path_new()
 {
   path_type* p = new path_type();
@@ -211,17 +204,3 @@ void text_rotate (CTEXT *_t, double angle)
   my::text *t = (my::text *) _t;
   t->rotate(angle);
 }
-
-CVERTSRC *
-ellipse_new (double x, double y, double rx, double ry)
-{
-  ellipse_type* e = new ellipse_type(x, y, rx, ry);
-  return (CVERTSRC *) e;
-}
-
-void
-ellipse_free (CVERTSRC *_e)
-{
-  ellipse_type* e = (ellipse_type*) _e;
-  delete e;
-};
