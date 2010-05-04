@@ -1,5 +1,3 @@
-local contour = require 'contour'
-
 f = function(x, g)
        local xc = vector {4.45, -1.2}
        local y = x - xc
@@ -29,12 +27,22 @@ frosenbrock = function(x, g)
 		 return v
 	      end
 
+local function cook(f)
+   local p = new(2,1)
+   return function(x,y)
+	     p:set(1,1, x)
+	     p:set(2,1, y)
+	     return f(p)
+	  end
+end
+
 function demo1()
    local x0 = vector {-1.2, 1.0}
    m = minimizer {f= frosenbrock, n= 2}
-   m:set(x0, vector {1, 1})
+   m:set(x0, vector {1, 1}) 
 
-   p=contour.plot(frosenbrock, {-1.5, -1}, {1.5, 2}, 20, 20, 30)
+   local px = new(2,1)
+   p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -55,7 +63,7 @@ function demo2()
    m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour.plot(f, {-2, -2}, {8, 2})
+   p=contour(cook(f), {-2, -2}, {8, 2})
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -76,7 +84,7 @@ function demo3()
    m = minimizer {fdf= fex, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour.plot(fex, {-2, -2.5}, {1, 1}, 30, 30, 40)
+   p=contour(cook(fex), {-2, -2.5}, {1, 1}, 30, 30, 16)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])

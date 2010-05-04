@@ -1,5 +1,4 @@
 
-local contour = require 'contour'
 
 fex = function(x1, x2)
 	 return 4*x1^2 + 2*x2^2 + 4*x1*x2 + 2*x2 + 1
@@ -35,9 +34,9 @@ fpeaksslopemake = function(ls, sx, sy)
 			    end
 		  end
 
-flin  = function(x) return x[1] + 2*x[2]   end
-flinm = function(x) return x[1] - 2*x[2]   end
-fsqr  = function(x) return x[1]^2 + x[2]^2 end
+flin  = function(x,y) return x + 2*y end
+flinm = function(x,y) return x - 2*y end
+fsqr  = function(x,y) return x^2 + y^2 end
 
 fsincos = function(sx,sy)
 	     return function(x,y) 
@@ -51,22 +50,23 @@ ftwopeaks = fpeaksmake {{-6, 0, 0, 1, 1}, {5, 1.5, 1, 1.45, 1.15}}
 ftwopeaksslp = fpeaksslopemake({{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}}, 0.3, 0.2)
 fthreepeaks = fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {1.5, 2, -2, 0.5, 0.8}}
 
--- contour.plot(fex, {-2, -2.5}, {1, 0.5}, 20, 20, 25)
--- contour.plot(ftwopeaksslp, {-3, -2}, {3, 2}, 40, 40, 9)
--- contour.plot(ftwopeaks, {-4, -4}, {5, 4}, 40, 40, 10)
--- contour.plot(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 15)
-contour.plot(fsincos(0.1,0.3), {0, 0}, {14, 14}, 40, 40, 9)
--- contour.plot(fsincos(0,0), {0, 0}, {4*pi, 4*pi}, 60, 60, 10)
--- contour.plot(flin, {-4, -4}, {4, 4})
--- contour.plot(fsqr, {-4, -4}, {4, 4})
--- contour.plot(flin, {-4, -4}, {4, 4}, 8, 16, 24)
--- contour.plot(flinm, {-4, -4}, {4, 4}, 8, 16, 24)
+contour(fex, {-2, -2.5}, {1, 1}, 30, 30, 16)
+-- contour(ftwopeaksslp, {-3, -2}, {3, 2}, 40, 40, 9)
+contour(ftwopeaks, {-4, -4}, {5, 4}, 40, 40, 10)
+-- contour(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 15)
+contour(fsincos(0.1,0.3), {0, 0}, {14, 14}, 40, 40, 9)
+contour(fsincos(0.1,0.3), {-14, -14}, {14, 14}, 80, 80, 8)
+contour(fsincos(0,0), {0, 0}, {14, 14})
+contour(flin, {-4, -4}, {4, 4})
+contour(fsqr, {-4, -4}, {4, 4})
+-- contour(flin, {-4, -4}, {4, 4}, 8, 16, 24)
+-- contour(flinm, {-4, -4}, {4, 4}, 8, 16, 24)
 
 zlev, nlev = {}, 9
 for k=1,nlev do
    table.insert(zlev, frosenbrock(1, 1 - 2 * (k/nlev)^2))
 end
-contour.plot(frosenbrock, {-1.5, -0.5}, {1.5, 2}, 80, 80, zlev)
+contour(frosenbrock, {-1.5, -0.5}, {1.5, 2}, 80, 80, zlev)
 
 -- NICE PLOT WITH THREE PEAKS
-contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 40, 40, 9)
+contour(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 40, 40, 9)
