@@ -109,7 +109,7 @@ fthreepeaks = fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {1.5, 2, -2
 -- contour.plot(ftwopeaks, {-4, -4}, {5, 4}, 40, 40, 10)
 -- contour.plot(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 15)
 -- contour.plot(fsincos(0.1,0.3), {0, 0}, {14, 14}, 20, 20, 13)
--- contour.plot(fsincos(0.1,0.3), {-14, -14}, {14, 14}, 20, 20, 9)
+contour.plot(fsincos(0.1,0.3), {-14, -14}, {14, 14}, 20, 20, 10)
 -- contour.plot(fsincos(0,0), {0, 0}, {4*pi, 4*pi}, 60, 60, 10)
 -- contour.plot(flin, {-4, -4}, {4, 4})
 -- contour.plot(fsqr, {-4, -4}, {4, 4})
@@ -124,6 +124,6 @@ for k=1,nlev do
 end
 contour.plot(frosenbrock, {-1.5, -0.5}, {1.5, 2}, 20, 20, zlev)
 
--- contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 20, 20, 9)
+contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 20, 20, 9)
 -- NICE PLOT WITH THREE PEAKS
 -- contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-4, -4}, {5, 4}, 20, 20, 9)

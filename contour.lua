@@ -718,7 +718,8 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    end
 
    local function color(a)
-      return rgba(0.9, 0.9 - 0.9*a, 0, 0.8)
+ --     return rgba(0.9, 0.9 - 0.9*a, 0, 0.8)
+      return rgba(0.91 - 0.565*a,  0.898 - 0.753*a, 0.85 - 0.25*a, 0.8)
    end
 
    local function curve_draw(pl, id)
