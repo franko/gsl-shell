@@ -1,5 +1,5 @@
 
-local contour = require 'hpcontour'
+require 'hpcontour'
 
 fex = function(x, g)
 	 local x1, x2 = x[1], x[2]
@@ -104,12 +104,12 @@ ftwopeaks = fpeaksmake {{-6, 0, 0, 1, 1}, {5, 1.5, 1, 1.45, 1.15}}
 ftwopeaksslp = fpeaksslopemake({{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}}, 0.3, 0.2)
 fthreepeaks = fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {1.5, 2, -2, 0.5, 0.8}}
 
--- contour.plot(fex, {-2, -2.5}, {1, 0.5}, 20, 20, 25)
+hpcontour(fex, {-2, -2.5}, {1, 0.5}, 20, 20, 16)
 -- contour.plot(ftwopeaksslp, {-3, -2}, {3, 2}, 40, 40, 9)
 -- contour.plot(ftwopeaks, {-4, -4}, {5, 4}, 40, 40, 10)
 -- contour.plot(fthreepeaks, {-4, -4}, {5, 4}, 40, 40, 15)
 -- contour.plot(fsincos(0.1,0.3), {0, 0}, {14, 14}, 20, 20, 13)
-contour.plot(fsincos(0.1,0.3), {-14, -14}, {14, 14}, 20, 20, 10)
+--hpcontour(fsincos(0.1,0.3), {-14, -14}, {14, 14}, 20, 20, 10)
 -- contour.plot(fsincos(0,0), {0, 0}, {4*pi, 4*pi}, 60, 60, 10)
 -- contour.plot(flin, {-4, -4}, {4, 4})
 -- contour.plot(fsqr, {-4, -4}, {4, 4})
@@ -122,8 +122,8 @@ for k=1,nlev do
    pze:set(2,1, 1 - 2 * (k/nlev)^2)
    table.insert(zlev, frosenbrock(pze))
 end
-contour.plot(frosenbrock, {-1.5, -0.5}, {1.5, 2}, 20, 20, zlev)
+--contour.plot(frosenbrock, {-1.5, -0.5}, {1.5, 2}, 20, 20, zlev)
 
-contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 20, 20, 9)
+hpcontour(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-2, -4}, {5, 4}, 20, 20, 10)
 -- NICE PLOT WITH THREE PEAKS
 -- contour.plot(fpeaksmake {{6, 0, 0, 1, 1}, {-5, 1.5, 1, 1.45, 1.15}, {4, 2, -2, 0.8, 0.8}}, {-4, -4}, {5, 4}, 20, 20, 9)

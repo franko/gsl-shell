@@ -288,5 +288,8 @@ function sampmodel(f, xs)
    return A
 end
 
-local _contour = require 'contour'
-contour = _contour.plot
+function ilist(f, i0, i1)
+   local ls = {}
+   for k= i0, i1 do ls[#ls+1] = f(k) end
+   return ls
+end

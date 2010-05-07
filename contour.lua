@@ -21,6 +21,15 @@
 local M = {}
 
 local insert = table.insert
+local color = color_function('redyellow', 0.8)
+
+local function reverse(ls)
+   local k, n = 1, #ls
+   while k < n do
+      ls[k], ls[n] = ls[n], ls[k]
+      k, n = k+1, n-1
+   end
+end
 
 local function root_solve(f, z0, x, y, dx0, dy0, z_eps)
    local dx, dy = dx0, dy0
@@ -511,6 +520,10 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       local inner = find_inner_level(s0, level)
       local status = run(curve, segment_copy(s0), si0)
       if status == 'boundary' then
+	 reverse(curve)
+	 segment_invert(s0)
+	 run(curve, s0, si0)
+
 	 if #curve < 2 then error 'curve with points less than two points' end
 	 local a, b = curve[1], curve[#curve]
 	 local aid = add_node(a, id, level)
@@ -622,30 +635,10 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 
    local function grid_find_curves()
       
-      local function my_bord_iter(level)
-	 local fiter = grid_iter_intersects(level)
-	 return function()
-		   for s, si in fiter do
-		      local msi, lsi = bord_main_index(si)
-		      if msi then
-			 if msi >= 2 then segment_invert(s) end
-			 return s, si
-		      end
-		   end
-		end
-      end
-
       for level=0, nlevels do
-	 for s, _ in my_bord_iter(level) do
-	    local id = curve_next_id()
-	    local curve = curve_join(s, level, id)
-	    curve_register(curve)
-	 end
-
 	 for s, _ in grid_iter_intersects(level) do
 	    local id = curve_next_id()
 	    local curve = curve_join(s, level, id)
-	    if not curve.closed then error 'expecting a closed curve' end
 	    curve_register(curve)
 	 end
       end
@@ -717,11 +710,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       end
    end
 
-   local function color(a)
- --     return rgba(0.9, 0.9 - 0.9*a, 0, 0.8)
-      return rgba(0.91 - 0.565*a,  0.898 - 0.753*a, 0.85 - 0.25*a, 0.8)
-   end
-
    local function curve_draw(pl, id)
       local ln = path()
       curve_add_path(ln, id, 'acw')
@@ -751,12 +739,12 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       end
    end
 
-   local function grid_draw_lines(pl, color)
+   local function grid_draw_lines(pl, col)
       local ln = path()
       for id = 1, #curves do
 	 curve_add_path(ln, id, 'cw')
       end
-      pl:addline(ln, color)
+      pl:addline(ln, col)
    end
 	 
    return {
@@ -765,7 +753,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
            draw_lines     = grid_draw_lines}
 end
 
-function M.plot(f, a, b, ngridx, ngridy, nlevels)
+function contour(f, a, b, ngridx, ngridy, nlevels)
    ngridx = ngridx and ngridx or 40
    ngridy = ngridy and ngridy or 40
    nlevels = nlevels and nlevels or 10

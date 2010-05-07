@@ -22,6 +22,8 @@ local plcurve = require 'plcurve'
 
 local M = {}
 
+local color = color_function('redyellow', 0.8)
+
 local insert = table.insert
 
 local function reverse(ls)
@@ -886,11 +888,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       end
    end
 
-   local function color(a)
- --     return rgba(0.9, 0.9 - 0.9*a, 0, 0.8)
-      return rgba(0.91 - 0.565*a,  0.898 - 0.753*a, 0.85 - 0.25*a, 0.8)
-   end
-
    local function curve_draw(pl, id)
       local ln = path()
       curve_add_path(ln, id, 'acw')
@@ -926,12 +923,12 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       end
    end
 
-   local function grid_draw_lines(pl, color)
+   local function grid_draw_lines(pl, col)
       local ln = path()
       for id = 1, #curves do
 	 curve_add_path(ln, id, 'cw')
       end
-      pl:addline(ln, color)
+      pl:addline(ln, col)
    end
 	 
    return {
@@ -941,7 +938,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
            draw_lines     = grid_draw_lines}
 end
 
-function M.plot(f, a, b, ngridx, ngridy, nlevels)
+function hpcontour(f, a, b, ngridx, ngridy, nlevels)
    ngridx = ngridx and ngridx or 20
    ngridy = ngridy and ngridy or 20
    nlevels = nlevels and nlevels or 12

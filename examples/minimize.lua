@@ -1,3 +1,5 @@
+require 'contour'
+
 f = function(x, g)
        local xc = vector {4.45, -1.2}
        local y = x - xc

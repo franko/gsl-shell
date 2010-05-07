@@ -75,6 +75,23 @@ function rainbow(n)
    return mcolors[q+1] .. bcolors[(n-1) % p + 1]
 end
 
+local color_schema = {
+   bluish    = {0.91, 0.898, 0.85, 0.345, 0.145, 0.6},
+   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
+   darkgreen = {0.9, 0.9, 0, 0, 0.4, 0}
+}
+-- local s, e = {1, 1, 1}, {0.1, 0.7, 0.2}
+--      local s, e = {0.9, 0.9, 0}, {0, 0.4, 0}
+--      local s, e = {0, 0.9, 0.9}, {0, 0, 0.7}
+
+function color_function(schema, alpha)
+   local c = color_schema[schema]
+   return function(a)
+	     return rgba(c[1] + a*(c[4]-c[1]), 
+			 c[2] + a*(c[5]-c[2]), 
+			 c[3] + a*(c[6]-c[3]), alpha)
+	  end
+end
 
 function plot_lines(ln)
    local p = plot()
