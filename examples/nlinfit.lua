@@ -82,7 +82,7 @@ function demo2()
       end
    end
 
-   pl = plot()
+   pl = plot('Non-linear fit / A * exp(a t) sin(w t)')
    pl:addline(ipath(sequence(function(k) return xs(k), y[k] end, n)), 'blue',
 	      {{'marker', size= 5}})
 
@@ -102,7 +102,6 @@ function demo2()
    print_state (s)
 
    pl:addline(fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red')
-   pl.title = 'Non-linear fit / A * exp(a t) sin(w t)'
    pl:show()
 
    return pl

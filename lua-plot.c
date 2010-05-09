@@ -53,11 +53,13 @@ static int agg_plot_show       (lua_State *L);
 static int agg_plot_add        (lua_State *L);
 static int agg_plot_update     (lua_State *L);
 static int agg_plot_add_line   (lua_State *L);
-static int agg_plot_title_set  (lua_State *L);
-static int agg_plot_title_get  (lua_State *L);
 static int agg_plot_index      (lua_State *L);
 static int agg_plot_newindex   (lua_State *L);
 static int agg_plot_free       (lua_State *L);
+static int agg_plot_title_set  (lua_State *L);
+static int agg_plot_title_get  (lua_State *L);
+static int agg_plot_units_set  (lua_State *L);
+static int agg_plot_units_get  (lua_State *L);
 
 static int agg_rgb_new         (lua_State *L);
 static int agg_rgba_new        (lua_State *L);
@@ -105,11 +107,13 @@ static const struct luaL_Reg agg_plot_methods[] = {
 
 static const struct luaL_Reg agg_plot_properties_get[] = {
   {"title",        agg_plot_title_get  },
+  {"units",        agg_plot_units_get  },
   {NULL, NULL}
 };
 
 static const struct luaL_Reg agg_plot_properties_set[] = {
   {"title",        agg_plot_title_set  },
+  {"units",        agg_plot_units_set  },
   {NULL, NULL}
 };
 
@@ -372,17 +376,17 @@ check_agg_plot (lua_State *L, int index)
 int
 agg_plot_new (lua_State *L)
 {
-  lua_Integer use_units = 1;
   struct agg_plot **pptr = lua_newuserdata (L, sizeof(void *));
   struct agg_plot *p;
+  const char *title = NULL;
 
-  if (lua_isboolean (L, 1))
-    use_units = lua_toboolean (L, 1);
+  if (lua_isstring (L, 1))
+    title = lua_tostring (L, 1);
 
   p = emalloc (sizeof(struct agg_plot));
   *pptr = p;
 
-  p->plot = plot_new (use_units);
+  p->plot = plot_new (title);
 
   p->lua_is_owner = 1;
   p->is_shown = 0;
@@ -462,6 +466,33 @@ agg_plot_title_get (lua_State *L)
   struct agg_plot *p = check_agg_plot (L, 1);
   const char *title = plot_get_title (p->plot);
   lua_pushstring (L, title);
+  return 1;
+}
+
+int
+agg_plot_units_set (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  bool request = lua_toboolean (L, 2);
+  bool current = plot_use_units (p->plot);
+
+  if (current != request)
+    {
+      pthread_mutex_lock (agg_mutex);
+      plot_set_units (p->plot, request);
+      if (p->window)
+	update_callback (p->window);
+      pthread_mutex_unlock (agg_mutex);
+    }
+	  
+  return 0;
+}
+
+int
+agg_plot_units_get (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  lua_pushboolean (L, plot_use_units (p->plot));
   return 1;
 }
 

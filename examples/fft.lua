@@ -26,23 +26,21 @@ function demo2()
 
    local bess = new(n, 1, |i| besselJ(order, xsmp(i)))
 
-   local p = plot()
+   local p = plot('Original signal / reconstructed')
    p:addline(ipath(sample(|i| bess[i], 1, n, n-1)), 'black')
 
    fft(bess)
 
-   fftplot = plot()
+   fftplot = plot('FFT power spectrum')
    bars = ibars(sample(|k| abs(bess:get(k)), 0, 60, 60))
    fftplot:add(bars, 'darkblue')
    fftplot:addline(bars, 'black')
-   fftplot.title = 'FFT power spectrum'
    fftplot:show()
 
    for k=ncut, n/2 do bess:set(k,0) end
    fft_inv(bess)
 
    p:addline(ipath(sample(|i| bess[i], 1, n, n-1)), 'red', {{'dash', a=7, b=3}})
-   p.title = 'Original signal / reconstructed'
    p:show()
 
    return p, fftplot

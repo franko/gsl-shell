@@ -47,7 +47,7 @@ endif
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(LUADIR)/etc
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp c-drawables.cpp colors.cpp xwin-show.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp c-drawables.cpp colors.cpp xwin-show.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 

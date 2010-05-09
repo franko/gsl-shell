@@ -13,10 +13,15 @@
 #include "units.h"
 #include "resource-manager.h"
 
+#include "agg_vcgen_markers_term.h"
 #include "agg_conv_transform.h"
 #include "agg_color_rgba.h"
 #include "agg_path_storage.h"
 #include "agg_array.h"
+#include "agg_conv_stroke.h"
+#include "agg_conv_dash.h"
+#include "agg_gsv_text.h"
+
 
 template<class VertexSource, class resource_manager = no_management>
 class plot {
@@ -45,18 +50,14 @@ class plot {
   };
 
 public:
-  plot() : m_elements(), m_trans(), m_bbox_updated(true) {
+  plot() : m_elements(), m_trans(), m_bbox_updated(true), m_use_units(true) {
     m_title_size = 32;
     m_title = new char[m_title_size];
     m_title[0] = 0;
   };
 
-  virtual ~plot() 
+  ~plot() 
   {
-#ifdef DEBUG_PLOT
-    fprintf(stderr, "freeing plot: %p\n", this);
-#endif
-
     for (unsigned j = 0; j < m_elements.size(); j++)
       {
 	container& d = m_elements[j];
@@ -81,6 +82,9 @@ public:
 
   const char *get_title() const { return m_title; };
 
+  bool use_units() const { return m_use_units; };
+  void set_units(bool use_units) { m_use_units = use_units; };
+
   void add(VertexSource* vs, agg::rgba8 color, bool outline = false) 
   { 
     container d(vs, color, outline);
@@ -89,13 +93,17 @@ public:
     resource_manager::acquire(vs);
   };
 
-  virtual void draw(canvas &canvas);
+  void draw(canvas &canvas);
 
-protected:
+private:
   void draw_elements(canvas &canvas);
   void draw_title(canvas& canvas);
+  void draw_axis(canvas& can);
+
+  void trans_matrix_update();
+  void update_viewport_trans();
+
   void calc_bounding_box();
-  virtual void trans_matrix_update();
 
   static void viewport_scale(agg::trans_affine& trans);
 
@@ -109,6 +117,9 @@ protected:
 
   char *m_title;
   unsigned int m_title_size;
+
+  bool m_use_units;
+  units m_ux, m_uy;
 };
 
 template <class VS, class RM>
@@ -116,6 +127,8 @@ void plot<VS,RM>::draw(canvas &canvas)
 {
   trans_matrix_update();
   draw_title(canvas);
+  if (m_use_units)
+    draw_axis(canvas);
   draw_elements(canvas);
 };
 
@@ -165,19 +178,48 @@ void plot<VS,RM>::draw_elements(canvas &canvas)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::trans_matrix_update()
+void plot<VS,RM>::update_viewport_trans()
 {
-  if (! m_bbox_updated)
-  {
-    calc_bounding_box();
+  double xi, yi, xs, ys;
 
-    double fx = m_x2 - m_x1, fy = m_y2 - m_y1;
-    m_trans.reset();
-    m_trans.scale(1/fx, 1/fy);
-    m_trans.translate(-m_x1/fx, -m_y1/fy);
-    m_bbox_updated = true;
-  }
+  if (m_use_units)
+    {
+      int ixi, ixs, iyi, iys;
+      double xd, yd;
+      m_ux.limits(ixi, ixs, xd);
+      xi = ixi * xd;
+      xs = ixs * xd;
+
+      m_uy.limits(iyi, iys, yd);
+      yi = iyi * yd;
+      ys = iys * yd;
+    }
+  else
+    {
+      xi = m_x1;
+      yi = m_y1;
+      xs = m_x2;
+      ys = m_y2;
+    }
+
+  double fx = 1/(xs - xi), fy = 1/(ys - yi);
+  this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -xi*fx, -yi*fy);
 }
+
+template<class VS, class RM>
+void plot<VS,RM>::trans_matrix_update()
+  {
+    if (this->m_bbox_updated)
+      return;
+
+    this->calc_bounding_box();
+
+    m_ux = units(this->m_x1, this->m_x2);
+    m_uy = units(this->m_y1, this->m_y2);
+
+    this->update_viewport_trans();
+    this->m_bbox_updated = true;
+  }
 
 template<class VS, class RM>
 void plot<VS,RM>::calc_bounding_box()
@@ -207,6 +249,114 @@ void plot<VS,RM>::calc_bounding_box()
     }
   }
 }
+
+template <class VS, class RM>
+void plot<VS,RM>::draw_axis(canvas &canvas)
+{
+  typedef agg::path_storage path_type;
+  typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
+
+  agg::trans_affine m;
+  this->viewport_scale(m);
+  canvas.scale(m);
+
+  agg::path_storage mark;
+  agg::conv_transform<path_type> mark_tr(mark, m);
+  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+
+  agg::path_storage ln;
+  agg::conv_transform<path_type> lntr(ln, m);
+  dash_type lndash(lntr);
+  agg::conv_stroke<dash_type> lns(lndash);
+
+  {
+    int jinf = m_uy.begin(), jsup = m_uy.end();
+    for (int j = jinf; j <= jsup; j++)
+      {
+	double y = double(j - jinf) / double(jsup - jinf);
+	agg::gsv_text lab;
+	agg::conv_stroke<agg::gsv_text> labs(lab);
+	char lab_text[32];
+	double xlab = 0, ylab = y;
+
+	lab.size(10.0);
+	m_uy.mark_label(lab_text, 32, j);
+	lab.text(lab_text);
+	labs.width(0.7);
+
+	m.transform(&xlab, &ylab);
+
+	xlab += -lab.text_width() - 8.0;
+	ylab += -10.0/2.0;
+
+	lab.start_point(xlab, ylab);
+	canvas.draw(labs, agg::rgba(0, 0, 0));
+
+	mark.move_to(0.0, y);
+	mark.line_to(-0.01, y);
+
+	if (j > jinf && j < jsup)
+	  {
+	    ln.move_to(0.0, y);
+	    ln.line_to(1.0, y);
+	  }
+      }
+  }
+
+  {
+    int jinf = m_ux.begin(), jsup = m_ux.end();
+    for (int j = jinf; j <= jsup; j++)
+      {
+	double x = double(j - jinf) / double(jsup - jinf);
+	agg::gsv_text lab;
+	agg::conv_stroke<agg::gsv_text> labs(lab);
+	char lab_text[32];
+	double xlab = x, ylab = 0;
+
+	lab.size(10.0);
+	m_ux.mark_label(lab_text, 32, j);
+	lab.text(lab_text);
+	labs.width(0.7);
+
+	m.transform(&xlab, &ylab);
+
+	xlab += -lab.text_width()/2.0;
+	ylab += -10.0 - 10.0;
+
+	lab.start_point(xlab, ylab);
+	canvas.draw(labs, agg::rgba(0, 0, 0));
+
+	mark.move_to(x, 0.0);
+	mark.line_to(x, -0.01);
+
+	if (j > jinf && j < jsup)
+	  {
+	    ln.move_to(x, 0.0);
+	    ln.line_to(x, 1.0);
+	  }
+      }
+  }
+
+  lndash.add_dash(8.0, 4.0);
+
+  lns.width(0.25);
+  canvas.draw(lns, agg::rgba(0.2, 0.2, 0.2));
+
+  mark_stroke.width(1.0);
+  canvas.draw(mark_stroke, agg::rgba8(0, 0, 0));
+
+  agg::path_storage box;
+  agg::conv_transform<path_type> boxtr(box, m);
+  agg::conv_stroke<agg::conv_transform<path_type> > boxs(boxtr);
+
+  box.move_to(0.0, 0.0);
+  box.line_to(0.0, 1.0);
+  box.line_to(1.0, 1.0);
+  box.line_to(1.0, 0.0);
+  box.close_polygon();
+
+  canvas.draw(boxs, agg::rgba8(0, 0, 0));
+};
 
 template<class VS, class RM>
 void plot<VS,RM>::viewport_scale(agg::trans_affine& m)

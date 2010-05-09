@@ -2,7 +2,6 @@
 #include "agg_color_rgba.h"
 #include "agg_math_stroke.h"
 
-#include "units-plot.h"
 #include "plot.h"
 #include "trans.h"
 #include "vertex-source.h"
@@ -28,19 +27,11 @@ struct property_reg line_join_properties[] = {
 typedef my::path path_type;
 
 CPLOT *
-plot_new(int with_units)
+plot_new(const char *title)
 {
-  plot_type *p;
-
-  if (with_units)
-    p = new units_plot_type();
-  else
-    p = new plot_type();
-
-#ifdef DEBUG_PLOT
-  fprintf(stderr, "Creating plot: %p\n", p);
-#endif
-
+  plot_type *p = new plot_type();
+  if (title)
+    p->set_title(title);
   return (CPLOT *) p; 
 }
 
@@ -139,6 +130,21 @@ const char * plot_get_title  (CPLOT *_p)
 {
   plot_type* p = (plot_type*) _p;
   return p->get_title();
+}
+
+int
+plot_use_units (CPLOT *_p)
+{
+  plot_type* p = (plot_type*) _p;
+  return p->use_units();
+  
+}
+
+void
+plot_set_units (CPLOT *_p, int use_units)
+{
+  plot_type* p = (plot_type*) _p;
+  return p->set_units(use_units);
 }
 
 CPATH* path_new()

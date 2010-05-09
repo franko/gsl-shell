@@ -10,10 +10,7 @@
 #define CTEXT    struct my_c_text
 
 #ifdef __cplusplus
-#include "units-plot.h"
-
 typedef plot<vertex_source, ref_manager> plot_type;
-typedef units_plot<vertex_source, ref_manager> units_plot_type;
 #endif
 
 __BEGIN_DECLS
@@ -25,13 +22,16 @@ CPLOT;
 CVERTSRC;
 CPATH;
 
-extern CPLOT *  plot_new        (int with_units);
+extern CPLOT *  plot_new        (const char *title);
 extern void     plot_free       (CPLOT *p);
 extern void     plot_add        (CPLOT *p, CVERTSRC *src, struct color *color,
 				 struct trans_spec *post, struct trans_spec *pre, 
 				 int outline);
 extern void     plot_set_title  (CPLOT *p, const char *title);
 extern const char * plot_get_title  (CPLOT *p);
+
+extern int     plot_use_units   (CPLOT *p);
+extern void    plot_set_units   (CPLOT *p, int use_units);
 
 extern void     vertex_source_ref   (CVERTSRC *p);
 extern void     vertex_source_unref (CVERTSRC *p);
