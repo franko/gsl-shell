@@ -163,6 +163,7 @@ void units_plot<VS,RM>::draw(canvas &canvas)
   {
     trans_matrix_update();
     draw_axis(canvas);
+    this->draw_title(canvas);
     this->draw_elements(canvas);
   };
 

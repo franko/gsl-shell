@@ -1,5 +1,5 @@
 
- -- nlinfit.lua
+ -- Non-linear Fit Examples / nlinfit.lua
  -- 
  -- Copyright (C) 2009 Francesco Abbate
  -- 
@@ -44,8 +44,8 @@ function demo1()
    end
 
    local function print_state(s)
-      print ("x: ", t(s.x))
-      print ("chi square: ", cmul(h(s.f), s.f)[1])
+      print ("x: ", tr(s.x))
+      print ("chi square: ", cmul(hc(s.f), s.f)[1])
    end
 
    s = csolver {fdf= cexpf, n= n, p= 4, x0= vector {2.1, -2.8, 18, 0}}
@@ -58,28 +58,52 @@ end
 
 function demo2()
    local n = 50
-   local p = {a= -3.1, A= 1.55}
-   local y = new(n, 1, |i,j| p.A * exp(p.a * (i-1)/n))
+   local px = vector {1.55, -1.1, 12.5}
+   local p0 = vector {2.5,  -1.5, 5.3}
+   local xs = |i| (i-1)/n
+   local r = rng()
+
+   local fmodel = function(p, t, J)
+		     local e, s = exp(p[2] * t), sin(p[3] * t)
+		     if J then
+			J:set(1,1, e * s)
+			J:set(1,2, t * p[1] * e * s)
+			J:set(1,3, t * p[1] * e * cos(p[3] * t))
+		     end
+		     return p[1] * e * s
+		  end
+
+   local y = new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+
    local function expf(x, f, J)
       for k=1, n do
-	 local t = (k-1) / n
-	 local A, a = x[1], x[2]
-	 local e = exp(a * t)
-	 if f then f:set(k, 1, A * e - y[k]) end
-	 if J then
-	    J:set(k, 1, e)
-	    J:set(k, 2, t * A * e)
-	 end
+	 local ym = fmodel(x, xs(k), J and J:row(k))
+	 if f then f:set(k, 1, ym - y[k]) end
       end
    end
+
+   pl = plot()
+   pl:addline(ipath(sequence(function(k) return xs(k), y[k] end, n)), 'blue',
+	      {{'marker', size= 5}})
+
    local function print_state(s)
-      print ("x: ", t(s.x))
+      print ("x: ", tr(s.x))
       print ("chi square: ", prod(s.f, s.f)[1])
    end
-   s = solver {fdf= expf, n= n, p= 2, x0= vector {3.5, -2.5}}
+
+   s = solver {fdf= expf, n= n, p= 3, x0= p0}
+
+   pl:addline(fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
+
    repeat
       print_state (s)
       local status = s:iterate()
    until status ~= 'continue'
    print_state (s)
+
+   pl:addline(fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red')
+   pl.title = 'Non-linear fit / A * exp(a t) sin(w t)'
+   pl:show()
+
+   return pl
 end

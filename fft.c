@@ -132,12 +132,9 @@ fft_hc_radix2_length (gsl_matrix *v)
 };
 
 int
-fft_hc_radix2_get_index (size_t _n, int index,
-			 int *rindex, int *cindex, int *csign)
+fft_hc_radix2_get_index (size_t _n, int i, int *rindex, int *cindex, int *csign)
 {
   const int n = (int) _n;
-  //  int is = - n/2 + 1;
-  int i = index; //((index - is) % n) + is;
 
   if (i < -n/2+1 || i >= n/2+1)
     return 1;
@@ -176,12 +173,11 @@ fft_hc_mixed_radix_length (gsl_matrix *v)
 };
 
 int
-fft_hc_mixed_radix_get_index (size_t _n, int index, 
+fft_hc_mixed_radix_get_index (size_t _n, int i, 
 			      int *rindex, int *cindex, int *csign)
 {
   int n = (int) _n;
   int is = (n % 2 == 0 ? -n/2 + 1 : -(n-1)/2);
-  int i = index; // ((index - is) % n) + is;
 
   if (i < is || i >= is + n)
     return 1;

@@ -53,6 +53,10 @@ static int agg_plot_show       (lua_State *L);
 static int agg_plot_add        (lua_State *L);
 static int agg_plot_update     (lua_State *L);
 static int agg_plot_add_line   (lua_State *L);
+static int agg_plot_title_set  (lua_State *L);
+static int agg_plot_title_get  (lua_State *L);
+static int agg_plot_index      (lua_State *L);
+static int agg_plot_newindex   (lua_State *L);
 static int agg_plot_free       (lua_State *L);
 
 static int agg_rgb_new         (lua_State *L);
@@ -93,7 +97,19 @@ static const struct luaL_Reg agg_plot_methods[] = {
   {"add",         agg_plot_add        },
   {"addline",     agg_plot_add_line   },
   {"update",      agg_plot_update     },
+  {"__index",     agg_plot_index      },
+  {"__newindex",  agg_plot_newindex   },
   {"__gc",        agg_plot_free       },
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg agg_plot_properties_get[] = {
+  {"title",        agg_plot_title_get  },
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg agg_plot_properties_set[] = {
+  {"title",        agg_plot_title_set  },
   {NULL, NULL}
 };
 
@@ -416,6 +432,45 @@ agg_plot_free (lua_State *L)
   return 0;
 }
 
+int
+agg_plot_index (lua_State *L)
+{
+  return mlua_index_with_properties (L, agg_plot_properties_get, false);
+}
+
+int
+agg_plot_title_set (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  const char *title = lua_tostring (L, 2);
+
+  if (title == NULL)
+    return gs_type_error (L, 2, "string");
+	  
+  pthread_mutex_lock (agg_mutex);
+  plot_set_title (p->plot, title);
+  if (p->window)
+    update_callback (p->window);
+  pthread_mutex_unlock (agg_mutex);
+	  
+  return 0;
+}
+
+int
+agg_plot_title_get (lua_State *L)
+{
+  struct agg_plot *p = check_agg_plot (L, 1);
+  const char *title = plot_get_title (p->plot);
+  lua_pushstring (L, title);
+  return 1;
+}
+
+int
+agg_plot_newindex (lua_State *L)
+{
+  return mlua_newindex_with_properties (L, agg_plot_properties_set);
+}
+
 static int
 property_lookup (struct property_reg *prop, const char *key)
 {
@@ -720,8 +775,6 @@ plot_register (lua_State *L)
 
   /* plot declaration */
   luaL_newmetatable (L, GS_METATABLE(GS_PLOT));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, agg_plot_methods);
   lua_pop (L, 1);
 

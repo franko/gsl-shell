@@ -446,6 +446,7 @@ static int pmain (lua_State *L) {
 
   lua_gc(L, LUA_GCRESTART, 0);
 
+  dolibrary (L, "base");
   dolibrary (L, "igsl");
   dolibrary (L, "integ");
   dolibrary (L, "draw");

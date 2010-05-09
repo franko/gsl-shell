@@ -45,7 +45,12 @@ class plot {
   };
 
 public:
-  plot() : m_elements(), m_trans(), m_bbox_updated(true) { };
+  plot() : m_elements(), m_trans(), m_bbox_updated(true) {
+    m_title_size = 32;
+    m_title = new char[m_title_size];
+    m_title[0] = 0;
+  };
+
   virtual ~plot() 
   {
 #ifdef DEBUG_PLOT
@@ -57,7 +62,24 @@ public:
 	container& d = m_elements[j];
 	resource_manager::dispose(d.vs);
       }
+
+    delete [] m_title;
   };
+
+  void set_title(const char *text) {
+    unsigned int len = strlen(text);
+
+    if (m_title_size < len + 1)
+      {
+	delete [] m_title;
+	m_title = new char[len+1];
+	m_title_size = len+1;
+      }
+
+    memcpy(m_title, text, len+1);
+  };
+
+  const char *get_title() const { return m_title; };
 
   void add(VertexSource* vs, agg::rgba8 color, bool outline = false) 
   { 
@@ -67,14 +89,11 @@ public:
     resource_manager::acquire(vs);
   };
 
-  virtual void draw(canvas &canvas)
-  {
-    trans_matrix_update();
-    draw_elements(canvas);
-  };
+  virtual void draw(canvas &canvas);
 
 protected:
   void draw_elements(canvas &canvas);
+  void draw_title(canvas& canvas);
   void calc_bounding_box();
   virtual void trans_matrix_update();
 
@@ -87,7 +106,43 @@ protected:
   bool   m_bbox_updated;
   double m_x1, m_y1;
   double m_x2, m_y2;
+
+  char *m_title;
+  unsigned int m_title_size;
 };
+
+template <class VS, class RM>
+void plot<VS,RM>::draw(canvas &canvas)
+{
+  trans_matrix_update();
+  draw_title(canvas);
+  draw_elements(canvas);
+};
+
+template <class VS, class RM>
+void plot<VS,RM>::draw_title(canvas &canvas)
+{
+  double xt = 0.5, yt = 1;
+
+  agg::trans_affine m;
+  this->viewport_scale(m);
+  canvas.scale(m);
+
+  agg::gsv_text title;
+  agg::conv_stroke<agg::gsv_text> titlestroke(title);
+
+  title.size(12.0);
+  title.text(m_title);
+  titlestroke.width(1.0);
+
+  m.transform(&xt, &yt);
+
+  xt += -title.text_width() / 2;
+  yt += 10.0;
+
+  title.start_point(xt, yt);
+  canvas.draw(titlestroke, agg::rgba(0, 0, 0));
+}
 
 template<class VS, class RM>
 void plot<VS,RM>::draw_elements(canvas &canvas)

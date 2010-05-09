@@ -87,7 +87,7 @@ Here an example::
 where the function ``print_state`` could be defined like::
 
    unction print_state(s)
-      print ("x: ", s.x:row_print())
+      print ("x: ", tr(s.x))
       print ("chi square: ", prod(s.f, s.f)[1])
    end
 

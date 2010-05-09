@@ -44,6 +44,9 @@ extern int
 mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
 			    bool use_cache);
 
+extern int
+mlua_newindex_with_properties (lua_State *L, const struct luaL_Reg *properties);
+
 extern const char * mlua_named_optstring (lua_State *L, int index, 
 					  const char *key, 
 					  const char * default_value);

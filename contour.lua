@@ -188,15 +188,8 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    local boxx = {right[1], right[1], left[1], left[1]}
    local boxy = {left[2], right[2], right[2], left[2]}
 
-   local function full_border_points()
-      local k = 0
-      return function()
-		if k < 4 then
-		   k = k+1
-		   return boxx[k], boxy[k]
-		end
-	     end
-   end
+   local full_border_points = sequence(function(k) return boxx[k], boxy[k] end,
+					1, 4)
 
    local function nodes_border_points(nid1, nid2)
       local n1, n2 = nodes[nid1], nodes[nid2]
@@ -571,61 +564,46 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 	 if curves[id].closed then insert(searchlist, id) end
       end
 
-      table.sort(searchlist, function(ia, ib) return #curves[ia] < #curves[ib] end)
+      table.sort(searchlist, 
+		 function(ia, ib) return #curves[ia] < #curves[ib] end)
 
-      local function make_col_iter(j)
-	 local i = 0
-	 return function()
-		   if i+1 <= ny then
-		      local si = segment_index_i(i, j, i+1, j)
-		      i = i+1
-		      return si
-		   end
-		end
+      local function make_col_iter(j) 
+	 return sequence(function(i) return segment_index_i(i, j, i+1, j) end,
+			  0, ny-1)
       end
       
-      local order_tree = {}
+      local order_tree, treated = {}, {}
 
-      function list_val_remove(ls, id)
-	 for k, cid in ipairs(ls) do
-	    if cid == id then 
-	       table.remove(ls, k)
-	       break
+      for _, id in ipairs(searchlist) do
+	 if not treated[id] then
+	    local i1, j1, i2, j2
+
+	    for _, si in ipairs(curves[id]) do
+	       i1, j1, i2, j2 = segment_index_lookup_i(si)
+	       if j1 == j2 then break end
 	    end
-	 end
-      end
 
-      while #searchlist > 0 do
-	 local id = searchlist[1]
-	 if not id then break end
+	    if not j1 then error 'cannot find vertical cross' end
 
-	 local i1, j1, i2, j2
+	    local line_iter, field = make_col_iter(j1), 2
+	    local i, j = 0, j1
 
-	 for _, si in ipairs(curves[id]) do
-	    i1, j1, i2, j2 = segment_index_lookup_i(si)
-	    if j1 == j2 then break end
-	 end
-
-	 if not j1 then error 'cannot find vertical cross' end
-
-	 local line_iter, field = make_col_iter(j1), 2
-	 local i, j = 0, j1
-
-	 local st = {}
-	 local domid = bord_domain_lookup(i, j)
-	 for id, si in line_scan_roots_iter(line_iter, field) do
-	    if not curves[id].closed and is_member_of_domain(domid, id) then
-	       domid = curve_opposite_domain(id, domid)
-	       if #st ~= 0 then error 'wrong curve stack in curve_order' end
-	    else
-	       list_val_remove(searchlist, id)
-
-	       if id == st[#st] then
-		  table.remove(st)
-		  local sup = #st > 0 and st[#st] or ('D' .. domid)
-		  order_add_relation(order_tree, id, sup)
+	    local st = {}
+	    local domid = bord_domain_lookup(i, j)
+	    for id, si in line_scan_roots_iter(line_iter, field) do
+	       if not curves[id].closed and is_member_of_domain(domid, id) then
+		  domid = curve_opposite_domain(id, domid)
+		  if #st ~= 0 then error 'wrong curve stack in curve_order' end
 	       else
-		  insert(st, id)
+		  treated[id] = true
+
+		  if id == st[#st] then
+		     table.remove(st)
+		     local sup = #st > 0 and st[#st] or ('D' .. domid)
+		     order_add_relation(order_tree, id, sup)
+		  else
+		     insert(st, id)
+		  end
 	       end
 	    end
 	 end

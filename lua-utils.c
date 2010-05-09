@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "lua-utils.h"
+#include "gs-types.h"
 
 char const * const CACHE_FIELD_NAME = "__cache";
 
@@ -105,6 +106,26 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
   lua_replace (L, 1);
   lua_gettable (L, 1);
   return 1;
+}
+
+int
+mlua_newindex_with_properties (lua_State *L, const struct luaL_Reg *properties)
+{
+  char const * key;
+  const struct luaL_Reg *reg;
+
+  key = lua_tostring (L, 2);
+  if (key == NULL)
+    return 0;
+
+  reg = mlua_find_method (properties, key);
+  if (reg)
+    {
+      lua_remove (L, 2);
+      return reg->func (L);
+    }
+
+  return luaL_error (L, "invalid property for %s object",  full_type_name (L, 1));
 }
 
 void

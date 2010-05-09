@@ -20,7 +20,7 @@ function demo1()
 end
 
 function demo2()
-   local n, ncut, order = 512, 16, 8
+   local n, ncut, order = 512, 11, 8
    local x1 = besselJzero(order, 14)
    local xsmp = |k| x1*(k-1)/n
 
@@ -35,12 +35,14 @@ function demo2()
    bars = ibars(sample(|k| abs(bess:get(k)), 0, 60, 60))
    fftplot:add(bars, 'darkblue')
    fftplot:addline(bars, 'black')
+   fftplot.title = 'FFT power spectrum'
    fftplot:show()
 
    for k=ncut, n/2 do bess:set(k,0) end
    fft_inv(bess)
 
    p:addline(ipath(sample(|i| bess[i], 1, n, n-1)), 'red', {{'dash', a=7, b=3}})
+   p.title = 'Original signal / reconstructed'
    p:show()
 
    return p, fftplot

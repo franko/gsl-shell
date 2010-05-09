@@ -24,53 +24,9 @@ if not have_complex then
    imag = |x| 0
 end
 
-local cat = table.concat
-local fmt = string.format
-local function push(ls, e)
-   ls[#ls+1] = e
-   return ls
-end
-
-function divmod(n, p)
-   local r = n % p
-   return (n-r)/p, r
-end
-
-local function tos(t, maxdepth)
-   if type(t) == 'table' then
-      if maxdepth <= 0 then return '<table>' end
-      local ls = {}
-      for k, v in pairs(t) do 
-	 if k ~= 'tag' then
-	    if type(k) ~= 'number' then 
-	       push(ls, k .. '= ' .. tos(v, maxdepth-1))
-	    else
-	       push(ls, tos(v, maxdepth-1))
-	    end
-	 end
-      end
-      return '{' .. cat(ls, ', ') .. '}'
-   elseif type(t) == 'function' then
-      return '<function>'
-   elseif type(t) == 'userdata' then
-      local ftostr = getmetatable(t).__tostring
-      if ftostr then return ftostr(t) else
-	 return fmt('<%s>', gsltype(t))
-      end
-   else
-      return tostring(t)
-   end
-end
-
-local function myprint(...)
-   for i, v in ipairs(arg) do
-      if i > 1 then io.write(', ') end
-      io.write(tos(v, 3))
-   end
-   io.write('\n')
-end
-
-print = myprint
+local cat    = table.concat
+local insert = table.insert
+local fmt    = string.format
 
 function matrix_f_set(m, f)
    local r, c = m:dims()
@@ -145,9 +101,9 @@ function matrix_to_string(m)
    for i=1,r do
       local ln = {}
       for j=1,c do
-	 push(ln, pad(tostring_eps(m:get(i,j), eps)))
+	 insert(ln, pad(tostring_eps(m:get(i,j), eps)))
       end
-      push(lines, '[ ' .. cat(ln, ' ') .. ' ]')
+      insert(lines, '[ ' .. cat(ln, ' ') .. ' ]')
    end
    return cat(lines, '\n')
 end
@@ -193,11 +149,7 @@ end
 
 function matrix_rows(m)
    local r, c = m:dims()
-   local i = 0
-   return function()
-	     i = i+1
-	     if i <= r then return m:slice(i, 1, 1, c) end
-	  end
+   return sequence(|i| m:slice(i, 1, 1, c), r)
 end
 
 function set(d, s)
@@ -249,7 +201,7 @@ end
 
 local function hc_print(hc)
    local eps = 1e-8 * hc_reduce(hc, |p,z| p + z*conj(z), 0)
-   local f = |p,z| push(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+   local f = |p,z| insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 
@@ -286,10 +238,4 @@ function sampmodel(f, xs)
       for j=1,p do A:set(k, j, y[j]) end
    end
    return A
-end
-
-function ilist(f, i0, i1)
-   local ls = {}
-   for k= i0, i1 do ls[#ls+1] = f(k) end
-   return ls
 end

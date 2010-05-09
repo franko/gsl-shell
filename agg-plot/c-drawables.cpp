@@ -30,7 +30,6 @@ typedef my::path path_type;
 CPLOT *
 plot_new(int with_units)
 {
-  typedef units_plot<vertex_source, ref_manager> units_plot_type;
   plot_type *p;
 
   if (with_units)
@@ -127,6 +126,19 @@ void plot_add(CPLOT *_p, CVERTSRC *_vs, struct color *color,
   curr = build_pipeline (curr, post);
 
   p->add(curr, new_color(color), (bool) outline);
+}
+
+void
+plot_set_title  (CPLOT *_p, const char *title)
+{
+  plot_type* p = (plot_type*) _p;
+  p->set_title(title);
+}
+
+const char * plot_get_title  (CPLOT *_p)
+{
+  plot_type* p = (plot_type*) _p;
+  return p->get_title();
 }
 
 CPATH* path_new()

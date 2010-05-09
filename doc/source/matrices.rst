@@ -24,24 +24,6 @@ In GSL Shell we can define the matrix with the following command::
 where you have previously defined n to be a small integer number.
 
 
-Examples
---------
-
-Here an examples that shows how to calculate the exponential of a 2x2 matrix by using the elementary Taylor expansion of the exponentian function::
-
-  function mexp(m, nmax)
-    local n = m:dims()
-    local r = unit(n)
-    local p, f = r, 1
-    for i=1, nmax do
-      p, f = mul(p, m), f/i
-      r = r + f * p
-    end
-    return r
-  end
-
-This function get two arguments.
-
 Matrix methods
 --------------
 
@@ -65,8 +47,41 @@ Matrix methods
 
 .. method:: slice(k0, k1, n0, n1)
 
-   Return a sub-matrix obtained from the original matrix by starting at the
-   element (k0, k1) and taking n0 rows and n1 columns.
+   Return a sub-matrix obtained from the original matrix by starting
+   at the element (k0, k1) and taking n0 rows and n1 columns. The
+   matrix that is returned is a "view" of the existing matrix in the
+   sense that it make reference to the same underlying matrix. So if
+   you modify the submatrix you will implicitely modify the original
+   matrix and viceversa.
+
+.. method:: norm()
+
+   Return the Frobenius norm of the matrix. It is defined as:
+
+   .. math::
+      \|a\| = \sqrt{\sum_i \sum_j | a_{ij} |^2}
+
+   where a\ :sub:`ij` are the elements of the matrix.
+
+.. method:: row(i)
+
+   Return the submatrix given by the i-th row of the matrix.
+
+.. method:: col(j)
+
+   Return the submatrix given by the j-th column of the matrix.
+
+.. method:: rows()
+
+   Return an iterator that gives all the rows of the matrix as a submatrix.
+
+   Example to calculate the norm of each row of a matrix ``m``::
+      
+      for r in m:rows() do
+         print(r:norm())
+      end
+
+
 
 Matrix Functions
 ----------------
@@ -81,6 +96,44 @@ All the functions described in this section have an equivalent function for comp
    elements with the i arguments equal to the row index and j equal to
    the column index. Then the value returned by the function is assigned
    to the matrix elements.
+
+.. function:: tr(m)
+
+   Return the transpose of the matrix.
+
+.. function:: hc(m)
+
+   Return the hermitian conjugate of the matrix.
+
+.. function:: tocomplex(m)
+
+   Return a new complex matrix equal to m.
+
+.. function:: diag(v)
+
+   Given a column vector ``v`` of length ``n`` returns a diagonal
+   matrix whose diagonal elements are equal to the elements of ``v``.
+
+.. function:: unit(n)
+
+   Return the unit matrix of dimension nxn.
+
+.. function:: set(a, b)
+
+   Set the matrix ``a`` to be equal to the matrix ``b``. It raise an
+   error if the dimensions of the matrices are different. Please note
+   that it is different than the statement::
+
+     a = b
+
+   because this latter simple make the variable ``a`` refer to the
+   same matrix of ``b``. With the :func:`set` function you set each
+   element of an existing matrix ``a`` to the same value of the
+   corresponding element of ``b``.
+
+.. function:: null(a)
+
+   Set each element of the matrix ``a`` to zero.
 
 .. function:: mul(a, b[, c, ...])
 
