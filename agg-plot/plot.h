@@ -83,7 +83,7 @@ public:
   const char *get_title() const { return m_title; };
 
   bool use_units() const { return m_use_units; };
-  void set_units(bool use_units) { m_use_units = use_units; };
+  void set_units(bool use_units);
 
   void add(VertexSource* vs, agg::rgba8 color, bool outline = false) 
   { 
@@ -364,6 +364,13 @@ void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
   const double xoffs = 0.09375, yoffs = 0.09375;
   static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-2*yoffs, xoffs, yoffs);
   trans_affine_compose (m, rsz);
+}
+
+template<class VS, class RM>
+void plot<VS,RM>::set_units(bool use_units)
+{ 
+  m_use_units = use_units; 
+  this->update_viewport_trans();
 }
 
 #endif

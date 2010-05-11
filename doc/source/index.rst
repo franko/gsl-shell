@@ -43,5 +43,6 @@ Contents:
    sf.rst
    minim.rst
    graphics.rst
+   contour.rst
    examples.rst
    acknowledgments.rst

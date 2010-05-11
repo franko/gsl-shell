@@ -24,17 +24,18 @@ Let's start with a simple example, let us suppose that we want to plot the funct
 
 where |agr| and |ohgr| are constants and t vary from 0 to t1. We can plot this function with GSL Shell with the following instructions::
 
-  require 'draw'
-  
   function myplot(alpha, omega, t1)
-     local p = plot() -- create a new plot, it is not shown for the moment
+     -- create a new plot, it is not shown for the moment
+     local p = plot('f(x) = exp(-a t) sin(w t)')
 
      -- we create a line that corresponds to our function
      local ln = fxline(|t| exp(-alpha*t)*sin(omega*t), 0, t1)
 
      -- we add the line to the plot and show it
-     p:add_line(ln, 'red')
+     p:addline(ln, 'red')
      p:show()
+
+     return p
   end
 
 Then to plot something you have just to call the 'myplot' function. For example::
@@ -45,10 +46,15 @@ Then to plot something you have just to call the 'myplot' function. For example:
 
 The function :func:`fxline` takes three arguments, the function to plot and the initial anf final values of the variable. By default the function will be sampled with 256 points but if you want you can provide a fourth arguments to give the number of sample points.
 
-TODO : Explain how 'plot' works.
+In this example we have used the :func:`plot` function to create a plot, the :func:`fxline` function to create the line to draw and the method :func:`addline` to add the line to the plot (in red). These three operations can be done with a single function, :func:`fxplot`. It works like that::
+  
+   p = fxplot(|x| sin(x), 0, 8*pi)
 
-A simpler example
------------------
+where the first arguments is the function to plot and the following
+arguments are the extrema of variation of the indipendent variable x.
+
+Graphics primitives
+-------------------
 
 In order to better understand the way GSL shell graphics works it is better to take a step back. Let use suppose that we want to plot an equilateral triangle. We can proceed as follows:
   - define a 'path' that describe the countour that we want to plot
@@ -70,7 +76,7 @@ So to plot a triangle you can give the following instructions::
 
 .. figure:: simpler-example-1.png
 
-Please not that we have used the :func:`add` method instead of :func:`add_line` to add the path.
+Please not that we have used the :func:`add` method instead of :func:`addline` to add the path.
 
 Now let us suppose that we want to plot only the contour of the triangle with a line 10 pixel thick and with round edges. Then what you have to do is to supply to the :func:`add` method a third argument where you specify a ``stroke`` transformation::
 
@@ -105,20 +111,44 @@ Some transformations are naturally expressed as post-transforms because they doe
 plot
 ----
 
-We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :func:`add` and :func:`add_line`. The method :func:`add_line` is just a shortcut to add elements with a 'stroke' post transform with unitary width.
+We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :func:`add` and :func:`addline`. The method :func:`addline` is just a shortcut to add elements with a 'stroke' post transform of unitary width.
 
 If can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
 
 .. class:: plot
    
-   .. function:: plot([show_grid])
+   .. function:: plot([title])
       
-      Create a new empty plot. By default ``show_grid`` is true and the plot is shown with axes, grids and marks.
+      Create a new empty plot with an optional title.
 
    .. method:: add(obj, color[, post_trans, pre_trans])
       
-      Add the :ref:`graphical object <graphics-objects>` ``obj`` to the plot with the given ``color``.
-      The optional arguments ``post_trans`` and ``pre_trans`` should be a table of :ref:`graphical transformations <graphics-transforms>`.
+      Add the :ref:`graphical object <graphics-objects>` ``obj`` to
+      the plot with the given ``color``.  The optional arguments
+      ``post_trans`` and ``pre_trans`` should be a table of
+      :ref:`graphical transformations <graphics-transforms>`.
+
+   .. method:: addline(obj, color[, post_trans, pre_trans])
+      
+      Add the :ref:`graphical object <graphics-objects>` ``obj`` to
+      the plot by performing automatically a stroke of it. It is
+      useful because you often need to draw lines and not filled
+      polygons. It is equivalent to add a 'stroke' operations of
+      unitary size in the viewport coordinates system.
+
+   .. method:: update()
+
+      Updates the window that display the plot.
+
+   .. attribute:: units
+
+      A boolean value that define if the axis and grids should be
+      drawn or not. By default it is true.
+
+   .. attribute:: title
+
+      The title of the plot. You can change or set the title using
+      this attribute.
 
 .. _graphics-objects:
 
@@ -178,7 +208,8 @@ Graphical Objects
 
    .. method:: set_point(x, y)
  
-      Set the position where the test is diplayed. It corresponds to the bottom left corner of the text.
+      Set the position where the test is diplayed. It corresponds to
+      the bottom left corner of the text.
 
    .. method:: rotate(angle)
  

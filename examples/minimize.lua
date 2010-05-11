@@ -45,7 +45,7 @@ function demo1()
 
    local px = new(2,1)
    p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
-   c=path(m.x[1], m.x[2])
+   c = path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
    end
@@ -55,6 +55,7 @@ function demo1()
    p:addline(c, 'black', {{'marker', size=5}})
    p:addline(c, 'red')
 
+   p.title = 'Rosenbrock function minimisation'
    p:show()
    return p
 end
@@ -65,7 +66,7 @@ function demo2()
    m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(f), {-2, -2}, {8, 2})
+   p=contour(cook(f), {-2, -3}, {8, 2})
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -76,6 +77,7 @@ function demo2()
    p:addline(c, 'black', {{'marker', size=5}})
    p:addline(c, 'red')
 
+   p.title = 'Quadratic function minimisation'
    p:show()
    return p
 end
@@ -86,7 +88,7 @@ function demo3()
    m = minimizer {fdf= fex, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(fex), {-2, -2.5}, {1, 1}, 30, 30, 16)
+   p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
    c=path(m.x[1], m.x[2])
    while m:step() == 'continue' do
       c:line_to(m.x[1], m.x[2])
@@ -97,6 +99,7 @@ function demo3()
    p:addline(c, 'black', {{'marker', size=5}})
    p:addline(c, 'green')
 
+   p.title = 'function minimisation: f(x,y) = 4 x^2 + 2 y^2 + 4 x y + 2 y + 1'
    p:show()
    return p
 end

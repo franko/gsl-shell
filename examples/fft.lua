@@ -6,15 +6,22 @@ function demo1()
 
    local sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
-   local p = plot()
-   p:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
+   local pt = plot('Original signal / reconstructed')
+   local pf = plot('FFT Power Spectrum')
+
+   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
 
    fft(sq)
+
+   pf:add(ibars(sample(|k| abs(sq:get(k)), 0, 60, 60)), 'black')
+
    for k=ncut, n/2 do sq:set(k,0) end
    fft_inv(sq)
 
-   p:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'red')
-   p:show()
+   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'red')
+
+   pf:show()
+   pt:show()
 
    return p
 end

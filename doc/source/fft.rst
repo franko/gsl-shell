@@ -162,16 +162,18 @@ In this example we will treat a square pulse in the temporal domain. To illustra
 
 So, first we define our square pulse in the time domain. Actually it will be a matrix with just one column::
 
-   n = 256
-   ncut = 16
+
+   local n, ncut = 256, 16
 
    -- we create a pulse signal in the time domain
-   sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   local sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
 Than we create two new plots, one for the Fourier transform and one for the signal itself::
 
-   pt, pf = plot(), plot()
-   pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'black')
+   local pt = plot('Original signal / reconstructed')
+   local pf = plot('FFT Power Spectrum')
+
+   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
 
 Now we are ready to perform:
 
@@ -181,15 +183,14 @@ Now we are ready to perform:
 
 and plot the results::
 
-   -- a convenience function, the norm of a complex number
-   cmod = |z| sqrt(z*conj(z))
-
    fft(sq)
-   pf:add(ibars(iter(function(i) return i, cmod(sq:get(i)) end, 0, n/2)), 'black')
+
+   pf:add(ibars(sample(|k| abs(sq:get(k)), 0, 60, 60)), 'black')
+
    for k=ncut, n/2 do sq:set(k,0) end
    fft_inv(sq)
 
-   pt:add_line(ipath(irow(sq, function(m,i) return i, m:get(i,1) end)), 'red')
+   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'red')
 
    pf:show()
    pt:show()
