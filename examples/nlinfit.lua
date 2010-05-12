@@ -1,7 +1,7 @@
 
  -- Non-linear Fit Examples / nlinfit.lua
  -- 
- -- Copyright (C) 2009 Francesco Abbate
+ -- Copyright (C) 2009, 2010 Francesco Abbate
  -- 
  -- This program is free software; you can redistribute it and/or modify
  -- it under the terms of the GNU General Public License as published by
@@ -16,9 +16,6 @@
  -- You should have received a copy of the GNU General Public License
  -- along with this program; if not, write to the Free Software
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-
-require 'igsl'
-require 'draw'
 
 function demo1()
    local n = 50
@@ -74,6 +71,7 @@ function demo2()
 		  end
 
    local y = new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+   local x = new(n, 1, |i,j| xs(i))
 
    local function expf(x, f, J)
       for k=1, n do
@@ -82,9 +80,9 @@ function demo2()
       end
    end
 
-   pl = plot('Non-linear fit / A * exp(a t) sin(w t)')
-   pl:addline(ipath(sequence(function(k) return xs(k), y[k] end, n)), 'blue',
-	      {{'marker', size= 5}})
+   pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
 
    local function print_state(s)
       print ("x: ", tr(s.x))

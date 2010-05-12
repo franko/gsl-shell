@@ -30,6 +30,10 @@ function fxline(f, xi, xs, n)
    return ipath(sample(f, xi, xs, n))
 end
 
+function filine(f, a, b)
+   return ipath(isample(f, a, b))
+end
+
 function xyline(x, y)
    local n = x:dims()
    local ln = path(x[1], y[1])

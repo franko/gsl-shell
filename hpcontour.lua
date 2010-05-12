@@ -51,9 +51,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 
    for i=0, nx do lncross[i] = {} end
 
-   local DEBUG_PLOT = nil -- plot()
-   local ECHO_DEBUG = false
-
    local function get_root(id, si)
       return roots[id][si]
    end
@@ -585,34 +582,12 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 
 	    insert(points, {pb[1], pb[2]})
 
-	    if DEBUG_PLOT then
-	       if start then
-		  debug_curve:move_to(pa[1], pa[2])
-		  debug_curve:line_to(pb[1], pb[2])
-		  DEBUG_PLOT:addline(debug_curve, 'gray')
-	       else
-		  debug_curve:line_to(pb[1], pb[2])
-		  DEBUG_PLOT:update()
-	       end
-
-	       for k=debug_n+1, #curve do
-		  local ssi = curve[k]
-		  local s = segment_index_lookup(ssi)
-		  local a, b = grid_point(s.i1, s.j1), grid_point(s.i2, s.j2)
-		  local seg = path(a[1], a[2])
-		  seg:line_to(b[1], b[2])
-		  DEBUG_PLOT:addline(seg, rainbow(level))
-	       end
-	       debug_n = #curve
-	    end
-
 	    local dya, dyb = pa[oi] - p0[oi], pb[oi] - p0[oi]
 	    if not start and (dyb * dya < 0 or dyb == 0) then
 	       local sign = (oi == 1 and 1 or -1)
 	       local dyi = dyb - dya
 	       local a = -dya / dyi
 	       local xi = pa[oj] - p0[oj] + a * (pb[oj] - pa[oj])
-	       if DEBUG_PLOT then add_point(DEBUG_PLOT, pa + a * (pb - pa)) end
 	       cw = cw + (sign * dyi * xi > 0 and -1 or 1)
 	    end
 
@@ -632,17 +607,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       local ss = segment_index_lookup(si0)
       grid_remove_cross(px, level, id, ss.j1 == ss.j2)
 
-      if DEBUG_PLOT then
-	 print('curve', id)
-	 local bord = path(left[1], left[2])
-	 bord:line_to(right[1], left[2])
-	 bord:line_to(right[1], right[2])
-	 bord:line_to(left[1],  right[2])
-	 bord:close()
-	 DEBUG_PLOT:addline(bord, 'blue')
-	 DEBUG_PLOT:show()
-      end
-
       local is_closed = run(curve, si0, 1)
       if not is_closed then
 	 reverse(curve.points)
@@ -656,8 +620,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 	 if cw == 0 then error 'error in curve closure determination' end
 	 curve.closed = cw
       end
-
-      if DEBUG_PLOT then io.read('*l') end
 
       return curve
    end
@@ -703,8 +665,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    end
 
    local function order_curves()
-      print('ORDER CURVES')
-
       searchlist, treated = {}, {}
       for id, _ in ipairs(curves) do 
 	 if curves[id].closed then insert(searchlist, id) end
@@ -735,17 +695,14 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 	    for id, _ in kf do
 	       if not curves[id].closed then
 		  if not is_member_of_domain(domid, id) then
-		     -- DEBUG DEBUG DEBUG
-		     print('ERROR: curve', id, 'does not match domain', domid)
+		     error 'error in curve/domain attribution'
 		  else
 		     domid = curve_opposite_domain(id, domid)
-		     print('> domain:', domid)
 		     if #st ~= 0 then 
 			error 'wrong curve stack in curve_order' 
 		     end
 		  end
 	       else
-		  print('curve', id)
 		  treated[id] = true
 
 		  if id == st[#st] then
@@ -757,19 +714,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 		  end
 	       end
 	    end
-	    print('SCAN OK')
 	 end
-      end
-
-      -- DEBUG DEBUG DEBUG
-      local function set_to_string(set)
-	 local tb = {}
-	 for k, _ in pairs(set) do insert(tb, k) end
-	 return string.format('{%s}', table.concat(tb, ','))
-      end
-
-      for id, c in pairs(order_tree) do
-	 print('> curve', id, 'inf:', set_to_string(c))
       end
 
       return order_tree
@@ -788,44 +733,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       find_domains()
 
       order_tree = order_curves()
-   end
-
-   local function debug_print_cross(color_function)
-      local pl = plot()
-      for k = 0, nlevels do
-	 local line = path()
-	 local dline = path()
-	 for i=0,ny do
-	    for j=0,nx do
-	       local ls = cross[segment_index_i(i,j,i,j+1)]
-	       local p = grid_point(i, j)
-	       if ls and ls[k] then
-		  if ls[k] == 'undef' then
-		     dline:move_to(p[1], p[2])
-		     dline:line_to(p[1] + dx[1], p[2])
-		  else
-		     line:move_to(p[1], p[2])
-		     line:line_to(p[1] + dx[1], p[2])
-		  end
-	       end
-	       ls = cross[segment_index_i(i,j,i+1,j)]
-	       if ls and ls[k] then
-		  if ls[k] == 'undef' then
-		     dline:move_to(p[1], p[2])
-		     dline:line_to(p[1], p[2] + dy[2])
-		  else
-		     line:move_to(p[1], p[2])
-		     line:line_to(p[1], p[2] + dy[2])
-		  end
-	       end
-	    end
-	 end
-	 local col = color_function(k+1)
-	 pl:addline(dline, col)
-	 pl:addline(line, col, {{'dash', a=3, b=3}})
-      end
-      pl:show()
-      return pl
    end
 
    local function curve_points(id, dir)
@@ -914,12 +821,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 	 end
 	 local a = dom.level/nlevels
 	 pl:add(dpath, color(a))
-
-	 -- DEBUG DEBUG DEBUG
-	 local cls = {}
-	 if tree then for sid, _ in pairs(tree) do insert(cls, sid) end end
-	 print('domain', domid, 'curves:', cls)
---	 io.read('*l')
       end
    end
 
@@ -932,7 +833,6 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    end
 	 
    return {
-	   print_cross    = debug_print_cross,
            find_curves    = grid_find_curves,
            draw_regions   = grid_draw_regions,
            draw_lines     = grid_draw_lines}
@@ -943,9 +843,6 @@ function hpcontour(f, a, b, ngridx, ngridy, nlevels)
    ngridy = ngridy and ngridy or 20
    nlevels = nlevels and nlevels or 12
    local g = grid_create(f, vector(a), vector(b), ngridx, ngridy, nlevels)
-
---   local p = g.print_cross(rainbow)
---   io.read('*l')
 
    g.find_curves()
 

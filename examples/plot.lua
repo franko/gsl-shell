@@ -87,7 +87,7 @@ function demo4()
    local sqf = sq:copy()
 
    local pt, pf = plot(), plot()
-   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
+   pt:addline(filine(|i| sq[i], n), 'black')
 
    local cmod = |z| sqrt(z*conj(z))
 
@@ -96,7 +96,7 @@ function demo4()
    for k=ncut, n/2 do sqf:set(k,0) end
    fft_inv(sqf)
 
-   pt:addline(ipath(sample(|i| sqf[i], 1, n, n-1)), 'red')
+   pt:addline(filine(|i| sqf[i], n), 'red')
 
    pf:show()
    pt:show()

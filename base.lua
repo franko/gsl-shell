@@ -10,16 +10,13 @@ end
 local function tos(t, maxdepth)
    if type(t) == 'table' then
       if maxdepth <= 0 then return '<table>' end
-
-      local ils = {}
-      for i, v in ipairs(t) do ils[i] = v end
-      
-      local ls = {}
-      for i, v in ipairs(ils) do insert(ls, tos(v, maxdepth-1)) end
-      for k, v in pairs(t) do 
-	 if not ils[k] then insert(ls, k .. '= ' .. tos(v, maxdepth-1)) end
+      local ls, n = {}, #t
+      for i, v in ipairs(t) do insert(ls, tos(v, maxdepth-1)) end
+      for k, v in pairs(t) do
+	 if type(k) ~= 'number' or k < 1 or k > n then
+	    insert(ls, k .. '= ' .. tos(v, maxdepth-1))
+	 end
       end
-
       return '{' .. cat(ls, ', ') .. '}'
    elseif type(t) == 'function' then
       return '<function>'
@@ -43,15 +40,20 @@ end
 
 print = myprint
 
-function ilist(f, a, b)
-   a, b = (b and a or 1), (b and b or a)
-   if not b or type(b) ~= 'number' then 
-      error 'argument #2 should be an integer number' 
-   end
-   local ls = {}
-   for k= a, b do ls[#ls+1] = f(k) end
-   return ls
-end
+-- take the function f and return an iterator that gives the couple (x, f(x))
+-- for x going from 'xi' to 'xs' with n sampling points
+-- function sample(f, xi, xs, n)
+--    n = n and n or xs - xi
+--    local k = 0
+--    local cf = (xs-xi)/n
+--    return function()
+-- 	     if k <= n then
+-- 		local x = xi + k*cf
+-- 		k = k+1
+-- 		return x, f(x)
+-- 	     end
+-- 	  end
+-- end
 
 function sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
@@ -65,4 +67,20 @@ function sequence(f, a, b)
 		return f(k-1)
 	     end
 	  end
+end
+
+function sample(f, xi, xs, n)
+--   n = n and n or xs - xi
+   local cf = (xs-xi)/n
+   return sequence(function(k) return xi+k*cf, f(xi+k*cf) end, 0, n)
+end
+
+function ilist(f, a, b)
+   local ls = {}
+   for x in sequence(f, a, b) do insert(ls, x) end
+   return ls
+end
+
+function isample(f, a, b)
+   return sequence(function(i) return i, f(i) end, a, b)
 end

@@ -178,21 +178,6 @@ function ode_iter(s, t0, y0, t1, tstep)
 	  end
 end
 
--- take the function f and return an iterator that gives the couple (x, f(x))
--- for x going from 'xi' to 'xs' with n sampling points
-function sample(f, xi, xs, n)
-   n = n and n or xs - xi
-   local k = 0
-   local cf = (xs-xi)/n
-   return function()
-	     if k <= n then
-		local x = xi + k*cf
-		k = k+1
-		return x, f(x)
-	     end
-	  end
-end
-
 local function hc_reduce(hc, f, accu)
    local n = hc.length
    for i=0, n do accu = f(accu, hc:get(i)) end
@@ -201,7 +186,10 @@ end
 
 local function hc_print(hc)
    local eps = 1e-8 * hc_reduce(hc, |p,z| p + z*conj(z), 0)
-   local f = |p,z| insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+   local f = function(p, z)
+		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+		return p
+	     end
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 
