@@ -49,6 +49,14 @@ function fxplot(f, xi, xs, color, n)
    return p
 end
 
+function fiplot(f, a, b, color)
+   if not b then a, b, color = 1, a, b end
+   local p = plot()
+   p:addline(ipathp(isample(f, a, b)), color)
+   p:show()
+   return p
+end
+
 local function add_bar(p, lx, rx, y)
    p:move_to(lx, 0)
    p:line_to(rx, 0)
@@ -97,8 +105,8 @@ function color_function(schema, alpha)
 	  end
 end
 
-function plot_lines(ln)
-   local p = plot()
+function plot_lines(ln, title)
+   local p = plot(title)
    for k=1, #ln do
       p:addline(ln[k], rainbow(k))
    end

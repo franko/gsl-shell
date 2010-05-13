@@ -1,5 +1,5 @@
 
- -- ode-example.lua
+ -- ODE examples, examples/ode.lua
  -- 
  -- Copyright (C) 2009 Francesco Abbate
  -- 
@@ -51,7 +51,7 @@ end
 function demo1()
    local mu = 10
 
-   local odef = function(t,y,f)
+   local odef = function(t, y, f)
 		   f:set(1,1, y[2])
 		   f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
 		end

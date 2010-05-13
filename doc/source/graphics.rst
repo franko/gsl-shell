@@ -53,6 +53,126 @@ In this example we have used the :func:`plot` function to create a plot, the :fu
 where the first arguments is the function to plot and the following
 arguments are the extrema of variation of the indipendent variable x.
 
+Graphics Functions
+------------------
+
+To create many type of plots you don't really need to use the graphics primitives because it would be annoying and tedious to give a not of instructions just to produce some simple plots. Instead you can use the higher level plotting functions to make most of the most common type of plots.
+
+.. function:: fxplot(f, xi, xs[, color, n])
+
+   Produces a plot of the function ``f(x)`` for x going from ``xi`` to ``xs``. The last optional parameter ``n`` is the number of sampling point to use and, if not given, a default value will be used. The function returns the :class:`plot` itself.
+
+.. function:: fiplot(f, a, b[, color])
+              fiplot(f, b)
+
+   Produces a plot of the function ``f(i)`` where 'i' is an integer
+   variable going from ``a`` to ``b``. In the second abbreviated form ``a`` take the default value of one. The function returns the :class:`plot` itself.
+
+   *Example*::
+   
+      -- plot the 'choose' function for some integer values
+      fiplot(|i| choose(12, i), 12)
+
+      -- plot of a geometric series
+      fiplot(|n| 0.9^n, 0, 36)
+
+.. function:: fxline(f, xi, xs[, n])
+
+   This function returns an graphical object of type :class:`path` given by the points (x, f(x)) for x going from ``xi`` to ``xs`` with ``n`` sampling point.
+
+   *Example*::
+
+      -- we create a 'path' for the function f(x) = sin(x)*exp(-0.1*x)
+      -- and plot it
+      p = plot('Example')
+      line = fxline(|x| sin(x)*exp(-0.1*x), 0, 10*pi)
+      p:addline(line)
+      p:show()
+
+   *Example*:
+      You can produce very easily a nice illustration of the "area below a curve" with the following commands::
+
+         p = plot('Example')
+         line = fxline(|x| sin(x)*exp(-0.1*x), 0, 10*pi)
+         p:add(line, rgba(1,1,0,0.6))
+         p:addline(line)
+         p:show()
+
+      and it will produce the following output:
+
+      .. figure:: graphics-example-yellow-area.png
+
+.. function:: filine(f, a, b)
+              filine(f, b)
+
+   This function returns an graphical object of type :class:`path` given by the points (i, f(i)) where 'i' is an integer variable going from ``a`` to ``b``. It ``a`` is omitted values will be in the interval 1 .. b.
+
+   For its usage see the similar function :func:`fxline`.
+
+.. function:: xyline(x, y)
+
+   This function takes two column matrix of dimendions N as arguments and returns a graphical object of type :class:`path` given by the points (x[i], y[i]) where i goes from 1 to N.
+
+   *Example*::
+
+      N = 256
+      sio2n = |w| sqrt(1.4923 + 0.61497*w^2/(w^2 - 0.115^2)-0.01059*w^2)
+      -- define a matrix with wavelength and refrective index in each column
+      d = new(N, 2, function(i,j)
+                       local w = 0.4*(i-1)/(N-1)+0.4
+                       return j == 1 and w or sio2n(w)
+                    end)
+      p = plot('SiO2 dispersion curve in visible range')
+      line = xyline(d:col(1), d:col(2))
+      p:addline(line)
+      p:show()
+
+.. function:: ipath(f)
+              ipathp(f)
+
+   This function takes an iterator function ``f`` and returns a :class:`path` given by the points (x, y) returned by the iterator ``f``. The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
+
+   *Example*
+      Please note that this example is given for didactic purpose and the same results can be obtained using the :func:`fxplot` function::
+
+	 -- create an iterator to sample a function f from xi to xs with n points
+	 make_f_iter = function(f, xi, xs, n)
+			  local i = 0
+			  return function()
+			     if i <= n then
+				local x = xi+(xs-xi)*i/n
+				i = i+1
+				return x, f(x)
+			     end
+			  end
+		       end
+	 -- then we use ipath to create a path from the iterator
+	 line = ipath(make_f_iter(sin, 0, 8*pi, 512))
+	 p = plot('sin(x)')
+	 p:addline(line)
+	 p:show()
+
+.. function:: ibars(f)
+
+   This function takes an iterator function ``f`` and returns a :class:`path` object that draws many adjacent rectangular boxs correspondings to the points (x, y) returned by the iterator ``f``. This function simplify the creation of histograms.
+
+   *Example*::
+
+      -- draws the histogram of a simulated gaussian distribution
+      N = 800
+      r = rng()
+      f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
+      p = plot('Simulated Gaussian Distribution')
+      b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
+      p:add(b, 'darkgreen')
+      p:add(b, 'black', {{'stroke', width= 0.5}})
+      p:addline(fxline(f, -4, 4), 'red')
+      p:show()
+
+   We obtain the following plot:
+ 
+   .. figure:: graphics-example-ibars.png
+
 Graphics primitives
 -------------------
 

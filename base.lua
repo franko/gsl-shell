@@ -40,21 +40,6 @@ end
 
 print = myprint
 
--- take the function f and return an iterator that gives the couple (x, f(x))
--- for x going from 'xi' to 'xs' with n sampling points
--- function sample(f, xi, xs, n)
---    n = n and n or xs - xi
---    local k = 0
---    local cf = (xs-xi)/n
---    return function()
--- 	     if k <= n then
--- 		local x = xi + k*cf
--- 		k = k+1
--- 		return x, f(x)
--- 	     end
--- 	  end
--- end
-
 function sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
    if not b or type(b) ~= 'number' then 
@@ -69,10 +54,11 @@ function sequence(f, a, b)
 	  end
 end
 
+-- take the function f and return an iterator that gives the couple (x, f(x))
+-- for x going from 'xi' to 'xs' with n sampling points
 function sample(f, xi, xs, n)
---   n = n and n or xs - xi
-   local cf = (xs-xi)/n
-   return sequence(function(k) return xi+k*cf, f(xi+k*cf) end, 0, n)
+   local c = (xs-xi)/n
+   return sequence(function(k) return xi+k*c, f(xi+k*c) end, 0, n)
 end
 
 function ilist(f, a, b)
