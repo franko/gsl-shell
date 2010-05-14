@@ -166,14 +166,14 @@ So, first we define our square pulse in the time domain. Actually it will be a m
    local n, ncut = 256, 16
 
    -- we create a pulse signal in the time domain
-   local sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   local y = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
 Than we create two new plots, one for the Fourier transform and one for the signal itself::
 
    local pt = plot('Original signal / reconstructed')
    local pf = plot('FFT Power Spectrum')
 
-   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'black')
+   pt:addline(ipath(sample(|i| y[i], 1, n, n-1)), 'black')
 
 Now we are ready to perform:
 
@@ -183,14 +183,14 @@ Now we are ready to perform:
 
 and plot the results::
 
-   fft(sq)
+   fft(y)
 
-   pf:add(ibars(sample(|k| abs(sq:get(k)), 0, 60, 60)), 'black')
+   pf:add(ibars(sample(|k| abs(y:get(k)), 0, 60, 60)), 'black')
 
-   for k=ncut, n/2 do sq:set(k,0) end
-   fft_inv(sq)
+   for k=ncut, n/2 do y:set(k,0) end
+   fft_inv(y)
 
-   pt:addline(ipath(sample(|i| sq[i], 1, n, n-1)), 'red')
+   pt:addline(filine(|i| y[i], n), 'red')
 
    pf:show()
    pt:show()

@@ -15,7 +15,6 @@ struct bspline {
   size_t nbreak;
 };
 
-static int         bspline_unif_new         (lua_State *L);
 static int         bspline_new              (lua_State *L);
 static int         bspline_free             (lua_State *L);
 static int         bspline_eval             (lua_State *L);
@@ -29,58 +28,54 @@ static const struct luaL_Reg bspline_methods[] = {
 };
 
 static const struct luaL_Reg bspline_functions[] = {
-  {"bsplines",        bspline_new},
-  {"bspline",         bspline_unif_new},
+  {"bspline",         bspline_new},
   {NULL, NULL}
 };  
 
 int
 bspline_new (lua_State *L)
 {
-  gsl_matrix *breaks = matrix_check (L, 1);
-  gsl_vector_view brk = gsl_matrix_column (breaks, 0);
-  size_t nbreak = breaks->size1;
+  gsl_matrix *breaks = NULL;
+  gsl_vector_view brk;
+  double a, b;
+  int nbreak;
   struct bspline *bs;
+  int nargs = 3;
   int k = 4;
 
-  if (!lua_isnil (L, 2))
+  if (lua_isnumber (L, 1))
     {
-      k = luaL_checkinteger (L, 2);
+      a = lua_tonumber (L, 1);
+      b = luaL_checknumber (L, 2);
+      nbreak = luaL_checkinteger (L, 3);
+    }
+  else
+    {
+      breaks = matrix_check (L, 1);
+      brk = gsl_matrix_column (breaks, 0);
+      nbreak = brk.vector.size;
+      nargs = 1;
+    }
+
+  if (nbreak <= 2)
+    return luaL_error (L, "number of knots should be >= 2");
+
+  if (lua_gettop (L) >= nargs+1 && !lua_isnil (L, nargs+1))
+    {
+      k = luaL_checkinteger (L, nargs+1);
       if (k <= 0)
 	return luaL_error (L, "bspline order should be > 0");
     }
 
   bs = lua_newuserdata (L, sizeof(struct bspline));
-  bs->ws = gsl_bspline_alloc ((size_t) k, nbreak);
+  bs->ws = gsl_bspline_alloc ((size_t) k, (size_t) nbreak);
   bs->k = k;
-  bs->nbreak = nbreak;
+  bs->nbreak = (size_t) nbreak;
 
-  gsl_bspline_knots (&brk.vector, bs->ws);
-
-  return 1;
-}
-
-int
-bspline_unif_new (lua_State *L)
-{
-  double a = luaL_checknumber (L, 1), b = luaL_checknumber (L, 2);
-  size_t nbreak = luaL_checkinteger (L, 3);
-  struct bspline *bs;
-  int k = 4;
-
-  if (lua_gettop (L) >= 4 && !lua_isnil (L, 4))
-    {
-      k = luaL_checkinteger (L, 4);
-      if (k <= 0)
-	return luaL_error (L, "bspline order should be > 0");
-    }
-
-  bs = lua_newuserdata (L, sizeof(struct bspline));
-  bs->ws = gsl_bspline_alloc ((size_t) k, nbreak);
-  bs->k = k;
-  bs->nbreak = nbreak;
-
-  gsl_bspline_knots_uniform (a, b, bs->ws);
+  if (breaks)
+    gsl_bspline_knots (&brk.vector, bs->ws);
+  else
+    gsl_bspline_knots_uniform (a, b, bs->ws);
 
   gs_set_metatable (L, GS_BSPLINE);
 

@@ -20,5 +20,7 @@ X = b:model(x)
 
 c, cov = mlinear(X, y, w)
 
-p = fxplot(|x| prod(c, b:eval(x))[1], 0, 15)
+p = plot('B-splines curve approximation')
+p:addline(xyline(x, mul(X, c)))
 p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
+p:show()

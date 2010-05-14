@@ -32,7 +32,7 @@ mlinear_fit (lua_State *L)
   double chisq;
   int status;
 
-  if (!lua_isnil (L, 3))
+  if (lua_gettop(L) > 2 && !lua_isnil (L, 3))
     {
       w = matrix_check (L, 3);
       matrix_check_size (L, w, n, 1);

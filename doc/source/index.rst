@@ -36,7 +36,9 @@ Contents:
    randist.rst
    pdf.rst
    cdf.rst
+   linfit.rst
    nlinfit.rst
+   bsplines.rst
    fft.rst
    ode.rst
    integ.rst
