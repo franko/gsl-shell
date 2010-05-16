@@ -8,6 +8,9 @@
 #ifndef lconfig_h
 #define lconfig_h
 
+#define QUOTEME_(x) #x
+#define QUOTEME(x) QUOTEME_(x)
+
 #include <limits.h>
 #include <stddef.h>
 
@@ -52,8 +55,9 @@
 	".\\?.dll;"  GSL_SHELL_CDIR"?.dll;" GSL_SHELL_CDIR"loadall.dll"
 
 #else
-# define LUA_ROOT	"/usr/"
-#define GSL_SHELL_CDIR	LUA_ROOT "lib/gsl-shell/"
+/* # define LUA_ROOT	"/usr" */
+#define LUA_ROOT_Q QUOTEME(LUA_ROOT) "/"
+#define GSL_SHELL_CDIR	LUA_ROOT_Q "lib/gsl-shell/"
 #define LUA_PATH_DEFAULT  \
 		"./?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?/init.lua"
 #define LUA_CPATH_DEFAULT \

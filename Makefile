@@ -71,7 +71,7 @@ ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   TARGETS = $(LUA_DLL)
 else
   C_SRC_FILES += gsl-shell.c
-  SUBDIRS_DEFS += -DGSL_SHELL_LUA
+  SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
   TARGETS = $(GSL_SHELL)
 endif
 
@@ -125,6 +125,14 @@ gsl-shell: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 	ln -sf ./.libs/libluagsl.so $@
+
+install: gsl-shell
+	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
+	cp igsl.lua base.lua integ.lua draw.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell
+	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
+	cp examples/*.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
+
 endif
 
 %.o: %.c

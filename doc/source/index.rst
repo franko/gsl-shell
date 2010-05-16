@@ -32,6 +32,7 @@ Contents:
    intro.rst
    matrices.rst
    linalg.rst
+   eigen.rst
    random.rst
    randist.rst
    pdf.rst

@@ -133,22 +133,25 @@ To create many type of plots you don't really need to use the graphics primitive
    This function takes an iterator function ``f`` and returns a :class:`path` given by the points (x, y) returned by the iterator ``f``. The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
 
    *Example*
-      Please note that this example is given for didactic purpose and the same results can be obtained using the :func:`fxplot` function::
+      In the following example we shows how to create a circle by using an iterator to generates the points. We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`. In this way we obtain an object of type :class:`path` and we can add into a plot.::
 
-	 -- create an iterator to sample a function f from xi to xs with n points
-	 make_f_iter = function(f, xi, xs, n)
-			  local i = 0
-			  return function()
-			     if i <= n then
-				local x = xi+(xs-xi)*i/n
-				i = i+1
-				return x, f(x)
-			     end
-			  end
-		       end
+	 -- create a simple iterator that return n points uniformly spaced
+         -- in a circle centerd in (x0, y0) with radius R
+	 circle = function(x0, y0, R, n)
+                     local k = 0
+                     return function()
+                        if k <= n then
+			   local th = 2*k*pi/n
+                           local x, y = x0 + R*cos(th), y0 + R*sin(th)
+                           k = k+1
+                           return x, y
+                        end
+                     end
+                  end
 	 -- then we use ipath to create a path from the iterator
-	 line = ipath(make_f_iter(sin, 0, 8*pi, 512))
-	 p = plot('sin(x)')
+	 line = ipath(circle(1, 1, 2.5, 256))
+	 p = plot('circle at (1,1) with R= 2.5')
+	 p:add(line, rgba(1,1,0,0.6))
 	 p:addline(line)
 	 p:show()
 
@@ -163,7 +166,7 @@ To create many type of plots you don't really need to use the graphics primitive
       r = rng()
       f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
       p = plot('Simulated Gaussian Distribution')
-      b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
+      b = ibars(sample(|x| rnd.poisson(r, f(x)*N) / N, -3, 3, 25))
       p:add(b, 'darkgreen')
       p:add(b, 'black', {{'stroke', width= 0.5}})
       p:addline(fxline(f, -4, 4), 'red')
