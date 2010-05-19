@@ -48,16 +48,22 @@ private:
   struct agg_plot *m_plot;
 };
 
-void update_callback (void *_app)
+int update_callback (void *_app)
 {
   the_application *app = (the_application *) _app;
+  int status = 0;
+
+  platform_support_lock (app);
+
   if (platform_support_is_mapped (app))
     {
-      platform_support_lock (app);
       app->on_draw_unprotected();
       app->update_window();
-      platform_support_unlock (app);
+      status = 1;
     }
+
+  platform_support_unlock (app);
+  return status;
 };
 			
 void *

@@ -128,6 +128,13 @@ static const struct luaL_Reg agg_text_methods[] = {
   {NULL, NULL}
 };
 
+static void
+update_plot_wait (struct agg_plot *p)
+{
+  if (p->window)
+    update_callback (p->window);
+}
+
 int
 push_new_agg_obj (lua_State *L, enum agg_type tag, CVERTSRC *vs)
 {
@@ -453,8 +460,7 @@ agg_plot_title_set (lua_State *L)
 	  
   pthread_mutex_lock (agg_mutex);
   plot_set_title (p->plot, title);
-  if (p->window)
-    update_callback (p->window);
+  update_plot_wait (p);
   pthread_mutex_unlock (agg_mutex);
 	  
   return 0;
@@ -480,8 +486,7 @@ agg_plot_units_set (lua_State *L)
     {
       pthread_mutex_lock (agg_mutex);
       plot_set_units (p->plot, request);
-      if (p->window)
-	update_callback (p->window);
+      update_plot_wait (p);
       pthread_mutex_unlock (agg_mutex);
     }
 	  
@@ -692,8 +697,7 @@ agg_plot_add_gener (lua_State *L, bool as_line)
 #ifdef DEBUG_PLOT
   printf("drawing\n");
 #endif
-  if (p->window)
-    update_callback (p->window);
+  update_plot_wait (p);
   pthread_mutex_unlock (agg_mutex);
 #ifdef DEBUG_PLOT
   printf("unlocked mutex\n");
@@ -713,8 +717,7 @@ agg_plot_update (lua_State *L)
 {
   struct agg_plot *p = check_agg_plot (L, 1);
   pthread_mutex_lock (agg_mutex);
-  if (p->window)
-    update_callback (p->window);
+  update_plot_wait (p);
   pthread_mutex_unlock (agg_mutex);
   return 0;
 }

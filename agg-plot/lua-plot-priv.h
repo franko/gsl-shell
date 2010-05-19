@@ -83,7 +83,7 @@ extern struct property_reg line_cap_properties[];
 extern struct property_reg line_join_properties[];
 
 extern void agg_plot_destroy (struct agg_plot *cp);
-extern void update_callback (void *_app);
+extern int  update_callback (void *_app);
 
 extern pthread_mutex_t agg_mutex[1];
 

@@ -185,21 +185,70 @@ Functions
 
 .. function:: expint3(x)
 
+    Computes the third-order exponential integral :math:`\textrm{Ei}_3(x) =
+    \int_0^xdt \exp(-t^3)` for x >= 0.
+
 .. function:: Shi(x)
+
+   Compute the integral :math:`\textrm{Shi}(x) = \int_0^x dt \sinh(t)/t`.
+
 .. function:: Chi(x)
+
+   Compute the integral
+
+   .. math::
+     \textrm{Chi}(x) = \Re \left( \gamma_E +
+     \log(x) + \int_0^x dt \dfrac{\cosh(t)-1}{t} \right)
+
+   where |ggr|\ :sub:`E` is the Euler constant.
+
 .. function:: Si(x)
+
+   Compute the Sine integral :math:`\textrm{Si}(x) = \int_0^x dt \dfrac{\sin(t)}{t}`.
+
 .. function:: Ci(x)
+
+   Compute the Cosine integral :math:`\textrm{Ci}(x) = -\int_x^\infty dt \dfrac{\cos(t)}{t}` for x > 0.
+
 .. function:: atanint(x)
 
+   compute the Arctangent integral, which is defined as :math:`\textrm{AtanInt}(x) = \int_0^x dt \dfrac{\arctan(t)}{t}`.
+
 .. function:: fact(n)
+
+   Compute the factorial n!. The factorial is related to the Gamma function by n! = |Ggr| (n+1).
+
 .. function:: doublefact(n)
+
+   Compute the double factorial :math:`n!! = n(n-2)(n-4) \dots`.
+
 .. function:: lnfact(n)
+
+   These routines compute the logarithm of the factorial of N, log(n!). The algorithm is faster than computing ln(|Ggr| (n+1)).
+
 .. function:: lndoublefact(n)
+
+   Compute the logarithm of the double factorial of N, log(n!!).
+
 .. function:: choose(n, k)
+            
+   Compute the combinatorial factor
+
+   .. math::
+      \binom{n}{k} = \dfrac{n!}{k! (n-k)!}
+
 .. function:: lnchoose(n, k)
 
+   Compute the logarithm of "n choose m".  This is equivalent to the sum :math:`\log(n!) - \log(m!) - \log((n-m)!)`.
+
 .. function:: gamma(x)
+ 
+   Compute the Gamma function |Ggr| (x), subject to x not being a negative integer or zero.  The function is computed using the real Lanczos method.
+
 .. function:: lngamma(x)
+
+   Compute the logarithm of the Gamma function, :math:`\log(\Gamma(x))`, subject to x not being a negative integer or zero.  For x<0 the real part of :math:`\log(\Gamma(x))` is returned, which  is equivalent to :math:`\log(|\Gamma(x)|)`. The function is computed using the real Lanczos method.
+
 .. function:: beta(a, b)
 .. function:: lnbeta(a, b)
 

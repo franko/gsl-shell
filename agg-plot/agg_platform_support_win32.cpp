@@ -76,6 +76,8 @@ namespace agg
         LARGE_INTEGER m_sw_freq;
         LARGE_INTEGER m_sw_start;
 
+      bool m_is_mapped;
+
       pthread_mutex_t m_mutex[1];
     };
 
@@ -93,7 +95,8 @@ namespace agg
         m_cur_y(0),
         m_input_flags(0),
         m_redraw_flag(true),
-        m_current_dc(0)
+        m_current_dc(0),
+	m_is_mapped(false)
     {
         memset(m_keymap, 0, sizeof(m_keymap));
 
@@ -646,7 +649,6 @@ namespace agg
         PAINTSTRUCT ps;
         HDC paintDC;
 
-
         void* user_data = reinterpret_cast<void*>(::GetWindowLong(hWnd, GWL_USERDATA));
         platform_support* app = 0;
 
@@ -731,12 +733,6 @@ namespace agg
                                               app->m_specific->m_input_flags);
                 }
             }
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
         //--------------------------------------------------------------------
@@ -762,12 +758,6 @@ namespace agg
             app->on_mouse_button_up(app->m_specific->m_cur_x, 
                                     app->m_specific->m_cur_y, 
                                     app->m_specific->m_input_flags);
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
 
@@ -787,12 +777,6 @@ namespace agg
             app->on_mouse_button_down(app->m_specific->m_cur_x, 
                                       app->m_specific->m_cur_y, 
                                       app->m_specific->m_input_flags);
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
         //--------------------------------------------------------------------
@@ -811,12 +795,6 @@ namespace agg
             app->on_mouse_button_up(app->m_specific->m_cur_x, 
                                     app->m_specific->m_cur_y, 
                                     app->m_specific->m_input_flags);
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
         //--------------------------------------------------------------------
@@ -851,12 +829,6 @@ namespace agg
                                        app->m_specific->m_input_flags);
                 }
             }
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
         //--------------------------------------------------------------------
@@ -932,12 +904,6 @@ namespace agg
                     }
                 }
             }
-/*
-            if(!app->wait_mode())
-            {
-                app->on_idle();
-            }
-*/
             break;
 
         //--------------------------------------------------------------------
@@ -981,6 +947,8 @@ namespace agg
             app->on_post_draw(paintDC);
             app->m_specific->m_current_dc = 0;
             ::EndPaint(hWnd, &ps);
+
+	    app->m_specific->m_is_mapped = true;
             break;
         
         //--------------------------------------------------------------------
@@ -999,6 +967,7 @@ namespace agg
         }
         app->m_specific->m_current_dc = 0;
         ::ReleaseDC(app->m_specific->m_hwnd, dc);
+
         return ret;
     }
 
@@ -1251,5 +1220,5 @@ void platform_support_unlock(agg::platform_support *app)
 
 bool platform_support_is_mapped(agg::platform_support *app)
 { 
-  return true;
+  return app->m_specific->m_is_mapped;
 }
