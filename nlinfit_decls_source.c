@@ -25,7 +25,7 @@ static int FUNCTION (solver, run)                (lua_State *);
 static int FUNCTION (solver, iterate)            (lua_State *);
 static int FUNCTION (solver, index)              (lua_State *);
 static int FUNCTION (solver, covar)              (lua_State *);
-static int FUNCTION (solver, get_x)              (lua_State *);
+static int FUNCTION (solver, get_p)              (lua_State *);
 static int FUNCTION (solver, get_f)              (lua_State *);
 static int FUNCTION (solver, get_jacob)          (lua_State *);
 
@@ -39,13 +39,13 @@ static const struct luaL_Reg FUNCTION (solver, methods)[] = {
 
 static const struct luaL_Reg FUNCTION (solver, properties)[] = {
   {"covar",        FUNCTION (solver, covar)},
-  {"x",            FUNCTION (solver, get_x)},
+  {"p",            FUNCTION (solver, get_p)},
   {"f",            FUNCTION (solver, get_f)},
   {"J",            FUNCTION (solver, get_jacob)},
   {NULL, NULL}
 };
 
 static const struct luaL_Reg FUNCTION (solver, functions)[] = {
-  {PREFIX "solver",      FUNCTION (solver, new)},
+  {PREFIX "nlfsolver",      FUNCTION (solver, new)},
   {NULL, NULL}
 };

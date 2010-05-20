@@ -39,23 +39,14 @@ check_positive_arg (lua_State *L, const char *name, const char *fullname)
 }
 
 void
-solver_get_n_and_p (lua_State *L, size_t *n, size_t *p)
-{
-  *n = check_positive_arg (L, "n", "observations");
-  *p = check_positive_arg (L, "p", "parameters");
-
-  if (*n < *p)
-    luaL_error (L, "insufficient data points, n < p");
-}
-
-void
-solver_get_x0 (lua_State *L, gsl_vector_view *x0, size_t p)
+solver_get_p0 (lua_State *L, gsl_vector_view *p0, size_t *p)
 {
   gsl_matrix *m;
-  lua_getfield (L, 1, "x0");
+  lua_getfield (L, 1, "p0");
   m = matrix_check (L, -1);
-  if (m->size2 != 1 || m->size1 != p)
-    luaL_error (L, "x0 should be a vector of length %d", p);
-  *x0 = gsl_matrix_column (m, 0);
+  if (m->size2 != 1)
+    luaL_error (L, "p0 should be a column matrix");
+  *p0 = gsl_matrix_column (m, 0);
+  *p = m->size1;
   lua_pop (L, 1);
 }

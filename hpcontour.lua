@@ -749,7 +749,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 
    local function line_add(ln, xyf, action)
       local x0, y0 = xyf()
-      if not x0 then print 'warning: empty line'; return end
+      if not x0 then return end
       if action ~= 'skip' then ln[action](ln, x0, y0) end
       for x, y in xyf do ln:line_to(x, y) end
    end

@@ -188,8 +188,8 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    local boxx = {right[1], right[1], left[1], left[1]}
    local boxy = {left[2], right[2], right[2], left[2]}
 
-   local full_border_points = sequence(function(k) return boxx[k], boxy[k] end,
-					1, 4)
+   local full_border_points = 
+      sequence(function(k) return boxx[k], boxy[k] end, 1, 4)
 
    local function nodes_border_points(nid1, nid2)
       local n1, n2 = nodes[nid1], nodes[nid2]
@@ -669,7 +669,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       if n0 then
 	 line_add(ln, nodes_border_points(n1, n0), 'line_to')
       else
-	 line_add(ln, full_border_points(), 'move_to')
+	 line_add(ln, full_border_points, 'move_to')
       end
 
       ln:close()

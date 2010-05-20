@@ -96,16 +96,16 @@ int
 FUNCTION (solver, new) (lua_State *L)
 {
   struct solver *s;
-  gsl_vector_view x0;
+  gsl_vector_view p0;
   size_t n, nreal, p;
   int findex;
 
   luaL_checktype (L, 1, LUA_TTABLE);
 
-  solver_get_n_and_p (L, &n, &p);
+  n = check_positive_arg (L, "n", "observations");
   nreal = n * MULTIPLICITY;
 
-  solver_get_x0 (L, &x0, p);
+  solver_get_p0 (L, &p0, &p);
 
   lua_settop (L, 1);
   lua_getfield (L, 1, "fdf");
@@ -127,7 +127,7 @@ FUNCTION (solver, new) (lua_State *L)
 
   fcall_args_prepare (L, 5);
   
-  gsl_multifit_fdfsolver_set (s->base, s->fdf, & x0.vector);
+  gsl_multifit_fdfsolver_set (s->base, s->fdf, & p0.vector);
 
   lua_pop (L, 5);
 
@@ -301,15 +301,15 @@ FUNCTION (solver, covar) (lua_State *L)
 }
 
 int
-FUNCTION (solver, get_x) (lua_State *L)
+FUNCTION (solver, get_p) (lua_State *L)
 {
   struct solver *s = FUNCTION (solver, check) (L, 1);
   gsl_vector *src = s->base->x;
-  size_t p = s->fdf->p;
-  gsl_matrix *x;
+  size_t P = s->fdf->p;
+  gsl_matrix *p;
 
-  x = matrix_push (L, p, 1);
-  gsl_matrix_set_col (x, 0, src);
+  p = matrix_push (L, P, 1);
+  gsl_matrix_set_col (p, 0, src);
 
   return 1;
 }

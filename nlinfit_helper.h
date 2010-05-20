@@ -30,9 +30,6 @@ extern size_t
 check_positive_arg (lua_State *L, const char *name, const char *fullname);
 
 extern void
-solver_get_n_and_p (lua_State *L, size_t *n, size_t *p);
-
-extern void
-solver_get_x0 (lua_State *L, gsl_vector_view *x0, size_t p);
+solver_get_p0 (lua_State *L, gsl_vector_view *p0, size_t *p);
 
 #endif

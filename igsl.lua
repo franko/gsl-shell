@@ -226,3 +226,22 @@ function linfit(gener, x, y, w)
 	     end
    return f, c
 end
+
+local function nlinfitwrapf(fmodel, x, y)
+   local n = y:dims()
+   return function(p, f, J)
+      for k=1, n do
+	 local ym = fmodel(p, x[k], J and J:row(k))
+	 if f then f:set(k, 1, ym - y[k]) end
+      end
+   end
+
+end
+
+function nlinfit(f, x, y, p0)
+   local N = y:dims()
+   local P = p0:dims()
+   local s = nlfsolver {fdf= nlinfitwrapf(f, x, y), n= N, p0= p0}
+   s:run()
+   return |x| f(s.p, x), s.p
+end

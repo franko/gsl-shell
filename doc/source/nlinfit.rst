@@ -59,75 +59,39 @@ In order to perform a non linear fitting with GSL Shell you should use a *solver
 
 Here an example::
 
-   local n = 50
-   local px = vector {1.55, -1.1, 12.5}
-   local p0 = vector {2.5,  -1.5, 5.3}
-   local xs = |i| (i-1)/n
-   local r = rng()
+   px = vector {1.55, -1.1, 12.5}
+   p0 = vector {2.5, -1.5, 5.3}
+   n = 50
+   xs = |i| (i-1)/n
+   r = rng()
 
-   local fmodel = function(p, t, J)
-		     local e, s = exp(p[2] * t), sin(p[3] * t)
-		     if J then
-			J:set(1,1, e * s)
-			J:set(1,2, t * p[1] * e * s)
-			J:set(1,3, t * p[1] * e * cos(p[3] * t))
-		     end
-		     return p[1] * e * s
-		  end
+   f = function(p, x, J)
+          local e, s = exp(p[2] * x), sin(p[3] * x)
+          if J then
+             J:set(1,1, e * s)
+             J:set(1,2, x * p[1] * e * s)
+	     J:set(1,3, x * p[1] * e * cos(p[3] * x))
+          end
+          return p[1] * e * s
+       end
 
-   local y = new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+   y = new(n, 1, |i,j| f(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+   x = new(n, 1, |i,j| xs(i))
 
-   local function expf(x, f, J)
-      for k=1, n do
-	 local ym = fmodel(x, xs(k), J and J:row(k))
-	 if f then f:set(k, 1, ym - y[k]) end
-      end
-   end
+   fit, pr = nlinfit(f, x, y, p0)
 
-   pl = plot('Non-linear fit / A * exp(a t) sin(w t)')
-   pl:addline(ipath(sequence(function(k) return xs(k), y[k] end, n)), 'blue',
-	      {{'marker', size= 5}})
+   print('Fit result:', tr(pr))
 
-   s = solver {fdf= expf, n= n, p= 3, x0= p0}
+   pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
 
-   pl:addline(fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
-
-   repeat
-      print_state (s)
-      local status = s:iterate()
-   until status ~= 'continue'
-   print_state (s)
-
-   pl:addline(fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red')
+   pl:addline(fxline(|x| f(p0, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
+   pl:addline(fxline(fit, 0, xs(n)), 'red')
    pl:show()
 
-where the function ``print_state`` could be defined like::
+The output you obtain is:
 
-   function print_state(s)
-      print ("x: ", tr(s.x))
-      print ("chi square: ", prod(s.f, s.f)[1])
-   end
-
-
-The output you obtain is::
-
-   x: , [  2.5 -1.5  5.3 ]
-   chi square: , 61.909477682545
-   x: , [ 0.816847 -2.19811  5.30633 ]
-   chi square: , 24.637775808867
-   x: , [   1.1919 -5.81962  5.71798 ]
-   chi square: , 20.698635047305
-   x: , [  2.55001 -11.3184  11.1346 ]
-   chi square: , 15.387167949514
-   [ ... ]
-   x: , [  1.58178 -1.22193  12.5912 ]
-   chi square: , 0.34786217353905
-   x: , [  1.56791 -1.14061  12.5125 ]
-   chi square: , 0.30630801846857
-   x: , [  1.56791 -1.14019  12.5156 ]
-   chi square: , 0.30626868109332
-   x: , [ 1.56791 -1.1402 12.5156 ]
-   chi square: , 0.3062686809533
+|  Fit result:, [ 1.56791 -1.1402 12.5156 ]
 
 .. figure:: nlinfit-example-plot.png
 
@@ -137,11 +101,15 @@ The output you obtain is::
 Solver class definition
 -----------------------
 
-.. class:: solver
+.. function:: nlinfit(f, x, y, p0)
+
+   Perform a non-linear fit of the function ``f`` with the data ``y`` over the indipendent variable ``x`` with initial seed ``p0``. The function  ``f`` will be called in the form ``f(p, x, J)`` where ``p`` is a column vector with the fit parameters, ``x`` is the real value where the function should be evaluated and ``J`` is a row vector. If ``J`` is not ``nil`` its n-th terms should be set to the value of the derivative of the function ``f`` with respect to the n-th fit parameters.
+
+.. class:: nlfsolver
    
    Nonlinear solver class for *real* numbers data.
 
-   .. function:: solver(spec)
+   .. function:: nlfsolver(spec)
       
       Create a new solver for *real* data. The ``spec`` should be a table
       containing the following fields:
@@ -152,12 +120,10 @@ Solver class definition
 	  The function will be called in the form ``fdf(y,f,J)``, ``f`` or
 	  ``J`` can be :keyword:`nil` if they are not required so you should
 	  always check them.
-      x0
+      p0
           The initial seed values of the parameters.
       n
           The number of data points.
-      p
-          The number of parameters.
 
    .. method:: iterate()
       
@@ -170,7 +136,23 @@ Solver class definition
       ``maxiter`` is gives it does limit the number of iterations to
       ``maxiter``.
 
-.. class:: csolver
+   .. attribute:: p
+
+      Returns the current vector with the fit parameters.
+
+   .. attribute:: f
+
+      Returns a vector with the fit residuals.
+
+   .. attribute:: J
+
+      Returns a matrix with the Jacobian for the current values of the parameters. The Jacobian is a matrix of n rows and p columns.
+
+   .. attribute:: covar
+
+      Returns the covariance matrix. It is a square matrix of dimension ``p``.
+
+.. class:: cnlfsolver
    
    Nonlinear solver class for *complex* data. It does have the same
    interface of ``solver``.
