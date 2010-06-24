@@ -18,6 +18,65 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+function demo1()
+   local odef = function(t, y, f)
+		   f:set(1,1, -y[2]-y[1]^2)
+		   f:set(2,1, 2*y[1] - y[2]^3)
+		end
+
+   local s = ode {f = odef, n= 2, eps_abs= 1e-6}
+
+   local t0, t1, tstep = 0, 30, 0.04
+   local y0 = vector {1,1}
+
+   local ln = path(y0[1], y0[2])
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      ln:line_to(y[1], y[2])
+   end
+
+   local p = plot('ODE integration example')
+   p:addline(ln)
+   p:show()
+   return p
+end
+
+function demo1bis()
+   local odef = function(t, y, f)
+		   f:set(1,1, -y[2]-y[1]^2)
+		   f:set(2,1, 2*y[1] - y[2]^3)
+		end
+
+   local odedf = function(t, y, dfdy, dfdt)
+		    dfdy:set(1,1, -2*y[1])
+		    dfdy:set(1,2, -1)
+		    dfdy:set(2,1, 2)
+		    dfdy:set(2,2, -3*y[2]^2)
+		    null(dfdt)
+		 end
+
+   local s = ode {f= odef, df= odedf, n= 2, eps_abs= 1e-6, method='bsimp'}
+
+   local t0, t1, tstep = 0, 30, 0.04
+   local y0 = vector {1,1}
+
+   local ln = path(y0[1], y0[2])
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      ln:line_to(y[1], y[2])
+   end
+
+   local p = plot('ODE integration example')
+   p:addline(ln)
+   p:show()
+
+   ln = path(y0[1], y0[2])
+   for t, y in s:iter(t0, y0, t1) do
+      ln:line_to(y[1], y[2])
+   end
+   p:add(ln, 'black', {{'marker', size=4}})
+
+   return p
+end
+
 function ode_lines(s, t0, y0, t1, tstep)
    local r = y0:dims()
    local p = {}
@@ -28,27 +87,7 @@ function ode_lines(s, t0, y0, t1, tstep)
    return p
 end
 
-function code_lines(s, t0, y0, t1, tstep)
-   local r = y0:dims()
-   local p = {}
-   for k=1,r do p[2*k-1] = path(t0, real(y0[k])); p[2*k] = path(t0, imag(y0[k])) end
-   for t, y in s:iter(t0, y0, t1, tstep) do
-      for k=1,r do p[2*k-1]:line_to(t, real(y[k])); p[2*k]:line_to(t, imag(y[k])) end
-   end
-   return p
-end
-
-function code_lines_re(s, t0, y0, t1, tstep)
-   local r = y0:dims()
-   local p = {}
-   for k=1,r do p[k] = path(t0, real(y0[k])) end
-   for t, y in s:iter(t0, y0, t1, tstep) do
-      for k=1,r do p[k]:line_to(t, real(y[k])) end
-   end
-   return p
-end
-
-function demo1()
+function demo2()
    local mu = 10
 
    local odef = function(t, y, f)
@@ -65,8 +104,7 @@ function demo1()
    return plot_lines(ln)
 end
 
-
-function demo2()
+function demo3()
    local mu = 10
 
    local odef = function(t,y,f)
@@ -91,45 +129,72 @@ function demo2()
    return plot_lines(ln)
 end
 
-function demo3()
-   local m = cmatrix {{4i, 0},{-0.6, 8.2i}}
+function demo4()
+   local t0, t1, tstep = 0, 30, 0.05
+   local alpha = 1i - 0.08
+   local z0 = 1.0 + 0.0i
 
-   local myf = function(t, y, f)
-		  set(f, cmul(m, y))
-	       end
-
-   local mydf = function(t, y, dfdy, dfdt)
-		   set(dfdy, m)
-		   null(dfdt)
+   local odef = function(t, z, f)
+		   f:set(1,1, alpha * z[1])
 		end
 
-   local s = code {f= myf, df= mydf, n= 2, method='bsimp'}
+   local solver = code {f= odef, n= 1}
 
-   local t0, t1 = 0, 16
-   local y0 = cvector {1,0}
+   local ln = path(real(z0), imag(z0))
+   for t, z in solver:iter(t0, cvector {z0}, t1, tstep) do
+      ln:line_to(real(z[1]), imag(z[1]))
+   end
 
-   local ln = code_lines(s, t0, y0, t1, 0.04)
-   return plot_lines(ln)
+   local p = plot('Spiral by complex ODE integration')
+   p:addline(ln)
+   p:show()
+   return p
 end
 
+function demo4bis()
+   local t0, t1, tstep = 0, 30, 0.05
+   local alpha = 1i - 0.08
+   local z0 = 1.0 + 0.0i
 
-function demo4()
-   local m = cmatrix {{12i-0.4, 1},{-1, 12i}}
-
-   local myf = function(t, y, f)
-		  set(f, cmul(m, y))
-	       end
-
-   local mydf = function(t, y, dfdy, dfdt)
-		   set(dfdy, m)
-		   null(dfdt)
+   local odef = function(t, z, f)
+		   f:set(1,1, alpha * z[1])
 		end
 
-   local s = code {f= myf, df= mydf, n= 2, method='bsimp'}
+   local odedf = function(t,y,dfdy,dfdt)
+		    dfdy:set(1,1, alpha)
+		    null(dfdt)
+		 end
 
-   local t0, t1 = 0, 10
-   local y0 = cvector {0.5+0.1i, 0}
+   local solver = code {f= odef, df= odedf, n= 1, method='bsimp'}
 
-   local ln = code_lines_re(s, t0, y0, t1, 0.01)
+   local ln = path(real(z0), imag(z0))
+   for t, z in solver:iter(t0, cvector {z0}, t1, tstep) do
+      ln:line_to(real(z[1]), imag(z[1]))
+   end
+
+   local p = plot('Spiral by complex ODE integration')
+   p:addline(ln)
+   p:show()
+
+   ln = path(real(z0), imag(z0))
+   for t, z in solver:iter(t0, cvector {z0}, t1) do
+      ln:line_to(real(z[1]), imag(z[1]))
+   end
+   p:add(ln, 'black', {{'marker', size=5}})
+   return p
+end
+
+function demo5()
+   local odef = function(t, y, f)
+		   f:set(1,1, y[2])
+		   f:set(2,1, -sin(y[1])*y[1])
+		end
+
+   local s = ode {f = odef, n= 2, eps_abs= 1e-6}
+
+   local t0, t1, tstep = 0, 30, 0.1
+   local y0 = vector {1, 0}
+
+   local ln = ode_lines(s, t0, y0, t1, tstep)
    return plot_lines(ln)
 end

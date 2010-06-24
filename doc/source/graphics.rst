@@ -56,7 +56,7 @@ arguments are the extrema of variation of the indipendent variable x.
 Graphics Functions
 ------------------
 
-To create many type of plots you don't really need to use the graphics primitives because it would be annoying and tedious to give a not of instructions just to produce some simple plots. Instead you can use the higher level plotting functions to make most of the most common type of plots.
+To create many type of plots you don't really need to use the graphics primitives because it would be annoying and tedious to give a lot of instructions just to produce some simple plots. Instead you can use the higher level plotting functions to make most of the most common type of plots.
 
 .. function:: fxplot(f, xi, xs[, color, n])
 

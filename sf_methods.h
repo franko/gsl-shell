@@ -10,5 +10,6 @@
 #define _GSH_SF_ID(gsl_name, lua_name)     METHOD_LINE(lua_name)
 #define _GSH_SF_DD(gsl_name, lua_name)     METHOD_LINE(lua_name)
 #define _GSH_SF_DDD(gsl_name, lua_name)    METHOD_LINE(lua_name)
+#define _GSH_SF_DDDD(gsl_name, lua_name)   METHOD_LINE(lua_name)
 #define _GSH_SF_IID(gsl_name, lua_name)    METHOD_LINE(lua_name)
 #define _GSH_SF_CUSTOM(lua_name)           METHOD_LINE(lua_name)

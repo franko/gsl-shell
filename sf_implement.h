@@ -149,6 +149,22 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     return 2;					\
   }
 
+#define _GSH_SF_DDDD(gsl_name, lua_name)		\
+  int my_ ## lua_name(lua_State *L)			\
+  {						\
+    double a = luaL_checknumber (L, 1);		\
+    double b = luaL_checknumber (L, 2);		\
+    double c = luaL_checknumber (L, 3);		\
+    double d = luaL_checknumber (L, 4);		\
+    gsl_sf_result res;				\
+    int status = GGSL_SF_NAME(gsl_name) (a, b, c, d, &res);	      \
+    if (status != GSL_SUCCESS)					      \
+      luaL_error (L, #lua_name ": %s", gsl_strerror (status));	      \
+    lua_pushnumber (L, res.val);	        \
+    lua_pushnumber (L, res.err);		\
+    return 2;					\
+  }
+
 
 #define _GSH_SF_IID(gsl_name, lua_name)			\
   int my_ ## lua_name(lua_State *L)				\
@@ -323,6 +339,21 @@ int GSH_LUA_NAME(hypergU) (lua_State *L)
   return push_gsl_result (L, &res);
 }
 
+int GSH_LUA_NAME(hyperg2F1conj) (lua_State *L)
+{
+  double complex a = luaL_checkcomplex(L, 1);
+  double c = luaL_checknumber(L, 2);
+  double x = luaL_checknumber (L, 3);
+  gsl_sf_result res;
+  int status;
+
+  status = gsl_sf_hyperg_2F1_conj_e (creal(a), cimag(a), c, x, &res);
+
+  if (status != GSL_SUCCESS)
+    return luaL_error (L, "hyperg2F1conj: %s", gsl_strerror (status));
+
+  return push_gsl_result (L, &res);
+}
 
 int GSH_LUA_NAME(laguerre) (lua_State *L)
 {

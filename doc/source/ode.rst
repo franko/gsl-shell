@@ -40,49 +40,86 @@ vector of derivatives :math:`f_i` and the Jacobian matrix,
 ODE solver usage example
 ------------------------
 
-Here an examples about the usage of an ODE solver for *real* numbers::
+Here an examples about the usage of an ODE solver for *real* numbers. The differential equation that we want integrate is:
 
-   mu = 10
+   .. math::
+      \begin{array}{ll}
+         x' = & -y - x^2 \\
+	 y' = & 2 x - y^3
+      \end{array}{ll}
+
+and here the code that we can write to implement it::
 
    -- define the ODE function
-   function odef(t,y,f)
-      f:set(1,1, y[2])
-      f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
-   end
+   odef = function(t, y, f)
+             f:set(1,1, -y[2]-y[1]^2)
+             f:set(2,1, 2*y[1] - y[2]^3)
+          end
 
    -- create the ODE solver
    s = ode {f = odef, n= 2, eps_abs= 1e-6}
 
    -- we define initial values
-   t0, t1 = 0, 100
-   y0 = vector {1,0}
+   t0, t1, tstep = 0, 30, 0.04
+   y0 = vector {1, 1}
 
-   -- the ODE solver is iterated tiil the time t1 is reached
-   for t, y in s:iter(t0, y0, t1) do
-      print(t, y:row_print())
+   -- the ODE solver is iterated till the time t1 is reached
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      print(t, tr(y))
    end
 
-and here an example with *complex* numbers::
+In anternative you may want to make a plot of the curve that you obtain. Here an example, we create a "path" to describe the curve that we want to plot and then we iterate with the ODE solver and we add all the points with the "line_to" method. The we create an empy plot and we add the line that we have just created::
 
-   m = cmatrix {{4i, 0},{-0.3, 3i}}
-
-   function myf(t, y, f)
-      set(f, cmul(m, y))
+   -- we create a line and add the points obtained by integrating the ODE
+   ln = path(y0[1], y0[2])
+   for t, y in s:iter(t0, y0, t1, tstep) do
+      ln:line_to(y[1], y[2])
    end
 
-   function mydf(t, y, dfdy, dfdt)
-      set(dfdy, m)
-      null(dfdt)
+   -- we create the plot by adding the line
+   local p = plot('ODE integration example')
+   p:addline(ln)
+   p:show()
+
+And here the plot that you will obtain:
+
+.. figure:: ode-integration-quasi-spiral.png
+
+   Curve obtained by integration of the above ODE system.
+
+We present also a simple example with *complex* numbers. In this example we show also how to use the ``bsimp`` integration method that requires the derivatives of the ODE system function. Here the code::
+
+   t0, t1, tstep = 0, 30, 0.05
+   alpha = 1i - 0.08
+   z0 = 1.0 + 0.0i
+
+   odef = function(t, z, f)
+             f:set(1,1, alpha * z[1])
+          end
+
+   odedf = function(t,y,dfdy,dfdt)
+              dfdy:set(1,1, alpha)
+              null(dfdt)
    end
 
-   s = code {f= myf, df= mydf, n= 2, method='bsimp'}
+   s = code {f= odef, df= odedf, n= 1, method='bsimp'}
 
-   t0, t1 = 0, 5
-   y0 = cvector {1,0}
-
-   for t, y in s:iter(t0, y0, t1, 0.05) do
-      print(t, y:row_print())
+   ln = path(real(z0), imag(z0))
+   for t, z in s:iter(t0, cvector {z0}, t1, tstep) do
+      ln:line_to(real(z[1]), imag(z[1]))
    end
+
+   p = plot('Spiral by complex ODE integration')
+   p:addline(ln)
+   p:show()
+
+   -- in the following example we add the points that we would obtain
+   -- by not giving a fixed "step"
+   ln = path(real(z0), imag(z0))
+   for t, z in solver:iter(t0, cvector {z0}, t1) do
+      ln:line_to(real(z[1]), imag(z[1]))
+   end
+   p:add(ln, 'black', {{'marker', size=5}})
 
 ODE Solver Class Definition
 ---------------------------
@@ -140,6 +177,10 @@ ODE Solver Class Definition
 
           - gear2, M=2 implicit Gear method.
 
+
+   .. function:: code(spec)
+
+      The same of the function :func:`ode` but for complex variables.
 
    .. method:: set(t0, y0)
       

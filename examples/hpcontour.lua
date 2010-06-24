@@ -29,7 +29,7 @@ function demo2()
 			  return v
 		       end
 
-   local N, pt = 7, new(2,1)
+   local N, pt = 12, new(2,1)
    pt:set(1,1, 1.0)
    local function frbeval(k) 
       pt:set(2,1, 1 - (k/N)^2)

@@ -35,11 +35,11 @@ struct gs_type {
 };
 
 extern const char * full_type_name (lua_State *L, int narg);
-extern const char * type_qualified_name (int typeid);
+extern const char * type_qualified_name (int type_id);
 extern int          gs_type_error (lua_State *L, int narg, const char *req_type);
-extern void *       gs_check_userdata (lua_State *L, int index, int typeid);
+extern void *       gs_check_userdata (lua_State *L, int index, int type_id);
 extern int          gs_gsl_errorcheck (lua_State *L, const char *routine, int status);
-extern void         gs_set_metatable (lua_State *L, int typeid);
+extern void         gs_set_metatable (lua_State *L, int type_id);
 extern double       gs_check_number (lua_State *L, int index, int check_normal);
 
 extern const struct gs_type gs_type_table[];

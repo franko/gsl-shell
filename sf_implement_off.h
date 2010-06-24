@@ -8,5 +8,6 @@
 #undef _GSH_SF_ID
 #undef _GSH_SF_DD
 #undef _GSH_SF_DDD
+#undef _GSH_SF_DDDD
 #undef _GSH_SF_IID
 #undef _GSH_SF_CUSTOM

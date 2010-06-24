@@ -31,6 +31,7 @@ Contents:
    news.rst
    intro.rst
    matrices.rst
+   lua-base.rst
    linalg.rst
    eigen.rst
    random.rst

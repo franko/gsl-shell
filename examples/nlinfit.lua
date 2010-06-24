@@ -113,12 +113,12 @@ function demo3()
    local xs = |i| (i-1)/n
    local r = rng()
 
-   local f = function(p, t, J)
-		local e, s = exp(p[2] * t), sin(p[3] * t)
+   local f = function(p, x, J)
+		local e, s = exp(p[2] * x), sin(p[3] * x)
 		if J then
 		   J:set(1,1, e * s)
-		   J:set(1,2, t * p[1] * e * s)
-		   J:set(1,3, t * p[1] * e * cos(p[3] * t))
+		   J:set(1,2, x * p[1] * e * s)
+		   J:set(1,3, x * p[1] * e * cos(p[3] * x))
 		end
 		return p[1] * e * s
 	     end

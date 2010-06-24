@@ -46,16 +46,23 @@ any data to be fitted is denoted by t.
 With the definition above the Jacobian is
 :math:`J_{ij} =(1 / \sigma_i)  d Y_i / d x_j`, where :math:`Y_i = Y(x,t_i)`.
 
-Creating a nonlineat fit solver
--------------------------------
+Performing a non-linear fit
+---------------------------
 
-In order to perform a non linear fitting with GSL Shell you should use a *solver* object. The logical steps to use a nonlinear fitting solver are:
+To perform a non-linear fit with GSL Shell there are two ways.
 
-* create a new solver by specifying the number of data points *n*, the
-  number of parameters *p*, the fitting function and the seeds to use as
-  initial values.
-* iterate the solver by using the :func:`iterate` until the algorithm
-  converge to an acceptable solution.
+The simpler one use the function :func:`nlinfit` and can be used if the data depend on a single indipendent variable "x". In this case you will supply two vectors, "x" and "y", with the observations, a "model" function and the seeds for the fit. The seeds are the starting point for the search of the fit parameters.
+
+The second method gives you more control and more flexibility over the non-linear fit. In this case you use directly the :class:`nlfsolver` and you can advance in the fit step-by-step by using the method :func:`iterate`.
+
+In the following sections we give the details to use each method.
+
+Simple non-linear fit
+---------------------
+
+.. function:: nlinfit(f, x, y, p0)
+
+   Perform a non-linear fit of the function ``f`` with the data ``y`` over the indipendent variable ``x`` with initial seed ``p0``. The function  ``f`` will be called in the form ``f(p, x, J)`` where ``p`` is a column vector with the fit parameters, ``x`` is the real value where the function should be evaluated and ``J`` is a *row* vector. If ``J`` is not ``nil`` its n-th terms should be set to the value of the derivative of the function ``f`` with respect to the n-th fit parameters.
 
 Here an example::
 
@@ -89,6 +96,15 @@ Here an example::
    pl:addline(fxline(fit, 0, xs(n)), 'red')
    pl:show()
 
+Creating a nonlineat fit solver
+-------------------------------
+
+The most basic method to perform a non linear fitting with GSL Shell does use the :class:`nlfsolver` object. The logical steps to use a nonlinear fitting solver are:
+
+* create a new solver by specifying the number of data points *n*, the fitting function and the seeds to use as initial values.
+* iterate the solver by using the :func:`iterate` until the algorithm
+  converge to an acceptable solution.
+
 The output you obtain is:
 
 |  Fit result:, [ 1.56791 -1.1402 12.5156 ]
@@ -100,10 +116,6 @@ The output you obtain is:
 
 Solver class definition
 -----------------------
-
-.. function:: nlinfit(f, x, y, p0)
-
-   Perform a non-linear fit of the function ``f`` with the data ``y`` over the indipendent variable ``x`` with initial seed ``p0``. The function  ``f`` will be called in the form ``f(p, x, J)`` where ``p`` is a column vector with the fit parameters, ``x`` is the real value where the function should be evaluated and ``J`` is a row vector. If ``J`` is not ``nil`` its n-th terms should be set to the value of the derivative of the function ``f`` with respect to the n-th fit parameters.
 
 .. class:: nlfsolver
    

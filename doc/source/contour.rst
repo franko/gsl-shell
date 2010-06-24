@@ -25,14 +25,14 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
 High Precision Contour
 ----------------------
 
-An *experimental* high precision contour plot is available with the module "hpcontour". It allows to plot accurate curves regardless of the grid chosen. This module use an algorithm that traces the contour curve by using the technique of the "implicit curve". The disadvantages of this algorithm are that it is computation intensive and it does require the derivatives of the function.
+An *experimental* high precision contour plot is available with the module "hpcontour". It allows to plot accurate curves regardless of the grid chosen. This module use an algorithm that traces the contour curves by using the technique of the "implicit curve". This technique seems to be known as the predictor-corrector algorithm. The disadvantages of this algorithm are that it is computation intensive and it does require the derivatives of the function.
 
 The algorithm is still experimental and works if the function respects some requirements:
 
   * the function should be differentiable in all the domain and the derivatives should be continuous
   * there should not be any contour curve that contains a point where the derivatives are identically zero
 
-Also the algorithm is not completely robust and it may give unaccurate results in some oscure cases.
+Also the algorithm is not completely robust and it may give unaccurate results in some rare cases.
 
 Having saying that the algorithm works flawlessly for many types of functions and it can be used to draw accurate curves.
 

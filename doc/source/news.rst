@@ -5,26 +5,33 @@ News
 
 **May 2010**
   GSL Shell 0.10.0 released. It does includes many new features, bug fixes
-  and a more extended set of GSL routine.
+  and a more extended set of GSL routines.
 
   Among the most important things:
 
   * A contour plot algorithm is implemented. It is written entirely in
-    Lua but it is quite fast. Its main limitations is that it is not
-    able to treate correctly discontinous functions.
+    Lua and it is quite fast. Its main limitations is that it is not
+    able to treate discontinuous functions.
 
   * An "high precision" experimental contour plot is also
     available. It is much more computational expensive but it draws
-    accurate smooths curve but it does require to the function to
-    provide the derivatives. As the algorithm is experimental it may
-    fails in some cases. It will fails almost surely fails if the
-    derivatives are discontinous or if both components becomes null at
-    some point. 
+    accurate smooths curve and it does require the derivatives of the
+    function. As the algorithm is experimental it may fails in some
+    cases. It will fails almost surely fails if the derivatives are
+    discontinous or if both components becomes null at some point.
 
   * To print an expression now you don't need to write an '=' sign before
 
-  * Some bugs fixed in the graphical window system.
+  * Some serious bugs related to the graphical window system have been fixed. Now the plotting system appears to be reliable in all situations both on Windows and X Window.
 
+  * More GSL modules implemented:
+
+    - Basis splines
+    - Linear Regression
+    - Eigensystems resolution
+
+  * Many improvements in almost all the modules.
+   
 **2 Janvier 2010**
   GSL Shell version 0.9.6 released.
 
