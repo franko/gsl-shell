@@ -34,8 +34,8 @@ class plot {
 
     container(): vs(NULL), color(), outline(false) {};
 
-    container(VertexSource* vs, agg::rgba8 c, bool as_outline): 
-      vs(vs), color(c), outline(as_outline)
+    container(VertexSource* vs, agg::rgba8 *c, bool as_outline): 
+      vs(vs), color(*c), outline(as_outline)
     {};
 
     ~container() {};
@@ -85,7 +85,7 @@ public:
   bool use_units() const { return m_use_units; };
   void set_units(bool use_units);
 
-  void add(VertexSource* vs, agg::rgba8 color, bool outline = false) 
+  void add(VertexSource* vs, agg::rgba8 *color, bool outline = false) 
   { 
     container d(vs, color, outline);
     m_elements.add(d);

@@ -11,7 +11,7 @@ class no_management {
   static void dispose(T* p) {};
 };
 
-
+/*
 class ref_manager {
 public:
   template <class T>
@@ -25,5 +25,6 @@ public:
       delete p;
   };
 };
+*/
 
 #endif

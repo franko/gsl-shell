@@ -740,12 +740,12 @@ function contour(f, a, b, ngridx, ngridy, nlevels)
 
    g.find_curves()
 
-   pl = plot()
-   g.draw_regions(pl)
-   g.draw_lines(pl, rgba(0,0,0,0.6))
-   pl:show()
+   local p = plot()
+   g.draw_regions(p)
+   g.draw_lines(p, rgba(0,0,0,0.6))
+   p:show()
 
-   return pl
+   return p
 end
 
 return M

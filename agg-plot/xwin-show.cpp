@@ -5,9 +5,11 @@
 #include "platform/agg_platform_support.h"
 
 #include "xwin-show.h"
+#include "gsl-shell.h"
 #include "canvas.h"
-#include "plot.h"
-#include "lua-plot-priv.h"
+#include "lua-plot.h"
+#include "lua-cpp-utils.h"
+#include "lua-draw.h"
 
 
 extern void platform_support_prepare   ();
@@ -20,7 +22,7 @@ enum flip_y_e { flip_y = true };
 class the_application : public agg::platform_support
 {
 public:
-  the_application(agg::pix_format_e format, bool flip_y, struct agg_plot *p) :
+  the_application(agg::pix_format_e format, bool flip_y, agg_plot *p) :
     agg::platform_support(format, flip_y), m_plot(p)
   {
   };
@@ -33,19 +35,16 @@ public:
   {
     canvas can(rbuf_window(), width(), height(), agg::rgba(1.0, 1.0, 1.0));
     can.clear();
-    plot_type* plot = (plot_type*) m_plot->plot;
-    plot->draw(can);
+    this->m_plot->draw(can);
   }
   
   virtual void on_draw()
   {
-    pthread_mutex_lock (agg_mutex);
-    on_draw_unprotected();
-    pthread_mutex_unlock (agg_mutex);
+    AGG_PROTECT(on_draw_unprotected());
   }
   
 private:
-  struct agg_plot *m_plot;
+  agg_plot *m_plot;
 };
 
 int update_callback (void *_app)
@@ -69,11 +68,11 @@ int update_callback (void *_app)
 void *
 xwin_thread_function (void *_plot) 
 {
-  struct agg_plot *p = (struct agg_plot *) _plot;
+  agg_plot *p = (agg_plot *) _plot;
 
   platform_support_prepare();
 
-  pthread_mutex_lock (agg_mutex);
+  AGG_LOCK();
 
   the_application app(agg::pix_format_bgr24, flip_y, p);
   app.caption("GSL shell plot");
@@ -81,21 +80,20 @@ xwin_thread_function (void *_plot)
   if(app.init(780, 400, agg::window_resize))
     {
       p->window = (void *) &app;
-      pthread_mutex_unlock (agg_mutex);
-      app.run();
-      pthread_mutex_lock (agg_mutex);
-    }
+      AGG_UNLOCK();
 
-  p->window = NULL;
-  if (p->lua_is_owner)
-    {
+      /* start main loop for the plot window */
+      app.run();
+
+      AGG_LOCK();
+      p->window = NULL;
       p->is_shown = 0;
-      pthread_mutex_unlock (agg_mutex);
-    }
-  else
-    {
-      pthread_mutex_unlock (agg_mutex);
-      agg_plot_destroy (p);
+      AGG_UNLOCK();
+
+      GSL_SHELL_LOCK();
+      printf("unref plot\n");
+      gsl_shell_unref_plot (p->id);
+      GSL_SHELL_UNLOCK();
     }
 
   return NULL;

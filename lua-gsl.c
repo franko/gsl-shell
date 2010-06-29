@@ -46,6 +46,7 @@
 
 #ifdef AGG_PLOT_ENABLED
 #include "lua-plot.h"
+#include "lua-draw.h"
 #endif
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
@@ -54,6 +55,8 @@ int
 luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
+
+  prepare_window_ref_table (L);
 
 #ifdef USE_SEPARATE_NAMESPACE
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
@@ -79,6 +82,7 @@ luaopen_gsl (lua_State *L)
   bspline_register (L);
 #ifdef AGG_PLOT_ENABLED
   plot_register (L);
+  draw_register (L);
 #endif
 
 #ifdef LNUM_COMPLEX

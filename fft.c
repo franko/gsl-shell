@@ -215,6 +215,21 @@ fft_hc_mixed_radix_transform (lua_State *L, gsl_matrix *hc)
 gsl_matrix *
 fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
 {
+  int sel;
+  gsl_matrix *p = gs_check_userdata_w_alt (L, index, 
+					   GS_HALFCMPL_R2,
+					   GS_HALFCMPL_MR, &sel);
+  
+  *selptr = (sel == GS_HALFCMPL_R2 ? fft_hc_radix2_sel :	\
+	                             fft_hc_mixed_radix_sel);
+
+  return p;
+}
+
+ /*
+gsl_matrix *
+fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
+{
   const char * const user_name = "half-complex vector";
   void *p = lua_touserdata (L, index);
   const char *msg;
@@ -251,6 +266,7 @@ fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
   gs_type_error (L, index, msg);
   return NULL;
 }
+ */
 
 int
 fft_hc_length (lua_State *L)

@@ -38,6 +38,7 @@ namespace my {
       agg::bounding_rect_single(*m_source, 0, x1, y1, x2, y2);
     };
 
+    /*
     virtual void ref() { ref_count++; };
     virtual unsigned unref()
     {
@@ -45,6 +46,7 @@ namespace my {
 	ref_count--;
       return ref_count;
     };
+    */
   };
 
   class path : public vs_proxy<agg::path_storage> {
@@ -55,40 +57,12 @@ namespace my {
   public:
     path(): vs_base(), m_path() 
     { 
-#ifdef DEBUG_PLOT
-      fprintf(stderr, "creating path: %p\n", this);
-#endif
       set_source(&m_path); 
     };
-
-#ifdef DEBUG_PLOT
-    ~path() { fprintf(stderr, "freeing path: %p\n", this); };
-#endif
-
 
     agg::path_storage& get_path() { return m_path; };
   };
   
-  /* ellipse drawable */
-  class ellipse : public vs_proxy<agg::ellipse> {
-    typedef vs_proxy<agg::ellipse> vs_base;
-
-    agg::ellipse m_ellipse;
-
-  public:
-    ellipse(double x, double y, double rx, double ry,
-	    unsigned num_steps=0, bool cw=false):
-      vs_base(), m_ellipse(x, y, rx, ry, num_steps, cw)
-    {
-      set_source(&m_ellipse);
-    };
-
-    virtual void apply_transform(agg::trans_affine& m, double as)
-    {
-      m_ellipse.approximation_scale(as);
-    };
-  };
-
   typedef vs_proxy<agg::conv_stroke<agg::conv_transform<agg::gsv_text> > > vs_text;
 
   /* text drawable */

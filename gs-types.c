@@ -1,7 +1,8 @@
 
+#include <assert.h>
+
 #include <lua.h>
 #include <lauxlib.h>
-#include <assert.h>
 #include "gs-types.h"
 #include <gsl/gsl_errno.h>
 #include <math.h>
@@ -20,8 +21,10 @@ static int gs_type_string (lua_State *L);
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
-#define GS_PLOT_NAME_DEF        "GSL.plot"
-#define GS_DRAW_OBJ_NAME_DEF   "GSL.path"
+#define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
+#define GS_DRAW_PATH_NAME_DEF   "GSL.path"
+#define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
+#define GS_DRAW_OBJ_NAME_DEF    "GSL.drawobj"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
 
 const struct gs_type gs_type_table[] = {
@@ -37,7 +40,9 @@ const struct gs_type gs_type_table[] = {
   {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
   {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
   {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
-  {GS_PLOT,        GS_PLOT_NAME_DEF,        "plot"},
+  {GS_DRAW_PLOT,   GS_DRAW_PLOT_NAME_DEF,   "plot"},
+  {GS_DRAW_PATH,   GS_DRAW_PATH_NAME_DEF,   "geometric line"},
+  {GS_DRAW_TEXT,   GS_DRAW_TEXT_NAME_DEF,   "graphical text"},
   {GS_DRAW_OBJ,    GS_DRAW_OBJ_NAME_DEF,    "drawing element"},
   {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
 };
@@ -118,12 +123,12 @@ gs_type_error (lua_State *L, int narg, const char *req_type)
 }
 
 void *
-gs_check_userdata (lua_State *L, int index, int typeid)
+gs_is_userdata (lua_State *L, int index, int typeid)
 {
   void *p = lua_touserdata (L, index);
 
   if (p == NULL)
-    gs_type_error (L, index, type_qualified_name (typeid));
+    return NULL;
 
   if (lua_getmetatable(L, index))
     {
@@ -137,8 +142,48 @@ gs_check_userdata (lua_State *L, int index, int typeid)
 	}
     }
 
-  gs_type_error (L, index, type_qualified_name (typeid));
+  lua_pop (L, 2);
+
   return NULL;
+}
+
+void *
+gs_check_userdata (lua_State *L, int index, int typeid)
+{
+  void *p = gs_is_userdata (L, index, typeid);
+
+  if (p == NULL)
+    gs_type_error (L, index, type_qualified_name (typeid));
+
+  return p;
+}
+
+void *
+gs_check_userdata_w_alt (lua_State *L, int index, int typeid1, int typeid2,
+			 int *sel)
+{
+  void *p;
+
+  p = gs_is_userdata (L, index, typeid1);
+  if (p == NULL)
+    {
+      p = gs_is_userdata (L, index, typeid2);
+      if (p == NULL)
+	{
+	  const char *msg = lua_pushfstring(L, "%s or %s", 
+					    type_qualified_name (typeid1),
+					    type_qualified_name (typeid2));
+	  gs_type_error (L, index, msg);
+	}
+
+      if (sel)
+	*sel = typeid2;
+    }
+
+  if (sel)
+    *sel = typeid1;
+
+  return p;
 }
 
 int

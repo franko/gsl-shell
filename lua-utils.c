@@ -206,3 +206,62 @@ mlua_fenv_get (lua_State *L, int index, int fenv_index)
   lua_rawgeti (L, -1, fenv_index);
   lua_remove (L, -2);
 }
+
+void
+mlua_fenv_addref (lua_State *L, int refindex)
+{
+  int n;
+  lua_getfenv (L, -1);
+  n = lua_objlen (L, -1);
+  lua_pushvalue (L, refindex);
+  lua_rawseti (L, -2, n+1);
+  lua_pop (L, 1);
+}
+
+void
+mlua_set_fenv_ref (lua_State *L, int refindex)
+{
+  int n;
+  lua_newtable (L);
+  lua_pushvalue (L, refindex);
+  lua_rawseti (L, -2, 1);
+  lua_setfenv (L, -2);
+}
+
+void
+prepare_window_ref_table (lua_State *L)
+{
+  lua_newtable (L);
+  lua_pushinteger (L, 0);
+  lua_setfield (L, -2, "N");
+  lua_setfield (L, LUA_REGISTRYINDEX, "GSL.windows");
+}
+
+int 
+mlua_window_ref(lua_State *L, int index)
+{
+  int n;
+
+  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
+
+  lua_getfield (L, -1, "N");
+  n = lua_tointeger (L, -1);
+  lua_pushinteger (L, n+1);
+  lua_remove (L, -2);
+  lua_setfield (L, -2, "N");
+
+  lua_pushvalue (L, index);
+  lua_rawseti (L, -2, n+1);
+  lua_pop (L, 1);
+
+  return n+1;
+}
+
+void
+mlua_window_unref(lua_State *L, int id)
+{
+  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
+  lua_pushnil (L);
+  lua_rawseti (L, -2, id);
+  lua_pop (L, 1);
+}

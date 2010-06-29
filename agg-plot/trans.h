@@ -8,6 +8,8 @@
 #include "agg_conv_transform.h"
 #include "agg_vcgen_markers_term.h"
 #include "agg_arrowhead.h"
+#include "agg_bounding_rect.h"
+#include "agg_ellipse.h"
 
 #include "my_conv_simple_marker.h"
 
@@ -23,15 +25,7 @@ protected:
 public:
   vs_trans_proxy(vertex_source* src): m_output(*src), m_source(src) 
   {
-#ifdef DEBUG_PLOT
-    fprintf(stderr, "creating trans: %p\n", this);
-#endif
   };
-#ifdef DEBUG_PLOT
-  ~vs_trans_proxy() { fprintf(stderr, "freeing trans: %p\n", this); };
-#endif
-
-
 
   template <class init_type>
   vs_trans_proxy(vertex_source* src, init_type& val):
@@ -41,6 +35,7 @@ public:
   virtual void rewind(unsigned path_id) { m_output.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_output.vertex(x, y); };
 
+  /*
   virtual void ref() { m_source->ref(); };
   virtual unsigned unref() 
   { 
@@ -49,6 +44,7 @@ public:
       delete m_source;
     return 0; 
   };
+  */
 
   virtual void apply_transform(agg::trans_affine& m, double as)
   { 

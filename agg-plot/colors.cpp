@@ -1,32 +1,26 @@
 
 #include <string.h>
 
+#include "lua-cpp-utils.h"
 #include "colors.h"
-#include "agg_color_rgba.h"
 
-void
-set_color_default (struct color *c)
+agg::rgba8 *
+rgba8_push_default (lua_State *L)
 {
-  c->r = 180;
-  c->g = c->b = 0;
-  c->a = 255;
+  return new(L, GS_RGBA_COLOR) agg::rgba8(180, 0, 0, 255);
 }
 
-void
-color_lookup (struct color *c, const char *color_str)
+agg::rgba8 *
+rgba8_push_lookup (lua_State *L, const char *color_str)
 {
   const char *p = color_str;
-  int val = 180;
-
-  c->a = 255;
+  const int a = 255;
 
   if (strcmp (p, "white") == 0)
-    {
-      c->r = c->g = c->b = 255;
-      return;
-    }
-
-  c->r = c->g = c->b = 0;
+    return new(L, GS_RGBA_COLOR) agg::rgba8(255, 255, 255, a);
+  
+  int val = 180;
+  int r = 0, g = 0, b = 0;
 
   if (strncmp (p, "light", 5) == 0)
     {
@@ -40,17 +34,19 @@ color_lookup (struct color *c, const char *color_str)
     }
 
   if (strcmp (p, "red") == 0)
-    c->r = val;
+    r = val;
   else if (strcmp (p, "green") == 0)
-    c->g = val;
+    g = val;
   else if (strcmp (p, "blue") == 0)
-    c->b = val;
+    b = val;
   else if (strcmp (p, "cyan") == 0)
-    c->g = c->b = val;
+    g = b = val;
   else if (strcmp (p, "magenta") == 0)
-    c->r = c->b = val;
+    r = b = val;
   else if (strcmp (p, "yellow") == 0)
-    c->r = c->g = val;
+    r = g = val;
   else if (strcmp (p, "gray") == 0)
-    c->r = c->g = c->b = val;
+    r = g = b = val;
+
+  return new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b, a);
 }

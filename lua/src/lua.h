@@ -270,8 +270,16 @@ LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
 * the module really wants to use them.
 */
 #ifdef LNUM_COMPLEX
+#ifdef __cplusplus
+  struct _double_complex {
+    double re;
+    double im;
+  };
+  typedef struct _double_complex lua_Complex;
+#else
   #include <complex.h>
   typedef LUA_NUMBER complex lua_Complex;
+#endif
   LUA_API lua_Complex (lua_tocomplex) (lua_State *L, int idx);
   LUA_API void (lua_pushcomplex) (lua_State *L, lua_Complex v);
 #endif
