@@ -29,7 +29,7 @@ Linear Fit Functions
 
 .. function:: linfit(f, x, y)
 
-   Perform a linear fit for a given "generation model" ``f`` for the observations ``y`` made for the points given by the vector ``x``. The function returns the fit functions and the coefficients. The "generation model" should be a function that takes a real number as argument (the value of x) and returns a list of the values of the model basis evaluated at x.
+   Perform a linear fit for a given "generator model" ``f`` for the observations ``y`` made for the points given by the vector ``x``. The function returns the fit functions and the coefficients. The "generator model" should be a function that takes a real number as argument (the value of x) and returns a list of the values of the model basis evaluated at x.
 
     *Example*
        We give a complete example where a set of (x, y) observations are simulated and a linear fit is done::

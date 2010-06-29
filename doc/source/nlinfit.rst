@@ -96,7 +96,7 @@ Here an example::
    pl:addline(fxline(fit, 0, xs(n)), 'red')
    pl:show()
 
-Creating a nonlineat fit solver
+Creating a nonlinear fit solver
 -------------------------------
 
 The most basic method to perform a non linear fitting with GSL Shell does use the :class:`nlfsolver` object. The logical steps to use a nonlinear fitting solver are:
@@ -105,9 +105,65 @@ The most basic method to perform a non linear fitting with GSL Shell does use th
 * iterate the solver by using the :func:`iterate` until the algorithm
   converge to an acceptable solution.
 
+We give an below the same example of the above section but by using directly the :class:`nlfsolver` object. We first define some useful elements::
+
+   n = 50
+   px = vector {1.55, -1.1, 12.5}
+   p0 = vector {2.5,  -1.5, 5.3}
+   xs = |i| (i-1)/n
+
+Then we define the model function and the "fit function". You can note that the "fit function" uses the model function to set the vector ``f`` and the vector ``J`` for each observation. Note also that for the "fit function" ``J`` is a n x p matrix while for the model ``J`` is a row matrix::
+
+   function fmodel(p, t, J)
+      local e, s = exp(p[2] * t), sin(p[3] * t)
+      if J then
+         J:set(1,1, e * s)
+	 J:set(1,2, t * p[1] * e * s)
+	 J:set(1,3, t * p[1] * e * cos(p[3] * t))
+      end
+     return p[1] * e * s
+   end
+
+   function expf(x, f, J)
+      for k=1, n do
+	 local ym = fmodel(x, xs(k), J and J:row(k))
+	 if f then f:set(k, 1, ym - y[k]) end
+      end
+   end
+
+Then we create the data that we want to fit. We can use the model function itself by just adding some gaussian noise::
+
+   r = rng()
+   y = new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+   x = new(n, 1, |i,j| xs(i))
+
+The we create a plot and iterate the non-linear solver as long as it is required to converge::
+
+   pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+
+   s = nlfsolver {fdf= expf, n= n, p0= p0}
+
+   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
+
+   repeat
+      print('Chi square:', prod(s.f, s.f)[1], tr(s.p))
+      local status = s:iterate()
+   until status ~= 'continue'
+   print('Chi square:', prod(s.f, s.f)[1], tr(s.p))
+
+   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red')
+   pl:show()
+
 The output you obtain is:
 
-|  Fit result:, [ 1.56791 -1.1402 12.5156 ]
+| Chi square:, 61.909477682545, [  2.5 -1.5  5.3 ]
+| Chi square:, 24.637775808867, [ 0.816847 -2.19811  5.30633 ]
+| [...]
+| Chi square:, 0.34786217353905, [  1.58178 -1.22193  12.5912 ]
+| Chi square:, 0.30630801846857, [  1.56791 -1.14061  12.5125 ]
+| Chi square:, 0.30626868109332, [  1.56791 -1.14019  12.5156 ]
+| Chi square:, 0.3062686809533, [ 1.56791 -1.1402 12.5156 ]
 
 .. figure:: nlinfit-example-plot.png
 

@@ -163,15 +163,15 @@ In this example we will treat a square pulse in the temporal domain. To illustra
 So, first we define our square pulse in the time domain. Actually it will be a matrix with just one column::
 
 
-   local n, ncut = 256, 16
+   n, ncut = 256, 16
 
    -- we create a pulse signal in the time domain
-   local y = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   y = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
 Than we create two new plots, one for the Fourier transform and one for the signal itself::
 
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
+   pt = plot('Original signal / reconstructed')
+   pf = plot('FFT Power Spectrum')
 
    pt:addline(ipath(sample(|i| y[i], 1, n, n-1)), 'black')
 

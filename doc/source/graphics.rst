@@ -56,17 +56,17 @@ arguments are the extrema of variation of the indipendent variable x.
 Graphics Functions
 ------------------
 
-To create many type of plots you don't really need to use the graphics primitives because it would be annoying and tedious to give a lot of instructions just to produce some simple plots. Instead you can use the higher level plotting functions to make most of the most common type of plots.
+To create many type of plots you don't really need to use always the graphics primitives but you can use the higher level plotting functions. We give in this section the description of all the higher level plotting functions.
 
 .. function:: fxplot(f, xi, xs[, color, n])
 
-   Produces a plot of the function ``f(x)`` for x going from ``xi`` to ``xs``. The last optional parameter ``n`` is the number of sampling point to use and, if not given, a default value will be used. The function returns the :class:`plot` itself.
+   Produces a plot of the function ``f(x)`` for x going from ``xi`` to ``xs``. The last optional parameter ``n`` is the number of sampling point to use and, if not given, a default value will be used. The function returns the :class:`Plot` itself.
 
 .. function:: fiplot(f, a, b[, color])
               fiplot(f, b)
 
    Produces a plot of the function ``f(i)`` where 'i' is an integer
-   variable going from ``a`` to ``b``. In the second abbreviated form ``a`` take the default value of one. The function returns the :class:`plot` itself.
+   variable going from ``a`` to ``b``. In the second abbreviated form ``a`` take the default value of one. The function returns the :class:`Plot` itself.
 
    *Example*::
    
@@ -78,7 +78,7 @@ To create many type of plots you don't really need to use the graphics primitive
 
 .. function:: fxline(f, xi, xs[, n])
 
-   This function returns an graphical object of type :class:`path` given by the points (x, f(x)) for x going from ``xi`` to ``xs`` with ``n`` sampling point.
+   This function returns an graphical object of type :class:`Path` given by the points (x, f(x)) for x going from ``xi`` to ``xs`` with ``n`` sampling point.
 
    *Example*::
 
@@ -105,13 +105,13 @@ To create many type of plots you don't really need to use the graphics primitive
 .. function:: filine(f, a, b)
               filine(f, b)
 
-   This function returns an graphical object of type :class:`path` given by the points (i, f(i)) where 'i' is an integer variable going from ``a`` to ``b``. It ``a`` is omitted values will be in the interval 1 .. b.
+   This function returns an graphical object of type :class:`Path` given by the points (i, f(i)) where 'i' is an integer variable going from ``a`` to ``b``. It ``a`` is omitted values will be in the interval 1 .. b.
 
    For its usage see the similar function :func:`fxline`.
 
 .. function:: xyline(x, y)
 
-   This function takes two column matrix of dimendions N as arguments and returns a graphical object of type :class:`path` given by the points (x[i], y[i]) where i goes from 1 to N.
+   This function takes two column matrix of dimendions N as arguments and returns a graphical object of type :class:`Path` given by the points (x[i], y[i]) where i goes from 1 to N.
 
    *Example*::
 
@@ -130,10 +130,10 @@ To create many type of plots you don't really need to use the graphics primitive
 .. function:: ipath(f)
               ipathp(f)
 
-   This function takes an iterator function ``f`` and returns a :class:`path` given by the points (x, y) returned by the iterator ``f``. The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
+   This function takes an iterator function ``f`` and returns a :class:`Path` given by the points (x, y) returned by the iterator ``f``. The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
 
    *Example*
-      In the following example we shows how to create a circle by using an iterator to generates the points. We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`. In this way we obtain an object of type :class:`path` and we can add into a plot.::
+      In the following example we shows how to create a circle by using an iterator to generates the points. We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`. In this way we obtain an object of type :class:`Path` and we can add into a plot.::
 
 	 -- create a simple iterator that return n points uniformly spaced
          -- in a circle centerd in (x0, y0) with radius R
@@ -157,7 +157,7 @@ To create many type of plots you don't really need to use the graphics primitive
 
 .. function:: ibars(f)
 
-   This function takes an iterator function ``f`` and returns a :class:`path` object that draws many adjacent rectangular boxs correspondings to the points (x, y) returned by the iterator ``f``. This function simplify the creation of histograms.
+   This function takes an iterator function ``f`` and returns a :class:`Path` object that draws many adjacent rectangular boxs correspondings to the points (x, y) returned by the iterator ``f``. This function simplify the creation of histograms.
 
    *Example*::
 
@@ -231,14 +231,14 @@ So, if general, the :func:`add` methods takes two optional arguments, the list o
 
 Some transformations are naturally expressed as post-transforms because they does operates naturally in term of pixel while other are usually expressed as pre-transforms because they operates in the user coordinates space.
 
-plot
+Plot
 ----
 
 We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :func:`add` and :func:`addline`. The method :func:`addline` is just a shortcut to add elements with a 'stroke' post transform of unitary width.
 
-If can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
+You can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
 
-.. class:: plot
+.. class:: Plot
    
    .. function:: plot([title])
       
@@ -278,11 +278,11 @@ If can add elements to a plot in any moments even when it is already shown. GSL 
 Graphical Objects
 -----------------
 
-.. class:: path
+.. class:: Path
 
-   .. function:: path()
+   .. function:: path([x, y])
  
-      Creates an empty path.
+      Creates an empty path. If the two coordinates (x, y) are provided set the initial point of the path to (x, y).
 
    .. method:: move_to(x, y)
 
@@ -307,13 +307,7 @@ Graphical Objects
 
       Add a conic bezier curve up to (x, y) with two control points. The same remarks for the method :func:`curve3` applies to :func:`curve4`.
 
-.. class:: ellipse
-
-   .. method:: ellipse(x, y, rx, ry)
-
-      Creates an ellipse with center at point (x, y) and radius rx and ry along the two axis.
-
-.. class:: text
+.. class:: Text
 
    A text object is used to display a text. This class of graphical
    object is special because it is not a shape that is resized rigidly

@@ -17,7 +17,7 @@ The Bessel's function J\ :sub:`n` for integer values of n can de defined with th
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
 
-We can use this definition to define our home-made Bessel function. To perform the integral we need to use the ``integ`` function and provide the function to integrate. This is easy like a piece of cake::
+We can use this definition to define our home-made Bessel function. To perform the integral we need to use the ``integ`` function and provide the function to integrate. This is easy like eating a piece of cake::
 
    function bessJ(x,n)
       local f = |t| cos(n*t - x*sin(t)) -- we define the function to integrate
@@ -26,11 +26,10 @@ We can use this definition to define our home-made Bessel function. To perform t
 
 The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
 
-   require 'draw'
-   p = plot()
+   p = plot('Bessel Functions Jn, n=0 ... 5')
    color = {'red', 'green', 'blue', 'cyan', 'magenta'}
    for n=0, 5 do
-      p:add_line(fxline(|x| bessJ(x,n), 0, 20), color[n+1])
+      p:addline(fxline(|x| bessJ(x,n), 0, 20), color[n+1])
    end
    p:show()
 
@@ -64,65 +63,61 @@ The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple 
 
 Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
 
-   require 'draw'
-
    function vonkoch(n)
       local sx = {2, 1, -1, -2, -1,  1}
       local sy = {0, 1,  1,  0, -1, -1}
-      local w = {}
-      for k=1,n+1 do w[#w+1] = 0 end
       local sh = {1, -2, 1}
-      local a = 0
-      local x, y = 0, 0
-
+      local a, x, y = 0, 0, 0
+      local w = ilist(|| 0, n+1)
+   
       local s = 1 / (3^n)
       for k=1, 6 do
-	 sx[k] = s * 0.5 * sx[k]
-	 sy[k] = s * sqrt(3)/2 * sy[k]
+         sx[k] = s * 0.5 * sx[k]
+         sy[k] = s * sqrt(3)/2 * sy[k]
       end
-
+   
       local first = true
-
+   
       return function()
-		if first then first = false; return x, y end
-		if w[n+1] == 0 then
-		   x, y = x + sx[a+1], y + sy[a+1]
-		   for k=1,n+1 do
-		      w[k] = (w[k] + 1) % 4
-		      if w[k] ~= 0 then
-			 a = (a + sh[w[k]]) % 6
-			 break
-		      end
-		   end
-		   return x, y
-		end
-	     end
+   	     if first then first = false; return x, y end
+   	     if w[n+1] == 0 then
+   		x, y = x + sx[a+1], y + sy[a+1]
+   		for k=1,n+1 do
+   		   w[k] = (w[k] + 1) % 4
+   		   if w[k] ~= 0 then
+   		      a = (a + sh[w[k]]) % 6
+   		      break
+   		   end
+   		end
+   		return x, y
+   	     end
+   	  end
    end
 
 Then we need to produce the plot. Since we want to make something cool we produce a closed Von Koch triangle by using always the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here the code::
 
-   local pl = plot()
+   p = plot()
 
-   local t = path()
+   t = path()
    t:move_to(0,0)
    t:line_to(1,0)
    t:line_to(0.5,-sqrt(3)/2)
    t:close()
 
-   local v = ipath(vonkoch(4))
-   local c = rgba(0,0,0.7,0.2)
-   pl:add(v, c)
-   pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
-   pl:add(t, c)
+   v = ipath(vonkoch(4))
+   c = rgba(0,0,0.7,0.2)
+   p:add(v, c)
+   p:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   p:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+   p:add(t, c)
 
    c = rgb(0,0,0.7)
 
-   pl:add(v, c, {{'stroke'}})
-   pl:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:add(v, c, {{'stroke'}}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
+   p:add(v, c, {{'stroke'}})
+   p:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   p:add(v, c, {{'stroke'}}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
 
-   pl:show()
+   p:show()
 
 And here the result:
 
