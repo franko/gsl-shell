@@ -35,16 +35,12 @@ public:
   virtual void rewind(unsigned path_id) { m_output.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_output.vertex(x, y); };
 
-  /*
-  virtual void ref() { m_source->ref(); };
-  virtual unsigned unref() 
+  virtual bool dispose() 
   { 
-    unsigned rc = m_source->unref();
-    if (rc == 0)
+    if (m_source->dispose())
       delete m_source;
-    return 0; 
+    return true;
   };
-  */
 
   virtual void apply_transform(agg::trans_affine& m, double as)
   { 

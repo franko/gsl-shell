@@ -36,9 +36,6 @@ struct path_cmd_reg {
   const char *signature;
 };
 
-static int agg_obj_index      (lua_State *L);
-static int agg_obj_free       (lua_State *L);
-
 static int agg_path_free      (lua_State *L);
 static int agg_path_index     (lua_State *L);
 
@@ -66,12 +63,6 @@ static const struct luaL_Reg plot_functions[] = {
   {"text",     agg_text_new},
   {"rgba",     agg_rgba_new},
   {"rgb",      agg_rgb_new},
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg agg_obj_methods[] = {
-  {"__index",     agg_obj_index},
-  {"__gc",        agg_obj_free},
   {NULL, NULL}
 };
 
@@ -125,7 +116,6 @@ agg_path_free (lua_State *L)
 {
   typedef my::path path_type;
   path_type *path = check_agg_path (L, 1);
-  printf("freeing PATH %p\n", (void *) path);
   path->~path_type();
   return 0;
 }
@@ -222,7 +212,7 @@ agg_path_index (lua_State *L)
 vertex_source *
 check_agg_obj (lua_State *L, int index)
 {
-  int tplist[] = {GS_DRAW_OBJ, GS_DRAW_PATH, GS_DRAW_TEXT, GS_INVALID_TYPE};
+  int tplist[] = {GS_DRAW_PATH, GS_DRAW_TEXT, GS_INVALID_TYPE};
   void *p = NULL;
   int j;
 
@@ -237,57 +227,6 @@ check_agg_obj (lua_State *L, int index)
     gs_type_error (L, index, "drawing object");
 
   return (vertex_source *) p;
-}
-
-int
-agg_obj_free (lua_State *L)
-{
-  vertex_source *vs = check_agg_obj (L, 1);
-  printf("freeing OBJECT %p\n", (void *) vs);
-  vs->~vertex_source();
-  return 0;
-}
-
-static int
-agg_obj_pcall (lua_State *L)
-{
-  int narg_out, narg_in = lua_gettop (L);
-  int status;
-
-  pthread_mutex_lock (agg_mutex);
-  lua_pushvalue (L, lua_upvalueindex(1));
-  lua_insert (L, 1);
-  status = lua_pcall (L, narg_in, LUA_MULTRET, 0);
-  pthread_mutex_unlock (agg_mutex);
-  if (status != 0)
-    {
-#ifndef LUA_MODULE
-      error_report (L, status);
-#else
-      luaL_error (L, "error in graphical object method");
-#endif
-      return 0;
-    }
-  narg_out = lua_gettop (L);
-  return narg_out;
-}
-
-int
-agg_obj_index (lua_State *L)
-{
-  vertex_source *vs = check_agg_obj (L, 1);
-
-  lua_getmetatable (L, 1);
-  lua_insert (L, 2);
-  lua_gettable (L, 2);
-
-  if (! lua_isnil (L, -1))
-    {
-      lua_pushcclosure (L, agg_obj_pcall, 1);
-      return 1;
-    }
-
-  return 0;
 }
 
 my::text *
@@ -403,10 +342,6 @@ draw_register (lua_State *L)
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, agg_text_methods);
-  lua_pop (L, 1);
-
-  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_OBJ));
-  luaL_register (L, NULL, agg_obj_methods);
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));

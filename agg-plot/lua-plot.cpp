@@ -33,12 +33,12 @@ static int agg_plot_title_get  (lua_State *L);
 static int agg_plot_units_set  (lua_State *L);
 static int agg_plot_units_get  (lua_State *L);
 
-static int build_stroke        (lua_State *L);
-static int build_dash          (lua_State *L);
-static int build_curve         (lua_State *L);
-static int build_marker        (lua_State *L);
-static int build_rotate        (lua_State *L);
-static int build_translate     (lua_State *L);
+static vertex_source * build_stroke    (lua_State *L, int index, vertex_source *obj);
+static vertex_source * build_dash      (lua_State *L, int index, vertex_source *obj);
+static vertex_source * build_curve     (lua_State *L, int index, vertex_source *obj);
+static vertex_source * build_marker    (lua_State *L, int index, vertex_source *obj);
+static vertex_source * build_rotate    (lua_State *L, int index, vertex_source *obj);
+static vertex_source * build_translate (lua_State *L, int index, vertex_source *obj);
 
 /* DEBUG DEBUG DEBUG */
 static int window_debug_list   (lua_State *L);
@@ -83,6 +83,11 @@ struct property_reg {
   const char *name;
 };
 
+struct builder_reg {
+  const char *name;
+  vertex_source *(*func)(lua_State *, int, vertex_source *);
+};
+
 __END_DECLS
   
 
@@ -102,7 +107,7 @@ struct property_reg line_join_properties[] = {
   {0, NULL}
 };
 
-const struct luaL_Reg trans_builder[] = {
+const builder_reg builder_table[] = {
   {"stroke",        build_stroke  },
   {"dash",          build_dash},
   {"curve",         build_curve},
@@ -162,7 +167,6 @@ int
 agg_plot_free (lua_State *L)
 {
   agg_plot *p = agg_plot::arg_check(L, 1);
-  printf("freeing plot\n");
   p->~agg_plot();
   return 0;
 }
@@ -233,150 +237,125 @@ agg_plot_newindex (lua_State *L)
   return mlua_newindex_with_properties (L, agg_plot_properties_set);
 }
 
-int
-build_stroke (lua_State *L)
+vertex_source *
+build_stroke (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   double width      = mlua_named_optnumber (L, specindex, "width", 1.0);
-  const char *scap  = mlua_named_optstring (L, specindex, "cap",  NULL);
-  const char *sjoin = mlua_named_optstring (L, specindex, "join", NULL);
-  vertex_source *obj = check_agg_obj (L, objindex);
+  const char *cap_str  = mlua_named_optstring (L, specindex, "cap",  NULL);
+  const char *join_str = mlua_named_optstring (L, specindex, "join", NULL);
 
-  trans::stroke *stroke = new(L, GS_DRAW_OBJ) trans::stroke(obj, width);
-  mlua_set_fenv_ref (L, objindex);
+  trans::stroke *stroke = new trans::stroke(obj, width);
 
-  if (scap)
+  if (cap_str)
     {
-      int cap = property_lookup (line_cap_properties, scap);
+      int cap = property_lookup (line_cap_properties, cap_str);
       stroke->line_cap((agg::line_cap_e) cap);
     }
 
-  if (sjoin)
+  if (join_str)
     {
-      int join = property_lookup (line_join_properties, sjoin);
+      int join = property_lookup (line_join_properties, join_str);
       stroke->line_join((agg::line_join_e) join);
     }
 
-  return 1;
+  return (vertex_source *) stroke;
 }
 
-int
-build_curve (lua_State *L)
+vertex_source *
+build_curve (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
-  vertex_source *obj = check_agg_obj (L, objindex);
-
-  trans::curve *c = new(L, GS_DRAW_OBJ) trans::curve(obj);
-  mlua_set_fenv_ref (L, objindex);
-
-  return 1;
+  trans::curve *c = new trans::curve(obj);
+  return (vertex_source *) c;
 }
 
-int
-build_marker (lua_State *L)
+vertex_source *
+build_marker (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   double size = mlua_named_optnumber (L, specindex, "size", 3.0);
-  vertex_source *obj = check_agg_obj (L, objindex);
-
-  new(L, GS_DRAW_OBJ) trans::marker(obj, size);
-  mlua_set_fenv_ref (L, objindex);
-
-  return 1;
+  return (vertex_source *) new trans::marker(obj, size);
 }
 
-int
-build_dash (lua_State *L)
+vertex_source *
+build_dash (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   double a = mlua_named_optnumber (L, specindex, "a", 10.0);
   double b = mlua_named_optnumber (L, specindex, "b", a);
-  vertex_source *obj = check_agg_obj (L, objindex);
 
-  trans::dash *dash = new(L, GS_DRAW_OBJ) trans::dash(obj);
-  mlua_set_fenv_ref (L, objindex);
- 
+  trans::dash *dash = new trans::dash(obj);
   dash->add_dash(a, b);
 
-  return 1;
+  return (vertex_source *) dash;
 }
 
-int
-build_translate (lua_State *L)
+vertex_source *
+build_translate (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   double x = mlua_named_number (L, specindex, "x");
   double y = mlua_named_number (L, specindex, "y");
-  vertex_source *obj = check_agg_obj (L, objindex);
 
-  trans::affine *t = new(L, GS_DRAW_OBJ) trans::affine(obj);
-  mlua_set_fenv_ref (L, objindex);
-
+  trans::affine *t = new trans::affine(obj);
   t->translate(x, y);
 
-  return 1;
+  return (vertex_source *) t;
 }
 
-int
-build_rotate (lua_State *L)
+vertex_source *
+build_rotate (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   double a = mlua_named_number (L, specindex, "angle");
-  vertex_source *obj = check_agg_obj (L, objindex);
 
-  trans::affine *t = new(L, GS_DRAW_OBJ) trans::affine(obj);
-  mlua_set_fenv_ref (L, objindex);
-
+  trans::affine *t = new trans::affine(obj);
   t->rotate(a);
 
-  return 1;
+  return (vertex_source *) t;
 }
 
-void
-parse_spec (lua_State *L)
+vertex_source *
+parse_spec (lua_State *L, int specindex, vertex_source *obj)
 {
-  const int specindex = 3, objindex = 2;
   const char *tag;
-  const struct luaL_Reg *builder;
 
   lua_rawgeti (L, specindex, 1);
   if (! lua_isstring (L, -1))
     {
       luaL_error (L, "the tag of the transformation is invalid");
-      return;
+      return NULL;
     }
 
   tag = lua_tostring (L, -1);
   lua_pop (L, 1);
 
-  builder = mlua_find_method (trans_builder, tag);
+  for (const builder_reg *b = builder_table; b->name != NULL; b++)
+    {
+      if (strcmp (b->name, tag) == 0)
+	return b->func (L, specindex, obj);
+    }
 
-  if (builder)
-    builder->func (L);
-  else
-    luaL_error (L, "error in definition of pre or post transforms");
-
-  lua_replace (L, objindex);
-  lua_pop (L, 1);
+  luaL_error (L, "invalid trasformation tag");
+  return NULL;
 }
 
-int
-lparse_spec_pipeline (lua_State *L)
+vertex_source *
+lparse_spec_pipeline (lua_State *L, int index, vertex_source *obj)
 {
   size_t k, nb;
 
-  if (lua_type (L, 1) == LUA_TTABLE)
-    nb = lua_objlen (L, 1);
+  if (lua_type (L, index) == LUA_TTABLE)
+    nb = lua_objlen (L, index);
   else
-    return luaL_error (L, "post transform argument should be a table");
+    {
+      luaL_error (L, "post transform argument should be a table");
+      return NULL;
+    }
 
   for (k = nb; k > 0; k--)
     {
-      lua_rawgeti (L, 1, k);
-      parse_spec (L);
+      lua_rawgeti (L, index, k);
+      obj = parse_spec (L, index+1, obj);
+      lua_pop (L, 1);
     }
 
-  return 1;
+  return obj;
 }
 
 static agg::rgba8 *
@@ -415,33 +394,27 @@ agg_plot_add_gener (lua_State *L, bool as_line)
   else
     color = color_arg_lookup (L, 3);
       
+  if (narg > 5)
+    return luaL_error (L, "too much arguments if add or addline plot method");
+
+  vertex_source *curr = check_agg_obj (L, 2);
+
   if (narg > 4)
     {
-      lua_pushcfunction (L, lparse_spec_pipeline);
-      lua_pushvalue (L, 5);
-      lua_pushvalue (L, 2);
-      lua_call (L, 2, 1);
-      lua_replace (L, 2);
+      curr = lparse_spec_pipeline (L, 5, curr);
+      lua_pop (L, 1);
     }
     
-  vertex_source *curr = check_agg_obj (L, 2);
   if (curr->need_resize())
     {
-      new(L, GS_DRAW_OBJ) trans::resize(curr);
-      mlua_set_fenv_ref (L, 2);
-      lua_replace (L, 2);
+      curr = new trans::resize(curr);
     }
 
   if (narg > 3)
     {
-      lua_pushcfunction (L, lparse_spec_pipeline);
-      lua_pushvalue (L, 4);
-      lua_pushvalue (L, 2);
-      lua_call (L, 2, 1);
-      lua_replace (L, 2);
+      curr = lparse_spec_pipeline (L, 4, curr);
+      lua_pop (L, 1);
     }
-  
-  curr = check_agg_obj (L, 2);
 
   lua_pushvalue (L, 1);
   mlua_fenv_addref (L, 2);

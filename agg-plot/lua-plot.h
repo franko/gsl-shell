@@ -12,7 +12,7 @@ __END_DECLS
 #include "plot.h"
 #include "resource-manager.h"
 
-typedef plot<vertex_source, no_management> plot_type;
+typedef plot<vertex_source, lua_management> plot_type;
 
 struct agg_plot : public plot_type {
   bool is_shown;

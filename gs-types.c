@@ -21,11 +21,12 @@ static int gs_type_string (lua_State *L);
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
+#ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
-#define GS_DRAW_OBJ_NAME_DEF    "GSL.drawobj"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
+#endif
 
 const struct gs_type gs_type_table[] = {
   {GS_MATRIX,      GS_MATRIX_NAME_DEF,      "real matrix"},
@@ -40,11 +41,12 @@ const struct gs_type gs_type_table[] = {
   {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
   {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
   {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
+#ifdef AGG_PLOT_ENABLED
   {GS_DRAW_PLOT,   GS_DRAW_PLOT_NAME_DEF,   "plot"},
   {GS_DRAW_PATH,   GS_DRAW_PATH_NAME_DEF,   "geometric line"},
   {GS_DRAW_TEXT,   GS_DRAW_TEXT_NAME_DEF,   "graphical text"},
-  {GS_DRAW_OBJ,    GS_DRAW_OBJ_NAME_DEF,    "drawing element"},
   {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
+#endif
 };
 
 const struct luaL_Reg gs_type_functions[] = {
