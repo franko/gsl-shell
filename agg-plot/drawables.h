@@ -22,10 +22,9 @@ namespace my {
   template <class T>
   class vs_proxy : public vertex_source {
     T* m_source;
-    unsigned ref_count;
 
   public:
-    vs_proxy(): vertex_source(), m_source(NULL), ref_count(0) {};
+    vs_proxy(): vertex_source(), m_source(NULL) {};
 
     void set_source(T* src) { m_source = src; };
 
@@ -37,16 +36,6 @@ namespace my {
     {
       agg::bounding_rect_single(*m_source, 0, x1, y1, x2, y2);
     };
-
-    /*
-    virtual void ref() { ref_count++; };
-    virtual unsigned unref()
-    {
-      if (ref_count > 0)
-	ref_count--;
-      return ref_count;
-    };
-    */
   };
 
   class path : public vs_proxy<agg::path_storage> {
@@ -113,9 +102,9 @@ namespace my {
       m_text.start_point(0.0, 0.0);
     };
 
-    virtual bool need_resize() { return false; };
-
     void set_text(const char *s) { m_text.text(s); };
+
+    virtual bool need_resize() { return false; };
   };
 
 }

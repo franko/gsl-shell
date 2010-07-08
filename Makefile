@@ -80,6 +80,7 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED
+  SUBDIRS_DEFS += -DAGG_PLOT_ENABLED
   LUAGSL_LIBS += agg-plot/libaggplot.a
   LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 endif
