@@ -218,15 +218,16 @@ mlua_fenv_addref (lua_State *L, int refindex)
   lua_pop (L, 1);
 }
 
+#if 0
 void
 mlua_set_fenv_ref (lua_State *L, int refindex)
 {
-  int n;
   lua_newtable (L);
   lua_pushvalue (L, refindex);
   lua_rawseti (L, -2, 1);
   lua_setfenv (L, -2);
 }
+#endif
 
 void
 prepare_window_ref_table (lua_State *L)

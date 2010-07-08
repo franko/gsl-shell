@@ -70,6 +70,10 @@ struct window_unref_cell {
   struct window_unref_cell *next;
 };
 
+#define UNREF_FIXED_SIZE 8
+static int unref_fixed_list[UNREF_FIXED_SIZE];
+static size_t unref_fixed_count = 0;
+
 static struct window_unref_cell *window_unref_list = NULL;
 static lua_State *globalL = NULL;
 
@@ -329,6 +333,8 @@ static void dotty (lua_State *L) {
     {
       struct window_unref_cell *wu;
       int status = loadline(L);
+      size_t j;
+
       if (status == -1)
 	break;
       if (status == 0) 
@@ -346,6 +352,12 @@ static void dotty (lua_State *L) {
 	    }
 	}
       GSL_SHELL_LOCK();
+
+      for (j = 0; j < unref_fixed_count; j++)
+	mlua_window_unref (L, unref_fixed_list[j]);
+
+      unref_fixed_count = 0;
+
       for (wu = window_unref_list; wu != NULL; /* */)
 	{
 	  struct window_unref_cell *nxt = wu->next;
@@ -354,22 +366,9 @@ static void dotty (lua_State *L) {
 	  wu = nxt;
 	}
       window_unref_list = NULL;
+
       GSL_SHELL_UNLOCK();
     }
-#if 0
-  while ((status = loadline(L)) != -1) {
-    if (status == 0) status = docall(L, 0, 0);
-    report(L, status);
-    if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
-      lua_getglobal(L, "print");
-      lua_insert(L, 1);
-      if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-        l_message(progname, lua_pushfstring(L,
-                               "error calling " LUA_QL("print") " (%s)",
-                               lua_tostring(L, -1)));
-    }
-  }
-#endif
   lua_settop(L, 0);  /* clear stack */
   fputs("\n", stdout);
   fflush(stdout);
@@ -551,10 +550,18 @@ int main (int argc, char **argv) {
 void
 gsl_shell_unref_plot (int id)
 {
-  struct window_unref_cell *cell = malloc(sizeof(struct window_unref_cell));
+  if (unref_fixed_count < UNREF_FIXED_SIZE)
+    {
+      unref_fixed_list[unref_fixed_count] = id;
+      unref_fixed_count ++;
+    }
+  else
+    {
+      struct window_unref_cell *cell = malloc(sizeof(struct window_unref_cell));
 
-  cell->id = id;
-  cell->next = window_unref_list;
+      cell->id = id;
+      cell->next = window_unref_list;
 
-  window_unref_list = cell;
+      window_unref_list = cell;
+    }
 }

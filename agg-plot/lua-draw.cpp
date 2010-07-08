@@ -116,7 +116,6 @@ agg_path_free (lua_State *L)
 {
   typedef my::path path_type;
   path_type *path = check_agg_path (L, 1);
-  printf("freeing PATH %p\n", (void *) path);
   path->~path_type();
   return 0;
 }

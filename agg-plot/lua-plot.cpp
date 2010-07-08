@@ -167,7 +167,6 @@ int
 agg_plot_free (lua_State *L)
 {
   agg_plot *p = agg_plot::arg_check(L, 1);
-  printf("freeing plot\n");
   p->~agg_plot();
   return 0;
 }

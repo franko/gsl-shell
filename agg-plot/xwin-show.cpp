@@ -91,7 +91,6 @@ xwin_thread_function (void *_plot)
       AGG_UNLOCK();
 
       GSL_SHELL_LOCK();
-      printf("unref plot\n");
       gsl_shell_unref_plot (p->id);
       GSL_SHELL_UNLOCK();
     }
