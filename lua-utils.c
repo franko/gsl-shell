@@ -233,9 +233,9 @@ void
 prepare_window_ref_table (lua_State *L)
 {
   lua_newtable (L);
-  lua_pushinteger (L, 0);
-  lua_setfield (L, -2, "N");
   lua_setfield (L, LUA_REGISTRYINDEX, "GSL.windows");
+  lua_pushinteger (L, 0);
+  lua_setfield (L, LUA_REGISTRYINDEX, "GSL.windows.n");
 }
 
 int 
@@ -243,13 +243,13 @@ mlua_window_ref(lua_State *L, int index)
 {
   int n;
 
-  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
-
-  lua_getfield (L, -1, "N");
+  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows.n");
   n = lua_tointeger (L, -1);
+  lua_pop (L, 1);
   lua_pushinteger (L, n+1);
-  lua_remove (L, -2);
-  lua_setfield (L, -2, "N");
+  lua_setfield (L, LUA_REGISTRYINDEX, "GSL.windows.n");
+
+  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
 
   lua_pushvalue (L, index);
   lua_rawseti (L, -2, n+1);

@@ -936,6 +936,7 @@ namespace agg
         
         //--------------------------------------------------------------------
         case WM_PAINT:
+	  printf("painting...\n");
             paintDC = ::BeginPaint(hWnd, &ps);
             app->m_specific->m_current_dc = paintDC;
             if(app->m_specific->m_redraw_flag)
@@ -1056,6 +1057,7 @@ namespace agg
     {
         MSG msg;
 
+	printf("running...\n");
 	pthread_mutex_lock (m_specific->m_mutex);
 
         for(;;)
@@ -1064,6 +1066,7 @@ namespace agg
             {
 	      bool status;
 
+	      printf("waiting message...\n");
 	      pthread_mutex_unlock (m_specific->m_mutex);
 	      status = ::GetMessage(&msg, 0, 0, 0);
 	      pthread_mutex_lock (m_specific->m_mutex);
@@ -1072,6 +1075,7 @@ namespace agg
                 {
 		  break;
                 }
+	      printf("dispaching...\n");
 	      ::TranslateMessage(&msg);
 	      ::DispatchMessage(&msg);
             }
