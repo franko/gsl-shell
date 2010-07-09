@@ -40,12 +40,18 @@ static vertex_source * build_marker    (lua_State *L, int index, vertex_source *
 static vertex_source * build_rotate    (lua_State *L, int index, vertex_source *obj);
 static vertex_source * build_translate (lua_State *L, int index, vertex_source *obj);
 
+/* DEBUG DEBUG DEBUG */
+static int window_debug_list   (lua_State *L);
+static int obj_getfenv         (lua_State *L);
+
 static const struct luaL_Reg plot_functions[] = {
   {"path",     agg_path_new},
   {"text",     agg_text_new},
   {"rgba",     agg_rgba_new},
   {"rgb",      agg_rgb_new},
   {"plot",     agg_plot_new},
+  {"windows",  window_debug_list},
+  {"objgetfenv",  obj_getfenv},
   {NULL, NULL}
 };
 
@@ -473,6 +479,20 @@ agg_plot_show (lua_State *L)
   AGG_UNLOCK();
 
   return 0;
+}
+
+int
+window_debug_list(lua_State *L)
+{
+  lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
+  return 1;
+}
+
+int
+obj_getfenv(lua_State *L)
+{
+  lua_getfenv (L, 1);
+  return 1;
 }
 
 void

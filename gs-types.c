@@ -26,7 +26,6 @@ static int gs_type_string (lua_State *L);
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
-#define GS_AGG_WINDOW_NAME_DEF  "GSL.window"
 #endif
 
 const struct gs_type gs_type_table[] = {
@@ -47,7 +46,6 @@ const struct gs_type gs_type_table[] = {
   {GS_DRAW_PATH,   GS_DRAW_PATH_NAME_DEF,   "geometric line"},
   {GS_DRAW_TEXT,   GS_DRAW_TEXT_NAME_DEF,   "graphical text"},
   {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
-  {GS_AGG_WINDOW,  GS_AGG_WINDOW_NAME_DEF,  "graphical window"},
 #endif
 };
 

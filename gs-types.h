@@ -26,7 +26,6 @@ enum gs_type_e {
   GS_DRAW_PATH,
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
-  GS_AGG_WINDOW,
 #endif
   GS_INVALID_TYPE,
 };
