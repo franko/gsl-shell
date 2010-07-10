@@ -463,6 +463,7 @@ agg_plot_show (lua_State *L)
 	  pthread_attr_destroy (attr);
 	  mlua_window_unref(L, p->id);
 	  p->id = -1;
+	  AGG_UNLOCK();
 	  return luaL_error(L, "error creating thread.");
 	}
       
