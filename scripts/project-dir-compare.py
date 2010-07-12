@@ -1,6 +1,11 @@
+#!/usr/bin/python
+
+import sys
 import os
 import re
-import sys
+import shutil
+
+from optparse import OptionParser
 
 def differs(fna, fnb):
     fa, fb = open(fna, 'r'), open(fnb, 'r')
@@ -15,19 +20,17 @@ def exists(fn):
     except:
         return False
 
-fulldira = sys.argv[1]
-fulldirb = sys.argv[2]
+parser = OptionParser()
+parser.add_option("-r", "--report", action="store_false", dest="write")
+parser.add_option("-w", "--write",  action="store_true",  dest="write", default=False)
 
-# basedir = '/home/francesco/sviluppo'
+(options, args) = parser.parse_args()
 
-# dira = 'gsl-shell'
-# dirb = 'gsl-shell-win-branch'
-
-# fulldira = os.path.join(basedir, dira)
-# fulldirb = os.path.join(basedir, dirb)
+dira = args[0]
+dirb = args[1]
 
 dir_ignore = [r'\.(git|svn|deps|libs)$', r'^doc/html$', r'^www$']
-file_ignore = [r'~$', r'\.o$']
+file_ignore = ['^\.gitignore', '^gsl-shell$', r'^lua/src/luac?$', r'~$', r'\.o$', r'\.a$']
 
 treated, absenta, absentb, differ = [], [], [], []
 
@@ -65,11 +68,11 @@ def project_scan(basedir):
                 yield rel
         dir_filter(dirnames, rpath, basedir)
 
-for filename in project_scan(fulldira):
+for filename in project_scan(dira):
     treated.append(filename)
 
-    filenamea = os.path.join(fulldira, filename)
-    filenameb = os.path.join(fulldirb, filename)
+    filenamea = os.path.join(dira, filename)
+    filenameb = os.path.join(dirb, filename)
 
     if not exists(filenameb):
         absentb.append(filename)
@@ -77,15 +80,45 @@ for filename in project_scan(fulldira):
         if differs(filenamea, filenameb):
             differ.append(filename)
 
-for filename in project_scan(fulldirb):
+for filename in project_scan(dirb):
     if not filename in treated:
         absenta.append(filename)
 
-print 'Absent A:'
+def copy_files(flist, src, dst):
+    for nm in flist:
+        sf = os.path.join(src, nm)
+        df = os.path.join(dst, nm)
+        print 'Copying', nm, 'into', dst, '...',
+        try:
+            mdestdir = os.path.dirname(df)
+            if not exists(mdestdir):
+                os.makedirs(mdestdir)
+            shutil.copy(sf, df)
+            shutil.copystat(sf, df)
+        except OSError as oserr:
+            print 'error:', oserr.strerror
+        else:
+            print 'ok'
+
+def sync_directories():
+    for nm in absenta:
+        nmb = os.path.join(dirb, nm)
+        print 'Removing', nmb, '...',
+        try:
+            os.remove(nmb)
+        except OSError as oserr:
+            print 'error:', oserr.strerror
+        else:
+            print 'ok'
+
+    copy_files(absentb, dira, dirb)
+    copy_files(differ,  dira, dirb)
+
+print 'Absent from SOURCE project:'
 for nm in absenta:
     print '+ ', nm
 
-print 'Absent B:'
+print 'Absent from DESTINATION project:'
 for nm in absentb:
     print '- ', nm
 
@@ -95,7 +128,15 @@ for nm in differ:
 
 print '-'*25 + ' DIFF OUTPUT ' + '-'*25
 for nm in differ:
-    cmd = 'diff -U 4 %s %s' % (os.path.join(fulldira, nm), os.path.join(fulldirb, nm))
+    cmd = 'diff -U 4 %s %s' % (os.path.join(dira, nm), os.path.join(dirb, nm))
     diffout = os.popen(cmd)
     for ln in diffout:
         print ln,
+
+if options.write:
+    print 'Proceed to sync DESTINATION (%s) from SOURCE (%s) [Y/n] ? ' % (dirb, dira),
+    ans = sys.stdin.readline()
+    ans = ans.rstrip('\n')
+    if ans in ['Y', 'Yes', 'y', 'yes']:
+        print 'Syncing'
+        sync_directories()
