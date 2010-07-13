@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <unistd.h>
 
 extern "C" {
 #include "lua.h"
@@ -8,6 +9,7 @@ extern "C" {
 #include "platform/agg_platform_support.h"
 
 #include "defs.h"
+#include "resource-manager.h"
 #include "gsl-shell.h"
 #include "plot-window.h"
 #include "agg-parse-trans.h"
@@ -33,6 +35,7 @@ static int plot_window_index       (lua_State *L);
 static int plot_window_draw        (lua_State *L);
 static int plot_window_clear       (lua_State *L);
 static int plot_window_update      (lua_State *L);
+static int plot_window_size        (lua_State *L);
 
 static const struct luaL_Reg plotwin_functions[] = {
   {"window",       plot_window_new},
@@ -45,11 +48,11 @@ static const struct luaL_Reg plot_window_methods[] = {
   {NULL, NULL}
 };
 
-/* NB: this methods should return no values */
 static const struct luaL_Reg plot_window_methods_protected[] = {
   {"draw",         plot_window_draw},
   {"clear",        plot_window_clear},
   {"update",       plot_window_update},
+  {"size",         plot_window_size},
   {NULL, NULL}
 };
 
@@ -129,27 +132,20 @@ plot_window::on_resize(int sx, int sy)
 void
 plot_window::start()
 {
-  WINDOW_LOCK();
+  //  sleep (15);
 
   this->caption("GSL shell plot");
   if (this->init(480, 480, agg::window_resize))
     {
       this->status = plot_window::running;
       
-      WINDOW_UNLOCK();
       this->run();
 
-      WINDOW_LOCK();
       this->status = plot_window::closed;
-      WINDOW_UNLOCK();
 
       GSL_SHELL_LOCK();
       gsl_shell_unref_plot (this->id);
       GSL_SHELL_UNLOCK();
-    }
-  else
-    {
-      WINDOW_UNLOCK();
     }
 }
 
@@ -183,9 +179,8 @@ plot_window_new (lua_State *L)
 
   const double bs = (double) agg::rgba8::base_mask;
   agg::rgba color(c8->r / bs, c8->g / bs, c8->b / bs, c8->a / bs);
-  plot_window *win = new(L, GS_AGG_WINDOW) plot_window(color);
 
-  WINDOW_LOCK();
+  plot_window *win = new(L, GS_AGG_WINDOW) plot_window(color);
 
   win->id = mlua_window_ref(L, 1);
 
@@ -194,6 +189,8 @@ plot_window_new (lua_State *L)
 
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+  platform_support_lock (win);
     
   if (pthread_create(win_thread, attr, win_thread_function, (void*) win))
     {
@@ -201,14 +198,12 @@ plot_window_new (lua_State *L)
 
       pthread_attr_destroy (attr);
       win->status = plot_window::error; 
-      WINDOW_UNLOCK();
 
       luaL_error(L, "error creating thread");
     }
 
   pthread_attr_destroy (attr);
   win->status = plot_window::starting;
-  WINDOW_UNLOCK();
 
   return 1;
 }
@@ -234,15 +229,24 @@ plot_window_draw (lua_State *L)
   else
     color = color_arg_lookup (L, 3);
 
-  vertex_source *curr = check_agg_obj (L, 2);
-
+  vertex_source *src = check_agg_obj (L, 2);
+  vertex_source *curr;
+  
   if (narg > 3)
     {
-      curr = parse_spec_pipeline (L, 4, curr);
+      curr = parse_spec_pipeline (L, 4, src);
       lua_pop (L, 1);
     }
+  else
+    {
+      curr = src;
+    }
 
-  if (! win->draw(curr, color))
+  bool success = win->draw(curr, color);
+
+  lua_management::dispose(curr);
+
+  if (! success)
     return luaL_error (L, "canvas not ready");
 
   return 0;
@@ -276,14 +280,14 @@ plot_window_index_protected (lua_State *L)
   lua_insert (L, 1);
 
   platform_support_lock (win);
-  if (lua_pcall (L, narg, 0, 0) != 0)
+  if (lua_pcall (L, narg, LUA_MULTRET, 0) != 0)
     {
       platform_support_unlock (win);
       return lua_error (L);
     }
 
   platform_support_unlock (win);
-  return 0;
+  return lua_gettop (L);
 }
 
 int
@@ -308,6 +312,15 @@ plot_window_index (lua_State *L)
     }
 
   return 0;
+}
+
+int
+plot_window_size (lua_State *L)
+{
+  plot_window *win = plot_window::check(L, 1);
+  lua_pushinteger (L, win->width());
+  lua_pushinteger (L, win->height());
+  return 2;
 }
 
 void

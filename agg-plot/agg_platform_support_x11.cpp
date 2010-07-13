@@ -661,8 +661,6 @@ namespace agg
   //------------------------------------------------------------------------
   int platform_support::run()
   {
-    pthread_mutex_lock (m_specific->m_mutex);
-
     XFlush(m_specific->m_display);
         
     bool quit = false;
