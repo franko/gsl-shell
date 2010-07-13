@@ -77,6 +77,8 @@ xwin_thread_function (void *_plot)
   the_application app(agg::pix_format_bgr24, flip_y, p);
   app.caption("GSL shell plot");
 
+  platform_support_lock (&app);
+
   if(app.init(780, 400, agg::window_resize))
     {
       p->window = (void *) &app;

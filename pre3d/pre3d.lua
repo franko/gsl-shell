@@ -583,7 +583,7 @@ end
 local RendererMT = {}
 RendererMT.__index = RendererMT
 
-function Renderer(plt)
+function Renderer(win)
    local this = {}
    setmetatable(this, RendererMT)
 
@@ -602,7 +602,7 @@ function Renderer(plt)
    -- this.normal1_rgba = nil
    -- this.normal2_rgba = nil
 
-   this.plt = plt
+   this.window = win
 
    -- The camera.
    this.camera = Camera()
@@ -782,9 +782,11 @@ local function zSorter(x, y)
 end
 
 function RendererMT.drawBuffer(this)
-   local plt = this.plt
+   local win = this.window
    local all_quads = this.buffered_quads_
    local num_quads = #all_quads
+
+   win:clear()
 
    -- Sort the quads by z-index for painters algorithm :(
    -- We're looking down the z-axis in the negative direction, so we want
@@ -832,14 +834,14 @@ function RendererMT.drawBuffer(this)
       -- Fill...
       local frgba = obj.fill_rgba
       if frgba then
-	 plt:add(qpath, frgba)
+	 win:draw(qpath, frgba)
       end
 
       -- Stroke...
       local srgba = obj.stroke_rgba
       if srgba then
 	 qpath:close()
-	 plt:addline(qpath, srgba) 
+	 win:draw(qpath, srgba, {{'stroke'}}) 
       end
 
       -- Normal lines (stroke)...
@@ -851,7 +853,7 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal1)))
 	 local n1path = path(screen_centroid.x, screen_centroid.y)
 	 n1path:line_to(screen_point.x, screen_point.y)
-	 plt:addline(n1path, n1r)
+	 win:draw(n1path, n1r, {{'stroke'}})
       end
 
       if n2r then
@@ -860,9 +862,11 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal2)))
 	 local n2path = path(screen_centroid.x, screen_centroid.y)
 	 n2path:line_to(screen_point.x, screen_point.y)
-	 plt:addline(n2path, n2r)
+	 win:addline(n2path, n2r, {{'stroke'}})
       end
    end
+
+   win:update()
    
    return num_quads
 end

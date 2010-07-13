@@ -161,6 +161,8 @@ namespace trans {
     
     const trans_affine& rotate(double a) { return m_matrix.rotate(a); };
     const trans_affine& translate(double x, double y) { return m_matrix.translate(x, y); };
+    
+    void set_matrix(const agg::trans_affine& m) { m_matrix = m; };
   };
 }
 

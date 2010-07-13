@@ -329,7 +329,7 @@ agg_rgb_new (lua_State *L)
 int
 agg_rgba_set (lua_State *L)
 {
-  agg::rgba8 *c = gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
   double r, g, b, a;
 
   r = luaL_checknumber (L, 2);
@@ -351,17 +351,17 @@ agg_rgba_set (lua_State *L)
 int
 agg_rgba_invert (lua_State *L)
 {
-  agg::rgba8 *c = gs_check_userdata (L, 1, GS_RGBA_COLOR);
-  c->r = 1 - r;
-  c->g = 1 - g;
-  c->b = 1 - b;
+  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  c->r = 1 - c->r;
+  c->g = 1 - c->g;
+  c->b = 1 - c->b;
   return 0;
 }
 
 int
 agg_rgba_dup (lua_State *L)
 {
-  agg::rgba8 *src = gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *src = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
   agg::rgba8 *dst = new(L, GS_RGBA_COLOR) agg::rgba8(*src);
   return 1;
 }

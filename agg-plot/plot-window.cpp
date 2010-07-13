@@ -19,23 +19,26 @@ extern "C" {
 #include "gs-types.h"
 #include "colors.h"
 #include "canvas.h"
+#include "trans.h"
 
 extern void platform_support_prepare   ();
 extern void platform_support_lock      (agg::platform_support *app);
 extern void platform_support_unlock    (agg::platform_support *app);
 extern bool platform_support_is_mapped (agg::platform_support *app);
 
+
 __BEGIN_DECLS
 
 static void * win_thread_function (void *_win);
 
-static int plot_window_new         (lua_State *L);
-static int plot_window_free        (lua_State *L);
-static int plot_window_index       (lua_State *L);
-static int plot_window_draw        (lua_State *L);
-static int plot_window_clear       (lua_State *L);
-static int plot_window_update      (lua_State *L);
-static int plot_window_size        (lua_State *L);
+static int plot_window_new           (lua_State *L);
+static int plot_window_free          (lua_State *L);
+static int plot_window_index         (lua_State *L);
+static int plot_window_draw          (lua_State *L);
+static int plot_window_clear         (lua_State *L);
+static int plot_window_update        (lua_State *L);
+static int plot_window_size          (lua_State *L);
+static int plot_window_set_transform (lua_State *L);
 
 static const struct luaL_Reg plotwin_functions[] = {
   {"window",       plot_window_new},
@@ -53,6 +56,7 @@ static const struct luaL_Reg plot_window_methods_protected[] = {
   {"clear",        plot_window_clear},
   {"update",       plot_window_update},
   {"size",         plot_window_size},
+  {"transform",    plot_window_set_transform},
   {NULL, NULL}
 };
 
@@ -64,8 +68,10 @@ class plot_window : public agg::platform_support {
 private:
   canvas *m_canvas;
   agg::rgba m_bgcolor;
-  
+
 public:
+  agg::trans_affine m_trans;
+
   enum win_status_e { not_ready, starting, running, error, closed };
 
   int id;
@@ -73,7 +79,7 @@ public:
 
   plot_window(agg::rgba& bgcol) :
     agg::platform_support(agg::pix_format_bgr24, true), 
-    m_canvas(NULL), m_bgcolor(bgcol), id(-1), status(not_ready)
+    m_canvas(NULL), m_bgcolor(bgcol), m_trans(), id(-1), status(not_ready)
   { };
 
   virtual ~plot_window() 
@@ -96,6 +102,11 @@ public:
 
     m_canvas->draw(*obj, *color);
     return true;
+  };
+
+  void set_transform(double sx, double sy, double x0, double y0)
+  {
+    m_trans = agg::trans_affine(sx, 0.0, 0.0, sy, x0, y0);
   };
  
   static plot_window *check (lua_State *L, int index);
@@ -229,17 +240,16 @@ plot_window_draw (lua_State *L)
   else
     color = color_arg_lookup (L, 3);
 
-  vertex_source *src = check_agg_obj (L, 2);
-  vertex_source *curr;
-  
+  vertex_source *curr = check_agg_obj (L, 2);
+
+  trans::affine *to = new trans::affine(curr);
+  to->set_matrix(win->m_trans);
+  curr = to;
+
   if (narg > 3)
     {
-      curr = parse_spec_pipeline (L, 4, src);
+      curr = parse_spec_pipeline (L, 4, curr);
       lua_pop (L, 1);
-    }
-  else
-    {
-      curr = src;
     }
 
   bool success = win->draw(curr, color);
@@ -250,7 +260,6 @@ plot_window_draw (lua_State *L)
     return luaL_error (L, "canvas not ready");
 
   return 0;
-  
 }
 
 int
@@ -321,6 +330,18 @@ plot_window_size (lua_State *L)
   lua_pushinteger (L, win->width());
   lua_pushinteger (L, win->height());
   return 2;
+}
+
+int
+plot_window_set_transform (lua_State *L)
+{
+  plot_window *win = plot_window::check(L, 1);
+  double sx = luaL_checknumber (L, 2);
+  double sy = luaL_checknumber (L, 3);
+  double x0 = luaL_optnumber (L, 4, 0.0);
+  double y0 = luaL_optnumber (L, 5, 0.0);
+  win->set_transform(sx, sy, x0, y0);
+  return 0;
 }
 
 void
