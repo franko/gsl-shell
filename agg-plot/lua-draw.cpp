@@ -45,6 +45,9 @@ static int agg_text_set_point (lua_State *L);
 static int agg_text_rotate    (lua_State *L);
 
 static int agg_rgba_free      (lua_State *L);
+static int agg_rgba_set       (lua_State *L);
+static int agg_rgba_invert    (lua_State *L);
+static int agg_rgba_dup       (lua_State *L);
 
 static void path_cmd (my::path *p, int cmd, struct cmd_call_stack *stack);
 
@@ -74,6 +77,9 @@ static const struct luaL_Reg agg_path_methods[] = {
 
 static const struct luaL_Reg rgba_methods[] = {
   {"__gc",        agg_rgba_free},
+  {"set",         agg_rgba_set },
+  {"invert",      agg_rgba_invert },
+  {"dup",         agg_rgba_dup },
   {NULL, NULL}
 };
 
@@ -317,6 +323,46 @@ agg_rgb_new (lua_State *L)
   unsigned int b = double2uint8 (luaL_checknumber (L, 3));
 
   new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b, 255);
+  return 1;
+}
+
+int
+agg_rgba_set (lua_State *L)
+{
+  agg::rgba8 *c = gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  double r, g, b, a;
+
+  r = luaL_checknumber (L, 2);
+  g = luaL_checknumber (L, 3);
+  b = luaL_checknumber (L, 4);
+  if (lua_gettop (L) > 4)
+    a = luaL_checknumber (L, 5);
+  else
+    a = 1.0;
+
+  c->r = r;
+  c->g = g;
+  c->b = b;
+  c->a = a;
+  
+  return 0;
+}
+
+int
+agg_rgba_invert (lua_State *L)
+{
+  agg::rgba8 *c = gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  c->r = 1 - r;
+  c->g = 1 - g;
+  c->b = 1 - b;
+  return 0;
+}
+
+int
+agg_rgba_dup (lua_State *L)
+{
+  agg::rgba8 *src = gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *dst = new(L, GS_RGBA_COLOR) agg::rgba8(*src);
   return 1;
 }
 
