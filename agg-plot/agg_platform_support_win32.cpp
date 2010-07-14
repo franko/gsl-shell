@@ -1091,8 +1091,6 @@ namespace agg
             }
         }
 
-	pthread_mutex_unlock (m_specific->m_mutex);
-
         return (int)msg.wParam;
     }
 

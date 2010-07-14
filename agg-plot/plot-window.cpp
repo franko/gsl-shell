@@ -158,6 +158,8 @@ plot_window::start()
       gsl_shell_unref_plot (this->id);
       GSL_SHELL_UNLOCK();
     }
+
+  platform_support_unlock (this);
 }
 
 void *
@@ -223,7 +225,7 @@ int
 plot_window_free (lua_State *L)
 {
   plot_window *win = plot_window::check (L, 1);
-  printf("freying plot window\n");
+  printf("freeing plot window\n");
   win->~plot_window();
   return 0;
 }
@@ -283,12 +285,19 @@ plot_window_index_protected (lua_State *L)
 {
   plot_window *win = plot_window::check(L, lua_upvalueindex(2));
 
+  platform_support_lock (win);
+
+  if (win->status != plot_window::running)
+    {
+      platform_support_unlock (win);
+      return luaL_error (L, "window is not active");
+    }
+
   int narg = lua_gettop (L);
 
   lua_pushvalue (L, lua_upvalueindex(1));
   lua_insert (L, 1);
 
-  platform_support_lock (win);
   if (lua_pcall (L, narg, LUA_MULTRET, 0) != 0)
     {
       platform_support_unlock (win);

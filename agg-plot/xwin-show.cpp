@@ -97,5 +97,7 @@ xwin_thread_function (void *_plot)
       GSL_SHELL_UNLOCK();
     }
 
+  platform_support_unlock (&app);
+
   return NULL;
 }
