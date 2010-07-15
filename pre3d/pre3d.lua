@@ -822,26 +822,6 @@ function RendererMT.drawBuffer(this)
 
       local is_triangle = qf:isTriangle()
 
-      if obj.draw_overdraw then
-	 -- Unfortunately when we fill with canvas, we can get some gap looking
-	 -- things on the edges between quads.  One possible solution is to
-	 -- stroke the path, but this turns out to be really expensive.  Instead
-	 -- we try to increase the area of the quad.  Each edge pushes its
-	 -- vertices away from each other.  This is sort of similar in concept
-	 -- to the builtin canvas shadow support (shadowOffsetX, etc).  However,
-	 -- Chrome doesn't support shadows correctly now.  It does in trunk, but
-	 -- using shadows to fill the gaps looks awful, and also seems slower.
-
-	 pushPoints2dIP(qf.i0, qf.i1)
-	 pushPoints2dIP(qf.i1, qf.i2)
-	 if is_triangle then
-	    pushPoints2dIP(qf.i2, qf.i0)
-	 else
-	    pushPoints2dIP(qf.i2, qf.i3)
-	    pushPoints2dIP(qf.i3, qf.i0)
-	 end
-      end
-
       -- Create our quad as a <canvas> path.
       local qpath = path(qf.i0.x, qf.i0.y)
       qpath:line_to(qf.i1.x, qf.i1.y)
@@ -854,7 +834,11 @@ function RendererMT.drawBuffer(this)
       -- Fill...
       local frgba = obj.fill_rgba
       if frgba then
-	 win:draw(qpath, frgba)
+	 if obj.draw_overdraw then
+	    win:draw(qpath, frgba, {{'extend'}})
+	 else
+	    win:draw(qpath, frgba)
+	 end
       end
 
       -- Stroke...

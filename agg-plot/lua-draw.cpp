@@ -48,11 +48,6 @@ static int agg_rgba_free      (lua_State *L);
 static int agg_rgba_add       (lua_State *L);
 static int agg_rgba_mul       (lua_State *L);
 static int agg_rgba_set_alpha (lua_State *L);
-#if 0
-static int agg_rgba_invert    (lua_State *L);
-static int agg_rgba_dup       (lua_State *L);
-static int agg_rgba_set       (lua_State *L);
-#endif
 
 static void path_cmd (my::path *p, int cmd, struct cmd_call_stack *stack);
 
@@ -85,11 +80,6 @@ static const struct luaL_Reg rgba_methods[] = {
   {"__add",       agg_rgba_add },
   {"__mul",       agg_rgba_mul },
   {"alpha",       agg_rgba_set_alpha },
-#if 0
-  {"set",         agg_rgba_set },
-  {"invert",      agg_rgba_invert },
-  {"dup",         agg_rgba_dup },
-#endif
   {NULL, NULL}
 };
 
@@ -256,7 +246,7 @@ agg_text_new (lua_State *L)
 {
   double size  = luaL_optnumber (L, 1, 10.0);
   double width = luaL_optnumber (L, 2, 1.0);
-  my::text *txt = new(L, GS_DRAW_TEXT) my::text(size, width);
+  new(L, GS_DRAW_TEXT) my::text(size, width);
   return 1;
 }
 
@@ -344,48 +334,6 @@ agg_rgba_set_alpha (lua_State *L)
   c->a = agg::rgba8::base_mask * a;
   return 0;
 }
-
-#if 0
-int
-agg_rgba_set (lua_State *L)
-{
-  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
-  double r, g, b, a;
-
-  r = luaL_checknumber (L, 2);
-  g = luaL_checknumber (L, 3);
-  b = luaL_checknumber (L, 4);
-  if (lua_gettop (L) > 4)
-    a = luaL_checknumber (L, 5);
-  else
-    a = 1.0;
-
-  c->r = r;
-  c->g = g;
-  c->b = b;
-  c->a = a;
-  
-  return 0;
-}
-
-int
-agg_rgba_invert (lua_State *L)
-{
-  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
-  c->r = 1 - c->r;
-  c->g = 1 - c->g;
-  c->b = 1 - c->b;
-  return 0;
-}
-
-int
-agg_rgba_dup (lua_State *L)
-{
-  agg::rgba8 *src = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
-  new(L, GS_RGBA_COLOR) agg::rgba8(*src);
-  return 1;
-}
-#endif
 
 int
 agg_rgba_add (lua_State *L)

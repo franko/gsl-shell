@@ -88,7 +88,6 @@ public:
       delete m_canvas;
   };
 
-  virtual void on_draw();
   virtual void on_init();
   virtual void on_resize(int sx, int sy);
 
@@ -120,16 +119,6 @@ plot_window::on_init()
 
   m_canvas = new canvas(rbuf_window(), width(), height(), m_bgcolor);
 }
-
-void
-plot_window::on_draw()
-{
-  printf("on draw!\n");
-  if (! m_canvas)
-    return;
-
-  m_canvas->clear();
-};
 
 void
 plot_window::on_resize(int sx, int sy)
