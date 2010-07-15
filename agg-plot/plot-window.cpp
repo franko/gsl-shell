@@ -195,7 +195,7 @@ plot_window_new (lua_State *L)
 
   plot_window *win = new(L, GS_AGG_WINDOW) plot_window(color);
 
-  win->id = mlua_window_ref(L, 1);
+  win->id = mlua_window_ref(L, lua_gettop (L));
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];

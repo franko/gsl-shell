@@ -732,8 +732,15 @@ function RendererMT.bufferShape(this, shape)
 
 	       -- Lighting intensity is just based on just one of the normals pointing
 	       -- towards the camera.  Should do something better here someday...
+	       local fill_rgba = this.fill_rgba
+
 	       local intensity = dotProduct3d(g_z_axis_vector, n1)
-	       if intensity < 0 then intensity = 0 end
+	       if intensity < 0 then 
+		  intensity = -intensity
+		  if this.fill_rgba_backside then
+		     fill_rgba = this.fill_rgba_backside
+		  end
+	       end
 
 	       -- We map the quad into world coordinates, and also replace the indices
 	       -- with the actual points.
@@ -758,12 +765,25 @@ function RendererMT.bufferShape(this, shape)
 	       world_qf.normal1 = n1
 	       world_qf.normal2 = n2
 
+--	       local cr, cg, cb = 0x42/255, 0x82/255, 0xAA/255
+--	       local cr, cg, cb = 0x4A/255, 0x92/255, 0xBF/255
+
+	       if this.set_light_intensity then
+		  local r1 = 0.2
+		  local ci = intensity * (1-r1)
+		  fill_rgba = r1 * fill_rgba + ci * fill_rgba
+	       end
+
+	       if this.fill_rgba_alpha then
+		  fill_rgba:alpha(this.fill_rgba_alpha)
+	       end
+
 	       local obj = {
 		  qf= world_qf,
 		  intensity= intensity,
 		  draw_overdraw= this.draw_overdraw,
 		  texture= this.texture,
-		  fill_rgba= this.fill_rgba,
+		  fill_rgba= fill_rgba,
 		  stroke_rgba= this.stroke_rgba,
 		  normal1_rgba= this.normal1_rgba,
 		  normal2_rgba= this.normal2_rgba

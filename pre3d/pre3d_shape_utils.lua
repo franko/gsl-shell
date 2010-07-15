@@ -802,7 +802,7 @@ local function makeXYFunction(f, xmin, ymin, xmax, ymax)
    local i0 = 1
    for i=1, nx do
       for j=1, ny do
-	 local i1, i2, i3 = i0+1, i0+(ny+1)+1, i0+(ny+1)
+	 local i1, i2, i3 = i0+(ny+1), i0+(ny+1)+1, i0+1
 	 push(quads, Pre3d.QuadFace(i0, i1, i2, i3))
 	 i0 = i0+1
       end

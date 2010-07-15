@@ -18,7 +18,7 @@ end
 
 function demo1()
    local win = window('black')
-   win:transform(300, 300, 240, 240)
+   win:transform(400, 400, 240, 240)
 
    local renderer = Pre3d.Renderer(win)
    -- shape = ShapeUtils.makeSphere(1, 12, 12)
@@ -39,7 +39,10 @@ function demo1()
 
    renderer.draw_overdraw = false
    renderer.draw_backfaces = true
-   renderer.fill_rgba = rgba(0x42/255, 0x82/255, 0xAA/255, 0.8)
+   renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
+   renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
+   renderer.set_light_intensity = true
+   renderer.fill_rgba_alpha = 0.95
    renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
 
    renderer.camera.focal_length = 30;
@@ -63,7 +66,9 @@ function demo2()
 
    renderer.draw_overdraw = false
    renderer.draw_backfaces = true
-   renderer.fill_rgba = rgba(0x42/255, 0x82/255, 0xAA/255, 1)
+   renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
+   renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
+   renderer.set_light_intensity = true
    renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
 
    renderer.camera.focal_length = 30;
@@ -71,9 +76,7 @@ function demo2()
    local N, tour = 256, 2*pi
    for j=0, N do
       local a = tour*j/N
-      setTransform(renderer.camera.transform, a, 0.15 * a)
+      setTransform(renderer.camera.transform, -a, -0.15*a)
       draw(renderer, shape)
    end
 end
-
-demo1()
