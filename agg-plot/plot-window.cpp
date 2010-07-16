@@ -1,5 +1,3 @@
-#include <pthread.h>
-#include <unistd.h>
 
 extern "C" {
 #include "lua.h"
@@ -59,8 +57,6 @@ static const struct luaL_Reg plot_window_methods_protected[] = {
   {"transform",    plot_window_set_transform},
   {NULL, NULL}
 };
-
-pthread_mutex_t window_mutex[1];
 
 __END_DECLS
 
@@ -132,8 +128,6 @@ plot_window::on_resize(int sx, int sy)
 void
 plot_window::start()
 {
-  //  sleep (15);
-
   this->caption("GSL shell plot");
   if (this->init(480, 480, agg::window_resize))
     {
@@ -154,8 +148,6 @@ plot_window::start()
 void *
 win_thread_function (void *_win)
 {
-  printf("debugging threads!!\n");
-
   platform_support_prepare();
 
   plot_window *win = (plot_window *) _win;
@@ -214,7 +206,6 @@ int
 plot_window_free (lua_State *L)
 {
   plot_window *win = plot_window::check (L, 1);
-  printf("freeing plot window\n");
   win->~plot_window();
   return 0;
 }
@@ -345,8 +336,6 @@ plot_window_set_transform (lua_State *L)
 void
 plot_window_register (lua_State *L)
 {
-  pthread_mutex_init (window_mutex, NULL);
-
   luaL_newmetatable (L, GS_METATABLE(GS_AGG_WINDOW));
   luaL_register (L, NULL, plot_window_methods);
   lua_pop (L, 1);
