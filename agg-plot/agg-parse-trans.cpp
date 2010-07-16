@@ -20,6 +20,14 @@ struct builder_reg {
   vertex_source *(*func)(lua_State *, int, vertex_source *);
 };
 
+static vertex_source * build_stroke    (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_curve     (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_marker    (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_dash      (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_extend    (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_translate (lua_State *L, int i, vertex_source *s);
+static vertex_source * build_rotate    (lua_State *L, int i, vertex_source *s);
+
 struct property_reg line_cap_properties[] = {
   {(int) agg::butt_cap,   "butt"  },
   {(int) agg::square_cap, "square"},
@@ -41,6 +49,7 @@ const builder_reg builder_table[] = {
   {"dash",          build_dash},
   {"curve",         build_curve},
   {"marker",        build_marker},
+  {"extend",        build_extend},
   {"translate",     build_translate},
   {"rotate",        build_rotate},
   {NULL, NULL}
@@ -111,6 +120,13 @@ build_dash (lua_State *L, int specindex, vertex_source *obj)
   dash->add_dash(a, b);
 
   return (vertex_source *) dash;
+}
+
+vertex_source *
+build_extend (lua_State *L, int specindex, vertex_source *obj)
+{
+  double width = mlua_named_optnumber (L, specindex, "width", 1.0);
+  return (vertex_source *) new trans::extend(obj, width);
 }
 
 vertex_source *

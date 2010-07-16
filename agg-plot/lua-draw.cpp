@@ -45,6 +45,9 @@ static int agg_text_set_point (lua_State *L);
 static int agg_text_rotate    (lua_State *L);
 
 static int agg_rgba_free      (lua_State *L);
+static int agg_rgba_add       (lua_State *L);
+static int agg_rgba_mul       (lua_State *L);
+static int agg_rgba_set_alpha (lua_State *L);
 
 static void path_cmd (my::path *p, int cmd, struct cmd_call_stack *stack);
 
@@ -74,6 +77,9 @@ static const struct luaL_Reg agg_path_methods[] = {
 
 static const struct luaL_Reg rgba_methods[] = {
   {"__gc",        agg_rgba_free},
+  {"__add",       agg_rgba_add },
+  {"__mul",       agg_rgba_mul },
+  {"alpha",       agg_rgba_set_alpha },
   {NULL, NULL}
 };
 
@@ -240,7 +246,7 @@ agg_text_new (lua_State *L)
 {
   double size  = luaL_optnumber (L, 1, 10.0);
   double width = luaL_optnumber (L, 2, 1.0);
-  my::text *txt = new(L, GS_DRAW_TEXT) my::text(size, width);
+  new(L, GS_DRAW_TEXT) my::text(size, width);
   return 1;
 }
 
@@ -321,6 +327,50 @@ agg_rgb_new (lua_State *L)
 }
 
 int
+agg_rgba_set_alpha (lua_State *L)
+{
+  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  double a = luaL_checknumber (L, 2);
+  c->a = agg::rgba8::base_mask * a;
+  return 0;
+}
+
+int
+agg_rgba_add (lua_State *L)
+{
+  agg::rgba8 *c1 = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *c2 = (agg::rgba8 *) gs_check_userdata (L, 2, GS_RGBA_COLOR);
+
+  unsigned int r = c1->r + c2->r;
+  unsigned int g = c1->g + c2->g;
+  unsigned int b = c1->b + c2->b;
+
+  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b);
+
+  return 1;
+}
+
+int
+agg_rgba_mul (lua_State *L)
+{
+  int is = 1, ic = 2;
+
+  if (gs_is_userdata (L, 1, GS_RGBA_COLOR))
+    {
+      ic = 1;
+      is = 2;
+    }
+
+  double f = luaL_checknumber (L, is);
+  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, ic, GS_RGBA_COLOR);
+
+  unsigned int r = f * c->r, g = f * c->g, b = f * c->b;
+
+  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b);
+  return 1;
+}
+
+int
 agg_rgba_free (lua_State *L)
 {
   typedef agg::rgba8 rgba_t;
@@ -345,6 +395,8 @@ draw_register (lua_State *L)
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));
+  lua_pushvalue (L, -1);
+  lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, rgba_methods);
   lua_pop (L, 1);
 }
