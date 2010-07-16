@@ -1056,8 +1056,6 @@ namespace agg
     {
         MSG msg;
 
-	pthread_mutex_lock (m_specific->m_mutex);
-
         for(;;)
         {
             if(m_wait_mode)
@@ -1092,8 +1090,6 @@ namespace agg
                 }
             }
         }
-
-	pthread_mutex_unlock (m_specific->m_mutex);
 
         return (int)msg.wParam;
     }

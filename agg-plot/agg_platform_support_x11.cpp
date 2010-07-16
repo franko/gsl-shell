@@ -661,8 +661,6 @@ namespace agg
   //------------------------------------------------------------------------
   int platform_support::run()
   {
-    pthread_mutex_lock (m_specific->m_mutex);
-
     XFlush(m_specific->m_display);
         
     bool quit = false;
@@ -949,8 +947,6 @@ namespace agg
     XFreeGC(m_specific->m_display, m_specific->m_gc);
     XDestroyWindow(m_specific->m_display, m_specific->m_window);
     XCloseDisplay(m_specific->m_display);
-
-    pthread_mutex_unlock (m_specific->m_mutex);
         
     return 0;
   }

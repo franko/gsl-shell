@@ -44,7 +44,7 @@ endif
 
 INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp lua-draw.cpp lua-plot.cpp xwin-show.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp lua-draw.cpp lua-plot.cpp agg-parse-trans.cpp xwin-show.cpp plot-window.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
@@ -57,9 +57,6 @@ CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 TARGETS = libaggplot.a
 
 all: $(TARGETS)
-
-#test.exe: $(AGGPLOT_OBJ_FILES)
-#	gcc -o test.exe $(AGGPLOT_OBJ_FILES) $(AGG_LIBS)
 
 libaggplot.a: $(AGGPLOT_OBJ_FILES)
 	$(AR) $@ $?

@@ -50,3 +50,27 @@ rgba8_push_lookup (lua_State *L, const char *color_str)
 
   return new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b, a);
 }
+
+agg::rgba8 *
+color_arg_lookup (lua_State *L, int index)
+{
+  agg::rgba8 *c;
+
+  if (lua_isnil (L, index))
+    {
+      c = rgba8_push_default (L);
+      lua_replace (L, index);
+    }
+  else if (lua_isstring (L, index))
+    {
+      const char *cstr = lua_tostring (L, index);
+      c = rgba8_push_lookup (L, cstr);
+      lua_replace (L, index);
+    }
+  else
+    {
+      c = (agg::rgba8 *) gs_check_userdata (L, index, GS_RGBA_COLOR);
+    }
+
+  return c;
+}

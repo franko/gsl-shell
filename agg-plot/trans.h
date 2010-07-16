@@ -6,6 +6,7 @@
 #include "agg_conv_curve.h"
 #include "agg_conv_dash.h"
 #include "agg_conv_transform.h"
+#include "agg_conv_contour.h"
 #include "agg_vcgen_markers_term.h"
 #include "agg_arrowhead.h"
 #include "agg_bounding_rect.h"
@@ -59,6 +60,7 @@ typedef vs_trans_proxy<agg::conv_stroke<vertex_source> > vs_stroke;
 typedef vs_trans_proxy<agg::conv_curve<vertex_source> > vs_curve;
 typedef vs_trans_proxy<agg::conv_dash<vertex_source> > vs_dash;
 typedef vs_trans_proxy<agg::conv_transform<vertex_source> > vs_transform;
+typedef vs_trans_proxy<agg::conv_contour<vertex_source> > vs_contour;
 
 namespace trans {
 
@@ -127,6 +129,24 @@ namespace trans {
       m_source->apply_transform(m, as);
     };
   };
+
+  class extend : public vs_contour {
+  public:
+    typedef agg::conv_contour<vertex_source> base_type;
+  
+    extend(vertex_source* src, double width): vs_contour(src)
+    {
+      base_type& v = self();
+      v.width(width);
+      v.auto_detect_orientation(true);
+    };
+
+    virtual void apply_transform(agg::trans_affine& m, double as) 
+    {
+      m_output.approximation_scale(as);
+      m_source->apply_transform(m, as);
+    };
+  };
   
   class resize : public vs_transform {
     agg::trans_affine m_matrix;
@@ -161,6 +181,8 @@ namespace trans {
     
     const trans_affine& rotate(double a) { return m_matrix.rotate(a); };
     const trans_affine& translate(double x, double y) { return m_matrix.translate(x, y); };
+    
+    void set_matrix(const agg::trans_affine& m) { m_matrix = m; };
   };
 }
 
