@@ -9,7 +9,7 @@ extern "C" {
 #include "defs.h"
 #include "resource-manager.h"
 #include "gsl-shell.h"
-#include "plot-window.h"
+#include "canvas-window.h"
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
@@ -29,56 +29,57 @@ __BEGIN_DECLS
 
 static void * win_thread_function (void *_win);
 
-static int plot_window_new           (lua_State *L);
-static int plot_window_free          (lua_State *L);
-static int plot_window_index         (lua_State *L);
-static int plot_window_draw          (lua_State *L);
-static int plot_window_clear         (lua_State *L);
-static int plot_window_update        (lua_State *L);
-static int plot_window_size          (lua_State *L);
-static int plot_window_set_transform (lua_State *L);
+static int canvas_window_new           (lua_State *L);
+static int canvas_window_free          (lua_State *L);
+static int canvas_window_index         (lua_State *L);
+static int canvas_window_draw          (lua_State *L);
+static int canvas_window_clear         (lua_State *L);
+static int canvas_window_update        (lua_State *L);
+static int canvas_window_set_box_trans (lua_State *L);
 
-static const struct luaL_Reg plotwin_functions[] = {
-  {"window",       plot_window_new},
+static const struct luaL_Reg canvas_win_functions[] = {
+  {"window",       canvas_window_new},
   {NULL, NULL}
 };
 
-static const struct luaL_Reg plot_window_methods[] = {
-  {"__gc",         plot_window_free},
-  {"__index",      plot_window_index},
+static const struct luaL_Reg canvas_window_methods[] = {
+  {"__gc",         canvas_window_free},
+  {"__index",      canvas_window_index},
   {NULL, NULL}
 };
 
-static const struct luaL_Reg plot_window_methods_protected[] = {
-  {"draw",         plot_window_draw},
-  {"clear",        plot_window_clear},
-  {"update",       plot_window_update},
-  {"size",         plot_window_size},
-  {"transform",    plot_window_set_transform},
+static const struct luaL_Reg canvas_window_methods_protected[] = {
+  {"draw",         canvas_window_draw},
+  {"clear",        canvas_window_clear},
+  {"update",       canvas_window_update},
+  {"setview",      canvas_window_set_box_trans},
   {NULL, NULL}
 };
 
 __END_DECLS
 
-class plot_window : public agg::platform_support {
+class canvas_window : public agg::platform_support {
 private:
   canvas *m_canvas;
   agg::rgba m_bgcolor;
 
+  agg::trans_affine m_user_trans;
+  agg::trans_affine m_canvas_trans;
+
 public:
-  agg::trans_affine m_trans;
 
   enum win_status_e { not_ready, starting, running, error, closed };
 
   int id;
   enum win_status_e status;
 
-  plot_window(agg::rgba& bgcol) :
+  canvas_window(agg::rgba& bgcol) :
     agg::platform_support(agg::pix_format_bgr24, true), 
-    m_canvas(NULL), m_bgcolor(bgcol), m_trans(), id(-1), status(not_ready)
+    m_canvas(NULL), m_bgcolor(bgcol), m_user_trans(), m_canvas_trans(), 
+    id(-1), status(not_ready)
   { };
 
-  virtual ~plot_window() 
+  virtual ~canvas_window() 
   {
     if (m_canvas)
       delete m_canvas;
@@ -99,43 +100,49 @@ public:
     return true;
   };
 
-  void set_transform(double sx, double sy, double x0, double y0)
+  void set_user_transform(agg::trans_affine& mtx)
   {
-    m_trans = agg::trans_affine(sx, 0.0, 0.0, sy, x0, y0);
+    m_user_trans = mtx;
   };
+
+  void set_global_transform(agg::trans_affine& mtx)
+  {
+    mtx = m_user_trans;
+    trans_affine_compose (mtx, m_canvas_trans);
+  }
  
-  static plot_window *check (lua_State *L, int index);
+  static canvas_window *check (lua_State *L, int index);
 };
 
 void
-plot_window::on_init()
-{
-  if (m_canvas)
-    delete m_canvas;
-
-  m_canvas = new canvas(rbuf_window(), width(), height(), m_bgcolor);
-}
-
-void
-plot_window::on_resize(int sx, int sy)
+canvas_window::on_resize(int sx, int sy)
 {
   if (m_canvas)
     delete m_canvas;
 
   m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
+  
+  double ww = sx, hh = sy;
+  m_canvas_trans = agg::trans_affine(ww, 0.0, 0.0, hh, 0.0, 0.0);
 }
 
 void
-plot_window::start()
+canvas_window::on_init()
+{
+  this->on_resize(width(), height());
+}
+
+void
+canvas_window::start()
 {
   this->caption("GSL shell plot");
   if (this->init(480, 480, agg::window_resize))
     {
-      this->status = plot_window::running;
+      this->status = canvas_window::running;
       
       this->run();
 
-      this->status = plot_window::closed;
+      this->status = canvas_window::closed;
 
       GSL_SHELL_LOCK();
       gsl_shell_unref_plot (this->id);
@@ -150,19 +157,19 @@ win_thread_function (void *_win)
 {
   platform_support_prepare();
 
-  plot_window *win = (plot_window *) _win;
+  canvas_window *win = (canvas_window *) _win;
   win->start();
   return NULL;
 }
 
-plot_window *
-plot_window::check (lua_State *L, int index)
+canvas_window *
+canvas_window::check (lua_State *L, int index)
 {
-  return (plot_window *) gs_check_userdata (L, index, GS_AGG_WINDOW);
+  return (canvas_window *) gs_check_userdata (L, index, GS_AGG_WINDOW);
 }
 
 int
-plot_window_new (lua_State *L)
+canvas_window_new (lua_State *L)
 {
   agg::rgba8 *c8;
 
@@ -174,7 +181,7 @@ plot_window_new (lua_State *L)
   const double bs = (double) agg::rgba8::base_mask;
   agg::rgba color(c8->r / bs, c8->g / bs, c8->b / bs, c8->a / bs);
 
-  plot_window *win = new(L, GS_AGG_WINDOW) plot_window(color);
+  canvas_window *win = new(L, GS_AGG_WINDOW) canvas_window(color);
 
   win->id = mlua_window_ref(L, lua_gettop (L));
 
@@ -191,29 +198,29 @@ plot_window_new (lua_State *L)
       mlua_window_unref(L, win->id);
 
       pthread_attr_destroy (attr);
-      win->status = plot_window::error; 
+      win->status = canvas_window::error; 
 
       luaL_error(L, "error creating thread");
     }
 
   pthread_attr_destroy (attr);
-  win->status = plot_window::starting;
+  win->status = canvas_window::starting;
 
   return 1;
 }
 
 int
-plot_window_free (lua_State *L)
+canvas_window_free (lua_State *L)
 {
-  plot_window *win = plot_window::check (L, 1);
-  win->~plot_window();
+  canvas_window *win = canvas_window::check (L, 1);
+  win->~canvas_window();
   return 0;
 }
 
 int
-plot_window_draw (lua_State *L)
+canvas_window_draw (lua_State *L)
 {
-  plot_window *win = plot_window::check (L, 1);
+  canvas_window *win = canvas_window::check (L, 1);
   int narg = lua_gettop (L);
   agg::rgba8 *color;
 
@@ -224,9 +231,16 @@ plot_window_draw (lua_State *L)
 
   vertex_source *curr = check_agg_obj (L, 2);
 
-  trans::affine *to = new trans::affine(curr);
-  to->set_matrix(win->m_trans);
-  curr = to;
+  if (narg > 4)
+    {
+      curr = parse_spec_pipeline (L, 5, curr);
+      lua_pop (L, 1);
+    }
+
+  trans::affine *tr = new trans::affine(curr);
+  win->set_global_transform(tr->matrix());
+
+  curr = tr;
 
   if (narg > 3)
     {
@@ -245,29 +259,29 @@ plot_window_draw (lua_State *L)
 }
 
 int
-plot_window_clear (lua_State *L)
+canvas_window_clear (lua_State *L)
 {
-  plot_window *win = plot_window::check (L, 1);
+  canvas_window *win = canvas_window::check (L, 1);
   win->clear();
   return 0;
 }
 
 int
-plot_window_update (lua_State *L)
+canvas_window_update (lua_State *L)
 {
-  plot_window *win = plot_window::check (L, 1);
+  canvas_window *win = canvas_window::check (L, 1);
   win->update_window();
   return 0;
 }
 
 static int
-plot_window_index_protected (lua_State *L)
+canvas_window_index_protected (lua_State *L)
 {
-  plot_window *win = plot_window::check(L, lua_upvalueindex(2));
+  canvas_window *win = canvas_window::check(L, lua_upvalueindex(2));
 
   platform_support_lock (win);
 
-  if (win->status != plot_window::running)
+  if (win->status != canvas_window::running)
     {
       platform_support_unlock (win);
       return luaL_error (L, "window is not active");
@@ -289,23 +303,23 @@ plot_window_index_protected (lua_State *L)
 }
 
 int
-plot_window_index (lua_State *L)
+canvas_window_index (lua_State *L)
 {
   const char *key = luaL_checkstring (L, 2);
 
-  const struct luaL_Reg *r = mlua_find_method (plot_window_methods, key);
+  const struct luaL_Reg *r = mlua_find_method (canvas_window_methods, key);
   if (r)
     {
       lua_pushcfunction (L, r->func);
       return 1;
     }
 
-  r = mlua_find_method (plot_window_methods_protected, key);
+  r = mlua_find_method (canvas_window_methods_protected, key);
   if (r)
     {
       lua_pushcfunction (L, r->func);
       lua_pushvalue (L, 1);
-      lua_pushcclosure (L, plot_window_index_protected, 2);
+      lua_pushcclosure (L, canvas_window_index_protected, 2);
       return 1;
     }
 
@@ -313,33 +327,30 @@ plot_window_index (lua_State *L)
 }
 
 int
-plot_window_size (lua_State *L)
+canvas_window_set_box_trans (lua_State *L)
 {
-  plot_window *win = plot_window::check(L, 1);
-  lua_pushinteger (L, win->width());
-  lua_pushinteger (L, win->height());
-  return 2;
-}
+  canvas_window *win = canvas_window::check(L, 1);
+  double x0 = luaL_checknumber (L, 2);
+  double y0 = luaL_checknumber (L, 3);
+  double x1 = luaL_checknumber (L, 4);
+  double y1 = luaL_checknumber (L, 5);
 
-int
-plot_window_set_transform (lua_State *L)
-{
-  plot_window *win = plot_window::check(L, 1);
-  double sx = luaL_checknumber (L, 2);
-  double sy = luaL_checknumber (L, 3);
-  double x0 = luaL_optnumber (L, 4, 0.0);
-  double y0 = luaL_optnumber (L, 5, 0.0);
-  win->set_transform(sx, sy, x0, y0);
+  double sx = 1/(x1 - x0), sy = 1/(y1 - y0);
+  double bx = -x0*sx, by = -y0*sy;
+
+  agg::trans_affine mtx(sx, 0.0, 0.0, sy, bx, by);
+  win->set_user_transform(mtx);
+
   return 0;
 }
 
 void
-plot_window_register (lua_State *L)
+canvas_window_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_AGG_WINDOW));
-  luaL_register (L, NULL, plot_window_methods);
+  luaL_register (L, NULL, canvas_window_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */
-  luaL_register (L, NULL, plotwin_functions);
+  luaL_register (L, NULL, canvas_win_functions);
 }

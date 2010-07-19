@@ -7,7 +7,7 @@ local function setTransform(ct, rx, ry)
    ct:rotateZ(0)
    ct:rotateY(ry)
    ct:rotateX(rx)
-   ct:translate(0, 0, -120)
+   ct:translate(0, 0, -80)
 end
 
 local function draw(renderer, shape)
@@ -18,7 +18,7 @@ end
 
 function demo1()
    local win = window('black')
-   win:transform(400, 400, 240, 240)
+   win:setview(-1, -1, 1, 1)
 
    local renderer = Pre3d.Renderer(win)
    -- shape = ShapeUtils.makeSphere(1, 12, 12)
@@ -56,7 +56,7 @@ end
 
 function demo2()
    local win = window('white')
-   win:transform(300, 300, 240, 240)
+   win:setview(-1, -1, 1, 1)
 
    local renderer = Pre3d.Renderer(win)
    -- local shape = ShapeUtils.makeSphere(1, 12, 12)
@@ -81,8 +81,8 @@ function demo2()
 end
 
 function demo3()
-   local win = window('white')
-   win:transform(400, 400, 240, 240)
+   local win = window('black')
+   win:setview(-1, -1, 1, 1)
 
    local renderer = Pre3d.Renderer(win)
    local shape = ShapeUtils.makeSphere(1, 12, 12)

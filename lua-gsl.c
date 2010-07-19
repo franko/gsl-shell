@@ -47,7 +47,7 @@
 #ifdef AGG_PLOT_ENABLED
 #include "lua-plot.h"
 #include "lua-draw.h"
-#include "plot-window.h"
+#include "canvas-window.h"
 #endif
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
@@ -84,7 +84,7 @@ luaopen_gsl (lua_State *L)
 #ifdef AGG_PLOT_ENABLED
   plot_register (L);
   draw_register (L);
-  plot_window_register (L);
+  canvas_window_register (L);
 #endif
 
 #ifdef LNUM_COMPLEX
