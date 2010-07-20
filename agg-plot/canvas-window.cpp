@@ -4,12 +4,12 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-#include "platform/agg_platform_support.h"
 
 #include "defs.h"
+#include "canvas-window.h"
+#include "canvas-window-cpp.h"
 #include "resource-manager.h"
 #include "gsl-shell.h"
-#include "canvas-window.h"
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
@@ -19,15 +19,7 @@ extern "C" {
 #include "canvas.h"
 #include "trans.h"
 
-extern void platform_support_prepare   ();
-extern void platform_support_lock      (agg::platform_support *app);
-extern void platform_support_unlock    (agg::platform_support *app);
-extern bool platform_support_is_mapped (agg::platform_support *app);
-
-
 __BEGIN_DECLS
-
-static void * win_thread_function (void *_win);
 
 static int canvas_window_new           (lua_State *L);
 static int canvas_window_free          (lua_State *L);
@@ -36,6 +28,9 @@ static int canvas_window_draw          (lua_State *L);
 static int canvas_window_clear         (lua_State *L);
 static int canvas_window_update        (lua_State *L);
 static int canvas_window_set_box_trans (lua_State *L);
+
+static void * canvas_thread_function        (void *_win);
+static int    canvas_window_index_protected (lua_State *L);
 
 static const struct luaL_Reg canvas_win_functions[] = {
   {"window",       canvas_window_new},
@@ -58,61 +53,12 @@ static const struct luaL_Reg canvas_window_methods_protected[] = {
 
 __END_DECLS
 
-class canvas_window : public agg::platform_support {
-private:
-  canvas *m_canvas;
-  agg::rgba m_bgcolor;
-
-  agg::trans_affine m_user_trans;
-  agg::trans_affine m_canvas_trans;
-
-public:
-
-  enum win_status_e { not_ready, starting, running, error, closed };
-
-  int id;
-  enum win_status_e status;
-
-  canvas_window(agg::rgba& bgcol) :
-    agg::platform_support(agg::pix_format_bgr24, true), 
-    m_canvas(NULL), m_bgcolor(bgcol), m_user_trans(), m_canvas_trans(), 
-    id(-1), status(not_ready)
-  { };
-
-  virtual ~canvas_window() 
-  {
-    if (m_canvas)
-      delete m_canvas;
-  };
-
-  virtual void on_init();
-  virtual void on_resize(int sx, int sy);
-
-  void start();
-  void clear() { if (m_canvas) m_canvas->clear(); };
-
-  bool draw(vertex_source *obj, agg::rgba8 *color)
-  {
-    if (! m_canvas)
-      return false;
-
-    m_canvas->draw(*obj, *color);
-    return true;
-  };
-
-  void set_user_transform(agg::trans_affine& mtx)
-  {
-    m_user_trans = mtx;
-  };
-
-  void set_global_transform(agg::trans_affine& mtx)
-  {
-    mtx = m_user_trans;
-    trans_affine_compose (mtx, m_canvas_trans);
-  }
- 
-  static canvas_window *check (lua_State *L, int index);
-};
+void
+canvas_window::on_draw()
+{
+  if (m_canvas) 
+    m_canvas->clear();
+}
 
 void
 canvas_window::on_resize(int sx, int sy)
@@ -149,11 +95,38 @@ canvas_window::start()
       GSL_SHELL_UNLOCK();
     }
 
-  platform_support_unlock (this);
+  this->unlock();
+}
+
+void
+canvas_window::start_new_thread (lua_State *L)
+{
+  this->id = mlua_window_ref(L, lua_gettop (L));
+
+  pthread_attr_t attr[1];
+  pthread_t win_thread[1];
+
+  pthread_attr_init (attr);
+  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+  this->lock();
+    
+  if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
+    {
+      mlua_window_unref(L, this->id);
+
+      pthread_attr_destroy (attr);
+      this->status = canvas_window::error; 
+
+      luaL_error(L, "error creating thread");
+    }
+
+  pthread_attr_destroy (attr);
+  this->status = canvas_window::starting;
 }
 
 void *
-win_thread_function (void *_win)
+canvas_thread_function (void *_win)
 {
   platform_support_prepare();
 
@@ -165,7 +138,7 @@ win_thread_function (void *_win)
 canvas_window *
 canvas_window::check (lua_State *L, int index)
 {
-  return (canvas_window *) gs_check_userdata (L, index, GS_AGG_WINDOW);
+  return (canvas_window *) gs_check_userdata (L, index, GS_CANVAS_WINDOW);
 }
 
 int
@@ -181,30 +154,9 @@ canvas_window_new (lua_State *L)
   const double bs = (double) agg::rgba8::base_mask;
   agg::rgba color(c8->r / bs, c8->g / bs, c8->b / bs, c8->a / bs);
 
-  canvas_window *win = new(L, GS_AGG_WINDOW) canvas_window(color);
+  canvas_window *win = new(L, GS_CANVAS_WINDOW) canvas_window(color);
 
-  win->id = mlua_window_ref(L, lua_gettop (L));
-
-  pthread_attr_t attr[1];
-  pthread_t win_thread[1];
-
-  pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
-
-  platform_support_lock (win);
-    
-  if (pthread_create(win_thread, attr, win_thread_function, (void*) win))
-    {
-      mlua_window_unref(L, win->id);
-
-      pthread_attr_destroy (attr);
-      win->status = canvas_window::error; 
-
-      luaL_error(L, "error creating thread");
-    }
-
-  pthread_attr_destroy (attr);
-  win->status = canvas_window::starting;
+  win->start_new_thread (L);
 
   return 1;
 }
@@ -262,7 +214,7 @@ int
 canvas_window_clear (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
-  win->clear();
+  win->on_draw();
   return 0;
 }
 
@@ -274,16 +226,16 @@ canvas_window_update (lua_State *L)
   return 0;
 }
 
-static int
+int
 canvas_window_index_protected (lua_State *L)
 {
   canvas_window *win = canvas_window::check(L, lua_upvalueindex(2));
 
-  platform_support_lock (win);
+  win->lock();
 
   if (win->status != canvas_window::running)
     {
-      platform_support_unlock (win);
+      win->unlock();
       return luaL_error (L, "window is not active");
     }
 
@@ -294,17 +246,18 @@ canvas_window_index_protected (lua_State *L)
 
   if (lua_pcall (L, narg, LUA_MULTRET, 0) != 0)
     {
-      platform_support_unlock (win);
+      win->unlock();
       return lua_error (L);
     }
 
-  platform_support_unlock (win);
+  win->unlock();
   return lua_gettop (L);
 }
 
 int
 canvas_window_index (lua_State *L)
 {
+  canvas_window *win = canvas_window::check(L, 1);
   const char *key = luaL_checkstring (L, 2);
 
   const struct luaL_Reg *r = mlua_find_method (canvas_window_methods, key);
@@ -347,7 +300,7 @@ canvas_window_set_box_trans (lua_State *L)
 void
 canvas_window_register (lua_State *L)
 {
-  luaL_newmetatable (L, GS_METATABLE(GS_AGG_WINDOW));
+  luaL_newmetatable (L, GS_METATABLE(GS_CANVAS_WINDOW));
   luaL_register (L, NULL, canvas_window_methods);
   lua_pop (L, 1);
 

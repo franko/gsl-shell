@@ -26,30 +26,47 @@ static int gs_type_string (lua_State *L);
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
-#define GS_AGG_WINDOW_NAME_DEF  "GSL.window"
+#define GS_CANVAS_WINDOW_NAME_DEF  "GSL.canvas"
+#define GS_PLOT_WINDOW_NAME_DEF  "GSL.pltcanvas"
 #endif
 
+#define MYCAT2x(a,b) a ## _ ## b
+#define MYCAT2(a,b) MYCAT2x(a,b)
+#define MYCAT3x(a,b,c) a ## _ ## b ## _ ## c
+#define MYCAT3(a,b,c) MYCAT3x(a,b,c)
+
+#define MY_EXPAND(NM,DESCR) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, NULL}
+#define MY_EXPAND_DER(NM,DESCR,SUB) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, &gs_type_table[MYCAT2(GS,SUB)]}
+
 const struct gs_type gs_type_table[] = {
-  {GS_MATRIX,      GS_MATRIX_NAME_DEF,      "real matrix"},
-  {GS_CMATRIX,     GS_CMATRIX_NAME_DEF,     "complex matrix"},
-  {GS_RNG,         GS_RNG_NAME_DEF,         "random number generator"},
-  {GS_NLINFIT,     GS_NLINFIT_NAME_DEF,     "real values non-linear solver"},
-  {GS_CNLINFIT,    GS_CNLINFIT_NAME_DEF,    "complex values non-linear solver"},
-  {GS_ODESOLV,     GS_ODESOLV_NAME_DEF,     "real values ODE solver"},
-  {GS_CODESOLV,    GS_CODESOLV_NAME_DEF,    "complex values ODE solver"},
-  {GS_HALFCMPL_R2, GS_HALFCMPL_R2_NAME_DEF, "half complex array (radix2)"},
-  {GS_HALFCMPL_MR, GS_HALFCMPL_MR_NAME_DEF, "half complex array (mixed radix)"},
-  {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
-  {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
-  {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
+  MY_EXPAND(MATRIX, "real matrix"),
+  MY_EXPAND(CMATRIX, "complex matrix"),
+  MY_EXPAND(RNG, "random number generator"),
+  MY_EXPAND(NLINFIT, "real values non-linear solver"),
+  MY_EXPAND(CNLINFIT, "complex values non-linear solver"),
+  MY_EXPAND(ODESOLV, "real values ODE solver"),
+  MY_EXPAND(CODESOLV, "complex values ODE solver"),
+  MY_EXPAND(HALFCMPL_R2, "half complex array (radix2)"),
+  MY_EXPAND(HALFCMPL_MR, "half complex array (mixed radix)"),
+  MY_EXPAND(FDFMULTIMIN, "fdf multimin solver"), 
+  MY_EXPAND(FMULTIMIN, "f multimin solver"), 
+  MY_EXPAND(BSPLINE, "B-spline"), 
 #ifdef AGG_PLOT_ENABLED
-  {GS_DRAW_PLOT,   GS_DRAW_PLOT_NAME_DEF,   "plot"},
-  {GS_DRAW_PATH,   GS_DRAW_PATH_NAME_DEF,   "geometric line"},
-  {GS_DRAW_TEXT,   GS_DRAW_TEXT_NAME_DEF,   "graphical text"},
-  {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
-  {GS_AGG_WINDOW,  GS_AGG_WINDOW_NAME_DEF,  "graphical window"},
+  MY_EXPAND(DRAW_PLOT, "plot"),
+  MY_EXPAND(DRAW_PATH, "geometric line"),
+  MY_EXPAND(DRAW_TEXT, "graphical text"),
+  MY_EXPAND(RGBA_COLOR, "color"),
+  MY_EXPAND(PLOT_WINDOW, "plot window"),
+  MY_EXPAND_DER(CANVAS_WINDOW, "graphical window", PLOT_WINDOW),
 #endif
 };
+
+#undef MYCAT2
+#undef MYCAT2x
+#undef MYCAT3
+#undef MYCAT3x
+#undef MY_EXPAND
+#undef MY_EXPAND_DER
 
 const struct luaL_Reg gs_type_functions[] = {
   {"gsltype",        gs_type_string},
@@ -136,13 +153,20 @@ gs_is_userdata (lua_State *L, int index, int typeid)
 
   if (lua_getmetatable(L, index))
     {
-      const char *mt = metatable_name (typeid);
+      const struct gs_type *inf;
 
-      lua_getfield(L, LUA_REGISTRYINDEX, mt);
-      if (lua_rawequal(L, -1, -2)) 
+      for (inf = &gs_type_table[typeid]; inf != NULL; inf = inf->derived_class)
 	{
-	  lua_pop (L, 2);
-	  return p;
+	  const char *mt = metatable_name (inf->tp);
+
+	  lua_getfield(L, LUA_REGISTRYINDEX, mt);
+	  if (lua_rawequal(L, -1, -2)) 
+	    {
+	      lua_pop (L, 2);
+	      return p;
+	    }
+
+	  lua_pop (L, 1);
 	}
     }
 

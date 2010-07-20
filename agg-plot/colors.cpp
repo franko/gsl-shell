@@ -74,3 +74,6 @@ color_arg_lookup (lua_State *L, int index)
 
   return c;
 }
+
+agg::rgba colors::white(1, 1, 1);
+agg::rgba colors::black(0, 0, 0);

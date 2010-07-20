@@ -61,7 +61,7 @@ static struct path_cmd_reg cmd_table[] = {
   {CMD_ERROR,    NULL, NULL}
 };
 
-static const struct luaL_Reg plot_functions[] = {
+static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
   {"text",     agg_text_new},
   {"rgba",     agg_rgba_new},
@@ -399,4 +399,7 @@ draw_register (lua_State *L)
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, rgba_methods);
   lua_pop (L, 1);
+
+  /* gsl module registration */
+  luaL_register (L, NULL, draw_functions);
 }

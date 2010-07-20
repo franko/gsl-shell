@@ -35,10 +35,6 @@ static int agg_plot_units_set  (lua_State *L);
 static int agg_plot_units_get  (lua_State *L);
 
 static const struct luaL_Reg plot_functions[] = {
-  {"path",     agg_path_new},
-  {"text",     agg_text_new},
-  {"rgba",     agg_rgba_new},
-  {"rgb",      agg_rgb_new},
   {"plot",     agg_plot_new},
   {NULL, NULL}
 };

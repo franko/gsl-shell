@@ -26,7 +26,8 @@ enum gs_type_e {
   GS_DRAW_PATH,
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
-  GS_AGG_WINDOW,
+  GS_PLOT_WINDOW,
+  GS_CANVAS_WINDOW,
 #endif
   GS_INVALID_TYPE,
 };
@@ -40,6 +41,7 @@ struct gs_type {
   enum gs_type_e tp;
   const char * mt_name;
   const char * fullname;
+  const struct gs_type *derived_class;
 };
 
 extern const char * full_type_name (lua_State *L, int narg);
