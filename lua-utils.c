@@ -103,8 +103,26 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
     }
 
   lua_getmetatable (L, 1);
-  lua_replace (L, 1);
-  lua_gettable (L, 1);
+  lua_pushstring (L, key);
+  lua_rawget (L, -2);
+
+  if (lua_isnil (L, -1))
+    {
+      lua_pop (L, 1);
+      lua_pushstring (L, "__superindex");
+      lua_rawget (L, -2);
+
+      if (! lua_isnil (L, -1))
+	{
+	  lua_insert (L, 1);
+	  lua_pop (L, 1);
+	  lua_call (L, 2, 1);
+	  return 1;
+	}
+
+      return 0;
+    }
+
   return 1;
 }
 

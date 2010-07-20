@@ -23,7 +23,6 @@ __BEGIN_DECLS
 
 static int canvas_window_new           (lua_State *L);
 static int canvas_window_free          (lua_State *L);
-static int canvas_window_index         (lua_State *L);
 static int canvas_window_draw          (lua_State *L);
 static int canvas_window_clear         (lua_State *L);
 static int canvas_window_update        (lua_State *L);

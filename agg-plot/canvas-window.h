@@ -9,6 +9,8 @@ __BEGIN_DECLS
 
 extern void canvas_window_register (lua_State *L);
 
+extern int canvas_window_index     (lua_State *L);
+
 __END_DECLS
 
 #endif

@@ -293,8 +293,9 @@ plot_window_register (lua_State *L)
 {
   /* plot declaration */
   luaL_newmetatable (L, GS_METATABLE(GS_PLOT_WINDOW));
-  lua_getfield(L, LUA_REGISTRYINDEX, GS_METATABLE(GS_CANVAS_WINDOW));
-  lua_setmetatable (L, -2);
+  lua_pushstring (L, "__superindex");
+  lua_pushcfunction (L, canvas_window_index);
+  lua_rawset (L, -3);
   luaL_register (L, NULL, plot_window_methods);
   lua_pop (L, 1);
 
