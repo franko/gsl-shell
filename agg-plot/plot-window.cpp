@@ -72,10 +72,13 @@ public:
   void on_draw_unprotected();
   virtual void on_draw();
 
-  void update_window_protected() 
+  // this method should be used only when AGG is locked
+  void plot_update() 
   {
     this->lock();
-    this->update_window();
+    this->on_draw_unprotected();
+    if (this->status == plot_window::running)
+      this->update_window();
     this->unlock();
   };
 
@@ -102,9 +105,7 @@ plot_window::on_draw_unprotected()
 void
 plot_window::on_draw()
 {
-  AGG_LOCK();
-  this->on_draw_unprotected();
-  AGG_UNLOCK();
+  AGG_PROTECT(this->on_draw_unprotected());
 }
 
 int
@@ -187,8 +188,11 @@ plot_window_add_gener (lua_State *L, bool as_line)
   plot_window::plot_type& plt = p->get_plot();
   plt.add(curr, color, as_line);
 
-  p->on_draw_unprotected();
-  p->update_window_protected();
+  if (p->status == plot_window::running)
+    {
+      p->on_draw_unprotected();
+      p->plot_update();
+    }
 
   AGG_UNLOCK();
 
@@ -221,7 +225,7 @@ plot_window_title_set (lua_State *L)
   plot_window::plot_type& plt = p->get_plot();
   plt.set_title(title);
  
-  p->update_window_protected();
+  p->plot_update();
 
   AGG_UNLOCK();
 	  
@@ -232,9 +236,13 @@ int
 plot_window_title_get (lua_State *L)
 {
   plot_window *p = plot_window::check(L, 1);
+
+  AGG_LOCK();
   plot_window::plot_type& plt = p->get_plot();
   const char *title = plt.get_title();
   lua_pushstring (L, title);
+  AGG_UNLOCK();
+  
   return 1;
 }
 
@@ -243,16 +251,19 @@ plot_window_units_set (lua_State *L)
 {
   plot_window *p = plot_window::check(L, 1);
   bool request = (bool) lua_toboolean (L, 2);
+
+  AGG_LOCK();
+  
   plot_window::plot_type& plt = p->get_plot();
   bool current = plt.use_units();
 
   if (current != request)
     {
-      AGG_LOCK();
       plt.set_units(request);
-      p->update_window_protected();
-      AGG_UNLOCK();
+      p->plot_update();
     }
+
+  AGG_UNLOCK();
 	  
   return 0;
 }
@@ -261,8 +272,12 @@ int
 plot_window_units_get (lua_State *L)
 {
   plot_window *p = plot_window::check(L, 1);
+
+  AGG_LOCK();
   plot_window::plot_type& plt = p->get_plot();
   lua_pushboolean (L, plt.use_units());
+  AGG_UNLOCK();
+
   return 1;
 }
 
@@ -276,7 +291,7 @@ int
 plot_window_update (lua_State *L)
 {
   plot_window *p = plot_window::check(L, 1);
-  p->update_window_protected();
+  AGG_PROTECT(p->plot_update());
   return 0;
 }
 

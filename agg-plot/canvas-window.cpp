@@ -77,6 +77,7 @@ canvas_window::on_init()
   this->on_resize(width(), height());
 }
 
+/*
 void
 canvas_window::start()
 {
@@ -96,6 +97,7 @@ canvas_window::start()
 
   this->unlock();
 }
+*/
 
 void
 canvas_window::start_new_thread (lua_State *L)
@@ -130,7 +132,21 @@ canvas_thread_function (void *_win)
   platform_support_prepare();
 
   canvas_window *win = (canvas_window *) _win;
-  win->start();
+
+  win->caption("GSL shell plot");
+  if (win->init(480, 480, agg::window_resize))
+    {
+      win->status = canvas_window::running;
+      win->run();
+      win->status = canvas_window::closed;
+
+      GSL_SHELL_LOCK();
+      gsl_shell_unref_plot (win->id);
+      GSL_SHELL_UNLOCK();
+    }
+
+  win->unlock();
+
   return NULL;
 }
 

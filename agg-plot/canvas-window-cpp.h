@@ -47,8 +47,6 @@ public:
   virtual void on_resize(int sx, int sy);
   virtual void on_draw();
 
-  void start();
-
   void lock() { platform_support_lock(this); };
   void unlock() { platform_support_unlock(this); };
 
