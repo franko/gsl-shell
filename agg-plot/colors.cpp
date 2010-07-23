@@ -7,7 +7,7 @@
 agg::rgba8 *
 rgba8_push_default (lua_State *L)
 {
-  return new(L, GS_RGBA_COLOR) agg::rgba8(180, 0, 0, 255);
+  return new(L, GS_RGBA_COLOR) agg::rgba8(80, 0, 0, 255);
 }
 
 agg::rgba8 *

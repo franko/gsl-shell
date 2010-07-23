@@ -53,7 +53,7 @@ public:
     m_width(width), m_height(height)
   {
     mtx.scale(width, height);
-    prof.width(1.0);
+    prof.width(1.5);
   };
 
   double width() const { return m_width; };

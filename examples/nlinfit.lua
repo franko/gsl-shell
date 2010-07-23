@@ -133,6 +133,7 @@ function demo2bis()
 
    pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
    pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+   pl:show()
 
    local function print_state(s)
       print ("x: ", tr(s.p))

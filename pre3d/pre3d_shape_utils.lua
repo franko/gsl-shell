@@ -814,6 +814,37 @@ local function makeXYFunction(f, xmin, ymin, xmax, ymax)
    return s
 end
 
+
+local function makeUVSurface(x, y, z, umin, vmin, umax, vmax, nu, nv)
+   nu = nu and nu or 20
+   nv = nv and nv or 20
+
+   local s = Pre3d.Shape()
+   for i=0, nu do
+      local u = umin + (umax - umin)*i/nu
+      for j=0, nv do
+	 local v = vmin + (vmax - vmin)*j/nv
+	 local xp, yp, zp = x(u,v), y(u,v), z(u,v)
+	 push(s.vertices, {x= xp, y= yp, z= zp})
+      end
+   end
+
+   local quads = {}
+   local i0 = 1
+   for i=1, nu do
+      for j=1, nv do
+	 local i1, i2, i3 = i0+(nv+1), i0+(nv+1)+1, i0+1
+	 push(quads, Pre3d.QuadFace(i0, i1, i2, i3))
+	 i0 = i0+1
+      end
+      i0 = i0+1
+   end
+
+   s.quads = quads
+   rebuildMeta(s)
+   return s
+end
+
 return {
    rebuildMeta= rebuildMeta,
    triangulate= triangulate,
@@ -827,6 +858,7 @@ return {
    makeSphere= makeSphere,
    makeOctahedron= makeOctahedron,
    makeXYFunction= makeXYFunction,
+   makeUVSurface= makeUVSurface,
 
    averageSmooth= averageSmooth,
    linearSubdivide= linearSubdivide,

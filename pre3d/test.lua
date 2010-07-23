@@ -95,12 +95,40 @@ function demo3()
 --   renderer.fill_rgba_alpha = 0.95
 --   renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
 
-   renderer.camera.focal_length = 30;
+   renderer.camera.focal_length = 40;
 
    local N, tour = 256, 2*pi
    for j=0, N do
       local a = tour*j/N
       setTransform(renderer.camera.transform, a, 0.15 * a)
+      draw(renderer, shape)
+   end
+end
+
+function demo4()
+   local win = window('black')
+   win:setview(-1, -1, 1, 1)
+
+   local renderer = Pre3d.Renderer(win)
+   local x = |u,v| (1 + 1/2 * v *cos(u/2))*cos(u)
+   local y = |u,v| (1 + 1/2 * v *cos(u/2))*sin(u)
+   local z = |u,v| 1/2 * v * sin(u/2)
+   local shape = ShapeUtils.makeUVSurface(y, z, x, 0, -1, 2*pi, 1, 60, 4)
+
+   renderer.draw_overdraw = false
+   renderer.draw_backfaces = true
+   renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
+   renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
+   renderer.set_light_intensity = true
+   renderer.draw_overdraw = true
+--   renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
+
+   renderer.camera.focal_length = 40;
+
+   local N, tour = 256, 2*pi
+   for j=0, N do
+      local a = tour*j/N
+      setTransform(renderer.camera.transform, -a, -0.15*a)
       draw(renderer, shape)
    end
 end

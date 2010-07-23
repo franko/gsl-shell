@@ -76,9 +76,8 @@ namespace agg
 
     pthread_mutex_t m_mutex[1];
 
+    static bool initialized;
   };
-
-
 
   //------------------------------------------------------------------------
   platform_specific::platform_specific(pix_format_e format, bool flip_y) :
@@ -1238,9 +1237,15 @@ namespace agg
 
 }
 
+bool agg::platform_specific::initialized = false;
 
 void platform_support_prepare()
 {
+  if (! agg::platform_specific::initialized)
+    {
+      XInitThreads();
+      agg::platform_specific::initialized = true;
+	}
 }
 
 void platform_support_lock(agg::platform_support *app)

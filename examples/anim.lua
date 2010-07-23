@@ -29,7 +29,7 @@ function demo2()
       local w = 4*exp((j-256)/256)
       p:clear()
       local ln = fxline(|x| exp(-0.1*x)*cos(w*x), 0, x1)
-      p:draw(ln, 'red', {{'stroke'}})
+      p:draw(ln, 'red', {{'stroke', width=1.5}})
       p:refresh()
    end
 end
