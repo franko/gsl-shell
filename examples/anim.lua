@@ -6,29 +6,29 @@ function circle(x0, y0, R, N)
    return ln
 end
 
-function rotate()
+function demo1()
    local c = window('white')
-   local fig = circle(0, 0, 0.3, 5)
+   local fig = circle(0, 0, 0.6, 5)
    c:setview(-1, -1, 1, 1)
    local N= 1000
    for j=0, N do
       c:clear()
       c:draw(fig, 'yellow', {}, {{'rotate', angle= 2*pi*j/N}})
       c:draw(fig, 'black', {{'stroke'}}, {{'rotate', angle= 2*pi*j/N}})
-      c:update()
+      c:refresh()
    end
 end
 
-function rotate_OLD()
-   local c = window('white')
-   local fig = circle(0, 0, 100, 5)
-   local N= 1000
-   for j=0, N do
-      c:clear()
-      c:draw(fig, 'yellow', {{'translate', x= 240, y=240}, 
-			    {'rotate', angle= 2*pi*j/N}})
-      c:draw(fig, 'black', {{'stroke'}, {'translate', x= 240, y=240}, 
-			    {'rotate', angle= 2*pi*j/N}})
-      c:update()
+function demo2()
+   local x1 = 25
+   local p = plot('Inviluppo')
+   p:addline(fxline(|x|  exp(-0.1*x), 0, x1), 'blue')
+   p:addline(fxline(|x| -exp(-0.1*x), 0, x1), 'blue')
+   for j=0, 256 do
+      local w = 4*exp((j-256)/256)
+      p:clear()
+      local ln = fxline(|x| exp(-0.1*x)*cos(w*x), 0, x1)
+      p:draw(ln, 'red', {{'stroke'}})
+      p:refresh()
    end
 end

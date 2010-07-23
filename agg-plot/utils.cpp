@@ -19,7 +19,7 @@ trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b)
 }
 
 double
-trans_affine_max_norm (agg::trans_affine& m)
+trans_affine_max_norm (const agg::trans_affine& m)
 {
   return max(m.sx, m.sy);
 }

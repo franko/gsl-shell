@@ -25,7 +25,7 @@ static int canvas_window_new           (lua_State *L);
 static int canvas_window_free          (lua_State *L);
 static int canvas_window_draw          (lua_State *L);
 static int canvas_window_clear         (lua_State *L);
-static int canvas_window_update        (lua_State *L);
+static int canvas_window_refresh       (lua_State *L);
 static int canvas_window_set_box_trans (lua_State *L);
 
 static void * canvas_thread_function        (void *_win);
@@ -45,7 +45,7 @@ static const struct luaL_Reg canvas_window_methods[] = {
 static const struct luaL_Reg canvas_window_methods_protected[] = {
   {"draw",         canvas_window_draw},
   {"clear",        canvas_window_clear},
-  {"update",       canvas_window_update},
+  {"refresh",      canvas_window_refresh},
   {"setview",      canvas_window_set_box_trans},
   {NULL, NULL}
 };
@@ -66,9 +66,6 @@ canvas_window::on_resize(int sx, int sy)
     delete m_canvas;
 
   m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
-  
-  double ww = sx, hh = sy;
-  m_canvas_trans = agg::trans_affine(ww, 0.0, 0.0, hh, 0.0, 0.0);
 }
 
 void
@@ -77,27 +74,11 @@ canvas_window::on_init()
   this->on_resize(width(), height());
 }
 
-/*
 void
-canvas_window::start()
+canvas_window::user_transform(agg::trans_affine& m)
 {
-  this->caption("GSL shell plot");
-  if (this->init(480, 480, agg::window_resize))
-    {
-      this->status = canvas_window::running;
-      
-      this->run();
-
-      this->status = canvas_window::closed;
-
-      GSL_SHELL_LOCK();
-      gsl_shell_unref_plot (this->id);
-      GSL_SHELL_UNLOCK();
-    }
-
-  this->unlock();
+  m = m_user_trans;
 }
-*/
 
 void
 canvas_window::start_new_thread (lua_State *L)
@@ -204,16 +185,19 @@ canvas_window_draw (lua_State *L)
       lua_pop (L, 1);
     }
 
-  trans::affine *tr = new trans::affine(curr);
-  win->set_global_transform(tr->matrix());
-
-  curr = tr;
+  if (curr->need_resize())
+    {
+      curr = new trans::resize(curr);
+    }
 
   if (narg > 3)
     {
       curr = parse_spec_pipeline (L, 4, curr);
       lua_pop (L, 1);
     }
+
+  const agg::trans_affine& mtx = win->transform();
+  curr->apply_transform(mtx, 1.0);
 
   bool success = win->draw(curr, color);
 
@@ -234,7 +218,7 @@ canvas_window_clear (lua_State *L)
 }
 
 int
-canvas_window_update (lua_State *L)
+canvas_window_refresh (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
   win->update_window();

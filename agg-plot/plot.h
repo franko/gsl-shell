@@ -95,12 +95,18 @@ public:
 
   void draw(canvas &canvas);
 
+  void trans_matrix_update();
+  void user_transform(agg::trans_affine& m)
+  {
+    m = m_trans;
+    viewport_scale(m);
+  };
+
 private:
   void draw_elements(canvas &canvas);
   void draw_title(canvas& canvas);
   void draw_axis(canvas& can);
 
-  void trans_matrix_update();
   void update_viewport_trans();
 
   void calc_bounding_box();

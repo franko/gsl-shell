@@ -72,6 +72,8 @@ public:
   void on_draw_unprotected();
   virtual void on_draw();
 
+  virtual void user_transform(agg::trans_affine& m);
+
   // this method should be used only when AGG is locked
   void plot_update() 
   {
@@ -106,6 +108,13 @@ void
 plot_window::on_draw()
 {
   AGG_PROTECT(this->on_draw_unprotected());
+}
+
+
+void
+plot_window::user_transform(agg::trans_affine& m)
+{
+  m_plot.user_transform(m);
 }
 
 int

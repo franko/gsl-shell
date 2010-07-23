@@ -170,7 +170,7 @@ gs_is_userdata (lua_State *L, int index, int typeid)
 	}
     }
 
-  lua_pop (L, 2);
+  lua_pop (L, 1);
 
   return NULL;
 }

@@ -44,7 +44,7 @@ endif
 
 INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp lua-draw.cpp lua-plot.cpp agg-parse-trans.cpp xwin-show.cpp canvas-window.cpp plot-window.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp trans.cpp lua-draw.cpp lua-plot.cpp agg-parse-trans.cpp xwin-show.cpp canvas-window.cpp plot-window.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 

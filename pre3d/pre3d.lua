@@ -870,7 +870,7 @@ function RendererMT.drawBuffer(this)
       end
    end
 
-   win:update()
+   win:refresh()
    
    return num_quads
 end

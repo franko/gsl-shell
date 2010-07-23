@@ -29,8 +29,13 @@ namespace my {
     void set_source(T* src) { m_source = src; };
 
     virtual void rewind(unsigned path_id) { m_source->rewind(path_id); };
-    virtual unsigned vertex(double* x, double* y) { return m_source->vertex(x, y); };
-    virtual void apply_transform(agg::trans_affine& m, double as) {};
+
+    virtual unsigned vertex(double* x, double* y) 
+    { 
+      return m_source->vertex(x, y); 
+    };
+
+    virtual void apply_transform(const agg::trans_affine& m, double as) {};
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {

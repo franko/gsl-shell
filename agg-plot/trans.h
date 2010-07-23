@@ -43,7 +43,7 @@ public:
     return true;
   };
 
-  virtual void apply_transform(agg::trans_affine& m, double as)
+  virtual void apply_transform(const agg::trans_affine& m, double as)
   { 
     m_source->apply_transform(m, as);
   };
@@ -74,7 +74,7 @@ namespace trans {
       v.width(width);
     };
 
-    virtual void apply_transform(agg::trans_affine& m, double as) 
+    virtual void apply_transform(const agg::trans_affine& m, double as) 
     {
       m_output.approximation_scale(as);
       m_source->apply_transform(m, as);
@@ -95,7 +95,7 @@ namespace trans {
   public:
     curve(vertex_source* src): vs_curve(src) {};
 
-    virtual void apply_transform(agg::trans_affine& m, double as) 
+    virtual void apply_transform(const agg::trans_affine& m, double as) 
     {
       m_output.approximation_scale(as);
       m_source->apply_transform(m, as);
@@ -123,7 +123,7 @@ namespace trans {
       m_ellipse.init(0.0, 0.0, size/2, size/2);
     };
 
-    virtual void apply_transform(agg::trans_affine& m, double as)
+    virtual void apply_transform(const agg::trans_affine& m, double as)
     { 
       m_ellipse.approximation_scale(as);
       m_source->apply_transform(m, as);
@@ -141,7 +141,7 @@ namespace trans {
       v.auto_detect_orientation(true);
     };
 
-    virtual void apply_transform(agg::trans_affine& m, double as) 
+    virtual void apply_transform(const agg::trans_affine& m, double as) 
     {
       m_output.approximation_scale(as);
       m_source->apply_transform(m, as);
@@ -150,11 +150,14 @@ namespace trans {
   
   class resize : public vs_transform {
     agg::trans_affine m_matrix;
-    
-  public:
-    resize(vertex_source* src): vs_transform(src, m_matrix), m_matrix() {};
 
-    virtual void apply_transform(agg::trans_affine& m, double as) 
+    static agg::trans_affine m_unit;
+   
+  public:
+    resize(vertex_source* src): 
+      vs_transform(src, m_matrix), m_matrix(m_unit) {};
+
+    virtual void apply_transform(const agg::trans_affine& m, double as) 
     {
       m_matrix = m;
       as *= trans_affine_max_norm(m);
@@ -165,6 +168,8 @@ namespace trans {
     {
       agg::bounding_rect_single(*m_source, 0, x1, y1, x2, y2);
     };
+
+  private:
   };
 
   
