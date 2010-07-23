@@ -78,6 +78,12 @@ function ibars(f)
    return b
 end
 
+function segment(x1, y1, x2, y2)
+   local p = path(x1, y1)
+   p:line_to(x2, y2)
+   return p
+end
+
 local bcolors = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
 local mcolors = {'dark', '', 'light'}
 

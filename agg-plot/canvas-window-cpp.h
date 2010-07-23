@@ -83,14 +83,6 @@ public:
 
     return m_trans;
   };
-
-  /*
-  void set_global_transform(agg::trans_affine& mtx)
-  {
-    mtx = m_user_trans;
-    trans_affine_compose (mtx, m_canvas_trans);
-  }
-  */
  
   static canvas_window *check (lua_State *L, int index);
 };

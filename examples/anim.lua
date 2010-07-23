@@ -24,6 +24,7 @@ function demo2()
    local p = plot('Inviluppo')
    p:addline(fxline(|x|  exp(-0.1*x), 0, x1), 'blue')
    p:addline(fxline(|x| -exp(-0.1*x), 0, x1), 'blue')
+   p:show()
    for j=0, 256 do
       local w = 4*exp((j-256)/256)
       p:clear()

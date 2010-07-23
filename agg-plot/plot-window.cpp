@@ -25,6 +25,7 @@ static int plot_window_add_line   (lua_State *L);
 static int plot_window_index      (lua_State *L);
 static int plot_window_newindex   (lua_State *L);
 static int plot_window_free       (lua_State *L);
+static int plot_window_show       (lua_State *L);
 static int plot_window_title_set  (lua_State *L);
 static int plot_window_title_get  (lua_State *L);
 static int plot_window_units_set  (lua_State *L);
@@ -41,6 +42,7 @@ static const struct luaL_Reg plot_window_methods[] = {
   {"add",         plot_window_add        },
   {"addline",     plot_window_add_line   },
   {"update",      plot_window_update     },
+  {"show",        plot_window_show       },
   {"__index",     plot_window_index      },
   {"__newindex",  plot_window_newindex   },
   {"__gc",        plot_window_free       },
@@ -134,8 +136,6 @@ plot_window_new (lua_State *L)
 	  plt.set_title(title);
 	}
     }
-
-  p->start_new_thread (L);
 
   return 1;
 }

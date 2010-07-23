@@ -104,6 +104,62 @@ function demo2()
    return pl
 end
 
+function demo2bis()
+   local n = 50
+   local px = vector {1.55, -1.1, 12.5}
+   local p0 = vector {2.5,  -1.5, 5.3}
+   local xs = |i| (i-1)/n
+   local r = rng()
+
+   local fmodel = function(p, t, J)
+		     local e, s = exp(p[2] * t), sin(p[3] * t)
+		     if J then
+			J:set(1,1, e * s)
+			J:set(1,2, t * p[1] * e * s)
+			J:set(1,3, t * p[1] * e * cos(p[3] * t))
+		     end
+		     return p[1] * e * s
+		  end
+
+   local y = new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
+   local x = new(n, 1, |i,j| xs(i))
+
+   local function expf(x, f, J)
+      for k=1, n do
+	 local ym = fmodel(x, xs(k), J and J:row(k))
+	 if f then f:set(k, 1, ym - y[k]) end
+      end
+   end
+
+   pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+
+   local function print_state(s)
+      print ("x: ", tr(s.p))
+      print ("chi square: ", prod(s.f, s.f)[1])
+   end
+
+   s = nlfsolver {fdf= expf, n= n, p0= p0}
+
+--   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', 
+--   {{'dash', a=7, b=3}})
+
+   repeat
+      print_state (s)
+      pl:clear()
+      pl:draw(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', {{'stroke'}})
+      pl:refresh()
+      io.read('*l')
+      local status = s:iterate()
+   until status ~= 'continue'
+   print_state (s)
+
+--   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red')
+--   pl:show()
+
+   return pl
+end
+
 function demo3()
    -- This demo does the same things of demo2 but using the 
    -- higher level function 'nlinfit'

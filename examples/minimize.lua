@@ -60,6 +60,28 @@ function demo1()
    return p
 end
 
+function demo1bis()
+   local x0 = vector {-1.2, 1.0}
+   m = minimizer {f= frosenbrock, n= 2}
+   m:set(x0, vector {1, 1}) 
+
+   local px = new(2,1)
+   p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
+   p.title = 'Rosenbrock function minimisation'
+   io.read('*l')
+   local ox, oy = m.x[1], m.x[2]
+   while m:step() == 'continue' do
+      print(m.x[1], m.x[2], m.value)
+      local nx, ny = m.x[1], m.x[2]
+      p:draw(segment(ox, oy, nx, ny), 'gray', {{'stroke'}})
+      p:refresh()
+      ox, oy = nx, ny
+   end
+   print(m.x[1], m.x[2], m.value)
+
+   return p
+end
+
 
 function demo2()
    local x0 = vector {-1.2, 1.0}

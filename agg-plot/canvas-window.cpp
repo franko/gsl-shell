@@ -83,6 +83,9 @@ canvas_window::user_transform(agg::trans_affine& m)
 void
 canvas_window::start_new_thread (lua_State *L)
 {
+  if (status != not_ready && status != closed)
+    return;
+
   this->id = mlua_window_ref(L, lua_gettop (L));
 
   pthread_attr_t attr[1];
