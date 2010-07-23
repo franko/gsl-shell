@@ -21,7 +21,7 @@
 local M = {}
 
 local insert = table.insert
-local color = color_function('redyellow', 0.8)
+local color = color_function('redyellow', 0.9)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -742,7 +742,7 @@ function contour(f, a, b, ngridx, ngridy, nlevels)
 
    local p = plot()
    g.draw_regions(p)
-   g.draw_lines(p, rgba(0,0,0,0.6))
+   g.draw_lines(p, rgba(0,0,0,0.8))
    p:show()
 
    return p

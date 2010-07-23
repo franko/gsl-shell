@@ -13,16 +13,19 @@
 #include "agg_trans_viewport.h"
 #include "agg_rasterizer_outline_aa.h"
 #include "agg_renderer_outline_aa.h"
+#include "agg_gamma_lut.h"
 
 #include "utils.h"
 
 class canvas {
-  typedef agg::pixfmt_bgr24 pixel_fmt;
+  typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
+  typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
   typedef agg::renderer_base<pixel_fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
   typedef agg::renderer_outline_aa<renderer_base> renderer_oaa;
   typedef agg::rasterizer_outline_aa<renderer_oaa> rasterizer_outline_aa;
 
+  gamma_type m_gamma;
   pixel_fmt pixf;
   renderer_base rb;
   renderer_solid rs;
@@ -44,7 +47,7 @@ class canvas {
 public:
   canvas(agg::rendering_buffer& ren_buf, double width, double height, 
 	 agg::rgba bgcol): 
-    pixf(ren_buf), rb(pixf), rs(rb),
+    m_gamma(2.2), pixf(ren_buf, m_gamma), rb(pixf), rs(rb),
     prof(), ren_oaa(rb, prof), ras_oaa(ren_oaa),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)

@@ -288,7 +288,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas)
 	lab.size(10.0);
 	m_uy.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(0.7);
+	labs.width(1.0);
 
 	m.transform(&xlab, &ylab);
 
@@ -322,7 +322,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas)
 	lab.size(10.0);
 	m_ux.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(0.7);
+	labs.width(1.0);
 
 	m.transform(&xlab, &ylab);
 
@@ -346,7 +346,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas)
   lndash.add_dash(8.0, 4.0);
 
   lns.width(0.25);
-  canvas.draw(lns, agg::rgba(0.2, 0.2, 0.2));
+  canvas.draw(lns, agg::rgba(0.0, 0.0, 0.0));
 
   mark_stroke.width(1.0);
   canvas.draw(mark_stroke, agg::rgba8(0, 0, 0));
