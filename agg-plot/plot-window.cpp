@@ -158,35 +158,8 @@ int
 plot_window_add_gener (lua_State *L, bool as_line)
 {
   plot_window *p = plot_window::check(L, 1);
-  int narg = lua_gettop (L);
-  agg::rgba8 *color;
-
-  if (narg <= 2)
-    color = rgba8_push_default (L);
-  else
-    color = color_arg_lookup (L, 3);
-      
-  if (narg > 5)
-    return luaL_error (L, "too much arguments if add or addline plot method");
-
-  vertex_source *curr = check_agg_obj (L, 2);
-
-  if (narg > 4)
-    {
-      curr = parse_spec_pipeline (L, 5, curr);
-      lua_pop (L, 1);
-    }
-    
-  if (curr->need_resize())
-    {
-      curr = new trans::resize(curr);
-    }
-
-  if (narg > 3)
-    {
-      curr = parse_spec_pipeline (L, 4, curr);
-      lua_pop (L, 1);
-    }
+  vertex_source *obj = parse_graph_args (L);
+  agg::rgba8 *color = check_color_rgba8 (L, 3);
 
   lua_pushvalue (L, 1);
   mlua_fenv_addref (L, 2);
@@ -195,7 +168,7 @@ plot_window_add_gener (lua_State *L, bool as_line)
   AGG_LOCK();
 
   plot_window::plot_type& plt = p->get_plot();
-  plt.add(curr, color, as_line);
+  plt.add(obj, color, as_line);
 
   if (p->status == plot_window::running)
     {

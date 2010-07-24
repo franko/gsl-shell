@@ -75,5 +75,11 @@ color_arg_lookup (lua_State *L, int index)
   return c;
 }
 
+agg::rgba8 *
+check_color_rgba8  (lua_State *L, int index)
+{
+  return (agg::rgba8 *) gs_check_userdata (L, index, GS_RGBA_COLOR);
+}
+
 agg::rgba colors::white(1, 1, 1);
 agg::rgba colors::black(0, 0, 0);

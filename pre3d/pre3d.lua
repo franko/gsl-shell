@@ -845,7 +845,7 @@ function RendererMT.drawBuffer(this)
       local srgba = obj.stroke_rgba
       if srgba then
 	 qpath:close()
-	 win:draw(qpath, srgba, {{'stroke'}}) 
+	 win:stroke(qpath, srgba)
       end
 
       -- Normal lines (stroke)...
@@ -857,7 +857,7 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal1)))
 	 local n1path = path(screen_centroid.x, screen_centroid.y)
 	 n1path:line_to(screen_point.x, screen_point.y)
-	 win:draw(n1path, n1r, {{'stroke'}})
+	 win:stroke(n1path, n1r)
       end
 
       if n2r then
@@ -866,7 +866,7 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal2)))
 	 local n2path = path(screen_centroid.x, screen_centroid.y)
 	 n2path:line_to(screen_point.x, screen_point.y)
-	 win:addline(n2path, n2r, {{'stroke'}})
+	 win:stroke(n2path, n2r)
       end
    end
 

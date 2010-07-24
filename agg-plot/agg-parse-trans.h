@@ -13,4 +13,6 @@ extern vertex_source * parse_spec (lua_State *L, int specindex,
 extern vertex_source * parse_spec_pipeline (lua_State *L, int index, 
 					    vertex_source *obj);
 
+extern vertex_source * parse_graph_args (lua_State *L);
+
 #endif

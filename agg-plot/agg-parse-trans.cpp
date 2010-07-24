@@ -7,7 +7,9 @@ extern "C" {
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
+#include "lua-draw.h"
 #include "gs-types.h"
+#include "colors.h"
 #include "trans.h"
 
 struct property_reg {
@@ -198,4 +200,43 @@ parse_spec_pipeline (lua_State *L, int index, vertex_source *obj)
     }
 
   return obj;
+}
+
+vertex_source *
+parse_graph_args (lua_State *L)
+{
+  int narg = lua_gettop (L);
+  agg::rgba8 *color;
+
+  if (narg <= 2)
+    color = rgba8_push_default (L);
+  else
+    color = color_arg_lookup (L, 3);
+      
+  if (narg > 5)
+    {
+      luaL_error (L, "too much arguments if add or addline plot method");
+      return NULL;
+    }
+
+  vertex_source *curr = check_agg_obj (L, 2);
+
+  if (narg > 4)
+    {
+      curr = parse_spec_pipeline (L, 5, curr);
+      lua_pop (L, 1);
+    }
+    
+  if (curr->need_resize())
+    {
+      curr = new trans::resize(curr);
+    }
+
+  if (narg > 3)
+    {
+      curr = parse_spec_pipeline (L, 4, curr);
+      lua_pop (L, 1);
+    }
+
+  return curr;
 }

@@ -14,7 +14,7 @@ function demo1()
    for j=0, N do
       c:clear()
       c:draw(fig, 'yellow', {}, {{'rotate', angle= 2*pi*j/N}})
-      c:draw(fig, 'black', {{'stroke'}}, {{'rotate', angle= 2*pi*j/N}})
+      c:stroke(fig, 'black', {}, {{'rotate', angle= 2*pi*j/N}})
       c:refresh()
    end
 end
@@ -29,7 +29,7 @@ function demo2()
       local w = 4*exp((j-256)/256)
       p:clear()
       local ln = fxline(|x| exp(-0.1*x)*cos(w*x), 0, x1)
-      p:draw(ln, 'red', {{'stroke', width=1.5}})
+      p:stroke(ln, 'red')
       p:refresh()
    end
 end

@@ -11,6 +11,7 @@ extern "C" {
 extern agg::rgba8 * rgba8_push_lookup  (lua_State *L, const char *color_str);
 extern agg::rgba8 * rgba8_push_default (lua_State *L);
 extern agg::rgba8 * color_arg_lookup   (lua_State *L, int index);
+extern agg::rgba8 * check_color_rgba8  (lua_State *L, int index);
 
 namespace colors {
 

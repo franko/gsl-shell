@@ -24,12 +24,14 @@ __BEGIN_DECLS
 static int canvas_window_new           (lua_State *L);
 static int canvas_window_free          (lua_State *L);
 static int canvas_window_draw          (lua_State *L);
+static int canvas_window_stroke          (lua_State *L);
 static int canvas_window_clear         (lua_State *L);
 static int canvas_window_refresh       (lua_State *L);
 static int canvas_window_set_box_trans (lua_State *L);
 
 static void * canvas_thread_function        (void *_win);
 static int    canvas_window_index_protected (lua_State *L);
+static int    canvas_window_draw_gener      (lua_State *L, bool as_line);
 
 static const struct luaL_Reg canvas_win_functions[] = {
   {"window",       canvas_window_new},
@@ -44,6 +46,7 @@ static const struct luaL_Reg canvas_window_methods[] = {
 
 static const struct luaL_Reg canvas_window_methods_protected[] = {
   {"draw",         canvas_window_draw},
+  {"stroke",       canvas_window_stroke},
   {"clear",        canvas_window_clear},
   {"refresh",      canvas_window_refresh},
   {"setview",      canvas_window_set_box_trans},
@@ -169,47 +172,35 @@ canvas_window_free (lua_State *L)
 }
 
 int
-canvas_window_draw (lua_State *L)
+canvas_window_draw_gener (lua_State *L, bool as_line)
 {
   canvas_window *win = canvas_window::check (L, 1);
-  int narg = lua_gettop (L);
-  agg::rgba8 *color;
-
-  if (narg <= 2)
-    color = rgba8_push_default (L);
-  else
-    color = color_arg_lookup (L, 3);
-
-  vertex_source *curr = check_agg_obj (L, 2);
-
-  if (narg > 4)
-    {
-      curr = parse_spec_pipeline (L, 5, curr);
-      lua_pop (L, 1);
-    }
-
-  if (curr->need_resize())
-    {
-      curr = new trans::resize(curr);
-    }
-
-  if (narg > 3)
-    {
-      curr = parse_spec_pipeline (L, 4, curr);
-      lua_pop (L, 1);
-    }
+  vertex_source *obj = parse_graph_args (L);
+  agg::rgba8 *color = check_color_rgba8 (L, 3);
 
   const agg::trans_affine& mtx = win->transform();
-  curr->apply_transform(mtx, 1.0);
+  obj->apply_transform(mtx, 1.0);
 
-  bool success = win->draw(curr, color);
+  bool success = win->draw(obj, color, as_line);
 
-  lua_management::dispose(curr);
+  lua_management::dispose(obj);
 
   if (! success)
     return luaL_error (L, "canvas not ready");
 
   return 0;
+}
+
+int
+canvas_window_draw (lua_State *L)
+{
+  return canvas_window_draw_gener (L, false);
+}
+
+int
+canvas_window_stroke (lua_State *L)
+{
+  return canvas_window_draw_gener (L, true);
 }
 
 int
@@ -259,7 +250,6 @@ canvas_window_index_protected (lua_State *L)
 int
 canvas_window_index (lua_State *L)
 {
-  canvas_window *win = canvas_window::check(L, 1);
   const char *key = luaL_checkstring (L, 2);
 
   const struct luaL_Reg *r = mlua_find_method (canvas_window_methods, key);
