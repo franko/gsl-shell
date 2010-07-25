@@ -152,7 +152,7 @@ void plot<VS,RM>::draw_title(canvas &canvas)
 
   title.size(12.0);
   title.text(m_title);
-  titlestroke.width(1.0);
+  titlestroke.width(1.5);
 
   m.transform(&xt, &yt);
 
@@ -288,7 +288,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas)
 	lab.size(10.0);
 	m_uy.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.0);
+	labs.width(1.5);
 
 	m.transform(&xlab, &ylab);
 
@@ -322,7 +322,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas)
 	lab.size(10.0);
 	m_ux.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.0);
+	labs.width(1.5);
 
 	m.transform(&xlab, &ylab);
 

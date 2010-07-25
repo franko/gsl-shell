@@ -785,8 +785,9 @@ function ExtruderMT.extrude(this, shape)
    rebuildMeta(shape) -- Compute all the new normals, etc.
 end
 
-local function makeXYFunction(f, xmin, ymin, xmax, ymax)
-   local nx, ny = 20, 20
+local function makeXYFunction(f, xmin, ymin, xmax, ymax, nx, ny)
+   nx = nx and nx or 20
+   ny = ny and ny or 20
 
    local s = Pre3d.Shape()
    for i=0, nx do
@@ -803,7 +804,8 @@ local function makeXYFunction(f, xmin, ymin, xmax, ymax)
    for i=1, nx do
       for j=1, ny do
 	 local i1, i2, i3 = i0+(ny+1), i0+(ny+1)+1, i0+1
-	 push(quads, Pre3d.QuadFace(i0, i1, i2, i3))
+	 push(quads, Pre3d.QuadFace(i0, i1, i2))
+	 push(quads, Pre3d.QuadFace(i0, i2, i3))
 	 i0 = i0+1
       end
       i0 = i0+1

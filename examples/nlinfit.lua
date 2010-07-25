@@ -142,21 +142,15 @@ function demo2bis()
 
    s = nlfsolver {fdf= expf, n= n, p0= p0}
 
---   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', 
---   {{'dash', a=7, b=3}})
-
    repeat
       print_state (s)
       pl:clear()
-      pl:draw(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', {{'stroke'}})
+      pl:stroke(fxline(|x| fmodel(s.p, x), 0, xs(n)))
       pl:refresh()
       io.read('*l')
       local status = s:iterate()
    until status ~= 'continue'
    print_state (s)
-
---   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red')
---   pl:show()
 
    return pl
 end

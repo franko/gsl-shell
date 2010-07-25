@@ -22,7 +22,7 @@ local plcurve = require 'plcurve'
 
 local M = {}
 
-local color = color_function('redyellow', 0.8)
+local color = color_function('redyellow', 0.9)
 
 local insert = table.insert
 
@@ -848,7 +848,7 @@ function hpcontour(f, a, b, ngridx, ngridy, nlevels)
 
    pl = plot()
    g.draw_regions(pl)
-   g.draw_lines(pl, rgba(0,0,0,0.6))
+   g.draw_lines(pl, rgba(0,0,0,0.8))
    pl:show()
 
    return pl

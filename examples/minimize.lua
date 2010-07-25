@@ -73,7 +73,7 @@ function demo1bis()
    while m:step() == 'continue' do
       print(m.x[1], m.x[2], m.value)
       local nx, ny = m.x[1], m.x[2]
-      p:draw(segment(ox, oy, nx, ny), 'gray', {{'stroke'}})
+      p:stroke(segment(ox, oy, nx, ny))
       p:refresh()
       ox, oy = nx, ny
    end
