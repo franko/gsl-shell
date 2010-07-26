@@ -13,19 +13,28 @@
 #include "agg_trans_viewport.h"
 #include "agg_rasterizer_outline_aa.h"
 #include "agg_renderer_outline_aa.h"
+
+#ifdef ENABLE_GAMMA_CORR
 #include "agg_gamma_lut.h"
+#endif
 
 #include "utils.h"
 
 class canvas {
+#ifdef ENABLE_GAMMA_CORR
   typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
   typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
+#else
+  typedef agg::pixfmt_bgr24 pixel_fmt;
+#endif
   typedef agg::renderer_base<pixel_fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
   typedef agg::renderer_outline_aa<renderer_base> renderer_oaa;
   typedef agg::rasterizer_outline_aa<renderer_oaa> rasterizer_outline_aa;
 
+#ifdef ENABLE_GAMMA_CORR
   gamma_type m_gamma;
+#endif
   pixel_fmt pixf;
   renderer_base rb;
   renderer_solid rs;
@@ -47,13 +56,21 @@ class canvas {
 public:
   canvas(agg::rendering_buffer& ren_buf, double width, double height, 
 	 agg::rgba bgcol): 
+#ifdef ENABLE_GAMMA_CORR
     m_gamma(2.2), pixf(ren_buf, m_gamma), rb(pixf), rs(rb),
+#else
+    pixf(ren_buf), rb(pixf), rs(rb),
+#endif
     prof(), ren_oaa(rb, prof), ras_oaa(ren_oaa),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
     mtx.scale(width, height);
+#ifdef ENABLE_GAMMA_CORR
     prof.width(1.5);
+#else
+    prof.width(1.0);
+#endif
   };
 
   double width() const { return m_width; };

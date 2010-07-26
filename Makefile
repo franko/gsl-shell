@@ -76,13 +76,17 @@ else
 endif
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-#  C_SRC_FILES += lua-plot.c
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED
   SUBDIRS_DEFS += -DAGG_PLOT_ENABLED
   LUAGSL_LIBS += agg-plot/libaggplot.a
   LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
+endif
+
+ifneq ($(strip $(ENABLE_GAMMA_CORR)), no)
+  DEFS += -DENABLE_GAMMA_CORR
+  SUBDIRS_DEFS += -DENABLE_GAMMA_CORR
 endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)

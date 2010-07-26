@@ -3,6 +3,9 @@ ENABLE_COMPLEX = yes
 ENABLE_AGG_PLOT = yes
 BUILD_LUA_DLL = no
 
+# set this to "no" if you want to disable gamma correction
+# ENABLE_GAMMA_CORR = no
+
 # PLATFORM should can be linux or mingw
 PLATFORM = none
 
