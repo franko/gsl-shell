@@ -18,6 +18,87 @@
 #include "vertex-source.h"
 
 template<class T>
+class vs_trans_proxy : public scalable_object {
+protected:
+  T m_output;
+  scalable_object* m_source;
+
+public:
+  vs_trans_proxy(scalable_object* src): m_output(*src), m_source(src) 
+  {
+  };
+
+  template <class init_type>
+  vs_trans_proxy(scalable_object* src, init_type& val):
+    m_output(*src, val), m_source(src)
+  {};
+
+  virtual void rewind(unsigned path_id) 
+  { 
+    m_output.rewind(path_id); 
+  };
+
+  virtual unsigned vertex(double* x, double* y) 
+  { 
+    return m_output.vertex(x, y); 
+  };
+
+  virtual void approximation_scale(double as)
+  {
+    m_source->approximation_scale(as);
+  };
+
+  virtual bool dispose() 
+  { 
+    if (m_source->dispose())
+      delete m_source;
+    return true;
+  };
+
+  T& self() { return m_output; };
+};
+
+template<class T>
+class vs_trans_scale_proxy : public vs_trans_proxt<T> {
+
+  virtual void approximation_scale(double as)
+  {
+    m_output.approximation_scale(as);
+    m_source->approximation_scale(as);
+  };
+  
+};
+
+typedef vs_trans_scale_proxy<agg::conv_stroke<vertex_source> > vs_stroke;
+
+namespace trans {
+
+  class stroke : public vs_stroke {
+  public:
+    typedef agg::conv_stroke<scalable_object> base_type;
+  
+    stroke(scalable_object* src, double width = 1.0): vs_stroke(src)
+    {
+      base_type& v = self();
+      v.width(width);
+    };
+
+    void line_cap(agg::line_cap_e cap)
+    {
+      m_output.line_cap(cap);
+    };
+
+    void line_join(agg::line_join_e join)
+    {
+      m_output.line_join(join);
+    };
+  };
+}
+
+#endif
+
+#if 0
+template<class T>
 class vs_trans_proxy : public vertex_source {
 protected:
   T m_output;

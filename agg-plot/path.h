@@ -34,6 +34,8 @@ namespace draw {
 
     virtual void approximation_scale(double as) { };
 
+    virtual bool dispose() { return false; };
+
     T& get_base() { return m_base; };
   };
 
