@@ -186,34 +186,6 @@ gs_check_userdata (lua_State *L, int index, int typeid)
   return p;
 }
 
-void *
-gs_check_userdata_w_alt (lua_State *L, int index, int typeid1, int typeid2,
-			 int *sel)
-{
-  void *p;
-
-  p = gs_is_userdata (L, index, typeid1);
-  if (p == NULL)
-    {
-      p = gs_is_userdata (L, index, typeid2);
-      if (p == NULL)
-	{
-	  const char *msg = lua_pushfstring(L, "%s or %s", 
-					    type_qualified_name (typeid1),
-					    type_qualified_name (typeid2));
-	  gs_type_error (L, index, msg);
-	}
-
-      if (sel)
-	*sel = typeid2;
-    }
-
-  if (sel)
-    *sel = typeid1;
-
-  return p;
-}
-
 int
 gs_gsl_errorcheck (lua_State *L, const char *routine, int status)
 {

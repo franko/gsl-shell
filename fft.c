@@ -215,58 +215,35 @@ fft_hc_mixed_radix_transform (lua_State *L, gsl_matrix *hc)
 gsl_matrix *
 fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
 {
-  int sel;
-  gsl_matrix *p = gs_check_userdata_w_alt (L, index, 
-					   GS_HALFCMPL_R2,
-					   GS_HALFCMPL_MR, &sel);
-  
-  *selptr = (sel == GS_HALFCMPL_R2 ? fft_hc_radix2_sel :	\
-	                             fft_hc_mixed_radix_sel);
+  gsl_matrix *p;
 
-  return p;
-}
+  p = gs_is_userdata (L, index, GS_HALFCMPL_R2);
 
- /*
-gsl_matrix *
-fft_hc_check (lua_State *L, int index, struct fft_hc_sel ** selptr)
-{
-  const char * const user_name = "half-complex vector";
-  void *p = lua_touserdata (L, index);
-  const char *msg;
-
-  if (p == NULL)
-    luaL_typerror(L, index, user_name);
-
-  if (lua_getmetatable(L, index))
+  if (p != NULL)
     {
-      lua_getfield(L, LUA_REGISTRYINDEX, GS_METATABLE(GS_HALFCMPL_R2));
-      if (lua_rawequal(L, -1, -2)) 
-	{
-	  if (selptr)
-	    *selptr = fft_hc_radix2_sel;
-	  lua_pop (L, 2);
-	  return p;
-	}
-      lua_pop (L, 1);
-      lua_getfield(L, LUA_REGISTRYINDEX, GS_METATABLE(GS_HALFCMPL_MR));
-      if (lua_rawequal(L, -1, -2)) 
-	{
-	  if (selptr)
-	    *selptr = fft_hc_mixed_radix_sel;
-	  lua_pop (L, 2);
-	  return p;
-	}
-      lua_pop (L, 2);
+      if (selptr)
+	*selptr = fft_hc_radix2_sel;
+      return p;
     }
 
-  msg = lua_pushfstring(L, "%s or %s", 
-			type_qualified_name (GS_HALFCMPL_R2),
-			type_qualified_name (GS_HALFCMPL_MR));
+  p = gs_is_userdata (L, index, GS_HALFCMPL_MR);
 
-  gs_type_error (L, index, msg);
-  return NULL;
+  if (p != NULL)
+    { 
+      if (selptr)
+	*selptr = fft_hc_mixed_radix_sel;
+      return p;
+    }
+  else
+    {
+      const char *msg = lua_pushfstring(L, "%s or %s", 
+					type_qualified_name (GS_HALFCMPL_R2),
+					type_qualified_name (GS_HALFCMPL_MR));
+      gs_type_error (L, index, msg);
+    }
+
+  return 0;
 }
- */
 
 int
 fft_hc_length (lua_State *L)

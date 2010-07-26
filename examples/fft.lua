@@ -39,7 +39,7 @@ function demo1()
    pf:show()
    pt:show()
 
-   return p
+   return pt, pf
 end
 
 function demo2()
@@ -56,7 +56,7 @@ function demo2()
 
    fftplot = plot('FFT power spectrum')
    bars = ibars(isample(|k| abs(bess:get(k)), 0, 60))
-   fftplot:add(bars, 'darkblue')
+   fftplot:add(bars, 'darkgreen')
    fftplot:addline(bars, 'black')
    fftplot:show()
 
