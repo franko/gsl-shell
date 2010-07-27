@@ -30,7 +30,9 @@ public:
   virtual ~drawable() { };
 };
 
-// implementation of a window_object type object based on a "scalable"
+/* this class take a "scalable" object and it does transform it to a
+   "drawable" by adding a conv_transform taht manage the window size
+   transformation. */
 class window_scalable : public drawable
 {
   static agg::trans_affine dummy_matrix;

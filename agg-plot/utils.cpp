@@ -21,7 +21,9 @@ trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b)
 double
 trans_affine_max_norm (const agg::trans_affine& m)
 {
-  return max(m.sx, m.sy);
+  double c1 = sqrt(m.sx*m.sx + m.shx*m.shx);
+  double c2 = sqrt(m.shy*m.shy + m.sy*m.sy);
+  return max(c1, c2);
 }
 
 void bbox_enlarge(double *x1, double* y1, double* x2, double* y2,

@@ -28,9 +28,27 @@ public:
   virtual ~scalable() { };
 };
 
+/* This class is basically a wrapper around a native AGG vertex_source object
+   that implements the "scalable" interface. */
+template <class T, bool system_managed>
+class vs_proxy : public scalable {
+  T m_base;
+
+public:
+  vs_proxy(): scalable(), m_base() {};
+
+  virtual void rewind(unsigned path_id) { m_base.rewind(path_id); };
+  virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  };
+
+  virtual void approximation_scale(double as) { };
+  virtual bool dispose() { return (system_managed ? false : true); };
+
+  T& get_base() { return m_base; };
+};
+
 /* this class does work does permit to perform an AGG transformation
    like conv_stroke, conv_dash or any other transform. This adapter
-   is mean to preserve the scalable or the window_drawable interface. */
+   is meant to preserve the scalable or the window_drawable interface. */
 template<class conv_type, class base_type>
 class vs_adapter : public base_type {
 protected:

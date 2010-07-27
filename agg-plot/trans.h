@@ -2,10 +2,13 @@
 #define AGGPLOT_TRANS_H
 
 #include "scalable.h"
+#include "utils.h"
 
 #include "agg_conv_stroke.h"
 #include "agg_conv_curve.h"
 #include "agg_conv_dash.h"
+#include "agg_trans_affine.h"
+#include "agg_conv_transform.h"
 
 #include "my_conv_simple_marker.h"
 #include "agg_ellipse.h"
@@ -50,6 +53,7 @@ public:
   };
 };
 
+typedef scalable_adapter<agg::conv_transform<scalable> > vs_affine;
 
 namespace trans {
 
@@ -59,6 +63,24 @@ namespace trans {
 
   typedef my::conv_simple_marker<scalable, agg::ellipse> conv_ellipse;
   typedef scalable_adapter<conv_ellipse> marker;
+
+  class affine : public vs_affine {
+    agg::trans_affine m_matrix;
+    double m_norm;
+
+  public:
+    affine(scalable *src, const agg::trans_affine& mtx) : 
+      vs_affine(src, m_matrix), m_matrix(mtx)
+    { 
+      m_norm = trans_affine_max_norm (m_matrix);
+    };
+
+    virtual void approximation_scale(double as) 
+    {
+      this->m_source->approximation_scale(m_norm * as);
+    };
+  };
+
 }
 
 #if 0

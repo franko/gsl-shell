@@ -1,5 +1,5 @@
-#ifndef AGGPLOT_DRAWABLES_H
-#define AGGPLOT_DRAWABLES_H
+#ifndef AGGPLOT_TEXT_H
+#define AGGPLOT_TEXT_H
 
 #include "drawable.h"
 
@@ -10,7 +10,7 @@
 
 namespace draw {
 
-  class text : public window_drawable {
+  class text : public drawable {
     typedef agg::gsv_text vs_text;
     typedef agg::conv_transform<vs_text> vs_trans_text;
     typedef agg::conv_stroke<vs_trans_text> vs_stroked_text;
@@ -40,15 +40,14 @@ namespace draw {
       m_matrix.sy  =  c;
     };
 
-    void set_text(const char *s) { m_text.text(s); };
-    void start_point(double x, double y) { m_text.start_point (x, y); };
-
     virtual void rewind(unsigned path_id);
     virtual unsigned vertex(double* x, double* y);
 
-    virtual void apply_transform(agg::trans_affine& m);
+    virtual void apply_transform(const agg::trans_affine& m);
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
     virtual bool dispose();
+
+    vs_text& self() { return m_text; };
   };
 }
 
