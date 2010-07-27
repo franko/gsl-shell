@@ -1,83 +1,75 @@
 #ifndef AGGPLOT_TRANS_H
 #define AGGPLOT_TRANS_H
 
-#include "agg_trans_affine.h"
+#include "scalable.h"
+
 #include "agg_conv_stroke.h"
 #include "agg_conv_curve.h"
 #include "agg_conv_dash.h"
-#include "agg_conv_transform.h"
-#include "agg_conv_contour.h"
-#include "agg_vcgen_markers_term.h"
-#include "agg_arrowhead.h"
-#include "agg_bounding_rect.h"
-#include "agg_ellipse.h"
 
 #include "my_conv_simple_marker.h"
+#include "agg_ellipse.h"
 
-#include "utils.h"
-#include "vertex-source.h"
-
-template<class T>
-class vs_trans_proxy : public scalable_object {
-protected:
-  T m_output;
-  scalable_object* m_source;
+template <class conv_type>
+class scalable_adapter : public vs_adapter<conv_type, scalable>
+{
+  typedef vs_adapter<conv_type, scalable> root_type;
 
 public:
-  vs_trans_proxy(scalable_object* src): m_output(*src), m_source(src) 
-  {
-  };
+  scalable_adapter(scalable *src) : root_type(src) { };
 
   template <class init_type>
-  vs_trans_proxy(scalable_object* src, init_type& val):
-    m_output(*src, val), m_source(src)
-  {};
+  scalable_adapter(scalable* src, init_type& val):
+    root_type(src, val)
+  { };
 
-  virtual void rewind(unsigned path_id) 
-  { 
-    m_output.rewind(path_id); 
-  };
-
-  virtual unsigned vertex(double* x, double* y) 
-  { 
-    return m_output.vertex(x, y); 
-  };
-
-  virtual void approximation_scale(double as)
+  virtual void approximation_scale(double as) 
   {
-    m_source->approximation_scale(as);
+    this->m_source->approximation_scale(as);
   };
-
-  virtual bool dispose() 
-  { 
-    if (m_source->dispose())
-      delete m_source;
-    return true;
-  };
-
-  T& self() { return m_output; };
 };
 
-template<class T>
-class vs_trans_scale_proxy : public vs_trans_proxt<T> {
 
-  virtual void approximation_scale(double as)
-  {
-    m_output.approximation_scale(as);
-    m_source->approximation_scale(as);
-  };
+template <class conv_type>
+class scalable_adapter_approx : public vs_adapter<conv_type, scalable>
+{
+  typedef vs_adapter<conv_type, scalable> root_type;
+
+public:
+  scalable_adapter_approx(scalable *src) : root_type(src) { };
+
+  template <class init_type>
+  scalable_adapter_approx(scalable* src, init_type& val):
+    root_type(src, val)
+  { };
   
+  virtual void approximation_scale(double as) 
+  {
+    this->m_output.approximation_scale(as);
+    this->m_source->approximation_scale(as);
+  };
 };
 
-typedef vs_trans_scale_proxy<agg::conv_stroke<vertex_source> > vs_stroke;
 
 namespace trans {
 
+  typedef scalable_adapter_approx<agg::conv_stroke<scalable> > stroke;
+  typedef scalable_adapter_approx<agg::conv_curve<scalable> > curve;
+  typedef scalable_adapter<agg::conv_dash<scalable> > dash;
+
+  typedef my::conv_simple_marker<scalable, agg::ellipse> conv_ellipse;
+  typedef scalable_adapter<conv_ellipse> marker;
+}
+
+#if 0
+namespace trans {
+
+  // -------------------- stroke --------------------
   class stroke : public vs_stroke {
   public:
-    typedef agg::conv_stroke<scalable_object> base_type;
+    typedef agg::conv_stroke<scalable> base_type;
   
-    stroke(scalable_object* src, double width = 1.0): vs_stroke(src)
+    stroke(scalable* src, double width = 1.0): vs_stroke(src)
     {
       base_type& v = self();
       v.width(width);
@@ -93,24 +85,59 @@ namespace trans {
       m_output.line_join(join);
     };
   };
+
+
+  // -------------------- curve --------------------
+  typedef vs_curve curve;
+
+
+  // -------------------- dash --------------------
+  class dash : public vs_dash {
+  public:
+    dash(scalable *src) : vs_dash(src) { };
+
+    void add_dash(double dash_len, double gap_len)
+    {
+      m_output.add_dash(dash_len, gap_len);
+    };
+  };
+
+  // -------------------- marker --------------------
+  class marker : public vs_marker_ellipse {
+    agg::ellipse m_ellipse;
+
+  public:
+    marker(scalable* src, double size): vs_marker_ellipse(src, m_ellipse)
+    {
+      m_ellipse.init(0.0, 0.0, size/2, size/2);
+    };
+
+    virtual void approximation_scale(double as) 
+    {
+      m_ellipse.approximation_scale(as);
+      m_source->approximation_scale(as);
+    };
+  };
+
 }
+#endif
 
 #endif
 
 #if 0
 template<class T>
-class vs_trans_proxy : public vertex_source {
+class vs_adapter : public vertex_source {
 protected:
   T m_output;
   vertex_source* m_source;
 
 public:
-  vs_trans_proxy(vertex_source* src): m_output(*src), m_source(src) 
+  vs_adapter(vertex_source* src): m_output(*src), m_source(src) 
   {
   };
 
   template <class init_type>
-  vs_trans_proxy(vertex_source* src, init_type& val):
+  vs_adapter(vertex_source* src, init_type& val):
     m_output(*src, val), m_source(src)
   {};
 
@@ -137,11 +164,11 @@ public:
   T& self() { return m_output; };
 };
 
-typedef vs_trans_proxy<agg::conv_stroke<vertex_source> > vs_stroke;
-typedef vs_trans_proxy<agg::conv_curve<vertex_source> > vs_curve;
-typedef vs_trans_proxy<agg::conv_dash<vertex_source> > vs_dash;
-typedef vs_trans_proxy<agg::conv_transform<vertex_source> > vs_transform;
-typedef vs_trans_proxy<agg::conv_contour<vertex_source> > vs_contour;
+typedef vs_adapter<agg::conv_stroke<vertex_source> > vs_stroke;
+typedef vs_adapter<agg::conv_curve<vertex_source> > vs_curve;
+typedef vs_adapter<agg::conv_dash<vertex_source> > vs_dash;
+typedef vs_adapter<agg::conv_transform<vertex_source> > vs_transform;
+typedef vs_adapter<agg::conv_contour<vertex_source> > vs_contour;
 
 namespace trans {
 
@@ -153,12 +180,6 @@ namespace trans {
     {
       base_type& v = self();
       v.width(width);
-    };
-
-    virtual void apply_transform(const agg::trans_affine& m, double as) 
-    {
-      m_output.approximation_scale(as);
-      m_source->apply_transform(m, as);
     };
 
     void line_cap(agg::line_cap_e cap)
@@ -193,7 +214,7 @@ namespace trans {
     }
   };
 
-  typedef vs_trans_proxy<my::conv_simple_marker<vertex_source, agg::ellipse> > vs_marker_ellipse;
+  typedef vs_adapter<my::conv_simple_marker<vertex_source, agg::ellipse> > vs_marker_ellipse;
 
   class marker : public vs_marker_ellipse {
     agg::ellipse m_ellipse;
