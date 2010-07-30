@@ -23,6 +23,16 @@
 #include "agg_gsv_text.h"
 
 
+static void
+bbox_enlarge(double *x1, double* y1, double* x2, double* y2,
+	     double x, double y)
+{
+  if (x < *x1) *x1 = x;
+  if (y < *y1) *y1 = y;
+  if (x > *x2) *x2 = x;
+  if (y > *y2) *y2 = y;
+}
+
 template<class VertexSource, class resource_manager = no_management>
 class plot {
 

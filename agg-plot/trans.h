@@ -2,17 +2,20 @@
 #define AGGPLOT_TRANS_H
 
 #include "scalable.h"
+#include "drawable.h"
+#include "markers.h"
 #include "utils.h"
+
+#include "agg_trans_affine.h"
+#include "agg_path_storage.h"
 
 #include "agg_conv_stroke.h"
 #include "agg_conv_curve.h"
 #include "agg_conv_dash.h"
-#include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
+#include "agg_conv_contour.h"
 
-#include "my_conv_simple_marker.h"
-#include "agg_ellipse.h"
-
+/*
 template <class conv_type>
 class scalable_adapter : public vs_adapter<conv_type, scalable>
 {
@@ -52,17 +55,111 @@ public:
     this->m_source->approximation_scale(as);
   };
 };
+*/
 
-typedef scalable_adapter<agg::conv_transform<scalable> > vs_affine;
+struct scalable_context {
 
-namespace trans {
+  template <class conv_type>
+  class simple : public scalable_adapter<conv_type> {
+    typedef scalable_adapter<conv_type> root_type;
+  public:
+    simple(scalable *src) : root_type(src) {};
+
+    template <class init_type>
+    simple(scalable* src, init_type& val): root_type(src, val) {};
+  };
+
+  template <class conv_type>
+  class approx : public scalable_adapter_approx<conv_type> {
+    typedef scalable_adapter_approx<conv_type> root_type;
+  public:
+    approx(scalable *src) : root_type(src) {};
+  };
+
+  typedef scalable base_type;
+};
+
+
+struct drawable_context {
+
+  template <class conv_type>
+  class simple : public drawable_adapter<conv_type> {
+    typedef drawable_adapter<conv_type> root_type;
+  public:
+    simple(drawable *src) : root_type(src) {};
+
+    template <class init_type>
+    simple(drawable* src, init_type& val): root_type(src, val) {};
+  };
+
+  template <class conv_type>
+  class approx : public drawable_adapter<conv_type> {
+    typedef drawable_adapter<conv_type> root_type;
+  public:
+    approx(drawable *src) : root_type(src) {};
+  };
+
+  typedef drawable base_type;
+
+};
+
+template <class context>
+struct trans {
+
+  typedef typename context::base_type base_type;
+
+  typedef typename context::template approx<agg::conv_stroke<base_type> > stroke;
+  typedef typename context::template approx<agg::conv_curve<base_type> > curve;
+  typedef typename context::template simple<agg::conv_dash<base_type> > dash;
+  typedef typename context::template approx<agg::conv_contour<base_type> > extend;
+
+  typedef typename context::template simple<agg::conv_transform<base_type> > vs_affine;
+
+  class affine : public vs_affine {
+    agg::trans_affine m_matrix;
+    double m_norm;
+
+  public:
+    affine(base_type *src, const agg::trans_affine& mtx) : 
+      vs_affine(src, m_matrix), m_matrix(mtx)
+    { 
+      m_norm = m_matrix.scale();
+    };
+
+    virtual void approximation_scale(double as) 
+    {
+      this->m_source->approximation_scale(m_norm * as);
+    };
+  };
+
+  typedef agg::conv_transform<scalable> symbol_type;
+  typedef my::conv_simple_marker<base_type, symbol_type> conv_marker;
+  typedef typename context::template simple<conv_marker> vs_marker;
+
+  class marker : public vs_marker {
+    scalable& m_symbol;
+    agg::trans_affine m_matrix;
+    agg::conv_transform<scalable> m_trans;
+
+  public:
+    marker(base_type* src, double size, const char *sym):  
+      vs_marker(src, m_trans), 
+      m_symbol(markers::get(sym)), m_matrix(), m_trans(m_symbol, m_matrix)
+    { 
+      m_matrix.scale(size);
+    };
+  };
+};
+
+#if 0
+struct trans {
 
   typedef scalable_adapter_approx<agg::conv_stroke<scalable> > stroke;
   typedef scalable_adapter_approx<agg::conv_curve<scalable> > curve;
   typedef scalable_adapter<agg::conv_dash<scalable> > dash;
+  typedef scalable_adapter_approx<agg::conv_curve<scalable> > extend;
 
-  typedef my::conv_simple_marker<scalable, agg::ellipse> conv_ellipse;
-  typedef scalable_adapter<conv_ellipse> marker;
+  typedef scalable_adapter<agg::conv_transform<scalable> > vs_affine;
 
   class affine : public vs_affine {
     agg::trans_affine m_matrix;
@@ -81,7 +178,47 @@ namespace trans {
     };
   };
 
-}
+  typedef my::conv_simple_marker<scalable, agg::conv_transform<agg::path_storage> > conv_marker;
+  typedef scalable_adapter<conv_marker> vs_marker;
+
+  class marker : public vs_marker {
+    agg::path_storage& m_symbol;
+    agg::trans_affine m_matrix;
+    agg::conv_transform<agg::path_storage> m_trans;
+
+  public:
+    marker(scalable* src, double size, const char *sym):  
+      vs_marker(src, m_trans), 
+      m_symbol(markers::get(sym)), m_matrix(), m_trans(m_symbol, m_matrix)
+    { 
+      m_matrix.scale(size);
+    };
+  };
+  
+  /*
+  template <class symbol_type>
+  class marker_gen : public my::conv_simple_marker<scalable, symbol_type> {
+    typedef my::conv_simple_marker<scalable, symbol_type> base_type;
+
+    symbol_type m_symbol;
+    agg::trans_affine m_matrix;
+    agg::conv_transform<symbol_type> m_trans;
+
+  public:
+    marker_gen(scalable* src, double size):  
+      base_type(src, m_trans), m_symbol(), m_matrix(), m_trans(m_symbol, m_matrix)
+    { };
+
+    virtual void approximation_scale(double as) 
+    {
+      m_symbol.approximation_scale(as);
+      m_source->approximation_scale(as);
+    };
+
+  };
+  */
+};
+#endif
 
 #if 0
 namespace trans {

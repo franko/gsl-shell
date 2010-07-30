@@ -1,5 +1,5 @@
-#ifndef AGGPLOT_DRAWABLES_H
-#define AGGPLOT_DRAWABLES_H
+#ifndef AGGPLOT_PATH_H
+#define AGGPLOT_PATH_H
 
 #include "scalable.h"
 

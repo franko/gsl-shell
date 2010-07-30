@@ -1,6 +1,5 @@
 
 #include "trans.h"
-#include "window-trans.h"
 #include "path.h"
 #include "text.h"
 
@@ -9,24 +8,24 @@ main()
 {
   draw::path *p = new draw::path();
 
-  agg::path_storage& pc = p->get_base();
+  agg::path_storage& pc = p->self();
   pc.move_to(0.0, 0.0);
   pc.line_to(20.0, 0.0);
   pc.line_to(20.0, 20.0);
   pc.line_to(0.0, 20.0);
   pc.close_polygon();
 
-  trans::stroke *s1 = new trans::stroke(p);
+  trans<scalable_context>::stroke *s1 = new trans<scalable_context>::stroke(p);
   s1->self().width(4.0);
   s1->self().line_cap(agg::round_cap);
 
   double c = 0.707, s= 0.707;
   agg::trans_affine rmat(c, s, -s, c, 0.0, 0.0);
-  trans::affine *rs1 = new trans::affine(s1, rmat);
+  trans<scalable_context>::affine *rs1 = new trans<scalable_context>::affine(s1, rmat);
 
   window_scalable *ws1 = new window_scalable(rs1);
 
-  window::stroke *s2 = new window::stroke(ws1);
+  trans<drawable_context>::stroke *s2 = new trans<drawable_context>::stroke(ws1);
   s2->self().width(1.0);
   s2->self().line_cap(agg::round_cap);
   
@@ -40,7 +39,7 @@ main()
   txt->self().text("Hello world!");
   txt->self().start_point(4.0, 5.0);
 
-  window::dash *d2 = new window::dash(txt);
+  trans<drawable_context>::dash *d2 = new trans<drawable_context>::dash(txt);
   d2->self().add_dash(2.0, 2.0);
 
   if (s2->dispose())

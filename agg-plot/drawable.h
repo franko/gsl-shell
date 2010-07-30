@@ -54,4 +54,25 @@ public:
   virtual bool dispose();
 };
 
+template<class conv_type>
+class drawable_adapter : public vs_adapter<conv_type, drawable> {
+  typedef vs_adapter<conv_type, drawable> root_type;
+
+public:
+  drawable_adapter(drawable *src) : root_type(src) { };
+
+  template <class init_type>
+  drawable_adapter(scalable* src, init_type& val): root_type(src, val) {};
+
+  virtual void apply_transform(const agg::trans_affine& m)
+  {
+    this->m_source->apply_transform(m);
+  };
+
+  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+  {
+    this->m_source->bounding_box(x1, y1, x2, y2);
+  }
+};
+
 #endif

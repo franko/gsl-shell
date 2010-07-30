@@ -10,8 +10,7 @@ void
 window_scalable::apply_transform(const agg::trans_affine& m)
 {
   m_trans.transformer(m);
-  double as = trans_affine_max_norm (m);
-  m_source->approximation_scale (as);
+  m_source->approximation_scale (m.scale());
 }
 
 void

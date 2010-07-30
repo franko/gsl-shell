@@ -28,8 +28,8 @@ public:
   virtual ~scalable() { };
 };
 
-/* This class is basically a wrapper around a native AGG vertex_source object
-   that implements the "scalable" interface. */
+/* This class is basically a wrapper around a native AGG vertex_source object.
+   The wrapper implements the "scalable" interface. */
 template <class T, bool system_managed>
 class vs_proxy : public scalable {
   T m_base;
@@ -43,7 +43,7 @@ public:
   virtual void approximation_scale(double as) { };
   virtual bool dispose() { return (system_managed ? false : true); };
 
-  T& get_base() { return m_base; };
+  T& self() { return m_base; };
 };
 
 /* this class does work does permit to perform an AGG transformation
@@ -56,6 +56,8 @@ protected:
   base_type* m_source;
 
 public:
+  typedef conv_type self_type;
+
   vs_adapter(base_type* src): m_output(*src), m_source(src) 
   {
   };
@@ -83,6 +85,39 @@ public:
   };
 
   conv_type& self() { return m_output; };
+};
+
+template<class conv_type>
+class scalable_adapter : public vs_adapter<conv_type, scalable> {
+  typedef vs_adapter<conv_type, scalable> root_type;
+
+public:
+  scalable_adapter(scalable *src) : root_type(src) { };
+
+  template <class init_type>
+  scalable_adapter(scalable* src, init_type& val): root_type(src, val) {};
+
+  virtual void approximation_scale(double as) 
+  {
+    this->m_source->approximation_scale(as);
+  };
+};
+
+template<class conv_type>
+class scalable_adapter_approx : public vs_adapter<conv_type, scalable> {
+  typedef vs_adapter<conv_type, scalable> root_type;
+
+public:
+  scalable_adapter_approx(scalable *src) : root_type(src) { };
+
+  template <class init_type>
+  scalable_adapter_approx(scalable* src, init_type& val): root_type(src, val) {};
+
+  virtual void approximation_scale(double as) 
+  {
+    this->m_output.approximation_scale(as);
+    this->m_source->approximation_scale(as);
+  };
 };
 
 #endif
