@@ -7,7 +7,7 @@
 
 #include "defs.h"
 #include "canvas-window.h"
-#include "vertex-source.h"
+#include "drawable.h"
 #include "canvas.h"
 #include "utils.h"
 
@@ -59,7 +59,7 @@ public:
 
   void start_new_thread (lua_State *L);
 
-  bool draw(vertex_source *obj, agg::rgba8 *color, bool as_line)
+  bool draw(drawable *obj, agg::rgba8 *color, bool as_line)
   {
     if (! m_canvas)
       return false;

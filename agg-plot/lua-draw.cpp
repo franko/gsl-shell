@@ -42,14 +42,14 @@ static int agg_path_index     (lua_State *L);
 static int agg_text_free      (lua_State *L);
 static int agg_text_set_text  (lua_State *L);
 static int agg_text_set_point (lua_State *L);
-static int agg_text_rotate    (lua_State *L);
+// static int agg_text_rotate    (lua_State *L);
 
 static int agg_rgba_free      (lua_State *L);
 static int agg_rgba_add       (lua_State *L);
 static int agg_rgba_mul       (lua_State *L);
 static int agg_rgba_set_alpha (lua_State *L);
 
-static void path_cmd (my::path *p, int cmd, struct cmd_call_stack *stack);
+static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
   {CMD_MOVE_TO,  "move_to",  "ff"},
@@ -87,14 +87,14 @@ static const struct luaL_Reg agg_text_methods[] = {
   {"__gc",        agg_text_free},
   {"set_point",   agg_text_set_point},
   {"set_text",    agg_text_set_text},
-  {"rotate",      agg_text_rotate},
+  //  {"rotate",      agg_text_rotate},
   {NULL, NULL}
 };
 
 int
 agg_path_new (lua_State *L)
 {
-  my::path *vs = new(L, GS_DRAW_PATH) my::path();
+  draw::path *vs = new(L, GS_DRAW_PATH) draw::path();
 
   if (lua_gettop (L) >= 2)
     {
@@ -111,25 +111,25 @@ agg_path_new (lua_State *L)
   return 1;
 }
 
-my::path *
+draw::path *
 check_agg_path (lua_State *L, int index)
 {
-  return (my::path *) gs_check_userdata (L, index, GS_DRAW_PATH);
+  return (draw::path *) gs_check_userdata (L, index, GS_DRAW_PATH);
 }
 
 int
 agg_path_free (lua_State *L)
 {
-  typedef my::path path_type;
+  typedef draw::path path_type;
   path_type *path = check_agg_path (L, 1);
   path->~path_type();
   return 0;
 }
 
 void
-path_cmd (my::path *p, int _cmd, struct cmd_call_stack *s)
+path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
 {
-  agg::path_storage& ps = p->get_path();
+  agg::path_storage& ps = p->self();
   path_cmd_e cmd = (path_cmd_e) _cmd;
 
   switch (cmd)
@@ -160,7 +160,7 @@ path_cmd (my::path *p, int _cmd, struct cmd_call_stack *s)
 static int
 agg_path_cmd (lua_State *L)
 {
-  my::path *p = check_agg_path (L, 1);
+  draw::path *p = check_agg_path (L, 1);
   int id = lua_tointeger (L, lua_upvalueindex(1));
   const char *signature = lua_tostring (L, lua_upvalueindex(2));
   int argc = 2, f_count = 0, b_count = 0;
@@ -215,10 +215,11 @@ agg_path_index (lua_State *L)
   return 0;
 }
 
-vertex_source *
-check_agg_obj (lua_State *L, int index)
+/* NB: for the moment we have only one kind of "scalable" object. */
+scalable *
+check_agg_scalable (lua_State *L, int index)
 {
-  int tplist[] = {GS_DRAW_PATH, GS_DRAW_TEXT, GS_INVALID_TYPE};
+  int tplist[] = {GS_DRAW_PATH, GS_INVALID_TYPE};
   void *p = NULL;
   int j;
 
@@ -232,13 +233,13 @@ check_agg_obj (lua_State *L, int index)
   if (p == NULL)
     gs_type_error (L, index, "drawing object");
 
-  return (vertex_source *) p;
+  return (scalable *) p;
 }
 
-my::text *
+draw::text *
 check_agg_text (lua_State *L, int index)
 {
-  return (my::text *) gs_check_userdata (L, index, GS_DRAW_TEXT);
+  return (draw::text *) gs_check_userdata (L, index, GS_DRAW_TEXT);
 }
 
 int
@@ -246,14 +247,14 @@ agg_text_new (lua_State *L)
 {
   double size  = luaL_optnumber (L, 1, 10.0);
   double width = luaL_optnumber (L, 2, 1.0);
-  new(L, GS_DRAW_TEXT) my::text(size, width);
+  new(L, GS_DRAW_TEXT) draw::text(size, width);
   return 1;
 }
 
 int
 agg_text_free (lua_State *L)
 {
-  typedef my::text text_type;
+  typedef draw::text text_type;
   text_type *t = check_agg_text (L, 1);
   t->~text_type();
   return 0;
@@ -262,30 +263,32 @@ agg_text_free (lua_State *L)
 int
 agg_text_set_text (lua_State *L)
 {
-  my::text *t = check_agg_text (L, 1);
+  draw::text *t = check_agg_text (L, 1);
   const char *text = luaL_checkstring (L, 2);
-  t->set_text(text);
+  t->self().text(text);
   return 0;
 }
 
 int
 agg_text_set_point (lua_State *L)
 {
-  my::text *t = check_agg_text (L, 1);
+  draw::text *t = check_agg_text (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
-  t->start_point(x, y);
+  t->self().start_point(x, y);
   return 0;
 }
 
+/*
 int
 agg_text_rotate (lua_State *L)
 {
-  my::text *t = check_agg_text (L, 1);
+  draw::text *t = check_agg_text (L, 1);
   double a = luaL_checknumber (L, 2);
   t->rotate(a);
   return 0;
 };
+*/
 
 static unsigned int double2uint8 (double x)
 {
@@ -383,6 +386,8 @@ void
 draw_register (lua_State *L)
 {
   pthread_mutex_init (agg_mutex, NULL);
+
+  markers::init();
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);

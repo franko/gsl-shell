@@ -5,14 +5,9 @@ extern "C" {
 #include "lua.h"
 }
 
-#include "vertex-source.h"
+#include "scalable.h"
+#include "drawable.h"
 
-extern vertex_source * parse_spec (lua_State *L, int specindex, 
-				   vertex_source *obj);
-
-extern vertex_source * parse_spec_pipeline (lua_State *L, int index, 
-					    vertex_source *obj);
-
-extern vertex_source * parse_graph_args (lua_State *L);
+extern drawable * parse_graph_args (lua_State *L);
 
 #endif

@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "vertex-source.h"
-
 #include "utils.h"
-#include "drawables.h"
+#include "drawable.h"
 #include "canvas.h"
 #include "units.h"
 #include "resource-manager.h"
@@ -184,7 +182,7 @@ void plot<VS,RM>::draw_elements(canvas &canvas)
     {
       container& d = m_elements[j];
       VS& vs = d.get_vertex_source();
-      vs.apply_transform(m, 1.0);
+      vs.apply_transform(m);
 
       if (d.outline)
 	canvas.draw_outline(vs, d.color);

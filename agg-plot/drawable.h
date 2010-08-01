@@ -62,7 +62,7 @@ public:
   drawable_adapter(drawable *src) : root_type(src) { };
 
   template <class init_type>
-  drawable_adapter(scalable* src, init_type& val): root_type(src, val) {};
+  drawable_adapter(drawable* src, init_type& val): root_type(src, val) {};
 
   virtual void apply_transform(const agg::trans_affine& m)
   {

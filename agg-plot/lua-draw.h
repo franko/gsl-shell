@@ -12,8 +12,12 @@ __END_DECLS
 
 #ifdef __cplusplus
 
-#include "vertex-source.h"
-#include "drawables.h"
+#include "agg_color_rgba.h"
+
+#include "scalable.h"
+#include "drawable.h"
+#include "path.h"
+#include "text.h"
 #include "trans.h"
 
 extern int agg_text_new       (lua_State *L);
@@ -21,9 +25,9 @@ extern int agg_path_new       (lua_State *L);
 extern int agg_rgb_new        (lua_State *L);
 extern int agg_rgba_new       (lua_State *L);
 
-extern vertex_source*  check_agg_obj   (lua_State *L, int index);
-extern my::path*       check_agg_path  (lua_State *L, int index);
-extern my::text*       check_agg_text  (lua_State *L, int index);
+extern scalable*       check_agg_scalable (lua_State *L, int index);
+extern draw::path*     check_agg_path  (lua_State *L, int index);
+extern draw::text*     check_agg_text  (lua_State *L, int index);
 extern agg::rgba8*     check_agg_rgba8 (lua_State *L, int index);
 
 #endif

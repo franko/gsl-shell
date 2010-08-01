@@ -12,7 +12,7 @@ extern "C" {
 #include "lua-draw.h"
 #include "colors.h"
 #include "plot.h"
-#include "vertex-source.h"
+#include "drawable.h"
 #include "resource-manager.h"
 #include "agg-parse-trans.h"
 
@@ -65,7 +65,7 @@ __END_DECLS
 
 class plot_window : public canvas_window {
 public:
-  typedef plot<vertex_source, lua_management> plot_type;
+  typedef plot<drawable, lua_management> plot_type;
 
   plot_window(): canvas_window(colors::white), m_plot() {};
 
@@ -158,7 +158,7 @@ int
 plot_window_add_gener (lua_State *L, bool as_line)
 {
   plot_window *p = plot_window::check(L, 1);
-  vertex_source *obj = parse_graph_args (L);
+  drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
   lua_pushvalue (L, 1);
