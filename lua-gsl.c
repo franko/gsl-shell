@@ -45,7 +45,6 @@
 #include "bspline.h"
 
 #ifdef AGG_PLOT_ENABLED
-/* #include "lua-plot.h" */
 #include "lua-draw.h"
 #include "canvas-window.h"
 #include "plot-window.h"
@@ -58,7 +57,10 @@ luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
+#ifdef AGG_PLOT_ENABLED
   prepare_window_ref_table (L);
+  prepare_plotref_table (L);
+#endif
 
 #ifdef USE_SEPARATE_NAMESPACE
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
@@ -83,7 +85,6 @@ luaopen_gsl (lua_State *L)
   mlinear_register (L);
   bspline_register (L);
 #ifdef AGG_PLOT_ENABLED
-  /*  plot_register (L); */
   draw_register (L);
   canvas_window_register (L);
   plot_window_register (L);

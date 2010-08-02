@@ -26,6 +26,7 @@
 #include "gs-types.h"
 
 char const * const CACHE_FIELD_NAME = "__cache";
+char const * const registry_plotref_name = "GSL.plotref";
 
 const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key)
@@ -226,28 +227,6 @@ mlua_fenv_get (lua_State *L, int index, int fenv_index)
 }
 
 void
-mlua_fenv_addref (lua_State *L, int refindex)
-{
-  int n;
-  lua_getfenv (L, -1);
-  n = lua_objlen (L, -1);
-  lua_pushvalue (L, refindex);
-  lua_rawseti (L, -2, n+1);
-  lua_pop (L, 1);
-}
-
-#if 0
-void
-mlua_set_fenv_ref (lua_State *L, int refindex)
-{
-  lua_newtable (L);
-  lua_pushvalue (L, refindex);
-  lua_rawseti (L, -2, 1);
-  lua_setfenv (L, -2);
-}
-#endif
-
-void
 prepare_window_ref_table (lua_State *L)
 {
   lua_newtable (L);
@@ -282,5 +261,44 @@ mlua_window_unref(lua_State *L, int id)
   lua_getfield (L, LUA_REGISTRYINDEX, "GSL.windows");
   lua_pushnil (L);
   lua_rawseti (L, -2, id);
+  lua_pop (L, 1);
+}
+
+void
+prepare_plotref_table (lua_State *L)
+{
+  lua_newtable (L);
+
+  /* the metatable to define it as a weak table */
+  lua_newtable (L);
+  lua_pushstring (L, "k");
+  lua_setfield (L, -2, "__mode");
+  lua_setmetatable (L, -2);
+
+  lua_setfield (L, LUA_REGISTRYINDEX, registry_plotref_name);
+}
+
+void
+mlua_plotref_add (lua_State *L, int key_index, int val_index)
+{
+  size_t n;
+
+  lua_getfield (L, LUA_REGISTRYINDEX, registry_plotref_name);
+  lua_pushvalue (L, key_index);
+  lua_pushvalue (L, key_index);
+  lua_rawget (L, -3);
+
+  if (lua_isnil (L, -1))
+    {
+      lua_pop (L, 1);
+      lua_newtable (L);
+    }
+
+  n = lua_objlen (L, -1);
+
+  lua_pushvalue (L, val_index);
+  lua_rawseti (L, -2, n + 1);
+
+  lua_rawset (L, -3);
   lua_pop (L, 1);
 }

@@ -161,9 +161,7 @@ plot_window_add_gener (lua_State *L, bool as_line)
   drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
-  lua_pushvalue (L, 1);
-  mlua_fenv_addref (L, 2);
-  lua_pop (L, 1);
+  mlua_plotref_add (L, 1, 2);
 
   AGG_LOCK();
 
