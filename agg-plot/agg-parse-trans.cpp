@@ -24,16 +24,6 @@ struct property_reg {
   const char *name;
 };
 
-/*
-static vertex_source * build_stroke    (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_curve     (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_marker    (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_dash      (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_extend    (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_translate (lua_State *L, int i, vertex_source *s);
-static vertex_source * build_rotate    (lua_State *L, int i, vertex_source *s);
-*/
-
 struct property_reg line_cap_properties[] = {
   {(int) agg::butt_cap,   "butt"  },
   {(int) agg::square_cap, "square"},
@@ -165,30 +155,33 @@ build_extend (lua_State *L, int specindex, typename context::base_type *obj)
   return (typename context::base_type *) m;
 }
 
-/*
-vertex_source *
-build_translate (lua_State *L, int specindex, vertex_source *obj)
+template <class context> typename context::base_type*
+build_translate (lua_State *L, int specindex, typename context::base_type *obj)
 {
+  typedef typename trans<context>::affine affine_type;
+
   double x = mlua_named_number (L, specindex, "x");
   double y = mlua_named_number (L, specindex, "y");
 
-  trans::affine *t = new trans::affine(obj);
-  t->translate(x, y);
+  agg::trans_affine mtx(1.0, 0.0, 0.0, 1.0, x, y);
+  affine_type *t = new affine_type(obj, mtx);
 
-  return (vertex_source *) t;
+  return (typename context::base_type *) t;
 }
 
-vertex_source *
-build_rotate (lua_State *L, int specindex, vertex_source *obj)
+template <class context> typename context::base_type*
+build_rotate (lua_State *L, int specindex, typename context::base_type *obj)
 {
+  typedef typename trans<context>::affine affine_type;
+
   double a = mlua_named_number (L, specindex, "angle");
 
-  trans::affine *t = new trans::affine(obj);
-  t->rotate(a);
+  double c = cos(a), s = sin(a);
+  agg::trans_affine mtx(c, s, -s, c, 0.0, 0.0);
+  affine_type *t = new affine_type(obj, mtx);
 
-  return (vertex_source *) t;
+  return (typename context::base_type *) t;
 }
-*/
 
 template <class context>
 class builder {
@@ -221,13 +214,13 @@ public:
 
 template <class context>
 const typename builder<context>::reg builder<context>::builder_table[] = {
-  {"stroke",        build_stroke<context> },
-  {"dash",          build_dash  <context> },
-  {"curve",         build_curve <context> },
-  {"marker",        build_marker<context> },
-  {"extend",        build_extend<context> },
-  //  {"translate",     build_translate},
-  //  {"rotate",        build_rotate},
+  {"stroke",        build_stroke   <context>},
+  {"dash",          build_dash     <context>},
+  {"curve",         build_curve    <context>},
+  {"marker",        build_marker   <context>},
+  {"extend",        build_extend   <context>},
+  {"translate",     build_translate<context>},
+  {"rotate",        build_rotate   <context>},
   {NULL, NULL}
 };
 

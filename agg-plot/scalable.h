@@ -1,30 +1,21 @@
 #ifndef AGGPLOT_SCALABLE_H
 #define AGGPLOT_SCALABLE_H
 
-class vertex_source {
-public:
+struct vertex_source {
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
 
   virtual ~vertex_source() { };
 };
 
-class scalable_object {
-public:
+struct scalable_object {
   virtual void approximation_scale(double as) = 0;
   virtual bool dispose() = 0;
 
   virtual ~scalable_object() { };
 };
 
-class scalable : public vertex_source, public scalable_object {
-public:
-  virtual void rewind(unsigned path_id) = 0;
-  virtual unsigned vertex(double* x, double* y) = 0;
-
-  virtual void approximation_scale(double as) = 0;
-  virtual bool dispose() = 0;
-
+struct scalable : public vertex_source, public scalable_object {
   virtual ~scalable() { };
 };
 
