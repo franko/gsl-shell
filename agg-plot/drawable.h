@@ -6,18 +6,15 @@
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
 
-// Interface
-struct window_object {
-public:
+struct drawable {
+
+  virtual void rewind(unsigned path_id) = 0;
+  virtual unsigned vertex(double* x, double* y) = 0;
+
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
-
   virtual bool dispose() = 0;
 
-  virtual ~window_object() { };
-};
-
-struct drawable: public vertex_source, public window_object {
   virtual ~drawable() { };
 };
 

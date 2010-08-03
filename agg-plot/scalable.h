@@ -23,21 +23,14 @@
 
 #include "agg_trans_affine.h"
 
-struct vertex_source {
+struct scalable {
+
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
 
-  virtual ~vertex_source() { };
-};
-
-struct scalable_object {
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual bool dispose() = 0;
 
-  virtual ~scalable_object() { };
-};
-
-struct scalable : public vertex_source, public scalable_object {
   virtual ~scalable() { };
 };
 
