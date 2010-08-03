@@ -9,7 +9,7 @@
 // Interface
 struct window_object {
 public:
-  virtual void apply_transform(const agg::trans_affine& m) = 0;
+  virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
 
   virtual bool dispose() = 0;
@@ -39,7 +39,7 @@ public:
   virtual void rewind(unsigned path_id);
   virtual unsigned vertex(double* x, double* y);
 
-  virtual void apply_transform(const agg::trans_affine& m);
+  virtual void apply_transform(const agg::trans_affine& m, double as);
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
 
   virtual bool dispose();
@@ -55,9 +55,9 @@ public:
   template <class init_type>
   drawable_adapter(drawable* src, init_type& val): root_type(src, val) {};
 
-  virtual void apply_transform(const agg::trans_affine& m)
+  virtual void apply_transform(const agg::trans_affine& m, double as)
   {
-    this->m_source->apply_transform(m);
+    this->m_source->apply_transform(m, as);
   };
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)

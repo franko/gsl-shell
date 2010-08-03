@@ -163,6 +163,7 @@ int
 plot_window_free (lua_State *L)
 {
   plot_window *p = plot_window::check(L, 1);
+  printf("Deallocating plot-window: %p\n", (void *) p);
   p->~plot_window();
   return 0;
 }

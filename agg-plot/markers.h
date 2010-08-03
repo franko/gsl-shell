@@ -3,11 +3,6 @@
 
 #include "scalable.h"
 
-namespace markers {
-
-  extern void init();
-
-  extern scalable& get(const char *name);
-}
+extern scalable* new_marker_symbol(const char *name);
 
 #endif

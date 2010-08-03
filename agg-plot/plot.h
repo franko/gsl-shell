@@ -202,7 +202,7 @@ void plot<VS,RM>::draw_elements(canvas &canvas)
     {
       container& d = m_elements[j];
       VS& vs = d.get_vertex_source();
-      vs.apply_transform(m);
+      vs.apply_transform(m, 1.0);
 
       if (d.outline)
 	canvas.draw_outline(vs, d.color);

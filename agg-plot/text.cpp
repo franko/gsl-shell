@@ -16,7 +16,7 @@ namespace draw {
   }
 
   void
-  text::apply_transform(const agg::trans_affine& m)
+  text::apply_transform(const agg::trans_affine& m, double as)
   {
     double& x = m_matrix.tx;
     double& y = m_matrix.ty;
@@ -25,6 +25,8 @@ namespace draw {
     y = m_y;
 
     m.transform(&x, &y);
+
+    m_stroke.approximation_scale(as);
   }
 
   void

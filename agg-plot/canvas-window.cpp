@@ -197,7 +197,7 @@ canvas_window_draw_gener (lua_State *L, bool as_line)
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
   const agg::trans_affine& mtx = win->transform();
-  obj->apply_transform(mtx);
+  obj->apply_transform(mtx, 1.0);
 
   bool success = win->draw(obj, color, as_line);
 

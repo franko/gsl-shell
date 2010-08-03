@@ -300,6 +300,10 @@ static int loadline (lua_State *L) {
   if (!pushline(L, 1))
     return -1;  /* no input */
 
+#warning DEBUG CODE
+  if (strcmp (lua_tostring(L, 1), "EXIT") == 0)
+    return -1;
+
   lua_pushfstring(L, "return %s", lua_tostring(L, 1));
   status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
   if (status == 0)
@@ -325,15 +329,36 @@ static int loadline (lua_State *L) {
   return status;
 }
 
+static void do_windows_unref (lua_State *L)
+{
+  struct window_unref_cell *wu;
+  size_t j;
+
+  GSL_SHELL_LOCK();
+
+  for (j = 0; j < unref_fixed_count; j++)
+    mlua_window_unref (L, unref_fixed_list[j]);
+
+  unref_fixed_count = 0;
+
+  for (wu = window_unref_list; wu != NULL; /* */)
+    {
+      struct window_unref_cell *nxt = wu->next;
+      mlua_window_unref (L, wu->id);
+      free (wu);
+      wu = nxt;
+    }
+  window_unref_list = NULL;
+
+  GSL_SHELL_UNLOCK();
+}
 
 static void dotty (lua_State *L) {
   const char *oldprogname = progname;
   progname = NULL;
   for (;;)
     {
-      struct window_unref_cell *wu;
       int status = loadline(L);
-      size_t j;
 
       if (status == -1)
 	break;
@@ -351,25 +376,13 @@ static void dotty (lua_State *L) {
 	      l_message(progname, emsg);
 	    }
 	}
-      GSL_SHELL_LOCK();
 
-      for (j = 0; j < unref_fixed_count; j++)
-	mlua_window_unref (L, unref_fixed_list[j]);
-
-      unref_fixed_count = 0;
-
-      for (wu = window_unref_list; wu != NULL; /* */)
-	{
-	  struct window_unref_cell *nxt = wu->next;
-	  mlua_window_unref (L, wu->id);
-	  free (wu);
-	  wu = nxt;
-	}
-      window_unref_list = NULL;
-
-      GSL_SHELL_UNLOCK();
+      do_windows_unref (L);
     }
+
+  do_windows_unref (L);
   lua_settop(L, 0);  /* clear stack */
+
   fputs("\n", stdout);
   fflush(stdout);
   progname = oldprogname;
@@ -544,6 +557,9 @@ int main (int argc, char **argv) {
   status = lua_cpcall(L, &pmain, &s);
   report(L, status);
   lua_close(L);
+
+  pthread_mutex_destroy (gsl_shell_mutex);
+
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 

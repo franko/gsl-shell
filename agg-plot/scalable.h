@@ -21,6 +21,8 @@
 #ifndef AGGPLOT_SCALABLE_H
 #define AGGPLOT_SCALABLE_H
 
+#include "agg_trans_affine.h"
+
 struct vertex_source {
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
@@ -29,7 +31,7 @@ struct vertex_source {
 };
 
 struct scalable_object {
-  virtual void approximation_scale(double as) = 0;
+  virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual bool dispose() = 0;
 
   virtual ~scalable_object() { };
@@ -41,8 +43,9 @@ struct scalable : public vertex_source, public scalable_object {
 
 /* This class is basically a wrapper around a native AGG vertex_source object.
    The wrapper implements the "scalable" interface. */
-template <class T, bool system_managed>
+template <class T, bool system_managed = false>
 class vs_proxy : public scalable {
+protected:
   T m_base;
 
 public:
@@ -51,10 +54,23 @@ public:
   virtual void rewind(unsigned path_id) { m_base.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  };
 
-  virtual void approximation_scale(double as) { };
+  virtual void apply_transform(const agg::trans_affine& m, double as) { };
   virtual bool dispose() { return (system_managed ? false : true); };
 
   T& self() { return m_base; };
+};
+
+/* The same as vs_proxy but with approximation_scale. */
+template <class T, bool system_managed = false>
+class vs_proxy_approx : public vs_proxy<T, system_managed> {
+  typedef vs_proxy<T, system_managed> root_type;
+public:
+  vs_proxy_approx(): root_type() {};
+
+  virtual void apply_transform(const agg::trans_affine& m, double as)
+  { 
+    this->m_base.approximation_scale(as); 
+  };
 };
 
 /* this class does work does permit to perform an AGG transformation
@@ -108,9 +124,9 @@ public:
   template <class init_type>
   scalable_adapter(scalable* src, init_type& val): root_type(src, val) {};
 
-  virtual void approximation_scale(double as) 
+  virtual void apply_transform(const agg::trans_affine& m, double as)
   {
-    this->m_source->approximation_scale(as);
+    this->m_source->apply_transform(m, as);
   };
 };
 
@@ -124,10 +140,10 @@ public:
   template <class init_type>
   scalable_adapter_approx(scalable* src, init_type& val): root_type(src, val) {};
 
-  virtual void approximation_scale(double as) 
+  virtual void apply_transform(const agg::trans_affine& m, double as)
   {
     this->m_output.approximation_scale(as);
-    this->m_source->approximation_scale(as);
+    this->m_source->apply_transform(m, as);
   };
 };
 

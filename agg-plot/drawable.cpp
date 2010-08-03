@@ -7,10 +7,10 @@
 agg::trans_affine window_scalable::dummy_matrix;
 
 void
-window_scalable::apply_transform(const agg::trans_affine& m)
+window_scalable::apply_transform(const agg::trans_affine& m, double as)
 {
   m_trans.transformer(m);
-  m_source->approximation_scale (m.scale());
+  m_source->apply_transform (m, as * m.scale());
 }
 
 void

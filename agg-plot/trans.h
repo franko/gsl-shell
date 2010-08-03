@@ -93,6 +93,11 @@ struct trans {
     { 
       m_norm = m_matrix.scale();
     };
+
+    virtual void apply_transform(const agg::trans_affine& m, double as)
+    {
+      this->m_source->apply_transform(m, as * m_norm);
+    };
   };
 
   typedef agg::conv_transform<scalable> symbol_type;
@@ -100,16 +105,29 @@ struct trans {
   typedef typename context::template simple<marker_base> vs_marker;
 
   class marker : public vs_marker {
-    scalable& m_symbol;
+    double m_size;
+    scalable* m_symbol;
     agg::trans_affine m_matrix;
     agg::conv_transform<scalable> m_trans;
 
   public:
     marker(base_type* src, double size, const char *sym):  
       vs_marker(src, m_trans), 
-      m_symbol(markers::get(sym)), m_matrix(), m_trans(m_symbol, m_matrix)
+      m_size(size), m_symbol(new_marker_symbol(sym)), m_matrix(), 
+      m_trans(*m_symbol, m_matrix)
     {
-      m_matrix.scale(size);
+      m_matrix.scale(m_size);
+    };
+
+    ~marker() 
+    { 
+      delete m_symbol; 
+    };
+
+    virtual void apply_transform(const agg::trans_affine& m, double as)
+    {
+      this->m_symbol->apply_transform(m, as * m_size);
+      this->m_source->apply_transform(m, as);
     };
   };
 };

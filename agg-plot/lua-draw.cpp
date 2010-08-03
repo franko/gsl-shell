@@ -141,6 +141,7 @@ agg_path_free (lua_State *L)
 {
   typedef draw::path path_type;
   path_type *path = check_agg_path (L, 1);
+  printf("Deallocating path: %p\n", (void *) path);
   path->~path_type();
   return 0;
 }
@@ -405,8 +406,6 @@ void
 draw_register (lua_State *L)
 {
   pthread_mutex_init (agg_mutex, NULL);
-
-  markers::init();
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);

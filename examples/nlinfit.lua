@@ -80,8 +80,8 @@ function demo2()
       end
    end
 
-   pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
-   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+   local pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
+   pl:add(xyline(x, y), 'blue', {{'stroke'}, {'marker', size= 5, mark="triangle"}})
 
    local function print_state(s)
       print ("x: ", tr(s.p))
@@ -90,7 +90,7 @@ function demo2()
 
    s = nlfsolver {fdf= expf, n= n, p0= p0}
 
-   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
+   pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)), 'red', {{'dash', 7, 3, 3, 3}})
 
    repeat
       print_state (s)

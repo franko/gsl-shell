@@ -43,7 +43,7 @@ namespace draw {
     virtual void rewind(unsigned path_id);
     virtual unsigned vertex(double* x, double* y);
 
-    virtual void apply_transform(const agg::trans_affine& m);
+    virtual void apply_transform(const agg::trans_affine& m, double as);
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
     virtual bool dispose();
 
