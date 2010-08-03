@@ -99,9 +99,11 @@ public:
   void plot_update() 
   {
     this->lock();
-    this->on_draw_unprotected();
     if (this->status == plot_window::running)
-      this->update_window();
+      {
+	this->on_draw_unprotected();
+	this->update_window();
+      }
     this->unlock();
   };
 
