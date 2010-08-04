@@ -33,3 +33,30 @@ function demo2()
       p:refresh()
    end
 end
+
+function demo3()
+   local x1 = 25
+   local p = plot('rotating sine')
+
+   local box = path(-2*pi, -2*pi)
+   box:line_to(2*pi, -2*pi)
+   box:line_to(2*pi, 2*pi)
+   box:line_to(-2*pi, 2*pi)
+   box:close()
+
+   p:addline(box, 'black')
+   p.units = false
+   p:show()
+
+   local N = 512
+   for j=0, N do
+      local angle = j*2*pi/N
+      p:clear()
+      local ln = fxline(sin, 0, 2*pi)
+      p:stroke(ln, 'red',    {}, {{'rotate', angle= angle}})
+      p:stroke(ln, 'blue',   {}, {{'rotate', angle= angle + pi/2}})
+      p:stroke(ln, 'green',  {}, {{'rotate', angle= angle + pi}})
+      p:stroke(ln, 'yellow', {}, {{'rotate', angle= angle + 3*pi/2}})
+      p:refresh()
+   end
+end

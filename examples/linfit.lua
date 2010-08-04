@@ -13,7 +13,7 @@ function demo1()
    print('Linear fit coefficients: ', tr(c))
 
    p = fxplot(fit, x0, x1)
-   p:addline(xyline(x, y), 'blue', {{'marker', size=6}})
+   p:add(xyline(x, y), 'blue', {{'stroke'}, {'marker', size=5}})
    p.title = 'Linear Fit'
    
    return p
@@ -33,7 +33,7 @@ function demo2()
 
    fitleg = linfit(legmodel(14), x, y)
    p = fxplot(fitleg, x0, x1)
-   p:addline(xyline(x, y), 'darkgreen', {{'marker', size=6}})
+   p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
    p.title = 'Legendre Polinomial fit of Bessel J3(x)'
    
    return p
@@ -57,8 +57,12 @@ function demo3()
    local yfit = mul(X, c)
    p = plot('Legendre Polinomial fit of Bessel J3(x)')
    p:addline(xyline(x, yfit))
-   p:addline(xyline(x, y), 'darkgreen', {{'marker', size=6}})
+   p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
    p:show()
    
    return p
 end
+
+print 'demo1() - examples of linear regression of (x, y) data'
+print 'demo2() - examples of linear regression based on legendre polynomials'
+print 'demo3() - same of demo2 with slightly different procedure'

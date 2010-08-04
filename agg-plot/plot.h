@@ -1,3 +1,23 @@
+
+/* plot.h
+ * 
+ * Copyright (C) 2009, 2010 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #ifndef AGGPLOT_CPLOT_H
 #define AGGPLOT_CPLOT_H
 
@@ -5,10 +25,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "vertex-source.h"
-
 #include "utils.h"
-#include "drawables.h"
+#include "drawable.h"
 #include "canvas.h"
 #include "units.h"
 #include "resource-manager.h"
@@ -22,6 +40,16 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
+
+static void
+bbox_enlarge(double *x1, double* y1, double* x2, double* y2,
+	     double x, double y)
+{
+  if (x < *x1) *x1 = x;
+  if (y < *y1) *y1 = y;
+  if (x > *x2) *x2 = x;
+  if (y > *y2) *y2 = y;
+}
 
 template<class VertexSource, class resource_manager = no_management>
 class plot {

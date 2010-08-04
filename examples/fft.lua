@@ -63,8 +63,11 @@ function demo2()
    for k=ncut, n/2 do bess:set(k,0) end
    fft_inv(bess)
 
-   p:addline(filine(|i| bess[i], n), 'red', {{'dash', a=7, b=3}})
+   p:addline(filine(|i| bess[i], n), 'red', {{'dash', 7, 3}})
    p:show()
 
    return p, fftplot
 end
+
+print 'demo1() - GSL example with square function and frequency cutoff'
+print 'demo2() - frequency cutoff example on bessel function'

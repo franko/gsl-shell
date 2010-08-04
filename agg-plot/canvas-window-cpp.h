@@ -7,14 +7,15 @@
 
 #include "defs.h"
 #include "canvas-window.h"
-#include "vertex-source.h"
+#include "drawable.h"
 #include "canvas.h"
 #include "utils.h"
 
-extern void platform_support_prepare   ();
-extern void platform_support_lock      (agg::platform_support *app);
-extern void platform_support_unlock    (agg::platform_support *app);
-extern bool platform_support_is_mapped (agg::platform_support *app);
+extern void platform_support_prepare      ();
+extern void platform_support_lock         (agg::platform_support *app);
+extern void platform_support_unlock       (agg::platform_support *app);
+extern bool platform_support_is_mapped    (agg::platform_support *app);
+extern void platform_support_close_window (agg::platform_support *app);
 
 class canvas_window : public agg::platform_support {
 protected:
@@ -57,9 +58,11 @@ public:
   void lock() { platform_support_lock(this); };
   void unlock() { platform_support_unlock(this); };
 
+  void close() { platform_support_close_window(this); };
+
   void start_new_thread (lua_State *L);
 
-  bool draw(vertex_source *obj, agg::rgba8 *color, bool as_line)
+  bool draw(drawable *obj, agg::rgba8 *color, bool as_line)
   {
     if (! m_canvas)
       return false;

@@ -1,4 +1,23 @@
 
+/* plot-window.cpp
+ * 
+ * Copyright (C) 2009, 2010 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
@@ -12,7 +31,7 @@ extern "C" {
 #include "lua-draw.h"
 #include "colors.h"
 #include "plot.h"
-#include "vertex-source.h"
+#include "drawable.h"
 #include "resource-manager.h"
 #include "agg-parse-trans.h"
 
@@ -65,7 +84,7 @@ __END_DECLS
 
 class plot_window : public canvas_window {
 public:
-  typedef plot<vertex_source, lua_management> plot_type;
+  typedef plot<drawable, lua_management> plot_type;
 
   plot_window(): canvas_window(colors::white), m_plot() {};
 
@@ -80,9 +99,11 @@ public:
   void plot_update() 
   {
     this->lock();
-    this->on_draw_unprotected();
     if (this->status == plot_window::running)
-      this->update_window();
+      {
+	this->on_draw_unprotected();
+	this->update_window();
+      }
     this->unlock();
   };
 
@@ -158,12 +179,10 @@ int
 plot_window_add_gener (lua_State *L, bool as_line)
 {
   plot_window *p = plot_window::check(L, 1);
-  vertex_source *obj = parse_graph_args (L);
+  drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
-  lua_pushvalue (L, 1);
-  mlua_fenv_addref (L, 2);
-  lua_pop (L, 1);
+  mlua_plotref_add (L, 1, 2);
 
   AGG_LOCK();
 

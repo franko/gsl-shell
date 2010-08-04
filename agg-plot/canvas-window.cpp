@@ -1,9 +1,27 @@
 
+/* canvas-window.cpp
+ * 
+ * Copyright (C) 2009, 2010 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 }
-
 
 #include "defs.h"
 #include "canvas-window.h"
@@ -13,6 +31,7 @@ extern "C" {
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
+#include "window-refs.h"
 #include "lua-draw.h"
 #include "gs-types.h"
 #include "colors.h"
@@ -50,6 +69,7 @@ static const struct luaL_Reg canvas_window_methods_protected[] = {
   {"clear",        canvas_window_clear},
   {"refresh",      canvas_window_refresh},
   {"setview",      canvas_window_set_box_trans},
+  {"close",        canvas_window_close},
   {NULL, NULL}
 };
 
@@ -89,7 +109,7 @@ canvas_window::start_new_thread (lua_State *L)
   if (status != not_ready && status != closed)
     return;
 
-  this->id = mlua_window_ref(L, lua_gettop (L));
+  this->id = window_ref_add (L, lua_gettop (L));
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -101,7 +121,7 @@ canvas_window::start_new_thread (lua_State *L)
     
   if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
     {
-      mlua_window_unref(L, this->id);
+      window_ref_remove (L, this->id);
 
       pthread_attr_destroy (attr);
       this->status = canvas_window::error; 
@@ -175,7 +195,7 @@ int
 canvas_window_draw_gener (lua_State *L, bool as_line)
 {
   canvas_window *win = canvas_window::check (L, 1);
-  vertex_source *obj = parse_graph_args (L);
+  drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
   const agg::trans_affine& mtx = win->transform();
@@ -216,6 +236,14 @@ canvas_window_refresh (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
   win->update_window();
+  return 0;
+}
+
+int
+canvas_window_close (lua_State *L)
+{
+  canvas_window *win = canvas_window::check (L, 1);
+  win->close();
   return 0;
 }
 
