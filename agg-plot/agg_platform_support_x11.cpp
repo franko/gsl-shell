@@ -48,6 +48,8 @@ namespace agg
         
     void caption(const char* capt);
     void put_image(const rendering_buffer* src);
+
+    void close();
        
     pix_format_e         m_format;
     pix_format_e         m_sys_format;
@@ -207,6 +209,23 @@ namespace agg
   platform_specific::~platform_specific()
   {
     pthread_mutex_destroy (m_mutex);
+  }
+
+  void platform_specific::close()
+  {
+    XEvent ev;
+ 
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = m_window;
+    //    ev.xclient.message_type = XInternAtom(m_display, "WM_PROTOCOLS", true);
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = m_close_atom; 
+    ev.xclient.data.l[1] = CurrentTime;
+    ev.xclient.data.l[2] = 0l;
+    ev.xclient.data.l[3] = 0l;
+    ev.xclient.data.l[4] = 0l;
+    XSendEvent(m_display, m_window, False, NoEventMask, &ev);
+    XFlush(m_display);
   }
 
   //------------------------------------------------------------------------
@@ -1261,4 +1280,9 @@ void platform_support_unlock(agg::platform_support *app)
 bool platform_support_is_mapped(agg::platform_support *app)
 { 
   return app->m_specific->m_is_mapped;
+}
+
+void platform_support_close_window(agg::platform_support *app)
+{
+  app->m_specific->close();
 }
