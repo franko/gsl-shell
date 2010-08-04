@@ -337,14 +337,14 @@ static void do_windows_unref (lua_State *L)
   GSL_SHELL_LOCK();
 
   for (j = 0; j < unref_fixed_count; j++)
-    mlua_window_unref (L, unref_fixed_list[j]);
+    window_ref_remove (L, unref_fixed_list[j]);
 
   unref_fixed_count = 0;
 
   for (wu = window_unref_list; wu != NULL; /* */)
     {
       struct window_unref_cell *nxt = wu->next;
-      mlua_window_unref (L, wu->id);
+      window_ref_remove (L, wu->id);
       free (wu);
       wu = nxt;
     }

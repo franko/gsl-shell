@@ -21,9 +21,10 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "lua-gsl.h"
+#include "window-refs.h"
 #include "nlinfit.h"
 #include "cnlinfit.h"
 #include "matrix.h"
@@ -58,7 +59,7 @@ luaopen_gsl (lua_State *L)
   gsl_set_error_handler_off ();
 
 #ifdef AGG_PLOT_ENABLED
-  prepare_window_ref_table (L);
+  window_ref_prepare (L);
   prepare_plotref_table (L);
 #endif
 
