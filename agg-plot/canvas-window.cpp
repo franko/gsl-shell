@@ -145,11 +145,9 @@ canvas_thread_function (void *_win)
     {
       win->status = canvas_window::running;
       win->run();
-      printf("window id %d terminate.\n", win->id);
       win->status = canvas_window::closed;
 
       GSL_SHELL_LOCK();
-      printf("request reference remove window id %d\n", win->id);
       gsl_shell_unref_plot (win->id);
       GSL_SHELL_UNLOCK();
     }

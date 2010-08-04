@@ -141,7 +141,6 @@ agg_path_free (lua_State *L)
 {
   typedef draw::path path_type;
   path_type *path = check_agg_path (L, 1);
-  printf("Deallocating path: %p\n", (void *) path);
   path->~path_type();
   return 0;
 }
