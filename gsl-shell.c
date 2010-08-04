@@ -62,6 +62,7 @@
 #include "gsl-shell.h"
 #include "lua-gsl.h"
 #include "lua-utils.h"
+#include "window-refs.h"
 
 #define report error_report
 
@@ -379,6 +380,8 @@ static void dotty (lua_State *L) {
 
       do_windows_unref (L);
     }
+
+  window_ref_close_all (L);
 
   do_windows_unref (L);
   lua_settop(L, 0);  /* clear stack */

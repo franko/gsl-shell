@@ -58,6 +58,8 @@ namespace agg
 
         unsigned translate(unsigned keycode);
 
+        void close();
+
         pix_format_e  m_format;
         pix_format_e  m_sys_format;
         bool          m_flip_y;
@@ -229,6 +231,11 @@ namespace agg
   platform_specific::~platform_specific()
   {
     pthread_mutex_destroy (m_mutex);
+  }
+
+  void platform_specific::close()
+  {
+    ::SendMessage(m_hwnd, WM_CLOSE, 0, 0);
   }
 
 
@@ -1217,4 +1224,9 @@ void platform_support_unlock(agg::platform_support *app)
 bool platform_support_is_mapped(agg::platform_support *app)
 { 
   return app->m_specific->m_is_mapped;
+}
+
+void platform_support_close_window(agg::platform_support *app)
+{
+  app->m_specific->close();
 }

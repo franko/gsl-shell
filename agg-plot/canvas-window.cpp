@@ -69,6 +69,7 @@ static const struct luaL_Reg canvas_window_methods_protected[] = {
   {"clear",        canvas_window_clear},
   {"refresh",      canvas_window_refresh},
   {"setview",      canvas_window_set_box_trans},
+  {"close",        canvas_window_close},
   {NULL, NULL}
 };
 
@@ -144,9 +145,11 @@ canvas_thread_function (void *_win)
     {
       win->status = canvas_window::running;
       win->run();
+      printf("window id %d terminate.\n", win->id);
       win->status = canvas_window::closed;
 
       GSL_SHELL_LOCK();
+      printf("request reference remove window id %d\n", win->id);
       gsl_shell_unref_plot (win->id);
       GSL_SHELL_UNLOCK();
     }
@@ -235,6 +238,14 @@ canvas_window_refresh (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
   win->update_window();
+  return 0;
+}
+
+int
+canvas_window_close (lua_State *L)
+{
+  canvas_window *win = canvas_window::check (L, 1);
+  win->close();
   return 0;
 }
 
