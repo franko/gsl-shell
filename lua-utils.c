@@ -302,3 +302,16 @@ mlua_plotref_add (lua_State *L, int key_index, int val_index)
   lua_rawset (L, -3);
   lua_pop (L, 1);
 }
+
+void
+mlua_table_clear (lua_State *L, int index) 
+{
+  lua_pushnil (L);  /* first key */
+  while (lua_next(L, index) != 0) 
+    {
+      lua_pop (L, 1);
+      lua_pushvalue (L, -1);
+      lua_pushnil (L);
+      lua_rawset (L, index);
+    }
+}

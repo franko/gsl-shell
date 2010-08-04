@@ -66,12 +66,13 @@ extern lua_Number   mlua_named_number    (lua_State *L, int index,
 
 extern void         mlua_fenv_set        (lua_State *L, int index, int fenv_index);
 extern void         mlua_fenv_get        (lua_State *L, int index, int fenv_index);
+extern void         mlua_table_clear (lua_State *L, int index);
+
 extern void         mlua_set_fenv_ref    (lua_State *L, int refidx);
 extern int          mlua_window_ref      (lua_State *L, int index);
 extern void         mlua_window_unref    (lua_State *L, int id);
 
 extern void prepare_window_ref_table (lua_State *L);
-
 extern void prepare_plotref_table (lua_State *L);
 extern void mlua_plotref_add (lua_State *L, int key_index, int val_index);
 

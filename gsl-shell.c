@@ -556,6 +556,12 @@ int main (int argc, char **argv) {
   s.argv = argv;
   status = lua_cpcall(L, &pmain, &s);
   report(L, status);
+
+  /* we clear the globals stack and make a full gc collect to avoid
+     problem with finalizers execution order for plots and
+     graphical objects. */
+  mlua_table_clear (L, LUA_GLOBALSINDEX);
+  lua_gc (L, LUA_GCCOLLECT, 0);
   lua_close(L);
 
   pthread_mutex_destroy (gsl_shell_mutex);
