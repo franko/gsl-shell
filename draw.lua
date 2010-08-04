@@ -84,8 +84,8 @@ function segment(x1, y1, x2, y2)
    return p
 end
 
-local bcolors = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
-local mcolors = {'dark', '', 'light'}
+local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
+local mcolors = {'', 'dark', 'light'}
 
 function rainbow(n)
    local p = #bcolors

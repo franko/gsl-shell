@@ -40,7 +40,7 @@ function demo1()
    return p
 end
 
-function demo1bis()
+function demo2()
    local odef = function(t, y, f)
 		   f:set(1,1, -y[2]-y[1]^2)
 		   f:set(2,1, 2*y[1] - y[2]^3)
@@ -87,7 +87,7 @@ function ode_lines(s, t0, y0, t1, tstep)
    return p
 end
 
-function demo2()
+function demo3()
    local mu = 10
 
    local odef = function(t, y, f)
@@ -104,7 +104,7 @@ function demo2()
    return plot_lines(ln)
 end
 
-function demo3()
+function demo4()
    local mu = 10
 
    local odef = function(t,y,f)
@@ -129,7 +129,7 @@ function demo3()
    return plot_lines(ln)
 end
 
-function demo4()
+function demo5()
    local t0, t1, tstep = 0, 30, 0.05
    local alpha = 1i - 0.08
    local z0 = 1.0 + 0.0i
@@ -151,7 +151,7 @@ function demo4()
    return p
 end
 
-function demo4bis()
+function demo6()
    local t0, t1, tstep = 0, 30, 0.05
    local alpha = 1i - 0.08
    local z0 = 1.0 + 0.0i
@@ -184,7 +184,7 @@ function demo4bis()
    return p
 end
 
-function demo5()
+function demo7()
    local odef = function(t, y, f)
 		   f:set(1,1, y[2])
 		   f:set(2,1, -sin(y[1])*y[1])
@@ -198,3 +198,11 @@ function demo5()
    local ln = ode_lines(s, t0, y0, t1, tstep)
    return plot_lines(ln)
 end
+
+print 'demo1() - ODE integration example'
+print 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
+print 'demo3() - GSL example of Var der Pol oscillator integration'
+print 'demo4() - same as demo3 but using \'bsimp\' method'
+print 'demo5() - spriral obtained by ODE integration'
+print 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
+print 'demo7() - another ODE integration example'
