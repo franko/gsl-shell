@@ -383,7 +383,10 @@ static void dotty (lua_State *L) {
 
   window_ref_close_all (L);
 
-  do_windows_unref (L);
+  do {
+    do_windows_unref (L);
+  } while (window_ref_count (L) > 0);
+  
   lua_settop(L, 0);  /* clear stack */
 
   fputs("\n", stdout);

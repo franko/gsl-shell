@@ -54,3 +54,22 @@ window_ref_close_all (lua_State *L)
 
   lua_pop (L, 1);
 }
+
+int
+window_ref_count (lua_State *L)
+{
+  int count = 0;
+
+  lua_getfield (L, LUA_REGISTRYINDEX, window_ref_table_name);
+
+  lua_pushnil (L);  /* first key */
+  while (lua_next(L, -2) != 0) 
+    {
+      lua_pop (L, 1);
+      count ++;
+    }
+
+  lua_pop (L, 1);
+
+  return count;
+}
