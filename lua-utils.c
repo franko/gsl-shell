@@ -26,7 +26,6 @@
 #include "gs-types.h"
 
 static char const * const CACHE_FIELD_NAME = "__cache";
-static char const * const registry_plotref_name = "GSL.plotref";
 
 const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key)
@@ -224,45 +223,6 @@ mlua_fenv_get (lua_State *L, int index, int fenv_index)
   lua_getfenv (L, index);
   lua_rawgeti (L, -1, fenv_index);
   lua_remove (L, -2);
-}
-
-void
-prepare_plotref_table (lua_State *L)
-{
-  lua_newtable (L);
-
-  /* the metatable to define it as a weak table */
-  lua_newtable (L);
-  lua_pushstring (L, "k");
-  lua_setfield (L, -2, "__mode");
-  lua_setmetatable (L, -2);
-
-  lua_setfield (L, LUA_REGISTRYINDEX, registry_plotref_name);
-}
-
-void
-mlua_plotref_add (lua_State *L, int key_index, int val_index)
-{
-  size_t n;
-
-  lua_getfield (L, LUA_REGISTRYINDEX, registry_plotref_name);
-  lua_pushvalue (L, key_index);
-  lua_pushvalue (L, key_index);
-  lua_rawget (L, -3);
-
-  if (lua_isnil (L, -1))
-    {
-      lua_pop (L, 1);
-      lua_newtable (L);
-    }
-
-  n = lua_objlen (L, -1);
-
-  lua_pushvalue (L, val_index);
-  lua_rawseti (L, -2, n + 1);
-
-  lua_rawset (L, -3);
-  lua_pop (L, 1);
 }
 
 void

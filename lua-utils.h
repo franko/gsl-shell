@@ -70,9 +70,6 @@ extern void         mlua_table_clear (lua_State *L, int index);
 
 extern void         mlua_set_fenv_ref    (lua_State *L, int refidx);
 
-extern void prepare_plotref_table (lua_State *L);
-extern void mlua_plotref_add       (lua_State *L, int key_index, int val_index);
-
 __END_DECLS
 
 

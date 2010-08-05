@@ -27,6 +27,7 @@ extern "C" {
 #include "canvas-window-cpp.h"
 #include "gs-types.h"
 #include "lua-utils.h"
+#include "object-refs.h"
 #include "lua-cpp-utils.h"
 #include "lua-draw.h"
 #include "colors.h"
@@ -182,7 +183,7 @@ plot_window_add_gener (lua_State *L, bool as_line)
   drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
-  mlua_plotref_add (L, 1, 2);
+  object_ref_add (L, 1, 2);
 
   AGG_LOCK();
 

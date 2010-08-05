@@ -24,7 +24,6 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "window-refs.h"
 #include "nlinfit.h"
 #include "cnlinfit.h"
 #include "matrix.h"
@@ -46,6 +45,8 @@
 #include "bspline.h"
 
 #ifdef AGG_PLOT_ENABLED
+#include "window-refs.h"
+#include "object-refs.h"
 #include "lua-draw.h"
 #include "canvas-window.h"
 #include "plot-window.h"
@@ -60,7 +61,7 @@ luaopen_gsl (lua_State *L)
 
 #ifdef AGG_PLOT_ENABLED
   window_ref_prepare (L);
-  prepare_plotref_table (L);
+  object_ref_prepare (L);
 #endif
 
 #ifdef USE_SEPARATE_NAMESPACE
