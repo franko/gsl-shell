@@ -24,10 +24,17 @@ namespace draw {
     double m_x, m_y;
     double m_angle;
 
+    double m_text_width;
+    double m_text_height;
+
+    double m_hjustif;
+    double m_vjustif;
+
   public:
     text(double size = 10.0, double width = 1.0):
       m_matrix(), m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans),
-      m_x(0.0), m_y(0.0), m_angle(0.0)
+      m_x(0.0), m_y(0.0), m_text_width(0.0), m_text_height(size),
+      m_hjustif(0.0), m_vjustif(0.0)
     {
       m_stroke.width(width + 0.5);
       m_stroke.line_cap(agg::round_cap);
@@ -35,13 +42,20 @@ namespace draw {
       m_text.size(size);
     };
 
-    void set_angle(double th)
+    void angle(double th)
     {
       double c = cos(th), s = sin(th);
+
       m_matrix.sx  =  c;
       m_matrix.shx = -s;
       m_matrix.shy =  s;
       m_matrix.sy  =  c;
+    };
+
+    void set_text(const char *txt) 
+    { 
+      m_text.text(txt);
+      m_text_width = m_text.text_width();
     };
 
     void set_point(double x, double y)
@@ -49,6 +63,9 @@ namespace draw {
       m_x = x;
       m_y = y;
     };
+
+    void hjustif(double hj) { m_hjustif = hj; };
+    void vjustif(double vj) { m_vjustif = vj; };
 
     virtual void rewind(unsigned path_id);
     virtual unsigned vertex(double* x, double* y);

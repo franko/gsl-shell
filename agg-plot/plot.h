@@ -180,7 +180,10 @@ void plot<VS,RM>::draw_title(canvas &canvas)
 
   title.size(12.0);
   title.text(m_title);
+
   titlestroke.width(1.5);
+  titlestroke.line_cap(agg::round_cap);
+  titlestroke.line_join(agg::round_join);
 
   m.transform(&xt, &yt);
 

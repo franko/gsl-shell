@@ -27,8 +27,7 @@ namespace draw {
     m.transform(&x, &y);
 
     m_stroke.approximation_scale(as);
-
-    m_text.start_point (0.0, 0.0);
+    m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
   }
 
   void

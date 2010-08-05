@@ -58,11 +58,6 @@ struct path_cmd_reg {
 static int agg_path_free      (lua_State *L);
 static int agg_path_index     (lua_State *L);
 
-static int agg_text_free      (lua_State *L);
-static int agg_text_set_text  (lua_State *L);
-static int agg_text_set_point (lua_State *L);
-static int agg_text_angle     (lua_State *L);
-
 static int agg_rgba_free      (lua_State *L);
 static int agg_rgba_add       (lua_State *L);
 static int agg_rgba_mul       (lua_State *L);
@@ -82,7 +77,6 @@ static struct path_cmd_reg cmd_table[] = {
 
 static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
-  {"text",     agg_text_new},
   {"rgba",     agg_rgba_new},
   {"rgb",      agg_rgb_new},
   {NULL, NULL}
@@ -99,14 +93,6 @@ static const struct luaL_Reg rgba_methods[] = {
   {"__add",       agg_rgba_add },
   {"__mul",       agg_rgba_mul },
   {"alpha",       agg_rgba_set_alpha },
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg agg_text_methods[] = {
-  {"__gc",        agg_text_free},
-  {"set_point",   agg_text_set_point},
-  {"text",        agg_text_set_text},
-  {"angle",       agg_text_angle},
   {NULL, NULL}
 };
 
@@ -234,58 +220,6 @@ agg_path_index (lua_State *L)
   return 0;
 }
 
-draw::text *
-check_agg_text (lua_State *L, int index)
-{
-  return (draw::text *) gs_check_userdata (L, index, GS_DRAW_TEXT);
-}
-
-int
-agg_text_new (lua_State *L)
-{
-  double size  = luaL_optnumber (L, 1, 10.0);
-  double width = luaL_optnumber (L, 2, 1.0);
-  new(L, GS_DRAW_TEXT) draw::text(size, width);
-  return 1;
-}
-
-int
-agg_text_free (lua_State *L)
-{
-  typedef draw::text text_type;
-  text_type *t = check_agg_text (L, 1);
-  t->~text_type();
-  return 0;
-}
-
-int
-agg_text_set_text (lua_State *L)
-{
-  draw::text *t = check_agg_text (L, 1);
-  const char *text = luaL_checkstring (L, 2);
-  t->self().text(text);
-  return 0;
-}
-
-int
-agg_text_set_point (lua_State *L)
-{
-  draw::text *t = check_agg_text (L, 1);
-  double x = luaL_checknumber (L, 2);
-  double y = luaL_checknumber (L, 3);
-  t->set_point(x, y);
-  return 0;
-}
-
-int
-agg_text_angle (lua_State *L)
-{
-  draw::text *t = check_agg_text (L, 1);
-  double a = luaL_checknumber (L, 2);
-  t->set_angle(a);
-  return 0;
-};
-
 static unsigned int double2uint8 (double x)
 {
   int u = x * 255.0;
@@ -385,12 +319,6 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);
-  lua_pop (L, 1);
-
-  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_TEXT));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, agg_text_methods);
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));

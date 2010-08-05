@@ -171,12 +171,6 @@ plot_window_free (lua_State *L)
 }
 
 int
-plot_window_index (lua_State *L)
-{
-  return mlua_index_with_properties (L, plot_window_properties_get, false);
-}
-
-int
 plot_window_add_gener (lua_State *L, bool as_line)
 {
   plot_window *p = plot_window::check(L, 1);
@@ -281,6 +275,12 @@ plot_window_units_get (lua_State *L)
   AGG_UNLOCK();
 
   return 1;
+}
+
+int
+plot_window_index (lua_State *L)
+{
+  return mlua_index_with_properties (L, plot_window_properties_get, false);
 }
 
 int

@@ -76,9 +76,9 @@ function demo2()
       local txt = text()
       local a = 2*pi*k/n - pi/2
       local ch = |t| t[(k % #t)+1]
-      txt:text('Hello world!')
-      txt:set_point(R*cos(a), R*sin(a))
-      txt:angle(a - pi)
+      txt.text = 'Hello world!'
+      txt:set(R*cos(a), R*sin(a))
+      txt.angle = a - pi
       p:add(txt, ch(color))
    end
    p:show()

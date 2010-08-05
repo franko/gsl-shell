@@ -48,6 +48,7 @@
 #include "window-refs.h"
 #include "object-refs.h"
 #include "lua-draw.h"
+#include "lua-text.h"
 #include "canvas-window.h"
 #include "plot-window.h"
 #endif
@@ -88,6 +89,7 @@ luaopen_gsl (lua_State *L)
   bspline_register (L);
 #ifdef AGG_PLOT_ENABLED
   draw_register (L);
+  text_register (L);
   canvas_window_register (L);
   plot_window_register (L);
 #endif
