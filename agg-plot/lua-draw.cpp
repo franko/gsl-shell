@@ -58,6 +58,10 @@ struct path_cmd_reg {
 static int agg_path_free      (lua_State *L);
 static int agg_path_index     (lua_State *L);
 
+static int agg_ellipse_new    (lua_State *L);
+static int agg_circle_new     (lua_State *L);
+static int agg_ellipse_free   (lua_State *L);
+
 static int agg_rgba_free      (lua_State *L);
 static int agg_rgba_add       (lua_State *L);
 static int agg_rgba_mul       (lua_State *L);
@@ -77,6 +81,8 @@ static struct path_cmd_reg cmd_table[] = {
 
 static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
+  {"ellipse",  agg_ellipse_new},
+  {"circle",   agg_circle_new},
   {"rgba",     agg_rgba_new},
   {"rgb",      agg_rgb_new},
   {NULL, NULL}
@@ -85,6 +91,12 @@ static const struct luaL_Reg draw_functions[] = {
 static const struct luaL_Reg agg_path_methods[] = {
   {"__index",     agg_path_index},
   {"__gc",        agg_path_free},
+  {NULL, NULL}
+};
+
+
+static const struct luaL_Reg agg_ellipse_methods[] = {
+  {"__gc",        agg_ellipse_free},
   {NULL, NULL}
 };
 
@@ -220,6 +232,38 @@ agg_path_index (lua_State *L)
   return 0;
 }
 
+int
+agg_ellipse_new (lua_State *L)
+{
+  draw::ellipse *vs = new(L, GS_DRAW_ELLIPSE) draw::ellipse();
+  double x = luaL_checknumber (L, 1);
+  double y = luaL_checknumber (L, 2);
+  double rx = luaL_checknumber (L, 3);
+  double ry = luaL_checknumber (L, 4);
+  vs->self().init(x, y, rx, ry, 0, false);
+  return 1;
+}
+
+int
+agg_circle_new (lua_State *L)
+{
+  draw::ellipse *vs = new(L, GS_DRAW_ELLIPSE) draw::ellipse();
+  double x = luaL_checknumber (L, 1);
+  double y = luaL_checknumber (L, 2);
+  double r = luaL_checknumber (L, 3);
+  vs->self().init(x, y, r, r, 0, false);
+  return 1;
+}
+
+int
+agg_ellipse_free (lua_State *L)
+{
+  typedef draw::ellipse ellipse_type;
+  ellipse_type *ellipse = (ellipse_type *) gs_check_userdata (L, 1, GS_DRAW_ELLIPSE);
+  ellipse->~ellipse_type();
+  return 0;
+}
+
 static unsigned int double2uint8 (double x)
 {
   int u = x * 255.0;
@@ -319,6 +363,10 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);
+  lua_pop (L, 1);
+
+  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_ELLIPSE));
+  luaL_register (L, NULL, agg_ellipse_methods);
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));

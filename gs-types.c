@@ -25,6 +25,7 @@ static int gs_type_string (lua_State *L);
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
+#define GS_DRAW_ELLIPSE_NAME_DEF   "GSL.ellipse"
 #define GS_DRAW_DRAWABLE_NAME_DEF NULL
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
@@ -57,6 +58,7 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(DRAW_PLOT, "plot"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),
   MY_EXPAND_DER(DRAW_PATH, "geometric line", DRAW_SCALABLE),
+  MY_EXPAND_DER(DRAW_ELLIPSE, "geometric ellipse", DRAW_SCALABLE),
   MY_EXPAND(DRAW_DRAWABLE, "window graphical object"),
   MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
   MY_EXPAND(RGBA_COLOR, "color"),

@@ -85,5 +85,29 @@ function demo2()
    return p
 end
 
+function demo3()
+   local n = 24
+   local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
+   local p = window('black')
+   local txt = text()
+   txt.text = 'Hello world!'
+
+   p:setview(-1, -1, 1, 1)
+
+   local N = 128
+   for j=0, N do
+      local th = 2*pi*j/N
+      txt.angle = th
+      p:clear()
+      for k=0, n-1 do
+	 local a = 2*pi*k/n - pi/2
+	 local ch = |t| t[(k % #t)+1]
+	 p:draw(txt, ch(color), {{'translate', x = 100*cos(a), y= 100*sin(a)}})
+      end
+      p:refresh()
+   end
+   return p
+end
+
 p1 = demo1()
 p2 = demo2()
