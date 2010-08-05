@@ -26,18 +26,28 @@ namespace draw {
 
   public:
     text(double size = 10.0, double width = 1.0):
-      m_matrix(), m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans)
+      m_matrix(), m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans),
+      m_x(0.0), m_y(0.0), m_angle(0.0)
     {
-      // m_text.start_point (0.0, 0.0);
+      m_stroke.width(width + 0.5);
+      m_stroke.line_cap(agg::round_cap);
+      m_stroke.line_join(agg::round_join);
+      m_text.size(size);
     };
 
     void set_angle(double th)
     {
       double c = cos(th), s = sin(th);
       m_matrix.sx  =  c;
-      m_matrix.shx =  s;
-      m_matrix.shy = -s;
+      m_matrix.shx = -s;
+      m_matrix.shy =  s;
       m_matrix.sy  =  c;
+    };
+
+    void set_point(double x, double y)
+    {
+      m_x = x;
+      m_y = y;
     };
 
     virtual void rewind(unsigned path_id);

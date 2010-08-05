@@ -27,6 +27,8 @@ namespace draw {
     m.transform(&x, &y);
 
     m_stroke.approximation_scale(as);
+
+    m_text.start_point (0.0, 0.0);
   }
 
   void

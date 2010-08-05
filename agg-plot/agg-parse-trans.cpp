@@ -290,16 +290,29 @@ parse_graph_args (lua_State *L)
       return NULL;
     }
 
-  scalable *s = check_agg_scalable (L, 2);
+  drawable *w;
 
-  if (narg > 4)
+  if (gs_is_userdata (L, 2, GS_DRAW_SCALABLE))
     {
-      s = parse_spec_pipeline<scalable_context> (L, 5, s);
-      lua_pop (L, 1);
-    }
-    
-  drawable *w = new window_scalable(s);
+      scalable *s = (scalable *) lua_touserdata (L, 2);
 
+      if (narg > 4)
+	{
+	  s = parse_spec_pipeline<scalable_context> (L, 5, s);
+	  lua_pop (L, 1);
+	}
+    
+      w = new window_scalable(s);
+    }
+  else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
+    {
+      w = (drawable *) lua_touserdata (L, 2);
+    }
+  else
+    {
+      gs_type_error (L, 2, "graphical object");
+    }
+      
   if (narg > 3)
     {
       w = parse_spec_pipeline<drawable_context> (L, 4, w);

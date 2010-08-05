@@ -61,7 +61,7 @@ static int agg_path_index     (lua_State *L);
 static int agg_text_free      (lua_State *L);
 static int agg_text_set_text  (lua_State *L);
 static int agg_text_set_point (lua_State *L);
-// static int agg_text_rotate    (lua_State *L);
+static int agg_text_angle     (lua_State *L);
 
 static int agg_rgba_free      (lua_State *L);
 static int agg_rgba_add       (lua_State *L);
@@ -105,8 +105,8 @@ static const struct luaL_Reg rgba_methods[] = {
 static const struct luaL_Reg agg_text_methods[] = {
   {"__gc",        agg_text_free},
   {"set_point",   agg_text_set_point},
-  {"set_text",    agg_text_set_text},
-  //  {"rotate",      agg_text_rotate},
+  {"text",        agg_text_set_text},
+  {"angle",       agg_text_angle},
   {NULL, NULL}
 };
 
@@ -234,27 +234,6 @@ agg_path_index (lua_State *L)
   return 0;
 }
 
-/* NB: for the moment we have only one kind of "scalable" object. */
-scalable *
-check_agg_scalable (lua_State *L, int index)
-{
-  int tplist[] = {GS_DRAW_PATH, GS_INVALID_TYPE};
-  void *p = NULL;
-  int j;
-
-  for (j = 0; tplist[j] != GS_INVALID_TYPE; j++)
-    {
-      p = gs_is_userdata (L, index, tplist[j]);
-      if (p)
-	break;
-    }
-
-  if (p == NULL)
-    gs_type_error (L, index, "drawing object");
-
-  return (scalable *) p;
-}
-
 draw::text *
 check_agg_text (lua_State *L, int index)
 {
@@ -294,20 +273,18 @@ agg_text_set_point (lua_State *L)
   draw::text *t = check_agg_text (L, 1);
   double x = luaL_checknumber (L, 2);
   double y = luaL_checknumber (L, 3);
-  t->self().start_point(x, y);
+  t->set_point(x, y);
   return 0;
 }
 
-/*
 int
-agg_text_rotate (lua_State *L)
+agg_text_angle (lua_State *L)
 {
   draw::text *t = check_agg_text (L, 1);
   double a = luaL_checknumber (L, 2);
-  t->rotate(a);
+  t->set_angle(a);
   return 0;
 };
-*/
 
 static unsigned int double2uint8 (double x)
 {

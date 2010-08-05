@@ -25,7 +25,9 @@ enum gs_type_e {
   GS_BSPLINE,
 #ifdef AGG_PLOT_ENABLED
   GS_DRAW_PLOT,
+  GS_DRAW_SCALABLE,
   GS_DRAW_PATH,
+  GS_DRAW_DRAWABLE,
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
   GS_CANVAS_WINDOW, /* derived types should be declared only after its

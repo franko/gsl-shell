@@ -23,7 +23,9 @@ static int gs_type_string (lua_State *L);
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
 #ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
+#define GS_DRAW_SCALABLE_NAME_DEF NULL
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
+#define GS_DRAW_DRAWABLE_NAME_DEF NULL
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
 #define GS_CANVAS_WINDOW_NAME_DEF  "GSL.canvas"
@@ -53,8 +55,10 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(BSPLINE, "B-spline"), 
 #ifdef AGG_PLOT_ENABLED
   MY_EXPAND(DRAW_PLOT, "plot"),
-  MY_EXPAND(DRAW_PATH, "geometric line"),
-  MY_EXPAND(DRAW_TEXT, "graphical text"),
+  MY_EXPAND(DRAW_SCALABLE, "graphical object"),
+  MY_EXPAND_DER(DRAW_PATH, "geometric line", DRAW_SCALABLE),
+  MY_EXPAND(DRAW_DRAWABLE, "window graphical object"),
+  MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
   MY_EXPAND(RGBA_COLOR, "color"),
   MY_EXPAND(CANVAS_WINDOW, "graphical window"),
   MY_EXPAND_DER(PLOT_WINDOW, "plot window", CANVAS_WINDOW),
@@ -97,6 +101,9 @@ userdata_full_name (lua_State *L, int index)
       for (j = 0; j < GS_INVALID_TYPE; j++)
 	{
 	  const char *mt = metatable_name (j);
+
+	  if (mt == NULL)
+	    continue;
 
 	  lua_getfield(L, LUA_REGISTRYINDEX, mt);
 	  if (lua_rawequal(L, -1, -2)) 
@@ -148,14 +155,16 @@ rec_check_type (lua_State *L, enum gs_type_e tp)
   const char *mt = metatable_name (tp);
   const struct gs_type *t;
 
-  lua_getfield(L, LUA_REGISTRYINDEX, mt);
-  if (lua_rawequal(L, -1, -2)) 
+  if (mt)
     {
+      lua_getfield(L, LUA_REGISTRYINDEX, mt);
+      if (lua_rawequal(L, -1, -2)) 
+	{
+	  lua_pop (L, 1);
+	  return true;
+	}
       lua_pop (L, 1);
-      return true;
     }
-
-  lua_pop (L, 1);
 
   /* we start to search from tp because we assume that derived type are
      follows base type in the table. */
