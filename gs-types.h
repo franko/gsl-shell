@@ -9,7 +9,9 @@ __BEGIN_DECLS
 #include <lauxlib.h>
 
 enum gs_type_e {
-  GS_MATRIX = 0,
+  GS_NO_TYPE = -1,
+  GS_MATRIX = 0, /* needs to start from zero because it is used as a 
+		    table index */
   GS_CMATRIX,
   GS_RNG,
   GS_NLINFIT,
@@ -26,8 +28,9 @@ enum gs_type_e {
   GS_DRAW_PATH,
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
+  GS_CANVAS_WINDOW, /* derived types should be declared only after its
+		       base class */
   GS_PLOT_WINDOW,
-  GS_CANVAS_WINDOW,
 #endif
   GS_INVALID_TYPE,
 };
@@ -41,7 +44,7 @@ struct gs_type {
   enum gs_type_e tp;
   const char * mt_name;
   const char * fullname;
-  const struct gs_type *derived_class;
+  enum gs_type_e base_type;
 };
 
 extern const char * full_type_name (lua_State *L, int narg);

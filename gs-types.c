@@ -35,8 +35,8 @@ static int gs_type_string (lua_State *L);
 #define MYCAT3x(a,b,c) a ## _ ## b ## _ ## c
 #define MYCAT3(a,b,c) MYCAT3x(a,b,c)
 
-#define MY_EXPAND(NM,DESCR) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, NULL}
-#define MY_EXPAND_DER(NM,DESCR,SUB) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, &gs_type_table[MYCAT2(GS,SUB)]}
+#define MY_EXPAND(NM,DESCR) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, GS_NO_TYPE}
+#define MY_EXPAND_DER(NM,DESCR,BASE) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, MYCAT2(GS,BASE)}
 
 const struct gs_type gs_type_table[] = {
   MY_EXPAND(MATRIX, "real matrix"),
@@ -56,9 +56,10 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(DRAW_PATH, "geometric line"),
   MY_EXPAND(DRAW_TEXT, "graphical text"),
   MY_EXPAND(RGBA_COLOR, "color"),
-  MY_EXPAND(PLOT_WINDOW, "plot window"),
-  MY_EXPAND_DER(CANVAS_WINDOW, "graphical window", PLOT_WINDOW),
+  MY_EXPAND(CANVAS_WINDOW, "graphical window"),
+  MY_EXPAND_DER(PLOT_WINDOW, "plot window", CANVAS_WINDOW),
 #endif
+  {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}
 };
 
 #undef MYCAT2
@@ -77,7 +78,6 @@ const char *
 type_qualified_name (int typeid)
 {
   const struct gs_type *tp = &gs_type_table[typeid];
-  /*  assert (typeid >= 0 && typeid < GS_INVALID_TYPE); */
   return tp->fullname;
 }
 
@@ -85,7 +85,6 @@ const char *
 metatable_name (int typeid)
 {
   const struct gs_type *tp = &gs_type_table[typeid];
-  /*  assert (typeid >= 0 && typeid < GS_INVALID_TYPE); */
   return tp->mt_name;
 }
 
@@ -143,6 +142,35 @@ gs_type_error (lua_State *L, int narg, const char *req_type)
   return luaL_argerror(L, narg, msg);
 }
 
+static bool
+rec_check_type (lua_State *L, enum gs_type_e tp)
+{
+  const char *mt = metatable_name (tp);
+  const struct gs_type *t;
+
+  lua_getfield(L, LUA_REGISTRYINDEX, mt);
+  if (lua_rawequal(L, -1, -2)) 
+    {
+      lua_pop (L, 1);
+      return true;
+    }
+
+  lua_pop (L, 1);
+
+  /* we start to search from tp because we assume that derived type are
+     follows base type in the table. */
+  for (t = &gs_type_table[tp]; t->tp != GS_INVALID_TYPE; t++)
+    {
+      if (t->base_type == tp)
+	{
+	  if (rec_check_type (L, t->tp))
+	    return true;
+	}
+    }
+
+  return false;
+}
+
 void *
 gs_is_userdata (lua_State *L, int index, int typeid)
 {
@@ -153,20 +181,10 @@ gs_is_userdata (lua_State *L, int index, int typeid)
 
   if (lua_getmetatable(L, index))
     {
-      const struct gs_type *inf;
-
-      for (inf = &gs_type_table[typeid]; inf != NULL; inf = inf->derived_class)
+      if (rec_check_type (L, typeid))
 	{
-	  const char *mt = metatable_name (inf->tp);
-
-	  lua_getfield(L, LUA_REGISTRYINDEX, mt);
-	  if (lua_rawequal(L, -1, -2)) 
-	    {
-	      lua_pop (L, 2);
-	      return p;
-	    }
-
 	  lua_pop (L, 1);
+	  return p;
 	}
     }
 
