@@ -146,9 +146,6 @@ plot_window_new (lua_State *L)
 {
   plot_window *p = new(L, GS_PLOT_WINDOW) plot_window();
 
-  lua_newtable (L);
-  lua_setfenv (L, -2);
-
   if (lua_isstring (L, 1))
     {
       const char *title = lua_tostring (L, 1);
@@ -186,7 +183,6 @@ plot_window_add_gener (lua_State *L, bool as_line)
 
   if (p->status == plot_window::running)
     {
-      p->on_draw_unprotected();
       p->plot_update();
     }
 
