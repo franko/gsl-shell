@@ -60,3 +60,20 @@ function demo3()
       p:refresh()
    end
 end
+
+function demo4()
+   local f = |t| exp(-0.1*t) * cos(t)
+   local x0, x1 = 0, 6*pi
+   local p = fxplot(f, x0, x1)
+   local N = 256
+   for j=0, N do
+      local x = x0 + j*(x1-x0)/256
+      local ln = fxline(f, x0, x)
+      ln:line_to(x, 0)
+      ln:line_to(0, 0)
+      ln:close()
+      p:clear()
+      p:draw(ln, 'yellow')
+      p:refresh()
+   end
+end
