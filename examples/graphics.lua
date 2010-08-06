@@ -50,7 +50,7 @@ function demo1()
    local a = path()
    local n = 12
    local t = {{}, {{'curve'}}, {{'stroke'}, {'curve'}}, 
-	      {{'stroke'}, {'dash'}, {'curve'}}}
+	      {{'stroke'}, {'dash', 6, 3}, {'curve'}}}
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = plot()
    local R = 120
@@ -109,5 +109,6 @@ function demo3()
    return p
 end
 
-p1 = demo1()
-p2 = demo2()
+print 'demo1() - path objects with bezier segments and various transformations'
+print 'demo2() - example of text object utilisation'
+print 'demo3() - example of animation with window and text object'

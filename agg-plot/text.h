@@ -21,6 +21,8 @@ namespace draw {
     vs_trans_text m_trans;
     vs_stroked_text m_stroke;
 
+    agg::pod_vector<char> m_text_buf;
+
     double m_x, m_y;
     double m_angle;
 
@@ -33,9 +35,13 @@ namespace draw {
   public:
     text(double size = 10.0, double width = 1.0):
       m_matrix(), m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans),
-      m_x(0.0), m_y(0.0), m_text_width(0.0), m_text_height(size),
+      m_text_buf(), m_x(0.0), m_y(0.0), m_angle(0.0), 
+      m_text_width(0.0), m_text_height(size),
       m_hjustif(0.0), m_vjustif(0.0)
     {
+      m_text_buf.capacity(32);
+      m_text_buf[0] = '\0';
+
       m_stroke.width(width + 0.5);
       m_stroke.line_cap(agg::round_cap);
       m_stroke.line_join(agg::round_join);
@@ -45,6 +51,8 @@ namespace draw {
     void angle(double th)
     {
       double c = cos(th), s = sin(th);
+      
+      m_angle = th;
 
       m_matrix.sx  =  c;
       m_matrix.shx = -s;
@@ -52,10 +60,21 @@ namespace draw {
       m_matrix.sy  =  c;
     };
 
+    double angle() const { return m_angle; };
+
     void set_text(const char *txt) 
-    { 
+    {
+      size_t len = strlen (txt);
+      m_text_buf.capacity(len+1);
+      memcpy (m_text_buf.data(), txt, len+1);
+
       m_text.text(txt);
       m_text_width = m_text.text_width();
+    };
+
+    const char * get_text() const
+    {
+      return m_text_buf.data();
     };
 
     void set_point(double x, double y)

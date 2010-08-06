@@ -21,6 +21,8 @@ static int agg_text_text_set   (lua_State *L);
 static int agg_text_angle_set  (lua_State *L);
 static int agg_text_justif_set (lua_State *L);
 
+static int agg_text_text_get   (lua_State *L);
+static int agg_text_angle_get  (lua_State *L);
 
 static draw::text* check_agg_text  (lua_State *L, int index);
 
@@ -34,17 +36,19 @@ static const struct luaL_Reg text_methods[] = {
   {"__index",     agg_text_index},
   {"__newindex",  agg_text_newindex},
   {"set",         agg_text_set_point},
+  {"justif",      agg_text_justif_set  },
   {NULL, NULL}
 };
 
 static const struct luaL_Reg text_properties_get[] = {
+  {"text",        agg_text_text_get  },
+  {"angle",       agg_text_angle_get  },
   {NULL, NULL}
 };
 
 static const struct luaL_Reg text_properties_set[] = {
   {"text",        agg_text_text_set  },
   {"angle",       agg_text_angle_set  },
-  {"justif",      agg_text_justif_set  },
   {NULL, NULL}
 };
 
@@ -88,6 +92,22 @@ agg_text_angle_set (lua_State *L)
   double th = luaL_checknumber (L, 2);
   t->angle(th);
   return 0;
+}
+
+int
+agg_text_angle_get (lua_State *L)
+{
+  draw::text *t = check_agg_text (L, 1);
+  lua_pushnumber (L, t->angle());
+  return 1;
+}
+
+int
+agg_text_text_get (lua_State *L)
+{
+  draw::text *t = check_agg_text (L, 1);
+  lua_pushstring (L, t->get_text());
+  return 1;
 }
 
 int

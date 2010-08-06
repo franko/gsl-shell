@@ -31,6 +31,7 @@
 #include "units.h"
 #include "resource-manager.h"
 
+#include "agg_array.h"
 #include "agg_vcgen_markers_term.h"
 #include "agg_conv_transform.h"
 #include "agg_color_rgba.h"
@@ -78,10 +79,13 @@ class plot {
   };
 
 public:
-  plot() : m_elements(), m_trans(), m_bbox_updated(true), m_use_units(true) {
-    m_title_size = 32;
-    m_title = new char[m_title_size];
-    m_title[0] = 0;
+  plot() : 
+    m_elements(), m_trans(), m_bbox_updated(true),
+    m_title_buf(), m_use_units(true)
+  {
+    m_title_buf.capacity(32);
+    m_title = m_title_buf.data();
+    m_title[0] = '\0';
   };
 
   ~plot() 
@@ -91,21 +95,13 @@ public:
 	container& d = m_elements[j];
 	resource_manager::dispose(d.vs);
       }
-
-    delete [] m_title;
   };
 
   void set_title(const char *text) {
     unsigned int len = strlen(text);
-
-    if (m_title_size < len + 1)
-      {
-	delete [] m_title;
-	m_title = new char[len+1];
-	m_title_size = len+1;
-      }
-
-    memcpy(m_title, text, len+1);
+    m_title_buf.resize(len+1);
+    m_title = m_title_buf.data();
+    memcpy (m_title, text, len+1);
   };
 
   const char *get_title() const { return m_title; };
@@ -149,8 +145,8 @@ private:
   double m_x1, m_y1;
   double m_x2, m_y2;
 
+  agg::pod_vector<char> m_title_buf;
   char *m_title;
-  unsigned int m_title_size;
 
   bool m_use_units;
   units m_ux, m_uy;

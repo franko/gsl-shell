@@ -1,6 +1,6 @@
 require 'draw'
 
-function c_generator(n, n_angle, len_frac, g)
+local function c_generator(n, n_angle, len_frac, g)
    local w, r, k = ilist(|| 0, n+1), #g
 
    local s = len_frac^n
@@ -26,7 +26,7 @@ function c_generator(n, n_angle, len_frac, g)
 	  end
 end
 
-function vonkoch(n)
+local function vonkoch(n)
    local p = plot('Von Koch\'s curve')
    local b = path()
    b:move_to (0, -0.05)
@@ -36,7 +36,7 @@ function vonkoch(n)
    return p
 end
 
-function levyc(n)
+local function levyc(n)
    local p = plot('Levy\'s C curve')
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
    p:addline(c, 'red', {}, {{'rotate', angle= -pi/4}})
@@ -45,6 +45,11 @@ function levyc(n)
    return p
 end
 
-p1 = vonkoch(5)
-p2 = levyc(7)
-p2.units = false
+demo1 = || vonkoch(5)
+demo2 = function() 
+	   local p = levyc(7)
+	   p.units = false
+	end
+
+print 'demo1() - Von Koch\'s curve'
+print 'demo2() - Levy\'s C curve'

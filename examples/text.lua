@@ -9,7 +9,7 @@ p:addline(ln, 'red', {{'dash', 7, 3}})
 
 t = text(12)
 t.text = 'Hello world!'
-t.justif = 'cc'
+t:justif('cc')
 t:set(2*pi, 0)
 
 local N = 128

@@ -38,13 +38,10 @@ function demo3()
    local x1 = 25
    local p = plot('rotating sine')
 
-   local box = path(-2*pi, -2*pi)
-   box:line_to(2*pi, -2*pi)
-   box:line_to(2*pi, 2*pi)
-   box:line_to(-2*pi, 2*pi)
-   box:close()
+   local e = ellipse(pi, 0, pi/2, pi/4)
 
-   p:addline(box, 'black')
+   p:addline(ellipse(0,0, 2*pi, 2*pi), 'black')
+--   p:addline(square(0,0, 4*pi), 'black')
    p.units = false
    p:show()
 
@@ -57,6 +54,9 @@ function demo3()
       p:stroke(ln, 'blue',   {}, {{'rotate', angle= angle + pi/2}})
       p:stroke(ln, 'green',  {}, {{'rotate', angle= angle + pi}})
       p:stroke(ln, 'yellow', {}, {{'rotate', angle= angle + 3*pi/2}})
+
+      p:stroke(e, 'red',    {}, {{'rotate', angle= angle}})
+
       p:refresh()
    end
 end

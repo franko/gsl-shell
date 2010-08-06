@@ -123,14 +123,11 @@ build_dash (lua_State *L, int specindex, typename context::base_type *obj)
 	  lua_pop (L, 1);
 
 	  lua_rawgeti (L, specindex, j+1);
-	  if (lua_isnumber (L, -1))
-	    {
-	      double b = lua_tonumber (L, -1);
-	      dash.add_dash(a, b);
-	      lua_pop (L,1);
-	    }
-	  else
-	    break;
+
+	  double b = (lua_isnumber (L, -1) ? lua_tonumber (L, -1) : a);
+
+	  dash.add_dash(a, b);
+	  lua_pop (L,1);
 	}
       else
 	break;
