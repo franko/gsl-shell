@@ -184,9 +184,13 @@ function demo3()
    pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
    pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
 
-   pl:addline(fxline(|x| f(p0, x), 0, xs(n)), 'red', {{'dash', a=7, b=3}})
+   pl:addline(fxline(|x| f(p0, x), 0, xs(n)), 'red', {{'dash', 7, 3, 3, 3}})
    pl:addline(fxline(fit, 0, xs(n)), 'red')
    pl:show()
 
    return pl
 end
+
+print 'demo1() - examples on non-linear fit of complex data'
+print 'demo2() - examples on non-linear fit of real data and plots'
+print 'demo3() - the same of demo2() using a slightly different approach'
