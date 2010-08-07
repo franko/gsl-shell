@@ -66,6 +66,7 @@ namespace agg
     XImage*              m_ximg_window;
     XSetWindowAttributes m_window_attributes;
     Atom                 m_close_atom;
+    Atom                 m_wm_protocols_atom;
     unsigned char*       m_buf_window;
     unsigned char*       m_buf_img[platform_support::max_images];
     unsigned             m_keymap[256];
@@ -97,6 +98,7 @@ namespace agg
     m_gc(0),
     m_ximg_window(0),
     m_close_atom(0),
+    m_wm_protocols_atom(0),
 
     m_buf_window(0),
         
@@ -217,7 +219,7 @@ namespace agg
  
     ev.xclient.type = ClientMessage;
     ev.xclient.window = m_window;
-    //    ev.xclient.message_type = XInternAtom(m_display, "WM_PROTOCOLS", true);
+    ev.xclient.message_type = m_wm_protocols_atom;
     ev.xclient.format = 32;
     ev.xclient.data.l[0] = m_close_atom; 
     ev.xclient.data.l[1] = CurrentTime;
@@ -648,6 +650,10 @@ namespace agg
     m_specific->m_close_atom = XInternAtom(m_specific->m_display, 
 					   "WM_DELETE_WINDOW", 
 					   false);
+
+    m_specific->m_wm_protocols_atom = XInternAtom(m_specific->m_display, 
+						  "WM_PROTOCOLS", 
+						  true);
 
     XSetWMProtocols(m_specific->m_display, 
 		    m_specific->m_window, 

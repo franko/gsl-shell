@@ -47,7 +47,7 @@ window_ref_close_all (lua_State *L)
   lua_pushnil (L);  /* first key */
   while (lua_next(L, -2) != 0) 
     {
-      lua_pushcfunction (L, canvas_window_close);
+      lua_pushcfunction (L, canvas_window_close_protected);
       lua_insert (L, -2);
       lua_call (L, 1, 0);
     }

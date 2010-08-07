@@ -47,9 +47,9 @@ static int canvas_window_stroke          (lua_State *L);
 static int canvas_window_clear         (lua_State *L);
 static int canvas_window_refresh       (lua_State *L);
 static int canvas_window_set_box_trans (lua_State *L);
+static int canvas_window_index_protected (lua_State *L);
 
 static void * canvas_thread_function        (void *_win);
-static int    canvas_window_index_protected (lua_State *L);
 static int    canvas_window_draw_gener      (lua_State *L, bool as_line);
 
 static const struct luaL_Reg canvas_win_functions[] = {
@@ -244,6 +244,17 @@ canvas_window_close (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
   win->close();
+  return 0;
+}
+
+int
+canvas_window_close_protected (lua_State *L)
+{
+  canvas_window *win = canvas_window::check (L, 1);
+  win->lock();
+  if (win->status == canvas_window::running)
+    win->close();
+  win->unlock();
   return 0;
 }
 
