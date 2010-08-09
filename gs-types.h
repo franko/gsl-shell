@@ -31,9 +31,9 @@ enum gs_type_e {
   GS_DRAW_DRAWABLE,
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
-  GS_CANVAS_WINDOW, /* derived types should be declared only after its
-		       base class */
-  GS_PLOT_WINDOW,
+  GS_CANVAS_WINDOW, /* derived types should be declared only after its base class */
+  GS_WINDOW,
+  GS_PLOT,
 #endif
   GS_INVALID_TYPE,
 };

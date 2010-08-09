@@ -79,7 +79,11 @@ public:
   void clear() { rb.clear(bg_color); };
 
   const agg::trans_affine& trans_matrix() const { return mtx; };
-  void scale(agg::trans_affine& m) const { trans_affine_compose (m, mtx); };
+
+  void premultiply(agg::trans_affine& m) const 
+  { 
+    trans_affine_compose (m, mtx); 
+  };
 
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)

@@ -5,6 +5,7 @@
 #include "drawable.h"
 #include "markers.h"
 #include "utils.h"
+#include "resource-manager.h"
 
 #include "agg_trans_affine.h"
 #include "agg_path_storage.h"
@@ -121,7 +122,7 @@ struct trans {
 
     ~marker() 
     { 
-      delete m_symbol; 
+      lua_management::dispose(m_symbol);
     };
 
     virtual void apply_transform(const agg::trans_affine& m, double as)

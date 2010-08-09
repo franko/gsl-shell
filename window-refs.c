@@ -31,6 +31,14 @@ window_ref_add(lua_State *L, int index)
 }
 
 void
+window_ref_get (lua_State *L, int id)
+{
+  lua_getfield (L, LUA_REGISTRYINDEX, window_ref_table_name);
+  lua_rawgeti (L, -1, id);
+  lua_remove (L, -2);
+}
+
+void
 window_ref_remove (lua_State *L, int id)
 {
   lua_getfield (L, LUA_REGISTRYINDEX, window_ref_table_name);

@@ -49,8 +49,8 @@
 #include "object-refs.h"
 #include "lua-draw.h"
 #include "lua-text.h"
-#include "canvas-window.h"
-#include "plot-window.h"
+#include "window.h"
+#include "lua-plot.h"
 #endif
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
@@ -90,8 +90,8 @@ luaopen_gsl (lua_State *L)
 #ifdef AGG_PLOT_ENABLED
   draw_register (L);
   text_register (L);
-  canvas_window_register (L);
-  plot_window_register (L);
+  window_register (L);
+  plot_register (L);
 #endif
 
 #ifdef LNUM_COMPLEX

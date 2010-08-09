@@ -21,10 +21,6 @@
 #ifndef AGGPLOT_CPLOT_H
 #define AGGPLOT_CPLOT_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
-
 #include "utils.h"
 #include "drawable.h"
 #include "canvas.h"
@@ -117,7 +113,7 @@ public:
     resource_manager::acquire(vs);
   };
 
-  void draw(canvas &canvas);
+  void draw(canvas &canvas, agg::trans_affine& m);
 
   void trans_matrix_update();
   void user_transform(agg::trans_affine& m)
@@ -127,9 +123,9 @@ public:
   };
 
 private:
-  void draw_elements(canvas &canvas);
-  void draw_title(canvas& canvas);
-  void draw_axis(canvas& can);
+  void draw_elements(canvas &canvas, agg::trans_affine& m);
+  void draw_title(canvas& canvas, agg::trans_affine& m);
+  void draw_axis(canvas& can, agg::trans_affine& m);
 
   void update_viewport_trans();
 
@@ -153,23 +149,24 @@ private:
 };
 
 template <class VS, class RM>
-void plot<VS,RM>::draw(canvas &canvas)
+void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   trans_matrix_update();
-  draw_title(canvas);
+  draw_title(canvas, canvas_mtx);
   if (m_use_units)
-    draw_axis(canvas);
-  draw_elements(canvas);
+    draw_axis(canvas, canvas_mtx);
+  draw_elements(canvas, canvas_mtx);
 };
 
 template <class VS, class RM>
-void plot<VS,RM>::draw_title(canvas &canvas)
+void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   double xt = 0.5, yt = 1;
 
   agg::trans_affine m;
   this->viewport_scale(m);
-  canvas.scale(m);
+  trans_affine_compose (m, canvas_mtx);
+  //  canvas.scale(m);
 
   agg::gsv_text title;
   agg::conv_stroke<agg::gsv_text> titlestroke(title);
@@ -191,11 +188,13 @@ void plot<VS,RM>::draw_title(canvas &canvas)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::draw_elements(canvas &canvas)
+void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
   viewport_scale(m);
-  canvas.scale(m);
+
+  trans_affine_compose (m, canvas_mtx);
+  //  canvas.scale(m);
 
   for (unsigned j = 0; j < m_elements.size(); j++)
     {
@@ -284,14 +283,15 @@ void plot<VS,RM>::calc_bounding_box()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::draw_axis(canvas &canvas)
+void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   typedef agg::path_storage path_type;
   typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
 
   agg::trans_affine m;
   this->viewport_scale(m);
-  canvas.scale(m);
+  trans_affine_compose (m, canvas_mtx);
+  //  canvas.scale(m);
 
   agg::path_storage mark;
   agg::conv_transform<path_type> mark_tr(mark, m);
