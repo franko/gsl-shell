@@ -58,6 +58,8 @@ GSH_SF_COMP(DD, hyperg, 0F1)
 GSH_SF_CUSTOM(hyperg1F1)
 GSH_SF_CUSTOM(hypergU)
 GSH_SF_COMP(DDDD, hyperg, 2F1)
+#ifdef LNUM_COMPLEX
 GSH_SF_CUSTOM(hyperg2F1conj)
+#endif
 
 GSH_SF_CUSTOM(zeta)
