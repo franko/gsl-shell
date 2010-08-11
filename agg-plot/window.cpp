@@ -11,12 +11,13 @@ extern "C" {
 #include "object-refs.h"
 #include "colors.h"
 #include "lua-plot-cpp.h"
+#include "split-spec-parser.h"
 
 __BEGIN_DECLS
 
 static int window_new        (lua_State *L);
 static int window_free       (lua_State *L);
-static int window_split3     (lua_State *L);
+static int window_split      (lua_State *L);
 static int window_attach     (lua_State *L);
 
 static const struct luaL_Reg window_functions[] = {
@@ -26,7 +27,7 @@ static const struct luaL_Reg window_functions[] = {
 
 static const struct luaL_Reg window_methods[] = {
   {"attach",         window_attach        },
-  {"split3",         window_split3        },
+  {"split",          window_split         },
   {"update",         window_update        },
   {"__gc",           window_free       },
   {NULL, NULL}
@@ -35,25 +36,35 @@ static const struct luaL_Reg window_methods[] = {
 __END_DECLS
 
 void
+window::draw_rec(split::node<plot_type*> *n)
+{
+  split::node<plot_type*>::list *ls;
+  for (ls = n->tree(); ls != NULL; ls = ls->next())
+    draw_rec(ls->content());
+
+  plot_type **p = n->content();
+  matrix* m = n->get_matrix();
+  if (p && m)
+    {
+      if (*p)
+	{
+	  agg::trans_affine mtx(*m);
+	  m_canvas->premultiply(mtx);
+	  (*p)->draw(*m_canvas, mtx);
+	}
+    }
+}
+
+void
 window::on_draw_unprotected()
 {
   if (! m_canvas)
     return;
 
-  m_canvas->clear();
-
-  pod_list<plot_matrix> *ls;
-
-  for (ls = m_plot_matrix; ls != NULL; ls = ls->next())
+  if (m_tree)
     {
-      plot_matrix& pm = ls->content();
-
-      if (pm.plot)
-	{
-	  agg::trans_affine mtx(pm.matrix);
-	  m_canvas->premultiply(mtx);
-	  pm.plot->draw(*m_canvas, mtx);
-	}
+      m_canvas->clear();
+      draw_rec(m_tree);
     }
 }
 
@@ -71,6 +82,7 @@ window::check (lua_State *L, int index)
   return (window *) gs_check_userdata (L, index, GS_WINDOW);
 }
 
+/*
 static void
 set_matrix(agg::trans_affine& m, double x, double y, double sx, double sy)
 {
@@ -80,37 +92,82 @@ set_matrix(agg::trans_affine& m, double x, double y, double sx, double sy)
   m.sy = sy;
 }
 
-void
-window::split3()
+typedef pod_list<plot_matrix> pm_list;
+
+pm_list * build_list(node *tree)
 {
-  plot_matrix empty(NULL);
+  pm_list *ls = NULL;
 
-  pod_list<plot_matrix> *p = new pod_list<plot_matrix>(empty);
-  set_matrix (p->content().matrix, 0.0, 0.5, 0.5, 0.5);
+  node_list *childs = tree->get_tree();
+  for ( ; childs != NULL; childs = childs->next())
+    {
+      pm_list *sub = build_list(childs->content());
+      ls = pm_list::push_back(ls, sub);
+    }
+  
+  matrix *m = tree->get_matrix();
+  if (m)
+    {
+      plot_matrix pm(NULL, *m);
+      ls = new pm_list(pm, ls);
+    }
 
-  p = new pod_list<plot_matrix>(empty, p);
-  set_matrix (p->content().matrix, 0.5, 0.5, 0.5, 0.5);
+  return ls;
+}
+*/
 
-  p = new pod_list<plot_matrix>(empty, p);
-  set_matrix (p->content().matrix, 0.0, 0.0, 1.0, 0.5);
+void
+window::split(const char *spec)
+{
+  split::string_lexer lexbuf(spec);
+  m_tree = split::parse<plot_type*, split::string_lexer>(lexbuf, (plot_type*) 0);
 
-  m_plot_matrix = p;
+  agg::trans_affine m;
+  m_tree->transform(m);
+}
+
+static const char *
+next_int (const char *str, int& val)
+{
+  while (*str == ' ')
+    str++;
+  if (*str == '\0')
+    return NULL;
+
+  char *eptr;
+  val = strtol (str, &eptr, 10);
+
+  if (eptr == str)
+    return NULL;
+
+  while (*eptr == ' ')
+    eptr++;
+  if (*eptr == ',')
+    eptr++;
+  return eptr;
 }
 
 bool
-window::attach(lua_plot *plot, int slot)
+window::attach(lua_plot *plot, const char *spec)
 {
-  pod_list<plot_matrix> *ls;
-  for (ls = m_plot_matrix; ls != NULL; ls = ls->next(), slot--)
+  split::node<plot_type*> *n = m_tree;
+  const char *ptr;
+  int k;
+
+  for (ptr = next_int (spec, k); ptr; ptr = next_int (ptr, k))
     {
-      if (slot == 0)
+      split::node<plot_type*>::list* list = n->tree();
+
+      if (! list)
 	break;
+
+      for (int j = 1; j < k && list; j++)
+	list = list->next();
+
+      n = list->content();
     }
 
-  if (! ls)
-    return false;
-
-  ls->content().plot = & plot->self();
+  n->content(& plot->self());
   return true;
 }
 
@@ -134,10 +191,11 @@ window_free (lua_State *L)
 
 
 int
-window_split3 (lua_State *L)
+window_split (lua_State *L)
 {
   window *win = window::check (L, 1);
-  win->split3();
+  const char *spec = luaL_checkstring (L, 2);
+  win->split(spec);
   return 0;
 }
 
@@ -146,11 +204,11 @@ window_attach (lua_State *L)
 {
   window *win = window::check (L, 1);
   lua_plot *plot = lua_plot::check (L, 2);
-  int slot = luaL_checkinteger (L, 3);
+  const char *spec = luaL_checkstring (L, 3);
 
   win->lock();
 
-  if (win->attach (plot, slot))
+  if (win->attach (plot, spec))
     {
       plot->id = win->id;
 

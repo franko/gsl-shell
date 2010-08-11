@@ -64,7 +64,7 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
   MY_EXPAND(RGBA_COLOR, "color"),
   MY_EXPAND(CANVAS_WINDOW, "bare graphical window"),
-  MY_EXPAND(WINDOW, "graphical window"),
+  MY_EXPAND_DER(WINDOW, "graphical window", CANVAS_WINDOW),
   MY_EXPAND(PLOT, "plot"),
 #endif
   {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}

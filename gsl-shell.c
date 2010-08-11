@@ -568,6 +568,9 @@ int main (int argc, char **argv) {
      graphical objects. */
   mlua_table_clear (L, LUA_GLOBALSINDEX);
   lua_gc (L, LUA_GCCOLLECT, 0);
+#warning UGLY HACKS
+  lua_gc (L, LUA_GCCOLLECT, 0);
+  lua_gc (L, LUA_GCCOLLECT, 0);
   lua_close(L);
 
   pthread_mutex_destroy (gsl_shell_mutex);

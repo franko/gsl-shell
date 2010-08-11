@@ -10,60 +10,28 @@ extern "C" {
 #include "plot.h"
 #include "drawable.h"
 
+#include "my_list.h"
+
 #include "agg_color_rgba.h"
 #include "agg_trans_affine.h"
-
-template <class T>
-class pod_list {
-  T m_content;
-  pod_list *m_next;
-
-public:
-  pod_list(const T& c, pod_list* next = NULL) : m_content(c), m_next(next) { };
-
-  void free_subtree()
-  {
-    if (m_next)
-      {
-	m_next->free_subtree();
-	delete m_next;
-      }
-  };
-
-        T& content()       { return m_content; };
-  const T& content() const { return m_content; };
-
-  pod_list *next() { return m_next; };
-
-  static void free(pod_list *list);
-};
-
-template <class T>
-void pod_list<T>::free(pod_list<T> *list)
-{
-  list->free_subtree();
-  delete list;
-}
+#include "split-spec-parser.h"
 
 class window : public canvas_window {
   typedef plot<drawable, lua_management> plot_type;
 
-  struct plot_matrix {
-    plot_type *plot;
-    agg::trans_affine matrix;
+  split::node<plot_type*>* m_tree;
 
-    plot_matrix(plot_type *p) : plot(p), matrix() {};
-  };
-
-  pod_list<plot_matrix> *m_plot_matrix;
+  void draw_rec(split::node<plot_type*> *n);
 
 public:
-  window(agg::rgba& bgcol) : canvas_window(bgcol), m_plot_matrix(NULL) {};
+  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) {};
+
+  ~window() { if (m_tree) delete m_tree; };
 
   static window *check (lua_State *L, int index);
 
-  void split3();
-  bool attach(lua_plot *plot, int slot);
+  void split(const char *spec);
+  bool attach(lua_plot *plot, const char *spec);
 
   void on_draw_unprotected();
   virtual void on_draw();
