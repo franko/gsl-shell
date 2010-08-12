@@ -30,16 +30,25 @@ class window : public canvas_window {
   split::node<ref>* m_tree;
 
   void draw_rec(split::node<ref> *n);
+  void cleanup_tree_rec (lua_State *L, int window_index, split::node<ref>* n);
 
 public:
-  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) {};
+  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) 
+  {
+    this->split("."); 
+  };
 
-  ~window() { if (m_tree) delete m_tree; };
+  ~window() { delete m_tree; };
 
   static window *check (lua_State *L, int index);
 
   void split(const char *spec);
   int attach(lua_plot *plot, const char *spec, int id);
+
+  void cleanup_refs(lua_State *L, int window_index)
+  {
+    cleanup_tree_rec (L, window_index, m_tree);
+  };
 
   void on_draw_unprotected();
   virtual void on_draw();

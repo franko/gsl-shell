@@ -36,6 +36,8 @@ static const struct luaL_Reg window_methods[] = {
 
 __END_DECLS
 
+static void remove_plot_ref (lua_State *L, int window_index, int plot_id);
+
 void
 window::draw_rec(split::node<ref> *n)
 {
@@ -63,8 +65,7 @@ window::on_draw_unprotected()
     return;
 
   m_canvas->clear();
-  if (m_tree)
-    draw_rec(m_tree);
+  draw_rec(m_tree);
 }
 
 void
@@ -82,8 +83,23 @@ window::check (lua_State *L, int index)
 }
 
 void
+window::cleanup_tree_rec (lua_State *L, int window_index, split::node<ref>* n)
+{
+  split::node<ref>::list *ls;
+  for (ls = n->tree(); ls != NULL; ls = ls->next())
+    cleanup_tree_rec(L, window_index, ls->content());
+
+  ref *ref = n->content();
+  if (ref->plot)
+    remove_plot_ref (L, window_index, ref->id);
+}
+
+void
 window::split(const char *spec)
 {
+  if (m_tree)
+    delete m_tree;
+
   split::string_lexer lexbuf(spec);
   m_tree = split::parse<ref, split::string_lexer>(lexbuf);
   split::node<ref>::init(m_tree);
@@ -143,6 +159,8 @@ int window::attach(lua_plot *plot, const char *spec, int id)
   ref new_ref(& plot->self(), id);
   n->content(new_ref);
 
+  /* NB: here ex_ref content will be the same of new_ref */
+
   return (ex_id > 0 ? ex_id : 0);
 }
 
@@ -170,8 +188,19 @@ window_split (lua_State *L)
 {
   window *win = window::check (L, 1);
   const char *spec = luaL_checkstring (L, 2);
+  win->cleanup_refs(L, 1);
   win->split(spec);
   return 0;
+}
+
+void 
+remove_plot_ref (lua_State *L, int window_index, int plot_id)
+{
+  object_index_get (L, OBJECT_PLOT, plot_id);
+
+  int plot_index = lua_gettop (L);
+  if (gs_is_userdata (L, plot_index, GS_PLOT))
+    object_ref_remove (L, window_index, plot_index);
 }
 
 int
@@ -197,12 +226,7 @@ window_attach (lua_State *L)
       object_ref_add (L, 1, 2);
 
       if (ex_plot_id > 0)
-	{
-	  object_index_get (L, OBJECT_PLOT, ex_plot_id);
-	  int plot_index = lua_gettop (L);
-	  if (gs_is_userdata (L, plot_index, GS_PLOT))
-	    object_ref_remove (L, 1, plot_index);
-	}
+	remove_plot_ref (L, 1, ex_plot_id);
     }
   else
     {
