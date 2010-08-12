@@ -48,8 +48,6 @@ class canvas {
 
   agg::rgba bg_color;
 
-  agg::trans_affine mtx;
-
   double m_width;
   double m_height;
 
@@ -65,7 +63,6 @@ public:
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
-    mtx.scale(width, height);
 #ifdef ENABLE_GAMMA_CORR
     prof.width(1.5);
 #else
@@ -77,13 +74,6 @@ public:
   double height() const { return m_height; };
 
   void clear() { rb.clear(bg_color); };
-
-  const agg::trans_affine& trans_matrix() const { return mtx; };
-
-  void premultiply(agg::trans_affine& m) const 
-  { 
-    trans_affine_compose (m, mtx); 
-  };
 
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)

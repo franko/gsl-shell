@@ -4,8 +4,6 @@
 #include "drawable.h"
 #include "utils.h"
 
-agg::trans_affine window_scalable::dummy_matrix;
-
 void
 window_scalable::apply_transform(const agg::trans_affine& m, double as)
 {

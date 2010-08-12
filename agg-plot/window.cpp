@@ -52,7 +52,7 @@ window::draw_rec(split::node<ref> *n)
       if (ref->plot)
 	{
 	  agg::trans_affine mtx(*m);
-	  m_canvas->premultiply(mtx);
+	  this->scale(mtx);
 	  ref->plot->draw(*m_canvas, mtx);
 	}
     }

@@ -2,6 +2,7 @@
 #define AGGPLOT_DRAWABLE_H
 
 #include "scalable.h"
+#include "utils.h"
 
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
@@ -23,13 +24,11 @@ struct drawable {
    transformation. */
 class window_scalable : public drawable
 {
-  static agg::trans_affine dummy_matrix;
-
   scalable *m_source;
   agg::conv_transform<scalable> m_trans;
   
 public:
-  window_scalable(scalable *src, agg::trans_affine& mtx = dummy_matrix) : 
+  window_scalable(scalable *src, agg::trans_affine& mtx = identity_matrix) : 
     drawable(), m_source(src), m_trans(*m_source, mtx)
   { };
 

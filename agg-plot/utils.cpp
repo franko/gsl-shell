@@ -7,6 +7,8 @@
 
 #include "utils.h"
 
+agg::trans_affine identity_matrix;
+
 void
 trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b)
 {

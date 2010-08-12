@@ -22,13 +22,7 @@ protected:
   canvas *m_canvas;
   agg::rgba m_bgcolor;
 
-  agg::trans_affine m_user_trans;
-
-  // This matrix cumulate the "user" transform plus the "window" transform.
-  // The "window" transform is stored inside the "canvas" class.
-  // This matrix could be calculated on the fly and is stored only for
-  // caching purpose.
-  agg::trans_affine m_trans;
+  agg::trans_affine m_matrix;
 
 public:
 
@@ -39,8 +33,7 @@ public:
 
   canvas_window(agg::rgba& bgcol) :
     agg::platform_support(agg::pix_format_bgr24, true), 
-    m_canvas(NULL), m_bgcolor(bgcol), m_user_trans(), m_trans(), 
-    id(-1), status(not_ready)
+    m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), id(-1), status(not_ready)
   { };
 
   virtual ~canvas_window() 
@@ -51,9 +44,6 @@ public:
 
   virtual void on_init();
   virtual void on_resize(int sx, int sy);
-  virtual void on_draw();
-
-  virtual void user_transform(agg::trans_affine& m);
 
   void lock() { platform_support_lock(this); };
   void unlock() { platform_support_unlock(this); };
@@ -75,21 +65,7 @@ public:
     return true;
   };
 
-  void set_user_transform(agg::trans_affine& mtx)
-  {
-    m_user_trans = mtx;
-  };
-
-  const agg::trans_affine& transform()
-  { 
-    if (m_canvas)
-      {
-	this->user_transform(m_trans);
-	trans_affine_compose (m_trans, m_canvas->trans_matrix());
-      }
-
-    return m_trans;
-  };
+  void scale (agg::trans_affine& m) { trans_affine_compose (m, m_matrix); };
  
   static canvas_window *check (lua_State *L, int index);
 };

@@ -166,7 +166,6 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
   agg::trans_affine m;
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
-  //  canvas.scale(m);
 
   agg::gsv_text title;
   agg::conv_stroke<agg::gsv_text> titlestroke(title);
@@ -194,7 +193,6 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
   viewport_scale(m);
 
   trans_affine_compose (m, canvas_mtx);
-  //  canvas.scale(m);
 
   for (unsigned j = 0; j < m_elements.size(); j++)
     {
@@ -291,7 +289,6 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   agg::trans_affine m;
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
-  //  canvas.scale(m);
 
   agg::path_storage mark;
   agg::conv_transform<path_type> mark_tr(mark, m);

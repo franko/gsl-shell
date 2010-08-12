@@ -42,15 +42,8 @@ __BEGIN_DECLS
 
 static int canvas_window_new           (lua_State *L);
 static int canvas_window_free          (lua_State *L);
-static int canvas_window_draw          (lua_State *L);
-static int canvas_window_stroke          (lua_State *L);
-static int canvas_window_clear         (lua_State *L);
-static int canvas_window_refresh       (lua_State *L);
-static int canvas_window_set_box_trans (lua_State *L);
-static int canvas_window_index_protected (lua_State *L);
 
 static void * canvas_thread_function        (void *_win);
-static int    canvas_window_draw_gener      (lua_State *L, bool as_line);
 
 static const struct luaL_Reg canvas_win_functions[] = {
   {"window",       canvas_window_new},
@@ -59,28 +52,10 @@ static const struct luaL_Reg canvas_win_functions[] = {
 
 static const struct luaL_Reg canvas_window_methods[] = {
   {"__gc",         canvas_window_free},
-  {"__index",      canvas_window_index},
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg canvas_window_methods_protected[] = {
-  {"draw",         canvas_window_draw},
-  {"stroke",       canvas_window_stroke},
-  {"clear",        canvas_window_clear},
-  {"refresh",      canvas_window_refresh},
-  {"setview",      canvas_window_set_box_trans},
-  {"close",        canvas_window_close},
   {NULL, NULL}
 };
 
 __END_DECLS
-
-void
-canvas_window::on_draw()
-{
-  if (m_canvas) 
-    m_canvas->clear();
-}
 
 void
 canvas_window::on_resize(int sx, int sy)
@@ -89,18 +64,15 @@ canvas_window::on_resize(int sx, int sy)
     delete m_canvas;
 
   m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
+  
+  m_matrix.sx = sx;
+  m_matrix.sy = sy;
 }
 
 void
 canvas_window::on_init()
 {
   this->on_resize(width(), height());
-}
-
-void
-canvas_window::user_transform(agg::trans_affine& m)
-{
-  m = m_user_trans;
 }
 
 void
@@ -192,62 +164,6 @@ canvas_window_free (lua_State *L)
 }
 
 int
-canvas_window_draw_gener (lua_State *L, bool as_line)
-{
-  canvas_window *win = canvas_window::check (L, 1);
-  drawable *obj = parse_graph_args (L);
-  agg::rgba8 *color = check_color_rgba8 (L, 3);
-
-  const agg::trans_affine& mtx = win->transform();
-  obj->apply_transform(mtx, 1.0);
-
-  bool success = win->draw(obj, color, as_line);
-
-  lua_management::dispose(obj);
-
-  if (! success)
-    return luaL_error (L, "canvas not ready");
-
-  return 0;
-}
-
-int
-canvas_window_draw (lua_State *L)
-{
-  return canvas_window_draw_gener (L, false);
-}
-
-int
-canvas_window_stroke (lua_State *L)
-{
-  return canvas_window_draw_gener (L, true);
-}
-
-int
-canvas_window_clear (lua_State *L)
-{
-  canvas_window *win = canvas_window::check (L, 1);
-  win->on_draw();
-  return 0;
-}
-
-int
-canvas_window_refresh (lua_State *L)
-{
-  canvas_window *win = canvas_window::check (L, 1);
-  win->update_window();
-  return 0;
-}
-
-int
-canvas_window_close (lua_State *L)
-{
-  canvas_window *win = canvas_window::check (L, 1);
-  win->close();
-  return 0;
-}
-
-int
 canvas_window_close_protected (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
@@ -255,76 +171,6 @@ canvas_window_close_protected (lua_State *L)
   if (win->status == canvas_window::running)
     win->close();
   win->unlock();
-  return 0;
-}
-
-int
-canvas_window_index_protected (lua_State *L)
-{
-  canvas_window *win = canvas_window::check(L, lua_upvalueindex(2));
-
-  win->lock();
-
-  if (win->status != canvas_window::running)
-    {
-      win->unlock();
-      return luaL_error (L, "window is not active");
-    }
-
-  int narg = lua_gettop (L);
-
-  lua_pushvalue (L, lua_upvalueindex(1));
-  lua_insert (L, 1);
-
-  if (lua_pcall (L, narg, LUA_MULTRET, 0) != 0)
-    {
-      win->unlock();
-      return lua_error (L);
-    }
-
-  win->unlock();
-  return lua_gettop (L);
-}
-
-int
-canvas_window_index (lua_State *L)
-{
-  const char *key = luaL_checkstring (L, 2);
-
-  const struct luaL_Reg *r = mlua_find_method (canvas_window_methods, key);
-  if (r)
-    {
-      lua_pushcfunction (L, r->func);
-      return 1;
-    }
-
-  r = mlua_find_method (canvas_window_methods_protected, key);
-  if (r)
-    {
-      lua_pushcfunction (L, r->func);
-      lua_pushvalue (L, 1);
-      lua_pushcclosure (L, canvas_window_index_protected, 2);
-      return 1;
-    }
-
-  return 0;
-}
-
-int
-canvas_window_set_box_trans (lua_State *L)
-{
-  canvas_window *win = canvas_window::check(L, 1);
-  double x0 = luaL_checknumber (L, 2);
-  double y0 = luaL_checknumber (L, 3);
-  double x1 = luaL_checknumber (L, 4);
-  double y1 = luaL_checknumber (L, 5);
-
-  double sx = 1/(x1 - x0), sy = 1/(y1 - y0);
-  double bx = -x0*sx, by = -y0*sy;
-
-  agg::trans_affine mtx(sx, 0.0, 0.0, sy, bx, by);
-  win->set_user_transform(mtx);
-
   return 0;
 }
 
