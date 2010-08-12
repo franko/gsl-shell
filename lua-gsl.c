@@ -45,7 +45,7 @@
 #include "bspline.h"
 
 #ifdef AGG_PLOT_ENABLED
-#include "window-refs.h"
+#include "object-index.h"
 #include "object-refs.h"
 #include "lua-draw.h"
 #include "lua-text.h"
@@ -61,7 +61,7 @@ luaopen_gsl (lua_State *L)
   gsl_set_error_handler_off ();
 
 #ifdef AGG_PLOT_ENABLED
-  window_ref_prepare (L);
+  object_index_prepare (L);
   object_ref_prepare (L);
 #endif
 

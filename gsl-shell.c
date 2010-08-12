@@ -62,7 +62,8 @@
 #include "gsl-shell.h"
 #include "lua-gsl.h"
 #include "lua-utils.h"
-#include "window-refs.h"
+#include "object-index.h"
+#include "canvas-window.h"
 
 #define report error_report
 
@@ -338,14 +339,14 @@ static void do_windows_unref (lua_State *L)
   GSL_SHELL_LOCK();
 
   for (j = 0; j < unref_fixed_count; j++)
-    window_ref_remove (L, unref_fixed_list[j]);
+    object_index_remove (L, OBJECT_WINDOW, unref_fixed_list[j]);
 
   unref_fixed_count = 0;
 
   for (wu = window_unref_list; wu != NULL; /* */)
     {
       struct window_unref_cell *nxt = wu->next;
-      window_ref_remove (L, wu->id);
+      object_index_remove (L, OBJECT_WINDOW, wu->id);
       free (wu);
       wu = nxt;
     }
@@ -381,11 +382,11 @@ static void dotty (lua_State *L) {
       do_windows_unref (L);
     }
 
-  window_ref_close_all (L);
+  object_index_apply_all (L, OBJECT_WINDOW, canvas_window_close_protected);
 
   do {
     do_windows_unref (L);
-  } while (window_ref_count (L) > 0);
+  } while (object_index_count (L, OBJECT_WINDOW) > 0);
   
   lua_settop(L, 0);  /* clear stack */
 

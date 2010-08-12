@@ -31,7 +31,7 @@ extern "C" {
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
-#include "window-refs.h"
+#include "object-index.h"
 #include "lua-draw.h"
 #include "gs-types.h"
 #include "colors.h"
@@ -109,7 +109,7 @@ canvas_window::start_new_thread (lua_State *L)
   if (status != not_ready && status != closed)
     return;
 
-  this->id = window_ref_add (L, lua_gettop (L));
+  this->id = object_index_add (L, OBJECT_WINDOW, -1);
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -121,7 +121,7 @@ canvas_window::start_new_thread (lua_State *L)
     
   if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
     {
-      window_ref_remove (L, this->id);
+      object_index_remove (L, OBJECT_WINDOW, this->id);
 
       pthread_attr_destroy (attr);
       this->status = canvas_window::error; 

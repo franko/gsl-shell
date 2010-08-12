@@ -19,9 +19,17 @@ extern "C" {
 class window : public canvas_window {
   typedef plot<drawable, lua_management> plot_type;
 
-  split::node<plot_type*>* m_tree;
+  struct ref {
+    plot_type *plot;
+    int id;
 
-  void draw_rec(split::node<plot_type*> *n);
+    ref() : plot(0), id(-1) {};
+    ref(plot_type *p, int _id) : plot(p), id(_id) {};
+  };
+
+  split::node<ref>* m_tree;
+
+  void draw_rec(split::node<ref> *n);
 
 public:
   window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) {};
@@ -31,7 +39,7 @@ public:
   static window *check (lua_State *L, int index);
 
   void split(const char *spec);
-  bool attach(lua_plot *plot, const char *spec);
+  int attach(lua_plot *plot, const char *spec, int id);
 
   void on_draw_unprotected();
   virtual void on_draw();

@@ -9,6 +9,7 @@ extern "C" {
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
 #include "object-refs.h"
+#include "object-index.h"
 #include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-spec-parser.h"
@@ -36,21 +37,21 @@ static const struct luaL_Reg window_methods[] = {
 __END_DECLS
 
 void
-window::draw_rec(split::node<plot_type*> *n)
+window::draw_rec(split::node<ref> *n)
 {
-  split::node<plot_type*>::list *ls;
+  split::node<ref>::list *ls;
   for (ls = n->tree(); ls != NULL; ls = ls->next())
     draw_rec(ls->content());
 
-  plot_type **p = n->content();
+  ref *ref = n->content();
   matrix* m = n->get_matrix();
-  if (p && m)
+  if (ref && m)
     {
-      if (*p)
+      if (ref->plot)
 	{
 	  agg::trans_affine mtx(*m);
 	  m_canvas->premultiply(mtx);
-	  (*p)->draw(*m_canvas, mtx);
+	  ref->plot->draw(*m_canvas, mtx);
 	}
     }
 }
@@ -61,11 +62,9 @@ window::on_draw_unprotected()
   if (! m_canvas)
     return;
 
+  m_canvas->clear();
   if (m_tree)
-    {
-      m_canvas->clear();
-      draw_rec(m_tree);
-    }
+    draw_rec(m_tree);
 }
 
 void
@@ -82,48 +81,12 @@ window::check (lua_State *L, int index)
   return (window *) gs_check_userdata (L, index, GS_WINDOW);
 }
 
-/*
-static void
-set_matrix(agg::trans_affine& m, double x, double y, double sx, double sy)
-{
-  m.tx = x;
-  m.ty = y;
-  m.sx = sx;
-  m.sy = sy;
-}
-
-typedef pod_list<plot_matrix> pm_list;
-
-pm_list * build_list(node *tree)
-{
-  pm_list *ls = NULL;
-
-  node_list *childs = tree->get_tree();
-  for ( ; childs != NULL; childs = childs->next())
-    {
-      pm_list *sub = build_list(childs->content());
-      ls = pm_list::push_back(ls, sub);
-    }
-  
-  matrix *m = tree->get_matrix();
-  if (m)
-    {
-      plot_matrix pm(NULL, *m);
-      ls = new pm_list(pm, ls);
-    }
-
-  return ls;
-}
-*/
-
 void
 window::split(const char *spec)
 {
   split::string_lexer lexbuf(spec);
-  m_tree = split::parse<plot_type*, split::string_lexer>(lexbuf, (plot_type*) 0);
-
-  agg::trans_affine m;
-  m_tree->transform(m);
+  m_tree = split::parse<ref, split::string_lexer>(lexbuf);
+  split::node<ref>::init(m_tree);
 }
 
 static const char *
@@ -147,28 +110,40 @@ next_int (const char *str, int& val)
   return eptr;
 }
 
-bool
-window::attach(lua_plot *plot, const char *spec)
+/* Returns the existing plot ref id, 0 if there isn't any.
+   It does return -1 in case of error.*/
+int window::attach(lua_plot *plot, const char *spec, int id)
 {
-  split::node<plot_type*> *n = m_tree;
+  split::node<ref> *n = m_tree;
   const char *ptr;
   int k;
 
   for (ptr = next_int (spec, k); ptr; ptr = next_int (ptr, k))
     {
-      split::node<plot_type*>::list* list = n->tree();
+      split::node<ref>::list* list = n->tree();
 
       if (! list)
-	break;
+	return -1;
 
-      for (int j = 1; j < k && list; j++)
-	list = list->next();
+      for (int j = 1; j < k; j++)
+	{
+	  list = list->next();
+	  if (! list)
+	    return -1;
+	}
 
       n = list->content();
     }
 
-  n->content(& plot->self());
-  return true;
+  ref* ex_ref = n->content();
+  if (! ex_ref)
+    return -1;
+  int ex_id = ex_ref->id;
+
+  ref new_ref(& plot->self(), id);
+  n->content(new_ref);
+
+  return (ex_id > 0 ? ex_id : 0);
 }
 
 int
@@ -208,9 +183,11 @@ window_attach (lua_State *L)
 
   win->lock();
 
-  if (win->attach (plot, spec))
+  int ex_plot_id = win->attach (plot, spec, plot->id);
+
+  if (ex_plot_id >= 0)
     {
-      plot->id = win->id;
+      plot->window_id = win->id;
 
       win->on_draw();
       win->update_window();
@@ -218,6 +195,14 @@ window_attach (lua_State *L)
       win->unlock();
 
       object_ref_add (L, 1, 2);
+
+      if (ex_plot_id > 0)
+	{
+	  object_index_get (L, OBJECT_PLOT, ex_plot_id);
+	  int plot_index = lua_gettop (L);
+	  if (gs_is_userdata (L, plot_index, GS_PLOT))
+	    object_ref_remove (L, 1, plot_index);
+	}
     }
   else
     {

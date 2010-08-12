@@ -25,7 +25,7 @@ extern "C" {
 
 #include "lua-plot.h"
 #include "lua-plot-cpp.h"
-#include "window-refs.h"
+#include "object-index.h"
 #include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
@@ -94,7 +94,7 @@ lua_plot::check(lua_State *L, int index)
 void
 lua_plot::update_window(lua_State *L)
 {
-  window_ref_get (L, this->id);
+  object_index_get (L, OBJECT_WINDOW, this->window_id);
 
   if (gs_is_userdata (L, lua_gettop (L), GS_WINDOW))
     {
@@ -119,6 +119,8 @@ plot_new (lua_State *L)
       if (title)
 	p->self().set_title(title);
     }
+
+  p->id = object_index_add (L, OBJECT_PLOT, -1);
 
   return 1;
 }

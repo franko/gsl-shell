@@ -12,19 +12,28 @@ enum direction_e { along_x, along_y };
 namespace split {
 
   template <class base_type>
-  class node {
-  public:
+  struct node {
     typedef pod_list<node*> list;
+
+    virtual void transform(matrix& m) = 0;
 
     virtual list* tree() { return 0; };
     virtual base_type* content() { return 0; };
     virtual void content(const base_type& src) { };
 
-    virtual void transform(matrix& m) = 0;
     virtual matrix* get_matrix() { return 0; };
 
     virtual ~node() {};
+
+    static void init(node* tree);
   };
+
+  template <class base_type>
+  void node<base_type>::init(node<base_type>* tree)
+  {
+    matrix m;
+    tree->transform(m);
+  }
 
   template <class base_type>
   class node_leaf : public node<base_type> {
@@ -32,7 +41,7 @@ namespace split {
     matrix m_matrix;
 
   public:
-    node_leaf(const base_type& src) : m_content(src), m_matrix() {};
+    node_leaf() : m_content(), m_matrix() {};
 
     virtual base_type* content() { return &m_content; };
     virtual void content(const base_type& src) { m_content = src; };
@@ -116,17 +125,17 @@ namespace split {
   };
 
   template <class base_type, class lexer>
-  extern node<base_type>* parse (lexer& lex, const base_type& seed);
+  extern node<base_type>* parse (lexer& lex);
 
   template <class base_type, class lexer>
-  node<base_type>* subtree (lexer& lex, const base_type& seed, direction_e dir)
+  node<base_type>* subtree (lexer& lex, direction_e dir)
   {
     node_tree<base_type> * ls = new node_tree<base_type>(dir);
 
     int c;
     for (c = 0; ; c++)
       {
-	node<base_type>* child = parse<base_type, lexer>(lex, seed);
+	node<base_type>* child = parse<base_type, lexer>(lex);
 	if (! child)
 	  break;
 	ls->add(child);
@@ -138,25 +147,23 @@ namespace split {
   }
 
   template <class base_type, class lexer>
-  node<base_type>* parse (lexer& lex, const base_type& seed)
+  node<base_type>* parse (lexer& lex)
   {
     char t = lex.next();
 
     switch (t)
       {
       case '.':
-	return new node_leaf<base_type>(seed);
+	return new node_leaf<base_type>();
       case 'h':
-	return subtree<base_type, lexer>(lex, seed, along_x);
+	return subtree<base_type, lexer>(lex, along_x);
       case 'v':
-	return subtree<base_type, lexer>(lex, seed, along_y);
+	return subtree<base_type, lexer>(lex, along_y);
       case '(':
 	{
-	  node<base_type> *nd = parse<base_type, lexer>(lex, seed);
-
+	  node<base_type> *nd = parse<base_type, lexer>(lex);
 	  if (! lex.checknext(')'))
 	    return NULL;
-
 	  return nd;
 	}
       case ')':
