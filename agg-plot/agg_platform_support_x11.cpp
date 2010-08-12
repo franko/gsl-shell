@@ -34,7 +34,7 @@
 #include <pthread.h>
 #include "agg_basics.h"
 #include "util/agg_color_conv_rgb8.h"
-#include "platform/agg_platform_support.h"
+#include "platform_support_ext.h"
 
 
 namespace agg

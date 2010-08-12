@@ -1,7 +1,7 @@
 #ifndef CANVAS_WINDOW_CPP_H
 #define CANVAS_WINDOW_CPP_H
 
-#include "platform/agg_platform_support.h"
+#include "platform_support_ext.h"
 #include "agg_trans_affine.h"
 #include "agg_color_rgba.h"
 
@@ -10,12 +10,6 @@
 #include "drawable.h"
 #include "canvas.h"
 #include "utils.h"
-
-extern void platform_support_prepare      ();
-extern void platform_support_lock         (agg::platform_support *app);
-extern void platform_support_unlock       (agg::platform_support *app);
-extern bool platform_support_is_mapped    (agg::platform_support *app);
-extern void platform_support_close_window (agg::platform_support *app);
 
 class canvas_window : public agg::platform_support {
 protected:

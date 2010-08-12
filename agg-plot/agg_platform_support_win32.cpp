@@ -25,7 +25,7 @@
 #include <windows.h>
 #include <string.h>
 #include <pthread.h>
-#include "platform/agg_platform_support.h"
+#include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "util/agg_color_conv_rgb16.h"
