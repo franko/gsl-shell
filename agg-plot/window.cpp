@@ -90,8 +90,11 @@ window::cleanup_tree_rec (lua_State *L, int window_index, split::node<ref>* n)
     cleanup_tree_rec(L, window_index, ls->content());
 
   ref *ref = n->content();
-  if (ref->plot)
-    remove_plot_ref (L, window_index, ref->id);
+  if (ref)
+    {
+      if (ref->plot)
+	remove_plot_ref (L, window_index, ref->id);
+    }
 }
 
 void
@@ -168,9 +171,7 @@ int
 window_new (lua_State *L)
 {
   window *win = new(L, GS_WINDOW) window(colors::white);
-
   win->start_new_thread (L);
-
   return 1;
 }
 
@@ -188,8 +189,16 @@ window_split (lua_State *L)
 {
   window *win = window::check (L, 1);
   const char *spec = luaL_checkstring (L, 2);
+
+  win->lock();
+
   win->cleanup_refs(L, 1);
   win->split(spec);
+
+  win->on_draw();
+  win->update_window();
+
+  win->unlock();
   return 0;
 }
 
@@ -242,8 +251,10 @@ window_update_unprotected (lua_State *L)
 {
   window *win = window::check (L, 1);
 
+  win->lock();
   win->on_draw_unprotected();
   win->update_window();
+  win->unlock();
 
   return 0;
 }
@@ -253,10 +264,10 @@ window_update (lua_State *L)
 {
   window *win = window::check (L, 1);
 
-  AGG_LOCK();
-  win->on_draw_unprotected();
+  win->lock();
+  win->on_draw();
   win->update_window();
-  AGG_UNLOCK();
+  win->unlock();
 
   return 0;
 }
