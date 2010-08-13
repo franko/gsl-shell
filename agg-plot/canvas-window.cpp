@@ -91,6 +91,8 @@ canvas_window::start_new_thread (lua_State *L)
 
   this->lock();
     
+  this->status = canvas_window::starting;
+
   if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
     {
       object_index_remove (L, OBJECT_WINDOW, this->id);
@@ -102,7 +104,6 @@ canvas_window::start_new_thread (lua_State *L)
     }
 
   pthread_attr_destroy (attr);
-  this->status = canvas_window::starting;
 }
 
 void *
