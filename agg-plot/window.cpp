@@ -102,7 +102,6 @@ window::split(const char *spec)
 {
   if (m_tree)
     delete m_tree;
-
   split::string_lexer lexbuf(spec);
   m_tree = split::parse<ref, split::string_lexer>(lexbuf);
   split::node<ref>::init(m_tree);

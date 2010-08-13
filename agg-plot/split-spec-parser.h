@@ -53,6 +53,7 @@ namespace split {
 
   template <class base_type>
   class node_tree : public node<base_type> {
+
     typedef typename node<base_type>::list node_list;
 
     node_list *m_head;
@@ -62,7 +63,16 @@ namespace split {
   public:
     node_tree(direction_e dir) : m_head(0), m_dir(dir) {};
   
-    ~node_tree() { node_list::free(m_head); };
+    ~node_tree()
+    {
+      node_list *n;
+      for (node_list *p = m_head; p; p = n)
+	{
+	  n = p->next();
+	  delete p->content();
+	  delete p;
+	}
+    };
 
     virtual node_list* tree() { return m_head; };
 

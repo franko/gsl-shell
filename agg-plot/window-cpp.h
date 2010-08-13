@@ -27,10 +27,13 @@ class window : public canvas_window {
     ref(plot_type *p, int _id) : plot(p), id(_id) {};
   };
 
-  split::node<ref>* m_tree;
+  typedef split::node<ref> node_type;
+  typedef split::node<ref>::list list_type;
 
-  void draw_rec(split::node<ref> *n);
-  void cleanup_tree_rec (lua_State *L, int window_index, split::node<ref>* n);
+  node_type* m_tree;
+
+  void draw_rec(node_type *n);
+  void cleanup_tree_rec (lua_State *L, int window_index, node_type* n);
 
 public:
   window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) 
@@ -38,7 +41,7 @@ public:
     this->split("."); 
   };
 
-  ~window() { delete m_tree; };
+  ~window() { if (m_tree) delete m_tree; };
 
   static window *check (lua_State *L, int index);
 

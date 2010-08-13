@@ -1,26 +1,13 @@
 #ifndef AGGPLOT_LIST_H
 #define AGGPLOT_LIST_H
 
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
 template <class T>
 class pod_list {
   T m_content;
   pod_list *m_next;
 
 public:
-  pod_list(const T& c, pod_list* next = NULL) : m_content(c), m_next(next) { };
-
-  void free_subtree()
-  {
-    if (m_next)
-      {
-	m_next->free_subtree();
-	delete m_next;
-      }
-  };
+  pod_list(const T& c, pod_list* next = 0) : m_content(c), m_next(next) { };
 
         T& content()       { return m_content; };
   const T& content() const { return m_content; };
@@ -47,10 +34,11 @@ public:
 template <class T>
 void pod_list<T>::free(pod_list<T> *list)
 {
-  if (list)
+  pod_list<T> *p, *n;
+  for (p = list; p; p = n)
     {
-      list->free_subtree();
-      delete list;
+      n = p->m_next;
+      delete p;
     }
 }
 
