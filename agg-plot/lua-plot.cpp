@@ -94,13 +94,17 @@ lua_plot::check(lua_State *L, int index)
 void
 lua_plot::update_window(lua_State *L)
 {
+  if (this->window_id <= 0)
+    return;
+
   object_index_get (L, OBJECT_WINDOW, this->window_id);
 
   if (gs_is_userdata (L, lua_gettop (L), GS_WINDOW))
     {
-      lua_pushcfunction (L, window_update_unprotected);
+      lua_pushcfunction (L, window_slot_update_unprotected);
       lua_insert (L, -2);
-      lua_call (L, 1, 0);
+      lua_pushinteger (L, this->slot_id);
+      lua_call (L, 2, 0);
     }
   else
     {

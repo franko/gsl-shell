@@ -28,6 +28,8 @@ public:
   static lua_plot *check(lua_State *L, int index);
 
   int window_id;
+  int slot_id;
+
   int id;
 };
 

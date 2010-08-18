@@ -14,27 +14,39 @@ extern "C" {
 
 #include "agg_color_rgba.h"
 #include "agg_trans_affine.h"
-#include "split-spec-parser.h"
+#include "split-parser.h"
 
 class window : public canvas_window {
+public:
   typedef plot<drawable, lua_management> plot_type;
 
-  struct ref {
-    plot_type *plot;
-    int id;
+  typedef agg::trans_affine bmatrix;
 
-    ref() : plot(0), id(-1) {};
-    ref(plot_type *p, int _id) : plot(p), id(_id) {};
+  struct ref {
+    typedef tree::node<ref, direction_e> node;
+
+    plot_type *plot;
+    int plot_id;
+    int slot_id;
+
+    bmatrix matrix;
+
+    ref() : plot(0), plot_id(-1), matrix() {};
+    ref(plot_type *p, int _id) : plot(p), plot_id(_id), matrix() {};
+
+    static void compose(bmatrix& a, const bmatrix& b);
+    static int calculate(node *t, const bmatrix& m, int id);
   };
 
-  typedef split::node<ref> node_type;
-  typedef split::node<ref>::list list_type;
+private:
+  void clear_box(const agg::trans_affine& box_mtx);
+  void draw_rec(ref::node *n);
+  void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
-  node_type* m_tree;
+  static ref *ref_lookup (ref::node *p, int slot_id);
 
-  void draw_rec(node_type *n);
-  void cleanup_tree_rec (lua_State *L, int window_index, node_type* n);
-
+  ref::node* m_tree;
+  
 public:
   window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) 
   {
@@ -46,12 +58,14 @@ public:
   static window *check (lua_State *L, int index);
 
   void split(const char *spec);
-  int attach(lua_plot *plot, const char *spec, int id);
+  int attach(lua_plot *plot, const char *spec, int plot_id, int& slot_id);
 
   void cleanup_refs(lua_State *L, int window_index)
   {
     cleanup_tree_rec (L, window_index, m_tree);
   };
+
+  void draw_slot(int slot_id);
 
   void on_draw_unprotected();
   virtual void on_draw();

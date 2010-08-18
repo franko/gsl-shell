@@ -75,6 +75,12 @@ public:
 
   void clear() { rb.clear(bg_color); };
 
+  void clear_box(int x1, int y1, int width, int height)
+  {
+    for (int y = y1; y < y1 + height; y++)
+      rb.copy_hline (x1, y, x1 + width, bg_color);
+  };
+
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)
   {

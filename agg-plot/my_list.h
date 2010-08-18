@@ -27,19 +27,29 @@ public:
   }
 
   pod_list* next() { return m_next; };
-
-  static void free(pod_list *list);
 };
 
-template <class T>
-void pod_list<T>::free(pod_list<T> *list)
-{
-  pod_list<T> *p, *n;
-  for (p = list; p; p = n)
+namespace list {
+
+  template <class T>
+  int length(pod_list<T> *ls)
+  {
+    int n = 0;
+    for ( ; ls; ls = ls->next())
+      n++;
+    return n;
+  }
+
+  template <class T>
+  void free(pod_list<T> *p)
+  {
+    pod_list<T> *n;
+    for (/* */; p; p = n)
     {
       n = p->m_next;
       delete p;
     }
+  }
 }
 
 #endif
