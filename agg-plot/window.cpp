@@ -36,6 +36,11 @@ static const struct luaL_Reg window_methods[] = {
 
 __END_DECLS
 
+static agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx)
+{
+  return agg::rect_base<int>(mtx.tx, mtx.ty, mtx.sx + mtx.tx, mtx.sy + mtx.ty);
+}
+
 void window::ref::compose(bmatrix& a, const bmatrix& b)
 {
   trans_affine_compose (a, b);
@@ -82,14 +87,6 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 static void remove_plot_ref (lua_State *L, int window_index, int plot_id);
 
 void
-window::clear_box(const bmatrix& m)
-{
-  int x1 = (int) m.tx, y1 = (int) m.ty;
-  int x2 = (int) (m.tx + m.sx), y2 = (int) (m.ty + m.sy);
-  m_canvas->clear_box(x1, y1, x2 - x1, y2 - y1);
-}
-
-void
 window::draw_rec(ref::node *n)
 {
   ref::node::list *ls;
@@ -130,15 +127,21 @@ window::ref* window::ref_lookup (ref::node *p, int slot_id)
 
 
 void
-window::draw_slot(int slot_id)
+window::draw_slot(int slot_id, bool update_req)
 {
   ref *ref = window::ref_lookup (this->m_tree, slot_id);
   if (ref && m_canvas)
     {
       agg::trans_affine mtx(ref->matrix);
       this->scale(mtx);
-      this->clear_box(mtx);
+
+      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      m_canvas->clear_box(r);
+
       ref->plot->draw(*m_canvas, mtx);
+
+      if (update_req)
+	platform_support_update_region (this, r);
     }
 }
 
@@ -315,8 +318,9 @@ window_attach (lua_State *L)
       plot->window_id = win->id;
       plot->slot_id = slot_id;
 
-      win->on_draw();
-      win->update_window();
+      win->draw_slot(slot_id, true);
+      /*      win->on_draw();
+	      win->update_window(); */
 
       win->unlock();
 
@@ -341,8 +345,7 @@ window_slot_update_unprotected (lua_State *L)
   int slot_id = luaL_checkinteger (L, 2);
 
   win->lock();
-  win->draw_slot(slot_id);
-  win->update_window();
+  win->draw_slot(slot_id, true);
   win->unlock();
 
   return 0;

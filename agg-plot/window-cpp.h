@@ -39,7 +39,6 @@ public:
   };
 
 private:
-  void clear_box(const agg::trans_affine& box_mtx);
   void draw_rec(ref::node *n);
   void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
@@ -59,6 +58,7 @@ public:
 
   void split(const char *spec);
   int attach(lua_plot *plot, const char *spec, int plot_id, int& slot_id);
+  void draw_slot(int slot_id, bool update_req);
 
   void cleanup_refs(lua_State *L, int window_index)
   {
