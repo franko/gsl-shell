@@ -39,52 +39,28 @@
 template<class RenBufDst, class RenBufSrc, class CopyRow> 
 void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functor)
 {
-  unsigned width = src->width();
-  unsigned height = src->height();
+  unsigned int width  = src->width();
+  unsigned int height = src->height();
 
-  if(dst->width()  < width)  width  = dst->width();
-  if(dst->height() < height) height = dst->height();
-
-  if(width)
+  for(unsigned int y = 0; y < height; y++)
     {
-      unsigned y;
-      for(y = 0; y < height; y++)
-	{
-	  copy_row_functor(dst->row_ptr(0, y, width), 
-			   src->row_ptr(y), 
-			   width);
-	}
+      copy_row_functor(dst->row_ptr(0, y, width), 
+		       src->row_ptr(y), 
+		       width);
     }
 }
 
 template<class T> class row_accessor_ro
 {
 public:
-  typedef agg::const_row_info<T> row_data;
-
   //--------------------------------------------------------------------
   row_accessor_ro(const T* buf, unsigned width, unsigned height, int stride) :
-    m_buf(0),
-    m_start(0),
-    m_width(0),
-    m_height(0),
-    m_stride(0)
+    m_buf(buf), m_width(width), m_height(height), m_stride(stride)
   {
-    attach(buf, width, height, stride);
-  }
-  
-
-  //--------------------------------------------------------------------
-  void attach(const T* buf, unsigned width, unsigned height, int stride)
-  {
-    m_buf = m_start = buf;
-    m_width = width;
-    m_height = height;
-    m_stride = stride;
     if(stride < 0) 
-      { 
-	m_start = m_buf - int(height - 1) * stride;
-      }
+      m_start = m_buf - int(height - 1) * stride;
+    else
+      m_start = m_buf;
   }
 
   //--------------------------------------------------------------------
@@ -100,18 +76,14 @@ public:
   //--------------------------------------------------------------------
   const T* row_ptr(int, int y, unsigned) const { return m_start + y * m_stride; }
   const T* row_ptr(int y) const { return m_start + y * m_stride; }
-  row_data row    (int y) const 
-  { 
-    return row_data(0, m_width-1, row_ptr(y)); 
-  }
 
 private:
   //--------------------------------------------------------------------
   const T*            m_buf;    // Pointer to renrdering buffer
-  const T*            m_start;  // Pointer to first pixel depending on stride 
   unsigned      m_width;  // Width in pixels
   unsigned      m_height; // Height in pixels
   int           m_stride; // Number of bytes per row. Can be < 0
+  const T*            m_start;  // Pointer to first pixel depending on stride 
 };
 
 namespace agg
@@ -324,6 +296,12 @@ namespace agg
     if(m_ximg_window == 0) return;
     m_ximg_window->data = (char*)m_buf_window;
 
+    if (m_format == m_sys_format && r == 0)
+      {
+	XPutImage(m_display, m_window, m_gc, m_ximg_window, 
+		  0, 0, 0, 0, src->width(), src->height());
+      }
+
     int x, y, w, h;
     if (r)
       {
@@ -340,26 +318,21 @@ namespace agg
 	h = src->height();
       }
 
-    if(m_format == m_sys_format)
+    int row_len = w * m_sys_bpp / 8;
+    unsigned char* buf_tmp = new unsigned char[row_len * h];
+
+    const unsigned char *src_start = src->row_ptr(m_flip_y ? y + h - 1 : y);
+    row_accessor_ro<unsigned char> src_box(src_start + 3*x, w, h, src->stride());
+            
+    rendering_buffer rbuf_tmp;
+    rbuf_tmp.attach(buf_tmp, w, h, m_flip_y ? -row_len : row_len);
+
+    if (m_format == m_sys_format)
       {
-	XPutImage(m_display, 
-		  m_window, 
-		  m_gc, 
-		  m_ximg_window, 
-		  x, y, x, y, w, h);
+	rbuf_tmp.copy_from(src_box);
       }
     else
       {
-	int row_len = w * m_sys_bpp / 8;
-	unsigned char* buf_tmp = new unsigned char[row_len * h];
-
-	int src_stride = src->stride();
-	const unsigned char *src_start = src->row_ptr(src_stride > 0 ? y : y + h - 1);
-	row_accessor_ro<unsigned char> src_box(src_start + 3*x, w, h, src_stride);
-            
-	rendering_buffer rbuf_tmp;
-	rbuf_tmp.attach(buf_tmp, w, h, m_flip_y ? -row_len : row_len);
-
 	switch(m_sys_format)            
 	  {
 	  default: break;
@@ -453,27 +426,22 @@ namespace agg
 	      }
 	    break;
 	  }
-
-	XImage *img = 
-	  XCreateImage(m_display, m_visual, m_depth, 
-		       ZPixmap, 0, (char*) buf_tmp,
-		       w, h, m_sys_bpp,
-		       w * (m_sys_bpp / 8));
-
-	img->byte_order = m_byte_order;
-
-	int y_dst = (m_flip_y ? src->height() - (y + h) : y);
-	XPutImage(m_display, 
-		  m_window, 
-		  m_gc, 
-		  img, 
-		  0, 0, x, y_dst, w, h);
-            
-	delete [] buf_tmp;
-
-	img->data = 0;
-	XDestroyImage(img);
       }
+
+    XImage *img = XCreateImage(m_display, m_visual, m_depth, 
+			       ZPixmap, 0, (char*) buf_tmp,
+			       w, h, m_sys_bpp,
+			       w * (m_sys_bpp / 8));
+
+    img->byte_order = m_byte_order;
+
+    int y_dst = (m_flip_y ? src->height() - (y + h) : y);
+    XPutImage(m_display, m_window, m_gc, img, 0, 0, x, y_dst, w, h);
+            
+    delete [] buf_tmp;
+
+    img->data = 0;
+    XDestroyImage(img);
   }
 
   //------------------------------------------------------------------------
