@@ -44,9 +44,7 @@ void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functo
 
   for(unsigned int y = 0; y < height; y++)
     {
-      copy_row_functor(dst->row_ptr(0, y, width), 
-		       src->row_ptr(y), 
-		       width);
+      copy_row_functor(dst->row_ptr(0, y, width), src->row_ptr(y), width);
     }
 }
 
@@ -79,11 +77,11 @@ public:
 
 private:
   //--------------------------------------------------------------------
-  const T*            m_buf;    // Pointer to renrdering buffer
+  const T*      m_buf;    // Pointer to renrdering buffer
   unsigned      m_width;  // Width in pixels
   unsigned      m_height; // Height in pixels
   int           m_stride; // Number of bytes per row. Can be < 0
-  const T*            m_start;  // Pointer to first pixel depending on stride 
+  const T*      m_start;  // Pointer to first pixel depending on stride 
 };
 
 namespace agg
@@ -322,7 +320,8 @@ namespace agg
     unsigned char* buf_tmp = new unsigned char[row_len * h];
 
     const unsigned char *src_start = src->row_ptr(m_flip_y ? y + h - 1 : y);
-    row_accessor_ro<unsigned char> src_box(src_start + 3*x, w, h, src->stride());
+    const unsigned int pix_width = m_bpp / 8;
+    row_accessor_ro<unsigned char> src_box(src_start + pix_width * x, w, h, src->stride());
             
     rendering_buffer rbuf_tmp;
     rbuf_tmp.attach(buf_tmp, w, h, m_flip_y ? -row_len : row_len);

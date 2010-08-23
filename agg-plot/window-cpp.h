@@ -39,6 +39,7 @@ public:
   };
 
 private:
+  void draw_slot_by_ref(ref& ref, bool dirty);
   void draw_rec(ref::node *n);
   void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 

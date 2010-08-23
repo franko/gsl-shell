@@ -96,12 +96,7 @@ window::draw_rec(ref::node *n)
   ref *ref = n->content();
   if (ref)
     {
-      if (ref->plot)
-	{
-	  agg::trans_affine mtx(ref->matrix);
-	  this->scale(mtx);
-	  ref->plot->draw(*m_canvas, mtx);
-	}
+      draw_slot_by_ref (*ref, false);
     }
 }
 
@@ -125,6 +120,26 @@ window::ref* window::ref_lookup (ref::node *p, int slot_id)
   return NULL;
 }
 
+void window::draw_slot_by_ref(window::ref& ref, bool dirty)
+{
+  if (! ref.plot)
+    return;
+
+  agg::trans_affine mtx(ref.matrix);
+  this->scale(mtx);
+
+  if (dirty)
+    {
+      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      m_canvas->clear_box(r);
+      ref.plot->draw(*m_canvas, mtx);
+      platform_support_update_region (this, r);
+    }
+  else
+    {
+      ref.plot->draw(*m_canvas, mtx);
+    }
+}
 
 void
 window::draw_slot(int slot_id, bool update_req)
@@ -132,16 +147,7 @@ window::draw_slot(int slot_id, bool update_req)
   ref *ref = window::ref_lookup (this->m_tree, slot_id);
   if (ref && m_canvas)
     {
-      agg::trans_affine mtx(ref->matrix);
-      this->scale(mtx);
-
-      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
-      m_canvas->clear_box(r);
-
-      ref->plot->draw(*m_canvas, mtx);
-
-      if (update_req)
-	platform_support_update_region (this, r);
+      draw_slot_by_ref(*ref, update_req);
     }
 }
 
@@ -319,8 +325,6 @@ window_attach (lua_State *L)
       plot->slot_id = slot_id;
 
       win->draw_slot(slot_id, true);
-      /*      win->on_draw();
-	      win->update_window(); */
 
       win->unlock();
 
