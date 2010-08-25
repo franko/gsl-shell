@@ -19,7 +19,7 @@ private:
   plot_type m_plot;
 
 public:
-  lua_plot() : m_plot(), window_id(-1), id(-1) { };
+  lua_plot() : m_plot(), window_id(-1) { };
 
   void update_window(lua_State *L);
 
@@ -29,8 +29,6 @@ public:
 
   int window_id;
   int slot_id;
-
-  int id;
 };
 
 #endif

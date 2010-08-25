@@ -7,9 +7,13 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
+/* We have currently just one class of objects that have a unique ID, windows.
+   At some moments during development this machinary was also used for plots. 
+   Because we have just one object type that get an id the code could be 
+   potentially simplified. */
 enum object_class_e {
   OBJECT_WINDOW = 0,
-  OBJECT_PLOT,
+  /*  OBJECT_PLOT, */
 };
 
 extern void   object_index_prepare   (lua_State *L);

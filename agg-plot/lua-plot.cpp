@@ -124,8 +124,6 @@ plot_new (lua_State *L)
 	p->self().set_title(title);
     }
 
-  p->id = object_index_add (L, OBJECT_PLOT, -1);
-
   return 1;
 }
 
