@@ -26,13 +26,12 @@ public:
     typedef tree::node<ref, direction_e> node;
 
     plot_type *plot;
-    int plot_id;
     int slot_id;
 
     bmatrix matrix;
 
-    ref() : plot(0), plot_id(-1), matrix() {};
-    ref(plot_type *p, int _id) : plot(p), plot_id(_id), matrix() {};
+    ref() : plot(0), matrix() {};
+    ref(plot_type *p) : plot(p), matrix() {};
 
     static void compose(bmatrix& a, const bmatrix& b);
     static int calculate(node *t, const bmatrix& m, int id);
@@ -58,7 +57,7 @@ public:
   static window *check (lua_State *L, int index);
 
   void split(const char *spec);
-  int attach(lua_plot *plot, const char *spec, int plot_id, int& slot_id);
+  int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
 
   void cleanup_refs(lua_State *L, int window_index)

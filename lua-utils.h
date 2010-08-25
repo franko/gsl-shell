@@ -72,5 +72,4 @@ extern void         mlua_set_fenv_ref    (lua_State *L, int refidx);
 
 __END_DECLS
 
-
 #endif

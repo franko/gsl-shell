@@ -4,6 +4,7 @@
 
 #include "object-index.h"
 
+#warning OBJECT_PLOT is no longer used
 static const char *table_name[] = {"GSL.reg.wins", "GSL.reg.plts"};
 
 void

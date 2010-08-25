@@ -2,6 +2,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "refs.h"
 #include "object-refs.h"
 
 static char const * const object_ref_table_name = "GSL.objref";
@@ -9,15 +10,7 @@ static char const * const object_ref_table_name = "GSL.objref";
 void
 object_ref_prepare (lua_State *L)
 {
-  lua_newtable (L);
-
-  /* the metatable to define it as a weak table */
-  lua_newtable (L);
-  lua_pushstring (L, "k");
-  lua_setfield (L, -2, "__mode");
-  lua_setmetatable (L, -2);
-
-  lua_setfield (L, LUA_REGISTRYINDEX, object_ref_table_name);
+  register_ref_table (L, object_ref_table_name);
 }
 
 void

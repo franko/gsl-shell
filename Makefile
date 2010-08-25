@@ -76,7 +76,7 @@ else
 endif
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-  C_SRC_FILES += object-index.c object-refs.c
+  C_SRC_FILES += refs.c object-index.c object-refs.c win-plot-refs.c
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED

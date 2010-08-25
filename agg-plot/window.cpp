@@ -4,11 +4,12 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include "lua-defs.h"
 #include "window-cpp.h"
 #include "lua-draw.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
-#include "object-refs.h"
+#include "win-plot-refs.h"
 #include "object-index.h"
 #include "colors.h"
 #include "lua-plot-cpp.h"
@@ -83,8 +84,6 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 
   return id;
 }
-
-static void remove_plot_ref (lua_State *L, int window_index, int plot_id);
 
 void
 window::draw_rec(ref::node *n)
@@ -185,7 +184,7 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
   if (ref)
     {
       if (ref->plot)
-	remove_plot_ref (L, window_index, ref->plot_id);
+	window_plot_ref_remove (L, ref->slot_id, window_index);
     }
 }
 
@@ -225,7 +224,7 @@ next_int (const char *str, int& val)
 
 /* Returns the existing plot ref id, 0 if there isn't any.
    It does return -1 in case of error.*/
-int window::attach(lua_plot *plot, const char *spec, int plot_id, int& slot_id)
+int window::attach(lua_plot *plot, const char *spec)
 {
   ref::node *n = m_tree;
   const char *ptr;
@@ -252,14 +251,9 @@ int window::attach(lua_plot *plot, const char *spec, int plot_id, int& slot_id)
   if (! r)
     return -1;
 
-  int ex_id = r->plot_id;
-
   r->plot = & plot->self();
-  r->plot_id = plot_id;
 
-  slot_id = r->slot_id;
-
-  return (ex_id > 0 ? ex_id : 0);
+  return r->slot_id;
 }
 
 int
@@ -297,29 +291,18 @@ window_split (lua_State *L)
   return 0;
 }
 
-void 
-remove_plot_ref (lua_State *L, int window_index, int plot_id)
-{
-  object_index_get (L, OBJECT_PLOT, plot_id);
-
-  int plot_index = lua_gettop (L);
-  if (gs_is_userdata (L, plot_index, GS_PLOT))
-    object_ref_remove (L, window_index, plot_index);
-}
-
 int
 window_attach (lua_State *L)
 {
   window *win = window::check (L, 1);
   lua_plot *plot = lua_plot::check (L, 2);
   const char *spec = luaL_checkstring (L, 3);
-  int slot_id;
 
   win->lock();
 
-  int ex_plot_id = win->attach (plot, spec, plot->id, slot_id);
+  int slot_id = win->attach (plot, spec);
 
-  if (ex_plot_id >= 0)
+  if (slot_id >= 0)
     {
       plot->window_id = win->id;
       plot->slot_id = slot_id;
@@ -328,10 +311,7 @@ window_attach (lua_State *L)
 
       win->unlock();
 
-      object_ref_add (L, 1, 2);
-
-      if (ex_plot_id > 0)
-	remove_plot_ref (L, 1, ex_plot_id);
+      window_plot_ref_add (L, slot_id, 1, 2);
     }
   else
     {

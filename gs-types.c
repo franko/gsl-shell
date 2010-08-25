@@ -3,6 +3,7 @@
 
 #include <lua.h>
 #include <lauxlib.h>
+#include "lua-defs.h"
 #include "gs-types.h"
 #include <gsl/gsl_errno.h>
 #include <math.h>
@@ -187,6 +188,8 @@ rec_check_type (lua_State *L, enum gs_type_e tp)
 void *
 gs_is_userdata (lua_State *L, int index, int typeid)
 {
+  INDEX_SET_ABS(L, index);
+
   void *p = lua_touserdata (L, index);
 
   if (p == NULL)
