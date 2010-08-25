@@ -51,5 +51,32 @@ demo2 = function()
 	   p.units = false
 	end
 
+function demo3()
+   local rdsd = sqrt(2)/2
+   local cf
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      local box = rect(0, 0, ll, ll)
+      local col = cf(depth)
+      pl:add(box, col, {}, {{'translate', x= x, y= y}, {'rotate', angle= th}})
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 pitag_tree(pl, x, y, th + pi/4, ll*rdsd, depth-1)
+	 x, y = x + ll*rdsd*cos(th+pi/4), y + ll*rdsd*sin(th+pi/4)
+	 pitag_tree(pl, x, y, th - pi/4, ll*rdsd, depth-1)
+      end
+   end
+
+   local depth = 12
+   local cfgen = color_function('darkgreen', 1)
+   cf = |d| cfgen(1-d/depth)
+   local pl = plot()
+   pl.units = false
+   pitag_tree(pl, 0, 0, 0, 1, depth)
+   pl:show()
+   return pl
+end
+
 print 'demo1() - Von Koch\'s curve'
 print 'demo2() - Levy\'s C curve'
+print 'demo3() - Pythagorean Tree'
