@@ -67,6 +67,5 @@ public:
 
   void draw_slot(int slot_id);
 
-  void on_draw_unprotected();
   virtual void on_draw();
 };

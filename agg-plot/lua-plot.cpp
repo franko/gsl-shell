@@ -127,9 +127,10 @@ plot_add_gener (lua_State *L, bool as_line)
   AGG_LOCK();
 
   p->self().add(obj, color, as_line);
-  plot_update_raw (L, 1);
 
   AGG_UNLOCK();
+
+  plot_update_raw (L, 1);
 
   return 0;
 }
@@ -158,9 +159,10 @@ plot_title_set (lua_State *L)
   AGG_LOCK();
 
   p->self().set_title(title);
-  plot_update_raw (L, 1);
 
   AGG_UNLOCK();
+
+  plot_update_raw (L, 1);
 	  
   return 0;
 }
@@ -194,10 +196,13 @@ plot_units_set (lua_State *L)
   if (current != request)
     {
       plt.set_units(request);
+      AGG_UNLOCK();
       plot_update_raw (L, 1);
     }
-
-  AGG_UNLOCK();
+  else
+    {
+      AGG_UNLOCK();
+    }
 	  
   return 0;
 }
@@ -232,16 +237,14 @@ plot_newindex (lua_State *L)
 void
 plot_update_raw (lua_State *L, int plot_index)
 {
-  window_plot_rev_lookup_apply (L, plot_index, window_slot_update_unprotected);
+  window_plot_rev_lookup_apply (L, plot_index, window_slot_update);
 }
 
 int
 plot_update (lua_State *L)
 {
   lua_plot *p = lua_plot::check(L, 1);
-  AGG_LOCK();
   plot_update_raw (L, 1);
-  AGG_UNLOCK();
   return 0;
 }
 

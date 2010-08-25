@@ -129,7 +129,9 @@ void window::draw_slot_by_ref(window::ref& ref, bool dirty)
     {
       agg::rect_base<int> r = rect_of_slot_matrix(mtx);
       m_canvas->clear_box(r);
+      AGG_LOCK();
       ref.plot->draw(*m_canvas, mtx);
+      AGG_UNLOCK();
       platform_support_update_region (this, r);
     }
   else
@@ -149,21 +151,13 @@ window::draw_slot(int slot_id, bool update_req)
 }
 
 void
-window::on_draw_unprotected()
+window::on_draw()
 {
   if (! m_canvas)
     return;
 
   m_canvas->clear();
   draw_rec(m_tree);
-}
-
-void
-window::on_draw()
-{
-  AGG_LOCK();
-  on_draw_unprotected();
-  AGG_UNLOCK();
 }
 
 window *
@@ -316,26 +310,16 @@ window_attach (lua_State *L)
 }
 
 int
-window_slot_update_unprotected (lua_State *L)
+window_slot_update (lua_State *L)
 {
   window *win = window::check (L, 1);
   int slot_id = luaL_checkinteger (L, 2);
 
   win->lock();
-  win->draw_slot(slot_id, true);
-  win->unlock();
-
-  return 0;
-}
-
-int
-window_update_unprotected (lua_State *L)
-{
-  window *win = window::check (L, 1);
-
-  win->lock();
-  win->on_draw_unprotected();
-  win->update_window();
+  if (win->status == canvas_window::running)
+    {
+      win->draw_slot(slot_id, true);
+    }
   win->unlock();
 
   return 0;
