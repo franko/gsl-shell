@@ -40,14 +40,17 @@ end
 
 function demo1()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= frosenbrock, n= 2}
+   local m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1}) 
 
-   local px = new(2,1)
-   p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
-   c = path(m.x[1], m.x[2])
+   local p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
@@ -56,7 +59,6 @@ function demo1()
    p:addline(c, 'red')
 
    p.title = 'Rosenbrock function minimisation'
-   p:show()
    return p
 end
 
@@ -65,7 +67,6 @@ function demo1bis()
    m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1}) 
 
-   local px = new(2,1)
    p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
    p.title = 'Rosenbrock function minimisation'
    io.read('*l')
@@ -85,13 +86,17 @@ end
 
 function demo2()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= f, n= 2}
+   local m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(f), {-2, -3}, {8, 2})
-   c=path(m.x[1], m.x[2])
+   local p=contour(cook(f), {-2, -3}, {8, 2})
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
@@ -107,13 +112,17 @@ end
 
 function demo3()
    local x0 = vector {-0.5, 1.0}
-   m = minimizer {fdf= fex, n= 2}
+   local m = minimizer {fdf= fex, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
-   c=path(m.x[1], m.x[2])
+   local p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
