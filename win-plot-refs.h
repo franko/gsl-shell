@@ -14,6 +14,9 @@ extern void window_plot_ref_add (lua_State *L, int slot_id,
 
 extern void window_plot_ref_remove (lua_State *L, int slot_id, int window_index);
 
+extern void window_plot_rev_lookup_apply (lua_State *L, int plot_index, 
+					  lua_CFunction func);
+
 __END_DECLS
 
 #endif

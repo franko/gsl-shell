@@ -25,7 +25,7 @@ extern "C" {
 
 #include "lua-plot.h"
 #include "lua-plot-cpp.h"
-#include "object-index.h"
+#include "win-plot-refs.h"
 #include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
@@ -47,13 +47,14 @@ static int plot_add_line   (lua_State *L);
 static int plot_index      (lua_State *L);
 static int plot_newindex   (lua_State *L);
 static int plot_free       (lua_State *L);
-// static int plot_show       (lua_State *L);
+static int plot_show       (lua_State *L);
 static int plot_title_set  (lua_State *L);
 static int plot_title_get  (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 
-static int plot_add_gener (lua_State *L, bool as_line);
+static int  plot_add_gener (lua_State *L, bool as_line);
+static void plot_update_raw (lua_State *L, int plot_index);
 
 static const struct luaL_Reg plot_functions[] = {
   {"plot",        plot_new},
@@ -64,7 +65,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"add",         plot_add        },
   {"addline",     plot_add_line   },
   {"update",      plot_update     },
-  //  {"show",        plot_show       },
+  {"show",        plot_show       },
   {"__index",     plot_index      },
   {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },
@@ -89,27 +90,6 @@ lua_plot *
 lua_plot::check(lua_State *L, int index)
 {
   return (lua_plot *) gs_check_userdata (L, index, GS_PLOT);
-}
-
-void
-lua_plot::update_window(lua_State *L)
-{
-  if (this->window_id <= 0)
-    return;
-
-  object_index_get (L, OBJECT_WINDOW, this->window_id);
-
-  if (gs_is_userdata (L, lua_gettop (L), GS_WINDOW))
-    {
-      lua_pushcfunction (L, window_slot_update_unprotected);
-      lua_insert (L, -2);
-      lua_pushinteger (L, this->slot_id);
-      lua_call (L, 2, 0);
-    }
-  else
-    {
-      lua_pop (L, 1);
-    }
 }
 
 int
@@ -147,7 +127,7 @@ plot_add_gener (lua_State *L, bool as_line)
   AGG_LOCK();
 
   p->self().add(obj, color, as_line);
-  p->update_window(L);
+  plot_update_raw (L, 1);
 
   AGG_UNLOCK();
 
@@ -178,7 +158,7 @@ plot_title_set (lua_State *L)
   AGG_LOCK();
 
   p->self().set_title(title);
-  p->update_window(L);
+  plot_update_raw (L, 1);
 
   AGG_UNLOCK();
 	  
@@ -214,7 +194,7 @@ plot_units_set (lua_State *L)
   if (current != request)
     {
       plt.set_units(request);
-      p->update_window(L);
+      plot_update_raw (L, 1);
     }
 
   AGG_UNLOCK();
@@ -249,25 +229,32 @@ plot_newindex (lua_State *L)
   return mlua_newindex_with_properties (L, plot_properties_set);
 }
 
+void
+plot_update_raw (lua_State *L, int plot_index)
+{
+  window_plot_rev_lookup_apply (L, plot_index, window_slot_update_unprotected);
+}
+
 int
 plot_update (lua_State *L)
 {
   lua_plot *p = lua_plot::check(L, 1);
   AGG_LOCK();
-  p->update_window(L);
+  plot_update_raw (L, 1);
   AGG_UNLOCK();
   return 0;
 }
 
-/*
 int
 plot_show (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
-  p->start_new_thread (L);
-  return 1;
+  lua_pushcfunction (L, window_attach);
+  window_new (L);
+  lua_pushvalue (L, 1);
+  lua_pushstring (L, "");
+  lua_call (L, 3, 0);
+  return 0;
 }
-*/
 
 void
 plot_register (lua_State *L)

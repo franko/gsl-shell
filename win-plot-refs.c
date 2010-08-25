@@ -60,3 +60,33 @@ window_plot_ref_remove (lua_State *L, int slot_id, int window_index)
 
   lua_pop (L, 2);
 }
+
+void
+window_plot_rev_lookup_apply (lua_State *L, int plot_index, lua_CFunction func)
+{
+  INDEX_SET_ABS(L, plot_index);
+
+  lua_getfield (L, LUA_REGISTRYINDEX, window_plot_ref_table_name);
+  lua_pushnil (L);
+
+  while (lua_next (L, -2) != 0)
+    {
+      lua_pushnil (L);
+
+      while (lua_next (L, -2) != 0)
+	{
+	  if (lua_rawequal (L, -1, plot_index))
+	    {
+	      lua_pushcfunction (L, func);
+	      lua_pushvalue (L, -5);
+	      lua_pushvalue (L, -4);
+	      lua_call (L, 2, 0);
+	    }
+	  lua_pop (L, 1);
+	}
+
+      lua_pop (L, 1);
+    }
+
+  lua_pop (L, 1);
+}

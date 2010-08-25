@@ -12,6 +12,8 @@ extern void window_register                (lua_State *L);
 extern int  window_slot_update_unprotected (lua_State *L);
 extern int  window_update_unprotected      (lua_State *L);
 extern int  window_update                  (lua_State *L);
+extern int  window_new                     (lua_State *L);
+extern int  window_attach                  (lua_State *L);
 
 __END_DECLS
 

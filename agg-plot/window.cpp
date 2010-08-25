@@ -17,10 +17,8 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int window_new        (lua_State *L);
 static int window_free       (lua_State *L);
 static int window_split      (lua_State *L);
-static int window_attach     (lua_State *L);
 
 static const struct luaL_Reg window_functions[] = {
   {"window",        window_new},
@@ -304,13 +302,8 @@ window_attach (lua_State *L)
 
   if (slot_id >= 0)
     {
-      plot->window_id = win->id;
-      plot->slot_id = slot_id;
-
       win->draw_slot(slot_id, true);
-
       win->unlock();
-
       window_plot_ref_add (L, slot_id, 1, 2);
     }
   else

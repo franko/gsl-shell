@@ -19,16 +19,11 @@ private:
   plot_type m_plot;
 
 public:
-  lua_plot() : m_plot(), window_id(-1) { };
-
-  void update_window(lua_State *L);
+  lua_plot() : m_plot() { };
 
   plot_type& self() { return m_plot; };
 
   static lua_plot *check(lua_State *L, int index);
-
-  int window_id;
-  int slot_id;
 };
 
 #endif
