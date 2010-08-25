@@ -17,6 +17,8 @@
 
 #include "agg_gamma_lut.h"
 
+extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
+
 class pixel_gamma_corr {
   typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
   typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
@@ -84,6 +86,13 @@ public:
     for (int y = r.y1; y < r.y2; y++)
       this->rb.copy_hline (r.x1, y, r.x2, bg_color);
   };
+
+  void clip_box(const agg::rect_base<int>& clip)
+  {
+    this->rb.clip_box_naked(clip.x1, clip.y1, clip.x2, clip.y2);
+  };
+
+  void reset_clipping() { this->rb.reset_clipping(true); };
 
   template<class VertexSource>
   void draw(VertexSource& vs, agg::rgba8 c)

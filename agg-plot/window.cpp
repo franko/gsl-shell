@@ -35,7 +35,7 @@ static const struct luaL_Reg window_methods[] = {
 
 __END_DECLS
 
-static agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx)
+agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx)
 {
   return agg::rect_base<int>(mtx.tx, mtx.ty, mtx.sx + mtx.tx, mtx.sy + mtx.ty);
 }

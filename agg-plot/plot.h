@@ -290,6 +290,9 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
 
+  agg::rect_base<int> clip = rect_of_slot_matrix(canvas_mtx);
+  canvas.clip_box(clip);
+
   agg::path_storage mark;
   agg::conv_transform<path_type> mark_tr(mark, m);
   agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
@@ -386,6 +389,8 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   box.close_polygon();
 
   canvas.draw(boxs, agg::rgba8(0, 0, 0));
+
+  canvas.reset_clipping();
 };
 
 template<class VS, class RM>
