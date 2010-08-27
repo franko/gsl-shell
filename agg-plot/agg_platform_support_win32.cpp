@@ -1089,6 +1089,7 @@ namespace agg
         on_init();
         m_specific->m_redraw_flag = true;
         ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+	::SetForegroundWindow(m_specific->m_hwnd);
         return true;
     }
 
