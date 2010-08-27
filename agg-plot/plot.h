@@ -37,6 +37,7 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
+extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
 
 static void
 bbox_enlarge(double *x1, double* y1, double* x2, double* y2,

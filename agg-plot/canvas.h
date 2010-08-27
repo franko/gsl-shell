@@ -17,8 +17,6 @@
 
 #include "agg_gamma_lut.h"
 
-extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
-
 class pixel_gamma_corr {
   typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
   typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;

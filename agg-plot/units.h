@@ -33,7 +33,7 @@ private:
 
 public:
   units(): m_major(1), order(0), dmajor(1), m_inf(0), m_sup(1), nb_decimals(0) {}; 
-  units (double min, double max, double spacefact = 5.0)
+  units (double min, double max, double spacefact = 4.0)
   { init(min, max, spacefact); };
 
   int begin() const { return m_inf; };

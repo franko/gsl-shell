@@ -319,8 +319,13 @@ window_slot_update (lua_State *L)
   if (win->status == canvas_window::running)
     {
       win->draw_slot(slot_id, true);
+      win->unlock();
     }
-  win->unlock();
+  else
+    {
+      win->unlock();
+      luaL_error (L, "window is not running");
+    }
 
   return 0;
 }
