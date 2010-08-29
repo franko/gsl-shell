@@ -732,9 +732,16 @@ namespace agg
 	  }
 
 	XEvent x_event;
-	pthread_mutex_unlock (m_specific->m_mutex);
-	XNextEvent(m_specific->m_display, &x_event);
-	pthread_mutex_lock (m_specific->m_mutex);
+	if (m_specific->m_is_mapped)
+	  {
+	    pthread_mutex_unlock (m_specific->m_mutex);
+	    XNextEvent(m_specific->m_display, &x_event);
+	    pthread_mutex_lock (m_specific->m_mutex);
+	  }
+	else
+	  {
+	    XNextEvent(m_specific->m_display, &x_event);
+	  }
             
 	// In the Idle mode discard all intermediate MotionNotify events
 	if(!m_wait_mode && x_event.type == MotionNotify)

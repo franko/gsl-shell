@@ -1106,9 +1106,16 @@ namespace agg
             {
 	      bool status;
 
-	      pthread_mutex_unlock (m_specific->m_mutex);
-	      status = ::GetMessage(&msg, 0, 0, 0);
-	      pthread_mutex_lock (m_specific->m_mutex);
+	      if (m_specific->m_is_mapped)
+		{
+		  pthread_mutex_unlock (m_specific->m_mutex);
+		  status = ::GetMessage(&msg, 0, 0, 0);
+		  pthread_mutex_lock (m_specific->m_mutex);
+		}
+	      else
+		{
+		  status = ::GetMessage(&msg, 0, 0, 0);
+		}
 
 	      if(! status)
                 {
