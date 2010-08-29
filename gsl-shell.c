@@ -339,7 +339,9 @@ static void do_windows_unref (lua_State *L)
   GSL_SHELL_LOCK();
 
   for (j = 0; j < unref_fixed_count; j++)
-    object_index_remove (L, OBJECT_WINDOW, unref_fixed_list[j]);
+    {
+      object_index_remove (L, OBJECT_WINDOW, unref_fixed_list[j]);
+    }
 
   unref_fixed_count = 0;
 
