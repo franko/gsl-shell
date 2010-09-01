@@ -32,6 +32,7 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include <pthread.h>
+#include <new>
 #include "agg_basics.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "platform_support_ext.h"
@@ -275,7 +276,9 @@ namespace agg
       }
 
     int row_len = w * m_sys_bpp / 8;
-    unsigned char* buf_tmp = new unsigned char[row_len * h];
+    unsigned char* buf_tmp = new(std::nothrow) unsigned char[row_len * h];
+    if (buf_tmp == 0)
+      return;
 
     const unsigned char *src_start = src->row_ptr(m_flip_y ? y + h - 1 : y);
     const unsigned int pix_width = m_bpp / 8;
@@ -474,7 +477,8 @@ namespace agg
 	fprintf(stderr,
 		"There's no Visual compatible with minimal AGG requirements:\n"
 		"At least 15-bit color depth and True- or DirectColor class.\n\n");
-	goto close_and_exit;
+	XCloseDisplay(m_specific->m_display);
+	return false;
       }
         
     int t = 1;
@@ -564,7 +568,8 @@ namespace agg
 		"RGB masks are not compatible with AGG pixel formats:\n"
 		"R=%08x, R=%08x, B=%08x\n", 
 		(unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
-	goto close_and_exit;
+	XCloseDisplay(m_specific->m_display);
+	return false;
       }
                 
         
@@ -607,7 +612,8 @@ namespace agg
       {
 	XFreeGC(m_specific->m_display, m_specific->m_gc);
 	XDestroyWindow(m_specific->m_display, m_specific->m_window);
-	goto close_and_exit;
+	XCloseDisplay(m_specific->m_display);
+	return false;
       }
 
     memset(m_specific->m_buf_window, 255, width * height * (m_bpp / 8));
@@ -693,10 +699,6 @@ namespace agg
 		    1);
 
     return true;
-
-  close_and_exit:
-    XCloseDisplay(m_specific->m_display);
-    return false;
   }
 
 

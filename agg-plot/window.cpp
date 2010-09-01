@@ -130,7 +130,11 @@ void window::draw_slot_by_ref(window::ref& ref, bool dirty)
       agg::rect_base<int> r = rect_of_slot_matrix(mtx);
       m_canvas->clear_box(r);
       AGG_LOCK();
-      ref.plot->draw(*m_canvas, mtx);
+      try 
+	{
+	  ref.plot->draw(*m_canvas, mtx);
+	} 
+      catch (std::bad_alloc&) { }
       AGG_UNLOCK();
       platform_support_update_region (this, r);
     }
