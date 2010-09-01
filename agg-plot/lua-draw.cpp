@@ -111,7 +111,7 @@ static const struct luaL_Reg rgba_methods[] = {
 int
 agg_path_new (lua_State *L)
 {
-  draw::path *vs = new(L, GS_DRAW_PATH) draw::path();
+  draw::path *vs = push_new_object<draw::path>(L, GS_DRAW_PATH);
 
   if (lua_gettop (L) >= 2)
     {
@@ -137,17 +137,29 @@ check_agg_path (lua_State *L, int index)
 int
 agg_path_free (lua_State *L)
 {
-  typedef draw::path path_type;
-  path_type *path = check_agg_path (L, 1);
-  path->~path_type();
-  return 0;
+  return object_free<draw::path>(L, 1, GS_DRAW_PATH);
 }
+
+#if 0
+#warning DEBUG CODE
+static const int DEBUG_error_count_max = 8 * 1024;
+static int DEBUG_error_count = DEBUG_error_count_max;
+#endif
 
 void
 path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
 {
   agg::path_storage& ps = p->self();
   path_cmd_e cmd = (path_cmd_e) _cmd;
+
+#if 0
+  DEBUG_error_count--;
+  if (DEBUG_error_count == 0)
+    {
+      DEBUG_error_count = DEBUG_error_count_max;
+      throw std::bad_alloc();
+    }
+#endif
 
   switch (cmd)
     {
@@ -200,7 +212,16 @@ agg_path_cmd (lua_State *L)
     }
 
   pthread_mutex_lock (agg_mutex);
-  path_cmd (p, id, s);
+  try
+    {
+      path_cmd (p, id, s);
+    }
+  catch (std::bad_alloc&)
+    {
+      pthread_mutex_unlock (agg_mutex);
+      luaL_error (L, "out of memory");
+      return 0;
+    }
   pthread_mutex_unlock (agg_mutex);
   return 0;
 }
@@ -235,7 +256,7 @@ agg_path_index (lua_State *L)
 int
 agg_ellipse_new (lua_State *L)
 {
-  draw::ellipse *vs = new(L, GS_DRAW_ELLIPSE) draw::ellipse();
+  draw::ellipse *vs = push_new_object<draw::ellipse>(L, GS_DRAW_ELLIPSE);
   double x = luaL_checknumber (L, 1);
   double y = luaL_checknumber (L, 2);
   double rx = luaL_checknumber (L, 3);
@@ -247,7 +268,7 @@ agg_ellipse_new (lua_State *L)
 int
 agg_circle_new (lua_State *L)
 {
-  draw::ellipse *vs = new(L, GS_DRAW_ELLIPSE) draw::ellipse();
+  draw::ellipse *vs = push_new_object<draw::ellipse>(L, GS_DRAW_ELLIPSE);
   double x = luaL_checknumber (L, 1);
   double y = luaL_checknumber (L, 2);
   double r = luaL_checknumber (L, 3);
@@ -258,10 +279,7 @@ agg_circle_new (lua_State *L)
 int
 agg_ellipse_free (lua_State *L)
 {
-  typedef draw::ellipse ellipse_type;
-  ellipse_type *ellipse = (ellipse_type *) gs_check_userdata (L, 1, GS_DRAW_ELLIPSE);
-  ellipse->~ellipse_type();
-  return 0;
+  return object_free<draw::ellipse>(L, 1, GS_DRAW_ELLIPSE);
 }
 
 static unsigned int double2uint8 (double x)
@@ -350,10 +368,7 @@ agg_rgba_mul (lua_State *L)
 int
 agg_rgba_free (lua_State *L)
 {
-  typedef agg::rgba8 rgba_t;
-  rgba_t *c = check_agg_rgba8 (L, 1);
-  c->~rgba_t();
-  return 0;
+  return object_free<agg::rgba8>(L, 1, GS_RGBA_COLOR);
 }
 
 void

@@ -7,8 +7,7 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
-extern void canvas_window_register        (lua_State *L);
-extern int  canvas_window_close_protected (lua_State *L);
+extern int  canvas_window_close (lua_State *L);
 
 __END_DECLS
 

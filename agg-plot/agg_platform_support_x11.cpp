@@ -36,6 +36,12 @@
 #include "util/agg_color_conv_rgb8.h"
 #include "platform_support_ext.h"
 
+/*
+extern "C" {
+  static int thread_error_handler (Display *d, XErrorEvent *ev);
+}
+*/
+
 namespace agg
 {
   //------------------------------------------------------------------------
@@ -468,8 +474,7 @@ namespace agg
 	fprintf(stderr,
 		"There's no Visual compatible with minimal AGG requirements:\n"
 		"At least 15-bit color depth and True- or DirectColor class.\n\n");
-	XCloseDisplay(m_specific->m_display);
-	return false;
+	goto close_and_exit;
       }
         
     int t = 1;
@@ -559,8 +564,7 @@ namespace agg
 		"RGB masks are not compatible with AGG pixel formats:\n"
 		"R=%08x, R=%08x, B=%08x\n", 
 		(unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
-	XCloseDisplay(m_specific->m_display);
-	return false;
+	goto close_and_exit;
       }
                 
         
@@ -595,9 +599,16 @@ namespace agg
 
     m_specific->m_gc = XCreateGC(m_specific->m_display, 
 				 m_specific->m_window, 
-				 0, 0); 
-    m_specific->m_buf_window = 
-      new unsigned char[width * height * (m_bpp / 8)];
+				 0, 0);
+
+    unsigned int buf_size = width * height * (m_bpp / 8);
+    m_specific->m_buf_window = new(std::nothrow) unsigned char[buf_size];
+    if (m_specific->m_buf_window == 0)
+      {
+	XFreeGC(m_specific->m_display, m_specific->m_gc);
+	XDestroyWindow(m_specific->m_display, m_specific->m_window);
+	goto close_and_exit;
+      }
 
     memset(m_specific->m_buf_window, 255, width * height * (m_bpp / 8));
         
@@ -682,6 +693,10 @@ namespace agg
 		    1);
 
     return true;
+
+  close_and_exit:
+    XCloseDisplay(m_specific->m_display);
+    return false;
   }
 
 
@@ -712,6 +727,7 @@ namespace agg
     unsigned flags;
     int cur_x;
     int cur_y;
+    int ret = 0;
 
     while(!quit)
       {
@@ -775,12 +791,20 @@ namespace agg
 		  int width  = x_event.xconfigure.width;
 		  int height = x_event.xconfigure.height;
 
+		  unsigned int bufsz = width * height * (m_bpp / 8);
+		  unsigned char *newbuf = new(std::nothrow) unsigned char[bufsz];
+		  if (newbuf == 0)
+		    {
+		      quit = true;
+		      ret = 1;
+		      break;
+		    }
+
 		  delete [] m_specific->m_buf_window;
 		  m_specific->m_ximg_window->data = 0;
 		  XDestroyImage(m_specific->m_ximg_window);
 
-		  m_specific->m_buf_window = 
-		    new unsigned char[width * height * (m_bpp / 8)];
+		  m_specific->m_buf_window = newbuf;
 
 		  m_rbuf_window.attach(m_specific->m_buf_window,
 				       width,
@@ -1000,7 +1024,7 @@ namespace agg
     XDestroyWindow(m_specific->m_display, m_specific->m_window);
     XCloseDisplay(m_specific->m_display);
         
-    return 0;
+    return ret;
   }
 
 
@@ -1290,6 +1314,15 @@ namespace agg
 
 }
 
+/*
+int
+thread_error_handler (Display *d, XErrorEvent *ev)
+{
+  pthread_exit (NULL);
+  return 0;
+}
+*/
+
 bool agg::platform_specific::initialized = false;
 
 void platform_support_prepare()
@@ -1297,8 +1330,9 @@ void platform_support_prepare()
   if (! agg::platform_specific::initialized)
     {
       XInitThreads();
+      //      XSetErrorHandler(thread_error_handler);
       agg::platform_specific::initialized = true;
-	}
+    }
 }
 
 void platform_support_lock(agg::platform_support *app)

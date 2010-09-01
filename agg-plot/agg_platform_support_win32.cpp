@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <string.h>
 #include <pthread.h>
+#include <new>
 #include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
@@ -722,14 +723,22 @@ namespace agg
         
         //--------------------------------------------------------------------
         case WM_SIZE:
-            app->m_specific->create_pmap(LOWORD(lParam), 
-                                         HIWORD(lParam),
-                                         &app->rbuf_window());
+	  try
+	    {
+	      app->m_specific->create_pmap(LOWORD(lParam), 
+					   HIWORD(lParam),
+					   &app->rbuf_window());
 
-            app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
-            app->on_resize(LOWORD(lParam), HIWORD(lParam));
-            app->force_redraw();
-            break;
+	      app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
+	      app->on_resize(LOWORD(lParam), HIWORD(lParam));
+	      app->force_redraw();
+	    }
+	  catch (std::bad_alloc&)
+	    {
+	      ::PostQuitMessage(1);
+	    }
+
+	  break;
         
         //--------------------------------------------------------------------
         case WM_ERASEBKGND:
@@ -1072,24 +1081,31 @@ namespace agg
         }
 
 
-        RECT rct;
-        ::GetClientRect(m_specific->m_hwnd, &rct);
+	try
+	  {
+	    RECT rct;
+	    ::GetClientRect(m_specific->m_hwnd, &rct);
 
-        ::MoveWindow(m_specific->m_hwnd,   // handle to window
-                     100,                  // horizontal position
-                     100,                  // vertical position
-                     width + (width - (rct.right - rct.left)),
-                     height + (height - (rct.bottom - rct.top)),
-                     FALSE);
+	    ::MoveWindow(m_specific->m_hwnd,   // handle to window
+			 100,                  // horizontal position
+			 100,                  // vertical position
+			 width + (width - (rct.right - rct.left)),
+			 height + (height - (rct.bottom - rct.top)),
+			 FALSE);
    
-        ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
-        m_specific->create_pmap(width, height, &m_rbuf_window);
-        m_initial_width = width;
-        m_initial_height = height;
-        on_init();
-        m_specific->m_redraw_flag = true;
-        ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
-	::SetForegroundWindow(m_specific->m_hwnd);
+	    ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+	    m_specific->create_pmap(width, height, &m_rbuf_window);
+	    m_initial_width = width;
+	    m_initial_height = height;
+	    on_init();
+	    m_specific->m_redraw_flag = true;
+	    ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+	    ::SetForegroundWindow(m_specific->m_hwnd);
+	  }
+	catch (std::bad_alloc&)
+	  {
+	    return false;
+	  }
         return true;
     }
 

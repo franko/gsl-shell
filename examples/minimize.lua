@@ -43,7 +43,7 @@ function demo1()
    local m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1}) 
 
-   local p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
+   local p = contour(cook(frosenbrock), {-1.5, -0.5}, {1.5, 2}, 20, 20, 12)
    local c = path(m.x[1], m.x[2])
    local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
@@ -105,7 +105,6 @@ function demo2()
    p:addline(c, 'red')
 
    p.title = 'Quadratic function minimisation'
-   p:show()
    return p
 end
 
@@ -131,6 +130,5 @@ function demo3()
    p:addline(c, 'green')
 
    p.title = 'function minimisation: f(x,y) = 4 x^2 + 2 y^2 + 4 x y + 2 y + 1'
-   p:show()
    return p
 end

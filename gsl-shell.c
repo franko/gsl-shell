@@ -384,7 +384,7 @@ static void dotty (lua_State *L) {
       do_windows_unref (L);
     }
 
-  object_index_apply_all (L, OBJECT_WINDOW, canvas_window_close_protected);
+  object_index_apply_all (L, OBJECT_WINDOW, canvas_window_close);
 
   do {
     do_windows_unref (L);

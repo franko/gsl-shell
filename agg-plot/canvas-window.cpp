@@ -24,7 +24,6 @@ extern "C" {
 }
 
 #include "defs.h"
-#include "canvas-window.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
 #include "gsl-shell.h"
@@ -40,20 +39,7 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int canvas_window_new           (lua_State *L);
-static int canvas_window_free          (lua_State *L);
-
 static void * canvas_thread_function        (void *_win);
-
-static const struct luaL_Reg canvas_win_functions[] = {
-  {"window",       canvas_window_new},
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg canvas_window_methods[] = {
-  {"__gc",         canvas_window_free},
-  {NULL, NULL}
-};
 
 __END_DECLS
 
@@ -63,7 +49,14 @@ canvas_window::on_resize(int sx, int sy)
   if (m_canvas)
     delete m_canvas;
 
-  m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
+  try 
+    {
+      m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
+    }
+  catch (std::bad_alloc&)
+    {
+      m_canvas = 0;
+    }
   
   m_matrix.sx = sx;
   m_matrix.sy = sy;
@@ -117,13 +110,18 @@ canvas_thread_function (void *_win)
   if (win->init(480, 480, agg::window_resize))
     {
       win->status = canvas_window::running;
-      win->run();
-      win->status = canvas_window::closed;
-
-      GSL_SHELL_LOCK();
-      gsl_shell_unref_plot (win->id);
-      GSL_SHELL_UNLOCK();
+      int excode = win->run();
+      win->status = (excode == 0 ? canvas_window::closed : canvas_window::error);
+      printf("window status after close is: %s\n", excode == 0 ? "closed" : "error");
     }
+  else
+    {
+      win->status = canvas_window::error;
+    }
+  
+  GSL_SHELL_LOCK();
+  gsl_shell_unref_plot (win->id);
+  GSL_SHELL_UNLOCK();
 
   win->unlock();
 
@@ -137,35 +135,7 @@ canvas_window::check (lua_State *L, int index)
 }
 
 int
-canvas_window_new (lua_State *L)
-{
-  agg::rgba8 *c8;
-
-  if (lua_gettop (L) == 0)
-    c8 = rgba8_push_default (L);
-  else
-    c8 = color_arg_lookup (L, 1);
-
-  const double bs = (double) agg::rgba8::base_mask;
-  agg::rgba color(c8->r / bs, c8->g / bs, c8->b / bs, c8->a / bs);
-
-  canvas_window *win = new(L, GS_CANVAS_WINDOW) canvas_window(color);
-
-  win->start_new_thread (L);
-
-  return 1;
-}
-
-int
-canvas_window_free (lua_State *L)
-{
-  canvas_window *win = canvas_window::check (L, 1);
-  win->~canvas_window();
-  return 0;
-}
-
-int
-canvas_window_close_protected (lua_State *L)
+canvas_window_close (lua_State *L)
 {
   canvas_window *win = canvas_window::check (L, 1);
   win->lock();
@@ -173,15 +143,4 @@ canvas_window_close_protected (lua_State *L)
     win->close();
   win->unlock();
   return 0;
-}
-
-void
-canvas_window_register (lua_State *L)
-{
-  luaL_newmetatable (L, GS_METATABLE(GS_CANVAS_WINDOW));
-  luaL_register (L, NULL, canvas_window_methods);
-  lua_pop (L, 1);
-
-  /* gsl module registration */
-  luaL_register (L, NULL, canvas_win_functions);
 }

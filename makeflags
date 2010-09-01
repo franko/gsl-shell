@@ -9,5 +9,5 @@ ifeq ($(strip $(DEBUG)), yes)
   CXXFLAGS = -g -Wall
 else
   CFLAGS = -O3 -Wall
-  CXXFLAGS = -O3 -fno-exceptions -fno-rtti -Wall
+  CXXFLAGS = -O3 -fno-rtti -Wall
 endif

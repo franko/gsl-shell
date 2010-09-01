@@ -251,7 +251,7 @@ int window::attach(lua_plot *plot, const char *spec)
 int
 window_new (lua_State *L)
 {
-  window *win = new(L, GS_WINDOW) window(colors::white);
+  window *win = push_new_object<window>(L, GS_WINDOW, colors::white);
   win->start_new_thread (L);
   return 1;
 }
@@ -259,11 +259,8 @@ window_new (lua_State *L)
 int
 window_free (lua_State *L)
 {
-  window *win = window::check (L, 1);
-  win->~window();
-  return 0;
+  return object_free<window>(L, 1, GS_WINDOW);
 }
-
 
 int
 window_split (lua_State *L)

@@ -231,6 +231,7 @@ parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
   lua_rawgeti (L, specindex, 1);
   if (! lua_isstring (L, -1))
     {
+      lua_management::dispose(obj);
       luaL_error (L, "the tag of the transformation is invalid");
       return NULL;
     }
@@ -241,8 +242,21 @@ parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
   typename builder_type::func_type *f = builder_type::lookup(tag);
 
   if (f)
-    return f (L, specindex, obj);
+    {
+      try
+	{
+	  typename context::base_type *retval = f (L, specindex, obj);
+	  return retval;
+	} 
+      catch (std::bad_alloc&) 
+	{
+	  lua_management::dispose(obj);
+	  luaL_error (L, "out of memory");
+	  return NULL;
+	}
+    }
 
+  lua_management::dispose(obj);
   luaL_error (L, "invalid trasformation tag");
   return NULL;
 }
@@ -256,6 +270,7 @@ parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
     nb = lua_objlen (L, index);
   else
     {
+      lua_management::dispose(obj);
       luaL_error (L, "post transform argument should be a table");
       return NULL;
     }
@@ -283,7 +298,7 @@ parse_graph_args (lua_State *L)
       
   if (narg > 5)
     {
-      luaL_error (L, "too much arguments if add or addline plot method");
+      luaL_error (L, "too much arguments in add or addline plot method");
       return NULL;
     }
 
@@ -299,7 +314,13 @@ parse_graph_args (lua_State *L)
 	  lua_pop (L, 1);
 	}
     
-      w = new window_scalable(s);
+      w = new(std::nothrow) window_scalable(s);
+      if (w == 0)
+	{
+	  lua_management::dispose(s);
+	  luaL_error (L, "out of memory");
+	  return NULL;
+	}	
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
