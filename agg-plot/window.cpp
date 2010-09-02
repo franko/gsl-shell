@@ -145,12 +145,30 @@ void window::draw_slot_by_ref(window::ref& ref, bool update_req)
 }
 
 void
-window::draw_slot(int slot_id, bool update_req)
+window::draw_slot(int slot_id, bool clean_req)
 {
   ref *ref = window::ref_lookup (this->m_tree, slot_id);
   if (ref && m_canvas)
     {
-      draw_slot_by_ref(*ref, update_req);
+      if (clean_req || ref->plot->need_redraw())
+	draw_slot_by_ref(*ref, true);
+      else
+	refresh_slot_by_ref(*ref);
+    }
+}
+
+void
+window::refresh_slot_by_ref(ref& ref)
+{
+  agg::trans_affine mtx(ref.matrix);
+  this->scale(mtx);
+  agg::rect_base<double> bb;
+
+  plot_type::iterator *current = ref.plot->drawing_start();
+  while (ref.plot->draw_queue(*m_canvas, mtx, bb, current))
+    {
+      agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
+      platform_support_update_region (this, bbw);
     }
 }
 
@@ -303,8 +321,8 @@ window_attach (lua_State *L)
   return 0;
 }
 
-int
-window_slot_update (lua_State *L)
+static int
+window_slot_update_raw (lua_State *L, bool clean_req)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
   int slot_id = luaL_checkinteger (L, 2);
@@ -312,11 +330,23 @@ window_slot_update (lua_State *L)
   win->lock();
   if (win->status == canvas_window::running)
     {
-      win->draw_slot(slot_id, true);
+      win->draw_slot(slot_id, clean_req);
     }
   win->unlock();
 
   return 0;
+}
+
+int
+window_slot_update (lua_State *L)
+{
+  return window_slot_update_raw (L, true);
+}
+
+int
+window_slot_refresh (lua_State *L)
+{
+  return window_slot_update_raw (L, false);
 }
 
 int

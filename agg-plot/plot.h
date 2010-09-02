@@ -70,17 +70,20 @@ class plot {
 
     void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
-      VertexSource& vsi = get_vertex_source();
+      VertexSource& vsi = vertex_source();
       vsi.bounding_box(x1, y1, x2, y2);
     };
 
-    VertexSource& get_vertex_source() { return *vs; };
+    VertexSource& vertex_source() { return *vs; };
   };
 
 public:
+  typedef pod_list<container> iterator;
+
   plot() : 
     m_elements(), m_trans(), m_drawing_queue(0), 
-    m_bbox_updated(true), m_title_buf(), m_use_units(true)
+    m_need_redraw(true), m_bbox_updated(false),
+    m_title_buf(), m_use_units(true)
   {
     m_title_buf.capacity(32);
     m_title = m_title_buf.data();
@@ -113,18 +116,37 @@ public:
     container d(vs, color, outline);
     m_elements.add(d);
 
-    if (! this->fit_inside(vs))
-      m_bbox_updated = false;
-
-    m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+    if (! m_need_redraw)
+      {
+	if (this->fit_inside(vs))
+	  {
+	    m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+	  }
+	else
+	  {
+	    m_bbox_updated = false;
+	    m_need_redraw = true;
+	    clear_drawing_queue();
+	  }
+      }
 
     resource_manager::acquire(vs);
   };
 
+  bool need_redraw() const { return m_need_redraw; };
+  void redraw_done() 
+  {
+    clear_drawing_queue();
+    m_need_redraw = false;
+  };
+
   void draw(canvas &canvas, agg::trans_affine& m);
+
   bool draw_queue(canvas &canvas, 
 		  agg::trans_affine& m,
-		  agg::rect_base<double>& bbox);
+		  agg::rect_base<double>& bbox,
+		  iterator*& current);
+  iterator* drawing_start() { return m_drawing_queue; };
 
   void trans_matrix_update();
   void user_transform(agg::trans_affine& m)
@@ -135,10 +157,19 @@ public:
 
 private:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
+  void draw_element(container& c, canvas &canvas, agg::trans_affine& m);
   void draw_title(canvas& canvas, agg::trans_affine& m);
   void draw_axis(canvas& can, agg::trans_affine& m);
 
+  agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
+
   void update_viewport_trans();
+
+  void clear_drawing_queue()
+  {
+    while (m_drawing_queue)
+      m_drawing_queue = list::pop(m_drawing_queue);
+  };	    
 
   void calc_bounding_box();
   bool fit_inside(VertexSource *obj) const;
@@ -151,7 +182,8 @@ private:
   pod_list<container> *m_drawing_queue;
 
   // bounding box
-  bool   m_bbox_updated;
+  bool m_need_redraw;
+  bool m_bbox_updated;
   double m_x1, m_y1;
   double m_x2, m_y2;
 
@@ -201,50 +233,54 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::draw_element(container& c, canvas &canvas, 
+			       agg::trans_affine& m)
+{
+  VS& vs = c.vertex_source();
+  vs.apply_transform(m, 1.0);
+
+  if (c.outline)
+    canvas.draw_outline(vs, c.color);
+  else
+    canvas.draw(vs, c.color);
+}
+
+template<class VS, class RM>
+agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
   viewport_scale(m);
-
   trans_affine_compose (m, canvas_mtx);
+  return m;
+}
+
+template<class VS, class RM>
+void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
+{
+  agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
   for (unsigned j = 0; j < m_elements.size(); j++)
     {
-      container& d = m_elements[j];
-      VS& vs = d.get_vertex_source();
-      vs.apply_transform(m, 1.0);
-
-      if (d.outline)
-	canvas.draw_outline(vs, d.color);
-      else
-	canvas.draw(vs, d.color);
+      draw_element(m_elements[j], canvas, m);
     }
 }
 
 template<class VS, class RM>
 bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
-			     agg::rect_base<double>& bb)
+			     agg::rect_base<double>& bb,
+			     plot<VS,RM>::iterator*& current)
 {
-  if (! m_drawing_queue) 
+  if (current == 0)
     return false;
 
-  agg::trans_affine m = m_trans;
-  viewport_scale(m);
-
-  trans_affine_compose (m, canvas_mtx);
-
   container& d = m_drawing_queue->content();
-  VS& vs = d.get_vertex_source();
-  vs.apply_transform(m, 1.0);
+  agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+  draw_element(d, canvas, m);
 
-  if (d.outline)
-    canvas.draw_outline(vs, d.color);
-  else
-    canvas.draw(vs, d.color);
+  agg::bounding_rect_single(d.vertex_source(), 0, 
+			    &bb.x1, &bb.y1, &bb.x2, &bb.y2);
 
-  agg::bounding_rect_single(vs, 0, &bb.x1, &bb.y1, &bb.x2, &bb.y2);
-
-  m_drawing_queue = list::pop(m_drawing_queue);
+  current = current->next();
   return true;
 }
 

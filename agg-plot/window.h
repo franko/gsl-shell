@@ -10,6 +10,7 @@ __BEGIN_DECLS
 extern void window_register                (lua_State *L);
 
 extern int  window_slot_update             (lua_State *L);
+extern int  window_slot_refresh            (lua_State *L);
 extern int  window_update                  (lua_State *L);
 extern int  window_new                     (lua_State *L);
 extern int  window_attach                  (lua_State *L);

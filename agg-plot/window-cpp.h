@@ -39,6 +39,7 @@ public:
 
 private:
   void draw_slot_by_ref(ref& ref, bool dirty);
+  void refresh_slot_by_ref(ref& ref);
   void draw_rec(ref::node *n);
   void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
@@ -57,6 +58,7 @@ public:
   void split(const char *spec);
   int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
+  void refresh_slot(int slot_id);
 
   void cleanup_refs(lua_State *L, int window_index)
   {

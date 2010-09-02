@@ -248,32 +248,31 @@ namespace agg
 
     
   //------------------------------------------------------------------------
-  void platform_specific::put_image(const rendering_buffer* src, const rect *r)
+  void platform_specific::put_image(const rendering_buffer* src, const rect *ri)
   {    
     if(m_ximg_window == 0) return;
     m_ximg_window->data = (char*)m_buf_window;
 
-    if (m_format == m_sys_format && r == 0)
+    if (m_format == m_sys_format && ri == 0)
       {
 	XPutImage(m_display, m_window, m_gc, m_ximg_window, 
 		  0, 0, 0, 0, src->width(), src->height());
       }
 
-    int x, y, w, h;
-    if (r)
+    agg::rect_base<int> r0(0, 0, src->width(), src->height());
+    agg::rect_base<int> r;
+
+    if (ri)
       {
-	x = r->x1;
-	y = r->y1;
-	w = r->x2 - r->x1;
-	h = r->y2 - r->y1;
+	r = *ri;
+	r.clip(r0);
       }
     else
       {
-	x = 0;
-	y = 0;
-	w = src->width();
-	h = src->height();
+	r = r0;
       }
+
+    int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
 
     int row_len = w * m_sys_bpp / 8;
     unsigned char* buf_tmp = new(std::nothrow) unsigned char[row_len * h];

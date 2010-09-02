@@ -55,6 +55,7 @@ static int plot_units_get  (lua_State *L);
 
 static int  plot_add_gener (lua_State *L, bool as_line);
 static void plot_update_raw (lua_State *L, int plot_index);
+static void plot_flush (lua_State *L, int plot_index);
 
 static const struct luaL_Reg plot_functions[] = {
   {"plot",        plot_new},
@@ -122,7 +123,7 @@ plot_add_gener (lua_State *L, bool as_line)
 
   AGG_UNLOCK();
 
-  plot_update_raw (L, 1);
+  plot_flush (L, 1);
 
   return 0;
 }
@@ -229,7 +230,17 @@ plot_newindex (lua_State *L)
 void
 plot_update_raw (lua_State *L, int plot_index)
 {
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   window_plot_rev_lookup_apply (L, plot_index, window_slot_update);
+  p->self().redraw_done();
+}
+
+void
+plot_flush (lua_State *L, int plot_index)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  window_plot_rev_lookup_apply (L, plot_index, window_slot_refresh);
+  p->self().redraw_done();
 }
 
 int
