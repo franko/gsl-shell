@@ -50,6 +50,14 @@ namespace list {
       delete p;
     }
   }
+
+  template <class T>
+  pod_list<T> * pop(pod_list<T> *p)
+  {
+    pod_list<T> *tail = p->next();
+    delete p;
+    return tail;
+  }
 }
 
 #endif

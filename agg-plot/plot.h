@@ -22,12 +22,14 @@
 #define AGGPLOT_CPLOT_H
 
 #include "utils.h"
+#include "my_list.h"
 #include "drawable.h"
 #include "canvas.h"
 #include "units.h"
 #include "resource-manager.h"
 
 #include "agg_array.h"
+#include "agg_bounding_rect.h"
 #include "agg_vcgen_markers_term.h"
 #include "agg_conv_transform.h"
 #include "agg_color_rgba.h"
@@ -77,8 +79,8 @@ class plot {
 
 public:
   plot() : 
-    m_elements(), m_trans(), m_bbox_updated(true),
-    m_title_buf(), m_use_units(true)
+    m_elements(), m_trans(), m_drawing_queue(0), 
+    m_bbox_updated(true), m_title_buf(), m_use_units(true)
   {
     m_title_buf.capacity(32);
     m_title = m_title_buf.data();
@@ -110,11 +112,19 @@ public:
   { 
     container d(vs, color, outline);
     m_elements.add(d);
-    m_bbox_updated = false;
+
+    if (! this->fit_inside(vs))
+      m_bbox_updated = false;
+
+    m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+
     resource_manager::acquire(vs);
   };
 
   void draw(canvas &canvas, agg::trans_affine& m);
+  bool draw_queue(canvas &canvas, 
+		  agg::trans_affine& m,
+		  agg::rect_base<double>& bbox);
 
   void trans_matrix_update();
   void user_transform(agg::trans_affine& m)
@@ -131,11 +141,14 @@ private:
   void update_viewport_trans();
 
   void calc_bounding_box();
+  bool fit_inside(VertexSource *obj) const;
 
   static void viewport_scale(agg::trans_affine& trans);
 
   agg::pod_bvector<container> m_elements;
   agg::trans_affine m_trans;
+
+  pod_list<container> *m_drawing_queue;
 
   // bounding box
   bool   m_bbox_updated;
@@ -209,6 +222,33 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
+bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
+			     agg::rect_base<double>& bb)
+{
+  if (! m_drawing_queue) 
+    return false;
+
+  agg::trans_affine m = m_trans;
+  viewport_scale(m);
+
+  trans_affine_compose (m, canvas_mtx);
+
+  container& d = m_drawing_queue->content();
+  VS& vs = d.get_vertex_source();
+  vs.apply_transform(m, 1.0);
+
+  if (d.outline)
+    canvas.draw_outline(vs, d.color);
+  else
+    canvas.draw(vs, d.color);
+
+  agg::bounding_rect_single(vs, 0, &bb.x1, &bb.y1, &bb.x2, &bb.y2);
+
+  m_drawing_queue = list::pop(m_drawing_queue);
+  return true;
+}
+
+template<class VS, class RM>
 void plot<VS,RM>::update_viewport_trans()
 {
   double xi, yi, xs, ys;
@@ -279,6 +319,21 @@ void plot<VS,RM>::calc_bounding_box()
       bbox_enlarge(&m_x1, &m_y1, &m_x2, &m_y2, sx2, sy2);
     }
   }
+}
+
+template<class VS, class RM>
+bool plot<VS,RM>::fit_inside(VS* obj) const
+{
+  double sx1, sy1, sx2, sy2;
+  obj->bounding_box(&sx1, &sy1, &sx2, &sy2);
+
+  if (sx1 < m_x1 || sx1 > m_x2 || sy1 < m_y1 || sy1 > m_y2)
+    return false;
+
+  if (sx2 < m_x1 || sx2 > m_x2 || sy2 < m_y1 || sy2 > m_y2)
+    return false;
+
+  return true;
 }
 
 template <class VS, class RM>
