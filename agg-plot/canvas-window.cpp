@@ -128,16 +128,10 @@ canvas_thread_function (void *_win)
   return NULL;
 }
 
-canvas_window *
-canvas_window::check (lua_State *L, int index)
-{
-  return (canvas_window *) gs_check_userdata (L, index, GS_CANVAS_WINDOW);
-}
-
 int
 canvas_window_close (lua_State *L)
 {
-  canvas_window *win = canvas_window::check (L, 1);
+  canvas_window *win = object_check<canvas_window>(L, 1, GS_CANVAS_WINDOW);
   win->lock();
   if (win->status == canvas_window::running)
     win->close();

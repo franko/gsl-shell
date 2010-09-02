@@ -60,8 +60,6 @@ public:
   };
 
   void scale (agg::trans_affine& m) { trans_affine_compose (m, m_matrix); };
- 
-  static canvas_window *check (lua_State *L, int index);
 };
 
 #endif

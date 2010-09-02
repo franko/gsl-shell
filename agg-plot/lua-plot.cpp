@@ -86,16 +86,10 @@ static const struct luaL_Reg plot_properties_set[] = {
 
 __END_DECLS
 
-lua_plot *
-lua_plot::check(lua_State *L, int index)
-{
-  return (lua_plot *) gs_check_userdata (L, index, GS_PLOT);
-}
-
 int
 plot_new (lua_State *L)
 {
-  lua_plot *p = new(L, GS_PLOT) lua_plot();
+  lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
 
   if (lua_isstring (L, 1))
     {
@@ -110,15 +104,13 @@ plot_new (lua_State *L)
 int
 plot_free (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
-  p->~lua_plot();
-  return 0;
+  return object_free<lua_plot>(L, 1, GS_PLOT);
 }
 
 int
 plot_add_gener (lua_State *L, bool as_line)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   drawable *obj = parse_graph_args (L);
   agg::rgba8 *color = check_color_rgba8 (L, 3);
 
@@ -150,7 +142,7 @@ plot_add_line (lua_State *L)
 int
 plot_title_set (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   const char *title = lua_tostring (L, 2);
 
   if (title == NULL)
@@ -170,7 +162,7 @@ plot_title_set (lua_State *L)
 int
 plot_title_get (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
   AGG_LOCK();
 
@@ -185,7 +177,7 @@ plot_title_get (lua_State *L)
 int
 plot_units_set (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   bool request = (bool) lua_toboolean (L, 2);
 
   AGG_LOCK();
@@ -210,7 +202,7 @@ plot_units_set (lua_State *L)
 int
 plot_units_get (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
   AGG_LOCK();
 
@@ -243,7 +235,7 @@ plot_update_raw (lua_State *L, int plot_index)
 int
 plot_update (lua_State *L)
 {
-  lua_plot *p = lua_plot::check(L, 1);
+  object_check<lua_plot>(L, 1, GS_PLOT);
   plot_update_raw (L, 1);
   return 0;
 }

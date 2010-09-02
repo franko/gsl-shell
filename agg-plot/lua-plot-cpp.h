@@ -14,16 +14,13 @@ extern "C" {
 class lua_plot {
 public:
   typedef plot<drawable, lua_management> plot_type;
-
-private:
-  plot_type m_plot;
-
-public:
+  
   lua_plot() : m_plot() { };
 
   plot_type& self() { return m_plot; };
 
-  static lua_plot *check(lua_State *L, int index);
+private:
+  plot_type m_plot;
 };
 
 #endif

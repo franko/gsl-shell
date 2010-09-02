@@ -51,10 +51,15 @@ T* push_new_object (lua_State *L, enum gs_type_e tp, init_type& init)
 template <class T>
 int object_free (lua_State *L, int index, enum gs_type_e tp)
 {
-  INDEX_SET_ABS(L, index);
   T *obj = (T *) gs_check_userdata (L, index, tp);
   obj->~T();
   return 0;
+}
+
+template <class T>
+T* object_check (lua_State *L, int index, enum gs_type_e tp)
+{
+  return (T *) gs_check_userdata (L, index, tp);
 }
 
 #endif

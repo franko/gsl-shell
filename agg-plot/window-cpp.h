@@ -54,8 +54,6 @@ public:
 
   ~window() { if (m_tree) delete m_tree; };
 
-  static window *check (lua_State *L, int index);
-
   void split(const char *spec);
   int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);

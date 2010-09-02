@@ -164,12 +164,6 @@ window::on_draw()
   draw_rec(m_tree);
 }
 
-window *
-window::check (lua_State *L, int index)
-{
-  return (window *) gs_check_userdata (L, index, GS_WINDOW);
-}
-
 void
 window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
 {
@@ -218,8 +212,7 @@ next_int (const char *str, int& val)
   return eptr;
 }
 
-/* Returns the existing plot ref id, 0 if there isn't any.
-   It does return -1 in case of error.*/
+/* Returns the slot_id or -1 in case of error. */
 int window::attach(lua_plot *plot, const char *spec)
 {
   ref::node *n = m_tree;
@@ -269,7 +262,7 @@ window_free (lua_State *L)
 int
 window_split (lua_State *L)
 {
-  window *win = window::check (L, 1);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
   const char *spec = luaL_checkstring (L, 2);
 
   win->lock();
@@ -287,8 +280,8 @@ window_split (lua_State *L)
 int
 window_attach (lua_State *L)
 {
-  window *win = window::check (L, 1);
-  lua_plot *plot = lua_plot::check (L, 2);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  lua_plot *plot = object_check<lua_plot>(L, 2, GS_PLOT);
   const char *spec = luaL_checkstring (L, 3);
 
   win->lock();
@@ -313,7 +306,7 @@ window_attach (lua_State *L)
 int
 window_slot_update (lua_State *L)
 {
-  window *win = window::check (L, 1);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
   int slot_id = luaL_checkinteger (L, 2);
 
   win->lock();
@@ -329,7 +322,7 @@ window_slot_update (lua_State *L)
 int
 window_update (lua_State *L)
 {
-  window *win = window::check (L, 1);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
 
   win->lock();
   win->on_draw();
