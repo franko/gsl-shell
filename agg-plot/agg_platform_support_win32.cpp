@@ -361,37 +361,42 @@ namespace agg
 	    h = m_pmap_window.height();
 	  }
 
-	pixel_map pmap_tmp;
-	pmap_tmp.create(w, h, org_e(m_sys_bpp));
+	try
+	  {
+	    pixel_map pmap_tmp;
+	    pmap_tmp.create(w, h, org_e(m_sys_bpp));
 
-	rendering_buffer rbuf_tmp;
-	rbuf_tmp.attach(pmap_tmp.buf(),
-			pmap_tmp.width(),
-			pmap_tmp.height(),
-			m_flip_y ?
-			pmap_tmp.stride() :
-			-pmap_tmp.stride());
+	    rendering_buffer rbuf_tmp;
+	    rbuf_tmp.attach(pmap_tmp.buf(),
+			    pmap_tmp.width(),
+			    pmap_tmp.height(),
+			    m_flip_y ?
+			    pmap_tmp.stride() :
+			    -pmap_tmp.stride());
 
-	const unsigned char *src_start = src->row_ptr(m_flip_y ? y : y + h - 1);
-	const unsigned int pix_width = m_bpp / 8;
-	row_accessor_ro<unsigned char> src_box(src_start + pix_width * x, w, h, src->stride());
+	    const unsigned char *src_start = src->row_ptr(m_flip_y ? y : y + h - 1);
+	    const unsigned int pix_width = m_bpp / 8;
+	    row_accessor_ro<unsigned char> src_box(src_start + pix_width * x, w, h, src->stride());
 
-	convert_pmap(&rbuf_tmp, &src_box, m_format, true);
+	    convert_pmap(&rbuf_tmp, &src_box, m_format, true);
 
-	unsigned int wh = m_pmap_window.height();
-	RECT wrect;
-	wrect.left   = x;
-	wrect.right  = x + w;
-	wrect.bottom = wh - y;
-	wrect.top    = wh - (y+h);
+	    unsigned int wh = m_pmap_window.height();
+	    RECT wrect;
+	    wrect.left   = x;
+	    wrect.right  = x + w;
+	    wrect.bottom = wh - y;
+	    wrect.top    = wh - (y+h);
 
-	RECT brect;
-	brect.left   = 0;
-	brect.right  = w;
-	brect.bottom = h;
-	brect.top    = 0;
+	    RECT brect;
+	    brect.left   = 0;
+	    brect.right  = w;
+	    brect.bottom = h;
+	    brect.top    = 0;
 
-	pmap_tmp.draw(dc, &wrect, &brect);
+	    pmap_tmp.draw(dc, &wrect, &brect);
+	  }
+	catch (std::bad_alloc&)
+	  { }
       }
   }
 

@@ -117,31 +117,31 @@ window::ref* window::ref_lookup (ref::node *p, int slot_id)
   return NULL;
 }
 
-void window::draw_slot_by_ref(window::ref& ref, bool dirty)
+void window::draw_slot_by_ref(window::ref& ref, bool update_req)
 {
   if (! ref.plot)
     return;
 
+  agg::rect_base<int> r;
   agg::trans_affine mtx(ref.matrix);
   this->scale(mtx);
 
-  if (dirty)
+  if (update_req)
     {
-      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      r = rect_of_slot_matrix(mtx);
       m_canvas->clear_box(r);
-      AGG_LOCK();
-      try 
-	{
-	  ref.plot->draw(*m_canvas, mtx);
-	} 
-      catch (std::bad_alloc&) { }
-      AGG_UNLOCK();
-      platform_support_update_region (this, r);
     }
-  else
+
+  AGG_LOCK();
+  try 
     {
       ref.plot->draw(*m_canvas, mtx);
-    }
+    } 
+  catch (std::bad_alloc&) { }
+  AGG_UNLOCK();
+
+  if (update_req)
+    platform_support_update_region (this, r);
 }
 
 void

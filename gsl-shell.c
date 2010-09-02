@@ -51,7 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <sys/resource.h>
+// #include <sys/resource.h>
 
 #define lua_c
 
@@ -547,12 +547,14 @@ static int pmain (lua_State *L) {
 int main (int argc, char **argv) {
   int status;
   struct Smain s;
+  /*
   struct rlimit lmt[1];
 
   lmt->rlim_cur = 32 * 1024 * 1024;
   lmt->rlim_max = 32 * 1024 * 1024;
 
   setrlimit (RLIMIT_AS, lmt);
+  */
 
   pthread_mutex_init (gsl_shell_mutex, NULL);
 
