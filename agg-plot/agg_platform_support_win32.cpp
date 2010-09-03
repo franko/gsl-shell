@@ -337,28 +337,26 @@ namespace agg
 
     //------------------------------------------------------------------------
   void platform_specific::display_pmap(HDC dc, const rendering_buffer* src,
-				       const agg::rect_base<int> *r)
+				       const agg::rect_base<int> *ri)
   {
-    if(m_sys_format == m_format && r == 0)
+    if(m_sys_format == m_format && ri == 0)
       {
 	m_pmap_window.draw(dc);
       }
     else
       {
-	int x, y, w, h;
-	if (r)
+	int x, y, w = src->width(), h = src->height();
+
+	if (ri)
 	  {
-	    x = r->x1;
-	    y = r->y1;
-	    w = r->x2 - r->x1;
-	    h = r->y2 - r->y1;
+	    agg::rect_base<int> r0(0, 0, w, h);
+	    agg::rect_base<int> r = *ri;
+	    r.clip(r0);
+	    x = r.x1; y = r.y1; w = r.x2 - r.x1; h = r.y2 - r.y1;
 	  }
 	else
 	  {
-	    x = 0;
-	    y = 0;
-	    w = m_pmap_window.width();
-	    h = m_pmap_window.height();
+	    x = 0; y = 0;
 	  }
 
 	try

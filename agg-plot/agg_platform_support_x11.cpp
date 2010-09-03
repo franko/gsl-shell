@@ -259,20 +259,19 @@ namespace agg
 		  0, 0, 0, 0, src->width(), src->height());
       }
 
-    agg::rect_base<int> r0(0, 0, src->width(), src->height());
-    agg::rect_base<int> r;
+    int x, y, w = src->width(), h = src->height();
 
     if (ri)
       {
-	r = *ri;
+	agg::rect_base<int> r0(0, 0, w, h);
+	agg::rect_base<int> r = *ri;
 	r.clip(r0);
+	x = r.x1; y = r.y1; w = r.x2 - r.x1; h = r.y2 - r.y1;
       }
     else
       {
-	r = r0;
+	x = 0; y = 0;
       }
-
-    int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
 
     int row_len = w * m_sys_bpp / 8;
     unsigned char* buf_tmp = new(std::nothrow) unsigned char[row_len * h];

@@ -164,12 +164,17 @@ window::refresh_slot_by_ref(ref& ref)
   this->scale(mtx);
   agg::rect_base<double> bb;
 
-  plot_type::iterator *current = ref.plot->drawing_start();
-  while (ref.plot->draw_queue(*m_canvas, mtx, bb, current))
-    {
-      agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
-      platform_support_update_region (this, bbw);
-    }
+  AGG_LOCK();
+  try {
+    plot_type::iterator *current = ref.plot->drawing_start();
+    while (ref.plot->draw_queue(*m_canvas, mtx, bb, current))
+      {
+	agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
+	platform_support_update_region (this, bbw);
+      }
+  } 
+  catch (std::bad_alloc&) { }
+  AGG_UNLOCK();
 }
 
 void
