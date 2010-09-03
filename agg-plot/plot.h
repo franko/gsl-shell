@@ -108,67 +108,31 @@ public:
       }
   };
 
-  void set_title(const char *text) {
-    unsigned int len = strlen(text);
-    m_title_buf.resize(len+1);
-    m_title = m_title_buf.data();
-    memcpy (m_title, text, len+1);
-  };
-
+  void set_title(const char *text);
   const char *get_title() const { return m_title; };
 
   bool use_units() const { return m_use_units; };
   void set_units(bool use_units);
 
-  void push_drawing_queue() 
-  {
-    push_drawing_rev (m_drawing_queue);
-    
-    while (m_drawing_queue)
-      m_drawing_queue = list::pop(m_drawing_queue);
-  };
-
-  void add(VertexSource* vs, agg::rgba8 *color, bool outline = false) 
-  { 
-    container d(vs, color, outline);
-
-    if (!this->fit_inside(vs))
-      {
-	m_bbox_updated = false;
-	m_need_redraw = true;
-	m_elements.add(d);
-      }
-    else
-      {
-	m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
-      }
-
-    m_is_empty = false;
-
-    resource_manager::acquire(vs);
-  };
-
-  bool need_redraw() const { return m_need_redraw; };
-  void redraw_done() 
-  {
-    push_drawing_queue();
-    m_need_redraw = false;
-  };
+  void add(VertexSource* vs, agg::rgba8 *color, bool outline = false);
 
   void draw(canvas &canvas, agg::trans_affine& m);
+
+  /* drawing queue related methods */
+  void push_drawing_queue();
+
+  bool need_redraw() const { return m_need_redraw; };
+  void redraw_done();
 
   bool draw_queue(canvas &canvas, 
 		  agg::trans_affine& m,
 		  agg::rect_base<double>& bbox,
 		  iterator*& current);
-  iterator* drawing_start() { return m_drawing_queue; };
 
+  iterator* drawing_start() { return m_drawing_queue; };
+  
+  /* transform matrix methods */
   void trans_matrix_update();
-  void user_transform(agg::trans_affine& m)
-  {
-    m = m_trans;
-    viewport_scale(m);
-  };
 
 private:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
@@ -180,18 +144,14 @@ private:
 
   void update_viewport_trans();
 
-  void clear_drawing_queue()
-  {
-    while (m_drawing_queue)
-      m_drawing_queue = list::pop(m_drawing_queue);
-  };	    
+  static void viewport_scale(agg::trans_affine& trans);
 
   void calc_bounding_box();
   bool fit_inside(VertexSource *obj) const;
 
-  static void viewport_scale(agg::trans_affine& trans);
-
   agg::pod_bvector<container> m_elements;
+
+  /* transformation matrix */
   agg::trans_affine m_trans;
 
   pod_list<container> *m_drawing_queue;
@@ -209,6 +169,52 @@ private:
   bool m_use_units;
   units m_ux, m_uy;
 };
+
+template <class VS, class RM>
+void plot<VS,RM>::redraw_done()
+{
+  push_drawing_queue();
+  m_need_redraw = false;
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
+{ 
+  container d(vs, color, outline);
+
+  if (!this->fit_inside(vs))
+    {
+      m_bbox_updated = false;
+      m_need_redraw = true;
+      m_elements.add(d);
+    }
+  else
+    {
+      m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+    }
+
+  m_is_empty = false;
+
+  RM::acquire(vs);
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::set_title(const char *text) 
+{
+  unsigned int len = strlen(text);
+  m_title_buf.resize(len+1);
+  m_title = m_title_buf.data();
+  memcpy (m_title, text, len+1);
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::push_drawing_queue() 
+{
+  push_drawing_rev (m_drawing_queue);
+  
+  while (m_drawing_queue)
+    m_drawing_queue = list::pop(m_drawing_queue);
+}
 
 template <class VS, class RM>
 void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
