@@ -110,9 +110,8 @@ canvas_thread_function (void *_win)
   if (win->init(480, 480, agg::window_resize))
     {
       win->status = canvas_window::running;
-      int excode = win->run();
-      win->status = (excode == 0 ? canvas_window::closed : canvas_window::error);
-      printf("window status after close is: %s\n", excode == 0 ? "closed" : "error");
+      int ec = win->run();
+      win->status = (ec == 0 ? canvas_window::closed : canvas_window::error);
     }
   else
     {
