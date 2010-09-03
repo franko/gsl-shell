@@ -77,13 +77,22 @@ class plot {
     VertexSource& vertex_source() { return *vs; };
   };
 
+  void push_drawing_rev(pod_list<container> *c)
+  {
+    if (c)
+      {
+	push_drawing_rev (c->next());
+	m_elements.add(c->content());
+      }
+  }
+
 public:
   typedef pod_list<container> iterator;
 
   plot() : 
     m_elements(), m_trans(), m_drawing_queue(0), 
-    m_need_redraw(true), m_bbox_updated(false),
-    m_title_buf(), m_use_units(true)
+    m_need_redraw(true), m_bbox_updated(true), m_is_empty(true),
+    m_title_buf(), m_use_units(true), m_ux(), m_uy()
   {
     m_title_buf.capacity(32);
     m_title = m_title_buf.data();
@@ -111,24 +120,30 @@ public:
   bool use_units() const { return m_use_units; };
   void set_units(bool use_units);
 
+  void push_drawing_queue() 
+  {
+    push_drawing_rev (m_drawing_queue);
+    
+    while (m_drawing_queue)
+      m_drawing_queue = list::pop(m_drawing_queue);
+  };
+
   void add(VertexSource* vs, agg::rgba8 *color, bool outline = false) 
   { 
     container d(vs, color, outline);
-    m_elements.add(d);
 
-    if (! m_need_redraw)
+    if (!this->fit_inside(vs))
       {
-	if (this->fit_inside(vs))
-	  {
-	    m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
-	  }
-	else
-	  {
-	    m_bbox_updated = false;
-	    m_need_redraw = true;
-	    clear_drawing_queue();
-	  }
+	m_bbox_updated = false;
+	m_need_redraw = true;
+	m_elements.add(d);
       }
+    else
+      {
+	m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+      }
+
+    m_is_empty = false;
 
     resource_manager::acquire(vs);
   };
@@ -136,7 +151,7 @@ public:
   bool need_redraw() const { return m_need_redraw; };
   void redraw_done() 
   {
-    clear_drawing_queue();
+    push_drawing_queue();
     m_need_redraw = false;
   };
 
@@ -184,6 +199,7 @@ private:
   // bounding box
   bool m_need_redraw;
   bool m_bbox_updated;
+  bool m_is_empty;
   double m_x1, m_y1;
   double m_x2, m_y2;
 
@@ -316,7 +332,7 @@ void plot<VS,RM>::update_viewport_trans()
 template<class VS, class RM>
 void plot<VS,RM>::trans_matrix_update()
   {
-    if (this->m_bbox_updated)
+    if (this->m_bbox_updated || this->m_is_empty)
       return;
 
     this->calc_bounding_box();
@@ -360,6 +376,9 @@ void plot<VS,RM>::calc_bounding_box()
 template<class VS, class RM>
 bool plot<VS,RM>::fit_inside(VS* obj) const
 {
+  if (this->m_is_empty || !this->m_bbox_updated)
+    return false;
+
   double sx1, sy1, sx2, sy2;
   obj->bounding_box(&sx1, &sy1, &sx2, &sy2);
 

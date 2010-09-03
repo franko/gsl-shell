@@ -152,8 +152,8 @@ window::draw_slot(int slot_id, bool clean_req)
     {
       if (clean_req || ref->plot->need_redraw())
 	draw_slot_by_ref(*ref, true);
-      else
-	refresh_slot_by_ref(*ref);
+
+      refresh_slot_by_ref(*ref);
     }
 }
 
