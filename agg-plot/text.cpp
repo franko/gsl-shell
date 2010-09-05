@@ -34,7 +34,7 @@ namespace draw {
   text::bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
     *x1 = *x2 = m_x;
-    *y1 = *y1 = m_y;
+    *y1 = *y2 = m_y;
   }
 
   bool
