@@ -93,7 +93,6 @@ function demo3()
    return pl
 end
 
-
 function demo3bis(n)
    n = n and n or 10
    local rdsd = sqrt(2)/2
@@ -118,7 +117,8 @@ function demo3bis(n)
    local cfgen = color_function('darkgreen', 1)
 
    local pl = plot()
-   pl.units = false
+   -- pl.units = false
+   pl:show()
 
    for d=n, 0, -1 do
       local dfact = rdsd^(n-d)
@@ -134,6 +134,64 @@ function demo3bis(n)
       end
    end
 
+   return pl
+end
+
+function demo3ter(n)
+   n = n and n or 10
+   local cf
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      local box = rect(0, 0, ll, ll)
+      local col = cf(depth)
+      pl:add(box, col, {}, {{'translate', x= x, y= y}, {'rotate', angle= th}})
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 local a1 = th + atan2(12,16)
+	 pitag_tree(pl, x, y, a1, ll*4/5, depth-1)
+	 x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+	 pitag_tree(pl, x, y, th + atan2(-12,9), ll*3/5, depth-1)
+      end
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+   cf = |d| cfgen(1-d/n)
+   local pl = plot()
+   pl.units = false
+   pl:show()
+   pitag_tree(pl, 0, 0, 0, 1, n)
+   return pl
+end
+
+function demo3teri(n)
+   n = n and n or 10
+   local col, coln
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      if depth == 0 then
+	 local box = rect(0, 0, ll, ll)
+	 local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}}
+	 pl:add(box, col, {}, tr)
+	 pl:add(box, coln, {{'stroke', width= 2.5*ll}}, tr)
+      end
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 local a1 = th + atan2(12,16)
+	 pitag_tree(pl, x, y, a1, ll*4/5, depth-1)
+	 x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+	 pitag_tree(pl, x, y, th + atan2(-12,9), ll*3/5, depth-1)
+      end
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+
+   local pl = plot()
+   pl.units = false
+
+   for k=0, n do
+      col, coln  = cfgen(k/n), cfgen((k+1)/n)
+      pitag_tree(pl, 0, 0, 0, 1, k)
+   end
    pl:show()
    return pl
 end
