@@ -7,20 +7,10 @@ extern "C" {
 #include "lua.h"
 }
 
-#include "plot.h"
+#include "plot-auto.h"
 #include "resource-manager.h"
 #include "drawable.h"
 
-class lua_plot {
-public:
-  typedef plot<drawable, lua_management> plot_type;
-  
-  lua_plot() : m_plot() { };
-
-  plot_type& self() { return m_plot; };
-
-private:
-  plot_type m_plot;
-};
+typedef plot<drawable, lua_management> lua_plot;
 
 #endif

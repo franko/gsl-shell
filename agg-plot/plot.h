@@ -41,19 +41,10 @@
 
 extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
 
-static void
-bbox_enlarge(double *x1, double* y1, double* x2, double* y2,
-	     double x, double y)
-{
-  if (x < *x1) *x1 = x;
-  if (y < *y1) *y1 = y;
-  if (x > *x2) *x2 = x;
-  if (y > *y2) *y2 = y;
-}
-
 template<class VertexSource, class resource_manager = no_management>
 class plot {
 
+protected:
   class container {
   public:
     VertexSource* vs;
@@ -77,29 +68,22 @@ class plot {
     VertexSource& vertex_source() { return *vs; };
   };
 
-  void push_drawing_rev(pod_list<container> *c)
-  {
-    if (c)
-      {
-	push_drawing_rev (c->next());
-	m_elements.add(c->content());
-      }
-  }
-
 public:
   typedef pod_list<container> iterator;
 
-  plot() : 
-    m_elements(), m_trans(), m_drawing_queue(0), 
-    m_need_redraw(true), m_bbox_updated(true), m_is_empty(true),
-    m_title_buf(), m_use_units(true), m_ux(), m_uy()
+  plot(bool use_units = true) : 
+    m_elements(), m_drawing_queue(0), 
+    m_need_redraw(true), m_rect(),
+    m_use_units(use_units), m_title_buf()
   {
+    compute_user_trans();
+
     m_title_buf.capacity(32);
     m_title = m_title_buf.data();
     m_title[0] = '\0';
   };
 
-  ~plot() 
+  virtual ~plot() 
   {
     for (unsigned j = 0; j < m_elements.size(); j++)
       {
@@ -109,13 +93,14 @@ public:
   };
 
   void set_title(const char *text);
-  const char *get_title() const { return m_title; };
+  const char *title() const { return m_title; };
 
-  bool use_units() const { return m_use_units; };
   void set_units(bool use_units);
+  bool use_units() const { return m_use_units; };
 
-  void add(VertexSource* vs, agg::rgba8 *color, bool outline = false);
-
+  virtual void add(VertexSource* vs, agg::rgba8 *color, bool outline);
+  virtual void on_draw() { };
+  
   void draw(canvas &canvas, agg::trans_affine& m);
 
   /* drawing queue related methods */
@@ -130,11 +115,8 @@ public:
 		  iterator*& current);
 
   iterator* drawing_start() { return m_drawing_queue; };
-  
-  /* transform matrix methods */
-  void trans_matrix_update();
 
-private:
+protected:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
   void draw_element(container& c, canvas &canvas, agg::trans_affine& m);
   void draw_title(canvas& canvas, agg::trans_affine& m);
@@ -142,33 +124,38 @@ private:
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
-  void update_viewport_trans();
+  void compute_user_trans();
 
   static void viewport_scale(agg::trans_affine& trans);
 
-  void calc_bounding_box();
   bool fit_inside(VertexSource *obj) const;
 
+  void push_drawing_rev(pod_list<container> *c);
+
   agg::pod_bvector<container> m_elements;
-
-  /* transformation matrix */
   agg::trans_affine m_trans;
-
   pod_list<container> *m_drawing_queue;
 
-  // bounding box
   bool m_need_redraw;
-  bool m_bbox_updated;
-  bool m_is_empty;
-  double m_x1, m_y1;
-  double m_x2, m_y2;
-
-  agg::pod_vector<char> m_title_buf;
-  char *m_title;
+  agg::rect_base<double> m_rect;
 
   bool m_use_units;
   units m_ux, m_uy;
+
+private:
+  agg::pod_vector<char> m_title_buf;
+  char *m_title;
 };
+
+template <class VS, class RM>
+void plot<VS,RM>::push_drawing_rev(pod_list<plot<VS,RM>::container> *c)
+{
+  if (c)
+    {
+      push_drawing_rev (c->next());
+      m_elements.add(c->content());
+    }
+}
 
 template <class VS, class RM>
 void plot<VS,RM>::redraw_done()
@@ -181,20 +168,7 @@ template <class VS, class RM>
 void plot<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
 { 
   container d(vs, color, outline);
-
-  if (!this->fit_inside(vs))
-    {
-      m_bbox_updated = false;
-      m_need_redraw = true;
-      m_elements.add(d);
-    }
-  else
-    {
-      m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
-    }
-
-  m_is_empty = false;
-
+  m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
   RM::acquire(vs);
 }
 
@@ -219,7 +193,7 @@ void plot<VS,RM>::push_drawing_queue()
 template <class VS, class RM>
 void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
-  trans_matrix_update();
+  on_draw();
   draw_title(canvas, canvas_mtx);
   if (m_use_units)
     draw_axis(canvas, canvas_mtx);
@@ -307,94 +281,29 @@ bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::update_viewport_trans()
+void plot<VS,RM>::compute_user_trans()
 {
-  double xi, yi, xs, ys;
+  agg::rect_base<double> r;
 
   if (m_use_units)
     {
       int ixi, ixs, iyi, iys;
       double xd, yd;
       m_ux.limits(ixi, ixs, xd);
-      xi = ixi * xd;
-      xs = ixs * xd;
+      r.x1 = ixi * xd;
+      r.x2 = ixs * xd;
 
       m_uy.limits(iyi, iys, yd);
-      yi = iyi * yd;
-      ys = iys * yd;
+      r.y1 = iyi * yd;
+      r.y2 = iys * yd;
     }
   else
     {
-      xi = m_x1;
-      yi = m_y1;
-      xs = m_x2;
-      ys = m_y2;
+      r = m_rect;
     }
 
-  double fx = 1/(xs - xi), fy = 1/(ys - yi);
-  this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -xi*fx, -yi*fy);
-}
-
-template<class VS, class RM>
-void plot<VS,RM>::trans_matrix_update()
-  {
-    if (this->m_bbox_updated || this->m_is_empty)
-      return;
-
-    this->calc_bounding_box();
-
-    m_ux = units(this->m_x1, this->m_x2);
-    m_uy = units(this->m_y1, this->m_y2);
-
-    this->update_viewport_trans();
-    this->m_bbox_updated = true;
-  }
-
-template<class VS, class RM>
-void plot<VS,RM>::calc_bounding_box()
-{
-  bool is_set = false;
-
-  for (unsigned j = 0; j < m_elements.size(); j++)
-  {
-    container& d = m_elements[j];
-
-    double sx1, sy1, sx2, sy2;
-    d.vs->bounding_box(&sx1, &sy1, &sx2, &sy2);
-      
-    if (! is_set)
-    {
-      m_x1 = sx1;
-      m_x2 = sx2;
-      m_y1 = sy1;
-      m_y2 = sy2;
-
-      is_set = true;
-    }
-    else
-    {
-      bbox_enlarge(&m_x1, &m_y1, &m_x2, &m_y2, sx1, sy1);
-      bbox_enlarge(&m_x1, &m_y1, &m_x2, &m_y2, sx2, sy2);
-    }
-  }
-}
-
-template<class VS, class RM>
-bool plot<VS,RM>::fit_inside(VS* obj) const
-{
-  if (this->m_is_empty || !this->m_bbox_updated)
-    return false;
-
-  double sx1, sy1, sx2, sy2;
-  obj->bounding_box(&sx1, &sy1, &sx2, &sy2);
-
-  if (sx1 < m_x1 || sx1 > m_x2 || sy1 < m_y1 || sy1 > m_y2)
-    return false;
-
-  if (sx2 < m_x1 || sx2 > m_x2 || sy2 < m_y1 || sy2 > m_y2)
-    return false;
-
-  return true;
+  double fx = 1/(r.x2 - r.x1), fy = 1/(r.y2 - r.y1);
+  this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -r.x1 * fx, -r.y1 * fy);
 }
 
 template <class VS, class RM>
@@ -522,7 +431,7 @@ template<class VS, class RM>
 void plot<VS,RM>::set_units(bool use_units)
 { 
   m_use_units = use_units; 
-  this->update_viewport_trans();
+  this->compute_user_trans();
 }
 
 #endif

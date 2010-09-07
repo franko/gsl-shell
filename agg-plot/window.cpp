@@ -263,7 +263,7 @@ int window::attach(lua_plot *plot, const char *spec)
   if (! r)
     return -1;
 
-  r->plot = & plot->self();
+  r->plot = plot;
 
   return r->slot_id;
 }

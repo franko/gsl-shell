@@ -43,6 +43,7 @@ __BEGIN_DECLS
 static int plot_new        (lua_State *L);
 static int plot_add        (lua_State *L);
 static int plot_update     (lua_State *L);
+static int plot_flush      (lua_State *L);
 static int plot_add_line   (lua_State *L);
 static int plot_index      (lua_State *L);
 static int plot_newindex   (lua_State *L);
@@ -53,12 +54,13 @@ static int plot_title_get  (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 
+static int canvas_new      (lua_State *L);
+
 static int  plot_add_gener (lua_State *L, bool as_line);
-static void plot_update_raw (lua_State *L, int plot_index);
-static void plot_flush (lua_State *L, int plot_index);
 
 static const struct luaL_Reg plot_functions[] = {
   {"plot",        plot_new},
+  {"canvas",      canvas_new},
   {NULL, NULL}
 };
 
@@ -90,13 +92,29 @@ __END_DECLS
 int
 plot_new (lua_State *L)
 {
+  typedef plot_auto<drawable, lua_management> plot_type;
+  lua_plot *p = push_new_object<plot_type>(L, GS_PLOT);
+
+  if (lua_isstring (L, 1))
+    {
+      const char *title = lua_tostring (L, 1);
+      if (title)
+	p->set_title(title);
+    }
+
+  return 1;
+}
+
+int
+canvas_new (lua_State *L)
+{
   lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
 
   if (lua_isstring (L, 1))
     {
       const char *title = lua_tostring (L, 1);
       if (title)
-	p->self().set_title(title);
+	p->set_title(title);
     }
 
   return 1;
@@ -119,11 +137,11 @@ plot_add_gener (lua_State *L, bool as_line)
 
   AGG_LOCK();
 
-  p->self().add(obj, color, as_line);
+  p->add(obj, color, as_line);
 
   AGG_UNLOCK();
 
-  plot_flush (L, 1);
+  plot_flush (L);
 
   return 0;
 }
@@ -150,12 +168,10 @@ plot_title_set (lua_State *L)
     return gs_type_error (L, 2, "string");
 	  
   AGG_LOCK();
-
-  p->self().set_title(title);
-
+  p->set_title(title);
   AGG_UNLOCK();
 
-  plot_update_raw (L, 1);
+  plot_update (L);
 	  
   return 0;
 }
@@ -167,7 +183,7 @@ plot_title_get (lua_State *L)
 
   AGG_LOCK();
 
-  const char *title = p->self().get_title();
+  const char *title = p->title();
   lua_pushstring (L, title);
 
   AGG_UNLOCK();
@@ -183,14 +199,13 @@ plot_units_set (lua_State *L)
 
   AGG_LOCK();
   
-  lua_plot::plot_type& plt = p->self();
-  bool current = plt.use_units();
+  bool current = p->use_units();
 
   if (current != request)
     {
-      plt.set_units(request);
+      p->set_units(request);
       AGG_UNLOCK();
-      plot_update_raw (L, 1);
+      plot_update (L);
     }
   else
     {
@@ -206,10 +221,7 @@ plot_units_get (lua_State *L)
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
   AGG_LOCK();
-
-  lua_plot::plot_type& plt = p->self();
-  lua_pushboolean (L, plt.use_units());
-
+  lua_pushboolean (L, p->use_units());
   AGG_UNLOCK();
 
   return 1;
@@ -227,27 +239,21 @@ plot_newindex (lua_State *L)
   return mlua_newindex_with_properties (L, plot_properties_set);
 }
 
-void
-plot_update_raw (lua_State *L, int plot_index)
-{
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  window_plot_rev_lookup_apply (L, plot_index, window_slot_update);
-  p->self().redraw_done();
-}
-
-void
-plot_flush (lua_State *L, int plot_index)
-{
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  window_plot_rev_lookup_apply (L, plot_index, window_slot_refresh);
-  p->self().redraw_done();
-}
-
 int
 plot_update (lua_State *L)
 {
-  object_check<lua_plot>(L, 1, GS_PLOT);
-  plot_update_raw (L, 1);
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  window_plot_rev_lookup_apply (L, 1, window_slot_update);
+  p->redraw_done();
+  return 0;
+}
+
+int
+plot_flush (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  window_plot_rev_lookup_apply (L, 1, window_slot_refresh);
+  p->redraw_done();
   return 0;
 }
 
