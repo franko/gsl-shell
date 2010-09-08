@@ -28,8 +28,9 @@
 
 template<class VertexSource, class resource_manager = no_management>
 class plot_auto : public plot<VertexSource, resource_manager> {
-public:
+  typedef plot_item<VertexSource> item;
 
+public:
   plot_auto() : 
     plot<VertexSource, resource_manager>(true),
     m_bbox_updated(true), m_is_empty(true)
@@ -53,8 +54,7 @@ private:
 template <class VS, class RM>
 void plot_auto<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
 { 
-  typedef typename plot_auto<VS,RM>::container cnt_type;
-  cnt_type d(vs, color, outline);
+  item d(vs, color, outline);
 
   if (!this->fit_inside(vs))
     {
@@ -64,7 +64,7 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline)
     }
   else
     {
-      this->m_drawing_queue = new pod_list<cnt_type>(d, this->m_drawing_queue);
+      this->m_drawing_queue = new pod_list<item>(d, this->m_drawing_queue);
     }
 
   this->m_is_empty = false;
@@ -93,7 +93,7 @@ void plot_auto<VS,RM>::calc_bounding_box()
 {
   for (unsigned j = 0; j < this->m_elements.size(); j++)
   {
-    typename plot_auto<VS,RM>::container& d = this->m_elements[j];
+    item& d = this->m_elements[j];
     agg::rect_base<double> r;
 
     d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);

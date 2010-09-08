@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef AGGPLOT_CPLOT_H
-#define AGGPLOT_CPLOT_H
+#ifndef AGGPLOT_PLOT_H
+#define AGGPLOT_PLOT_H
 
 #include "utils.h"
 #include "my_list.h"
@@ -41,35 +41,27 @@
 
 extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
 
+template<class VertexSource>
+struct plot_item {
+  VertexSource* vs;
+  agg::rgba8 color;
+  bool outline;
+
+  plot_item() : vs(0) {};
+
+  plot_item(VertexSource* vs, agg::rgba8 *c, bool as_outline): 
+    vs(vs), color(*c), outline(as_outline)
+  {};
+
+  VertexSource& vertex_source() { return *vs; };
+};
+
 template<class VertexSource, class resource_manager = no_management>
 class plot {
-
-protected:
-  class container {
-  public:
-    VertexSource* vs;
-    agg::rgba8 color;
-    bool outline;
-
-    container(): vs(NULL), color(), outline(false) {};
-
-    container(VertexSource* vs, agg::rgba8 *c, bool as_outline): 
-      vs(vs), color(*c), outline(as_outline)
-    {};
-
-    ~container() {};
-
-    void bounding_box(double *x1, double *y1, double *x2, double *y2)
-    {
-      VertexSource& vsi = vertex_source();
-      vsi.bounding_box(x1, y1, x2, y2);
-    };
-
-    VertexSource& vertex_source() { return *vs; };
-  };
+  typedef plot_item<VertexSource> item;
 
 public:
-  typedef pod_list<container> iterator;
+  typedef pod_list<item> iterator;
 
   plot(bool use_units = true) : 
     m_elements(), m_drawing_queue(0), 
@@ -87,7 +79,7 @@ public:
   {
     for (unsigned j = 0; j < m_elements.size(); j++)
       {
-	container& d = m_elements[j];
+	item& d = m_elements[j];
 	resource_manager::dispose(d.vs);
       }
   };
@@ -118,7 +110,7 @@ public:
 
 protected:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
-  void draw_element(container& c, canvas &canvas, agg::trans_affine& m);
+  void draw_element(item& c, canvas &canvas, agg::trans_affine& m);
   void draw_title(canvas& canvas, agg::trans_affine& m);
   void draw_axis(canvas& can, agg::trans_affine& m);
 
@@ -130,11 +122,11 @@ protected:
 
   bool fit_inside(VertexSource *obj) const;
 
-  void push_drawing_rev(pod_list<container> *c);
+  void push_drawing_rev(pod_list<item> *c);
 
-  agg::pod_bvector<container> m_elements;
+  agg::pod_bvector<item> m_elements;
   agg::trans_affine m_trans;
-  pod_list<container> *m_drawing_queue;
+  pod_list<item> *m_drawing_queue;
 
   bool m_need_redraw;
   agg::rect_base<double> m_rect;
@@ -148,7 +140,7 @@ private:
 };
 
 template <class VS, class RM>
-void plot<VS,RM>::push_drawing_rev(pod_list<plot<VS,RM>::container> *c)
+void plot<VS,RM>::push_drawing_rev(pod_list<item> *c)
 {
   if (c)
     {
@@ -167,8 +159,8 @@ void plot<VS,RM>::redraw_done()
 template <class VS, class RM>
 void plot<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
 { 
-  container d(vs, color, outline);
-  m_drawing_queue = new pod_list<container>(d, m_drawing_queue);
+  item d(vs, color, outline);
+  m_drawing_queue = new pod_list<item>(d, m_drawing_queue);
   RM::acquire(vs);
 }
 
@@ -229,8 +221,7 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::draw_element(container& c, canvas &canvas, 
-			       agg::trans_affine& m)
+void plot<VS,RM>::draw_element(item& c, canvas &canvas, agg::trans_affine& m)
 {
   VS& vs = c.vertex_source();
   vs.apply_transform(m, 1.0);
@@ -269,7 +260,7 @@ bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
   if (current == 0)
     return false;
 
-  container& d = m_drawing_queue->content();
+  item& d = m_drawing_queue->content();
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
   draw_element(d, canvas, m);
 
