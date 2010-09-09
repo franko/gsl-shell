@@ -90,6 +90,8 @@ public:
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
 
+  void set_limits(const agg::rect_base<double>& r);
+
   virtual void add(VertexSource* vs, agg::rgba8 *color, bool outline);
   virtual void on_draw() { };
   
@@ -422,7 +424,17 @@ template<class VS, class RM>
 void plot<VS,RM>::set_units(bool use_units)
 { 
   m_use_units = use_units; 
-  this->compute_user_trans();
+  compute_user_trans();
+}
+
+template<class VS, class RM>
+void plot<VS,RM>::set_limits(const agg::rect_base<double>& r)
+{
+  m_rect = r;
+  m_ux = units(r.x1, r.x2);
+  m_uy = units(r.y1, r.y2);
+  m_need_redraw = true;
+  compute_user_trans();
 }
 
 #endif

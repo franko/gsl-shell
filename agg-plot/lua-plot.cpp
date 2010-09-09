@@ -53,10 +53,12 @@ static int plot_title_set  (lua_State *L);
 static int plot_title_get  (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
+static int plot_set_limits (lua_State *L);
 
 static int canvas_new      (lua_State *L);
 
-static int  plot_add_gener (lua_State *L, bool as_line);
+static int   plot_add_gener  (lua_State *L, bool as_line);
+static void  plot_update_raw (lua_State *L, lua_plot *p, int plot_index);
 
 static const struct luaL_Reg plot_functions[] = {
   {"plot",        plot_new},
@@ -69,6 +71,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"addline",     plot_add_line   },
   {"update",      plot_update     },
   {"show",        plot_show       },
+  {"limits",      plot_set_limits },
   {"__index",     plot_index      },
   {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },
@@ -171,7 +174,7 @@ plot_title_set (lua_State *L)
   p->set_title(title);
   AGG_UNLOCK();
 
-  plot_update (L);
+  plot_update_raw (L, p, 1);
 	  
   return 0;
 }
@@ -205,7 +208,7 @@ plot_units_set (lua_State *L)
     {
       p->set_units(request);
       AGG_UNLOCK();
-      plot_update (L);
+      plot_update_raw (L, p, 1);
     }
   else
     {
@@ -239,12 +242,18 @@ plot_newindex (lua_State *L)
   return mlua_newindex_with_properties (L, plot_properties_set);
 }
 
+void
+plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
+{
+  window_plot_rev_lookup_apply (L, plot_index, window_slot_update);
+  p->redraw_done();
+}
+
 int
 plot_update (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  window_plot_rev_lookup_apply (L, 1, window_slot_update);
-  p->redraw_done();
+  plot_update_raw (L, p, 1);
   return 0;
 }
 
@@ -265,6 +274,22 @@ plot_show (lua_State *L)
   lua_pushvalue (L, 1);
   lua_pushstring (L, "");
   lua_call (L, 3, 0);
+  return 0;
+}
+
+int
+plot_set_limits (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+
+  agg::rect_base<double> r;
+  r.x1 = gs_check_number (L, 2, true);
+  r.y1 = gs_check_number (L, 3, true);
+  r.x2 = gs_check_number (L, 4, true);
+  r.y2 = gs_check_number (L, 5, true);
+
+  p->set_limits(r);
+  plot_update_raw (L, p, 1);
   return 0;
 }
 
