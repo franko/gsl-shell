@@ -54,6 +54,9 @@ static int plot_title_get  (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 static int plot_set_limits (lua_State *L);
+static int plot_push_layer (lua_State *L);
+static int plot_pop_layer  (lua_State *L);
+static int plot_clear      (lua_State *L);
 
 static int canvas_new      (lua_State *L);
 
@@ -72,6 +75,9 @@ static const struct luaL_Reg plot_methods[] = {
   {"update",      plot_update     },
   {"show",        plot_show       },
   {"limits",      plot_set_limits },
+  {"pushlayer",   plot_push_layer },
+  {"poplayer",    plot_pop_layer  },
+  {"clear",       plot_clear  },
   {"__index",     plot_index      },
   {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },
@@ -246,7 +252,7 @@ void
 plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
 {
   window_plot_rev_lookup_apply (L, plot_index, window_slot_update);
-  p->redraw_done();
+  p->commit_pending_draw();
 }
 
 int
@@ -262,7 +268,7 @@ plot_flush (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   window_plot_rev_lookup_apply (L, 1, window_slot_refresh);
-  p->redraw_done();
+  p->commit_pending_draw();
   return 0;
 }
 
@@ -288,7 +294,41 @@ plot_set_limits (lua_State *L)
   r.x2 = gs_check_number (L, 4, true);
   r.y2 = gs_check_number (L, 5, true);
 
+  AGG_LOCK();
   p->set_limits(r);
+  AGG_UNLOCK();
+  plot_update_raw (L, p, 1);
+  return 0;
+}
+
+int
+plot_push_layer (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  p->push_layer();
+  AGG_UNLOCK();
+  return 0;
+}
+
+int
+plot_pop_layer (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  p->pop_layer();
+  AGG_UNLOCK();
+  plot_update_raw (L, p, 1);
+  return 0;
+}
+
+int
+plot_clear (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  p->clear_current_layer();
+  AGG_UNLOCK();
   plot_update_raw (L, p, 1);
   return 0;
 }

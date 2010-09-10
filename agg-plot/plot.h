@@ -56,15 +56,19 @@ struct plot_item {
   VertexSource& vertex_source() { return *vs; };
 };
 
-template<class VertexSource, class resource_manager = no_management>
+template<class vertex_source, class resource_manager>
 class plot {
-  typedef plot_item<VertexSource> item;
+  typedef plot_item<vertex_source> item;
+  typedef agg::pod_bvector<item> item_list;
+
+  static const unsigned max_layers = 8;
 
 public:
   typedef pod_list<item> iterator;
 
   plot(bool use_units = true) : 
-    m_elements(), m_drawing_queue(0), 
+    m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
+    m_drawing_queue(0), 
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_title_buf()
   {
@@ -77,10 +81,12 @@ public:
 
   virtual ~plot() 
   {
-    for (unsigned j = 0; j < m_elements.size(); j++)
+    layer_dispose_elements(m_root_layer);
+    for (unsigned k = 0; k < m_layers.size(); k++)
       {
-	item& d = m_elements[j];
-	resource_manager::dispose(d.vs);
+	item_list *layer = m_layers[k];
+	layer_dispose_elements(*layer);
+	delete layer;
       }
   };
 
@@ -92,16 +98,21 @@ public:
 
   void set_limits(const agg::rect_base<double>& r);
 
-  virtual void add(VertexSource* vs, agg::rgba8 *color, bool outline);
+  virtual void add(vertex_source* vs, agg::rgba8 *color, bool outline);
   virtual void on_draw() { };
   
   void draw(canvas &canvas, agg::trans_affine& m);
 
+  bool push_layer();
+  bool pop_layer();
+
   /* drawing queue related methods */
   void push_drawing_queue();
+  void clear_drawing_queue();
+  void clear_current_layer();
 
   bool need_redraw() const { return m_need_redraw; };
-  void redraw_done();
+  void commit_pending_draw();
 
   bool draw_queue(canvas &canvas, 
 		  agg::trans_affine& m,
@@ -122,11 +133,18 @@ protected:
 
   static void viewport_scale(agg::trans_affine& trans);
 
-  bool fit_inside(VertexSource *obj) const;
+  bool fit_inside(vertex_source *obj) const;
 
   void push_drawing_rev(pod_list<item> *c);
+  void layer_dispose_elements (item_list& layer);
 
-  agg::pod_bvector<item> m_elements;
+  item_list& current_layer() { return *m_current_layer; };
+
+  item_list m_root_layer;
+  agg::pod_auto_vector<item_list*, max_layers> m_layers;
+  item_list *m_current_layer;
+  //  agg::pod_bvector<item> m_elements;
+
   agg::trans_affine m_trans;
   pod_list<item> *m_drawing_queue;
 
@@ -147,12 +165,12 @@ void plot<VS,RM>::push_drawing_rev(pod_list<item> *c)
   if (c)
     {
       push_drawing_rev (c->next());
-      m_elements.add(c->content());
+      m_current_layer->add(c->content());
     }
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::redraw_done()
+void plot<VS,RM>::commit_pending_draw()
 {
   push_drawing_queue();
   m_need_redraw = false;
@@ -182,6 +200,17 @@ void plot<VS,RM>::push_drawing_queue()
   
   while (m_drawing_queue)
     m_drawing_queue = list::pop(m_drawing_queue);
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::clear_drawing_queue() 
+{
+  while (m_drawing_queue)
+    {
+      item& d = m_drawing_queue->content();
+      RM::dispose(d.vs);
+      m_drawing_queue = list::pop(m_drawing_queue);
+    }
 }
 
 template <class VS, class RM>
@@ -248,9 +277,18 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
-  for (unsigned j = 0; j < m_elements.size(); j++)
+  for (unsigned j = 0; j < m_root_layer.size(); j++)
     {
-      draw_element(m_elements[j], canvas, m);
+      draw_element(m_root_layer[j], canvas, m);
+    }
+
+  for (unsigned k = 0; k < m_layers.size(); k++)
+    {
+      item_list& layer = *(m_layers[k]);
+      for (unsigned j = 0; j < layer.size(); j++)
+	{
+	  draw_element(layer[j], canvas, m);
+	}
     }
 }
 
@@ -435,6 +473,64 @@ void plot<VS,RM>::set_limits(const agg::rect_base<double>& r)
   m_uy = units(r.y1, r.y2);
   m_need_redraw = true;
   compute_user_trans();
+}
+
+template<class VS, class RM>
+void plot<VS,RM>::layer_dispose_elements(plot<VS,RM>::item_list& layer)
+{
+  unsigned n = layer.size();
+  for (unsigned k = 0; k < n; k++)
+    {
+      RM::dispose(layer[k].vs);
+    }
+}
+
+template<class VS, class RM>
+bool plot<VS,RM>::push_layer()
+{
+  if (m_layers.size() >= max_layers)
+    return false;
+
+  item_list *new_layer = new(std::nothrow) item_list();
+  if (new_layer == 0)
+    return false;
+
+  commit_pending_draw();
+  m_layers.add(new_layer);
+  m_current_layer = new_layer;
+
+  return true;
+}
+
+template<class VS, class RM>
+bool plot<VS,RM>::pop_layer()
+{
+  unsigned n = m_layers.size();
+
+  if (n == 0)
+    return false;
+
+  item_list *layer = m_layers[n-1];
+  layer_dispose_elements (*layer);
+  delete layer;
+
+  m_layers.inc_size(-1);
+  n--;
+
+  clear_drawing_queue();
+  m_need_redraw = true;
+  m_current_layer = (n > 0 ? m_layers[n-1] : &m_root_layer);
+
+  return true;
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::clear_current_layer() 
+{
+  clear_drawing_queue();
+  layer_dispose_elements (current_layer());
+  m_current_layer->clear();
+  m_need_redraw = true;
 }
 
 #endif

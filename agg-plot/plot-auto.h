@@ -29,6 +29,7 @@
 template<class VertexSource, class resource_manager = no_management>
 class plot_auto : public plot<VertexSource, resource_manager> {
   typedef plot_item<VertexSource> item;
+  typedef agg::pod_bvector<item> item_list;
 
 public:
   plot_auto() : 
@@ -42,6 +43,10 @@ public:
   virtual void on_draw() { check_bounding_box(); };
 
 private:
+  void calc_layer_bounding_box(item_list& layer, 
+			       agg::rect_base<double>& prect, 
+			       bool is_initialized);
+
   void check_bounding_box();
   void calc_bounding_box();
   bool fit_inside(VertexSource *obj) const;
@@ -60,7 +65,7 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline)
     {
       this->m_bbox_updated = false;
       this->m_need_redraw = true;
-      this->m_elements.add(d);
+      this->current_layer().add(d);
     }
   else
     {
@@ -89,20 +94,35 @@ void plot_auto<VS,RM>::check_bounding_box()
   }
 
 template<class VS, class RM>
+void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, agg::rect_base<double>& prect, bool is_initialized)
+{
+  for (unsigned j = 0; j < layer.size(); j++)
+    {
+      item& d = layer[j];
+      agg::rect_base<double> r;
+
+      d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
+      
+      if (! is_initialized)
+	{
+	  prect = r;
+	  is_initialized = true;
+	}
+      else
+	{
+	  prect = agg::unite_rectangles(prect, r);
+	}
+    }
+}
+
+template<class VS, class RM>
 void plot_auto<VS,RM>::calc_bounding_box()
 {
-  for (unsigned j = 0; j < this->m_elements.size(); j++)
-  {
-    item& d = this->m_elements[j];
-    agg::rect_base<double> r;
-
-    d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-      
-    if (j == 0)
-      this->m_rect = r;
-    else
-      this->m_rect = agg::unite_rectangles(this->m_rect, r);
-  }
+  calc_layer_bounding_box(this->m_root_layer, this->m_rect, false);
+  for (unsigned j = 0; j < this->m_layers.size(); j++)
+    {
+      calc_layer_bounding_box(*(this->m_layers[j]), this->m_rect, true);
+    }
 }
 
 template<class VS, class RM>
