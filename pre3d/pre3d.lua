@@ -1,7 +1,7 @@
 -- Pre3d, a JavaScript software 3d renderer.
 -- (c) Dean McNamee <dean@gmail.com>, Dec 2008.
 --
--- Code adapted for Lua/GSL shell by Francesco Abbate
+-- Code adapted for GSL shell (Lua) by Francesco Abbate
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to
@@ -583,7 +583,7 @@ end
 local RendererMT = {}
 RendererMT.__index = RendererMT
 
-function Renderer(win)
+function Renderer(plt)
    local this = {}
    setmetatable(this, RendererMT)
 
@@ -602,7 +602,7 @@ function Renderer(win)
    -- this.normal1_rgba = nil
    -- this.normal2_rgba = nil
 
-   this.window = win
+   this.plot = plt
 
    -- The camera.
    this.camera = Camera()
@@ -802,7 +802,7 @@ local function zSorter(x, y)
 end
 
 function RendererMT.drawBuffer(this)
-   local win = this.window
+   local win = this.plot
    local all_quads = this.buffered_quads_
    local num_quads = #all_quads
 
@@ -835,9 +835,9 @@ function RendererMT.drawBuffer(this)
       local frgba = obj.fill_rgba
       if frgba then
 	 if obj.draw_overdraw then
-	    win:draw(qpath, frgba, {{'extend'}})
+	    win:add(qpath, frgba, {{'extend'}})
 	 else
-	    win:draw(qpath, frgba)
+	    win:add(qpath, frgba)
 	 end
       end
 
@@ -845,7 +845,7 @@ function RendererMT.drawBuffer(this)
       local srgba = obj.stroke_rgba
       if srgba then
 	 qpath:close()
-	 win:stroke(qpath, srgba)
+	 win:addline(qpath, srgba)
       end
 
       -- Normal lines (stroke)...
@@ -857,7 +857,7 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal1)))
 	 local n1path = path(screen_centroid.x, screen_centroid.y)
 	 n1path:line_to(screen_point.x, screen_point.y)
-	 win:stroke(n1path, n1r)
+	 win:addline(n1path, n1r)
       end
 
       if n2r then
@@ -866,11 +866,11 @@ function RendererMT.drawBuffer(this)
             addPoints3d(qf.centroid, unitVector3d(qf.normal2)))
 	 local n2path = path(screen_centroid.x, screen_centroid.y)
 	 n2path:line_to(screen_point.x, screen_point.y)
-	 win:stroke(n2path, n2r)
+	 win:addline(n2path, n2r)
       end
    end
 
-   win:refresh()
+   win:flush()
    
    return num_quads
 end

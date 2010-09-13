@@ -17,10 +17,31 @@ local function draw(renderer, shape)
 end
 
 function demo1()
-   local win = window('black')
-   win:setview(-1, -1, 1, 1)
+   local win = window()
+   win:split('v(h..).')
 
-   local renderer = Pre3d.Renderer(win)
+   p1 = plot 'sin'
+   p1:addline(fxline(sin, 0, 2*pi), 'blue')
+   p2 = plot 'cos'
+   p2:addline(fxline(cos, 0, 2*pi), 'green')
+
+   win:attach(p1, '2')
+   win:attach(p2, '1,1')
+
+   local plt = canvas('Pre3D')
+   win:attach(plt, '1,2')
+
+   local a = -0.6
+   plt:limits(-a, -a, a, a)
+   plt.units = false
+   plt:addline(fxline(|x|  a*sin(2*pi*x/a), -a, a))
+   plt:addline(fxline(|x|  a*cos(2*pi*x/a), -a, a), 'blue')
+   plt:addline(fxline(|x| -a*sin(2*pi*x/a), -a, a), 'green')
+   plt:addline(fxline(|x| -a*cos(2*pi*x/a), -a, a), 'yellow')
+   plt.sync = false
+   plt:pushlayer()
+
+   local renderer = Pre3d.Renderer(plt)
    -- shape = ShapeUtils.makeSphere(1, 12, 12)
    local shape = ShapeUtils.makeOctahedron()
 
