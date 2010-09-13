@@ -115,12 +115,8 @@ public:
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
 
-  bool draw_queue(canvas &canvas, 
-		  agg::trans_affine& m,
-		  agg::rect_base<double>& bbox,
-		  iterator*& current);
-
-  iterator* drawing_start() { return m_drawing_queue; };
+  bool draw_queue(canvas &canvas, agg::trans_affine& m,
+		  agg::rect_base<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -300,21 +296,23 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 
 template<class VS, class RM>
 bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
-			     agg::rect_base<double>& bb,
-			     plot<VS,RM>::iterator*& current)
+			     agg::rect_base<double>& bb)
 {
-  if (current == 0)
-    return false;
+  plot<VS,RM>::iterator *c0 = m_drawing_queue;
+  for (plot<VS,RM>::iterator *c = c0; c != 0; c = c->next())
+    {
+      item& d = c->content();
+      agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+      draw_element(d, canvas, m);
 
-  item& d = current->content();
-  agg::trans_affine m = get_scaled_matrix(canvas_mtx);
-  draw_element(d, canvas, m);
+      agg::rect_base<double> ebb;
+      agg::bounding_rect_single(d.vertex_source(), 0, 
+				&ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
 
-  agg::bounding_rect_single(d.vertex_source(), 0, 
-			    &bb.x1, &bb.y1, &bb.x2, &bb.y2);
+      bb = (c == c0 ? ebb : agg::unite_rectangles(ebb, bb));
+    }
 
-  current = current->next();
-  return true;
+  return (c0 != 0);
 }
 
 template<class VS, class RM>
@@ -536,7 +534,6 @@ void plot<VS,RM>::clear_current_layer()
   clear_drawing_queue();
   layer_dispose_elements (current_layer());
   m_current_layer->clear();
-  m_need_redraw = true;
 }
 
 #endif

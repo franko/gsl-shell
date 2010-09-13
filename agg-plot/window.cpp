@@ -14,11 +14,12 @@ extern "C" {
 #include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-parser.h"
+#include "platform_support_ext.h"
 
 __BEGIN_DECLS
 
-static int window_free       (lua_State *L);
-static int window_split      (lua_State *L);
+static int window_free            (lua_State *L);
+static int window_split           (lua_State *L);
 
 static const struct luaL_Reg window_functions[] = {
   {"window",        window_new},
@@ -158,16 +159,67 @@ window::draw_slot(int slot_id, bool clean_req)
 }
 
 void
+window::save_slot_image(int slot_id)
+{
+  ref *ref = window::ref_lookup (this->m_tree, slot_id);
+  if (ref != 0)
+    {
+      agg::trans_affine mtx(ref->matrix);
+      this->scale(mtx);
+
+      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      int w = r.x2 - r.x1, h = r.y2 - r.y1;
+
+      unsigned img_bpp = this->bpp();
+      int row_len = w * (img_bpp / 8);
+
+      if (ref->layer_buf == 0)
+	{
+	  unsigned int bufsize = row_len * h;
+	  ref->layer_buf = new(std::nothrow) unsigned char[bufsize];
+	  ref->layer_img.attach(ref->layer_buf, w, h, this->flip_y() ? -row_len : row_len);
+	}
+
+      if (ref->layer_buf != 0)
+	{
+	  agg::rendering_buffer& img = ref->layer_img;
+	  agg::rendering_buffer& win = this->rbuf_window();
+	  rendering_buffer_get_region (img, win, r, img_bpp / 8);
+	}
+    }
+}
+
+void
+window::restore_slot_image(int slot_id)
+{
+  ref *ref = window::ref_lookup (this->m_tree, slot_id);
+  if (ref != 0)
+    {
+      agg::trans_affine mtx(ref->matrix);
+      this->scale(mtx);
+
+      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      unsigned img_bpp = this->bpp();
+
+      if (ref->layer_buf != 0)
+	{
+	  agg::rendering_buffer& img = ref->layer_img;
+	  agg::rendering_buffer& win = this->rbuf_window();
+	  rendering_buffer_put_region (win, img, r, img_bpp / 8);
+	}
+    }
+}
+
+void
 window::refresh_slot_by_ref(ref& ref)
 {
   agg::trans_affine mtx(ref.matrix);
   this->scale(mtx);
-  agg::rect_base<double> bb;
 
   AGG_LOCK();
   try {
-    plot_type::iterator *current = ref.plot->drawing_start();
-    while (ref.plot->draw_queue(*m_canvas, mtx, bb, current))
+    agg::rect_base<double> bb;
+    if (ref.plot->draw_queue(*m_canvas, mtx, bb))
       {
 	agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
 	platform_support_update_region (this, bbw);
@@ -362,6 +414,38 @@ window_update (lua_State *L)
   win->lock();
   win->on_draw();
   win->update_window();
+  win->unlock();
+
+  return 0;
+}
+
+int
+window_save_slot_image (lua_State *L)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  int slot_id = luaL_checkinteger (L, 2);
+
+  win->lock();
+  if (win->status == canvas_window::running)
+    {
+      win->save_slot_image(slot_id);
+    }
+  win->unlock();
+
+  return 0;
+}
+
+int
+window_restore_slot_image (lua_State *L)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  int slot_id = luaL_checkinteger (L, 2);
+
+  win->lock();
+  if (win->status == canvas_window::running)
+    {
+      win->restore_slot_image(slot_id);
+    }
   win->unlock();
 
   return 0;

@@ -30,8 +30,13 @@ public:
 
     bmatrix matrix;
 
-    ref() : plot(0), matrix() {};
-    ref(plot_type *p) : plot(p), matrix() {};
+    unsigned char *layer_buf;
+    agg::rendering_buffer layer_img;
+
+    ref() : plot(0), matrix(), layer_buf(0) {};
+    ref(plot_type *p) : plot(p), matrix(), layer_buf(0) {};
+
+    ~ref() { if (layer_buf) delete layer_buf; };
 
     static void compose(bmatrix& a, const bmatrix& b);
     static int calculate(node *t, const bmatrix& m, int id);
@@ -46,7 +51,7 @@ private:
   static ref *ref_lookup (ref::node *p, int slot_id);
 
   ref::node* m_tree;
-  
+
 public:
   window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) 
   {
@@ -59,6 +64,9 @@ public:
   int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
   void refresh_slot(int slot_id);
+
+  void save_slot_image(int slot_id);
+  void restore_slot_image(int slot_id);
 
   void cleanup_refs(lua_State *L, int window_index)
   {

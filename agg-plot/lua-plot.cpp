@@ -312,9 +312,13 @@ int
 plot_push_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+
   AGG_LOCK();
   p->push_layer();
   AGG_UNLOCK();
+
+  window_plot_rev_lookup_apply (L, 1, window_save_slot_image);
+
   return 0;
 }
 
@@ -336,6 +340,8 @@ plot_clear (lua_State *L)
   AGG_LOCK();
   p->clear_current_layer();
   AGG_UNLOCK();
+
+  window_plot_rev_lookup_apply (L, 1, window_restore_slot_image);
 
   if (p->sync_mode())
     plot_update_raw (L, p, 1);

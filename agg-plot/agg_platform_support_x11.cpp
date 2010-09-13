@@ -37,12 +37,6 @@
 #include "util/agg_color_conv_rgb8.h"
 #include "platform_support_ext.h"
 
-/*
-extern "C" {
-  static int thread_error_handler (Display *d, XErrorEvent *ev);
-}
-*/
-
 namespace agg
 {
   //------------------------------------------------------------------------

@@ -24,6 +24,34 @@ void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functo
     }
 }
 
+template<class RenBufDst, class RenBufSrc> 
+void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
+				  unsigned pixel_width)
+{
+  int w = r.x2 - r.x1, h = r.y2 - r.y1;
+  for (int y = 0; y < h; y++)
+    {
+      unsigned char *drow = dst.row_ptr(y);
+      unsigned char *srow = src.row_ptr(r.y1 + y);
+      srow += r.x1 * pixel_width;
+      memcpy (drow, srow, pixel_width * w);
+    }
+}
+
+template<class RenBufDst, class RenBufSrc> 
+void rendering_buffer_put_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
+				  unsigned pixel_width)
+{
+  int w = r.x2 - r.x1, h = r.y2 - r.y1;
+  for (int y = 0; y < h; y++)
+    {
+      unsigned char *drow = dst.row_ptr(r.y1 + y);
+      unsigned char *srow = src.row_ptr(y);
+      drow += r.x1 * pixel_width;
+      memcpy (drow, srow, pixel_width * w);
+    }
+}
+
 template<class T> class row_accessor_ro
 {
 public:
