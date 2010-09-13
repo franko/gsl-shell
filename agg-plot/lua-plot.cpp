@@ -58,6 +58,9 @@ static int plot_push_layer (lua_State *L);
 static int plot_pop_layer  (lua_State *L);
 static int plot_clear      (lua_State *L);
 
+static int plot_sync_mode_get (lua_State *L);
+static int plot_sync_mode_set (lua_State *L);
+
 static int canvas_new      (lua_State *L);
 
 static int   plot_add_gener  (lua_State *L, bool as_line);
@@ -73,6 +76,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"add",         plot_add        },
   {"addline",     plot_add_line   },
   {"update",      plot_update     },
+  {"flush",       plot_flush      },
   {"show",        plot_show       },
   {"limits",      plot_set_limits },
   {"pushlayer",   plot_push_layer },
@@ -87,12 +91,14 @@ static const struct luaL_Reg plot_methods[] = {
 static const struct luaL_Reg plot_properties_get[] = {
   {"title",        plot_title_get  },
   {"units",        plot_units_get  },
+  {"sync",         plot_sync_mode_get  },
   {NULL, NULL}
 };
 
 static const struct luaL_Reg plot_properties_set[] = {
   {"title",        plot_title_set  },
   {"units",        plot_units_set  },
+  {"sync",         plot_sync_mode_set  },
   {NULL, NULL}
 };
 
@@ -150,7 +156,8 @@ plot_add_gener (lua_State *L, bool as_line)
 
   AGG_UNLOCK();
 
-  plot_flush (L);
+  if (p->sync_mode())
+    plot_flush (L);
 
   return 0;
 }
@@ -329,7 +336,31 @@ plot_clear (lua_State *L)
   AGG_LOCK();
   p->clear_current_layer();
   AGG_UNLOCK();
-  plot_update_raw (L, p, 1);
+
+  if (p->sync_mode())
+    plot_update_raw (L, p, 1);
+
+  return 0;
+}
+
+int
+plot_sync_mode_get (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  lua_pushboolean (L, p->sync_mode());
+  AGG_UNLOCK();
+  return 1;
+}
+
+int
+plot_sync_mode_set (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  bool request = (bool) lua_toboolean (L, 2);
+  AGG_LOCK();
+  p->sync_mode(request);
+  AGG_UNLOCK();
   return 0;
 }
 

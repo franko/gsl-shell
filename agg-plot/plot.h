@@ -70,7 +70,8 @@ public:
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), 
     m_need_redraw(true), m_rect(),
-    m_use_units(use_units), m_title_buf()
+    m_use_units(use_units), m_title_buf(),
+    m_sync_mode(true)
   {
     compute_user_trans();
 
@@ -121,6 +122,9 @@ public:
 
   iterator* drawing_start() { return m_drawing_queue; };
 
+  void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
+  bool sync_mode() const { return m_sync_mode; };
+
 protected:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas &canvas, agg::trans_affine& m);
@@ -157,6 +161,8 @@ protected:
 private:
   agg::pod_vector<char> m_title_buf;
   char *m_title;
+
+  bool m_sync_mode;
 };
 
 template <class VS, class RM>
@@ -300,7 +306,7 @@ bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
   if (current == 0)
     return false;
 
-  item& d = m_drawing_queue->content();
+  item& d = current->content();
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
   draw_element(d, canvas, m);
 
