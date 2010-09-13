@@ -135,7 +135,6 @@ protected:
 
   bool fit_inside(vertex_source *obj) const;
 
-  void push_drawing_rev(pod_list<item> *c);
   void layer_dispose_elements (item_list& layer);
 
   item_list& current_layer() { return *m_current_layer; };
@@ -143,7 +142,6 @@ protected:
   item_list m_root_layer;
   agg::pod_auto_vector<item_list*, max_layers> m_layers;
   item_list *m_current_layer;
-  //  agg::pod_bvector<item> m_elements;
 
   agg::trans_affine m_trans;
   pod_list<item> *m_drawing_queue;
@@ -162,16 +160,6 @@ private:
 };
 
 template <class VS, class RM>
-void plot<VS,RM>::push_drawing_rev(pod_list<item> *c)
-{
-  if (c)
-    {
-      push_drawing_rev (c->next());
-      m_current_layer->add(c->content());
-    }
-}
-
-template <class VS, class RM>
 void plot<VS,RM>::commit_pending_draw()
 {
   push_drawing_queue();
@@ -182,7 +170,8 @@ template <class VS, class RM>
 void plot<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
 { 
   item d(vs, color, outline);
-  m_drawing_queue = new pod_list<item>(d, m_drawing_queue);
+  pod_list<item> *new_node = new pod_list<item>(d);
+  m_drawing_queue = pod_list<item>::push_back(m_drawing_queue, new_node);
   RM::acquire(vs);
 }
 
@@ -198,7 +187,10 @@ void plot<VS,RM>::set_title(const char *text)
 template <class VS, class RM>
 void plot<VS,RM>::push_drawing_queue() 
 {
-  push_drawing_rev (m_drawing_queue);
+  for (pod_list<item> *c = m_drawing_queue; c != 0; c = c->next())
+    {
+      m_current_layer->add(c->content());
+    }
   
   while (m_drawing_queue)
     m_drawing_queue = list::pop(m_drawing_queue);
