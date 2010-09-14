@@ -58,6 +58,18 @@ namespace list {
     delete p;
     return tail;
   }
+
+  template <class T, class f>
+  void apply(pod_list<T> *p)
+  {
+    pod_list<T> *n;
+    for ( ; p; p = n)
+    {
+      n = p->m_next;
+      T& val = p->content();
+      f::func(val);
+    }
+  }
 }
 
 #endif

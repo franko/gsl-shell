@@ -85,6 +85,27 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 }
 
 void
+window::ref::save_image (agg::rendering_buffer& win_buf, 
+			 agg::rect_base<int>& r,
+			 int img_bpp, bool flip_y)
+{
+  int w = r.x2 - r.x1, h = r.y2 - r.y1;
+  int row_len = w * (img_bpp / 8);
+
+  if (layer_buf == 0)
+    {
+      unsigned int bufsize = row_len * h;
+      layer_buf = new(std::nothrow) unsigned char[bufsize];
+    }
+
+  if (layer_buf != 0)
+    {
+      layer_img.attach(layer_buf, w, h, flip_y ? -row_len : row_len);
+      rendering_buffer_get_region (layer_img, win_buf, r, img_bpp / 8);
+    }
+}
+
+void
 window::draw_rec(ref::node *n)
 {
   ref::node::list *ls;
@@ -168,24 +189,7 @@ window::save_slot_image(int slot_id)
       this->scale(mtx);
 
       agg::rect_base<int> r = rect_of_slot_matrix(mtx);
-      int w = r.x2 - r.x1, h = r.y2 - r.y1;
-
-      unsigned img_bpp = this->bpp();
-      int row_len = w * (img_bpp / 8);
-
-      if (ref->layer_buf == 0)
-	{
-	  unsigned int bufsize = row_len * h;
-	  ref->layer_buf = new(std::nothrow) unsigned char[bufsize];
-	  ref->layer_img.attach(ref->layer_buf, w, h, this->flip_y() ? -row_len : row_len);
-	}
-
-      if (ref->layer_buf != 0)
-	{
-	  agg::rendering_buffer& img = ref->layer_img;
-	  agg::rendering_buffer& win = this->rbuf_window();
-	  rendering_buffer_get_region (img, win, r, img_bpp / 8);
-	}
+      ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
     }
 }
 
@@ -199,13 +203,18 @@ window::restore_slot_image(int slot_id)
       this->scale(mtx);
 
       agg::rect_base<int> r = rect_of_slot_matrix(mtx);
-      unsigned img_bpp = this->bpp();
 
-      if (ref->layer_buf != 0)
+      if (ref->layer_buf == 0)
+	{
+	  m_canvas->clear_box(r);
+	  draw_slot_by_ref (*ref, false);
+	  ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
+	}
+      else
 	{
 	  agg::rendering_buffer& img = ref->layer_img;
 	  agg::rendering_buffer& win = this->rbuf_window();
-	  rendering_buffer_put_region (win, img, r, img_bpp / 8);
+	  rendering_buffer_put_region (win, img, r, this->bpp() / 8);
 	}
     }
 }
@@ -237,6 +246,27 @@ window::on_draw()
 
   m_canvas->clear();
   draw_rec(m_tree);
+}
+
+struct dispose_buffer {
+  static void func (window::ref& ref)
+  {
+    if (ref.layer_buf)
+      {
+	delete [] ref.layer_buf;
+	ref.layer_buf = 0;
+      }
+  }
+};
+
+void
+window::on_resize(int sx, int sy)
+{
+  this->canvas_window::on_resize(sx, sy);
+  if (m_tree)
+    {
+      tree::walk_rec<window::ref, direction_e, dispose_buffer>(m_tree);
+    }
 }
 
 void

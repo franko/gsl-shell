@@ -29,7 +29,6 @@ function demo1()
    win:attach(p2, '1,1')
 
    local plt = canvas('Pre3D')
-   win:attach(plt, '1,2')
 
    local a = -0.6
    plt:limits(-a, -a, a, a)
@@ -40,6 +39,8 @@ function demo1()
    plt:addline(fxline(|x| -a*cos(2*pi*x/a), -a, a), 'yellow')
    plt.sync = false
    plt:pushlayer()
+
+   win:attach(plt, '1,2')
 
    local renderer = Pre3d.Renderer(plt)
    -- shape = ShapeUtils.makeSphere(1, 12, 12)
