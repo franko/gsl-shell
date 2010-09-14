@@ -77,10 +77,13 @@ end
 
 
 function demo2()
-   local win = window('white')
-   win:setview(-1, -1, 1, 1)
+   local win = window()
+   local plt = canvas 'Pre3D'
+   plt:limits(-1, -1, 1, 1)
+   plt.sync = false
+   win:attach(plt, '')
 
-   local renderer = Pre3d.Renderer(win)
+   local renderer = Pre3d.Renderer(plt)
    local shape = ShapeUtils.makeXYFunction(|x,y| 1.2*exp(-x^2-y^2), -2, -2, 2, 2)
 
    renderer.draw_overdraw = false
@@ -155,10 +158,13 @@ end
 
 
 function demo3()
-   local win = window('black')
-   win:setview(-1, -1, 1, 1)
+   local win = window()
+   local plt = canvas 'Pre3D'
+   plt:limits(-1, -1, 1, 1)
+   plt.sync = false
+   win:attach(plt, '')
 
-   local renderer = Pre3d.Renderer(win)
+   local renderer = Pre3d.Renderer(plt)
    local shape = ShapeUtils.makeSphere(1, 12, 12)
 
    renderer.draw_overdraw = true
