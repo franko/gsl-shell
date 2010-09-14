@@ -320,6 +320,41 @@ int window::attach(lua_plot *plot, const char *spec)
   return r->slot_id;
 }
 
+typedef void (window::*window_slot_method_type)(int slot_id);
+
+int window_generic_oper (lua_State *L, window_slot_method_type method)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  int slot_id = luaL_checkinteger (L, 2);
+
+  win->lock();
+  if (win->status == canvas_window::running)
+    {
+      (win->*method)(slot_id);
+    }
+  win->unlock();
+
+  return 0;
+}
+
+template <class param_type>
+int window_generic_oper_ext (lua_State *L, 
+			     void (window::*method)(int, param_type),
+			     param_type param)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  int slot_id = luaL_checkinteger (L, 2);
+
+  win->lock();
+  if (win->status == canvas_window::running)
+    {
+      (win->*method)(slot_id, param);
+    }
+  win->unlock();
+
+  return 0;
+}
+
 int
 window_new (lua_State *L)
 {
@@ -378,32 +413,16 @@ window_attach (lua_State *L)
   return 0;
 }
 
-static int
-window_slot_update_raw (lua_State *L, bool clean_req)
-{
-  window *win = object_check<window>(L, 1, GS_WINDOW);
-  int slot_id = luaL_checkinteger (L, 2);
-
-  win->lock();
-  if (win->status == canvas_window::running)
-    {
-      win->draw_slot(slot_id, clean_req);
-    }
-  win->unlock();
-
-  return 0;
-}
-
 int
 window_slot_update (lua_State *L)
 {
-  return window_slot_update_raw (L, true);
+  return window_generic_oper_ext (L, &window::draw_slot, true);
 }
 
 int
 window_slot_refresh (lua_State *L)
 {
-  return window_slot_update_raw (L, false);
+  return window_generic_oper_ext (L, &window::draw_slot, false);
 }
 
 int
@@ -422,33 +441,13 @@ window_update (lua_State *L)
 int
 window_save_slot_image (lua_State *L)
 {
-  window *win = object_check<window>(L, 1, GS_WINDOW);
-  int slot_id = luaL_checkinteger (L, 2);
-
-  win->lock();
-  if (win->status == canvas_window::running)
-    {
-      win->save_slot_image(slot_id);
-    }
-  win->unlock();
-
-  return 0;
+  return window_generic_oper (L, &window::save_slot_image);
 }
 
 int
 window_restore_slot_image (lua_State *L)
 {
-  window *win = object_check<window>(L, 1, GS_WINDOW);
-  int slot_id = luaL_checkinteger (L, 2);
-
-  win->lock();
-  if (win->status == canvas_window::running)
-    {
-      win->restore_slot_image(slot_id);
-    }
-  win->unlock();
-
-  return 0;
+  return window_generic_oper (L, &window::restore_slot_image);
 }
 
 void
