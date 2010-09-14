@@ -49,14 +49,7 @@ canvas_window::on_resize(int sx, int sy)
   if (m_canvas)
     delete m_canvas;
 
-  try 
-    {
-      m_canvas = new canvas(rbuf_window(), sx, sy, m_bgcolor);
-    }
-  catch (std::bad_alloc&)
-    {
-      m_canvas = 0;
-    }
+  m_canvas = new(std::nothrow) canvas(rbuf_window(), sx, sy, m_bgcolor);
   
   m_matrix.sx = sx;
   m_matrix.sy = sy;
