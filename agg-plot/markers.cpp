@@ -26,7 +26,7 @@ static struct symbol_reg builder_table[] = {
 scalable *
 build_circle()
 {
-  typedef vs_proxy_approx<agg::ellipse> circle_type;
+  typedef vs_proxy<agg::ellipse, false, true> circle_type;
   circle_type *circle = new circle_type();
   circle->self().init(0.0, 0.0, 0.5, 0.5);
   return (scalable *) circle;

@@ -36,7 +36,7 @@ struct scalable {
 
 /* This class is basically a wrapper around a native AGG vertex_source object.
    The wrapper implements the "scalable" interface. */
-template <class T, bool system_managed = false>
+template <class T, bool system_managed = false, bool approx = false>
 class vs_proxy : public scalable {
 protected:
   T m_base;
@@ -54,16 +54,25 @@ public:
 };
 
 /* The same as vs_proxy but with approximation_scale. */
-template <class T, bool system_managed = false>
-class vs_proxy_approx : public vs_proxy<T, system_managed> {
-  typedef vs_proxy<T, system_managed> root_type;
+template <class T, bool SM>
+class vs_proxy<T, SM, true> : public scalable {
+protected:
+  T m_base;
+
 public:
-  vs_proxy_approx(): root_type() {};
+  vs_proxy(): scalable(), m_base() {};
+
+  virtual void rewind(unsigned path_id) { m_base.rewind(path_id); };
+  virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  };
 
   virtual void apply_transform(const agg::trans_affine& m, double as)
   { 
     this->m_base.approximation_scale(as); 
   };
+
+  virtual bool dispose() { return (SM ? false : true); };
+
+  T& self() { return m_base; };
 };
 
 /* this class does work does permit to perform an AGG transformation
@@ -76,11 +85,7 @@ protected:
   base_type* m_source;
 
 public:
-  typedef conv_type self_type;
-
-  vs_adapter(base_type* src): m_output(*src), m_source(src) 
-  {
-  };
+  vs_adapter(base_type* src): m_output(*src), m_source(src) { };
 
   template <class init_type>
   vs_adapter(base_type* src, init_type& val):
@@ -107,8 +112,9 @@ public:
   conv_type& self() { return m_output; };
 };
 
-template<class conv_type>
-class scalable_adapter : public vs_adapter<conv_type, scalable> {
+template<class conv_type, bool approx = false>
+class scalable_adapter : public vs_adapter<conv_type, scalable> 
+{
   typedef vs_adapter<conv_type, scalable> root_type;
 
 public:
@@ -124,14 +130,15 @@ public:
 };
 
 template<class conv_type>
-class scalable_adapter_approx : public vs_adapter<conv_type, scalable> {
+class scalable_adapter<conv_type, true> : public vs_adapter<conv_type, scalable> 
+{
   typedef vs_adapter<conv_type, scalable> root_type;
 
 public:
-  scalable_adapter_approx(scalable *src) : root_type(src) { };
+  scalable_adapter(scalable *src) : root_type(src) { };
 
   template <class init_type>
-  scalable_adapter_approx(scalable* src, init_type& val): root_type(src, val) {};
+  scalable_adapter(scalable* src, init_type& val): root_type(src, val) {};
 
   virtual void apply_transform(const agg::trans_affine& m, double as)
   {

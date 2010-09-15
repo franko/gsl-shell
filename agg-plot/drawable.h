@@ -59,7 +59,7 @@ public:
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
     this->m_source->bounding_box(x1, y1, x2, y2);
-  }
+  };
 };
 
 #endif

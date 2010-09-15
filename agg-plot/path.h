@@ -8,8 +8,8 @@
 
 namespace draw {
 
-  typedef vs_proxy<agg::path_storage, true> path;
-  typedef vs_proxy_approx<agg::ellipse, true> ellipse;
+  typedef vs_proxy<agg::path_storage, true, false> path;
+  typedef vs_proxy<agg::ellipse, true, true> ellipse;
 }
 
 #endif

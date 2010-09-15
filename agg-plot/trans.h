@@ -20,21 +20,15 @@
 
 struct scalable_context {
 
-  template <class conv_type>
-  class simple : public scalable_adapter<conv_type> {
-    typedef scalable_adapter<conv_type> root_type;
+  template <class conv_type, bool approx>
+  class adapter : public scalable_adapter<conv_type, approx>
+  {
+    typedef scalable_adapter<conv_type, approx> root_type;
   public:
-    simple(scalable *src) : root_type(src) {};
+    adapter(scalable *src) : root_type(src) {};
 
     template <class init_type>
-    simple(scalable* src, init_type& val): root_type(src, val) {};
-  };
-
-  template <class conv_type>
-  class approx : public scalable_adapter_approx<conv_type> {
-    typedef scalable_adapter_approx<conv_type> root_type;
-  public:
-    approx(scalable *src) : root_type(src) {};
+    adapter(scalable* src, init_type& val): root_type(src, val) {};
   };
 
   typedef scalable base_type;
@@ -43,25 +37,18 @@ struct scalable_context {
 
 struct drawable_context {
 
-  template <class conv_type>
-  class simple : public drawable_adapter<conv_type> {
+  template <class conv_type, bool approx>
+  class adapter : public drawable_adapter<conv_type>
+  {
     typedef drawable_adapter<conv_type> root_type;
   public:
-    simple(drawable *src) : root_type(src) {};
+    adapter(drawable *src) : root_type(src) {};
 
     template <class init_type>
-    simple(drawable* src, init_type& val): root_type(src, val) {};
-  };
-
-  template <class conv_type>
-  class approx : public drawable_adapter<conv_type> {
-    typedef drawable_adapter<conv_type> root_type;
-  public:
-    approx(drawable *src) : root_type(src) {};
+    adapter(drawable* src, init_type& val): root_type(src, val) {};
   };
 
   typedef drawable base_type;
-
 };
 
 template <class context>
@@ -70,19 +57,19 @@ struct trans {
   typedef typename context::base_type base_type;
 
   typedef agg::conv_stroke<base_type> stroke_base;
-  typedef typename context::template approx<stroke_base> stroke;
+  typedef typename context::template adapter<stroke_base, true> stroke;
 
   typedef agg::conv_curve<base_type> curve_base;
-  typedef typename context::template approx<curve_base> curve;
+  typedef typename context::template adapter<curve_base, true> curve;
 
   typedef agg::conv_dash<base_type> dash_base;
-  typedef typename context::template simple<dash_base> dash;
+  typedef typename context::template adapter<dash_base, false> dash;
 
   typedef agg::conv_contour<base_type> extend_base;
-  typedef typename context::template approx<extend_base> extend;
+  typedef typename context::template adapter<extend_base, true> extend;
 
   typedef agg::conv_transform<base_type> affine_base;
-  typedef typename context::template simple<affine_base> vs_affine;
+  typedef typename context::template adapter<affine_base, false> vs_affine;
 
   class affine : public vs_affine {
     agg::trans_affine m_matrix;
@@ -103,7 +90,7 @@ struct trans {
 
   typedef agg::conv_transform<scalable> symbol_type;
   typedef my::conv_simple_marker<base_type, symbol_type> marker_base;
-  typedef typename context::template simple<marker_base> vs_marker;
+  typedef typename context::template adapter<marker_base, false> vs_marker;
 
   class marker : public vs_marker {
     double m_size;
