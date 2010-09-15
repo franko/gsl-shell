@@ -27,6 +27,7 @@
 #include "canvas.h"
 #include "units.h"
 #include "resource-manager.h"
+#include "colors.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -159,6 +160,11 @@ private:
   bool m_sync_mode;
 };
 
+static double 
+compute_scale(agg::trans_affine& m) { 
+  return min(m.sy, m.sx) / 400.0; 
+}
+
 template <class VS, class RM>
 void plot<VS,RM>::commit_pending_draw()
 {
@@ -226,20 +232,22 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
 
+  double scale = compute_scale(canvas_mtx);
+
   agg::gsv_text title;
   agg::conv_stroke<agg::gsv_text> titlestroke(title);
 
-  title.size(12.0);
+  title.size(12.0 * scale);
   title.text(m_title);
 
-  titlestroke.width(1.5);
+  titlestroke.width(1.5 * scale);
   titlestroke.line_cap(agg::round_cap);
   titlestroke.line_join(agg::round_join);
 
   m.transform(&xt, &yt);
 
   xt += -title.text_width() / 2;
-  yt += 10.0;
+  yt += 10.0 * scale;
 
   title.start_point(xt, yt);
   canvas.draw(titlestroke, agg::rgba(0, 0, 0));
@@ -343,6 +351,8 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
 
+  double scale = compute_scale(canvas_mtx);
+
   agg::rect_base<int> clip = rect_of_slot_matrix(canvas_mtx);
   canvas.clip_box(clip);
 
@@ -365,21 +375,21 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	char lab_text[32];
 	double xlab = 0, ylab = y;
 
-	lab.size(10.0);
+	lab.size(10.0 * scale);
 	m_uy.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.5);
+	labs.width(1.5 * scale);
 
 	m.transform(&xlab, &ylab);
 
-	xlab += -lab.text_width() - 8.0;
-	ylab += -10.0/2.0;
+	xlab += -lab.text_width() - 8.0 * scale;
+	ylab += -5.0 * scale;
 
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	mark.move_to(0.0, y);
-	mark.line_to(-0.01, y);
+	mark.line_to(-0.01 * scale, y);
 
 	if (j > jinf && j < jsup)
 	  {
@@ -399,21 +409,21 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	char lab_text[32];
 	double xlab = x, ylab = 0;
 
-	lab.size(10.0);
+	lab.size(10.0 * scale);
 	m_ux.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.5);
+	labs.width(1.5 * scale);
 
 	m.transform(&xlab, &ylab);
 
 	xlab += -lab.text_width()/2.0;
-	ylab += -10.0 - 10.0;
+	ylab += -20.0 * scale;
 
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	mark.move_to(x, 0.0);
-	mark.line_to(x, -0.01);
+	mark.line_to(x, -0.01 * scale);
 
 	if (j > jinf && j < jsup)
 	  {
@@ -423,13 +433,13 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
       }
   }
 
-  lndash.add_dash(8.0, 4.0);
+  lndash.add_dash(8.0 * scale, 4.0 * scale);
 
-  lns.width(0.25);
-  canvas.draw(lns, agg::rgba(0.0, 0.0, 0.0));
+  lns.width(0.25 * scale);
+  canvas.draw(lns, colors::black);
 
-  mark_stroke.width(1.0);
-  canvas.draw(mark_stroke, agg::rgba8(0, 0, 0));
+  mark_stroke.width(1.0 * scale);
+  canvas.draw(mark_stroke, colors::black);
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);
@@ -441,7 +451,9 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   box.line_to(1.0, 0.0);
   box.close_polygon();
 
-  canvas.draw(boxs, agg::rgba8(0, 0, 0));
+  boxs.width(1.0 * scale);
+
+  canvas.draw(boxs, colors::black);
 
   canvas.reset_clipping();
 };
