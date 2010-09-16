@@ -125,6 +125,8 @@ canvas_new (lua_State *L)
 {
   lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
 
+  p->sync_mode(false);
+
   if (lua_isstring (L, 1))
     {
       const char *title = lua_tostring (L, 1);

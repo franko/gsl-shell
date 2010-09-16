@@ -36,6 +36,17 @@ static const struct luaL_Reg window_methods[] = {
 
 __END_DECLS
 
+struct dispose_buffer {
+  static void func (window::ref& ref)
+  {
+    if (ref.layer_buf)
+      {
+	delete [] ref.layer_buf;
+	ref.layer_buf = 0;
+      }
+  }
+};
+
 agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx)
 {
   return agg::rect_base<int>(mtx.tx, mtx.ty, mtx.sx + mtx.tx, mtx.sy + mtx.ty);
@@ -163,7 +174,9 @@ void window::draw_slot_by_ref(window::ref& ref, bool update_req)
   AGG_UNLOCK();
 
   if (update_req)
-    platform_support_update_region (this, r);
+    {
+      platform_support_update_region (this, r);
+    }
 }
 
 void
@@ -173,7 +186,10 @@ window::draw_slot(int slot_id, bool clean_req)
   if (ref && m_canvas)
     {
       if (clean_req || ref->plot->need_redraw())
-	draw_slot_by_ref(*ref, true);
+	{
+	  draw_slot_by_ref(*ref, true);
+	  dispose_buffer::func(*ref);
+	}
 
       refresh_slot_by_ref(*ref);
     }
@@ -209,6 +225,7 @@ window::restore_slot_image(int slot_id)
 	  m_canvas->clear_box(r);
 	  draw_slot_by_ref (*ref, false);
 	  ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
+	  ref->dirty_rect.clear();
 	}
       else
 	{
@@ -231,9 +248,12 @@ window::refresh_slot_by_ref(ref& ref)
     if (ref.plot->draw_queue(*m_canvas, mtx, bb))
       {
 	agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
-	platform_support_update_region (this, bbw);
+	agg::rect_base<int> dbox;
+	ref.dirty_rect.compose(dbox, bbw);
+	platform_support_update_region (this, dbox);
+	ref.dirty_rect.set(bbw);
       }
-  } 
+  }
   catch (std::bad_alloc&) { }
   AGG_UNLOCK();
 }
@@ -247,17 +267,6 @@ window::on_draw()
   m_canvas->clear();
   draw_rec(m_tree);
 }
-
-struct dispose_buffer {
-  static void func (window::ref& ref)
-  {
-    if (ref.layer_buf)
-      {
-	delete [] ref.layer_buf;
-	ref.layer_buf = 0;
-      }
-  }
-};
 
 void
 window::on_resize(int sx, int sy)

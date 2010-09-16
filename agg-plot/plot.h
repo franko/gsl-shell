@@ -162,7 +162,7 @@ private:
 
 static double 
 compute_scale(agg::trans_affine& m) { 
-  return min(m.sy, m.sx) / 400.0; 
+  return min(m.sy, m.sx) / 480.0; 
 }
 
 template <class VS, class RM>
