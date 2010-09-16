@@ -88,11 +88,12 @@ end
 function demo3()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
-   local p = window('black')
+   local p = canvas 'Rotating text'
    local txt = text()
    txt.text = 'Hello world!'
 
-   p:setview(-1, -1, 1, 1)
+   p:limits(-1, -1, 1, 1)
+   p:show()
 
    local N = 128
    for j=0, N do
@@ -102,9 +103,9 @@ function demo3()
       for k=0, n-1 do
 	 local a = 2*pi*k/n - pi/2
 	 local ch = |t| t[(k % #t)+1]
-	 p:draw(txt, ch(color), {{'translate', x = 100*cos(a), y= 100*sin(a)}})
+	 p:add(txt, ch(color), {{'translate', x = 100*cos(a), y= 100*sin(a)}})
       end
-      p:refresh()
+      p:flush()
    end
    return p
 end
