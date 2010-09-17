@@ -9,31 +9,12 @@ extern "C" {
 #include "lua-plot-cpp.h"
 #include "plot.h"
 #include "drawable.h"
-
+#include "rect.h"
 #include "my_list.h"
 
 #include "agg_color_rgba.h"
 #include "agg_trans_affine.h"
 #include "split-parser.h"
-
-class opt_rect {
-  typedef agg::rect_base<int> rect_type;
-
-  bool m_defined;
-  rect_type m_rect;
-
-public:
-  opt_rect() : m_defined(false) {};
-
-  void clear() { m_defined = false; };
-  void set(const rect_type& r) { m_defined = true; m_rect = r; };
-  const rect_type& box() const { return m_rect; };
-
-  void compose(rect_type& dst, const rect_type& r) 
-  {
-    dst = (m_defined ? agg::unite_rectangles(m_rect, r) : r);
-  };
-};
 
 class window : public canvas_window {
 public:
@@ -52,7 +33,7 @@ public:
     unsigned char *layer_buf;
     agg::rendering_buffer layer_img;
 
-    opt_rect dirty_rect;
+    opt_rect<int> dirty_rect;
 
     ref(plot_type *p = 0) : plot(p), matrix(), layer_buf(0), dirty_rect() {};
 

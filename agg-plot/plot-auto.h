@@ -22,6 +22,7 @@
 #define AGGPLOT_PLOT_AUTO_H
 
 #include "plot.h"
+#include "rect.h"
 
 #include "agg_array.h"
 #include "agg_basics.h"
@@ -43,9 +44,7 @@ public:
   virtual void on_draw() { check_bounding_box(); };
 
 private:
-  void calc_layer_bounding_box(item_list& layer, 
-			       agg::rect_base<double>& prect, 
-			       bool is_initialized);
+  void calc_layer_bounding_box(item_list& layer, opt_rect<double>& rect);
 
   void check_bounding_box();
   void calc_bounding_box();
@@ -69,7 +68,8 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline)
     }
   else
     {
-      this->m_drawing_queue = new pod_list<item>(d, this->m_drawing_queue);
+      pod_list<item> *nn = new pod_list<item>(d);
+      this->m_drawing_queue = pod_list<item>::push_back(this->m_drawing_queue, nn);
     }
 
   this->m_is_empty = false;
@@ -94,7 +94,8 @@ void plot_auto<VS,RM>::check_bounding_box()
   }
 
 template<class VS, class RM>
-void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, agg::rect_base<double>& prect, bool is_initialized)
+void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, 
+					       opt_rect<double>& rect)
 {
   for (unsigned j = 0; j < layer.size(); j++)
     {
@@ -102,27 +103,22 @@ void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& laye
       agg::rect_base<double> r;
 
       d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-      
-      if (! is_initialized)
-	{
-	  prect = r;
-	  is_initialized = true;
-	}
-      else
-	{
-	  prect = agg::unite_rectangles(prect, r);
-	}
+      rect.add(r);
     }
 }
 
 template<class VS, class RM>
 void plot_auto<VS,RM>::calc_bounding_box()
 {
-  calc_layer_bounding_box(this->m_root_layer, this->m_rect, false);
+  opt_rect<double> box;
+  calc_layer_bounding_box(this->m_root_layer, box);
   for (unsigned j = 0; j < this->m_layers.size(); j++)
     {
-      calc_layer_bounding_box(*(this->m_layers[j]), this->m_rect, true);
+      calc_layer_bounding_box(*(this->m_layers[j]), box);
     }
+
+  if (box.is_defined())
+    this->m_rect = box.rect();
 }
 
 template<class VS, class RM>

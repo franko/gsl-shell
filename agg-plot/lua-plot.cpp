@@ -315,6 +315,8 @@ plot_push_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
+  window_plot_rev_lookup_apply (L, 1, window_slot_refresh);
+
   AGG_LOCK();
   p->push_layer();
   AGG_UNLOCK();
