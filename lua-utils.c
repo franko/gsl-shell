@@ -103,10 +103,6 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
     }
 
   lua_getmetatable (L, 1);
-<<<<<<< HEAD
-  lua_replace (L, 1);
-  lua_gettable (L, 1);
-=======
   lua_pushstring (L, key);
   lua_rawget (L, -2);
 
@@ -127,7 +123,6 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
       return 0;
     }
 
->>>>>>> layout-manager
   return 1;
 }
 
@@ -229,8 +224,6 @@ mlua_fenv_get (lua_State *L, int index, int fenv_index)
   lua_rawgeti (L, -1, fenv_index);
   lua_remove (L, -2);
 }
-<<<<<<< HEAD
-=======
 
 void
 mlua_table_clear (lua_State *L, int index) 
@@ -244,4 +237,4 @@ mlua_table_clear (lua_State *L, int index)
       lua_rawset (L, index);
     }
 }
->>>>>>> layout-manager
+
