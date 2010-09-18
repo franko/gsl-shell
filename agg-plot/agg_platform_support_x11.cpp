@@ -47,6 +47,8 @@ namespace agg
   public:
     platform_specific(pix_format_e format, bool flip_y);
     ~platform_specific();
+
+    void free_x_resources();
         
     void caption(const char* capt);
     void put_image(const rendering_buffer* src, const rect *r = 0);
@@ -213,6 +215,17 @@ namespace agg
   platform_specific::~platform_specific()
   {
     pthread_mutex_destroy (m_mutex);
+  }
+
+  void platform_specific::free_x_resources()
+  {
+    delete [] m_buf_window;
+    m_ximg_window->data = 0;
+    XDestroyImage(m_ximg_window);
+    XFreeGC(m_display, m_gc);
+    XCloseDisplay(m_display);
+
+    m_initialized = false;
   }
 
   void platform_specific::close()
@@ -446,7 +459,7 @@ namespace agg
   bool platform_support::init(unsigned width, unsigned height, unsigned flags)
   {
     m_window_flags = flags;
-        
+
     m_specific->m_display = XOpenDisplay(NULL);
     if(m_specific->m_display == 0) 
       {
@@ -1001,7 +1014,6 @@ namespace agg
 	  }           
       }
 
-
     unsigned i = platform_support::max_images;
     while(i--)
       {
@@ -1011,13 +1023,8 @@ namespace agg
 	  }
       }
 
-    delete [] m_specific->m_buf_window;
-    m_specific->m_ximg_window->data = 0;
-    XDestroyImage(m_specific->m_ximg_window);
-    XFreeGC(m_specific->m_display, m_specific->m_gc);
-    XDestroyWindow(m_specific->m_display, m_specific->m_window);
-    XCloseDisplay(m_specific->m_display);
-        
+    m_specific->free_x_resources();
+  
     return ret;
   }
 
