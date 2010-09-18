@@ -16,6 +16,23 @@ local function draw(renderer, shape)
    renderer:emptyBuffer()
 end
 
+function star(r)
+   local a, ae = 54*pi/180, 72*pi/180
+   local li, hi = r*cos(a), r*sin(a)
+   local he = li*tan(ae)
+   local xv, yv = 0, - hi - he
+   local xb, yb = - li, - hi
+   local p = path(xv, yv)
+   p:line_to(xb, yb)
+   for k=1, 4 do
+      local th = 2*pi*k/5
+      p:line_to(xv*cos(th) + yv*sin(th), yv*cos(th) - xv*sin(th))
+      p:line_to(xb*cos(th) + yb*sin(th), yb*cos(th) - xb*sin(th))
+   end
+   p:close()
+   return p
+end
+
 function demo1()
    local win = window()
    win:split('v(h..).')
@@ -29,14 +46,17 @@ function demo1()
    win:attach(p2, '1,1')
 
    local plt = canvas('Pre3D')
-
-   local a = -0.6
+   local a = 0.6
    plt:limits(-a, -a, a, a)
+   local r = rng()
+   for k = 1, 50 do
+      local x, y = (2*r:get()-1)*a, (2*r:get()-1)*a
+      local d = rnd.gaussian(r, 0.015*a) + 0.03*a
+      local s = star(d)
+      plt:add(s, rgb(0.9, 0.9, 0.9), {}, {{'translate', x=x, y=y}})
+      plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
+   end
    plt.units = false
-   plt:addline(fxline(|x|  a*sin(2*pi*x/a), -a, a))
-   plt:addline(fxline(|x|  a*cos(2*pi*x/a), -a, a), 'blue')
-   plt:addline(fxline(|x| -a*sin(2*pi*x/a), -a, a), 'green')
-   plt:addline(fxline(|x| -a*cos(2*pi*x/a), -a, a), 'yellow')
    plt.sync = false
    plt:pushlayer()
 

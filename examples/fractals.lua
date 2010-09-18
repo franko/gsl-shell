@@ -188,11 +188,44 @@ function demo3teri(n)
    local pl = plot()
    pl.units = false
 
-   for k=0, n do
+   for k=n, 0, -1 do
       col, coln  = cfgen(k/n), cfgen((k+1)/n)
       pitag_tree(pl, 0, 0, 0, 1, k)
    end
    pl:show()
+   return pl
+end
+
+function demo3q()
+   local cf
+   local llmt = 0.05
+   local ta1, ta2 = atan2(12,16), atan2(-12,9)
+
+   local function pitag_tree(pl, x, y, th, ll, k)
+      if ll < llmt then return end
+
+      local box = rect(0, 0, ll, ll)
+      local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}}
+      pl:add(box, cf(k), {}, tr)
+      pl:add(box, cf(k+1), {{'stroke', width= 2.5*ll}}, tr)
+
+      x, y = x - ll*sin(th), y + ll*cos(th)
+      local a1 = th + ta1
+      pitag_tree(pl, x, y, a1, ll*4/5, k+1)
+      x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+      pitag_tree(pl, x, y, th + ta2, ll*3/5, k+1)
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+
+   local pl = plot()
+   pl.units = false
+   pl:show()
+
+   local n = ceil(log(llmt)/log(4/5))
+
+   cf = |k| cfgen(k/n)
+   pitag_tree(pl, 0, 0, 0, 1, 0)
    return pl
 end
 
