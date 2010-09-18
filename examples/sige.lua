@@ -42,11 +42,13 @@ brs, sg0 = matrix {{2, 0}, {4, 36}, {18,32}, {100, 0}}, 0.8
 mysf = step_func(brs)
 mycf = step_func_gauss(brs, sg0)
 
-p = plot()
+p = canvas 'SiGe Ge% profile'
+p.units = true
+p:limits(0, 0, 30, 44)
 p:addline(xyline(dt:col(1), dt:col(2)))
-p:addline(fxline(mysf, 0, 27), "blue")
-p:addline(fxline(mycf, 0, 27), "green")
 p:show()
+p.sync = false
+p:pushlayer()
 
 function apply_param(brs, xp)
    brs:set(1,1, xp[1])
@@ -57,33 +59,40 @@ function apply_param(brs, xp)
 end
 
 function minf_gener(lbrs)
-   lbrs = lbrs:copy()
-   return function(xp, g)
-	     if g then error 'cannot calc gradient' end
+   local lbrs = lbrs:copy()
+   local sigma
+   local function compute(xp, g)
+      if g then error 'cannot calc gradient' end
 
-	     if xp[1] > xp[2] or xp[2] > xp[4] then
-		return 0/0
-	     end
+      if xp[1] > xp[2] or xp[2] > xp[4] then
+	 return 0/0
+      end
 
-	     if xp[3] < 0 or xp[5] < 0 or xp[3] > 42 then
-		return 0/0
-	     end
+      if xp[3] < 0 or xp[5] < 0 or xp[3] > 42 then
+	 return 0/0
+      end
 
-	     apply_param(lbrs, xp)
-	     local mycf = step_func_gauss(lbrs, xp[6])
-
-	     local resid = 0
-	     for r in dt:rows() do
-		local xi, yi = r:get(1,1), r:get(1,2)
-		resid = resid + (yi - mycf(xi))^2
-	     end
+      apply_param(lbrs, xp)
+      sigma = xp[6]
+      local mycf = step_func_gauss(lbrs, xp[6])
+      
+      local resid = 0
+      for r in dt:rows() do
+	 local xi, yi = r:get(1,1), r:get(1,2)
+	 resid = resid + (yi - mycf(xi))^2
+      end
 	  
-	     return resid
-	  end
+      return resid
+   end
+   local function coeffs()
+      return lbrs, sigma
+   end
+   return compute, coeffs
 end
 
 function do_minimize()
-   local m = minimizer {f= minf_gener(brs), n= 6}
+   local f, coeffs = minf_gener(brs)
+   local m = minimizer {f= f, n= 6}
 
    local x0 = vector {2,   4,  36, 18, 32, 0.8}
    local dx = vector {0.8, 0.8, 6, 2, 6,   0.1}
@@ -92,6 +101,14 @@ function do_minimize()
 
    while m:step() == 'continue' do
       print(tr(m.x), m.value)
+
+      p:clear()
+      local obrs, sg = coeffs()
+      local sf = step_func(obrs)
+      local cf = step_func_gauss(obrs, sg)
+      p:addline(fxline(sf, 0, 27), "green")
+      p:addline(fxline(cf, 0, 27), "blue")
+      p:flush()
    end
 
    print('SUCCESS:', tr(m.x), m.value)

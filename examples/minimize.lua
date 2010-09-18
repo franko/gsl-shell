@@ -69,13 +69,15 @@ function demo1bis()
 
    p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
    p.title = 'Rosenbrock function minimisation'
+   p.sync = false
+   p:pushlayer()
    io.read('*l')
    local ox, oy = m.x[1], m.x[2]
    while m:step() == 'continue' do
       print(m.x[1], m.x[2], m.value)
       local nx, ny = m.x[1], m.x[2]
-      p:stroke(segment(ox, oy, nx, ny))
-      p:refresh()
+      p:addline(segment(ox, oy, nx, ny))
+      p:flush()
       ox, oy = nx, ny
    end
    print(m.x[1], m.x[2], m.value)
