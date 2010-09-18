@@ -165,6 +165,18 @@ compute_scale(agg::trans_affine& m) {
   return min(m.sy, m.sx) / 480.0; 
 }
 
+static double
+std_line_width(double scale, double w = 1.0)
+{
+#if 0
+  const double dsf = M_LN10;
+  double ls = log(scale) / dsf;
+  return exp(round(ls) * dsf) * w * 1.5;
+#else
+  return w * 1.5;
+#endif
+}
+
 template <class VS, class RM>
 void plot<VS,RM>::commit_pending_draw()
 {
@@ -240,7 +252,7 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
   title.size(12.0 * scale);
   title.text(m_title);
 
-  titlestroke.width(1.5 * scale);
+  titlestroke.width(std_line_width(scale));
   titlestroke.line_cap(agg::round_cap);
   titlestroke.line_join(agg::round_join);
 
@@ -375,21 +387,21 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	char lab_text[32];
 	double xlab = 0, ylab = y;
 
-	lab.size(10.0 * scale);
+	lab.size(12.0 * scale);
 	m_uy.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.5 * scale);
+	labs.width(std_line_width(scale));
 
 	m.transform(&xlab, &ylab);
 
-	xlab += -lab.text_width() - 8.0 * scale;
+	xlab += -lab.text_width() - 10.0 * scale;
 	ylab += -5.0 * scale;
 
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	mark.move_to(0.0, y);
-	mark.line_to(-0.01 * scale, y);
+	mark.line_to(-0.01, y);
 
 	if (j > jinf && j < jsup)
 	  {
@@ -409,21 +421,21 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	char lab_text[32];
 	double xlab = x, ylab = 0;
 
-	lab.size(10.0 * scale);
+	lab.size(12.0 * scale);
 	m_ux.mark_label(lab_text, 32, j);
 	lab.text(lab_text);
-	labs.width(1.5 * scale);
+	labs.width(std_line_width(scale));
 
 	m.transform(&xlab, &ylab);
 
 	xlab += -lab.text_width()/2.0;
-	ylab += -20.0 * scale;
+	ylab += -24.0 * scale;
 
 	lab.start_point(xlab, ylab);
 	canvas.draw(labs, agg::rgba(0, 0, 0));
 
 	mark.move_to(x, 0.0);
-	mark.line_to(x, -0.01 * scale);
+	mark.line_to(x, -0.01);
 
 	if (j > jinf && j < jsup)
 	  {
@@ -433,12 +445,12 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
       }
   }
 
-  lndash.add_dash(8.0 * scale, 4.0 * scale);
+  lndash.add_dash(7.0, 3.0);
 
-  lns.width(0.25 * scale);
+  lns.width(std_line_width(scale, 0.25));
   canvas.draw(lns, colors::black);
 
-  mark_stroke.width(1.0 * scale);
+  mark_stroke.width(std_line_width(scale, 0.75));
   canvas.draw(mark_stroke, colors::black);
 
   agg::path_storage box;
@@ -451,7 +463,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   box.line_to(1.0, 0.0);
   box.close_polygon();
 
-  boxs.width(1.0 * scale);
+  boxs.width(std_line_width(scale));
 
   canvas.draw(boxs, colors::black);
 
