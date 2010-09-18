@@ -1,9 +1,5 @@
-#ifndef LUA_CPLOT_H
-#define LUA_CPLOT_H
-
-#include <pthread.h>
-
-#include "lua.h"
+#ifndef AGGPLOT_LUA_PLOT_H
+#define AGGPLOT_LUA_PLOT_H
 
 #include "defs.h"
 

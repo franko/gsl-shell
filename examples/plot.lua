@@ -1,6 +1,4 @@
 
-require 'draw'
-
 function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
    return fxplot(f, 0, 15, 'red')
@@ -13,7 +11,7 @@ function demo2()
    local p = plot('Simulated Gaussian Distribution')
    local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
-   p:add(b, 'black', {{'stroke', width= 0.5}})
+   p:addline(b, rgba(0, 0, 0, 0.6))
    p:addline(fxline(f, -4, 4), 'red')
    p:show()
    return p

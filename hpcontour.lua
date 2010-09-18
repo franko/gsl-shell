@@ -22,7 +22,7 @@ local plcurve = require 'plcurve'
 
 local M = {}
 
-local color = color_function('redyellow', 0.8)
+local color = color_function('redyellow', 0.9)
 
 local insert = table.insert
 
@@ -829,7 +829,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       for id = 1, #curves do
 	 curve_add_path(ln, id, 'cw')
       end
-      pl:addline(ln, col)
+      pl:add(ln, col, {{'stroke', width=0.75}})
    end
 	 
    return {
@@ -846,12 +846,12 @@ function hpcontour(f, a, b, ngridx, ngridy, nlevels)
 
    g.find_curves()
 
-   pl = plot()
-   g.draw_regions(pl)
-   g.draw_lines(pl, rgba(0,0,0,0.6))
-   pl:show()
+   local p = plot()
+   g.draw_regions(p)
+   g.draw_lines(p, 'black')
+   p:show()
 
-   return pl
+   return p
 end
 
 return M

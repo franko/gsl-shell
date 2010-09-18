@@ -22,12 +22,13 @@ ifeq ($(strip $(PLATFORM)), mingw)
   AGG_HOME = /c/fra/src/agg-2.5
   PTHREADS_HOME = /usr/pthreads-w32
 
-  AGG_CFLAGS = -I$(AGG_HOME)/include
+  AGG_INCLUDES = -I$(AGG_HOME)/include
   AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
 
   PTHREADS_CFLAGS = -I$(PTHREADS_HOME)/include
   PTHREADS_LIBS = -L$(PTHREADS_HOME)/lib -lpthreadGC2
 else
+  AGG_INCLUDES = -I/usr/include/agg2
   AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
   PTHREADS_LIBS = -lpthread
 endif

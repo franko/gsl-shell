@@ -50,6 +50,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+// #include <sys/resource.h>
 
 #define lua_c
 
@@ -58,11 +60,24 @@
 #include <lauxlib.h>
 #include <lualib.h>
 #include "llimits.h"
+#include "gsl-shell.h"
 #include "lua-gsl.h"
 #include "lua-utils.h"
+#include "object-index.h"
+#include "canvas-window.h"
 
 #define report error_report
 
+struct window_unref_cell {
+  int id;
+  struct window_unref_cell *next;
+};
+
+#define UNREF_FIXED_SIZE 8
+static int unref_fixed_list[UNREF_FIXED_SIZE];
+static size_t unref_fixed_count = 0;
+
+static struct window_unref_cell *window_unref_list = NULL;
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
@@ -83,6 +98,8 @@ static const luaL_Reg gshlibs[] = {
 #endif
   {NULL, NULL}
 };
+
+pthread_mutex_t gsl_shell_mutex[1];
 
 static void lstop (lua_State *L, lua_Debug *ar) {
   (void)ar;  /* unused arg. */
@@ -112,7 +129,6 @@ static void print_usage (void) {
   progname);
   fflush(stderr);
 }
-
 
 void
 gsl_shell_openlibs (lua_State *L) 
@@ -266,8 +282,12 @@ static int pushline (lua_State *L, int firstline) {
   char *b = buffer;
   size_t l;
   const char *prmt = get_prompt(L, firstline);
+
   if (lua_readline(L, b, prmt) == 0)
-    return 0;  /* no input */
+    {
+      return 0;  /* no input */
+    }
+
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
     b[l-1] = '\0';  /* remove it */
@@ -282,6 +302,10 @@ static int loadline (lua_State *L) {
   lua_settop(L, 0);
   if (!pushline(L, 1))
     return -1;  /* no input */
+
+#warning DEBUG CODE
+  if (strcmp (lua_tostring(L, 1), "exit") == 0)
+    return -1;
 
   lua_pushfstring(L, "return %s", lua_tostring(L, 1));
   status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
@@ -308,24 +332,67 @@ static int loadline (lua_State *L) {
   return status;
 }
 
+static void do_windows_unref (lua_State *L)
+{
+  struct window_unref_cell *wu;
+  size_t j;
+
+  GSL_SHELL_LOCK();
+
+  for (j = 0; j < unref_fixed_count; j++)
+    {
+      object_index_remove (L, OBJECT_WINDOW, unref_fixed_list[j]);
+    }
+
+  unref_fixed_count = 0;
+
+  for (wu = window_unref_list; wu != NULL; /* */)
+    {
+      struct window_unref_cell *nxt = wu->next;
+      object_index_remove (L, OBJECT_WINDOW, wu->id);
+      free (wu);
+      wu = nxt;
+    }
+  window_unref_list = NULL;
+
+  GSL_SHELL_UNLOCK();
+}
 
 static void dotty (lua_State *L) {
-  int status;
   const char *oldprogname = progname;
   progname = NULL;
-  while ((status = loadline(L)) != -1) {
-    if (status == 0) status = docall(L, 0, 0);
-    report(L, status);
-    if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
-      lua_getglobal(L, "print");
-      lua_insert(L, 1);
-      if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-        l_message(progname, lua_pushfstring(L,
-                               "error calling " LUA_QL("print") " (%s)",
-                               lua_tostring(L, -1)));
+  for (;;)
+    {
+      int status = loadline(L);
+
+      if (status == -1)
+	break;
+      if (status == 0) 
+	status = docall(L, 0, 0);
+      report(L, status);
+      if (status == 0 && lua_gettop(L) > 0) 
+	{  /* any result to print? */
+	  lua_getglobal(L, "print");
+	  lua_insert(L, 1);
+	  if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
+	    {
+	      const char *fstr = "error calling " LUA_QL("print") " (%s)";
+	      const char *emsg = lua_pushfstring(L, fstr, lua_tostring(L, -1));
+	      l_message(progname, emsg);
+	    }
+	}
+
+      do_windows_unref (L);
     }
-  }
+
+  object_index_apply_all (L, OBJECT_WINDOW, canvas_window_close);
+
+  do {
+    do_windows_unref (L);
+  } while (object_index_count (L, OBJECT_WINDOW) > 0);
+  
   lua_settop(L, 0);  /* clear stack */
+
   fputs("\n", stdout);
   fflush(stdout);
   progname = oldprogname;
@@ -480,6 +547,16 @@ static int pmain (lua_State *L) {
 int main (int argc, char **argv) {
   int status;
   struct Smain s;
+  /*
+  struct rlimit lmt[1];
+
+  lmt->rlim_cur = 32 * 1024 * 1024;
+  lmt->rlim_max = 32 * 1024 * 1024;
+
+  setrlimit (RLIMIT_AS, lmt);
+  */
+
+  pthread_mutex_init (gsl_shell_mutex, NULL);
 
   lua_State *L = lua_open();  /* create state */
   if (L == NULL) {
@@ -497,6 +574,37 @@ int main (int argc, char **argv) {
   s.argv = argv;
   status = lua_cpcall(L, &pmain, &s);
   report(L, status);
+
+  /* we clear the globals stack and make a full gc collect to avoid
+     problem with finalizers execution order for plots and
+     graphical objects. */
+  mlua_table_clear (L, LUA_GLOBALSINDEX);
+  lua_gc (L, LUA_GCCOLLECT, 0);
+#warning UGLY HACKS
+  lua_gc (L, LUA_GCCOLLECT, 0);
+  lua_gc (L, LUA_GCCOLLECT, 0);
   lua_close(L);
+
+  pthread_mutex_destroy (gsl_shell_mutex);
+
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+void
+gsl_shell_unref_plot (int id)
+{
+  if (unref_fixed_count < UNREF_FIXED_SIZE)
+    {
+      unref_fixed_list[unref_fixed_count] = id;
+      unref_fixed_count ++;
+    }
+  else
+    {
+      struct window_unref_cell *cell = malloc(sizeof(struct window_unref_cell));
+
+      cell->id = id;
+      cell->next = window_unref_list;
+
+      window_unref_list = cell;
+    }
 }

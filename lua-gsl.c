@@ -21,9 +21,9 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "lua-gsl.h"
 #include "nlinfit.h"
 #include "cnlinfit.h"
 #include "matrix.h"
@@ -45,6 +45,12 @@
 #include "bspline.h"
 
 #ifdef AGG_PLOT_ENABLED
+#include "object-index.h"
+#include "object-refs.h"
+#include "win-plot-refs.h"
+#include "lua-draw.h"
+#include "lua-text.h"
+#include "window.h"
 #include "lua-plot.h"
 #endif
 
@@ -54,6 +60,12 @@ int
 luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
+
+#ifdef AGG_PLOT_ENABLED
+  object_index_prepare (L);
+  object_ref_prepare (L);
+  window_plot_ref_prepare (L);
+#endif
 
 #ifdef USE_SEPARATE_NAMESPACE
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
@@ -78,6 +90,9 @@ luaopen_gsl (lua_State *L)
   mlinear_register (L);
   bspline_register (L);
 #ifdef AGG_PLOT_ENABLED
+  draw_register (L);
+  text_register (L);
+  window_register (L);
   plot_register (L);
 #endif
 

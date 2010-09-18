@@ -14,7 +14,7 @@ local function tos(t, maxdepth)
       for i, v in ipairs(t) do insert(ls, tos(v, maxdepth-1)) end
       for k, v in pairs(t) do
 	 if type(k) ~= 'number' or k < 1 or k > n then
-	    insert(ls, k .. '= ' .. tos(v, maxdepth-1))
+	    insert(ls, tos(k, 1) .. '= ' .. tos(v, maxdepth-1))
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'

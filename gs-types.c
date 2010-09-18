@@ -1,7 +1,9 @@
 
+#include <assert.h>
+
 #include <lua.h>
 #include <lauxlib.h>
-#include <assert.h>
+#include "lua-defs.h"
 #include "gs-types.h"
 #include <gsl/gsl_errno.h>
 #include <math.h>
@@ -20,27 +22,61 @@ static int gs_type_string (lua_State *L);
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
-#define GS_PLOT_NAME_DEF        "GSL.plot"
-#define GS_DRAW_OBJ_NAME_DEF   "GSL.path"
+#ifdef AGG_PLOT_ENABLED
+#define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
+#define GS_DRAW_SCALABLE_NAME_DEF NULL
+#define GS_DRAW_PATH_NAME_DEF   "GSL.path"
+#define GS_DRAW_ELLIPSE_NAME_DEF   "GSL.ellipse"
+#define GS_DRAW_DRAWABLE_NAME_DEF NULL
+#define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
+#define GS_CANVAS_WINDOW_NAME_DEF  "GSL.canvas"
+#define GS_WINDOW_NAME_DEF  "GSL.window"
+#define GS_PLOT_NAME_DEF  "GSL.plot"
+#endif
+
+#define MYCAT2x(a,b) a ## _ ## b
+#define MYCAT2(a,b) MYCAT2x(a,b)
+#define MYCAT3x(a,b,c) a ## _ ## b ## _ ## c
+#define MYCAT3(a,b,c) MYCAT3x(a,b,c)
+
+#define MY_EXPAND(NM,DESCR) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, GS_NO_TYPE}
+#define MY_EXPAND_DER(NM,DESCR,BASE) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, MYCAT2(GS,BASE)}
 
 const struct gs_type gs_type_table[] = {
-  {GS_MATRIX,      GS_MATRIX_NAME_DEF,      "real matrix"},
-  {GS_CMATRIX,     GS_CMATRIX_NAME_DEF,     "complex matrix"},
-  {GS_RNG,         GS_RNG_NAME_DEF,         "random number generator"},
-  {GS_NLINFIT,     GS_NLINFIT_NAME_DEF,     "real values non-linear solver"},
-  {GS_CNLINFIT,    GS_CNLINFIT_NAME_DEF,    "complex values non-linear solver"},
-  {GS_ODESOLV,     GS_ODESOLV_NAME_DEF,     "real values ODE solver"},
-  {GS_CODESOLV,    GS_CODESOLV_NAME_DEF,    "complex values ODE solver"},
-  {GS_HALFCMPL_R2, GS_HALFCMPL_R2_NAME_DEF, "half complex array (radix2)"},
-  {GS_HALFCMPL_MR, GS_HALFCMPL_MR_NAME_DEF, "half complex array (mixed radix)"},
-  {GS_FDFMULTIMIN, GS_FDFMULTIMIN_NAME_DEF, "fdf multimin solver"}, 
-  {GS_FMULTIMIN,   GS_FMULTIMIN_NAME_DEF,   "f multimin solver"}, 
-  {GS_BSPLINE,     GS_BSPLINE_NAME_DEF,     "B-spline"}, 
-  {GS_PLOT,        GS_PLOT_NAME_DEF,        "plot"},
-  {GS_DRAW_OBJ,    GS_DRAW_OBJ_NAME_DEF,    "drawing element"},
-  {GS_RGBA_COLOR,  GS_RGBA_COLOR_NAME_DEF,  "color"},
+  MY_EXPAND(MATRIX, "real matrix"),
+  MY_EXPAND(CMATRIX, "complex matrix"),
+  MY_EXPAND(RNG, "random number generator"),
+  MY_EXPAND(NLINFIT, "real values non-linear solver"),
+  MY_EXPAND(CNLINFIT, "complex values non-linear solver"),
+  MY_EXPAND(ODESOLV, "real values ODE solver"),
+  MY_EXPAND(CODESOLV, "complex values ODE solver"),
+  MY_EXPAND(HALFCMPL_R2, "half complex array (radix2)"),
+  MY_EXPAND(HALFCMPL_MR, "half complex array (mixed radix)"),
+  MY_EXPAND(FDFMULTIMIN, "fdf multimin solver"), 
+  MY_EXPAND(FMULTIMIN, "f multimin solver"), 
+  MY_EXPAND(BSPLINE, "B-spline"), 
+#ifdef AGG_PLOT_ENABLED
+  MY_EXPAND(DRAW_PLOT, "plot"),
+  MY_EXPAND(DRAW_SCALABLE, "graphical object"),
+  MY_EXPAND_DER(DRAW_PATH, "geometric line", DRAW_SCALABLE),
+  MY_EXPAND_DER(DRAW_ELLIPSE, "geometric ellipse", DRAW_SCALABLE),
+  MY_EXPAND(DRAW_DRAWABLE, "window graphical object"),
+  MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
+  MY_EXPAND(RGBA_COLOR, "color"),
+  MY_EXPAND(CANVAS_WINDOW, "bare graphical window"),
+  MY_EXPAND_DER(WINDOW, "graphical window", CANVAS_WINDOW),
+  MY_EXPAND(PLOT, "plot"),
+#endif
+  {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}
 };
+
+#undef MYCAT2
+#undef MYCAT2x
+#undef MYCAT3
+#undef MYCAT3x
+#undef MY_EXPAND
+#undef MY_EXPAND_DER
 
 const struct luaL_Reg gs_type_functions[] = {
   {"gsltype",        gs_type_string},
@@ -51,7 +87,6 @@ const char *
 type_qualified_name (int typeid)
 {
   const struct gs_type *tp = &gs_type_table[typeid];
-  /*  assert (typeid >= 0 && typeid < GS_INVALID_TYPE); */
   return tp->fullname;
 }
 
@@ -59,7 +94,6 @@ const char *
 metatable_name (int typeid)
 {
   const struct gs_type *tp = &gs_type_table[typeid];
-  /*  assert (typeid >= 0 && typeid < GS_INVALID_TYPE); */
   return tp->mt_name;
 }
 
@@ -72,6 +106,9 @@ userdata_full_name (lua_State *L, int index)
       for (j = 0; j < GS_INVALID_TYPE; j++)
 	{
 	  const char *mt = metatable_name (j);
+
+	  if (mt == NULL)
+	    continue;
 
 	  lua_getfield(L, LUA_REGISTRYINDEX, mt);
 	  if (lua_rawequal(L, -1, -2)) 
@@ -117,28 +154,70 @@ gs_type_error (lua_State *L, int narg, const char *req_type)
   return luaL_argerror(L, narg, msg);
 }
 
-void *
-gs_check_userdata (lua_State *L, int index, int typeid)
+static bool
+rec_check_type (lua_State *L, enum gs_type_e tp)
 {
-  void *p = lua_touserdata (L, index);
+  const char *mt = metatable_name (tp);
+  const struct gs_type *t;
 
-  if (p == NULL)
-    gs_type_error (L, index, type_qualified_name (typeid));
-
-  if (lua_getmetatable(L, index))
+  if (mt)
     {
-      const char *mt = metatable_name (typeid);
-
       lua_getfield(L, LUA_REGISTRYINDEX, mt);
       if (lua_rawequal(L, -1, -2)) 
 	{
-	  lua_pop (L, 2);
+	  lua_pop (L, 1);
+	  return true;
+	}
+      lua_pop (L, 1);
+    }
+
+  /* we start to search from tp because we assume that derived type are
+     follows base type in the table. */
+  for (t = &gs_type_table[tp]; t->tp != GS_INVALID_TYPE; t++)
+    {
+      if (t->base_type == tp)
+	{
+	  if (rec_check_type (L, t->tp))
+	    return true;
+	}
+    }
+
+  return false;
+}
+
+void *
+gs_is_userdata (lua_State *L, int index, int typeid)
+{
+  INDEX_SET_ABS(L, index);
+
+  void *p = lua_touserdata (L, index);
+
+  if (p == NULL)
+    return NULL;
+
+  if (lua_getmetatable(L, index))
+    {
+      if (rec_check_type (L, typeid))
+	{
+	  lua_pop (L, 1);
 	  return p;
 	}
     }
 
-  gs_type_error (L, index, type_qualified_name (typeid));
+  lua_pop (L, 1);
+
   return NULL;
+}
+
+void *
+gs_check_userdata (lua_State *L, int index, int typeid)
+{
+  void *p = gs_is_userdata (L, index, typeid);
+
+  if (p == NULL)
+    gs_type_error (L, index, type_qualified_name (typeid));
+
+  return p;
 }
 
 int

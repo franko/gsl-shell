@@ -57,11 +57,11 @@ function fiplot(f, a, b, color)
    return p
 end
 
-local function add_bar(p, lx, rx, y)
-   p:move_to(lx, 0)
-   p:line_to(rx, 0)
-   p:line_to(rx, y)
-   p:line_to(lx, y)
+local function add_square(p, lx, by, rx, ty)
+   p:move_to(lx, by)
+   p:line_to(rx, by)
+   p:line_to(rx, ty)
+   p:line_to(lx, ty)
    p:close()
 end
 
@@ -71,15 +71,31 @@ function ibars(f)
    local first = true
    for rx, ry in f do
       local dx = (rx-lx)/2
-      if first then add_bar(b, lx-dx, lx+dx, ly); first = false end
-      add_bar(b, lx+dx, rx+dx, ry)
+      if first then add_square(b, lx-dx, 0, lx+dx, ly); first = false end
+      add_square(b, lx+dx, 0, rx+dx, ry)
       lx, ly = rx, ry
    end
    return b
 end
 
-local bcolors = {'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'}
-local mcolors = {'dark', '', 'light'}
+function segment(x1, y1, x2, y2)
+   local p = path(x1, y1)
+   p:line_to(x2, y2)
+   return p
+end
+
+function rect(x1, y1, x2, y2)
+   local p = path()
+   add_square(p, x1, y1, x2, y2)
+   return p
+end
+
+function square(x0, y0, l)
+   return rect(x0-l/2, y0-l/2, x0+l/2, y0+l/2)
+end
+
+local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
+local mcolors = {'', 'dark', 'light'}
 
 function rainbow(n)
    local p = #bcolors
@@ -89,7 +105,8 @@ end
 
 local color_schema = {
    bluish    = {0.91, 0.898, 0.85, 0.345, 0.145, 0.6},
-   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
+--   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
+   redyellow = {1, 1, 0, 1, 0, 0},
    darkgreen = {0.9, 0.9, 0, 0, 0.4, 0}
 }
 -- local s, e = {1, 1, 1}, {0.1, 0.7, 0.2}

@@ -25,7 +25,8 @@
 #include <windows.h>
 #include <string.h>
 #include <pthread.h>
-#include "platform/agg_platform_support.h"
+#include <new>
+#include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "util/agg_color_conv_rgb16.h"
@@ -49,7 +50,8 @@ namespace agg
         void create_pmap(unsigned width, unsigned height, 
                          rendering_buffer* wnd);
 
-        void display_pmap(HDC dc, const rendering_buffer* src);
+      void display_pmap(HDC dc, const rendering_buffer* src,
+			const agg::rect_base<int> *rect = 0);
         bool load_pmap(const char* fn, unsigned idx, 
                        rendering_buffer* dst);
 
@@ -57,6 +59,8 @@ namespace agg
                        const rendering_buffer* src);
 
         unsigned translate(unsigned keycode);
+
+        void close();
 
         pix_format_e  m_format;
         pix_format_e  m_sys_format;
@@ -231,6 +235,11 @@ namespace agg
     pthread_mutex_destroy (m_mutex);
   }
 
+  void platform_specific::close()
+  {
+    ::SendMessage(m_hwnd, WM_CLOSE, 0, 0);
+  }
+
 
     //------------------------------------------------------------------------
     void platform_specific::create_pmap(unsigned width, 
@@ -247,109 +256,147 @@ namespace agg
     }
 
 
+  //------------------------------------------------------------------------
+  template <class RenBufDst, class RenBufSrc>
+  static void convert_pmap(RenBufDst* dst, const RenBufSrc* src, 
+			   pix_format_e format, bool copy_req)
+  {
+    switch(format)
+      {
+      case pix_format_gray8:
+      case pix_format_bgr24:
+	if (copy_req)
+	  dst->copy_from(*src);
+	break;
+
+      case pix_format_gray16:
+	my_color_conv(dst, src, color_conv_gray16_to_gray8());
+	break;
+
+      case pix_format_rgb565:
+	my_color_conv(dst, src, color_conv_rgb565_to_rgb555());
+	break;
+
+      case pix_format_rgbAAA:
+	my_color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
+	break;
+
+      case pix_format_bgrAAA:
+	my_color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
+	break;
+
+      case pix_format_rgbBBA:
+	my_color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
+	break;
+
+      case pix_format_bgrABB:
+	my_color_conv(dst, src, color_conv_bgrABB_to_bgr24());
+	break;
+
+      case pix_format_rgb24:
+	my_color_conv(dst, src, color_conv_rgb24_to_bgr24());
+	break;
+
+      case pix_format_rgb48:
+	my_color_conv(dst, src, color_conv_rgb48_to_bgr24());
+	break;
+
+      case pix_format_bgr48:
+	my_color_conv(dst, src, color_conv_bgr48_to_bgr24());
+	break;
+
+      case pix_format_abgr32:
+	my_color_conv(dst, src, color_conv_abgr32_to_bgra32());
+	break;
+
+      case pix_format_argb32:
+	my_color_conv(dst, src, color_conv_argb32_to_bgra32());
+	break;
+
+      case pix_format_rgba32:
+	my_color_conv(dst, src, color_conv_rgba32_to_bgra32());
+	break;
+
+      case pix_format_bgra64:
+	my_color_conv(dst, src, color_conv_bgra64_to_bgra32());
+	break;
+
+      case pix_format_abgr64:
+	my_color_conv(dst, src, color_conv_abgr64_to_bgra32());
+	break;
+
+      case pix_format_argb64:
+	my_color_conv(dst, src, color_conv_argb64_to_bgra32());
+	break;
+
+      case pix_format_rgba64:
+	my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
+	break;
+      }
+  }
+
     //------------------------------------------------------------------------
-    static void convert_pmap(rendering_buffer* dst, 
-                             const rendering_buffer* src, 
-                             pix_format_e format)
-    {
-        switch(format)
-        {
-        case pix_format_gray8:
-            break;
+  void platform_specific::display_pmap(HDC dc, const rendering_buffer* src,
+				       const agg::rect_base<int> *ri)
+  {
+    if(m_sys_format == m_format && ri == 0)
+      {
+	m_pmap_window.draw(dc);
+      }
+    else
+      {
+	int x, y, w = src->width(), h = src->height();
 
-        case pix_format_gray16:
-            color_conv(dst, src, color_conv_gray16_to_gray8());
-            break;
+	if (ri)
+	  {
+	    agg::rect_base<int> r0(0, 0, w, h);
+	    agg::rect_base<int> r = *ri;
+	    r.clip(r0);
+	    x = r.x1; y = r.y1; w = r.x2 - r.x1; h = r.y2 - r.y1;
+	  }
+	else
+	  {
+	    x = 0; y = 0;
+	  }
 
-        case pix_format_rgb565:
-            color_conv(dst, src, color_conv_rgb565_to_rgb555());
-            break;
+	try
+	  {
+	    pixel_map pmap_tmp;
+	    pmap_tmp.create(w, h, org_e(m_sys_bpp));
 
-        case pix_format_rgbAAA:
-            color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
-            break;
+	    rendering_buffer rbuf_tmp;
+	    rbuf_tmp.attach(pmap_tmp.buf(),
+			    pmap_tmp.width(),
+			    pmap_tmp.height(),
+			    m_flip_y ?
+			    pmap_tmp.stride() :
+			    -pmap_tmp.stride());
 
-        case pix_format_bgrAAA:
-            color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
-            break;
+	    const unsigned char *src_start = src->row_ptr(m_flip_y ? y : y + h - 1);
+	    const unsigned int pix_width = m_bpp / 8;
+	    row_accessor_ro<unsigned char> src_box(src_start + pix_width * x, w, h, src->stride());
 
-        case pix_format_rgbBBA:
-            color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
-            break;
+	    convert_pmap(&rbuf_tmp, &src_box, m_format, true);
 
-        case pix_format_bgrABB:
-            color_conv(dst, src, color_conv_bgrABB_to_bgr24());
-            break;
+	    unsigned int wh = m_pmap_window.height();
+	    RECT wrect;
+	    wrect.left   = x;
+	    wrect.right  = x + w;
+	    wrect.bottom = wh - y;
+	    wrect.top    = wh - (y+h);
 
-        case pix_format_rgb24:
-            color_conv(dst, src, color_conv_rgb24_to_bgr24());
-            break;
+	    RECT brect;
+	    brect.left   = 0;
+	    brect.right  = w;
+	    brect.bottom = h;
+	    brect.top    = 0;
 
-        case pix_format_rgb48:
-            color_conv(dst, src, color_conv_rgb48_to_bgr24());
-            break;
-
-        case pix_format_bgr48:
-            color_conv(dst, src, color_conv_bgr48_to_bgr24());
-            break;
-
-        case pix_format_abgr32:
-            color_conv(dst, src, color_conv_abgr32_to_bgra32());
-            break;
-
-        case pix_format_argb32:
-            color_conv(dst, src, color_conv_argb32_to_bgra32());
-            break;
-
-        case pix_format_rgba32:
-            color_conv(dst, src, color_conv_rgba32_to_bgra32());
-            break;
-
-        case pix_format_bgra64:
-            color_conv(dst, src, color_conv_bgra64_to_bgra32());
-            break;
-
-        case pix_format_abgr64:
-            color_conv(dst, src, color_conv_abgr64_to_bgra32());
-            break;
-
-        case pix_format_argb64:
-            color_conv(dst, src, color_conv_argb64_to_bgra32());
-            break;
-
-        case pix_format_rgba64:
-            color_conv(dst, src, color_conv_rgba64_to_bgra32());
-            break;
-        }
-    }
-
-
-    //------------------------------------------------------------------------
-    void platform_specific::display_pmap(HDC dc, const rendering_buffer* src)
-    {
-        if(m_sys_format == m_format)
-        {
-            m_pmap_window.draw(dc);
-        }
-        else
-        {
-            pixel_map pmap_tmp;
-            pmap_tmp.create(m_pmap_window.width(), 
-                            m_pmap_window.height(),
-                            org_e(m_sys_bpp));
-
-            rendering_buffer rbuf_tmp;
-            rbuf_tmp.attach(pmap_tmp.buf(),
-                            pmap_tmp.width(),
-                            pmap_tmp.height(),
-                            m_flip_y ?
-                              pmap_tmp.stride() :
-                             -pmap_tmp.stride());
-
-            convert_pmap(&rbuf_tmp, src, m_format);
-            pmap_tmp.draw(dc);
-        }
-    }
+	    pmap_tmp.draw(dc, &wrect, &brect);
+	  }
+	catch (std::bad_alloc&)
+	  { }
+      }
+  }
 
 
 
@@ -375,7 +422,7 @@ namespace agg
                           pmap_tmp.stride() :
                           -pmap_tmp.stride());
 
-        convert_pmap(&rbuf_tmp, src, m_format);
+        convert_pmap(&rbuf_tmp, src, m_format, false);
         return pmap_tmp.save_as_bmp(fn);
     }
 
@@ -679,14 +726,22 @@ namespace agg
         
         //--------------------------------------------------------------------
         case WM_SIZE:
-            app->m_specific->create_pmap(LOWORD(lParam), 
-                                         HIWORD(lParam),
-                                         &app->rbuf_window());
+	  try
+	    {
+	      app->m_specific->create_pmap(LOWORD(lParam), 
+					   HIWORD(lParam),
+					   &app->rbuf_window());
 
-            app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
-            app->on_resize(LOWORD(lParam), HIWORD(lParam));
-            app->force_redraw();
-            break;
+	      app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
+	      app->on_resize(LOWORD(lParam), HIWORD(lParam));
+	      app->force_redraw();
+	    }
+	  catch (std::bad_alloc&)
+	    {
+	      ::PostQuitMessage(1);
+	    }
+
+	  break;
         
         //--------------------------------------------------------------------
         case WM_ERASEBKGND:
@@ -1029,23 +1084,31 @@ namespace agg
         }
 
 
-        RECT rct;
-        ::GetClientRect(m_specific->m_hwnd, &rct);
+	try
+	  {
+	    RECT rct;
+	    ::GetClientRect(m_specific->m_hwnd, &rct);
 
-        ::MoveWindow(m_specific->m_hwnd,   // handle to window
-                     100,                  // horizontal position
-                     100,                  // vertical position
-                     width + (width - (rct.right - rct.left)),
-                     height + (height - (rct.bottom - rct.top)),
-                     FALSE);
+	    ::MoveWindow(m_specific->m_hwnd,   // handle to window
+			 100,                  // horizontal position
+			 100,                  // vertical position
+			 width + (width - (rct.right - rct.left)),
+			 height + (height - (rct.bottom - rct.top)),
+			 FALSE);
    
-        ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
-        m_specific->create_pmap(width, height, &m_rbuf_window);
-        m_initial_width = width;
-        m_initial_height = height;
-        on_init();
-        m_specific->m_redraw_flag = true;
-        ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+	    ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+	    m_specific->create_pmap(width, height, &m_rbuf_window);
+	    m_initial_width = width;
+	    m_initial_height = height;
+	    on_init();
+	    m_specific->m_redraw_flag = true;
+	    ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+	    ::SetForegroundWindow(m_specific->m_hwnd);
+	  }
+	catch (std::bad_alloc&)
+	  {
+	    return false;
+	  }
         return true;
     }
 
@@ -1056,17 +1119,22 @@ namespace agg
     {
         MSG msg;
 
-	pthread_mutex_lock (m_specific->m_mutex);
-
         for(;;)
         {
             if(m_wait_mode)
             {
 	      bool status;
 
-	      pthread_mutex_unlock (m_specific->m_mutex);
-	      status = ::GetMessage(&msg, 0, 0, 0);
-	      pthread_mutex_lock (m_specific->m_mutex);
+	      if (m_specific->m_is_mapped)
+		{
+		  pthread_mutex_unlock (m_specific->m_mutex);
+		  status = ::GetMessage(&msg, 0, 0, 0);
+		  pthread_mutex_lock (m_specific->m_mutex);
+		}
+	      else
+		{
+		  status = ::GetMessage(&msg, 0, 0, 0);
+		}
 
 	      if(! status)
                 {
@@ -1092,8 +1160,6 @@ namespace agg
                 }
             }
         }
-
-	pthread_mutex_unlock (m_specific->m_mutex);
 
         return (int)msg.wParam;
     }
@@ -1198,8 +1264,8 @@ namespace agg
     void platform_support::on_post_draw(void* raw_handler) {}
 }
 
-
-void platform_support_prepare()
+void
+platform_support_ext::prepare()
 {
   if (agg::g_windows_instance == 0)
     {
@@ -1208,17 +1274,37 @@ void platform_support_prepare()
     }
 }
 
-void platform_support_lock(agg::platform_support *app)
+void 
+platform_support_ext::lock()
 { 
-  pthread_mutex_lock (app->m_specific->m_mutex); 
+  pthread_mutex_lock (m_specific->m_mutex); 
 }
 
-void platform_support_unlock(agg::platform_support *app)
+void
+platform_support_ext::unlock()
 { 
-  pthread_mutex_unlock (app->m_specific->m_mutex); 
+  pthread_mutex_unlock (m_specific->m_mutex); 
 }
 
-bool platform_support_is_mapped(agg::platform_support *app)
+bool
+platform_support_ext::is_mapped()
 { 
-  return app->m_specific->m_is_mapped;
+  return m_specific->m_is_mapped;
+}
+
+void
+platform_support_ext::close_request()
+{
+  m_specific->close();
+}
+
+void
+platform_support_ext::update_region (const agg::rect_base<int>& r)
+{
+  if (! m_specific->m_is_mapped)
+    return;
+
+  HDC dc = ::GetDC(m_specific->m_hwnd);
+  m_specific->display_pmap(dc, &rbuf_window(), &r);
+  ::ReleaseDC(m_specific->m_hwnd, dc);
 }

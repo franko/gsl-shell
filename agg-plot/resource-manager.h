@@ -11,19 +11,17 @@ class no_management {
   static void dispose(T* p) {};
 };
 
-
-class ref_manager {
+class lua_management {
 public:
   template <class T>
-  static void acquire(T* p) { p->ref(); };
+  static void acquire(T* p) { };
 
   template <class T>
   static void dispose(T* p) 
-  { 
-    unsigned rc = p->unref(); 
-    if (rc == 0)
-      delete p;
-  };
+    { 
+      if (p->dispose())
+	delete p;
+    };
 };
 
 #endif

@@ -8,6 +8,6 @@ ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall
 else
-  CFLAGS = -O2 -Wall
-  CXXFLAGS = -O2 -fno-exceptions -fno-rtti -Wall
+  CFLAGS = -O3 -Wall
+  CXXFLAGS = -O3 -fno-rtti -Wall
 endif

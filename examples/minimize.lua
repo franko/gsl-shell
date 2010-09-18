@@ -40,14 +40,17 @@ end
 
 function demo1()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= frosenbrock, n= 2}
+   local m = minimizer {f= frosenbrock, n= 2}
    m:set(x0, vector {1, 1}) 
 
-   local px = new(2,1)
-   p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
-   c = path(m.x[1], m.x[2])
+   local p = contour(cook(frosenbrock), {-1.5, -0.5}, {1.5, 2}, 20, 20, 12)
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
@@ -56,20 +59,46 @@ function demo1()
    p:addline(c, 'red')
 
    p.title = 'Rosenbrock function minimisation'
-   p:show()
+   return p
+end
+
+function demo1bis()
+   local x0 = vector {-1.2, 1.0}
+   m = minimizer {f= frosenbrock, n= 2}
+   m:set(x0, vector {1, 1}) 
+
+   p = contour(cook(frosenbrock), {-1.5, -0.2}, {1.5, 2}, 20, 20, 12)
+   p.title = 'Rosenbrock function minimisation'
+   p.sync = false
+   p:pushlayer()
+   io.read('*l')
+   local ox, oy = m.x[1], m.x[2]
+   while m:step() == 'continue' do
+      print(m.x[1], m.x[2], m.value)
+      local nx, ny = m.x[1], m.x[2]
+      p:addline(segment(ox, oy, nx, ny))
+      p:flush()
+      ox, oy = nx, ny
+   end
+   print(m.x[1], m.x[2], m.value)
+
    return p
 end
 
 
 function demo2()
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= f, n= 2}
+   local m = minimizer {f= f, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(f), {-2, -3}, {8, 2})
-   c=path(m.x[1], m.x[2])
+   local p=contour(cook(f), {-2, -3}, {8, 2})
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
@@ -78,20 +107,23 @@ function demo2()
    p:addline(c, 'red')
 
    p.title = 'Quadratic function minimisation'
-   p:show()
    return p
 end
 
 
 function demo3()
    local x0 = vector {-0.5, 1.0}
-   m = minimizer {fdf= fex, n= 2}
+   local m = minimizer {fdf= fex, n= 2}
    m:set(x0, vector {1, 1})
 
-   p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
-   c=path(m.x[1], m.x[2])
+   local p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
+   local c = path(m.x[1], m.x[2])
+   local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
-      c:line_to(m.x[1], m.x[2])
+      if cx ~= m.x[1] or cy ~= m.x[2] then
+	 c:line_to(m.x[1], m.x[2])
+	 cx, cy = m.x[1], m.x[2]
+      end
    end
    c:line_to(m.x[1], m.x[2])
    print(m.x[1], m.x[2], m.value)
@@ -100,6 +132,5 @@ function demo3()
    p:addline(c, 'green')
 
    p.title = 'function minimisation: f(x,y) = 4 x^2 + 2 y^2 + 4 x y + 2 y + 1'
-   p:show()
    return p
 end

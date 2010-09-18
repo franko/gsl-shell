@@ -1,17 +1,23 @@
 #ifndef AGGPLOT_COLORS_H
 #define AGGPLOT_COLORS_H
 
+extern "C" {
+#include "lua.h"
+}
+
 #include "defs.h"
+#include "agg_color_rgba.h"
 
-__BEGIN_DECLS
+extern agg::rgba8 * rgba8_push_lookup  (lua_State *L, const char *color_str);
+extern agg::rgba8 * rgba8_push_default (lua_State *L);
+extern agg::rgba8 * color_arg_lookup   (lua_State *L, int index);
+extern agg::rgba8 * check_color_rgba8  (lua_State *L, int index);
 
-struct color {
-  unsigned int r, g, b, a;
+namespace colors {
+
+  extern agg::rgba white;
+  extern agg::rgba black;
+
 };
-
-extern void color_lookup        (struct color *c, const char *color_str);
-extern void set_color_default   (struct color *c);
-
-__END_DECLS
 
 #endif

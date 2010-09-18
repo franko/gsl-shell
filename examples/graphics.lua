@@ -50,7 +50,7 @@ function demo1()
    local a = path()
    local n = 12
    local t = {{}, {{'curve'}}, {{'stroke'}, {'curve'}}, 
-	      {{'stroke'}, {'dash'}, {'curve'}}}
+	      {{'stroke'}, {'dash', 6, 3}, {'curve'}}}
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = plot()
    local R = 120
@@ -76,14 +76,40 @@ function demo2()
       local txt = text()
       local a = 2*pi*k/n - pi/2
       local ch = |t| t[(k % #t)+1]
-      txt:set_text('Hello world!')
-      txt:set_point(R*cos(a), R*sin(a))
-      txt:rotate(a - pi)
+      txt.text = 'Hello world!'
+      txt:set(R*cos(a), R*sin(a))
+      txt.angle = a - pi
       p:add(txt, ch(color))
    end
    p:show()
    return p
 end
 
-p1 = demo1()
-p2 = demo2()
+function demo3()
+   local n = 24
+   local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
+   local p = canvas 'Rotating text'
+   local txt = text()
+   txt.text = 'Hello world!'
+
+   p:limits(-1, -1, 1, 1)
+   p:show()
+
+   local N = 128
+   for j=0, N do
+      local th = 2*pi*j/N
+      txt.angle = th
+      p:clear()
+      for k=0, n-1 do
+	 local a = 2*pi*k/n - pi/2
+	 local ch = |t| t[(k % #t)+1]
+	 p:add(txt, ch(color), {{'translate', x = 100*cos(a), y= 100*sin(a)}})
+      end
+      p:flush()
+   end
+   return p
+end
+
+print 'demo1() - path objects with bezier segments and various transformations'
+print 'demo2() - example of text object utilisation'
+print 'demo3() - example of animation with window and text object'

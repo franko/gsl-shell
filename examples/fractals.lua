@@ -1,6 +1,6 @@
 require 'draw'
 
-function c_generator(n, n_angle, len_frac, g)
+local function c_generator(n, n_angle, len_frac, g)
    local w, r, k = ilist(|| 0, n+1), #g
 
    local s = len_frac^n
@@ -26,25 +26,209 @@ function c_generator(n, n_angle, len_frac, g)
 	  end
 end
 
-function vonkoch(n)
-   local p = plot('Von Koch\'s curve')
-   local b = path()
-   b:move_to (0, -0.05)
-   p:addline(b, 'white')
-   p:addline(ipath(c_generator(n, 6, 1/3, {0,1,-1,0})), 'blue')
-   p:show()
-   return p
-end
-
-function levyc(n)
+local function levyc(n)
    local p = plot('Levy\'s C curve')
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
    p:addline(c, 'red', {}, {{'rotate', angle= -pi/4}})
    p:addline(c, 'red', {}, {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
+   p.units = false
    p:show()
    return p
 end
 
-p1 = vonkoch(5)
-p2 = levyc(7)
-p2.units = false
+function demo1() 
+   local pl = plot()
+
+   local t = path()
+   t:move_to(0,0)
+   t:line_to(1,0)
+   t:line_to(0.5,-sqrt(3)/2)
+   t:close()
+
+   local v = ipath(c_generator(4, 6, 1/3, {0,1,-1,0}))
+   local c = rgba(0,0,0.7,0.2)
+   pl:add(v, c)
+   pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
+		     {'rotate', angle=-2*2*pi/3}})
+   pl:add(t, c)
+
+   c = rgb(0,0,0.7)
+
+   pl:addline(v, c)
+   pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
+   pl:addline(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
+			 {'rotate', angle=-2*2*pi/3}})
+
+   pl.units = false
+   pl:show()
+   return pl
+end
+
+demo2 = function(n) return levyc(n and n or 6) end 
+
+function demo3()
+   local rdsd = sqrt(2)/2
+   local cf
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      local box = rect(0, 0, ll, ll)
+      local col = cf(depth)
+      pl:add(box, col, {}, {{'translate', x= x, y= y}, {'rotate', angle= th}})
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 pitag_tree(pl, x, y, th + pi/4, ll*rdsd, depth-1)
+	 x, y = x + ll*rdsd*cos(th+pi/4), y + ll*rdsd*sin(th+pi/4)
+	 pitag_tree(pl, x, y, th - pi/4, ll*rdsd, depth-1)
+      end
+   end
+
+   local depth = 12
+   local cfgen = color_function('darkgreen', 1)
+   cf = |d| cfgen(1-d/depth)
+   local pl = plot()
+   pl.units = false
+   pitag_tree(pl, 0, 0, 0, 1, depth)
+   pl:show()
+   return pl
+end
+
+function demo3bis(n)
+   n = n and n or 10
+   local rdsd = sqrt(2)/2
+   local m = new(2^(n+1)-1, 4)
+
+   local function pitag_tree(x, y, th, ll, k, depth)
+      m:set(k, 1, x)
+      m:set(k, 2, y)
+      m:set(k, 3, th)
+      m:set(k, 4, depth)
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 k = pitag_tree(x, y, th + pi/4, ll*rdsd, k+1, depth-1)
+	 x, y = x + ll*rdsd*cos(th+pi/4), y + ll*rdsd*sin(th+pi/4)
+	 k = pitag_tree(x, y, th - pi/4, ll*rdsd, k+1, depth-1)
+      end
+      return k
+   end
+
+   pitag_tree(0, 0, 0, 1, 1, n)
+
+   local cfgen = color_function('darkgreen', 1)
+
+   local pl = plot()
+   -- pl.units = false
+   pl:show()
+
+   for d=n, 0, -1 do
+      local dfact = rdsd^(n-d)
+      local box = rect(0, 0, dfact, dfact)
+      for k=1, 2^(n+1)-1 do
+	 if m:get(k,4) == d then
+	    local x, y, th = m:get(k,1), m:get(k,2), m:get(k,3)
+	    local tr = {{'translate', x=x, y=y}, {'rotate', angle=th}}
+	    pl:add(box, cfgen(1-d/n), {}, tr)
+	    pl:add(box, cfgen(1-(d-1)/n), {{'stroke', width= 2.5*dfact}}, tr)
+	    --	    pl:addline(box, cfgen(1-(d-1)/n), {}, tr)
+	 end
+      end
+   end
+
+   return pl
+end
+
+function demo3ter(n)
+   n = n and n or 10
+   local cf
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      local box = rect(0, 0, ll, ll)
+      local col = cf(depth)
+      pl:add(box, col, {}, {{'translate', x= x, y= y}, {'rotate', angle= th}})
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 local a1 = th + atan2(12,16)
+	 pitag_tree(pl, x, y, a1, ll*4/5, depth-1)
+	 x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+	 pitag_tree(pl, x, y, th + atan2(-12,9), ll*3/5, depth-1)
+      end
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+   cf = |d| cfgen(1-d/n)
+   local pl = plot()
+   pl.units = false
+   pl:show()
+   pitag_tree(pl, 0, 0, 0, 1, n)
+   return pl
+end
+
+function demo3teri(n)
+   n = n and n or 10
+   local col, coln
+
+   local function pitag_tree(pl, x, y, th, ll, depth)
+      if depth == 0 then
+	 local box = rect(0, 0, ll, ll)
+	 local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}}
+	 pl:add(box, col, {}, tr)
+	 pl:add(box, coln, {{'stroke', width= 2.5*ll}}, tr)
+      end
+      if depth > 0 then
+	 x, y = x - ll*sin(th), y + ll*cos(th)
+	 local a1 = th + atan2(12,16)
+	 pitag_tree(pl, x, y, a1, ll*4/5, depth-1)
+	 x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+	 pitag_tree(pl, x, y, th + atan2(-12,9), ll*3/5, depth-1)
+      end
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+
+   local pl = plot()
+   pl.units = false
+
+   for k=n, 0, -1 do
+      col, coln  = cfgen(k/n), cfgen((k+1)/n)
+      pitag_tree(pl, 0, 0, 0, 1, k)
+   end
+   pl:show()
+   return pl
+end
+
+function demo3q()
+   local cf
+   local llmt = 0.05
+   local ta1, ta2 = atan2(12,16), atan2(-12,9)
+
+   local function pitag_tree(pl, x, y, th, ll, k)
+      if ll < llmt then return end
+
+      local box = rect(0, 0, ll, ll)
+      local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}}
+      pl:add(box, cf(k), {}, tr)
+      pl:add(box, cf(k+1), {{'stroke', width= 2.5*ll}}, tr)
+
+      x, y = x - ll*sin(th), y + ll*cos(th)
+      local a1 = th + ta1
+      pitag_tree(pl, x, y, a1, ll*4/5, k+1)
+      x, y = x + ll*4/5*cos(a1), y + ll*4/5*sin(a1)
+      pitag_tree(pl, x, y, th + ta2, ll*3/5, k+1)
+   end
+
+   local cfgen = color_function('darkgreen', 1)
+
+   local pl = plot()
+   pl.units = false
+   pl:show()
+
+   local n = ceil(log(llmt)/log(4/5))
+
+   cf = |k| cfgen(k/n)
+   pitag_tree(pl, 0, 0, 0, 1, 0)
+   return pl
+end
+
+print 'demo1() - Von Koch\'s curve'
+print 'demo2() - Levy\'s C curve'
+print 'demo3() - Pythagorean Tree'

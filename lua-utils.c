@@ -25,7 +25,7 @@
 #include "lua-utils.h"
 #include "gs-types.h"
 
-char const * const CACHE_FIELD_NAME = "__cache";
+static char const * const CACHE_FIELD_NAME = "__cache";
 
 const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key)
@@ -103,8 +103,31 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
     }
 
   lua_getmetatable (L, 1);
+<<<<<<< HEAD
   lua_replace (L, 1);
   lua_gettable (L, 1);
+=======
+  lua_pushstring (L, key);
+  lua_rawget (L, -2);
+
+  if (lua_isnil (L, -1))
+    {
+      lua_pop (L, 1);
+      lua_pushstring (L, "__superindex");
+      lua_rawget (L, -2);
+
+      if (! lua_isnil (L, -1))
+	{
+	  lua_insert (L, 1);
+	  lua_pop (L, 1);
+	  lua_call (L, 2, 1);
+	  return 1;
+	}
+
+      return 0;
+    }
+
+>>>>>>> layout-manager
   return 1;
 }
 
@@ -206,3 +229,19 @@ mlua_fenv_get (lua_State *L, int index, int fenv_index)
   lua_rawgeti (L, -1, fenv_index);
   lua_remove (L, -2);
 }
+<<<<<<< HEAD
+=======
+
+void
+mlua_table_clear (lua_State *L, int index) 
+{
+  lua_pushnil (L);  /* first key */
+  while (lua_next(L, index) != 0) 
+    {
+      lua_pop (L, 1);
+      lua_pushvalue (L, -1);
+      lua_pushnil (L);
+      lua_rawset (L, index);
+    }
+}
+>>>>>>> layout-manager
