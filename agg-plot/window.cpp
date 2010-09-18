@@ -18,6 +18,7 @@ extern "C" {
 
 __BEGIN_DECLS
 
+static int window_show            (lua_State *L);
 static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
 
@@ -27,6 +28,7 @@ static const struct luaL_Reg window_functions[] = {
 };
 
 static const struct luaL_Reg window_methods[] = {
+  {"show",           window_show          },
   {"attach",         window_attach        },
   {"split",          window_split         },
   {"update",         window_update        },
@@ -398,8 +400,24 @@ int
 window_new (lua_State *L)
 {
   window *win = push_new_object<window>(L, GS_WINDOW, colors::white);
+  const char *spec = lua_tostring (L, 1);
+
   win->start_new_thread (L);
+
+  if (spec)
+    {
+      win->split(spec);
+    }
+
   return 1;
+}
+
+int
+window_show (lua_State *L)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  win->start_new_thread (L);
+  return 0;
 }
 
 int
