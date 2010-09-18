@@ -95,7 +95,7 @@ canvas_window::start_new_thread (lua_State *L)
 void *
 canvas_thread_function (void *_win)
 {
-  platform_support_prepare();
+  platform_support_ext::prepare();
 
   canvas_window *win = (canvas_window *) _win;
 
@@ -126,7 +126,7 @@ canvas_window_close (lua_State *L)
   canvas_window *win = object_check<canvas_window>(L, 1, GS_CANVAS_WINDOW);
   win->lock();
   if (win->status == canvas_window::running)
-    win->close();
+    win->close_request();
   win->unlock();
   return 0;
 }

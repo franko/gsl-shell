@@ -4,13 +4,21 @@
 #include "agg_basics.h"
 #include "platform/agg_platform_support.h"
 
-extern void platform_support_prepare       ();
-extern void platform_support_lock          (agg::platform_support *app);
-extern void platform_support_unlock        (agg::platform_support *app);
-extern bool platform_support_is_mapped     (agg::platform_support *app);
-extern void platform_support_close_window  (agg::platform_support *app);
-extern void platform_support_update_region (agg::platform_support *app, 
-					    const agg::rect_base<int>& r);
+class platform_support_ext : public agg::platform_support {
+public:
+  platform_support_ext (agg::pix_format_e format, bool flip_y)
+    : agg::platform_support(format, flip_y) 
+  { };
+
+  void lock();
+  void unlock();
+
+  bool is_mapped();
+  void close_request();
+  void update_region (const agg::rect_base<int>& r);
+
+  static void prepare();
+};
 
 template<class RenBufDst, class RenBufSrc, class CopyRow> 
 void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functor)

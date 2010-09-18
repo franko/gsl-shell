@@ -177,7 +177,7 @@ void window::draw_slot_by_ref(window::ref& ref, bool update_req)
 
   if (update_req)
     {
-      platform_support_update_region (this, r);
+      update_region(r);
     }
 }
 
@@ -252,7 +252,7 @@ window::refresh_slot_by_ref(ref& ref)
 	agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
 	agg::rect_base<int> dbox;
 	ref.dirty_rect.compose(dbox, bbw);
-	platform_support_update_region (this, dbox);
+	update_region (dbox);
 	ref.dirty_rect.set(bbw);
       }
   }

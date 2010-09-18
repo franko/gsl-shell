@@ -11,7 +11,7 @@
 #include "canvas.h"
 #include "utils.h"
 
-class canvas_window : public agg::platform_support {
+class canvas_window : public platform_support_ext {
 protected:
   canvas *m_canvas;
   agg::rgba m_bgcolor;
@@ -26,7 +26,7 @@ public:
   enum win_status_e status;
 
   canvas_window(agg::rgba& bgcol) :
-    agg::platform_support(agg::pix_format_bgr24, true), 
+    platform_support_ext(agg::pix_format_bgr24, true), 
     m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), id(-1), status(not_ready)
   { };
 
@@ -38,11 +38,6 @@ public:
 
   virtual void on_init();
   virtual void on_resize(int sx, int sy);
-
-  void lock() { platform_support_lock(this); };
-  void unlock() { platform_support_unlock(this); };
-
-  void close() { platform_support_close_window(this); };
 
   void start_new_thread (lua_State *L);
 

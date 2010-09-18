@@ -1264,8 +1264,8 @@ namespace agg
     void platform_support::on_post_draw(void* raw_handler) {}
 }
 
-
-void platform_support_prepare()
+void
+platform_support_ext::prepare()
 {
   if (agg::g_windows_instance == 0)
     {
@@ -1274,33 +1274,37 @@ void platform_support_prepare()
     }
 }
 
-void platform_support_lock(agg::platform_support *app)
+void 
+platform_support_ext::lock()
 { 
-  pthread_mutex_lock (app->m_specific->m_mutex); 
+  pthread_mutex_lock (m_specific->m_mutex); 
 }
 
-void platform_support_unlock(agg::platform_support *app)
+void
+platform_support_ext::unlock()
 { 
-  pthread_mutex_unlock (app->m_specific->m_mutex); 
+  pthread_mutex_unlock (m_specific->m_mutex); 
 }
 
-bool platform_support_is_mapped(agg::platform_support *app)
+bool
+platform_support_ext::is_mapped()
 { 
-  return app->m_specific->m_is_mapped;
+  return m_specific->m_is_mapped;
 }
 
-void platform_support_close_window(agg::platform_support *app)
+void
+platform_support_ext::close_request()
 {
-  app->m_specific->close();
+  m_specific->close();
 }
 
-void platform_support_update_region (agg::platform_support *app, 
-				     const agg::rect_base<int>& r)
+void
+platform_support_ext::update_region (const agg::rect_base<int>& r)
 {
-  if (! app->m_specific->m_is_mapped)
+  if (! m_specific->m_is_mapped)
     return;
 
-  HDC dc = ::GetDC(app->m_specific->m_hwnd);
-  app->m_specific->display_pmap(dc, &app->rbuf_window(), &r);
-  ::ReleaseDC(app->m_specific->m_hwnd, dc);
+  HDC dc = ::GetDC(m_specific->m_hwnd);
+  m_specific->display_pmap(dc, &rbuf_window(), &r);
+  ::ReleaseDC(m_specific->m_hwnd, dc);
 }
