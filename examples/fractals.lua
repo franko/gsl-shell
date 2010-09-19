@@ -67,12 +67,34 @@ end
 
 demo2 = function(n) return levyc(n and n or 6) end 
 
+function get_box_gener()
+   local pbox = {}
+
+   local function get(ll)
+      local b = pbox[ll]
+      if not b then
+	 b = rect(0, 0, ll, ll)
+	 pbox[ll] = b
+      end
+      return b
+   end
+
+   local function count()
+      local c = 0
+      for k, v in pairs(pbox) do c = c+1 end
+      return c
+   end
+   return get, count
+end
+
 function demo3()
    local rdsd = sqrt(2)/2
    local cf
 
+   local get_box, box_count = get_box_gener()
+
    local function pitag_tree(pl, x, y, th, ll, depth)
-      local box = rect(0, 0, ll, ll)
+      local box = get_box(ll)
       local col = cf(depth)
       pl:add(box, col, {}, {{'translate', x= x, y= y}, {'rotate', angle= th}})
       if depth > 0 then
@@ -90,6 +112,8 @@ function demo3()
    pl.units = false
    pitag_tree(pl, 0, 0, 0, 1, depth)
    pl:show()
+
+   print('number of used rectangles:', box_count())
    return pl
 end
 
@@ -167,9 +191,11 @@ function demo3teri(n)
    n = n and n or 10
    local col, coln
 
+   local get_box, box_count = get_box_gener()
+
    local function pitag_tree(pl, x, y, th, ll, depth)
       if depth == 0 then
-	 local box = rect(0, 0, ll, ll)
+	 local box = get_box(ll) 
 	 local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}}
 	 pl:add(box, col, {}, tr)
 	 pl:add(box, coln, {{'stroke', width= 2.5*ll}}, tr)
@@ -187,12 +213,15 @@ function demo3teri(n)
 
    local pl = plot()
    pl.units = false
+   pl.sync = false
+   pl:show()
 
-   for k=n, 0, -1 do
+   for k=0, n do
       col, coln  = cfgen(k/n), cfgen((k+1)/n)
       pitag_tree(pl, 0, 0, 0, 1, k)
+	  pl:flush()
    end
-   pl:show()
+   print('number of used rectangles:', box_count())
    return pl
 end
 
