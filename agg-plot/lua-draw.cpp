@@ -140,26 +140,11 @@ agg_path_free (lua_State *L)
   return object_free<draw::path>(L, 1, GS_DRAW_PATH);
 }
 
-#if 0
-#warning DEBUG CODE
-static const int DEBUG_error_count_max = 8 * 1024;
-static int DEBUG_error_count = DEBUG_error_count_max;
-#endif
-
 void
 path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
 {
   agg::path_storage& ps = p->self();
   path_cmd_e cmd = (path_cmd_e) _cmd;
-
-#if 0
-  DEBUG_error_count--;
-  if (DEBUG_error_count == 0)
-    {
-      DEBUG_error_count = DEBUG_error_count_max;
-      throw std::bad_alloc();
-    }
-#endif
 
   switch (cmd)
     {

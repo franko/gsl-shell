@@ -112,6 +112,7 @@ public:
   void push_drawing_queue();
   void clear_drawing_queue();
   void clear_current_layer();
+  int current_layer_index();
 
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
@@ -550,6 +551,12 @@ void plot<VS,RM>::clear_current_layer()
   clear_drawing_queue();
   layer_dispose_elements (current_layer());
   m_current_layer->clear();
+}
+
+template <class VS, class RM>
+int plot<VS,RM>::current_layer_index()
+{
+  return m_layers.size();
 }
 
 #endif

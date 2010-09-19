@@ -9,7 +9,7 @@ extern "C" {
 #include "lua-draw.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
-#include "win-plot-refs.h"
+#include "object-refs.h"
 #include "object-index.h"
 #include "colors.h"
 #include "lua-plot-cpp.h"
@@ -290,7 +290,7 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
   if (ref)
     {
       if (ref->plot)
-	window_plot_ref_remove (L, ref->slot_id, window_index);
+	object_refs_remove (L, table_window_plot, ref->slot_id, window_index);
     }
 }
 
@@ -459,7 +459,7 @@ window_attach (lua_State *L)
     {
       win->draw_slot(slot_id, true);
       win->unlock();
-      window_plot_ref_add (L, slot_id, 1, 2);
+      object_refs_add (L, table_window_plot, slot_id, 1, 2);
     }
   else
     {

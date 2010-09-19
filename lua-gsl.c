@@ -47,7 +47,6 @@
 #ifdef AGG_PLOT_ENABLED
 #include "object-index.h"
 #include "object-refs.h"
-#include "win-plot-refs.h"
 #include "lua-draw.h"
 #include "lua-text.h"
 #include "window.h"
@@ -63,8 +62,7 @@ luaopen_gsl (lua_State *L)
 
 #ifdef AGG_PLOT_ENABLED
   object_index_prepare (L);
-  object_ref_prepare (L);
-  window_plot_ref_prepare (L);
+  object_refs_prepare (L);
 #endif
 
 #ifdef USE_SEPARATE_NAMESPACE
