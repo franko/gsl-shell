@@ -227,7 +227,6 @@ window::restore_slot_image(int slot_id)
 	  m_canvas->clear_box(r);
 	  draw_slot_by_ref (*ref, false);
 	  ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
-	  ref->dirty_rect.clear();
 	}
       else
 	{

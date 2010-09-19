@@ -25,7 +25,7 @@ public:
   {
     assert (m_defined);
     return m_rect; 
-  };
+  }
 
   void compose(rect_type& dst, const rect_type& r) 
   {
@@ -33,13 +33,19 @@ public:
       dst = (m_defined ? agg::unite_rectangles(m_rect, r) : r);
     else
       dst = (m_defined ? agg::intersect_rectangles(m_rect, r) : r);
-  };
+  }
 
   void add(const rect_type& r) 
   { 
     this->compose(m_rect, r); 
     m_defined = true;
-  };
+  }
+
+  void add(const opt_rect& optr) 
+  { 
+    if (optr.m_defined)
+      this->add(optr.m_rect);
+  }
 };
 
 #endif

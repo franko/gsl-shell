@@ -35,13 +35,15 @@ class plot_auto : public plot<VertexSource, resource_manager> {
 public:
   plot_auto() : 
     plot<VertexSource, resource_manager>(true),
-    m_bbox_updated(true), m_is_empty(true)
+    m_bbox_updated(true)
   { };
 
   virtual ~plot_auto() { };
 
   virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
-  virtual void on_draw() { check_bounding_box(); };
+  virtual void before_draw() { check_bounding_box(); };
+
+  virtual bool pop_layer();
 
 private:
   void calc_layer_bounding_box(item_list& layer, opt_rect<double>& rect);
@@ -52,7 +54,6 @@ private:
 
   // bounding box
   bool m_bbox_updated;
-  bool m_is_empty;
 };
 
 template <class VS, class RM>
@@ -64,15 +65,10 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
     {
       this->m_bbox_updated = false;
       this->m_need_redraw = true;
-      this->current_layer().add(d);
-    }
-  else
-    {
-      pod_list<item> *nn = new pod_list<item>(d);
-      this->m_drawing_queue = pod_list<item>::push_back(this->m_drawing_queue, nn);
     }
 
-  this->m_is_empty = false;
+  pod_list<item> *nn = new pod_list<item>(d);
+  this->m_drawing_queue = pod_list<item>::push_back(this->m_drawing_queue, nn);
 
   RM::acquire(vs);
 }
@@ -80,17 +76,20 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
 template<class VS, class RM>
 void plot_auto<VS,RM>::check_bounding_box()
   {
-    if (this->m_bbox_updated || this->m_is_empty)
+    if (this->m_bbox_updated)
       return;
 
     this->calc_bounding_box();
 
-    const agg::rect_base<double>& bb = this->m_rect;
-    this->m_ux = units(bb.x1, bb.x2);
-    this->m_uy = units(bb.y1, bb.y2);
+    if (this->m_rect.is_defined())
+      {
+	const agg::rect_base<double>& bb = this->m_rect.rect();
+	this->m_ux = units(bb.x1, bb.x2);
+	this->m_uy = units(bb.y1, bb.y2);
 
-    this->compute_user_trans();
-    this->m_bbox_updated = true;
+	this->compute_user_trans();
+	this->m_bbox_updated = true;
+      }
   }
 
 template<class VS, class RM>
@@ -111,27 +110,43 @@ template<class VS, class RM>
 void plot_auto<VS,RM>::calc_bounding_box()
 {
   opt_rect<double> box;
+
   calc_layer_bounding_box(this->m_root_layer, box);
   for (unsigned j = 0; j < this->m_layers.size(); j++)
     {
       calc_layer_bounding_box(*(this->m_layers[j]), box);
     }
 
-  if (box.is_defined())
-    this->m_rect = box.rect();
+  for (pod_list<item> *t = this->m_drawing_queue; t; t = t->next())
+    {
+      const item& d = t->content();
+      agg::rect_base<double> r;
+      d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
+      box.add(r);
+    }
+
+  this->m_rect.add(box);
 }
 
 template<class VS, class RM>
 bool plot_auto<VS,RM>::fit_inside(VS* obj) const
 {
-  if (this->m_is_empty || !this->m_bbox_updated)
+  if (!this->m_bbox_updated || !this->m_rect.is_defined())
     return false;
 
   agg::rect_base<double> r;
   obj->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
 
-  const agg::rect_base<double>& bb = this->m_rect;
+  const agg::rect_base<double>& bb = this->m_rect.rect();
   return bb.hit_test(r.x1, r.y1) && bb.hit_test(r.x2, r.y2);
+}
+
+template<class VS, class RM>
+bool plot_auto<VS,RM>::pop_layer()
+{
+  bool retval = this->plot<VS,RM>::pop_layer();
+  this->m_bbox_updated = false;
+  return retval;
 }
 
 #endif

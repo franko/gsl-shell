@@ -28,6 +28,7 @@
 #include "units.h"
 #include "resource-manager.h"
 #include "colors.h"
+#include "rect.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -101,12 +102,12 @@ public:
   void set_limits(const agg::rect_base<double>& r);
 
   virtual void add(vertex_source* vs, agg::rgba8& color, bool outline);
-  virtual void on_draw() { };
+  virtual void before_draw() { };
   
   void draw(canvas &canvas, agg::trans_affine& m);
 
-  bool push_layer();
-  bool pop_layer();
+  virtual bool push_layer();
+  virtual bool pop_layer();
 
   /* drawing queue related methods */
   void push_drawing_queue();
@@ -149,7 +150,7 @@ protected:
   pod_list<item> *m_drawing_queue;
 
   bool m_need_redraw;
-  agg::rect_base<double> m_rect;
+  opt_rect<double> m_rect;
 
   bool m_use_units;
   units m_ux, m_uy;
@@ -229,7 +230,7 @@ void plot<VS,RM>::clear_drawing_queue()
 template <class VS, class RM>
 void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
-  on_draw();
+  before_draw();
   draw_title(canvas, canvas_mtx);
   if (m_use_units)
     draw_axis(canvas, canvas_mtx);
@@ -347,7 +348,9 @@ void plot<VS,RM>::compute_user_trans()
     }
   else
     {
-      r = m_rect;
+      if (! m_rect.is_defined())
+	return;
+      r = m_rect.rect();
     }
 
   double fx = 1/(r.x2 - r.x1), fy = 1/(r.y2 - r.y1);
@@ -489,7 +492,7 @@ void plot<VS,RM>::set_units(bool use_units)
 template<class VS, class RM>
 void plot<VS,RM>::set_limits(const agg::rect_base<double>& r)
 {
-  m_rect = r;
+  m_rect.set(r);
   m_ux = units(r.x1, r.x2);
   m_uy = units(r.y1, r.y2);
   m_need_redraw = true;
