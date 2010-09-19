@@ -50,8 +50,8 @@ struct plot_item {
 
   plot_item() : vs(0) {};
 
-  plot_item(VertexSource* vs, agg::rgba8 *c, bool as_outline): 
-    vs(vs), color(*c), outline(as_outline)
+  plot_item(VertexSource* vs, agg::rgba8& c, bool as_outline): 
+    vs(vs), color(c), outline(as_outline)
   {};
 
   VertexSource& vertex_source() { return *vs; };
@@ -100,7 +100,7 @@ public:
 
   void set_limits(const agg::rect_base<double>& r);
 
-  virtual void add(vertex_source* vs, agg::rgba8 *color, bool outline);
+  virtual void add(vertex_source* vs, agg::rgba8& color, bool outline);
   virtual void on_draw() { };
   
   void draw(canvas &canvas, agg::trans_affine& m);
@@ -186,7 +186,7 @@ void plot<VS,RM>::commit_pending_draw()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
+void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline) 
 { 
   item d(vs, color, outline);
   pod_list<item> *new_node = new pod_list<item>(d);

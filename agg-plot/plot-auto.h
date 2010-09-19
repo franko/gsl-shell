@@ -40,7 +40,7 @@ public:
 
   virtual ~plot_auto() { };
 
-  virtual void add(VertexSource* vs, agg::rgba8 *color, bool outline);
+  virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
   virtual void on_draw() { check_bounding_box(); };
 
 private:
@@ -56,7 +56,7 @@ private:
 };
 
 template <class VS, class RM>
-void plot_auto<VS,RM>::add(VS* vs, agg::rgba8 *color, bool outline) 
+void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline) 
 { 
   item d(vs, color, outline);
 

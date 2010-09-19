@@ -62,7 +62,7 @@ static int agg_ellipse_new    (lua_State *L);
 static int agg_circle_new     (lua_State *L);
 static int agg_ellipse_free   (lua_State *L);
 
-static int agg_rgba_free      (lua_State *L);
+
 static int agg_rgba_add       (lua_State *L);
 static int agg_rgba_mul       (lua_State *L);
 static int agg_rgba_set_alpha (lua_State *L);
@@ -100,8 +100,8 @@ static const struct luaL_Reg agg_ellipse_methods[] = {
   {NULL, NULL}
 };
 
+// no finalizer is needed because rgba does not allocate memory
 static const struct luaL_Reg rgba_methods[] = {
-  {"__gc",        agg_rgba_free},
   {"__add",       agg_rgba_add },
   {"__mul",       agg_rgba_mul },
   {"alpha",       agg_rgba_set_alpha },
@@ -309,7 +309,7 @@ agg_rgb_new (lua_State *L)
 int
 agg_rgba_set_alpha (lua_State *L)
 {
-  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *c = object_check<agg::rgba8> (L, 1, GS_RGBA_COLOR);
   double a = luaL_checknumber (L, 2);
   c->a = agg::rgba8::base_mask * a;
   return 0;
@@ -318,8 +318,8 @@ agg_rgba_set_alpha (lua_State *L)
 int
 agg_rgba_add (lua_State *L)
 {
-  agg::rgba8 *c1 = (agg::rgba8 *) gs_check_userdata (L, 1, GS_RGBA_COLOR);
-  agg::rgba8 *c2 = (agg::rgba8 *) gs_check_userdata (L, 2, GS_RGBA_COLOR);
+  agg::rgba8 *c1 = object_check<agg::rgba8> (L, 1, GS_RGBA_COLOR);
+  agg::rgba8 *c2 = object_check<agg::rgba8> (L, 2, GS_RGBA_COLOR);
 
   unsigned int r = c1->r + c2->r;
   unsigned int g = c1->g + c2->g;
@@ -342,18 +342,12 @@ agg_rgba_mul (lua_State *L)
     }
 
   double f = luaL_checknumber (L, is);
-  agg::rgba8 *c = (agg::rgba8 *) gs_check_userdata (L, ic, GS_RGBA_COLOR);
+  agg::rgba8 *c = object_check<agg::rgba8> (L, ic, GS_RGBA_COLOR);
 
   unsigned int r = f * c->r, g = f * c->g, b = f * c->b;
 
   new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b);
   return 1;
-}
-
-int
-agg_rgba_free (lua_State *L)
-{
-  return object_free<agg::rgba8>(L, 1, GS_RGBA_COLOR);
 }
 
 void

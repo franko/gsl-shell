@@ -146,8 +146,9 @@ int
 plot_add_gener (lua_State *L, bool as_line)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  drawable *obj = parse_graph_args (L);
-  agg::rgba8 *color = check_color_rgba8 (L, 3);
+
+  agg::rgba8 color;
+  drawable *obj = parse_graph_args (L, color);
 
   object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
 

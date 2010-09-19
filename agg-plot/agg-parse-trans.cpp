@@ -286,13 +286,12 @@ parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
 }
 
 drawable *
-parse_graph_args (lua_State *L)
+parse_graph_args (lua_State *L, agg::rgba8& color)
 {
   int narg = lua_gettop (L);
-  agg::rgba8 *color;
 
   if (narg <= 2)
-    color = rgba8_push_default (L);
+    color = colors::cdefault;
   else
     color = color_arg_lookup (L, 3);
       
