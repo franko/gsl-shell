@@ -134,6 +134,8 @@ function demo2bis()
    pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
    pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
    pl:show()
+   pl.sync = false
+   pl:pushlayer()
 
    local function print_state(s)
       print ("x: ", tr(s.p))
@@ -145,8 +147,8 @@ function demo2bis()
    repeat
       print_state (s)
       pl:clear()
-      pl:stroke(fxline(|x| fmodel(s.p, x), 0, xs(n)))
-      pl:refresh()
+      pl:addline(fxline(|x| fmodel(s.p, x), 0, xs(n)))
+      pl:flush()
       io.read('*l')
       local status = s:iterate()
    until status ~= 'continue'
