@@ -31,6 +31,7 @@
 #include "util/agg_color_conv_rgb8.h"
 #include "util/agg_color_conv_rgb16.h"
 
+#include "rect.h"
 
 namespace agg
 {
@@ -345,19 +346,12 @@ namespace agg
       }
     else
       {
-	int x, y, w = src->width(), h = src->height();
-
+	opt_rect<int, rect_intersect> optr(0, 0, src->width(), src->height());
 	if (ri)
-	  {
-	    agg::rect_base<int> r0(0, 0, w, h);
-	    agg::rect_base<int> r = *ri;
-	    r.clip(r0);
-	    x = r.x1; y = r.y1; w = r.x2 - r.x1; h = r.y2 - r.y1;
-	  }
-	else
-	  {
-	    x = 0; y = 0;
-	  }
+	  optr.add(*ri);
+
+	const agg::rect_base<int>& r = optr.rect();
+	int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
 
 	try
 	  {
@@ -372,11 +366,10 @@ namespace agg
 			    pmap_tmp.stride() :
 			    -pmap_tmp.stride());
 
-	    const unsigned char *src_start = src->row_ptr(m_flip_y ? y : y + h - 1);
-	    const unsigned int pix_width = m_bpp / 8;
-	    row_accessor_ro<unsigned char> src_box(src_start + pix_width * x, w, h, src->stride());
+	    rendering_buffer_ro src_view;
+	    rendering_buffer_get_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-	    convert_pmap(&rbuf_tmp, &src_box, m_format, true);
+	    convert_pmap(&rbuf_tmp, &src_view, m_format, true);
 
 	    unsigned int wh = m_pmap_window.height();
 	    RECT wrect;

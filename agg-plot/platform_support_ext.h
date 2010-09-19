@@ -47,6 +47,16 @@ void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base
 }
 
 template<class RenBufDst, class RenBufSrc> 
+void rendering_buffer_get_view (RenBufDst& view, const RenBufSrc& src, 
+				const agg::rect_base<int>& r,
+				unsigned pixel_width, bool flip_y)
+{
+  int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
+  const unsigned char *buf_start = src.row_ptr(flip_y ? y + h - 1 : y);
+  view.attach(buf_start + pixel_width * x, w, h, src.stride());
+}
+
+template<class RenBufDst, class RenBufSrc> 
 void rendering_buffer_put_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
 				  unsigned pixel_width)
 {
@@ -64,6 +74,8 @@ template<class T> class row_accessor_ro
 {
 public:
   //--------------------------------------------------------------------
+  row_accessor_ro() : m_buf(0), m_width(0), m_height(0), m_stride(0), m_start(0) {};
+
   row_accessor_ro(const T* buf, unsigned width, unsigned height, int stride) :
     m_buf(buf), m_width(width), m_height(height), m_stride(stride)
   {
@@ -72,6 +84,18 @@ public:
     else
       m_start = m_buf;
   }
+
+  void attach(const T* buf, unsigned width, unsigned height, int stride)
+  {
+    m_buf = m_start = buf;
+    m_width = width;
+    m_height = height;
+    m_stride = stride;
+    if(stride < 0) 
+      { 
+	m_start = m_buf - int(height - 1) * stride;
+      }
+  };
 
   //--------------------------------------------------------------------
   const T* buf()    const { return m_buf;    }
@@ -95,5 +119,7 @@ private:
   int           m_stride; // Number of bytes per row. Can be < 0
   const T*      m_start;  // Pointer to first pixel depending on stride 
 };
+
+typedef row_accessor_ro<unsigned char> rendering_buffer_ro;
 
 #endif
