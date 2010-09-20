@@ -52,7 +52,9 @@ void rendering_buffer_get_view (RenBufDst& view, const RenBufSrc& src,
 				unsigned pixel_width, bool flip_y)
 {
   int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
-  const unsigned char *buf_start = src.row_ptr(flip_y ? y + h - 1 : y);
+  const unsigned char *buf_start = src.row_ptr(y);
+  if (src.stride() < 0)
+    buf_start += src.stride() * (h - 1);
   view.attach(buf_start + pixel_width * x, w, h, src.stride());
 }
 
