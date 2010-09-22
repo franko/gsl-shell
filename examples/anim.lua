@@ -48,7 +48,7 @@ function demo2()
       plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
    end
    plt:pushlayer()
-   local N, R, nc = 128, 5.0, 15
+   local N, R, nc = 4, 5.0, 15
    for k = 0, N * nc do
       local r = R * cos(pi*k/N)^2
       local th = 2*pi*(k/(N*nc*10))
@@ -57,6 +57,7 @@ function demo2()
       plt:add(s, rgba(1, 1, 0, 0.7), {}, {{'rotate', angle=th}})
       plt:addline(s, rgb(0.5, 0.5, 0), {}, {{'rotate', angle=th}})
       plt:flush()
+--      io.read '*l'
    end
 end
 
@@ -64,11 +65,12 @@ function demo3()
    local f = |x| exp(-0.1*x) * cos(x)
    local p = plot 'y = f(x)'
    local x0, x1 = 0, 10*pi
+   local cc = fxline(f, x0, x1, k)
+   p:addline(cc)
    p.sync = false
    p:pushlayer()
    p:show()
 
-   local cc = fxline(f, x0, x1, k)
    local N = 256
    for k= 1, N do
       local x = x0 + k * (x1-x0) / N
@@ -76,7 +78,31 @@ function demo3()
       ca:line_to(x, 0); ca:line_to(0, 0); ca:close()
       p:clear()
       p:add(ca, rgba(1,1,0,0.6))
-      p:addline(cc)
+      p:flush()
+   end
+end
+
+function demo4()
+   local p = plot 'box plot'
+   local r = rng()
+   r:set(os.time())
+   p:addline(rect(-10, -10, 10, 10), 'blue', {{'dash', 7, 3}})
+   p.sync = false
+   p:pushlayer()
+   p:show()
+   
+   local L = 100
+   local get = || rnd.gaussian(r, L)
+
+   local N = 256
+   for k=1, N do
+      p:clear()
+      for j=1, 4 do
+	 local x, y, rad = get(), get(), 5 + r:get() * L
+	 local rt = circle(x, y, rad)
+	 p:add(rt, rgba(r:get(), r:get(),r:get(), 0.5))
+	 p:addline(rt, 'black')
+      end
       p:flush()
    end
 end

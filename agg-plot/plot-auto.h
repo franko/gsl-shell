@@ -102,7 +102,7 @@ void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& laye
       agg::rect_base<double> r;
 
       d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-      rect.add(r);
+      rect.add<rect_union>(r);
     }
 }
 
@@ -122,10 +122,10 @@ void plot_auto<VS,RM>::calc_bounding_box()
       const item& d = t->content();
       agg::rect_base<double> r;
       d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-      box.add(r);
+      box.add<rect_union>(r);
     }
 
-  this->m_rect.add(box);
+  this->m_rect.template add<rect_union>(box);
 }
 
 template<class VS, class RM>

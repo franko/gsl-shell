@@ -346,9 +346,9 @@ namespace agg
       }
     else
       {
-	opt_rect<int, rect_intersect> optr(0, 0, src->width(), src->height());
+	opt_rect<int> optr(0, 0, src->width(), src->height());
 	if (ri)
-	  optr.add(*ri);
+	  optr.add<rect_intersect>(*ri);
 
 	const agg::rect_base<int>& r = optr.rect();
 	int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
@@ -1046,7 +1046,7 @@ namespace agg
         wc.hInstance = g_windows_instance;
         wc.hIcon = LoadIcon(0, IDI_APPLICATION);
         wc.hCursor = LoadCursor(0, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
         wc.lpszMenuName = "AGGAppMenu";
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
@@ -1292,12 +1292,23 @@ platform_support_ext::close_request()
 }
 
 void
-platform_support_ext::update_region (const agg::rect_base<int>& r)
+platform_support_ext::update_region (const agg::rect_base<int>& r, int margin)
 {
   if (! m_specific->m_is_mapped)
     return;
 
   HDC dc = ::GetDC(m_specific->m_hwnd);
-  m_specific->display_pmap(dc, &rbuf_window(), &r);
+
+  if (margin == 0)
+    {
+      m_specific->display_pmap(dc, &rbuf_window(), &r);
+    }
+  else
+    {
+      int m = margin;
+      agg::rect_base<int> re(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
+      m_specific->display_pmap(dc, &rbuf_window(), &re);
+    }
+
   ::ReleaseDC(m_specific->m_hwnd, dc);
 }

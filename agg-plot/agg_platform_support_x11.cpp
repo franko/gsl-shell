@@ -265,9 +265,9 @@ namespace agg
 		  0, 0, 0, 0, src->width(), src->height());
       }
 
-    opt_rect<int, rect_intersect> optr(0, 0, src->width(), src->height());
+    opt_rect<int> optr(0, 0, src->width(), src->height());
     if (ri)
-      optr.add(*ri);
+      optr.add<rect_intersect>(*ri);
 
     const agg::rect_base<int>& r = optr.rect();
     int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
@@ -1341,12 +1341,21 @@ platform_support_ext::close_request()
 }
 
 void
-platform_support_ext::update_region (const agg::rect_base<int>& r)
+platform_support_ext::update_region (const agg::rect_base<int>& r, int margin)
 {
   if (! m_specific->m_is_mapped)
     return;
 
-  m_specific->put_image(&rbuf_window(), &r);
+  if (margin == 0)
+    {
+      m_specific->put_image(&rbuf_window(), &r);
+    }
+  else
+    {
+      int m = margin;
+      agg::rect_base<int> re(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
+      m_specific->put_image(&rbuf_window(), &re);
+    }
         
   // When m_wait_mode is true we can discard all the events 
   // came while the image is being drawn. In this case 

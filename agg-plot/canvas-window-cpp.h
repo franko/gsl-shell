@@ -41,19 +41,6 @@ public:
 
   void start_new_thread (lua_State *L);
 
-  bool draw(drawable *obj, agg::rgba8 *color, bool as_line)
-  {
-    if (! m_canvas)
-      return false;
-
-    if (as_line)
-      m_canvas->draw_outline(*obj, *color);
-    else
-      m_canvas->draw(*obj, *color);
-
-    return true;
-  };
-
   void scale (agg::trans_affine& m) { trans_affine_compose (m, m_matrix); };
 };
 

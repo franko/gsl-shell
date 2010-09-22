@@ -15,7 +15,7 @@ public:
 
   bool is_mapped();
   void close_request();
-  void update_region (const agg::rect_base<int>& r);
+  void update_region (const agg::rect_base<int>& r, int margin = 0);
 
   static void prepare();
 };

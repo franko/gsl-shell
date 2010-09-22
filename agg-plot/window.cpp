@@ -41,6 +41,7 @@ __END_DECLS
 struct dispose_buffer {
   static void func (window::ref& ref)
   {
+    ref.valid_rect = false;
     if (ref.layer_buf)
       {
 	delete [] ref.layer_buf;
@@ -48,11 +49,6 @@ struct dispose_buffer {
       }
   }
 };
-
-agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx)
-{
-  return agg::rect_base<int>(mtx.tx, mtx.ty, mtx.sx + mtx.tx, mtx.sy + mtx.ty);
-}
 
 void window::ref::compose(bmatrix& a, const bmatrix& b)
 {
@@ -128,7 +124,7 @@ window::draw_rec(ref::node *n)
   ref *ref = n->content();
   if (ref)
     {
-      draw_slot_by_ref (*ref, false);
+      draw_slot_by_ref (*ref, true);
     }
 }
 
@@ -152,33 +148,27 @@ window::ref* window::ref_lookup (ref::node *p, int slot_id)
   return NULL;
 }
 
-void window::draw_slot_by_ref(window::ref& ref, bool update_req)
+void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
 {
-  if (! ref.plot)
-    return;
-
-  agg::rect_base<int> r;
   agg::trans_affine mtx(ref.matrix);
   this->scale(mtx);
 
-  if (update_req)
+  agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
+  m_canvas->clear_box(r);
+
+  if (ref.plot)
     {
-      r = rect_of_slot_matrix(mtx);
-      m_canvas->clear_box(r);
+      AGG_LOCK();
+      try 
+	{
+	  ref.plot->draw(*m_canvas, mtx);
+	} 
+      catch (std::bad_alloc&) { }
+      AGG_UNLOCK();
     }
 
-  AGG_LOCK();
-  try 
-    {
-      ref.plot->draw(*m_canvas, mtx);
-    } 
-  catch (std::bad_alloc&) { }
-  AGG_UNLOCK();
-
-  if (update_req)
-    {
-      update_region(r);
-    }
+  if (draw_image)
+    update_region(r);
 }
 
 void
@@ -187,13 +177,16 @@ window::draw_slot(int slot_id, bool clean_req)
   ref *ref = window::ref_lookup (this->m_tree, slot_id);
   if (ref && m_canvas)
     {
-      if (clean_req || ref->plot->need_redraw())
+      bool redraw = clean_req || ref->plot->need_redraw();
+
+      if (redraw)
 	{
-	  draw_slot_by_ref(*ref, true);
+	  draw_slot_by_ref(*ref, false);
 	  dispose_buffer::func(*ref);
 	}
 
-      refresh_slot_by_ref(*ref);
+      refresh_slot_by_ref(*ref, redraw);
+      ref->valid_rect = true;
     }
 }
 
@@ -206,7 +199,7 @@ window::save_slot_image(int slot_id)
       agg::trans_affine mtx(ref->matrix);
       this->scale(mtx);
 
-      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
       ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
     }
 }
@@ -220,7 +213,7 @@ window::restore_slot_image(int slot_id)
       agg::trans_affine mtx(ref->matrix);
       this->scale(mtx);
 
-      agg::rect_base<int> r = rect_of_slot_matrix(mtx);
+      agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
 
       if (ref->layer_buf == 0)
 	{
@@ -238,35 +231,40 @@ window::restore_slot_image(int slot_id)
 }
 
 void
-window::refresh_slot_by_ref(ref& ref)
+window::refresh_slot_by_ref(ref& ref, bool draw_all)
 {
   agg::trans_affine mtx(ref.matrix);
   this->scale(mtx);
 
+  opt_rect<double> rect;
+
+  if (!ref.valid_rect || draw_all)
+    rect.set(rect_of_slot_matrix<double>(mtx));
+
   AGG_LOCK();
   try {
-    agg::rect_base<double> bb;
-    if (ref.plot->draw_queue(*m_canvas, mtx, bb))
-      {
-	agg::rect_base<int> bbw(bb.x1 - 4, bb.y1 - 4, bb.x2 + 4, bb.y2 + 4);
-	agg::rect_base<int> dbox;
-	ref.dirty_rect.compose(dbox, bbw);
-	update_region (dbox);
-	ref.dirty_rect.set(bbw);
-      }
+    opt_rect<double> draw_rect;
+    ref.plot->draw_queue(*m_canvas, mtx, draw_rect);
+    rect.add<rect_union>(draw_rect);
+    rect.add<rect_union>(ref.dirty_rect);
+    ref.dirty_rect = draw_rect;
   }
   catch (std::bad_alloc&) { }
   AGG_UNLOCK();
+
+  if (rect.is_defined())
+    {
+      const agg::rect_base<double>& r = rect.rect();
+      const agg::rect_base<int> ri(r.x1, r.y1, r.x2, r.y2);
+      update_region (ri, 4);
+    }
 }
 
 void
 window::on_draw()
 {
-  if (! m_canvas)
-    return;
-
-  m_canvas->clear();
-  draw_rec(m_tree);
+  if (m_canvas)
+    draw_rec(m_tree);
 }
 
 void

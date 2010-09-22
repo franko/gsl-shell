@@ -33,9 +33,12 @@ public:
     unsigned char *layer_buf;
     agg::rendering_buffer layer_img;
 
-    opt_rect<int> dirty_rect;
+    bool valid_rect;
+    opt_rect<double> dirty_rect;
 
-    ref(plot_type *p = 0) : plot(p), matrix(), layer_buf(0), dirty_rect() {};
+    ref(plot_type *p = 0)
+      : plot(p), matrix(), layer_buf(0), valid_rect(true), dirty_rect()
+    {};
 
     ~ref() { if (layer_buf) delete layer_buf; };
 
@@ -48,7 +51,7 @@ public:
 
 private:
   void draw_slot_by_ref(ref& ref, bool dirty);
-  void refresh_slot_by_ref(ref& ref);
+  void refresh_slot_by_ref(ref& ref, bool draw_all);
   void draw_rec(ref::node *n);
   void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
@@ -57,7 +60,7 @@ private:
   ref::node* m_tree;
 
 public:
-  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0) 
+  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0)
   {
     this->split("."); 
   };

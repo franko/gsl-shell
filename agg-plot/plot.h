@@ -41,8 +41,6 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
-extern agg::rect_base<int> rect_of_slot_matrix (const agg::trans_affine& mtx);
-
 template<class VertexSource>
 struct plot_item {
   VertexSource* vs;
@@ -118,8 +116,7 @@ public:
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
 
-  bool draw_queue(canvas &canvas, agg::trans_affine& m,
-		  agg::rect_base<double>& bbox);
+  void draw_queue(canvas &canvas, agg::trans_affine& m, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -309,8 +306,8 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
-			     agg::rect_base<double>& bb)
+void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
+			     opt_rect<double>& bb)
 {
   plot<VS,RM>::iterator *c0 = m_drawing_queue;
   for (plot<VS,RM>::iterator *c = c0; c != 0; c = c->next())
@@ -323,10 +320,8 @@ bool plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
       agg::bounding_rect_single(d.vertex_source(), 0, 
 				&ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
 
-      bb = (c == c0 ? ebb : agg::unite_rectangles(ebb, bb));
+      bb.add<rect_union>(ebb);
     }
-
-  return (c0 != 0);
 }
 
 template<class VS, class RM>
@@ -369,7 +364,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 
   double scale = compute_scale(canvas_mtx);
 
-  agg::rect_base<int> clip = rect_of_slot_matrix(canvas_mtx);
+  agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
   canvas.clip_box(clip);
 
   agg::path_storage mark;

@@ -6,7 +6,7 @@
 
 enum set_oper_e { rect_union, rect_intersect };
 
-template <typename T, set_oper_e op = rect_union>
+template <typename T>
 class opt_rect {
   typedef agg::rect_base<T> rect_type;
 
@@ -27,25 +27,29 @@ public:
     return m_rect; 
   }
 
-  void compose(rect_type& dst, const rect_type& r) 
-  {
-    if (op == rect_union)
-      dst = (m_defined ? agg::unite_rectangles(m_rect, r) : r);
-    else
-      dst = (m_defined ? agg::intersect_rectangles(m_rect, r) : r);
-  }
-
+  template <set_oper_e op>
   void add(const rect_type& r) 
   { 
-    this->compose(m_rect, r); 
+    if (op == rect_union)
+      m_rect = (m_defined ? agg::unite_rectangles(m_rect, r) : r);
+    else
+      m_rect = (m_defined ? agg::intersect_rectangles(m_rect, r) : r);
+
     m_defined = true;
   }
 
+  template <set_oper_e op>
   void add(const opt_rect& optr) 
   { 
     if (optr.m_defined)
-      this->add(optr.m_rect);
+      this->add<op>(optr.m_rect);
   }
 };
+
+template <typename T>
+agg::rect_base<T> rect_of_slot_matrix (const agg::trans_affine& mtx)
+{
+  return agg::rect_base<T>(T(mtx.tx), T(mtx.ty), T(mtx.sx + mtx.tx), T(mtx.sy + mtx.ty));
+}
 
 #endif
