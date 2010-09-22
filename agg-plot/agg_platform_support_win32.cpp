@@ -82,6 +82,7 @@ namespace agg
         LARGE_INTEGER m_sw_start;
 
       bool m_is_mapped;
+      bool m_is_ready;
 
       pthread_mutex_t m_mutex[1];
     };
@@ -101,7 +102,8 @@ namespace agg
         m_input_flags(0),
         m_redraw_flag(true),
         m_current_dc(0),
-	m_is_mapped(false)
+	m_is_mapped(false),
+	m_is_ready(false)
     {
         memset(m_keymap, 0, sizeof(m_keymap));
 
@@ -734,6 +736,8 @@ namespace agg
 	      ::PostQuitMessage(1);
 	    }
 
+	  app->m_specific->m_is_ready = false;
+
 	  break;
         
         //--------------------------------------------------------------------
@@ -997,6 +1001,7 @@ namespace agg
             ::EndPaint(hWnd, &ps);
 
 	    app->m_specific->m_is_mapped = true;
+	    app->m_specific->m_is_ready = true;
             break;
         
         //--------------------------------------------------------------------
@@ -1118,7 +1123,7 @@ namespace agg
             {
 	      bool status;
 
-	      if (m_specific->m_is_mapped)
+	      if (m_specific->m_is_ready)
 		{
 		  pthread_mutex_unlock (m_specific->m_mutex);
 		  status = ::GetMessage(&msg, 0, 0, 0);
@@ -1292,23 +1297,12 @@ platform_support_ext::close_request()
 }
 
 void
-platform_support_ext::update_region (const agg::rect_base<int>& r, int margin)
+platform_support_ext::update_region (const agg::rect_base<int>& r)
 {
   if (! m_specific->m_is_mapped)
     return;
 
   HDC dc = ::GetDC(m_specific->m_hwnd);
-
-  if (margin == 0)
-    {
-      m_specific->display_pmap(dc, &rbuf_window(), &r);
-    }
-  else
-    {
-      int m = margin;
-      agg::rect_base<int> re(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
-      m_specific->display_pmap(dc, &rbuf_window(), &re);
-    }
-
+  m_specific->display_pmap(dc, &rbuf_window(), &r);
   ::ReleaseDC(m_specific->m_hwnd, dc);
 }

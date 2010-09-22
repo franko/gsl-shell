@@ -125,7 +125,7 @@ void plot_auto<VS,RM>::calc_bounding_box()
       box.add<rect_union>(r);
     }
 
-  this->m_rect.template add<rect_union>(box);
+  this->m_rect = box;
 }
 
 template<class VS, class RM>

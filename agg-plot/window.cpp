@@ -254,9 +254,10 @@ window::refresh_slot_by_ref(ref& ref, bool draw_all)
 
   if (rect.is_defined())
     {
+      const int m = 4;
       const agg::rect_base<double>& r = rect.rect();
-      const agg::rect_base<int> ri(r.x1, r.y1, r.x2, r.y2);
-      update_region (ri, 4);
+      const agg::rect_base<int> ri(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
+      update_region (ri);
     }
 }
 

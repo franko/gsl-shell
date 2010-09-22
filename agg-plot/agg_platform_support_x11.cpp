@@ -1341,21 +1341,12 @@ platform_support_ext::close_request()
 }
 
 void
-platform_support_ext::update_region (const agg::rect_base<int>& r, int margin)
+platform_support_ext::update_region (const agg::rect_base<int>& r)
 {
   if (! m_specific->m_is_mapped)
     return;
 
-  if (margin == 0)
-    {
-      m_specific->put_image(&rbuf_window(), &r);
-    }
-  else
-    {
-      int m = margin;
-      agg::rect_base<int> re(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
-      m_specific->put_image(&rbuf_window(), &re);
-    }
+  m_specific->put_image(&rbuf_window(), &r);
         
   // When m_wait_mode is true we can discard all the events 
   // came while the image is being drawn. In this case 

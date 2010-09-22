@@ -48,7 +48,7 @@ function demo2()
       plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
    end
    plt:pushlayer()
-   local N, R, nc = 4, 5.0, 15
+   local N, R, nc = 256, 5.0, 15
    for k = 0, N * nc do
       local r = R * cos(pi*k/N)^2
       local th = 2*pi*(k/(N*nc*10))
@@ -92,17 +92,20 @@ function demo4()
    p:show()
    
    local L = 100
-   local get = || rnd.gaussian(r, L)
+   local get = || rnd.gaussian(r, L/2)
 
    local N = 256
    for k=1, N do
       p:clear()
       for j=1, 4 do
-	 local x, y, rad = get(), get(), 5 + r:get() * L
+	 local x, y, rad = get(), get(), 5 + r:get() * L/2
 	 local rt = circle(x, y, rad)
 	 p:add(rt, rgba(r:get(), r:get(),r:get(), 0.5))
 	 p:addline(rt, 'black')
       end
       p:flush()
    end
+
+   p:poplayer()
+   return p
 end

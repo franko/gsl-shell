@@ -27,6 +27,13 @@ public:
     return m_rect; 
   }
 
+  void operator = (const opt_rect& src)
+  {
+    m_defined = src.m_defined;
+    if (m_defined)
+      m_rect = src.m_rect;
+  }
+
   template <set_oper_e op>
   void add(const rect_type& r) 
   { 
