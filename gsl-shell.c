@@ -63,8 +63,11 @@
 #include "gsl-shell.h"
 #include "lua-gsl.h"
 #include "lua-utils.h"
+
+#ifdef AGG_PLOT_ENABLED
 #include "object-index.h"
-#include "canvas-window.h"
+#include "window.h"
+#endif
 
 #define report error_report
 
@@ -385,7 +388,7 @@ static void dotty (lua_State *L) {
       do_windows_unref (L);
     }
 
-  object_index_apply_all (L, OBJECT_WINDOW, canvas_window_close);
+  object_index_apply_all (L, OBJECT_WINDOW, window_close);
 
   do {
     do_windows_unref (L);

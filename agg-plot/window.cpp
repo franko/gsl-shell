@@ -32,6 +32,7 @@ static const struct luaL_Reg window_methods[] = {
   {"attach",         window_attach        },
   {"split",          window_split         },
   {"update",         window_update        },
+  {"close",          window_close        },
   {"__gc",           window_free       },
   {NULL, NULL}
 };
@@ -503,6 +504,17 @@ int
 window_restore_slot_image (lua_State *L)
 {
   return window_generic_oper (L, &window::restore_slot_image);
+}
+
+int
+window_close (lua_State *L)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  win->lock();
+  if (win->status == canvas_window::running)
+    win->close_request();
+  win->unlock();
+  return 0;
 }
 
 void

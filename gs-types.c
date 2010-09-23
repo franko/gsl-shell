@@ -22,6 +22,7 @@ static int gs_type_string (lua_State *L);
 #define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
+#define GS_INTERP_NAME_DEF      "GSL.interp"
 #ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
@@ -30,7 +31,6 @@ static int gs_type_string (lua_State *L);
 #define GS_DRAW_DRAWABLE_NAME_DEF NULL
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
-#define GS_CANVAS_WINDOW_NAME_DEF  "GSL.canvas"
 #define GS_WINDOW_NAME_DEF  "GSL.window"
 #define GS_PLOT_NAME_DEF  "GSL.plot"
 #endif
@@ -56,6 +56,7 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(FDFMULTIMIN, "fdf multimin solver"), 
   MY_EXPAND(FMULTIMIN, "f multimin solver"), 
   MY_EXPAND(BSPLINE, "B-spline"), 
+  MY_EXPAND(INTERP, "Interpolation object"), 
 #ifdef AGG_PLOT_ENABLED
   MY_EXPAND(DRAW_PLOT, "plot"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),
@@ -64,8 +65,7 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(DRAW_DRAWABLE, "window graphical object"),
   MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
   MY_EXPAND(RGBA_COLOR, "color"),
-  MY_EXPAND(CANVAS_WINDOW, "bare graphical window"),
-  MY_EXPAND_DER(WINDOW, "graphical window", CANVAS_WINDOW),
+  MY_EXPAND(WINDOW, "graphical window"),
   MY_EXPAND(PLOT, "plot"),
 #endif
   {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}
@@ -152,6 +152,14 @@ gs_type_error (lua_State *L, int narg, const char *req_type)
   const char *msg = lua_pushfstring(L, "%s expected, got %s",
 				    req_type, actual_type);
   return luaL_argerror(L, narg, msg);
+}
+
+void * 
+gs_new_object (size_t nbytes, lua_State *L, enum gs_type_e tp)
+{
+  void* p = lua_newuserdata(L, nbytes);
+  gs_set_metatable (L, tp);
+  return p;
 }
 
 static bool

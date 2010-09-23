@@ -28,7 +28,7 @@ T* push_new_object (lua_State *L, enum gs_type_e tp)
   catch (std::bad_alloc&)
     {
       luaL_error (L, "out of memory");
-     }
+    }
 
   return 0;
 }

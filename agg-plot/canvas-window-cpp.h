@@ -6,7 +6,6 @@
 #include "agg_color_rgba.h"
 
 #include "defs.h"
-#include "canvas-window.h"
 #include "drawable.h"
 #include "canvas.h"
 #include "utils.h"

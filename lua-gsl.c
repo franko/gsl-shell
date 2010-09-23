@@ -43,6 +43,7 @@
 #include "eigen-systems.h"
 #include "mlinear.h"
 #include "bspline.h"
+#include "interp.h"
 
 #ifdef AGG_PLOT_ENABLED
 #include "object-index.h"
@@ -87,6 +88,7 @@ luaopen_gsl (lua_State *L)
   eigen_register (L);
   mlinear_register (L);
   bspline_register (L);
+  interp_register (L);
 #ifdef AGG_PLOT_ENABLED
   draw_register (L);
   text_register (L);

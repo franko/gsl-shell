@@ -62,7 +62,7 @@ C_SRC_FILES = common.c gs-types.c matrix.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
-                multimin.c eigen-systems.c mlinear.c bspline.c \
+                multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
 		lua-gsl.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
