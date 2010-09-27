@@ -81,6 +81,22 @@ const struct luaL_Reg fdfmultimin_methods[] = {
   {NULL, NULL}
 };
 
+static const gsl_multimin_fdfminimizer_type *
+fdfmin_algo_lookup (const char *name)
+{
+  if (strcmp (name, "conjugate_fr") == 0)
+    return gsl_multimin_fdfminimizer_conjugate_fr;
+  else if (strcmp (name, "conjugate_pr") == 0)
+    return gsl_multimin_fdfminimizer_conjugate_pr;
+  else if (strcmp (name, "bfgs") == 0)
+    return gsl_multimin_fdfminimizer_vector_bfgs2;
+  else if (strcmp (name, "steepest_descent") == 0)
+    return gsl_multimin_fdfminimizer_steepest_descent;
+  return NULL;
+}
+
+static const char * const fdfmin_algo_list = "conjugate_fr, conjugate_pr, bfgs, steepest_descent";
+
 #define MULTIMIN_MAX_ITER 20
 
 struct fdfmultimin *
@@ -130,6 +146,7 @@ check_init_fdf_multimin (lua_State *L, int index)
 int
 fdfmultimin_new (lua_State *L)
 {
+  const gsl_multimin_fdfminimizer_type *T;
   struct fdfmultimin *m;
   int ni = luaL_checkinteger (L, 2);
   int findex = 1;
@@ -143,7 +160,20 @@ fdfmultimin_new (lua_State *L)
   if (!lua_isfunction (L, findex))
     luaL_typerror (L, findex, "function");
 
-  m = push_new_fdf_multimin (L, findex, n, gsl_multimin_fdfminimizer_conjugate_fr);
+  if (lua_gettop (L) > 2)
+    {
+      const char *req_algo = luaL_checkstring (L, 3);
+      T = fdfmin_algo_lookup (req_algo);
+      if (T == NULL)
+	return luaL_error (L, "unknown algorithm. Known alogrithm are: %s",
+			   fdfmin_algo_list);
+    }
+  else
+    {
+      T = gsl_multimin_fdfminimizer_conjugate_fr;
+    }
+
+  m = push_new_fdf_multimin (L, findex, n, T);
 
   m->fdf->n      = n;
   m->fdf->f      = fdfmultimin_f_hook;
@@ -236,21 +266,14 @@ fdfmultimin_set (lua_State *L)
 {
   struct fdfmultimin *m = check_fdf_multimin (L, 1);
   gsl_matrix *x0m = matrix_check (L, 2);
-  double step_size;
+  double step_size = gs_check_number (L, 3, FP_CHECK_NORMAL);
+  double tol = 0.1;
   gsl_vector_view x0v;
   size_t n = m->fdf->n;
   int status;
 
-  if (lua_isnumber (L, 3))
-    {
-      step_size = lua_tonumber (L, 3);
-    }
-  else 
-    {
-      gsl_matrix *sm = matrix_check (L, 3);
-      gsl_vector_view sv = gsl_matrix_column (sm, 0);
-      step_size = geometric_mean (L, &sv.vector);
-    }
+  if (lua_gettop (L) > 3)
+    tol = gs_check_number (L, 4, FP_CHECK_NORMAL);
 
   lua_pushcfunction (L, gradient_auto_check);
   mlua_fenv_get (L, 1, FENV_FUNCTION);
@@ -272,7 +295,7 @@ fdfmultimin_set (lua_State *L)
   mlua_null_cache (L, 1);
   fcall_args_prepare (L, m->p, 1);
 
-  status = gsl_multimin_fdfminimizer_set (m->s, m->fdf, &x0v.vector, step_size, 0.1);
+  status = gsl_multimin_fdfminimizer_set (m->s, m->fdf, &x0v.vector, step_size, tol);
 
   if (status != GSL_SUCCESS)
     return luaL_error (L, "minimizer:set %s", gsl_strerror (status));

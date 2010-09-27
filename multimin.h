@@ -34,8 +34,6 @@ extern int  fmultimin_new        (lua_State *L);
 extern int  gradient_auto_check  (lua_State *L);
 
 
-extern double geometric_mean (lua_State *L, gsl_vector *v);
-
 extern const struct luaL_Reg fmultimin_methods[];
 extern const struct luaL_Reg fdfmultimin_methods[];
 

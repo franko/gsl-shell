@@ -58,7 +58,7 @@ struct fmultimin {
   gsl_multimin_fminimizer *s;
   gsl_multimin_function f[1];
   struct params p[1];
-  double step_tol;
+  double size_tol;
 };
 
 enum fenvidx {
@@ -133,7 +133,7 @@ fmultimin_new (lua_State *L)
   size_t n;
 
   if (ni <= 0)
-    luaL_error (L, "argument #1 should be a positive integer");
+    return luaL_error (L, "argument #1 should be a positive integer");
   else
     n = (size_t) ni;
 
@@ -205,33 +205,23 @@ fmultimin_set (lua_State *L)
 {
   struct fmultimin *m = check_fmultimin (L, 1);
   gsl_matrix *x0m = matrix_check (L, 2);
-  gsl_matrix *stepm;
+  gsl_matrix *stepm = matrix_check (L, 3);
+  double size_tol = gs_check_number (L, 4, FP_CHECK_NORMAL);
   gsl_vector_view x0v, stepv;
-  double step_tol;
   size_t n = m->f->n;
   int status;
 
-  x0v = gsl_matrix_column (x0m,   0);
+  if (x0m->size2 > 1)
+    return gs_type_error (L, 2, "column vector");
 
-  if (lua_isnumber (L, 3))
-    {
-      double step = lua_tonumber (L, 3);
-      size_t k;
-      stepm = matrix_push_raw (L, n, 1);
-      stepv = gsl_matrix_column (stepm, 0);
-      for (k = 0; k < n; k++)
-	gsl_matrix_set (stepm, k, 0, step);
-      step_tol = step * 1e-4;
-    }
-  else 
-    {
-      stepm = matrix_check (L, 3);
-      stepv = gsl_matrix_column (stepm, 0);
-      step_tol = geometric_mean (L, &stepv.vector) * 1e-4;
-    }
+  if (stepm->size2 > 1)
+    return gs_type_error (L, 2, "column vector");
+
+  x0v =   gsl_matrix_column (x0m,   0);
+  stepv = gsl_matrix_column (stepm, 0);
 
   m->f->params = m->p;
-  m->step_tol = step_tol;
+  m->size_tol = pow (size_tol, n);
 
   m->p->L = L;
   m->p->n = n;
@@ -266,7 +256,7 @@ fmultimin_step (lua_State *L)
     return luaL_error (L, "minimizer:step %s", gsl_strerror (status));
 
   size = gsl_multimin_fminimizer_size (m->s);
-  status = gsl_multimin_test_size (size, m->step_tol);
+  status = gsl_multimin_test_size (size, m->size_tol);
 
   if (status == GSL_CONTINUE)
     {
@@ -302,7 +292,7 @@ fmultimin_run (lua_State *L)
       break;
 
     size = gsl_multimin_fminimizer_size (m->s);
-    status = gsl_multimin_test_size (size, m->step_tol);
+    status = gsl_multimin_test_size (size, m->size_tol);
 
     if (status == GSL_SUCCESS)
       return 0;

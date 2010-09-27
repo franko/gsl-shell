@@ -40,8 +40,10 @@ end
 
 function demo1()
    local x0 = vector {-1.2, 1.0}
-   local m = minimizer {f= frosenbrock, n= 2}
-   m:set(x0, vector {1, 1}) 
+--   local m = fmultimin(frosenbrock, 2)
+--   m:set(x0, vector {0.5, 0.5}, 0.001) 
+   local m = fdfmultimin(frosenbrock, 2, "bfgs")
+   m:set(x0, 0.5) 
 
    local p = contour(cook(frosenbrock), {-1.5, -0.5}, {1.5, 2}, 20, 20, 12)
    local c = path(m.x[1], m.x[2])
@@ -88,8 +90,8 @@ end
 
 function demo2()
    local x0 = vector {-1.2, 1.0}
-   local m = minimizer {f= f, n= 2}
-   m:set(x0, vector {1, 1})
+   local m = fmultimin(f, 2)
+   m:set(x0, vector {1, 1}, 0.01)
 
    local p=contour(cook(f), {-2, -3}, {8, 2})
    local c = path(m.x[1], m.x[2])
@@ -113,8 +115,8 @@ end
 
 function demo3()
    local x0 = vector {-0.5, 1.0}
-   local m = minimizer {fdf= fex, n= 2}
-   m:set(x0, vector {1, 1})
+   local m = fdfmultimin(fex, 2, "bfgs")
+   m:set(x0, 0.5)
 
    local p=contour(cook(fex), {-2, -2.5}, {1, 1.5}, 30, 30, 22)
    local c = path(m.x[1], m.x[2])
@@ -131,6 +133,6 @@ function demo3()
    p:addline(c, 'black', {{'marker', size=5}})
    p:addline(c, 'green')
 
-   p.title = 'function minimisation: f(x,y) = 4 x^2 + 2 y^2 + 4 x y + 2 y + 1'
+   p.title = 'f(x,y) = exp(x) * (4 x^2 + 2 y^2 + 4 x y + 2 y + 1)'
    return p
 end
