@@ -14,11 +14,6 @@ struct interp {
   int n;
 };
 
-struct interp_type_reg {
-  const char *name;
-  const gsl_interp_type *type;
-};
-
 enum fenv_pos {
   FENV_X_VECTOR = 1,
   FENV_Y_VECTOR = 2,
@@ -28,28 +23,9 @@ static int          interp_new       (lua_State *L);
 static int          interp_free      (lua_State *L);
 static int          interp_eval      (lua_State *L);
 
-struct interp_type_reg interp_type_table[] = {
-#if 0
-  {"linear",             gsl_interp_linear},
-  {"polynomial",         gsl_interp_polynomial},
-  {"cspline",            gsl_interp_cspline},
-  {"cspline_periodic",   gsl_interp_cspline_periodic},
-  {"akima",              gsl_interp_akima},
-  {"akima_periodic",     gsl_interp_akima_periodic},
-#endif
-  {"linear",             NULL},
-  {"polynomial",         NULL},
-  {"cspline",            NULL},
-  {"cspline_periodic",   NULL},
-  {"akima",              NULL},
-  {"akima_periodic",     NULL},
-  {NULL,                 NULL}
-};
-
 static const struct luaL_Reg interp_methods[] = {
   {"__gc",          interp_free},
   {"eval",          interp_eval},
-  /*  {"evalvec",       interp_vector_eval}, */
   {NULL, NULL}
 };
 
@@ -59,14 +35,20 @@ static const struct luaL_Reg interp_functions[] = {
 };  
 
 static struct interp_type_reg *
-interp_type_lookup (const char *req_name)
+interp_algo_lookup (const char *req_name)
 {
-  struct interp_type_reg *p;
-  for (p = interp_type_table; p->name != NULL; p++)
-    {
-      if (strcmp (p->name, req_name) == 0)
-	return p;
-    }
+  if (strcmp ("linear", req_name) == 0)
+    return gsl_interp_linear;
+  else if (strcmp ("polynomial", req_name) == 0)
+    return gsl_interp_polynomial;
+  else if (strcmp ("cspline", req_name) == 0)
+    return gsl_interp_cspline;
+  else if (strcmp ("cspline_periodic", req_name) == 0)
+    return gsl_interp_cspline_periodic;
+  else if (strcmp ("akima", req_name) == 0)
+    return gsl_interp_akima;
+  else if (strcmp ("akima_periodic", req_name) == 0)
+    return gsl_interp_akima_periodic;
 
   return NULL;
 }
@@ -86,10 +68,9 @@ interp_set_ref (lua_State *L, int index_x, int index_y)
 int
 interp_new (lua_State *L)
 {
-  const char *interp_name = luaL_checkstring (L, 1);
-  gsl_matrix *x = matrix_check (L, 2);
-  gsl_matrix *y = matrix_check (L, 3);
-  struct interp_type_reg *reg;
+  gsl_matrix *x = matrix_check (L, 1);
+  gsl_matrix *y = matrix_check (L, 2);
+  const gsl_interp_type *T;
   size_t n = x->size1;
   struct interp *obj;
 
@@ -99,13 +80,20 @@ interp_new (lua_State *L)
   if (x->size1 != y->size1)
     return luaL_error (L, "mismatch in argument's dimensions");
 
-  reg = interp_type_lookup (interp_name);
-  if (reg == NULL)
-    return luaL_error (L, "the requested type of interpolation is not "
-		       "recognized");
+  if (lua_gettop (L) > 2)
+    {
+      const char *interp_name = luaL_checkstring (L, 3);
+      T = interp_algo_lookup (interp_name);
+      if (T == NULL)
+	return luaL_error (L, "unknown algorithm type");
+    }
+  else
+    {
+      T = gsl_interp_linear;
+    }
 
   obj = gs_new_object (sizeof(struct interp), L, GS_INTERP);
-  obj->interp = gsl_interp_alloc (reg->type, n);
+  obj->interp = gsl_interp_alloc (T, n);
   obj->acc = gsl_interp_accel_alloc ();
   obj->n = n;
 
@@ -138,23 +126,9 @@ interp_eval (lua_State *L)
   return 1;
 };
 
-static void
-init_interp_type_table ()
-{
-  struct interp_type_reg *p = interp_type_table;
-  (p++)->type = gsl_interp_linear;
-  (p++)->type = gsl_interp_polynomial;
-  (p++)->type = gsl_interp_cspline;
-  (p++)->type = gsl_interp_cspline_periodic;
-  (p++)->type = gsl_interp_akima;
-  (p++)->type = gsl_interp_akima_periodic;
-}
-
 void
 interp_register (lua_State *L)
 {
-  init_interp_type_table ();
-
   luaL_newmetatable (L, GS_METATABLE(GS_INTERP));
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
