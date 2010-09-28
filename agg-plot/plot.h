@@ -70,7 +70,7 @@ public:
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), 
     m_need_redraw(true), m_rect(),
-    m_use_units(use_units), m_title_buf(),
+    m_use_units(use_units), m_pad_units(false), m_title_buf(),
     m_sync_mode(true)
   {
     compute_user_trans();
@@ -121,6 +121,18 @@ public:
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
 
+  void pad_mode(bool req) 
+  { 
+    if (req != m_pad_units)
+      {
+	m_pad_units = req; 
+	m_need_redraw = true;
+	compute_user_trans();
+      }
+  };
+
+  bool pad_mode() { return m_pad_units; };
+
 protected:
   void draw_elements(canvas &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas &canvas, agg::trans_affine& m);
@@ -153,6 +165,8 @@ protected:
   units m_ux, m_uy;
 
 private:
+  bool m_pad_units;
+
   agg::pod_vector<char> m_title_buf;
   char *m_title;
 
@@ -329,7 +343,7 @@ void plot<VS,RM>::compute_user_trans()
 {
   agg::rect_base<double> r;
 
-  if (m_use_units)
+  if (m_use_units && m_pad_units)
     {
       int ixi, ixs, iyi, iys;
       double xd, yd;
@@ -343,9 +357,7 @@ void plot<VS,RM>::compute_user_trans()
     }
   else
     {
-      if (! m_rect.is_defined())
-	return;
-      r = m_rect.rect();
+      r = m_rect.is_defined() ? m_rect.rect() : agg::rect_base<double>(0.0, 0.0, 1.0, 1.0);
     }
 
   double fx = 1/(r.x2 - r.x1), fy = 1/(r.y2 - r.y1);
@@ -367,90 +379,105 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
   canvas.clip_box(clip);
 
-  agg::path_storage mark;
-  agg::conv_transform<path_type> mark_tr(mark, m);
-  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+  if (m_rect.is_defined())
+    {
+      agg::path_storage mark;
+      agg::conv_transform<path_type> mark_tr(mark, m);
+      agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
 
-  agg::path_storage ln;
-  agg::conv_transform<path_type> lntr(ln, m);
-  dash_type lndash(lntr);
-  agg::conv_stroke<dash_type> lns(lndash);
+      agg::path_storage ln;
+      agg::conv_transform<path_type> lntr(ln, m);
+      dash_type lndash(lntr);
+      agg::conv_stroke<dash_type> lns(lndash);
 
-  {
-    int jinf = m_uy.begin(), jsup = m_uy.end();
-    for (int j = jinf; j <= jsup; j++)
+      const agg::rect_base<double>& rect = m_rect.rect();
+      double yeps = (rect.y2 - rect.y1) / 1.0e+3;
+      double xeps = (rect.x2 - rect.x1) / 1.0e+3;
+
       {
-	double y = double(j - jinf) / double(jsup - jinf);
-	agg::gsv_text lab;
-	agg::conv_stroke<agg::gsv_text> labs(lab);
-	char lab_text[32];
-	double xlab = 0, ylab = y;
-
-	lab.size(12.0 * scale);
-	m_uy.mark_label(lab_text, 32, j);
-	lab.text(lab_text);
-	labs.width(std_line_width(scale));
-
-	m.transform(&xlab, &ylab);
-
-	xlab += -lab.text_width() - 10.0 * scale;
-	ylab += -5.0 * scale;
-
-	lab.start_point(xlab, ylab);
-	canvas.draw(labs, agg::rgba(0, 0, 0));
-
-	mark.move_to(0.0, y);
-	mark.line_to(-0.01, y);
-
-	if (j > jinf && j < jsup)
+	int jinf = m_uy.begin(), jsup = m_uy.end();
+	for (int j = jinf; j <= jsup; j++)
 	  {
-	    ln.move_to(0.0, y);
-	    ln.line_to(1.0, y);
+	    double yl = m_uy.mark_value(j);
+	    if (yl >= rect.y1 - yeps && yl <= rect.y2 + yeps)
+	      {
+		double y = (yl - rect.y1) / (rect.y2 - rect.y1);
+		agg::gsv_text lab;
+		agg::conv_stroke<agg::gsv_text> labs(lab);
+		char lab_text[32];
+		double xlab = 0, ylab = y;
+
+		lab.size(12.0 * scale);
+		m_uy.mark_label(lab_text, 32, j);
+		lab.text(lab_text);
+		labs.width(std_line_width(scale));
+
+		m.transform(&xlab, &ylab);
+
+		xlab += -lab.text_width() - 10.0 * scale;
+		ylab += -5.0 * scale;
+
+		lab.start_point(xlab, ylab);
+		canvas.draw(labs, agg::rgba(0, 0, 0));
+
+		mark.move_to(0.0, y);
+		mark.line_to(-0.01, y);
+
+		if (j > jinf && j < jsup)
+		  {
+		    ln.move_to(0.0, y);
+		    ln.line_to(1.0, y);
+		  }
+	      }
 	  }
       }
-  }
 
-  {
-    int jinf = m_ux.begin(), jsup = m_ux.end();
-    for (int j = jinf; j <= jsup; j++)
       {
-	double x = double(j - jinf) / double(jsup - jinf);
-	agg::gsv_text lab;
-	agg::conv_stroke<agg::gsv_text> labs(lab);
-	char lab_text[32];
-	double xlab = x, ylab = 0;
-
-	lab.size(12.0 * scale);
-	m_ux.mark_label(lab_text, 32, j);
-	lab.text(lab_text);
-	labs.width(std_line_width(scale));
-
-	m.transform(&xlab, &ylab);
-
-	xlab += -lab.text_width()/2.0;
-	ylab += -24.0 * scale;
-
-	lab.start_point(xlab, ylab);
-	canvas.draw(labs, agg::rgba(0, 0, 0));
-
-	mark.move_to(x, 0.0);
-	mark.line_to(x, -0.01);
-
-	if (j > jinf && j < jsup)
+	int jinf = m_ux.begin(), jsup = m_ux.end();
+	for (int j = jinf; j <= jsup; j++)
 	  {
-	    ln.move_to(x, 0.0);
-	    ln.line_to(x, 1.0);
+	    double xl = m_ux.mark_value(j);
+	    if (xl >= rect.x1 - xeps && xl <= rect.x2 + xeps)
+	      {
+		double x = (xl - rect.x1) / (rect.x2 - rect.x1);
+		agg::gsv_text lab;
+		agg::conv_stroke<agg::gsv_text> labs(lab);
+		char lab_text[32];
+		double xlab = x, ylab = 0;
+
+		lab.size(12.0 * scale);
+		m_ux.mark_label(lab_text, 32, j);
+		lab.text(lab_text);
+		labs.width(std_line_width(scale));
+
+		m.transform(&xlab, &ylab);
+
+		xlab += -lab.text_width()/2.0;
+		ylab += -24.0 * scale;
+
+		lab.start_point(xlab, ylab);
+		canvas.draw(labs, agg::rgba(0, 0, 0));
+
+		mark.move_to(x, 0.0);
+		mark.line_to(x, -0.01);
+
+		if (j > jinf && j < jsup)
+		  {
+		    ln.move_to(x, 0.0);
+		    ln.line_to(x, 1.0);
+		  }
+	      }
 	  }
       }
-  }
 
-  lndash.add_dash(7.0, 3.0);
+      lndash.add_dash(7.0, 3.0);
 
-  lns.width(std_line_width(scale, 0.25));
-  canvas.draw(lns, colors::black);
+      lns.width(std_line_width(scale, 0.25));
+      canvas.draw(lns, colors::black);
 
-  mark_stroke.width(std_line_width(scale, 0.75));
-  canvas.draw(mark_stroke, colors::black);
+      mark_stroke.width(std_line_width(scale, 0.75));
+      canvas.draw(mark_stroke, colors::black);
+    }
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);
@@ -480,8 +507,12 @@ void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
 template<class VS, class RM>
 void plot<VS,RM>::set_units(bool use_units)
 { 
-  m_use_units = use_units; 
-  compute_user_trans();
+  if (use_units != use_units)
+    {
+      m_use_units = use_units;
+      m_need_redraw = true;
+      compute_user_trans();
+    }
 }
 
 template<class VS, class RM>
