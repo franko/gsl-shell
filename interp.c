@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <assert.h>
+#include <string.h>
 #include <gsl/gsl_interp.h>
 
 #include "interp.h"
@@ -34,7 +35,7 @@ static const struct luaL_Reg interp_functions[] = {
   {NULL, NULL}
 };  
 
-static struct interp_type_reg *
+static const gsl_interp_type *
 interp_algo_lookup (const char *req_name)
 {
   if (strcmp ("linear", req_name) == 0)
