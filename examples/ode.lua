@@ -26,16 +26,17 @@ function demo1()
 
    local s = ode {f = odef, n= 2, eps_abs= 1e-6}
 
-   local t0, t1, tstep = 0, 30, 0.04
+   local t0, t1, h, tstep = 0, 30, 1e-3, 0.04
    local y0 = vector {1,1}
 
    local ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1, tstep) do
+   for t, y in s:iter(t0, y0, t1, h, tstep) do
       ln:line_to(y[1], y[2])
    end
 
    local p = plot('ODE integration example')
    p:addline(ln)
+--   p:add(ln, 'black', {{'marker', size=3}})
    p:show()
    return p
 end
@@ -54,13 +55,13 @@ function demo2()
 		    null(dfdt)
 		 end
 
-   local s = ode {f= odef, df= odedf, n= 2, eps_abs= 1e-6, method='bsimp'}
+   local s = ode {f= odef, df= odedf, n= 2, eps_abs= 1e-6, method= 'bsimp'}
 
-   local t0, t1, tstep = 0, 30, 0.04
+   local t0, t1, h, tstep = 0, 30, 1e-3, 0.04
    local y0 = vector {1,1}
 
    local ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1, tstep) do
+   for t, y in s:iter(t0, y0, t1, h, tstep) do
       ln:line_to(y[1], y[2])
    end
 
@@ -69,7 +70,7 @@ function demo2()
    p:show()
 
    ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1) do
+   for t, y in s:iter(t0, y0, t1, h) do
       ln:line_to(y[1], y[2])
    end
    p:add(ln, 'black', {{'marker', size=4}})
@@ -77,11 +78,11 @@ function demo2()
    return p
 end
 
-function ode_lines(s, t0, y0, t1, tstep)
+function ode_lines(s, t0, y0, t1, h, tstep)
    local r = y0:dims()
    local p = {}
    for k=1,r do p[k] = path(t0, y0[k]) end
-   for t, y in s:iter(t0, y0, t1, tstep) do
+   for t, y in s:iter(t0, y0, t1, h, tstep) do
       for k=1,r do p[k]:line_to(t, y[k]) end
    end
    return p
@@ -97,10 +98,10 @@ function demo3()
 
    local s = ode {f = odef, n= 2, eps_abs= 1e-6}
 
-   local t0, t1 = 0, 50
+   local t0, t1, h = 0, 50, 0.01
    local y0 = vector {1,0}
 
-   local ln = ode_lines(s, t0, y0, t1)
+   local ln = ode_lines(s, t0, y0, t1, h)
    return plot_lines(ln)
 end
 
@@ -122,15 +123,15 @@ function demo4()
 
    local s = ode {f = odef, df= odedf, n= 2, eps_abs= 1e-6, method='bsimp'}
 
-   local t0, t1 = 0, 50
+   local t0, t1, h = 0, 50, 0.01
    local y0 = vector {1,0}
 
-   local ln = ode_lines(s, t0, y0, t1)
+   local ln = ode_lines(s, t0, y0, t1, h)
    return plot_lines(ln)
 end
 
 function demo5()
-   local t0, t1, tstep = 0, 30, 0.05
+   local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
    local alpha = 1i - 0.08
    local z0 = 1.0 + 0.0i
 
@@ -141,7 +142,7 @@ function demo5()
    local solver = code {f= odef, n= 1}
 
    local ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1, tstep) do
+   for t, z in solver:iter(t0, cvector {z0}, t1, h, tstep) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
 
@@ -152,7 +153,7 @@ function demo5()
 end
 
 function demo6()
-   local t0, t1, tstep = 0, 30, 0.05
+   local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
    local alpha = 1i - 0.08
    local z0 = 1.0 + 0.0i
 
@@ -168,7 +169,7 @@ function demo6()
    local solver = code {f= odef, df= odedf, n= 1, method='bsimp'}
 
    local ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1, tstep) do
+   for t, z in solver:iter(t0, cvector {z0}, t1, h, tstep) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
 
@@ -177,7 +178,7 @@ function demo6()
    p:show()
 
    ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1) do
+   for t, z in solver:iter(t0, cvector {z0}, t1, h) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
    p:add(ln, 'black', {{'marker', size=5}})
@@ -192,10 +193,10 @@ function demo7()
 
    local s = ode {f = odef, n= 2, eps_abs= 1e-6}
 
-   local t0, t1, tstep = 0, 30, 0.1
+   local t0, t1, h, tstep = 0, 30, 1e-4, 0.1
    local y0 = vector {1, 0}
 
-   local ln = ode_lines(s, t0, y0, t1, tstep)
+   local ln = ode_lines(s, t0, y0, t1, h, tstep)
    return plot_lines(ln)
 end
 

@@ -1,7 +1,7 @@
 
 #define ODE_DEFAULT_EPS_ABS 1e-4
 #define ODE_DEFAULT_EPS_REL 0.0
-#define ODE_DEFAULT_STEP 0.1
+/* #define ODE_DEFAULT_STEP 0.1 */
 #define ODE_DEFAULT_METHOD "rk8pd"
 
 static int FUNCTION (ode, evolve) (lua_State *L);

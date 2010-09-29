@@ -151,7 +151,7 @@ FUNCTION (ode, new) (lua_State *L)
   T = method_lookup (method, gsl_odeiv_step_rk8pd, & needs_jacobian);
 
   s = ode_solver_push_new (L, T, MULTIPLICITY * n, eps_abs, eps_rel, 
-			   TYPE (ode_solver_type));
+			   TYPE (ode_solver_type), needs_jacobian);
 
   FUNCTION (ode, fenv_setup) (L, n);
 
@@ -223,9 +223,9 @@ FUNCTION (ode, set) (lua_State *L)
   TYPE (gsl_matrix) *y, *yode;
 
   s->t = luaL_checknumber (L, 2);
-  s->h = luaL_optnumber (L, 4, ODE_DEFAULT_STEP);
-  
   y = FUNCTION (matrix, check) (L, 3);
+  s->h = luaL_checknumber (L, 4);
+
   mlua_fenv_get (L, 1, FENV_Y);
   yode = FUNCTION (matrix, check) (L, -1);
   FUNCTION (gsl_matrix, memcpy) (yode, y);

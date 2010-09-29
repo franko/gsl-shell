@@ -167,8 +167,8 @@ local function add_matrix_method(s, m)
    end
 end
 
-function ode_iter(s, t0, y0, t1, tstep)
-   s:set(t0, y0)
+function ode_iter(s, t0, y0, t1, h, tstep)
+   s:set(t0, y0, h)
    return function()
 	     local t, y = s.t, s.y
 	     if t < t1 then

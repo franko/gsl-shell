@@ -31,14 +31,19 @@ static struct method_entry methods_table[] = {
 struct solver *
 ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
 		     size_t dim, double eps_abs, double eps_rel,
-		     struct solver_type *st)
+		     struct solver_type *st, bool use_jacob)
 {
   struct solver *s;
 
   s = lua_newuserdata (L, sizeof (struct solver));
 
   s->step = gsl_odeiv_step_alloc (type, dim);
-  s->ctrl = gsl_odeiv_control_y_new (eps_abs, eps_rel);
+
+  if (use_jacob)
+    s->ctrl = gsl_odeiv_control_standard_new (eps_abs, eps_rel, 1.0, 1.0);
+  else
+    s->ctrl = gsl_odeiv_control_y_new (eps_abs, eps_rel);
+
   s->evol = gsl_odeiv_evolve_alloc (dim);
 
   s->dimension = dim;

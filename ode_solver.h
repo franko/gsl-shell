@@ -50,7 +50,7 @@ struct solver_type {
 extern struct solver *
 ode_solver_push_new (lua_State *L, const gsl_odeiv_step_type *type,
 		     size_t dim, double eps_abs, double eps_rel,
-		     struct solver_type *st);
+		     struct solver_type *st, bool use_jacob);
 
 extern const gsl_odeiv_step_type *
 method_lookup (const char *method, const gsl_odeiv_step_type *default_type,
