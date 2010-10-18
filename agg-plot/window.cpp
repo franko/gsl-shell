@@ -437,7 +437,7 @@ window_split (lua_State *L)
   win->split(spec);
 
   win->on_draw();
-  win->update_window();
+  win->do_window_update();
 
   win->unlock();
   return 0;
@@ -488,7 +488,7 @@ window_update (lua_State *L)
 
   win->lock();
   win->on_draw();
-  win->update_window();
+  win->do_window_update();
   win->unlock();
 
   return 0;

@@ -52,7 +52,7 @@ namespace agg
     void free_x_resources();
         
     void caption(const char* capt);
-    void put_image(const rendering_buffer* src, const rect *r = 0);
+    void put_image(const rendering_buffer* src, Display* d, const rect *r = 0);
 
     void close();
        
@@ -63,6 +63,7 @@ namespace agg
     unsigned             m_bpp;
     unsigned             m_sys_bpp;
     Display*             m_display;
+    Display*             m_display_alt;
     int                  m_screen;
     int                  m_depth;
     Visual*              m_visual;
@@ -95,7 +96,7 @@ namespace agg
     m_flip_y(flip_y),
     m_bpp(0),
     m_sys_bpp(0),
-    m_display(0),
+    m_display(0), m_display_alt(0),
     m_screen(0),
     m_depth(0),
     m_visual(0),
@@ -225,6 +226,7 @@ namespace agg
     XDestroyImage(m_ximg_window);
     XFreeGC(m_display, m_gc);
     XCloseDisplay(m_display);
+    XCloseDisplay(m_display_alt);
   }
 
   void platform_specific::close()
@@ -240,8 +242,8 @@ namespace agg
     ev.xclient.data.l[2] = 0l;
     ev.xclient.data.l[3] = 0l;
     ev.xclient.data.l[4] = 0l;
-    XSendEvent(m_display, m_window, False, NoEventMask, &ev);
-    XFlush(m_display);
+    XSendEvent(m_display_alt, m_window, False, NoEventMask, &ev);
+    XFlush(m_display_alt);
   }
 
   //------------------------------------------------------------------------
@@ -254,14 +256,16 @@ namespace agg
 
     
   //------------------------------------------------------------------------
-  void platform_specific::put_image(const rendering_buffer* src, const rect *ri)
-  {    
+  void platform_specific::put_image(const rendering_buffer* src,
+				    Display *dsp, const rect *ri)
+  {
     if(m_ximg_window == 0) return;
+
     m_ximg_window->data = (char*)m_buf_window;
 
     if (m_format == m_sys_format && ri == 0)
       {
-	XPutImage(m_display, m_window, m_gc, m_ximg_window, 
+	XPutImage(dsp, m_window, m_gc, m_ximg_window, 
 		  0, 0, 0, 0, src->width(), src->height());
       }
 
@@ -384,7 +388,7 @@ namespace agg
 	  }
       }
 
-    XImage *img = XCreateImage(m_display, m_visual, m_depth, 
+    XImage *img = XCreateImage(dsp, m_visual, m_depth, 
 			       ZPixmap, 0, (char*) buf_tmp,
 			       w, h, m_sys_bpp,
 			       w * (m_sys_bpp / 8));
@@ -392,7 +396,7 @@ namespace agg
     img->byte_order = m_byte_order;
 
     int y_dst = (m_flip_y ? src->height() - (y + h) : y);
-    XPutImage(m_display, m_window, m_gc, img, 0, 0, x, y_dst, w, h);
+    XPutImage(dsp, m_window, m_gc, img, 0, 0, x, y_dst, w, h);
             
     delete [] buf_tmp;
 
@@ -452,7 +456,8 @@ namespace agg
     m_window_flags = flags;
 
     m_specific->m_display = XOpenDisplay(NULL);
-    if(m_specific->m_display == 0) 
+    m_specific->m_display_alt = XOpenDisplay(NULL);
+    if(m_specific->m_display == 0 || m_specific->m_display_alt == 0) 
       {
 	fprintf(stderr, "Unable to open DISPLAY!\n");
 	return false;
@@ -474,6 +479,7 @@ namespace agg
 		"There's no Visual compatible with minimal AGG requirements:\n"
 		"At least 15-bit color depth and True- or DirectColor class.\n\n");
 	XCloseDisplay(m_specific->m_display);
+	XCloseDisplay(m_specific->m_display_alt);
 	return false;
       }
         
@@ -565,6 +571,7 @@ namespace agg
 		"R=%08x, R=%08x, B=%08x\n", 
 		(unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
 	XCloseDisplay(m_specific->m_display);
+	XCloseDisplay(m_specific->m_display_alt);
 	return false;
       }
                 
@@ -697,15 +704,13 @@ namespace agg
     return true;
   }
 
-
-
   //------------------------------------------------------------------------
   void platform_support::update_window()
   {
     if (! m_specific->m_is_mapped)
       return;
 
-    m_specific->put_image(&m_rbuf_window);
+    m_specific->put_image(&m_rbuf_window, m_specific->m_display);
         
     // When m_wait_mode is true we can discard all the events 
     // came while the image is being drawn. In this case 
@@ -833,7 +838,7 @@ namespace agg
 	    break;
 
 	  case Expose:
-	    m_specific->put_image(&m_rbuf_window);
+	    m_specific->put_image(&m_rbuf_window, m_specific->m_display);
 	    XFlush(m_specific->m_display);
 	    XSync(m_specific->m_display, false);
 	    break;
@@ -1346,12 +1351,19 @@ platform_support_ext::update_region (const agg::rect_base<int>& r)
   if (! m_specific->m_is_mapped)
     return;
 
-  m_specific->put_image(&rbuf_window(), &r);
+  m_specific->put_image(&rbuf_window(), m_specific->m_display_alt, &r);
         
   // When m_wait_mode is true we can discard all the events 
   // came while the image is being drawn. In this case 
   // the X server does not accumulate mouse motion events.
   // When m_wait_mode is false, i.e. we have some idle drawing
   // we cannot afford to miss any events
-  XSync(m_specific->m_display, wait_mode());
+  XSync(m_specific->m_display_alt, wait_mode());
+}
+
+void
+platform_support_ext::do_window_update()
+{
+  agg::rect_base<int> r(0, 0, rbuf_window().width(), rbuf_window().height());
+  update_region(r);
 }
