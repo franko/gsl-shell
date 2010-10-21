@@ -385,14 +385,20 @@ static void dotty (lua_State *L) {
 	    }
 	}
 
+#ifdef AGG_PLOT_ENABLED
       do_windows_unref (L);
+#endif
     }
 
+#ifdef AGG_PLOT_ENABLED
   object_index_apply_all (L, OBJECT_WINDOW, window_close);
 
-  do {
-    do_windows_unref (L);
-  } while (object_index_count (L, OBJECT_WINDOW) > 0);
+  do 
+    {
+      do_windows_unref (L);
+    } 
+  while (object_index_count (L, OBJECT_WINDOW) > 0);
+#endif
   
   lua_settop(L, 0);  /* clear stack */
 
@@ -577,15 +583,6 @@ int main (int argc, char **argv) {
   s.argv = argv;
   status = lua_cpcall(L, &pmain, &s);
   report(L, status);
-
-  /* we clear the globals stack and make a full gc collect to avoid
-     problem with finalizers execution order for plots and
-     graphical objects. */
-  mlua_table_clear (L, LUA_GLOBALSINDEX);
-  lua_gc (L, LUA_GCCOLLECT, 0);
-#warning UGLY HACKS
-  lua_gc (L, LUA_GCCOLLECT, 0);
-  lua_gc (L, LUA_GCCOLLECT, 0);
   lua_close(L);
 
   pthread_mutex_destroy (gsl_shell_mutex);

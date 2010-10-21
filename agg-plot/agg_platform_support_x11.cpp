@@ -243,7 +243,7 @@ namespace agg
     ev.xclient.data.l[3] = 0l;
     ev.xclient.data.l[4] = 0l;
     XSendEvent(m_display_alt, m_window, False, NoEventMask, &ev);
-    XFlush(m_display_alt);
+    XSync(m_display_alt, False);
   }
 
   //------------------------------------------------------------------------
