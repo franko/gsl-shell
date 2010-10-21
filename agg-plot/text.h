@@ -10,7 +10,7 @@
 
 namespace draw {
 
-  class text : public drawable {
+  class text : public vertex_source {
     typedef agg::gsv_text vs_text;
     typedef agg::conv_transform<vs_text> vs_trans_text;
     typedef agg::conv_stroke<vs_trans_text> vs_stroked_text;
@@ -90,8 +90,6 @@ namespace draw {
     virtual unsigned vertex(double* x, double* y);
 
     virtual void apply_transform(const agg::trans_affine& m, double as);
-    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
-    virtual bool dispose();
 
     vs_text& self() { return m_text; };
   };

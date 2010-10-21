@@ -3,6 +3,6 @@
 
 #include "scalable.h"
 
-extern scalable* new_marker_symbol(const char *name);
+extern vertex_source* new_marker_symbol(const char *name);
 
 #endif

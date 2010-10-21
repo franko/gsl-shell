@@ -9,12 +9,12 @@
 
 struct symbol_reg {
   const char *name;
-  scalable *(*builder)();
+  vertex_source *(*builder)();
 };
 
-static scalable *build_circle();
-static scalable *build_square();
-static scalable *build_triangle();
+static vertex_source *build_circle();
+static vertex_source *build_square();
+static vertex_source *build_triangle();
 
 static struct symbol_reg builder_table[] = {
   {"circle",   build_circle},
@@ -23,19 +23,19 @@ static struct symbol_reg builder_table[] = {
   {NULL, NULL}
 };
 
-scalable *
+vertex_source *
 build_circle()
 {
-  typedef vs_proxy<agg::ellipse, false, true> circle_type;
+  typedef vs_proxy<agg::ellipse, true> circle_type;
   circle_type *circle = new circle_type();
   circle->self().init(0.0, 0.0, 0.5, 0.5);
-  return (scalable *) circle;
+  return (vertex_source *) circle;
 }
 
-scalable *
+vertex_source *
 build_square()
 {
-  typedef vs_proxy<agg::path_storage> path_type;
+  typedef vs_proxy<agg::path_storage, false> path_type;
   path_type *p = new path_type();
   
   agg::path_storage& square = p->self();
@@ -45,13 +45,13 @@ build_square()
   square.line_to(-0.5,  0.5);
   square.close_polygon();
 
-  return (scalable *) p;
+  return (vertex_source *) p;
 }
 
-scalable *
+vertex_source *
 build_triangle()
 {
-  typedef vs_proxy<agg::path_storage> path_type;
+  typedef vs_proxy<agg::path_storage, false> path_type;
   path_type *p = new path_type();
   
   agg::path_storage& triangle = p->self();
@@ -62,10 +62,10 @@ build_triangle()
   triangle.line_to( 0.0,  2*ht/3);
   triangle.close_polygon();
 
-  return (scalable *) p;
+  return (vertex_source *) p;
 }
 
-scalable*
+vertex_source*
 new_marker_symbol (const char *req_name)
 {
   struct symbol_reg *reg;

@@ -305,7 +305,8 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
 
   if (gs_is_userdata (L, 2, GS_DRAW_SCALABLE))
     {
-      scalable *s = (scalable *) lua_touserdata (L, 2);
+      vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
+      scalable *s = new boxed_scalable(vs);
 
       if (narg > 4)
 	{
@@ -323,7 +324,8 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
-      w = (drawable *) lua_touserdata (L, 2);
+      vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
+      w = new boxed_drawable(vs);
     }
   else
     {

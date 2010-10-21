@@ -6,17 +6,36 @@
 
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
+#include "agg_bounding_rect.h"
 
-struct drawable {
-
-  virtual void rewind(unsigned path_id) = 0;
-  virtual unsigned vertex(double* x, double* y) = 0;
-
-  virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
+struct drawable : public vertex_source {
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
   virtual bool dispose() = 0;
 
   virtual ~drawable() { };
+};
+
+class boxed_drawable : public drawable {
+  vertex_source *m_object;
+
+ public:
+  boxed_drawable(vertex_source *p) : drawable(), m_object(p) {};
+
+  ~boxed_drawable() { };
+
+  virtual void rewind(unsigned path_id) { m_object->rewind(path_id); };
+  virtual unsigned vertex(double* x, double* y) { return m_object->vertex(x, y); };
+  virtual void apply_transform(const agg::trans_affine& m, double as) { m_object->apply_transform(m, as); };
+
+  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+  {
+    agg::bounding_rect_single (*m_object, 0, x1, y1, x2, y2);
+  };
+
+  virtual bool dispose() { return false; };
+
+ private:
+  boxed_drawable();
 };
 
 /* this class take a "scalable" object and it does transform it to a
@@ -58,7 +77,7 @@ public:
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
-    this->m_source->bounding_box(x1, y1, x2, y2);
+    agg::bounding_rect_single (*this->m_source, 0, x1, y1, x2, y2);
   };
 };
 

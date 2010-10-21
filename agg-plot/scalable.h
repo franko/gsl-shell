@@ -23,56 +23,68 @@
 
 #include "agg_trans_affine.h"
 
-struct scalable {
-
+struct vertex_source {
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
-
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
-  virtual bool dispose() = 0;
+  virtual ~vertex_source() { };
+};
 
+struct scalable : public vertex_source {
+  virtual bool dispose() = 0;
   virtual ~scalable() { };
 };
 
-/* This class is basically a wrapper around a native AGG vertex_source object.
-   The wrapper implements the "scalable" interface. */
-template <class T, bool system_managed = false, bool approx = false>
-class vs_proxy : public scalable {
+template <class T, bool approx>
+class vs_proxy : public vertex_source {
 protected:
   T m_base;
 
 public:
-  vs_proxy(): scalable(), m_base() {};
+  vs_proxy(): vertex_source(), m_base() {};
 
   virtual void rewind(unsigned path_id) { m_base.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  };
-
   virtual void apply_transform(const agg::trans_affine& m, double as) { };
-  virtual bool dispose() { return (system_managed ? false : true); };
 
   T& self() { return m_base; };
 };
 
 /* The same as vs_proxy but with approximation_scale. */
-template <class T, bool SM>
-class vs_proxy<T, SM, true> : public scalable {
+template <class T>
+class vs_proxy<T, true> : public vertex_source {
 protected:
   T m_base;
 
 public:
-  vs_proxy(): scalable(), m_base() {};
+  vs_proxy(): vertex_source(), m_base() {};
 
   virtual void rewind(unsigned path_id) { m_base.rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  };
-
   virtual void apply_transform(const agg::trans_affine& m, double as)
   { 
     this->m_base.approximation_scale(as); 
   };
 
-  virtual bool dispose() { return (SM ? false : true); };
-
   T& self() { return m_base; };
+};
+
+class boxed_scalable : public scalable {
+  vertex_source *m_object;
+
+ public:
+  boxed_scalable(vertex_source *p) : scalable(), m_object(p) {};
+
+  ~boxed_scalable() { };
+
+  virtual void rewind(unsigned path_id) { m_object->rewind(path_id); };
+  virtual unsigned vertex(double* x, double* y) { return m_object->vertex(x, y); };
+  virtual void apply_transform(const agg::trans_affine& m, double as) { m_object->apply_transform(m, as); };
+
+  virtual bool dispose() { return false; };
+
+ private:
+  boxed_scalable();
 };
 
 /* this class does work does permit to perform an AGG transformation
@@ -112,7 +124,7 @@ public:
   conv_type& self() { return m_output; };
 };
 
-template<class conv_type, bool approx = false>
+template<class conv_type, bool approx>
 class scalable_adapter : public vs_adapter<conv_type, scalable> 
 {
   typedef vs_adapter<conv_type, scalable> root_type;

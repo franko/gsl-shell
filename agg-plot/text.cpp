@@ -29,17 +29,4 @@ namespace draw {
     m_stroke.approximation_scale(as);
     m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
   }
-
-  void
-  text::bounding_box(double *x1, double *y1, double *x2, double *y2)
-  {
-    *x1 = *x2 = m_x;
-    *y1 = *y2 = m_y;
-  }
-
-  bool
-  text::dispose()
-  {
-    return false;
-  }
 }

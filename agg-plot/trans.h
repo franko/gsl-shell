@@ -88,15 +88,15 @@ struct trans {
     };
   };
 
-  typedef agg::conv_transform<scalable> symbol_type;
+  typedef agg::conv_transform<vertex_source> symbol_type;
   typedef my::conv_simple_marker<base_type, symbol_type> marker_base;
   typedef typename context::template adapter<marker_base, false> vs_marker;
 
   class marker : public vs_marker {
     double m_size;
-    scalable* m_symbol;
+    vertex_source* m_symbol;
     agg::trans_affine m_matrix;
-    agg::conv_transform<scalable> m_trans;
+    agg::conv_transform<vertex_source> m_trans;
 
   public:
     marker(base_type* src, double size, const char *sym):  
@@ -109,7 +109,7 @@ struct trans {
 
     ~marker() 
     { 
-      lua_management::dispose(m_symbol);
+      delete m_symbol;
     };
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
