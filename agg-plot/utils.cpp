@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
-
-#include <string>
-#include <stdarg.h>
-
 #include "utils.h"
 
 agg::trans_affine identity_matrix;

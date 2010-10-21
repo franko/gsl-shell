@@ -21,6 +21,8 @@
 #ifndef AGGPLOT_PLOT_H
 #define AGGPLOT_PLOT_H
 
+#include <new>
+
 #include "utils.h"
 #include "my_list.h"
 #include "drawable.h"
@@ -323,8 +325,10 @@ template<class VS, class RM>
 void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
 			     opt_rect<double>& bb)
 {
-  plot<VS,RM>::iterator *c0 = m_drawing_queue;
-  for (plot<VS,RM>::iterator *c = c0; c != 0; c = c->next())
+  typedef typename plot<VS,RM>::iterator iter_type;
+
+  iter_type *c0 = m_drawing_queue;
+  for (iter_type *c = c0; c != 0; c = c->next())
     {
       item& d = c->content();
       agg::trans_affine m = get_scaled_matrix(canvas_mtx);

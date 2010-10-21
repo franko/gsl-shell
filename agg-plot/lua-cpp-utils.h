@@ -1,6 +1,7 @@
 #ifndef LUA_CPP_UTILS_H
 #define LUA_CPP_UTILS_H
 
+#include <exception>
 #include <new>
 
 #include "defs.h"

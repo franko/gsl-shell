@@ -35,7 +35,7 @@ endif
 
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
-  DEFS += -DWIN32
+  DEFS += -DWIN32 -DAGG_PLOT_ENABLED
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else

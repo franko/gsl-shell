@@ -1358,7 +1358,8 @@ platform_support_ext::update_region (const agg::rect_base<int>& r)
   // the X server does not accumulate mouse motion events.
   // When m_wait_mode is false, i.e. we have some idle drawing
   // we cannot afford to miss any events
-  XSync(m_specific->m_display_alt, wait_mode());
+  // XSync(m_specific->m_display_alt, wait_mode());
+  XFlush(m_specific->m_display_alt);
 }
 
 void

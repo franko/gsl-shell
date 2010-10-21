@@ -1,18 +1,28 @@
 #ifndef AGGPLOT_UTILS_H
 #define AGGPLOT_UTILS_H
 
-#include <string>
 #include "agg_trans_affine.h"
 
-template <class T>
-T max (T a, T b) {
-  return (b < a) ? a : b;
-}
+#ifdef min
+#undef min
+#endif
 
-template <class T>
-T min (T a, T b) {
-  return (b > a) ? a : b;
-}
+#ifdef max
+#undef max
+#endif
+
+
+template <typename T>
+T min(T a, T b)
+{
+  return (a < b) ? a : b;
+};
+
+template <typename T>
+T max(T a, T b)
+{
+  return (a > b) ? a : b;
+};
 
 extern void   trans_affine_compose  (agg::trans_affine& a, 
 				     const agg::trans_affine& b);

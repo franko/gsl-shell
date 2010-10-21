@@ -1306,3 +1306,10 @@ platform_support_ext::update_region (const agg::rect_base<int>& r)
   m_specific->display_pmap(dc, &rbuf_window(), &r);
   ::ReleaseDC(m_specific->m_hwnd, dc);
 }
+
+void
+platform_support_ext::do_window_update()
+{
+  agg::rect_base<int> r(0, 0, rbuf_window().width(), rbuf_window().height());
+  update_region(r);
+}
