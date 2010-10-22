@@ -27,7 +27,7 @@
 #include "agg_array.h"
 #include "agg_basics.h"
 
-template<class VertexSource, class resource_manager = no_management>
+template<class VertexSource, class resource_manager>
 class plot_auto : public plot<VertexSource, resource_manager> {
   typedef plot_item<VertexSource> item;
   typedef agg::pod_bvector<item> item_list;

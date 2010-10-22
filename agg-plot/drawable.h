@@ -10,16 +10,14 @@
 
 struct drawable : public vertex_source {
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
-  virtual bool dispose() = 0;
-
   virtual ~drawable() { };
 };
 
 class boxed_drawable : public drawable {
-  vertex_source *m_object;
+  drawable *m_object;
 
  public:
-  boxed_drawable(vertex_source *p) : drawable(), m_object(p) {};
+  boxed_drawable(drawable *p) : drawable(), m_object(p) {};
 
   ~boxed_drawable() { };
 
@@ -29,10 +27,8 @@ class boxed_drawable : public drawable {
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
-    agg::bounding_rect_single (*m_object, 0, x1, y1, x2, y2);
+    m_object->bounding_box(x1, y1, x2, y2);
   };
-
-  virtual bool dispose() { return false; };
 
  private:
   boxed_drawable();
@@ -51,13 +47,22 @@ public:
     drawable(), m_source(src), m_trans(*m_source, mtx)
   { };
 
-  virtual void rewind(unsigned path_id);
-  virtual unsigned vertex(double* x, double* y);
+  ~window_scalable() { delete m_source; };
 
-  virtual void apply_transform(const agg::trans_affine& m, double as);
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
+  virtual void rewind(unsigned path_id) { m_trans.rewind(path_id); };
 
-  virtual bool dispose();
+  virtual unsigned vertex(double* x, double* y) { return m_trans.vertex(x, y); };
+
+  virtual void apply_transform(const agg::trans_affine& m, double as)
+  {
+    m_trans.transformer(m);
+    m_source->apply_transform (m, as * m.scale());
+  };
+
+  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+  {
+    agg::bounding_rect_single (*m_source, 0, x1, y1, x2, y2);
+  };
 };
 
 template<class conv_type>
@@ -77,7 +82,7 @@ public:
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
-    agg::bounding_rect_single (*this->m_source, 0, x1, y1, x2, y2);
+    this->m_source->bounding_box(x1, y1, x2, y2);
   };
 };
 

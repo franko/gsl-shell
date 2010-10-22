@@ -324,7 +324,7 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
-      vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
+      drawable *vs = (drawable *) lua_touserdata (L, 2);
       w = new boxed_drawable(vs);
     }
   else

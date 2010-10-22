@@ -30,10 +30,7 @@ struct vertex_source {
   virtual ~vertex_source() { };
 };
 
-struct scalable : public vertex_source {
-  virtual bool dispose() = 0;
-  virtual ~scalable() { };
-};
+typedef vertex_source scalable;
 
 template <class T, bool approx>
 class vs_proxy : public vertex_source {
@@ -81,8 +78,6 @@ class boxed_scalable : public scalable {
   virtual unsigned vertex(double* x, double* y) { return m_object->vertex(x, y); };
   virtual void apply_transform(const agg::trans_affine& m, double as) { m_object->apply_transform(m, as); };
 
-  virtual bool dispose() { return false; };
-
  private:
   boxed_scalable();
 };
@@ -98,6 +93,8 @@ protected:
 
 public:
   vs_adapter(base_type* src): m_output(*src), m_source(src) { };
+  
+  ~vs_adapter() { delete this->m_source; };
 
   template <class init_type>
   vs_adapter(base_type* src, init_type& val):
@@ -112,13 +109,6 @@ public:
   virtual unsigned vertex(double* x, double* y) 
   { 
     return m_output.vertex(x, y); 
-  };
-
-  virtual bool dispose()
-  {
-    if (this->m_source->dispose())
-      delete this->m_source;
-    return true;
   };
 
   conv_type& self() { return m_output; };
