@@ -6,6 +6,7 @@ namespace draw {
   void
   text::rewind(unsigned path_id)
   {
+    m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
     m_stroke.rewind(path_id);
   }
 
@@ -27,7 +28,6 @@ namespace draw {
     m.transform(&x, &y);
 
     m_stroke.approximation_scale(as);
-    m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
   }
 
   void

@@ -616,6 +616,7 @@ namespace agg
 	XFreeGC(m_specific->m_display, m_specific->m_gc);
 	XDestroyWindow(m_specific->m_display, m_specific->m_window);
 	XCloseDisplay(m_specific->m_display);
+	XCloseDisplay(m_specific->m_display_alt);
 	return false;
       }
 
