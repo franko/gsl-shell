@@ -48,7 +48,7 @@ function demo2()
       plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
    end
    plt:pushlayer()
-   local N, R, nc = 256, 5.0, 15
+   local N, R, nc = 128, 5.0, 8
    for k = 0, N * nc do
       local r = R * cos(pi*k/N)^2
       local th = 2*pi*(k/(N*nc*10))
@@ -66,7 +66,6 @@ function demo3()
    local p = plot 'y = f(x)'
    local x0, x1 = 0, 10*pi
    local cc = fxline(f, x0, x1, k)
-   p:addline(cc)
    p.sync = false
    p:pushlayer()
    p:show()
@@ -78,6 +77,7 @@ function demo3()
       ca:line_to(x, 0); ca:line_to(0, 0); ca:close()
       p:clear()
       p:add(ca, rgba(1,1,0,0.6))
+      p:addline(cc)
       p:flush()
    end
 end
@@ -106,6 +106,5 @@ function demo4()
       p:flush()
    end
 
-   p:poplayer()
    return p
 end
