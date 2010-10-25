@@ -10,4 +10,6 @@ extern int  matrix_mul_elements      (lua_State *L);
 extern int  matrix_div_elements      (lua_State *L);
 extern int  matrix_unm               (lua_State *L);
 
+extern void matrix_arith_register (lua_State *L);
+
 #endif

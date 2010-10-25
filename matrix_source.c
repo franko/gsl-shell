@@ -268,40 +268,8 @@ FUNCTION(matrix, new) (lua_State *L)
 }
 
 int
-FUNCTION(matrix, mul) (lua_State *L)
+FUNCTION(matrix, inverse_raw) (lua_State *L, const TYPE (gsl_matrix) *a)
 {
-  int k, nargs = lua_gettop (L);
-  TYPE (gsl_matrix) *r, *a, *b;
-  BASE one = ONE;
-
-  r = FUNCTION (matrix, check) (L, 1);
-
-  for (k = 2; k <= nargs; k++)
-    {
-      a = r;
-      b = FUNCTION (matrix, check) (L, k);
-
-      if (a->size2 != b->size1)
-	luaL_error (L, "incompatible matrix dimensions in multiplication");
-
-      if (k == nargs)
-	r = FUNCTION (matrix, push) (L, a->size1, b->size2);
-      else
-	r = FUNCTION (gsl_matrix, calloc) (a->size1, b->size2);
-
-      BLAS_FUNCTION(gemm) (CblasNoTrans, CblasNoTrans, one, a, b, one, r);
-
-      if (k > 2)
-	FUNCTION (gsl_matrix, free) (a);
-    }
-
-  return 1;
-}
-
-int
-FUNCTION(matrix, inverse) (lua_State *L)
-{
-  const TYPE (gsl_matrix) *a = FUNCTION (matrix, check) (L, 1);
   TYPE (gsl_matrix) *lu, *inverse;
   gsl_permutation *p;
   size_t n = a->size1;
@@ -326,10 +294,10 @@ FUNCTION(matrix, inverse) (lua_State *L)
   return 1;
 }
 int
-FUNCTION(matrix, solve) (lua_State *L)
+FUNCTION(matrix, solve_raw) (lua_State *L, 
+			     const TYPE (gsl_matrix) *a,
+			     const TYPE (gsl_matrix) *b)
 {
-  const TYPE (gsl_matrix) *a = FUNCTION (matrix, check) (L, 1);
-  const TYPE (gsl_matrix) *b = FUNCTION (matrix, check) (L, 2);
   TYPE (gsl_matrix) *x;
   CONST_VIEW (gsl_vector) b_view = CONST_FUNCTION (gsl_matrix, column) (b, 0);
   VIEW (gsl_vector) x_view;

@@ -20,6 +20,13 @@ extern void                FUNCTION (matrix, check_size) (lua_State *L,
 							  TYPE (gsl_matrix) *m,
 							  size_t n1, size_t n2);
 
+extern int                 FUNCTION (matrix, inverse_raw)(lua_State *L,
+							  const TYPE (gsl_matrix) *a);
+
+extern int                 FUNCTION (matrix, solve_raw)  (lua_State *L,
+							  const TYPE (gsl_matrix) *a,
+							  const TYPE (gsl_matrix) *b);
+
 
 /* matrix helper functions */
 extern void
