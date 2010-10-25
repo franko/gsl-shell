@@ -28,12 +28,6 @@ static int  FUNCTION (matrix, dims)              (lua_State *L);
 static int  FUNCTION (matrix, copy)              (lua_State *L);
 static int  FUNCTION (matrix, slice)             (lua_State *L);
 
-static int  FUNCTION (matrix, add)               (lua_State *L);
-static int  FUNCTION (matrix, sub)               (lua_State *L);
-static int  FUNCTION (matrix, mul_elements)      (lua_State *L);
-static int  FUNCTION (matrix, div_elements)      (lua_State *L);
-static int  FUNCTION (matrix, unm)               (lua_State *L);
-
 static int  FUNCTION (matrix, mul)               (lua_State *L);
 static int  FUNCTION (matrix, inverse)           (lua_State *L);
 static int  FUNCTION (matrix, solve)             (lua_State *L);
@@ -41,11 +35,11 @@ static int  FUNCTION (matrix, solve)             (lua_State *L);
 static void FUNCTION (matrix, set_ref)           (lua_State *L, int index);
 
 static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
-  {"__add",         FUNCTION (matrix, add)},
-  {"__sub",         FUNCTION (matrix, sub)},
-  {"__mul",         FUNCTION (matrix, mul_elements)},
-  {"__div",         FUNCTION (matrix, div_elements)},
-  {"__unm",         FUNCTION (matrix, unm)},
+  {"__add",         matrix_add},
+  {"__sub",         matrix_sub},
+  {"__mul",         matrix_mul_elements},
+  {"__div",         matrix_div_elements},
+  {"__unm",         matrix_unm},
   {"__gc",          FUNCTION (matrix, free)},
   {"get",           FUNCTION (matrix, get)},
   {"set",           FUNCTION (matrix, set)},

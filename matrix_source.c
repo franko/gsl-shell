@@ -268,21 +268,6 @@ FUNCTION(matrix, new) (lua_State *L)
 }
 
 int
-FUNCTION(matrix, unm) (lua_State *L)
-{
-  const TYPE (gsl_matrix) *a = FUNCTION (matrix, check) (L, 1);
-  TYPE (gsl_matrix) *r;
-  LUA_TYPE fact = -1.0;
-  BASE gslfact = TYPE (value_assign) (fact);
-
-  r = FUNCTION (matrix, push_raw) (L, a->size1, a->size2);
-
-  FUNCTION (gsl_matrix, memcpy) (r, a);
-  FUNCTION (gsl_matrix, scale) (r, gslfact);
-  return 1;
-}
-
-int
 FUNCTION(matrix, mul) (lua_State *L)
 {
   int k, nargs = lua_gettop (L);

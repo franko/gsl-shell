@@ -31,6 +31,7 @@
 #include "gs-types.h"
 #include "lua-utils.h"
 #include "cmatrix.h"
+#include "matrix_arith.h"
 
 static lua_Complex
 value_retrieve_complex (gsl_complex v)
@@ -52,30 +53,6 @@ value_assign_complex (lua_Complex v)
 #include "matrix_decls_source.c"
 #include "matrix_source.c"
 #include "matrix_helper_source.c"
-
-#define OPER_ADD
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_ADD
-
-#define OPER_SUB
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_SUB
-
-#define OPER_MUL
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_MUL
-
-#define OPER_DIV
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_DIV
 
 #include "template_matrix_off.h"
 #undef BASE_GSL_COMPLEX

@@ -41,3 +41,9 @@
 #else
 #error matrix operation directive unknown
 #endif
+
+#define CONCAT2x(a,b) a ## _ ## b 
+#define CONCAT2(a,b) CONCAT2x(a,b)
+
+#define OPER_FUNCTION(base) CONCAT2(base,OPER)
+#define SCALAR_OPER_FUNCTION(base) CONCAT2(base,SCALAR_OP)

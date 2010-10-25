@@ -29,6 +29,7 @@
 
 #include "gs-types.h"
 #include "matrix.h"
+#include "matrix_arith.h"
 #include "lua-utils.h"
 
 /* danger: three mathematicians in the name of this function :-) */
@@ -56,30 +57,6 @@ matrix_jacob_copy_cauchy_riemann (gsl_matrix *jreal, gsl_matrix_complex *jcmpl,
 #include "matrix_decls_source.c"
 #include "matrix_source.c"
 #include "matrix_helper_source.c"
-
-#define OPER_ADD
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_ADD
-
-#define OPER_SUB
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_SUB
-
-#define OPER_MUL
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_MUL
-
-#define OPER_DIV
-#include "template_matrix_oper_on.h"
-#include "matrix_op_source.c"
-#include "template_matrix_oper_off.h"
-#undef OPER_DIV
 
 #include "template_matrix_off.h"
 #undef BASE_DOUBLE

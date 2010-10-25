@@ -20,48 +20,101 @@
 
 #ifdef SCALAR_OP
 static int
-FUNCTION (scalar_matrix, OPER) (lua_State *L, int index_scalar, int index_matrix)
+OPER_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx)
 {
-  const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, index_matrix);
-  LUA_TYPE val = LUA_FUNCTION (to) (L, index_scalar);
-  BASE gval = TYPE (value_assign) (val);
-  TYPE (gsl_matrix) *r;
-
-  r = FUNCTION (matrix, push) (L, m->size1, m->size2);
-
-  FUNCTION (gsl_matrix, memcpy) (r, m);
-  FUNCTION (gsl_matrix, SCALAR_OP) (r, gval);
+  lua_Complex s = lua_tocomplex (L, sidx);
+  int tpm = gs_is_userdata (L, midx, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
+  if (tpm == GS_MATRIX)
+    {
+      const gsl_matrix *a = lua_touserdata (L, midx);
+      if (cimag(s) == 0.0)
+	{
+	  gsl_matrix *r =  matrix_push_raw (L, a->size1, a->size2);
+	  gsl_matrix_memcpy (r, a);
+	  SCALAR_OPER_FUNCTION (gsl_matrix) (r, creal(s));
+	}
+      else
+	{
+	  gsl_matrix_complex *r = push_matrix_complex_of_real (L, a);
+	  gsl_complex sc = {{creal(s), cimag(s)}};
+	  SCALAR_OPER_FUNCTION (gsl_matrix_complex) (r, sc);
+	}
+    }
+  else
+    {
+      const gsl_matrix_complex *a = gs_check_userdata (L, 2, GS_CMATRIX);
+      gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
+      gsl_complex sc = {{creal(s), cimag(s)}};
+      gsl_matrix_complex_memcpy (r, a);
+      SCALAR_OPER_FUNCTION (gsl_matrix_complex) (r, sc);
+    }
+  
   return 1;
 }
 #endif
 
 int
-FUNCTION(matrix,OPER) (lua_State *L)
+OPER_FUNCTION (matrix) (lua_State *L)
 {
-  const TYPE(gsl_matrix) *a, *b;
-  TYPE(gsl_matrix) *r;
-
 #ifdef SCALAR_OP
-  if (LUA_FUNCTION(is) (L, 1))
+  if (lua_isnumber (L, 1))
     {
-      return FUNCTION(scalar_matrix, OPER) (L, 1, 2);
+      return OPER_FUNCTION (scalar_matrix) (L, 1, 2);
     }
-  else if (LUA_FUNCTION(is) (L, 2))
+  else if (lua_isnumber (L, 2))
     {
-      return FUNCTION(scalar_matrix, OPER) (L, 2, 1);
+      return OPER_FUNCTION (scalar_matrix) (L, 2, 1);
     }
 #endif
 
-  a = FUNCTION (matrix, check) (L, 1);
-  b = FUNCTION (matrix, check) (L, 2);
+  int tp1 = gs_is_userdata (L, 1, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
+  int tp2 = gs_is_userdata (L, 2, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
 
-  if (a->size1 != b->size1 || a->size2 != b->size2)
-    luaL_error (L, "matrices should have the same size in " OP_NAME);
+  if (tp1 == GS_MATRIX && tp2 == GS_MATRIX)
+    {
+      const gsl_matrix *a = lua_touserdata (L, 1), *b = lua_touserdata (L, 2);
+      gsl_matrix *r = matrix_push_raw (L, a->size1, a->size2);
 
-  r = FUNCTION (matrix, push) (L, a->size1, a->size2);
+      if (a->size1 != b->size1 || a->size2 != b->size2)
+	return luaL_error (L, size_err_msg, OP_NAME);
 
-  FUNCTION(gsl_matrix, memcpy) (r, a);
-  FUNCTION(gsl_matrix, OPER) (r, b);
+      gsl_matrix_memcpy (r, a);
+      OPER_FUNCTION (gsl_matrix) (r, b);
+    }
+  else if (tp1 == GS_MATRIX)
+    {
+      const gsl_matrix *ar = lua_touserdata (L, 1);
+      gsl_matrix_complex *a = push_matrix_complex_of_real (L, ar);
+      const gsl_matrix_complex *b = gs_check_userdata (L, 2, GS_CMATRIX);
+
+      if (ar->size1 != b->size1 || ar->size2 != b->size2)
+	return luaL_error (L, size_err_msg, OP_NAME);
+
+      OPER_FUNCTION (gsl_matrix_complex) (a, b);
+    }
+  else if (tp2 == GS_MATRIX)
+    {
+      const gsl_matrix_complex *a = gs_check_userdata (L, 1, GS_CMATRIX);
+      const gsl_matrix *br = lua_touserdata (L, 2);
+      gsl_matrix_complex *b = push_matrix_complex_of_real (L, br);
+
+      if (a->size1 != br->size1 || a->size2 != br->size2)
+	return luaL_error (L, size_err_msg, OP_NAME);
+
+      OPER_FUNCTION (gsl_matrix_complex) (b, a);
+    }
+  else
+    {
+      gsl_matrix_complex *a = gs_check_userdata (L, 1, GS_CMATRIX);
+      gsl_matrix_complex *b = gs_check_userdata (L, 2, GS_CMATRIX);
+      gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
+
+      if (a->size1 != b->size1 || a->size2 != b->size2)
+	luaL_error (L, size_err_msg, OP_NAME);
+
+      gsl_matrix_complex_memcpy (r, a);
+      OPER_FUNCTION (gsl_matrix_complex) (r, b);
+    }
 
   return 1;
 }
