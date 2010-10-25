@@ -26,5 +26,5 @@ function demo2()
    print(v)
    -- the following expression will give a diagonal matrix with the eigenvalues
    --- along the diagonal
-   -- cmul(cinverse(v),tocomplex(m),v)
+   print(mul(inv(v),m,v))
 end

@@ -42,7 +42,7 @@ function demo1()
 
    local function print_state(s)
       print ("x: ", tr(s.p))
-      print ("chi square: ", cmul(hc(s.f), s.f)[1])
+      print ("chi square: ", mul(hc(s.f), s.f)[1])
    end
 
    s = cnlfsolver {fdf= cexpf, n= n, p0= vector {2.1, -2.8, 18, 0}}

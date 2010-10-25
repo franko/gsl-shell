@@ -105,10 +105,6 @@ All the functions described in this section have an equivalent function for comp
 
    Return the hermitian conjugate of the matrix.
 
-.. function:: tocomplex(m)
-
-   Return a new complex matrix equal to m.
-
 .. function:: diag(v)
 
    Given a column vector ``v`` of length ``n`` returns a diagonal

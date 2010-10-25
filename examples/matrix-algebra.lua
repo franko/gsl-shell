@@ -33,4 +33,4 @@ function randhmat(n)
 end
 
 -- m = fourierm(8)
--- mi = cinverse(m)
+-- mi = inv(m)

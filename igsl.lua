@@ -118,11 +118,6 @@ function hc(m)
    return cnew(c, r, |i,j| conj(m:get(j,i)))
 end
 
-function tocomplex(m)
-   local r, c = dim(m)
-   return cnew(r, c, |i,j| m:get(i,j))
-end
-
 function diag(v)
    local n = dim(v)
    return new(n, n, |i,j| i == j and v:get(i,1) or 0)

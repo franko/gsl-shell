@@ -319,6 +319,8 @@ int
 matrix_prod (lua_State *L)
 {
   struct pmatrix a, b, r;
+  gsl_complex u = {{1.0, 0.0}};
+
   check_matrix_type (L, 1, &a);
   check_matrix_type (L, 2, &b);
   
@@ -332,8 +334,6 @@ matrix_prod (lua_State *L)
 
   switch (r.tp)
     {
-      gsl_complex u = {{1.0, 0.0}};
-
     case GS_MATRIX:
       r.m.real = matrix_push (L, a.m.real->size2, b.m.real->size2);
 
