@@ -35,7 +35,7 @@ function filine(f, a, b)
 end
 
 function xyline(x, y)
-   local n = x:dims()
+   local n = dim(x)
    local ln = path(x[1], y[1])
    for i=2, n do ln:line_to(x[i], y[i]) end
    return ln

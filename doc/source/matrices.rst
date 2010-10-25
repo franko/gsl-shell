@@ -12,7 +12,7 @@ GSL Shell main data types are *real* and *complex* matrices and many of the GSL 
 
 With matrix you can do basic algebraic operation just by using the '+' and '*' operators to perform element by element operations with the matrix operands. In order to perform real matrix multiplication you can use the functions :func:`mul` and :func:`prod`. The first one take an arbitrary number of arguments and perform the matrix products of its arguments. The :func:`prod` function instead takes exactly two arguments and perform the matrix product of the transpose of the first with the second argument. So, for example, if ``x`` and ``y`` are two column matrices the expression ``prod(x, y)`` gives their scalar product.
 
-In order to create a new matrix you should use the :func:`new` function for a *real* matrix and :func:`cnew` for a *complex* matrix. Most of GSL Shell function comes in two variants for complex and real number. Generally the *complex* variant has the same name of the real one but with 'c' prefix.
+In order to create a new matrix you should use the :func:`new` function for a *real* matrix and :func:`cnew` for a *complex* matrix. The basic function and operations that operates on matrix can accept both real or complex matrix. If one of the operand is complex all the other operands are implicitly converted to a complex matrix and a complex matrix is returned.
 
 The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialised to zero. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialise the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialise matrices. As an example, let us suppose that we want to define a matrix ``m`` of dimension :math:`n \times n` whose elements are given by :math:`m_{jk} = \textrm{exp} (2 \pi i j k / n)`.
 
@@ -35,15 +35,6 @@ Matrix methods
 .. method:: set(i, j, v)
 
    This function sets the value of the (i,j)-th element of the matrix to v.   
-
-.. method:: dims()
-   
-   Returns two values, in the order, the number of rows and of columns of
-   the matrix.
-
-.. method:: copy()
-
-   Returns a copy of the matrix.
 
 .. method:: slice(k0, k1, n0, n1)
 
@@ -96,6 +87,15 @@ All the functions described in this section have an equivalent function for comp
    elements with the i arguments equal to the row index and j equal to
    the column index. Then the value returned by the function is assigned
    to the matrix elements.
+
+.. function:: dim(m)
+   
+   Returns two values, in the order, the number of rows and of columns of
+   the matrix.
+
+.. function:: copy(m)
+
+   Returns a copy of the matrix.
 
 .. function:: tr(m)
 

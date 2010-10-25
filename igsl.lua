@@ -29,7 +29,7 @@ local insert = table.insert
 local fmt    = string.format
 
 function matrix_f_set(m, f)
-   local r, c = m:dims()
+   local r, c = dim(m)
    for i = 1, r do
       for j = 1, c do
 	 local z = f(i, j)
@@ -40,7 +40,7 @@ function matrix_f_set(m, f)
 end
 
 function matrix_reduce(m, f, accu)
-   local r, c = m:dims()
+   local r, c = dim(m)
    for i = 1, r do
       for j = 1, c do
 	 accu = f(accu, m:get(i, j))
@@ -96,7 +96,7 @@ function matrix_to_string(m)
 		  end
    local width = matrix_reduce(m, fwidth, 0)
    local pad = |s| string.rep(' ', width - #s) .. s
-   local r, c = m:dims()
+   local r, c = dim(m)
    local lines = {}
    for i=1,r do
       local ln = {}
@@ -109,22 +109,22 @@ function matrix_to_string(m)
 end
 
 function tr(m)
-   local r, c = m:dims()
+   local r, c = dim(m)
    return new(c, r, |i,j| m:get(j,i))
 end
 
 function hc(m)
-   local r, c = m:dims()
+   local r, c = dim(m)
    return cnew(c, r, |i,j| conj(m:get(j,i)))
 end
 
 function tocomplex(m)
-   local r, c = m:dims()
+   local r, c = dim(m)
    return cnew(r, c, |i,j| m:get(i,j))
 end
 
 function diag(v)
-   local n = v:dims()
+   local n = dim(v)
    return new(n, n, |i,j| i == j and v:get(i,1) or 0)
 end
 
@@ -138,17 +138,17 @@ function matrix_norm(m)
 end
 
 function matrix_column (m, c)
-   local r = m:dims()
+   local r = dim(m)
    return m:slice(1, c, r, 1)
 end
 
 function matrix_row (m, r)
-   local _, c = m:dims()
+   local _, c = dim(m)
    return m:slice(r, 1, 1, c)
 end
 
 function matrix_rows(m)
-   local r, c = m:dims()
+   local r, c = dim(m)
    return sequence(|i| m:slice(i, 1, 1, c), r)
 end
 
@@ -208,7 +208,7 @@ add_matrix_method('row',        matrix_row)
 add_matrix_method('rows',       matrix_rows)
 
 function linmodel(f, x)
-   local p, n = #f(x[1]), x:dims()
+   local p, n = #f(x[1]), dim(x)
    local A = new(n, p)
    for k=1,n do
       local y = f(x[k])
@@ -228,7 +228,7 @@ function linfit(gener, x, y, w)
 end
 
 local function nlinfitwrapf(fmodel, x, y)
-   local n = y:dims()
+   local n = dim(y)
    return function(p, f, J)
       for k=1, n do
 	 local ym = fmodel(p, x[k], J and J:row(k))
@@ -239,8 +239,8 @@ local function nlinfitwrapf(fmodel, x, y)
 end
 
 function nlinfit(f, x, y, p0)
-   local N = y:dims()
-   local P = p0:dims()
+   local N = dim(y)
+   local P = dim(p0)
    local s = nlfsolver {fdf= nlinfitwrapf(f, x, y), n= N, p0= p0}
    s:run()
    return |x| f(s.p, x), s.p

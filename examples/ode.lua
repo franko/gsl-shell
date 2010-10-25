@@ -79,7 +79,7 @@ function demo2()
 end
 
 function ode_lines(s, t0, y0, t1, h, tstep)
-   local r = y0:dims()
+   local r = dim(y0)
    local p = {}
    for k=1,r do p[k] = path(t0, y0[k]) end
    for t, y in s:iter(t0, y0, t1, h, tstep) do

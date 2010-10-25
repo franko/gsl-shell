@@ -58,7 +58,7 @@ We give an example to build a stateless row "iterator" over the rows of a matrix
 
    -- we define the stateless iterator
    function my_row_iter(m, i)
-      local r, c = m:dims()
+      local r, c = dim(m)
       if i <= r then
          return i+1, m:row(i)
       end

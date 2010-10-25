@@ -101,15 +101,6 @@ FUNCTION (matrix, null_view) (lua_State *L, int index)
   m->data = NULL;
 }
 
-int
-FUNCTION(matrix, copy) (lua_State *L)
-{
-  const TYPE (gsl_matrix) *a = FUNCTION (matrix, check) (L, 1);
-  TYPE (gsl_matrix) *cp = FUNCTION (matrix, push_raw) (L, a->size1, a->size2);
-  FUNCTION (gsl_matrix, memcpy) (cp, a);
-  return 1;
-}
-
 void
 FUNCTION (matrix, set_ref) (lua_State *L, int index)
 {
@@ -169,15 +160,6 @@ FUNCTION(matrix, get) (lua_State *L)
   LUA_FUNCTION (push) (L, v);
 
   return 1;
-}
-
-int
-FUNCTION(matrix, dims) (lua_State *L)
-{
-  const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
-  lua_pushinteger (L, m->size1);
-  lua_pushinteger (L, m->size2);
-  return 2;
 }
 
 int

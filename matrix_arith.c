@@ -44,13 +44,17 @@ struct pmatrix {
 static int matrix_inv   (lua_State *L);
 static int matrix_solve (lua_State *L);
 static int matrix_mul   (lua_State *L);
+static int matrix_dim   (lua_State *L);
+static int matrix_copy  (lua_State *L);
+static int matrix_prod    (lua_State *L);
 
 static const struct luaL_Reg matrix_arith_functions[] = {
-  //  {"dim",           matrix_dim)},
-  //  {"copy",          matrix_copy},
+  {"dim",           matrix_dim},
+  {"copy",          matrix_copy},
   {"mul",           matrix_mul},
   {"solve",         matrix_solve},
   {"inv",           matrix_inv},
+  {"prod",          matrix_prod},
   {NULL, NULL}
 };
 
@@ -179,6 +183,9 @@ matrix_mul (lua_State *L)
   struct pmatrix a, b, r;
   int k;
 
+  if (nargs == 0)
+    luaL_error (L, "no arguments given");
+
   for (k = nargs - 1; k >= 1; k--)
     {
       check_matrix_type (L, k, &a);
@@ -259,6 +266,95 @@ matrix_solve (lua_State *L)
     }
 
   return 0;
+}
+
+int
+matrix_dim (lua_State *L)
+{
+  struct pmatrix p;
+  check_matrix_type (L, 1, &p);
+  size_t n1, n2;
+
+  if (p.tp == GS_MATRIX)
+    {
+      const gsl_matrix *a = lua_touserdata (L, 1);
+      n1 = a->size1;
+      n2 = a->size2;
+    }
+  else
+    {
+      const gsl_matrix_complex *a = lua_touserdata (L, 1);
+      n1 = a->size1;
+      n2 = a->size2;
+    }
+
+  lua_pushinteger (L, n1);
+  lua_pushinteger (L, n2);
+  return 2;
+}
+
+int
+matrix_copy (lua_State *L)
+{
+  struct pmatrix p;
+  check_matrix_type (L, 1, &p);
+
+  if (p.tp == GS_MATRIX)
+    {
+      const gsl_matrix *a = lua_touserdata (L, 1);
+      gsl_matrix *cp = matrix_push_raw (L, a->size1, a->size2);
+      gsl_matrix_memcpy (cp, a);
+    }
+  else
+    {
+      const gsl_matrix_complex *a = lua_touserdata (L, 1);
+      gsl_matrix_complex *cp = matrix_complex_push_raw (L, a->size1, a->size2);
+      gsl_matrix_complex_memcpy (cp, a);
+    }
+
+  return 1;
+}
+
+int
+matrix_prod (lua_State *L)
+{
+  struct pmatrix a, b, r;
+  check_matrix_type (L, 1, &a);
+  check_matrix_type (L, 2, &b);
+  
+  r.tp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (a.tp != r.tp)
+    matrix_complex_promote (L, 1, &a);
+
+  if (b.tp != r.tp)
+    matrix_complex_promote (L, 2, &b);
+
+  switch (r.tp)
+    {
+      gsl_complex u = {{1.0, 0.0}};
+
+    case GS_MATRIX:
+      r.m.real = matrix_push (L, a.m.real->size2, b.m.real->size2);
+
+      if (a.m.real->size1 != b.m.real->size1)
+	luaL_error (L, "incompatible matrix dimensions in multiplication");
+
+      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, a.m.real, b.m.real, 1.0, r.m.real);
+      break;
+    case GS_CMATRIX:
+      r.m.cmpl = matrix_complex_push (L, a.m.cmpl->size2, b.m.cmpl->size2);
+
+      if (a.m.cmpl->size1 != b.m.cmpl->size1)
+	luaL_error (L, "incompatible matrix dimensions in multiplication");
+      
+      gsl_blas_zgemm (CblasConjTrans, CblasNoTrans, u, a.m.cmpl, b.m.cmpl, u, r.m.cmpl);
+      break;
+    default:
+      /* */;
+    }
+
+  return 1;
 }
 
 void

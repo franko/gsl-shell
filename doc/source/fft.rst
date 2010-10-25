@@ -104,7 +104,7 @@ A sequence with this symmetry is called "conjugate-complex" or
    does not return any value.  If you need to preserve the original
    data you should make a copy of your vector by doing something like::
 
-      local f = v:copy() -- we take a copy of the vector
+      local f = copy(v) -- we take a copy of the vector
       fft(f) -- fourier transform is made in place
 
    Please note that the value you obtain is not an ordinary matrix but

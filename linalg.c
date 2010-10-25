@@ -25,11 +25,9 @@
 #include "matrix.h"
 
 static int linalg_svd     (lua_State *L);
-static int linalg_prod    (lua_State *L);
 
 static const struct luaL_Reg linalg_functions[] = {
   {"svd",           linalg_svd},
-  {"prod",          linalg_prod},
   {NULL, NULL}
 };
 
@@ -62,21 +60,6 @@ linalg_svd (lua_State *L)
   gsl_vector_free (work);
 
   return 3;
-}
-
-int
-linalg_prod (lua_State *L)
-{
-  const gsl_matrix *a = matrix_check (L, 1);
-  const gsl_matrix *b = matrix_check (L, 2);
-  gsl_matrix *r = matrix_push (L, a->size2, b->size2);
-
-  if (a->size1 != b->size1)
-    luaL_error (L, "incompatible matrix dimensions in multiplication");
-
-  gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, a, b, 1.0, r);
-
-  return 1;
 }
 
 void

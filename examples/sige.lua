@@ -59,7 +59,7 @@ function apply_param(brs, xp)
 end
 
 function minf_gener(lbrs)
-   local lbrs = lbrs:copy()
+   local lbrs = copy(lbrs)
    local sigma
    local function compute(xp, g)
       if g then error 'cannot calc gradient' end

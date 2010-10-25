@@ -49,7 +49,7 @@ local function set_orthogonal(v, w, a)
 end
 
 local function qeval_closure(f, f0, p, d)
-   local pe = p:copy()
+   local pe = copy(p)
    local set   = function(q) set_affine_trans(pe, p, d, q) end
    local eval  = function(q) set(q); return f(pe) - f0 end
 --   local diag  = function(q) print('>>', -log(abs(f(pe) - f0)), f(pe), f0) end
@@ -68,7 +68,7 @@ end
 
 -- ORIGINAL algorithm
 local function segment_root_francesco(f, z0, p0, d0, z_eps)
-   local p, d = p0:copy(), d0:copy()
+   local p, d = copy(p0), copy(d0)
    local qeval, yield = qeval_closure(f, z0, p, d)
    local fl, fc, fr
 
@@ -157,7 +157,7 @@ M.segment_root = segment_root_brent
 
 function M.stepper(f, p0, step0, z_spacing)
 
-   local p, z0 = p0:copy(), f(p0)
+   local p, z0 = copy(p0), f(p0)
    local z_tol = z_spacing * 1e-6
    local zdelmax = z_spacing / 20
    local abserr = 1e-4 * z_spacing / step0
