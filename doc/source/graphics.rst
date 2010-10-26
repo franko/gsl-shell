@@ -176,6 +176,80 @@ To create many type of plots you don't really need to use always the graphics pr
  
    .. figure:: graphics-example-ibars.png
 
+Multiple plot window
+--------------------
+
+With GSL shell it is possible to put several plot in a given window or also to put a given plot on several windows. To better understand what follows lets clarify a little bit the relations between plots and windows.
+
+In GSL shell a plot can exists indipendetely of any window and viceversa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :func:`show` what happens is that:
+
+ * a window is created and shown on the screen
+ * the plot is *attached* to the window
+
+You can perform the operations above explicitely if you want. For example::
+
+   p = plot('Test plot')
+   w = window()
+   w:attach(p, '') -- attach the plot "p" to the default slot of "w"
+
+In this code snipper you can see the method :func:`attach` at work. It is a method of the :class:`Window` used to tie a particular plot to a window. At this point you may wonder what is the second argument for. It is something which is not very useful for simple windows but it becomes important when the window is "subdivided" into subwindows.
+
+Let as see this at work with a second example::
+
+   w = window('v..') -- create a window divided in two subwindows (vertical tiling)
+   p1 = plot('Logarithm function')
+   p1:addline(fxline(log, exp(-3), exp(3)))
+   p2 = plot'f(x) = sin(x)/x'
+   p2:addline(fxline(|x| sin(x)/x, 0.0001, 10*pi), 'blue')
+   
+   w:attach(p1, '1') -- attach plot "p1" to the first available slot
+   w:attach(p2, '2') -- attach plot "p2" to the second slot
+
+And here what the results will looks like:
+
+.. figure:: example-vtiled-plots.png
+
+Window class
+------------
+
+.. class:: Window
+   
+   .. function:: window([layout])
+      
+      Create a new empty window with the layout given by the optional
+      :ref:`layout string <layout-string>`. If the argument is omitted
+      the window will have a single slot that will cover the whole
+      window.
+
+   .. method:: layout(spec)
+      
+      Remove all the plots that may be atatched to the existing window
+      and subdivide the window according to the given
+      :ref:`layout string <layout-string>`.
+
+   .. method:: attach(plot, slot)
+
+      Attach the given ``plot`` to the window's slot speficied by the string ``slot``. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. For each of the mentioned integer the corresponding window partition will be choosen recursively.
+
+      Example::
+ 
+      w = window()
+
+      -- create two vertical subdivision and subdivide the first one
+      -- into two horizontal subwindows
+      w:split('v(h..).')
+
+      w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
+      w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
+
+.. _layout-string:
+
+Layout string
+~~~~~~~~~~~~~
+
+
+
+
 Graphics primitives
 -------------------
 
