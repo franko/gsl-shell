@@ -30,7 +30,7 @@ static const struct luaL_Reg window_functions[] = {
 static const struct luaL_Reg window_methods[] = {
   {"show",           window_show          },
   {"attach",         window_attach        },
-  {"split",          window_split         },
+  {"layout",         window_split         },
   {"update",         window_update        },
   {"close",          window_close        },
   {"__gc",           window_free       },

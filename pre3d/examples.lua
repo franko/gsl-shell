@@ -35,7 +35,7 @@ end
 
 function demo1()
    local win = window()
-   win:split('v(h..).')
+   win:layout('v(h..).')
 
    p1 = plot 'sin'
    p1:addline(fxline(sin, 0, 2*pi), 'blue')

@@ -237,7 +237,7 @@ Window class
 
       -- create two vertical subdivision and subdivide the first one
       -- into two horizontal subwindows
-      w:split('v(h..).')
+      w:layout('v(h..).')
 
       w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
       w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
