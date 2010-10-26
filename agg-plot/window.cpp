@@ -293,17 +293,24 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
     }
 }
 
-void
+bool
 window::split(const char *spec)
 {
-  if (m_tree)
-    delete m_tree;
-
   ::split<ref>::lexer lexbuf(spec);
-  m_tree = ::split<ref>::parse(lexbuf);
+  tree::node<ref, direction_e> *new_tree = ::split<ref>::parse(lexbuf);
 
-  bmatrix m0;
-  ref::calculate(m_tree, m0, 0);
+  if (new_tree)
+    {
+      if (m_tree)
+	delete m_tree;
+
+      m_tree = new_tree;
+      bmatrix m0;
+      ref::calculate(m_tree, m0, 0);
+      return true;
+    }
+
+  return false;
 }
 
 static const char *
@@ -360,6 +367,22 @@ int window::attach(lua_plot *plot, const char *spec)
   return r->slot_id;
 }
 
+const char *
+window::error_message(window::error_e code)
+{
+  switch (code)
+    {
+    case invalid_split_string:
+      return "invalid window subdivision specification";
+    case invalid_slot:
+      return "invalid slot specification";
+    default:
+      ;
+    }
+  return "unknown error";
+}
+
+
 typedef void (window::*window_slot_method_type)(int slot_id);
 
 int window_generic_oper (lua_State *L, window_slot_method_type method)
@@ -406,6 +429,7 @@ window_new (lua_State *L)
   if (spec)
     {
       win->split(spec);
+      // return luaL_error(L, window::error_message(window::invalid_split_string));
     }
 
   return 1;
@@ -434,7 +458,12 @@ window_split (lua_State *L)
   win->lock();
 
   win->cleanup_refs(L, 1);
-  win->split(spec);
+  if (!win->split(spec))
+    {
+      win->do_window_update();
+      win->unlock();
+      return luaL_error(L, window::error_message(window::invalid_split_string));
+    }
 
   win->on_draw();
   win->do_window_update();
@@ -463,7 +492,7 @@ window_attach (lua_State *L)
   else
     {
       win->unlock();
-      luaL_error (L, "invalid slot");
+      luaL_error (L, window::error_message(window::invalid_slot));
     }
 
   return 0;

@@ -18,6 +18,11 @@ extern "C" {
 
 class window : public canvas_window {
 public:
+  enum error_e {
+    invalid_split_string,
+    invalid_slot,
+  };
+
   typedef plot<drawable, lua_management> plot_type;
 
   typedef agg::trans_affine bmatrix;
@@ -62,12 +67,12 @@ private:
 public:
   window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0)
   {
-    this->split("."); 
+    this->split(".");
   };
 
   ~window() { if (m_tree) delete m_tree; };
 
-  void split(const char *spec);
+  bool split(const char *spec);
   int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
   void refresh_slot(int slot_id);
@@ -84,4 +89,6 @@ public:
 
   virtual void on_draw();
   virtual void on_resize(int sx, int sy);
+
+  static const char * error_message(error_e code);
 };
