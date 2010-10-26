@@ -247,7 +247,35 @@ Window class
 Layout string
 ~~~~~~~~~~~~~
 
+The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the :func:`split` method or, during the creation of the window, by the function :func:`window` itself.
 
+A valid string layout is just a "cell" layout which, in turn, is either:
+
+  * a '.' to indicate a region without further subdivisions
+  * the character 'h' followed by a sequence of cell layout string
+  * the character 'v' followed by a sequence of cell layout string
+  * the same as above but enclose between brackets: '(' ')'
+
+with the serquence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
+
+The pattern described above is recursive and you can use brackets to group items where needed to avoid ambiguity.
+
+Example::
+ 
+  w = window() -- create a window
+  w:layout('v(h..).') -- split the windows in three drawing regions
+
+and here how the resulting window can look:
+
+.. figure:: split-window-example.png
+
+we have added some empty plots so that you can see something inside the window.
+
+Then we should figure out how to access a particulat plot. This is done via the method :func:`attach` with a string that identifies the drawing area. This sequence is formed like a sequence on integer numbers separated by a commas. For each number we enter in a subdivision of the plot by choosing a particular slot number from 1 up to the number of slot. As the subdivision can be nested you should specify as many numbers as are the depth level of the nesting.
+
+For examples, to identify the drawing area in the sample above the following string should be used: '1,1', '1,2', '2'. You can attach a plot to a particular drawing area by using the method :func:`attach` as follows::
+
+   w:attach(p1, '1,2')
 
 
 Graphics primitives
