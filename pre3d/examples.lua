@@ -104,7 +104,7 @@ function demo2()
    win:attach(plt, '')
 
    local renderer = Pre3d.Renderer(plt)
-   local shape = ShapeUtils.makeXYFunction(|x,y| 1.2*exp(-x^2-y^2), -2, -2, 2, 2)
+   local shape = ShapeUtils.makeXYFunction(|x,y| 1.2*exp(-x^2-y^2), -2, -2, 2, 2, 20, 20)
 
    renderer.draw_overdraw = false
    renderer.draw_backfaces = true
@@ -146,10 +146,13 @@ function demo2bis()
 			   {-5, 1.5, 1, 1.45, 1.15}, 
 			   {4, 2, -2, 0.8, 0.8}}
 
-   local win = window('white')
-   win:setview(-1, -1, 1, 1)
+   local win = window()
+   local plt = plot 'Pre3d'
+   plt:limits(-1, -1, 1, 1)
+   plt.sync = false
+   win:attach(plt, '')
 
-   local renderer = Pre3d.Renderer(win)
+   local renderer = Pre3d.Renderer(plt)
    local shape = ShapeUtils.makeXYFunction(f3ps, -4, -6, 6, 6, 40, 40)
 
    renderer.draw_overdraw = true

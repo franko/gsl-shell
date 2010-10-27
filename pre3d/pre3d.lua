@@ -845,7 +845,7 @@ function RendererMT.drawBuffer(this)
       local srgba = obj.stroke_rgba
       if srgba then
 	 qpath:close()
-	 win:addline(qpath, srgba)
+	 win:add(qpath, srgba, {{'stroke', width=0.5}})
       end
 
       -- Normal lines (stroke)...

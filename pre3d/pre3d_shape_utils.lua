@@ -786,9 +786,6 @@ function ExtruderMT.extrude(this, shape)
 end
 
 local function makeXYFunction(f, xmin, ymin, xmax, ymax, nx, ny)
-   nx = nx and nx or 20
-   ny = ny and ny or 20
-
    local s = Pre3d.Shape()
    for i=0, nx do
       local x = xmin + (xmax - xmin)*i/nx
