@@ -50,7 +50,7 @@ function demo1()
    plt:limits(-a, -a, a, a)
    local r = rng()
    for k = 1, 50 do
-      local x, y = (2*r:get()-1)*a, (2*r:get()-1)*a
+      local x, y = (2*r:get()-1)*a*0.8, (2*r:get()-1)*a*0.8
       local d = rnd.gaussian(r, 0.015*a) + 0.03*a
       local s = star(d)
       plt:add(s, rgb(0.9, 0.9, 0.9), {}, {{'translate', x=x, y=y}})
@@ -78,11 +78,11 @@ function demo1()
    ShapeUtils.rebuildMeta(shape)
 
    renderer.draw_overdraw = false
-   renderer.draw_backfaces = true
+   renderer.draw_backfaces = false
    renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
    renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
    renderer.set_light_intensity = true
-   renderer.fill_rgba_alpha = 0.95
+   --   renderer.fill_rgba_alpha = 0.95
    renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
 
    renderer.camera.focal_length = 30;
@@ -209,10 +209,13 @@ function demo3()
 end
 
 function demo4()
-   local win = window('black')
-   win:setview(-1, -1, 1, 1)
+   local win = window()
+   local plt = canvas 'Pre3D'
+   plt:limits(-1, -1, 1, 1)
+   plt.sync = false
+   win:attach(plt, '')
 
-   local renderer = Pre3d.Renderer(win)
+   local renderer = Pre3d.Renderer(plt)
    local x = |u,v| (1 + 1/2 * v *cos(u/2))*cos(u)
    local y = |u,v| (1 + 1/2 * v *cos(u/2))*sin(u)
    local z = |u,v| 1/2 * v * sin(u/2)
@@ -224,7 +227,7 @@ function demo4()
    renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
    renderer.set_light_intensity = true
    renderer.draw_overdraw = true
---   renderer.stroke_rgba = rgb(0x66/255, 0x66/255, 0x66/255)
+   renderer.stroke_rgba = rgb(0.2, 0.2, 0.2)
 
    renderer.camera.focal_length = 40;
 

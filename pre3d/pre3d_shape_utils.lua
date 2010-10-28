@@ -815,9 +815,6 @@ end
 
 
 local function makeUVSurface(x, y, z, umin, vmin, umax, vmax, nu, nv)
-   nu = nu and nu or 20
-   nv = nv and nv or 20
-
    local s = Pre3d.Shape()
    for i=0, nu do
       local u = umin + (umax - umin)*i/nu
