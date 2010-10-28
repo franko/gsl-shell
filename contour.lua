@@ -21,7 +21,7 @@
 local M = {}
 
 local insert = table.insert
-local color = color_function('redyellow', 0.9)
+local default_color_map = color_function('redyellow', 0.9)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -69,10 +69,13 @@ local function order_add_relation(t, a, b)
    t[b][a] = true
 end
 
-local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
+local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, color, map)
+   local f = map and (function(x,y) return f_(map(x, y)) end) or f_
+   if not map then map = (function(x,y) return x, y end) end
+
    local cross, roots = {}, {}
-   local g = {z= {}, zmin= f(left[1], left[2]), zmax= f(right[1], right[2])}
-   local dx, dy = (right[1] - left[1]) / nx, (right[2] - left[2]) / ny
+   local g = {z= {}, zmin= f(lx1, ly1), zmax= f(rx2, ry2)}
+   local dx, dy = (rx2 - lx1) / nx, (ry2 - ly1) / ny
    local ds = sqrt(dx^2 + dy^2)
    local zlevels, zstep, z_eps
    local order_tree
@@ -101,7 +104,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
    end
 
    local function grid_point(i, j)
-      return left[1] + j * dx, left[2] + i * dy
+      return lx1 + j * dx, ly1 + i * dy
    end
 
    local function segment_index_lookup_i(si)
@@ -185,32 +188,33 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
       return nid
    end
 
-   local boxx = {right[1], right[1], left[1], left[1]}
-   local boxy = {left[2], right[2], right[2], left[2]}
-
-   local full_border_points = 
-      sequence(function(k) return boxx[k], boxy[k] end, 1, 4)
+   local function border_sequence_iter(bi1, bi2)
+      return function()
+		local x, y
+		if bi1 <= bi2 then
+		   bi1 = bi1 + 1
+		   local k = bi1 % (2*nx + 2*ny)
+		   local j = k <= nx and k or 
+		      (k <= nx+ny and nx or 
+		       (k <= 2*nx+ny and 2*nx + ny - k or 0))
+		   local i = k <= nx and 0 or 
+		      (k <= nx+ny and k - nx or 
+		       (k <= 2*nx+ny and ny or 2*nx + 2*ny - k))
+		   return map(grid_point(i, j))
+		end
+	     end
+   end
 
    local function nodes_border_points(nid1, nid2)
       local n1, n2 = nodes[nid1], nodes[nid2]
 
-      local s1, k1 = bord_main_index(n1.si)
-      local s2, k2 = bord_main_index(n2.si)
-      if s2 < s1 or (s1 == s2 and k2 < k1) then s2 = s2 + 4 end
+      local bi1, bi2 = n1.bi, n2.bi
+      if bi2 < bi1 then bi2 = bi2 + 2*nx + 2*ny end
 
-      return function()
-		local x, y
-		if s1 < s2 then
-		   x, y = boxx[(s1%4)+1], boxy[(s1%4)+1]
-		   s1 = s1 + 1
-		   return x, y
-		elseif n2 then
-		   x, y = n2.x, n2.y
-		   n2 = nil
-		   return x, y
-		end
-	     end
+      return border_sequence_iter(bi1, bi2)
    end
+
+   local full_border_points = border_sequence_iter(0, 2*nx+2*ny)
 
    local domains = {}
    local function domain_add(dom)
@@ -635,7 +639,7 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
 		if i >= 1 and i <= n then
 		   local p = get_root(id, curve[i])
 		   i = i + dir
-		   return p[1], p[2]
+		   return map(p[1], p[2])
 		end
 	     end
    end
@@ -731,18 +735,50 @@ local function grid_create(f, left, right, nx, ny, nlevels_or_levels)
            draw_lines     = grid_draw_lines}
 end
 
-function contour(f, a, b, ngridx, ngridy, nlevels)
-   ngridx = ngridx and ngridx or 40
-   ngridy = ngridy and ngridy or 40
-   nlevels = nlevels and nlevels or 10
+local function circle_map_gener(R)
+   return function(x, y)
+	     local r = max(abs(x), abs(y))
+	     local th = atan2(y,x)
+	     return R*r*cos(th), R*r*sin(th)
+	  end
+end
 
-   local g = grid_create(f, a, b, ngridx, ngridy, nlevels)
+local function opt_gener(options, defaults)
+   return function(name)
+	     local t = (options and options[name] ~= nil) and options or defaults
+	     return t[name]
+	  end
+end
+
+function contour(f, x1, y1, x2, y2, options)
+   local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
+				   colormap= default_color_map, lines= true})
+
+   local g = grid_create(f, x1, y1, x2, y2, opt'gridx', opt'gridy', opt'levels',
+			 opt'colormap')
 
    g.find_curves()
 
    local p = plot()
    g.draw_regions(p)
-   g.draw_lines(p, 'black')
+   if opt'lines' then g.draw_lines(p, 'black') end
+   p:show()
+
+   return p
+end
+
+function polar_contour(f, R, options)
+   local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
+				   colormap= default_color_map, lines= true})
+   local map = circle_map_gener(R)
+   local g = grid_create(f, -1, -1, 1, 1, opt'gridx', opt'gridy', opt'levels',
+			 opt'colormap', map)
+
+   g.find_curves()
+
+   local p = plot()
+   g.draw_regions(p)
+   if opt'lines' then g.draw_lines(p, 'black') end
    p:show()
 
    return p
