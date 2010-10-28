@@ -786,13 +786,28 @@ function ExtruderMT.extrude(this, shape)
 end
 
 local function makeXYFunction(f, xmin, ymin, xmax, ymax, nx, ny)
+   local zmin, zmax
+   local zmap = {}
    local s = Pre3d.Shape()
    for i=0, nx do
       local x = xmin + (xmax - xmin)*i/nx
       for j=0, ny do
 	 local y = ymin + (ymax - ymin)*j/ny
 	 local z = f(x, y)
-	 push(s.vertices, {x= x, y= y, z= z})
+	 if not zmin or z < zmin then zmin = z end
+	 if not zmax or z > zmax then zmax = z end
+	 zmap[i * (ny+1) + j] = z
+      end
+   end
+
+   local xscale, yscale, zscale = (xmax-xmin), (ymax-ymin), 2*(zmax-zmin)
+
+   for i=0, nx do
+      local x = xmin + (xmax - xmin)*i/nx
+      for j=0, ny do
+	 local y = ymin + (ymax - ymin)*j/ny
+	 local z = zmap[i * (ny+1) + j]
+	 push(s.vertices, {x= (x-xmin)/xscale, y= (y-ymin)/yscale, z= (z-zmin)/zscale})
       end
    end
 
@@ -810,7 +825,7 @@ local function makeXYFunction(f, xmin, ymin, xmax, ymax, nx, ny)
 
    s.quads = quads
    rebuildMeta(s)
-   return s
+   return s, (zmax - zmin)
 end
 
 
