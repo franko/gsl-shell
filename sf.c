@@ -67,6 +67,17 @@ static const struct luaL_Reg sf_functions[] = {
   {NULL, NULL}
 };
 
+#ifdef SF_RETURN_ERROR
+#define SF_RETURN(p) \
+  lua_pushnumber (L, (p)->val); \
+  lua_pushnumber (L, (p)->err); \
+  return 2
+#else
+#define SF_RETURN(p) \
+  lua_pushnumber (L, (p)->val); \
+  return 1
+#endif
+
 #include "sf_implement.h"
 #include "sf_gener.c"
 #include "sf_implement_off.h"

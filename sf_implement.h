@@ -5,9 +5,7 @@ typedef int (*gsh_u_fun_t)(unsigned int, gsl_sf_result *);
 static int
 push_gsl_result (lua_State *L, gsl_sf_result *r)
 {
-  lua_pushnumber (L, r->val);
-  lua_pushnumber (L, r->err);
-  return 2;
+  SF_RETURN(r);
 }
 
 static int
@@ -18,9 +16,8 @@ gsh_sf_d_raw (lua_State *L, const char *fname, gsh_d_fun_t f_gsl)
   int status = f_gsl(x, &res);
   if (status != GSL_SUCCESS)				       
     luaL_error (L, "%s: %s", fname, gsl_strerror (status));   
-  lua_pushnumber (L, res.val);	        
-  lua_pushnumber (L, res.err);		
-  return 2;					
+
+  SF_RETURN(&res);
 }
 
 static int
@@ -31,9 +28,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
   int status = f_gsl(i, &res);
   if (status != GSL_SUCCESS)				       
     luaL_error (L, "%s: %s", fname, gsl_strerror (status));   
-  lua_pushnumber (L, res.val);	        
-  lua_pushnumber (L, res.err);		
-  return 2;					
+  SF_RETURN(&res);
 }
 
 #define _GSH_SF_D(gsl_name, lua_name)			\
@@ -57,9 +52,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (a, b, &res);		      \
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status)); \
-    lua_pushnumber (L, res.val);				\
-    lua_pushnumber (L, res.err);				\
-    return 2;							\
+    SF_RETURN(&res); \
   }
 
 
@@ -72,9 +65,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (x, i, &res);		      \
     if (status != GSL_SUCCESS)						\
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));		\
-    lua_pushnumber (L, res.val);				\
-    lua_pushnumber (L, res.err);				\
-    return 2;							\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_I(gsl_name, lua_name)			\
@@ -85,9 +76,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (i, &res);		      \
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));			      \
-    lua_pushnumber (L, res.val);				\
-    lua_pushnumber (L, res.err);				\
-    return 2;							\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_ID(gsl_name, lua_name)			\
@@ -99,9 +88,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (i, x, &res);	\
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status)); \
-    lua_pushnumber (L, res.val);	        \
-    lua_pushnumber (L, res.err);		\
-    return 2;					\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_D_MODE(gsl_name, lua_name)		\
@@ -114,9 +101,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (x, mode, &res);	      \
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));			      \
-    lua_pushnumber (L, res.val);			\
-    lua_pushnumber (L, res.err);			\
-    return 2;						\
+    SF_RETURN(&res); \
   }
 
 
@@ -129,9 +114,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (a, b, &res);	\
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status)); \
-    lua_pushnumber (L, res.val);	        \
-    lua_pushnumber (L, res.err);		\
-    return 2;					\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_DDD(gsl_name, lua_name)		\
@@ -144,9 +127,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (a, b, c, &res);	      \
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));			      \
-    lua_pushnumber (L, res.val);	        \
-    lua_pushnumber (L, res.err);		\
-    return 2;					\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_DDDD(gsl_name, lua_name)		\
@@ -160,9 +141,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (a, b, c, d, &res);	      \
     if (status != GSL_SUCCESS)					      \
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));	      \
-    lua_pushnumber (L, res.val);	        \
-    lua_pushnumber (L, res.err);		\
-    return 2;					\
+    SF_RETURN(&res); \
   }
 
 
@@ -176,9 +155,7 @@ gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
     int status = GGSL_SF_NAME(gsl_name) (a, b, c, &res);		\
     if (status != GSL_SUCCESS)						\
       luaL_error (L, #lua_name ": %s", gsl_strerror (status));		\
-    lua_pushnumber (L, res.val);			\
-    lua_pushnumber (L, res.err);			\
-    return 2;						\
+    SF_RETURN(&res); \
   }
 
 #define _GSH_SF_CUSTOM(lua_name)
@@ -242,9 +219,7 @@ int GSH_LUA_NAME(fermi_dirac) (lua_State *L)
 
   if (status != GSL_SUCCESS)
     luaL_error (L, "fermi_dirac: %s", gsl_strerror (status));
-  lua_pushnumber (L, res.val);
-  lua_pushnumber (L, res.err);
-  return 2;
+  SF_RETURN(&res);
 }
 
 int GSH_LUA_NAME(debye) (lua_State *L)
@@ -280,9 +255,8 @@ int GSH_LUA_NAME(debye) (lua_State *L)
 
   if (status != GSL_SUCCESS)
     luaL_error (L, "debye: %s", gsl_strerror (status));
-  lua_pushnumber (L, res.val);
-  lua_pushnumber (L, res.err);
-  return 2;
+
+  SF_RETURN(&res);
 }
 
 int GSH_LUA_NAME(hyperg1F1) (lua_State *L)
