@@ -14,13 +14,14 @@ function zernicke(n, m, p, phi)
    return zerR(n, m, p) * pf
 end
 
-local Nlev = 7
+local Nlev = 15
 local levels = ilist(|k| (k - Nlev)/Nlev, 0, 2*Nlev)
-local N, M = 3, -1
+local N, M = 8, -2
+local Rcut = 0.9
 
 require 'contour'
-local p = polar_contour(|x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x)), 1, {gridx= 61, gridy= 61, levels= levels})
-p:addline(circle(0, 0, 1), 'black')
+local p = polar_contour(|x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x)), Rcut, {gridx= 81, gridy= 81, levels= 15, colormap= hue})
+p:addline(circle(0, 0, Rcut), 'gray')
 
 
-contour(|x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x)), -1, -1, 1, 1, {gridx= 61, gridy= 61, levels= levels})
+-- contour(|x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x)), -1, -1, 1, 1, {gridx= 61, gridy= 61, levels= levels})
