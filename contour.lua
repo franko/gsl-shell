@@ -191,7 +191,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    local function border_sequence_iter(bi1, bi2)
       return function()
 		local x, y
-		if bi1 <= bi2 then
+		if bi1 < bi2 then
 		   bi1 = bi1 + 1
 		   local k = bi1 % (2*nx + 2*ny)
 		   local j = k <= nx and k or 
@@ -632,22 +632,42 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       order_tree = order_curves()
    end
 
-   local function curve_points(id, dir)
-      local curve = curves[id]
-      local i, n = (dir > 0 and 1 or #curve), #curve
+   local function pts_filter(f)
+      local xp, yp
+
+      local function differ(x1, y1, x2, y2)
+	 return abs(x1-x2) > 1e-2 * dx or abs(y1-y2) > 1e-2 * dy
+      end
+
       return function()
-		if i >= 1 and i <= n then
-		   local p = get_root(id, curve[i])
-		   i = i + dir
-		   return map(p[1], p[2])
+		local x, y
+		repeat
+		   x, y = f()
+		until not yp or not y or differ(xp, yp, x, y)
+
+		if y then
+		   xp, yp = x, y
+		   return map(x, y)
 		end
 	     end
    end
 
+   local function curve_points(id, dir)
+      local curve = curves[id]
+      local i, n = (dir > 0 and 1 or #curve), #curve
+      return function()
+   		if i >= 1 and i <= n then
+   		   local p = get_root(id, curve[i])
+		   i = i + dir
+		   return p[1], p[2]
+   		end
+   	     end
+   end
+
    local function line_add(ln, xyf, action)
       local x0, y0 = xyf()
-      if not x0 then print 'warning: empty line'; return end
-      if action ~= 'skip' then ln[action](ln, x0, y0) end
+      if not x0 then return end
+      if action ~= '' then ln[action](ln, x0, y0) end
       for x, y in xyf do ln:line_to(x, y) end
    end
 
@@ -660,11 +680,11 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       local n0, n1
       for _, join in ipairs(domains[domid]) do
 	 local na, nb = curve_extrema(curves[join.id], join.direction)
-	 local action = n0 and 'skip' or 'move_to'
+	 local action = n0 and 'line_to' or 'move_to'
 
 	 if n1 then line_add(ln, nodes_border_points(n1, na), 'line_to') end
 
-	 line_add(ln, curve_points(join.id, join.direction), action)
+	 line_add(ln, pts_filter(curve_points(join.id, join.direction)), action)
 
 	 n1 = nb
 	 if not n0 then n0 = na end
@@ -685,10 +705,10 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       if c.closed then
 	 local vdir = (verse == 'cw' and -1 or 1)
 	 local orient = vdir * c.closed
-	 line_add(ln, curve_points(id, orient), 'move_to')
+	 line_add(ln, pts_filter(curve_points(id, orient)), 'move_to')
 	 ln:close()
       else
-	 line_add(ln, curve_points(id, 1), 'move_to')
+	 line_add(ln, pts_filter(curve_points(id, 1)), 'move_to')
       end
    end
 
