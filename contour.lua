@@ -359,6 +359,11 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	 for j=0, nx do
 	    local x, y = grid_point(i, j) 
 	    local z = f(x, y)
+	    if not (z == z) then
+	       local msg = string.format('function eval at: (%g, %g) gives %g', 
+					 x, y, z)
+	       error(msg)
+	    end
 	    if z < g.zmin then g.zmin = z end
 	    if z > g.zmax then g.zmax = z end
 	    g.z[index(i,j)] = z
