@@ -355,6 +355,25 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       use the :func:`attach` window's method to attach the plot to a
       specific window.
 
+      This kind of plot automatically update its limits when the
+      graphical objects that are added. The ``sync`` property is also
+      initialized to a ``true`` value so that every operation triggers
+      an update of all the windows that shows the plot. If you want to
+      perform animations you may want to set the ``sync`` property to
+      ``false`` and use the :func:`flush` method to update the windows
+      when all the drawing operations have been done.
+
+   .. function:: canvas([title])
+      
+      Like the function above it does create a new empty plot with
+      fixed logical limits. This latter kind of plot differs in that
+      it will not update automatically its limits to fit the graphical
+      objects. The method :func:`limits` should be used instead to set
+      the logical limits of plotting area. The other difference with
+      the :func:`plot` function is that the property ``sync`` will be
+      initialized to ``false``. This kind of plot is generally better
+      suited for animations.
+
    .. method:: add(obj, color[, post_trans, pre_trans])
       
       Add the :ref:`graphical object <graphics-objects>` ``obj`` to
@@ -370,6 +389,13 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       polygons. It is equivalent to add a 'stroke' operations of
       unitary size in the viewport coordinates system.
 
+   .. method:: limits(x1, y1, x2, y2)
+      
+      Set the logical limits of the area displayed by the plot to the
+      rectangle with lower-left corner (x1, y1) and upper-right corner
+      (x2, y2). This method is used for plots with fixed limits
+      obtained with the function :func:`canvas`.
+
    .. method:: show()
 
       Create a new window to show the plot on the screen.
@@ -378,6 +404,12 @@ You can add elements to a plot in any moments even when it is already shown. GSL
 
       Remove all the graphical elements into the current
       :ref:`graphical layer <graphical-layer>`.
+
+   .. method:: flush()
+
+      All the pending operations on a plot are processed and all the
+      windows attached to the plot are updated. This method is only
+      useful when the attribute ``sync`` is set to false.
 
    .. method:: pushlayer()
 
@@ -391,12 +423,6 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Remove the current :ref:`graphical layer <graphical-layer>` and
       all its graphical elements and make the previous level the
       current one.
-
-   .. method:: flush()
-
-      All the pending operations on a plot are processed and all the
-      windows attached to the plot are updated. This method is only
-      useful when the attribute ``sync`` is set to false.
 
    .. attribute:: units
 

@@ -33,6 +33,13 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
 
    Plot a contour plot of the function ``f(x, y)`` over the circular domain or radius ``R`` and centered at the origin. The ``options`` table accept the same field of the function :func:`contour`.
 
+   Example::
+
+     p = polar_contour(|x,y| cos(x)+cos(y)+0.1*x+0.3*y, 8)
+     p.title = 'cos(x) + cos(y) + 0.1*x + 0.3*y'
+   
+   .. figure:: polar-contour-example-cos-cos.png
+
 High Precision Contour
 ----------------------
 
