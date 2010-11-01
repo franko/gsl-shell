@@ -10,7 +10,7 @@ Functions
 
 GSL Shell gives access to some functions of linear algebra based on GSL itself or on the BLAS routines.
 
-.. function:: inverse(m)
+.. function:: inv(m)
 
    Returns the inverse of the matrix m.
 

@@ -14,13 +14,24 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
 
    require 'contour'
 
-   contour(|x,y| x^2 - y^2, {-8, -8}, {8, 8})
+   contour(|x,y| x^2 - y^2, -8, -8, 8, 8)
 
 .. figure:: contour-plot-hyper.png
 
-.. function:: contour(f, {xmin, ymin}, {xmax, ymax}[, ngridx, ngridy, levels])
+.. function:: contour(f, xmin, ymin, xmax, ymax[, options]])
 
    Plot a contour plot of the function ``f``. ``contours`` can be the number of levels or a list containing all the values that should be used to draw the contours.
+
+   The ``options`` argument is an optional table that can contain the following field:
+ 
+     * ``gridx``, number of subdivision along x
+     * ``gridy``, number of subdivision along y
+     * ``levels``, number of contour levels or a list of the level values in monotonic order.
+     * ``colormap`` a function that return a color for the contour region. The argumet of the function will be a number between 0 and 1.
+
+.. function:: polar_contour(f, R[, options]])
+
+   Plot a contour plot of the function ``f(x, y)`` over the circular domain or radius ``R`` and centered at the origin. The ``options`` table accept the same field of the function :func:`contour`.
 
 High Precision Contour
 ----------------------

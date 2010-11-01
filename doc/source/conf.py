@@ -34,15 +34,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'GSL Shell'
-copyright = '2009, Francesco Abbate'
+copyright = '2009, 2010, Francesco Abbate'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = 0.9
+version = 1.0
 # The full version, including alpha/beta/rc tags.
-release = '0.10.0'
+release = '1.0-beta1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

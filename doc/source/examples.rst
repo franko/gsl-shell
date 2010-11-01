@@ -126,3 +126,87 @@ And here the result:
 With a similar procedure, the code is in ``examples/fractals.lua`` we can produce  beautiful Levy C curve:
 
 .. figure:: examples-levy-c-curve-1.png
+
+Zernike Polynomials
+-------------------
+
+*Taken from Wikipedia*
+
+In mathematics, the Zernike polynomials are a sequence of polynomials that are orthogonal on the unit disk. Named after Frits Zernike, they play an important role in beam optics.
+
+Definitions
+~~~~~~~~~~~
+
+There are even and odd Zernike polynomials. The even ones are defined as
+
+.. math::
+     Z_n^m(\rho, \phi) = R_n^m(\rho) \cos(m \phi)
+
+and the odd ones as
+
+.. math::
+     Z_n^{-m}(\rho, \phi) = R_n^m(\rho) \sin(m \phi)
+
+where m and n are nonnegative integers with n≥m, φ is the azimuthal angle, and ρ is the radial distance . The radial polynomials R\ :sub:`n`\ :sup:`m` are defined as
+
+.. math::
+     R_n^m(\rho) = \sum_{k=0}^{(n-m)/2} \frac{(-1)^k (n-k)!}{k! ((n+m)/2-k)! ((n-m)/2 - k)!} \rho^{n - 2 k}
+
+for n − m even, and are identically 0 for n − m odd.
+For m = 0, the even definition is used which reduces to R\ :sub:`n`\ :sup:`0`\ (ρ).
+
+Implementation
+~~~~~~~~~~~~~~
+
+The above formula can be implemented quite straightforwardly in GSL shell with only a subtle point about the factorials in the denominator. The problem is that in same cases you can have the factorial of negative number and if you feed a negative number to the :func:`fact` function you will get an error.
+
+Actually the meaning of the formula is that the factorial of a negative number if :math:`\infty` and so, since it does appear in the denominator, its contribution to the sum is null. So, in order to implement this behaviour we just define an euxialiary function that return the inverse of the factorial and zero when the argument is negative.
+
+So here the code for the radial part::
+
+  -- inverse factorial function definition
+  invf = |n| n >= 0 and 1/fact(n) or 0
+
+  -- radial part of Zernike's polynomial
+  function zerR(n, m, p)
+     local ip, im = (n+m)/2, (n-m)/2
+     local z = 0
+     for k=0, im do
+        local f = fact(n-k) * (invf(k) * invf(ip-k) * invf(im-k))
+        if f > 0 then z = z + (-1)^k * f * p^(n-2*k) end
+     end
+     return z
+  end
+
+and the we define the Zernike's function completed with the angular part::
+
+  function zernicke(n, m, p, phi, even)
+     local pf = even and cos(m*phi) or sin(-m*phi)
+     return zerR(n, m, p) * pf
+  end
+
+Now we are just ready to draw our function, the only missing piece is the relation between ρ, φ and the cartesian coordinates but this is trivial:
+
+.. math::
+   \begin{array}{ll}
+     \rho = & \sqrt{x^2 + y^2} \\
+     \phi = & \tan^{-1}(y, x)
+   \end{array}
+
+let us therefore define our sample function in term of x and y and use it to call the function :func:`polar_contour`::
+
+  require 'contour'
+  N, M = 8, -2
+  f = |x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x))
+  p = polar_contour(f, 0.9, {gridx= 81, gridy= 81, levels= 10})
+  p.title = string.format('Zernike polynomial (N=%i, M=%i)', N, M)
+
+We show a few screenshots of the contour plot for various N and M.
+
+.. figure:: zernicke-contour-3-1.png
+
+.. figure:: zernicke-contour-5-1.png
+
+.. figure:: zernicke-contour-5-5.png
+
+.. figure:: zernicke-contour-8-2.png

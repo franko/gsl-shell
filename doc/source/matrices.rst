@@ -137,5 +137,7 @@ All the functions described in this section have an equivalent function for comp
 
 .. function:: prod(A, B)
 
-   Return the matrix product of the transpose of A time B. It can be useful
-   also to compute the scalar product of a column vector.
+   Return the matrix product of the transpose of A time B. If A or B
+   are complex the hermitian conjugate are taken instead. This
+   function can be useful also to compute the scalar product of two
+   column vectors.

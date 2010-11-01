@@ -179,7 +179,7 @@ To create many type of plots you don't really need to use always the graphics pr
 Multiple plot window
 --------------------
 
-With GSL shell it is possible to put several plot in a given window or also to put a given plot on several windows. To better understand what follows lets clarify a little bit the relations between plots and windows.
+With GSL shell it is possible to put several plots in a given window or also to put a given plot on several windows. To better understand what follows lets clarify a little bit the relations between plots and windows.
 
 In GSL shell a plot can exists indipendetely of any window and viceversa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :func:`show` what happens is that:
 
@@ -196,9 +196,14 @@ In this code snipper you can see the method :func:`attach` at work. It is a meth
 
 Let as see this at work with a second example::
 
-   w = window('v..') -- create a window divided in two subwindows (vertical tiling)
+   -- create a window divided in two subwindows (vertical tiling)
+   w = window('v..')
+
+   -- create a first plot...
    p1 = plot('Logarithm function')
    p1:addline(fxline(log, exp(-3), exp(3)))
+
+   -- create a second plot
    p2 = plot'f(x) = sin(x)/x'
    p2:addline(fxline(|x| sin(x)/x, 0.0001, 10*pi), 'blue')
    
@@ -218,12 +223,12 @@ Window class
       
       Create a new empty window with the layout given by the optional
       :ref:`layout string <layout-string>`. If the argument is omitted
-      the window will have a single slot that will cover the whole
+      the window will have a single drawing area that will cover the whole
       window.
 
    .. method:: layout(spec)
       
-      Remove all the plots that may be atatched to the existing window
+      Remove all the plots that may be attached to the existing window
       and subdivide the window according to the given
       :ref:`layout string <layout-string>`.
 
@@ -233,14 +238,14 @@ Window class
 
       Example::
  
-      w = window()
+        w = window()
 
-      -- create two vertical subdivision and subdivide the first one
-      -- into two horizontal subwindows
-      w:layout('v(h..).')
+        -- create two vertical subdivision and divide the first area
+        -- into two horizontal drawing regions
+        w:layout('v(h..).')
 
-      w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
-      w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
+        w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
+        w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
 
 .. _layout-string:
 
@@ -249,14 +254,14 @@ Layout string
 
 The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the :func:`split` method or, during the creation of the window, by the function :func:`window` itself.
 
-A valid string layout is just a "cell" layout which, in turn, is either:
+A valid string layout is defined recursively and it is either:
 
   * a '.' to indicate a region without further subdivisions
-  * the character 'h' followed by a sequence of cell layout string
-  * the character 'v' followed by a sequence of cell layout string
-  * the same as above but enclose between brackets: '(' ')'
+  * the character 'h' followed by a sequence of layout strings
+  * the character 'v' followed by a sequence of layout strings
+  * the same as above but enclosed between brackets: '(' ')'.
 
-with the serquence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
+With the serquence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
 
 The pattern described above is recursive and you can use brackets to group items where needed to avoid ambiguity.
 
@@ -271,7 +276,7 @@ and here how the resulting window can look:
 
 we have added some empty plots so that you can see something inside the window.
 
-Then we should figure out how to access a particulat plot. This is done via the method :func:`attach` with a string that identifies the drawing area. This sequence is formed like a sequence on integer numbers separated by a commas. For each number we enter in a subdivision of the plot by choosing a particular slot number from 1 up to the number of slot. As the subdivision can be nested you should specify as many numbers as are the depth level of the nesting.
+Now let us see how to specify a particulat drawing area once the :func:`layout` is done. Drawing are specification is done with the method :func:`attach` with a string that identifies the drawing area. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth you should specify as many numbers as are the depth level of the drawing are you want to address.
 
 For examples, to identify the drawing area in the sample above the following string should be used: '1,1', '1,2', '2'. You can attach a plot to a particular drawing area by using the method :func:`attach` as follows::
 
@@ -344,7 +349,11 @@ You can add elements to a plot in any moments even when it is already shown. GSL
    
    .. function:: plot([title])
       
-      Create a new empty plot with an optional title.
+      Create a new empty plot with an optional title. The plot is not
+      attached to any window and is therefore not visible. To show the
+      plot on the screen use either the :func:`show` plot's method or
+      use the :func:`attach` window's method to attach the plot to a
+      specific window.
 
    .. method:: add(obj, color[, post_trans, pre_trans])
       
@@ -361,9 +370,33 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       polygons. It is equivalent to add a 'stroke' operations of
       unitary size in the viewport coordinates system.
 
-   .. method:: update()
+   .. method:: show()
 
-      Updates the window that display the plot.
+      Create a new window to show the plot on the screen.
+
+   .. method:: clear()
+
+      Remove all the graphical elements into the current
+      :ref:`graphical layer <graphical-layer>`.
+
+   .. method:: pushlayer()
+
+      Add a new :ref:`graphical layer <graphical-layer>` and into the
+      plot so that it becames the current one and all the elements
+      added with methods :func:`add` or :func:`addline` are associated with
+      this new layer.
+
+   .. method:: poplayer()
+
+      Remove the current :ref:`graphical layer <graphical-layer>` and
+      all its graphical elements and make the previous level the
+      current one.
+
+   .. method:: flush()
+
+      All the pending operations on a plot are processed and all the
+      windows attached to the plot are updated. This method is only
+      useful when the attribute ``sync`` is set to false.
 
    .. attribute:: units
 
@@ -374,6 +407,50 @@ You can add elements to a plot in any moments even when it is already shown. GSL
 
       The title of the plot. You can change or set the title using
       this attribute.
+
+   .. attribute:: sync
+
+      This attribute can be either true or false. If true any changes
+      in the plot will automatically update all the windows where the
+      plot is shown. It is useful to set ``sync`` to false for
+      animation so that many operations can be performed and the
+      window is updated only when the :func:`flush` method is called.
+
+
+.. _graphical-layer:
+
+Graphical Layers
+~~~~~~~~~~~~~~~~
+
+When you want to perform animations with plot you can take advantage of the :ref:`graphical layers <graphical-layer>` that allows to clear and redraw only some graphical elements while keeping other elements always present in the background. The idea is that if you want to make an animation you will probably clear and redraw over and over some graphical elements but you may want to keep some of them fixed in the background. In order to obtain that you can
+
+  * add normally all the fixed graphical elements
+  * add a new :ref:`graphical layer <graphical-layer>` with the method :func:`pushlayer`
+  * clear and redraw all the elements using the new topmost layer
+
+Here an simple example::
+
+  p = canvas('Animation Test')
+  p:limits(-100, -100, 100, 100)
+  p:show()
+
+  p:add(circle(0, 0, 80), 'blue', {{'stroke', width= 5}})
+
+  x, y = 0, 0
+  vx, vy = 2, 5
+  R = 20 
+
+  p:pushlayer()
+  for k=1, 100 do
+    if x + vx + R > 100 or x + vx - R < -100 then vx = -vx end
+    if y + vy + R > 100 or y + vy - R < -100 then vy = -vy end
+    x = x + vx
+    y = y + vy
+
+    p:clear()
+    p:add(circle(x, y, R), 'red')
+    p:flush()
+  end
 
 .. _graphics-objects:
 

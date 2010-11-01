@@ -35,14 +35,14 @@ GSL Shell is very flexible about function definitions. It does allow to define g
 
 Here an examples where we define the normalized gaussian function centered in zero::
 
-    function normgauss(x, s)
-       local nf = 1/sqrt(2*pi*s^2)
-       return nf * exp(-x^2/2)
+    function ngauss(x, s)
+       local N = 1/sqrt(2*pi*s^2)
+       return N * exp(-x^2/2)
     end
 
-Please note that we have used a "local" variable, ``nf`` that is visible only withing the scope of the function. This is very convenient because in this way the variable ``nf`` will not interfere with the global variables.
+Please note that we have used a "local" variable, ``N`` that is visible only withing the scope of the function. This is very convenient because in this way the variable ``N`` will not interfere with the global variables.
 
-GSL Shell also support *closures* like many other advanced programming languages like Lisp, Scheme or ML languages. A closure is a function that use some variables that lives in the scope of an enclosing function.
+GSL Shell also support *closures* like many other advanced programming languages like Lisp, Scheme or ML languages. A closure is a function that use some variables that lives in the scope of an enclosing function and can be used outside of the scope of these variables.
 
 Here an examples of a closure the define a "counter"::
 
@@ -57,16 +57,16 @@ Here an examples of a closure the define a "counter"::
 
 and here an examples of its utilisation:
 
-| -- make a counter up to 3
-| c = make_counter(3)
-| c()
-| >> 1
-| c()
-| >> 2
-| c()
-| >> 3
-| c()
-| >>
+  >>> -- make a counter up to 3
+  >>> c = make_counter(3)
+  >>> c()
+  1
+  >>> c()
+  2
+  >>> c()
+  3
+  >>> c()
+  nil
 
 The function ``make_counter`` is not a closure because does not refer to any variable of any enclosing function but the function that it does returns *is* a closure because the returned function refer to the variable ``i`` which is local to the scope of the enclosing function ``make_counter``.
 
