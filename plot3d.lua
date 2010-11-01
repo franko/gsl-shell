@@ -20,7 +20,7 @@ end
 function render_shape(shape, plt, stroke)
    local renderer = Pre3d.Renderer(plt)
 
-   renderer.draw_overdraw = not stroke
+   renderer.draw_overdraw = true 
    renderer.draw_backfaces = true
    renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
    renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
