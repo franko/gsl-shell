@@ -255,7 +255,7 @@ FUNCTION(matrix, inverse_raw) (lua_State *L, const TYPE (gsl_matrix) *a)
   TYPE (gsl_matrix) *lu, *inverse;
   gsl_permutation *p;
   size_t n = a->size1;
-  int sign;
+  int status, sign;
 
   if (a->size2 != n)
     luaL_typerror (L, 1, "square matrix");
@@ -268,10 +268,16 @@ FUNCTION(matrix, inverse_raw) (lua_State *L, const TYPE (gsl_matrix) *a)
   inverse = FUNCTION (matrix, push_raw) (L, n, n);
 
   FUNCTION (gsl_linalg, LU_decomp) (lu, p, &sign);
-  FUNCTION (gsl_linalg, LU_invert) (lu, p, inverse);
+  status = FUNCTION (gsl_linalg, LU_invert) (lu, p, inverse);
 
   FUNCTION (gsl_matrix, free) (lu);
   gsl_permutation_free (p);
+
+  if (status)
+    {
+      return luaL_error (L, "error during matrix inversion: %s",
+			 gsl_strerror (status));
+    }
 
   return 1;
 }
