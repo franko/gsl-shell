@@ -42,7 +42,7 @@ OPER_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx)
     }
   else
     {
-      const gsl_matrix_complex *a = gs_check_userdata (L, 2, GS_CMATRIX);
+      const gsl_matrix_complex *a = gs_check_userdata (L, midx, GS_CMATRIX);
       gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
       gsl_complex sc = {{creal(s), cimag(s)}};
       gsl_matrix_complex_memcpy (r, a);
