@@ -53,7 +53,7 @@ Interpolating Functions
      ``y``. The last argument, ``interp_type`` should be a string that
      specify the kind of interpolation. The most common type of
      interpolation are ``linear`` and ``cspline``. Please look at the
-     section on :ref:`interpolation types <interp-types>` if you want
+     section on :ref:`interpolation types <interp-types>` for 
      more details.
 
   .. method:: eval(x)
@@ -72,7 +72,7 @@ Interpolating Functions
 
      Evaluate the definite integral of the interpolated function in the interval ``(a, b)``.
 
-.. _interp-type:
+.. _interp-types:
 
 Interpolation types
 -------------------
@@ -89,13 +89,13 @@ The interpolation library provides six interpolation types:
      datasets.  The number of terms in the interpolating polynomial is
      equal to the number of points.
 
-``cpline``
+``cspline``
      Cubic spline with natural boundary conditions.  The resulting
      curve is piecewise cubic on each interval, with matching first and
      second derivatives at the supplied data-points.  The second
      derivative is chosen to be zero at the first point and last point.
 
-``cpline_periodic``
+``cspline_periodic``
      Cubic spline with periodic boundary conditions.  The resulting
      curve is piecewise cubic on each interval, with matching first and
      second derivatives at the supplied data-points.  The derivatives
