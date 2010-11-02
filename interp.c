@@ -23,10 +23,16 @@ enum fenv_pos {
 static int          interp_new       (lua_State *L);
 static int          interp_free      (lua_State *L);
 static int          interp_eval      (lua_State *L);
+static int          interp_deriv     (lua_State *L);
+static int          interp_deriv2    (lua_State *L);
+static int          interp_integ     (lua_State *L);
 
 static const struct luaL_Reg interp_methods[] = {
   {"__gc",          interp_free},
   {"eval",          interp_eval},
+  {"deriv",         interp_deriv},
+  {"deriv2",        interp_deriv2},
+  {"integ",         interp_integ},
   {NULL, NULL}
 };
 
@@ -124,6 +130,37 @@ interp_eval (lua_State *L)
   double x = gs_check_number (L, 2, true);
   double y = gsl_interp_eval (obj->interp, obj->xsrc, obj->ysrc, x, obj->acc);
   lua_pushnumber (L, y);
+  return 1;
+};
+
+int
+interp_deriv (lua_State *L)
+{
+  struct interp *obj = gs_check_userdata (L, 1, GS_INTERP);
+  double x = gs_check_number (L, 2, true);
+  double d = gsl_interp_eval_deriv (obj->interp, obj->xsrc, obj->ysrc, x, obj->acc);
+  lua_pushnumber (L, d);
+  return 1;
+};
+
+int
+interp_deriv2 (lua_State *L)
+{
+  struct interp *obj = gs_check_userdata (L, 1, GS_INTERP);
+  double x = gs_check_number (L, 2, true);
+  double d = gsl_interp_eval_deriv2 (obj->interp, obj->xsrc, obj->ysrc, x, obj->acc);
+  lua_pushnumber (L, d);
+  return 1;
+};
+
+int
+interp_integ (lua_State *L)
+{
+  struct interp *obj = gs_check_userdata (L, 1, GS_INTERP);
+  double a = gs_check_number (L, 2, true);
+  double b = gs_check_number (L, 3, true);
+  double v = gsl_interp_eval_integ (obj->interp, obj->xsrc, obj->ysrc, a, b, obj->acc);
+  lua_pushnumber (L, v);
   return 1;
 };
 
