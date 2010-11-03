@@ -60,6 +60,17 @@ static const struct luaL_Reg matrix_arith_functions[] = {
 
 static const char * size_err_msg = "matrices should have the same size in %s";
 
+static void
+check_matrix_mul_dim (lua_State *L, struct pmatrix *a, struct pmatrix *b, 
+		      bool atrans, bool btrans)
+{
+  size_t row = (a->tp == GS_MATRIX ? (atrans ? a->m.real->size2 : a->m.real->size1) : (atrans ? a->m.cmpl->size2 : a->m.cmpl->size1));
+  size_t col = (b->tp == GS_MATRIX ? (btrans ? b->m.real->size1 : b->m.real->size2) : (btrans ? b->m.cmpl->size1 : b->m.cmpl->size2));
+
+  if (row != col)
+    luaL_error (L, "incompatible matrix dimensions in multiplication");
+}
+
 static gsl_matrix_complex *
 push_matrix_complex_of_real (lua_State *L, const gsl_matrix *a)
 {
@@ -135,11 +146,13 @@ matrix_complex_promote (lua_State *L, int index, struct pmatrix *a)
 int
 matrix_unm (lua_State *L)
 {
-  int tp = gs_is_userdata (L, 1, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
+  struct pmatrix p;
 
-  if (tp == GS_MATRIX)
+  check_matrix_type (L, 1, &p);
+
+  if (p.tp == GS_MATRIX)
     {
-      const gsl_matrix *a = lua_touserdata (L, 1);
+      const gsl_matrix *a = p.m.real;
       size_t n1 = a->size1, n2 = a->size2;
       gsl_matrix *r = matrix_push_raw (L, n1, n2);
       size_t i;
@@ -155,7 +168,7 @@ matrix_unm (lua_State *L)
     }
   else
     {
-      const gsl_matrix_complex *a = gs_check_userdata (L, 1, GS_CMATRIX);
+      const gsl_matrix_complex *a = p.m.cmpl;
       size_t n1 = a->size1, n2 = a->size2;
       gsl_matrix_complex *r = matrix_complex_push_raw (L, n1, n2);
       size_t i;
@@ -190,6 +203,8 @@ matrix_mul (lua_State *L)
     {
       check_matrix_type (L, k, &a);
       check_matrix_type (L, k+1, &b);
+
+      check_matrix_mul_dim (L, &a, &b, false, false);
 
       r.tp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
 	
@@ -323,6 +338,8 @@ matrix_prod (lua_State *L)
 
   check_matrix_type (L, 1, &a);
   check_matrix_type (L, 2, &b);
+
+  check_matrix_mul_dim (L, &a, &b, true, false);
   
   r.tp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
 
@@ -336,18 +353,10 @@ matrix_prod (lua_State *L)
     {
     case GS_MATRIX:
       r.m.real = matrix_push (L, a.m.real->size2, b.m.real->size2);
-
-      if (a.m.real->size1 != b.m.real->size1)
-	luaL_error (L, "incompatible matrix dimensions in multiplication");
-
       gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, a.m.real, b.m.real, 1.0, r.m.real);
       break;
     case GS_CMATRIX:
       r.m.cmpl = matrix_complex_push (L, a.m.cmpl->size2, b.m.cmpl->size2);
-
-      if (a.m.cmpl->size1 != b.m.cmpl->size1)
-	luaL_error (L, "incompatible matrix dimensions in multiplication");
-      
       gsl_blas_zgemm (CblasConjTrans, CblasNoTrans, u, a.m.cmpl, b.m.cmpl, u, r.m.cmpl);
       break;
     default:

@@ -22,11 +22,13 @@
 static int
 OPER_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx)
 {
+  struct pmatrix p;
   lua_Complex s = lua_tocomplex (L, sidx);
-  int tpm = gs_is_userdata (L, midx, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
-  if (tpm == GS_MATRIX)
+  check_matrix_type (L, midx, &p);
+
+  if (p.tp == GS_MATRIX)
     {
-      const gsl_matrix *a = lua_touserdata (L, midx);
+      const gsl_matrix *a = p.m.real;
       if (cimag(s) == 0.0)
 	{
 	  gsl_matrix *r =  matrix_push_raw (L, a->size1, a->size2);
@@ -42,7 +44,7 @@ OPER_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx)
     }
   else
     {
-      const gsl_matrix_complex *a = gs_check_userdata (L, midx, GS_CMATRIX);
+      const gsl_matrix_complex *a = p.m.cmpl;
       gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
       gsl_complex sc = {{creal(s), cimag(s)}};
       gsl_matrix_complex_memcpy (r, a);
@@ -67,12 +69,23 @@ OPER_FUNCTION (matrix) (lua_State *L)
     }
 #endif
 
-  int tp1 = gs_is_userdata (L, 1, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
-  int tp2 = gs_is_userdata (L, 2, GS_MATRIX) ? GS_MATRIX : GS_CMATRIX;
+  struct pmatrix pa, pb;
+  int rtp;
 
-  if (tp1 == GS_MATRIX && tp2 == GS_MATRIX)
+  check_matrix_type (L, 1, &pa);
+  check_matrix_type (L, 2, &pb);
+
+  rtp = (pa.tp == GS_MATRIX && pb.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (pa.tp != rtp)
+    matrix_complex_promote (L, 1, &pa);
+
+  if (pb.tp != rtp)
+    matrix_complex_promote (L, 1, &pb);
+
+  if (rtp == GS_MATRIX)
     {
-      const gsl_matrix *a = lua_touserdata (L, 1), *b = lua_touserdata (L, 2);
+      const gsl_matrix *a = pa.m.real, *b = pb.m.real;
       gsl_matrix *r = matrix_push_raw (L, a->size1, a->size2);
 
       if (a->size1 != b->size1 || a->size2 != b->size2)
@@ -81,36 +94,13 @@ OPER_FUNCTION (matrix) (lua_State *L)
       gsl_matrix_memcpy (r, a);
       OPER_FUNCTION (gsl_matrix) (r, b);
     }
-  else if (tp1 == GS_MATRIX)
-    {
-      const gsl_matrix *ar = lua_touserdata (L, 1);
-      gsl_matrix_complex *a = push_matrix_complex_of_real (L, ar);
-      const gsl_matrix_complex *b = gs_check_userdata (L, 2, GS_CMATRIX);
-
-      if (ar->size1 != b->size1 || ar->size2 != b->size2)
-	return luaL_error (L, size_err_msg, OP_NAME);
-
-      OPER_FUNCTION (gsl_matrix_complex) (a, b);
-    }
-  else if (tp2 == GS_MATRIX)
-    {
-      const gsl_matrix_complex *a = gs_check_userdata (L, 1, GS_CMATRIX);
-      const gsl_matrix *br = lua_touserdata (L, 2);
-      gsl_matrix_complex *b = push_matrix_complex_of_real (L, br);
-
-      if (a->size1 != br->size1 || a->size2 != br->size2)
-	return luaL_error (L, size_err_msg, OP_NAME);
-
-      OPER_FUNCTION (gsl_matrix_complex) (b, a);
-    }
   else
     {
-      gsl_matrix_complex *a = gs_check_userdata (L, 1, GS_CMATRIX);
-      gsl_matrix_complex *b = gs_check_userdata (L, 2, GS_CMATRIX);
+      const gsl_matrix_complex *a = pa.m.cmpl, *b = pb.m.cmpl;
       gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
 
       if (a->size1 != b->size1 || a->size2 != b->size2)
-	luaL_error (L, size_err_msg, OP_NAME);
+	return luaL_error (L, size_err_msg, OP_NAME);
 
       gsl_matrix_complex_memcpy (r, a);
       OPER_FUNCTION (gsl_matrix_complex) (r, b);
