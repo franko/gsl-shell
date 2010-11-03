@@ -50,6 +50,7 @@ Contents:
    sf.rst
    minim.rst
    graphics.rst
+   plot3d.rst
    contour.rst
    examples.rst
    acknowledgments.rst
