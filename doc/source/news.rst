@@ -3,6 +3,26 @@
 News
 ====
 
+**November 2010**
+  Release of GSL Shell 1.0
+
+  This new release brings a lot of improvements in the graphics functions. Now it is possible:
+   
+    * put multiple plots on the same windows
+    * make animations
+    * have multiple graphical layers in a plot.
+
+  The graphical rendering code was almost completely rewritten and optimised for to be efficient both for static plot and animations.
+
+  We have also a first implementation of a 3D plotting module based on the JavaScript `Pre3d library <http://deanm.github.com/pre3d/>`_ of Dean Mc Namee. This implementation is suboptimal in term of resource usage and rendering speed and may be replaced in future by a better implementation. The reason is not the quality of the Pre3d code, which is excellent in itself, but the usage of JavaScript/Lua for 3D graphics which is inherently inefficient in term of speed and memory usage.
+
+  The 3D plotting module is nevertheless functional and fully usable for simple and moderately complex 3D plots so don't be afraid to use it :-)
+
+  From the point of view of core mathematical functions we have also some interesting new features:
+  
+    * new implementation of the interpolation functions with, notably, the Akima and cubic spline interpolation
+    * improvement of the handling of mixed operation between complex and real matrix
+
 **May 2010**
   GSL Shell 0.10.0 released. It does includes many new features, bug fixes
   and a more extended set of GSL routines.
