@@ -18,56 +18,102 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifdef SCALAR_OP
 static int
-OPER_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx)
+SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
+				     bool direct)
 {
   struct pmatrix p;
-  lua_Complex s = lua_tocomplex (L, sidx);
+  lua_Complex sc = lua_tocomplex (L, sidx);
+  int rtp;
+
   check_matrix_type (L, midx, &p);
 
-  if (p.tp == GS_MATRIX)
+  rtp = (cimag(sc) == 0.0 && p.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (rtp == GS_MATRIX)
     {
-      const gsl_matrix *a = p.m.real;
-      if (cimag(s) == 0.0)
+      double s = creal(sc);
+      gsl_matrix *m = p.m.real;
+      size_t n1 = m->size1, n2 = m->size2;
+      gsl_matrix *r = matrix_push_raw (L, n1, n2);
+      size_t i;
+
+      for (i = 0; i < n1; i++)
 	{
-	  gsl_matrix *r =  matrix_push_raw (L, a->size1, a->size2);
-	  gsl_matrix_memcpy (r, a);
-	  SCALAR_OPER_FUNCTION (gsl_matrix) (r, creal(s));
-	}
-      else
-	{
-	  gsl_matrix_complex *r = push_matrix_complex_of_real (L, a);
-	  gsl_complex sc = {{creal(s), cimag(s)}};
-	  SCALAR_OPER_FUNCTION (gsl_matrix_complex) (r, sc);
+	  double *mp0 = m->data + (m->tda * i);
+	  double *mp1 = m->data + (m->tda * i + n2);
+	  double *rp = r->data + r->tda * i;
+	  double *mp;
+
+	  for (mp = mp0; mp < mp1; mp++, rp++)
+	    {
+	      double a = (direct ? s : *mp), b = (direct ? *mp : s);
+	      *rp = BASE_OPER(a, b);
+	    }
 	}
     }
   else
     {
-      const gsl_matrix_complex *a = p.m.cmpl;
-      gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
-      gsl_complex sc = {{creal(s), cimag(s)}};
-      gsl_matrix_complex_memcpy (r, a);
-      SCALAR_OPER_FUNCTION (gsl_matrix_complex) (r, sc);
+      cmpl s = sc;
+      if (p.tp == GS_CMATRIX)
+	{
+	  gsl_matrix_complex *m = p.m.cmpl;
+	  size_t n1 = m->size1, n2 = m->size2;
+	  gsl_matrix_complex *r = matrix_complex_push_raw (L, n1, n2);
+	  size_t i;
+
+	  for (i = 0; i < n1; i++)
+	    {
+	      cmpl *mp0 = (cmpl *) (m->data + 2 * (m->tda * i));
+	      cmpl *mp1 = (cmpl *) (m->data + 2 * (m->tda * i + n2));
+	      cmpl *rp  = (cmpl *) (r->data + 2 * (r->tda * i));
+	      cmpl *mp;
+
+	      for (mp = mp0; mp < mp1; mp++, rp++)
+		{
+		  cmpl a = (direct ? s : *mp), b = (direct ? *mp : s);
+		  *rp = BASE_OPER(a, b);
+		}
+	    }
+	}
+      else
+	{
+	  gsl_matrix *m = p.m.real;
+	  size_t n1 = m->size1, n2 = m->size2;
+	  gsl_matrix_complex *r = matrix_complex_push_raw (L, n1, n2);
+	  size_t i;
+
+	  for (i = 0; i < n1; i++)
+	    {
+	      double *mp0 = m->data + (m->tda * i);
+	      double *mp1 = m->data + (m->tda * i + n2);
+	      cmpl *rp  = (cmpl *) (r->data + 2 * (r->tda * i));
+	      double *mp;
+
+	      for (mp = mp0; mp < mp1; mp++, rp++)
+		{
+		  cmpl mc = *mp;
+		  cmpl a = (direct ? s : mc), b = (direct ? mc : s);
+		  *rp = BASE_OPER(a, b);
+		}
+	    }
+	}
     }
-  
+
   return 1;
 }
-#endif
 
 int
 OPER_FUNCTION (matrix) (lua_State *L)
 {
-#ifdef SCALAR_OP
   if (lua_isnumber (L, 1))
     {
-      return OPER_FUNCTION (scalar_matrix) (L, 1, 2);
+      return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 1, 2, true);
     }
   else if (lua_isnumber (L, 2))
     {
-      return OPER_FUNCTION (scalar_matrix) (L, 2, 1);
+      return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 2, 1, false);
     }
-#endif
 
   struct pmatrix pa, pb;
   int rtp;

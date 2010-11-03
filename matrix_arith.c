@@ -20,8 +20,8 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <assert.h>
-#include <string.h>
+#include <math.h>
+#include <complex.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
@@ -40,6 +40,8 @@ struct pmatrix {
     gsl_matrix_complex *cmpl;
   } m;
 };
+
+typedef double _Complex cmpl;
 
 static int matrix_inv   (lua_State *L);
 static int matrix_solve (lua_State *L);

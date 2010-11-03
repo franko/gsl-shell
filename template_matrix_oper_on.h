@@ -22,21 +22,25 @@
 #define OPER add
 #define SCALAR_OP add_constant
 #define OP_NAME "addition"
+#define BASE_OPER(a,b) ((a) + (b))
 
 #elif defined(OPER_MUL)
 #define OPER mul_elements
 #define SCALAR_OP scale
 #define OP_NAME "multiplication"
+#define BASE_OPER(a,b) ((a) * (b))
 
 #elif defined(OPER_SUB)
 #define OPER sub
-#undef SCALAR_OP
+#define SCALAR_OP add_constant
 #define OP_NAME "subtraction"
+#define BASE_OPER(a,b) ((a) - (b))
 
 #elif defined(OPER_DIV)
 #define OPER div_elements
-#undef SCALAR_OP
+#define SCALAR_OP scale
 #define OP_NAME "division"
+#define BASE_OPER(a,b) ((a) / (b))
 
 #else
 #error matrix operation directive unknown
@@ -46,4 +50,4 @@
 #define CONCAT2(a,b) CONCAT2x(a,b)
 
 #define OPER_FUNCTION(base) CONCAT2(base,OPER)
-#define SCALAR_OPER_FUNCTION(base) CONCAT2(base,SCALAR_OP)
+#define SCALAR_MAT_FUNCTION(base) CONCAT2(base_scalar,OPER)
