@@ -37,11 +37,11 @@ The 3D Function Plot give you the possibility of making a 3D plot of a function 
 
    The ``options`` argument is an optional table that can contain the following field:
  
-     * ``gridx``, number of subdivision along x
-     * ``gridy``, number of subdivision along y
-     * ``title``, the title of the plot
-     * ``stroke``, a boolean valua that indicate if the wireframe
-       should be drawn or not.
+   * ``gridx``, number of subdivision along x
+   * ``gridy``, number of subdivision along y
+   * ``title``, the title of the plot
+   * ``stroke``, a boolean valua that indicate if the wireframe
+     should be drawn or not.
 
 Here a simples example::
 
@@ -73,19 +73,19 @@ where u and v are two parameters that span a rectangular domain.
 
    The ``options`` argument is an optional table that can contain the following field:
  
-     * ``gridu``, number of subdivision along x
-     * ``gridv``, number of subdivision along y
-     * ``title``, the title of the plot
-     * ``stroke``, a boolean valua that indicate if the wireframe
-       should be drawn or not.
+   * ``gridu``, number of subdivision along x
+   * ``gridv``, number of subdivision along y
+   * ``title``, the title of the plot
+   * ``stroke``, a boolean valua that indicate if the wireframe should
+     be drawn or not.
 
 Here a simples example that plot the Moebius surface starting from a parametric: form:
 
 .. math::
    \begin{array}{ll}
-     x = & (1 + 1/2 * v *\cos(u/2))*\cos(u) \\
-     y = & (1 + 1/2 * v *\cos(u/2))*\sin(u) \\
-     z = & 1/2 * v * \sin(u/2)
+     x = & \left(1 + 1/2 \, v \cos(u/2)\right) \cos(u) \\
+     y = & \left(1 + 1/2 \, v \cos(u/2)\right) \sin(u) \\
+     z = & 1/2 \, v \sin(u/2)
    \end{array}
 
 here the code to produce the plot::

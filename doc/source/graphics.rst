@@ -256,10 +256,10 @@ The layout string is a string that is used to specify the layout of the drawing 
 
 A valid string layout is defined recursively and it is either:
 
-  * a '.' to indicate a region without further subdivisions
-  * the character 'h' followed by a sequence of layout strings
-  * the character 'v' followed by a sequence of layout strings
-  * the same as above but enclosed between brackets: '(' ')'.
+* a '.' to indicate a region without further subdivisions
+* the character 'h' followed by a sequence of layout strings
+* the character 'v' followed by a sequence of layout strings
+* the same as above but enclosed between brackets: '(' ')'.
 
 With the serquence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
 
