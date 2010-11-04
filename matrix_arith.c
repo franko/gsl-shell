@@ -66,10 +66,10 @@ static void
 check_matrix_mul_dim (lua_State *L, struct pmatrix *a, struct pmatrix *b, 
 		      bool atrans, bool btrans)
 {
-  size_t row = (a->tp == GS_MATRIX ? (atrans ? a->m.real->size2 : a->m.real->size1) : (atrans ? a->m.cmpl->size2 : a->m.cmpl->size1));
-  size_t col = (b->tp == GS_MATRIX ? (btrans ? b->m.real->size1 : b->m.real->size2) : (btrans ? b->m.cmpl->size1 : b->m.cmpl->size2));
+  size_t col1 = (a->tp == GS_MATRIX ? (atrans ? a->m.real->size1 : a->m.real->size2) : (atrans ? a->m.cmpl->size1 : a->m.cmpl->size2));
+  size_t row2 = (b->tp == GS_MATRIX ? (btrans ? b->m.real->size2 : b->m.real->size1) : (btrans ? b->m.cmpl->size2 : b->m.cmpl->size1));
 
-  if (row != col)
+  if (col1 != row2)
     luaL_error (L, "incompatible matrix dimensions in multiplication");
 }
 
