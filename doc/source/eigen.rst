@@ -46,3 +46,12 @@ Eigenvalues of a real matrix
 .. function:: eignsv(m)
 
    Gives a *real nonsymmetrix* matrix ``m`` returns a complex vector with the eigenvalues and a complex matrix with the corresponding eigenvectors arranged by columns. Please note that, even if the original matrix is *real* the resulting eigenvalues and eigenvectors will be complex.
+
+.. function:: schur(m)
+
+   This function works like the function :func:`eignsv` but it does return the Schur form matrix T and the schur vector matrix Z. These matrices satisfies the identity:
+
+   .. math::
+      T = Z^{-1} m Z
+
+   where ``m`` is the given real non-symmetrix matrix.

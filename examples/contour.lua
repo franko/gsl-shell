@@ -40,11 +40,6 @@ function demo3()
 end
 
 function demo4()
-   local fsqr = function(x,y) return x^2 + y^2 end
-   return contour(fsqr, -4, -4, 4, 4)
-end
-
-function demo5()
    local fsincos = function(sx,sy)
 		      return function(x,y) 
 				return cos(x)+cos(y) + sx*x + sy*y
@@ -67,3 +62,18 @@ function demo5()
 
    return p1, p2
 end
+
+function demo5()
+   local N, R, zmax = 5, 1.2, 1.2
+   local ls = ilist(|k| zmax * (k-N-1)/N, 2*N+1)
+   local p = polar_contour(|x,y| y^2 - x^2*(x+1), R, {levels= ls})
+   p.title = 'f(x,y) = y^2 - x^2*(x+1)'
+   return p
+end
+
+print([[
+demo1() - contour plot of simple function with a local minimum
+demo2() - contour plot of rosenbrock function
+demo3() - contour plot of function with gaussian peaks
+demo4() - contour of f(x) = cos(x) + cos(y) with and without perturbations
+demo5() - contour plot of cubic function in a circular domain]])

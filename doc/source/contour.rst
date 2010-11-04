@@ -18,7 +18,7 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
 
 .. figure:: contour-plot-hyper.png
 
-.. function:: contour(f, xmin, ymin, xmax, ymax[, options]])
+.. function:: contour(f, xmin, ymin, xmax, ymax[, options])
 
    Plot a contour plot of the function ``f``. ``contours`` can be the number of levels or a list containing all the values that should be used to draw the contours.
 

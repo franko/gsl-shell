@@ -7,24 +7,31 @@ end
 
 function demo1()
    local m = new(4, 4, |i,j| 1/(i+j-1))
-   print(m)
+   print('Matrix:')
+   print(m, '\n')
    local e, v = eigsv(m)
-   print('Eigenvalues:', ilist(|i| e[i], 4))
-   print('Eigenvectors:')
-   print(v)
+   print('Eigenvalues:', ilist(|i| e[i], 4), '\n')
+
    -- the following expression will give a diagonal matrix with the eigenvalues
    --- along the diagonal
+   print('Matrix diagonal form:')
    print(prod(v,mul(m,v)))
 end
 
 function demo2()
    local m = vandermonde {-1, -2, 3, 4}
-   print(m)
+   print('Matrix:')
+   print(m, '\n')
+
    local e, v = eignsv(m)
-   print('Eigenvalues:', ilist(|i| e[i], 4))
-   print('Eigenvectors:')
-   print(v)
+   print('Eigenvalues:', ilist(|i| e[i], 4), '\n')
+
    -- the following expression will give a diagonal matrix with the eigenvalues
    --- along the diagonal
+   print('Matrix diagonal form:')
    print(mul(inv(v),m,v))
 end
+
+print([[
+demo1() - example of eigensystem solving for a real symmetrix matrix
+demo2() - example of eigensystem solving for a real non-symmetrix matrix]])

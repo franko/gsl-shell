@@ -12,11 +12,19 @@ local function hermiteFp(n,x)
 end
 
 local function demo_gen(hermiteFF)
-   local p = plot('Hermite functions')
+   local w = window('v...')
+
+   local p = plot('Hermite(2, x)')
    p:addline(fxline(|x| hermiteFF(2, x), -10, 10), 'red')
-   p:addline(fxline(|x| hermiteFF(4, x), -10, 10), 'blue', {{'dash', 7, 3}})
+   w:attach(p, '1')
+
+   local p = plot('Hermite(4, x)')
+   p:addline(fxline(|x| hermiteFF(4, x), -10, 10), 'blue')
+   w:attach(p, '2')
+
+   local p = plot('Hermite(16, x)')
    p:addline(fxline(|x| hermiteFF(16, x), -10, 10, 512), 'green')
-   p:show()
+   w:attach(p, '3')
 end
 
 demo1 = || demo_gen(hermiteLp)

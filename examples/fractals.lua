@@ -187,7 +187,7 @@ function demo3ter(n)
    return pl
 end
 
-function demo3teri(n)
+function demo4(n)
    n = n and n or 10
    local col, coln
 
@@ -258,6 +258,8 @@ function demo3q()
    return pl
 end
 
-print 'demo1() - Von Koch\'s curve'
-print 'demo2() - Levy\'s C curve'
-print 'demo3() - Pythagorean Tree'
+print([[
+demo1() - Von Koch's curve
+demo2() - Levy's C curve
+demo3() - Pythagorean Tree (symmetric)
+demo4() - Pythagorean Tree (asymmetric)]])
