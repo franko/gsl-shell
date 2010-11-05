@@ -92,12 +92,12 @@ end
 
 function do_minimize()
    local f, coeffs = minf_gener(brs)
-   local m = minimizer {f= f, n= 6}
+   local m = fmultimin(f, 6)
 
    local x0 = vector {2,   4,  36, 18, 32, 0.8}
    local dx = vector {0.8, 0.8, 6, 2, 6,   0.1}
 
-   m:set(x0, dx)
+   m:set(x0, dx, 0.3)
 
    while m:step() == 'continue' do
       print(tr(m.x), m.value)
