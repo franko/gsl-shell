@@ -165,7 +165,7 @@ fdfmultimin_new (lua_State *L)
       const char *req_algo = luaL_checkstring (L, 3);
       T = fdfmin_algo_lookup (req_algo);
       if (T == NULL)
-	return luaL_error (L, "unknown algorithm. Known alogrithm are: %s",
+	return luaL_error (L, "unknown algorithm. Known algorithm are: %s",
 			   fdfmin_algo_list);
     }
   else

@@ -221,7 +221,7 @@ fmultimin_set (lua_State *L)
   stepv = gsl_matrix_column (stepm, 0);
 
   m->f->params = m->p;
-  m->size_tol = pow (size_tol, n);
+  m->size_tol = size_tol;
 
   m->p->L = L;
   m->p->n = n;
