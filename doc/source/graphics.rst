@@ -46,7 +46,7 @@ Then to plot something you have just to call the 'myplot' function. For example:
 
 The function :func:`fxline` takes three arguments, the function to plot and the initial anf final values of the variable. By default the function will be sampled with 256 points but if you want you can provide a fourth arguments to give the number of sample points.
 
-In this example we have used the :func:`plot` function to create a plot, the :func:`fxline` function to create the line to draw and the method :func:`addline` to add the line to the plot (in red). These three operations can be done with a single function, :func:`fxplot`. It works like that::
+In this example we have used the :func:`plot` function to create a plot, the :func:`fxline` function to create the line to draw and the method :func:`~Plot.addline` to add the line to the plot (in red). These three operations can be done with a single function, :func:`fxplot`. It works like that::
   
    p = fxplot(|x| sin(x), 0, 8*pi)
 
@@ -181,7 +181,7 @@ Multiple plot window
 
 With GSL shell it is possible to put several plots in a given window or also to put a given plot on several windows. To better understand what follows lets clarify a little bit the relations between plots and windows.
 
-In GSL shell a plot can exists indipendetely of any window and viceversa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :func:`show` what happens is that:
+In GSL shell a plot can exists indipendetely of any window and viceversa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :meth:`~Plot.show` what happens is that:
 
  * a window is created and shown on the screen
  * the plot is *attached* to the window
@@ -192,7 +192,7 @@ You can perform the operations above explicitely if you want. For example::
    w = window()
    w:attach(p, '') -- attach the plot "p" to the default slot of "w"
 
-In this code snipper you can see the method :func:`attach` at work. It is a method of the :class:`Window` used to tie a particular plot to a window. At this point you may wonder what is the second argument for. It is something which is not very useful for simple windows but it becomes important when the window is "subdivided" into subwindows.
+In this code snipper you can see the method :meth:`~Window.attach` at work. It is a method of the :class:`Window` used to tie a particular plot to a window. At this point you may wonder what is the second argument for. It is something which is not very useful for simple windows but it becomes important when the window is "subdivided" into subwindows.
 
 Let as see this at work with a second example::
 
@@ -252,7 +252,7 @@ Window class
 Layout string
 ~~~~~~~~~~~~~
 
-The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the :func:`split` method or, during the creation of the window, by the function :func:`window` itself.
+The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the :meth:`~Window.layout` method or, during the creation of the window, by the function :func:`window` itself.
 
 A valid string layout is defined recursively and it is either:
 
@@ -276,9 +276,9 @@ and here how the resulting window can look:
 
 we have added some empty plots so that you can see something inside the window.
 
-Now let us see how to specify a particulat drawing area once the :func:`layout` is done. Drawing are specification is done with the method :func:`attach` with a string that identifies the drawing area. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth you should specify as many numbers as are the depth level of the drawing are you want to address.
+Now let us see how to specify a particulat drawing area once the :meth:`~Window.layout` is done. Drawing are specification is done with the method :meth:`~Window.attach` with a string that identifies the drawing area. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth you should specify as many numbers as are the depth level of the drawing are you want to address.
 
-For examples, to identify the drawing area in the sample above the following string should be used: '1,1', '1,2', '2'. You can attach a plot to a particular drawing area by using the method :func:`attach` as follows::
+For examples, to identify the drawing area in the sample above the following string should be used: '1,1', '1,2', '2'. You can attach a plot to a particular drawing area by using the method :meth:`~Window.attach` as follows::
 
    w:attach(p1, '1,2')
 
@@ -290,7 +290,7 @@ In order to better understand the way GSL shell graphics works it is better to t
   - define a 'path' that describe the countour that we want to plot
   - add the 'path' that we have defined to a 'plot' object to show it
 
-In order to create a 'path' we can use the function :func:`path` which just creates an empty path. Then we add the the points by using the methods :func:`move_to` and :func:`line_to` methods. When you use :func:`move_to` a new curve is started at the given points and with :func:`line_to` you can draw your curve.
+In order to create a 'path' we can use the function :func:`path` which just creates an empty path. Then we add the the points by using the methods :meth:`~Path.move_to` and :meth:`~Path.line_to` methods. When you use :meth:`~Path.move_to` a new curve is started at the given points and with :meth:`~Path.line_to` you can draw your curve.
 
 So to plot a triangle you can give the following instructions::
 
@@ -306,9 +306,9 @@ So to plot a triangle you can give the following instructions::
 
 .. figure:: simpler-example-1.png
 
-Please not that we have used the :func:`add` method instead of :func:`addline` to add the path.
+Please not that we have used the :meth:`~Plot.add` method instead of :meth:`~Plot.addline` to add the path.
 
-Now let us suppose that we want to plot only the contour of the triangle with a line 10 pixel thick and with round edges. Then what you have to do is to supply to the :func:`add` method a third argument where you specify a ``stroke`` transformation::
+Now let us suppose that we want to plot only the contour of the triangle with a line 10 pixel thick and with round edges. Then what you have to do is to supply to the :meth:`~Plot.add` method a third argument where you specify a ``stroke`` transformation::
 
   p = plot()
   p:add(t, 'red', {{'stroke', width=10, cap='round'}})
@@ -326,7 +326,7 @@ Now, to continue our example, let us suppose that we want to plot a dashed line 
 
 .. figure:: simpler-example-3.png
 
-the 'a' and 'b' parameters specifies the lengths of the dash and of the blank space between the dashes. This length is calculated in pixel as it does depends on the size of the windows. Let us suppose now that you want to give the length of the dashes in the user coordinate system. In this case you have to provide it as a fourth arguments to the :func:`add`. So you should do something like that::
+the 'a' and 'b' parameters specifies the lengths of the dash and of the blank space between the dashes. This length is calculated in pixel as it does depends on the size of the windows. Let us suppose now that you want to give the length of the dashes in the user coordinate system. In this case you have to provide it as a fourth arguments to the :meth:`~Plot.add`. So you should do something like that::
 
   p = plot()
   p:add(t, 'red', {{'stroke'}}, {{'dash', a= 0.5, b= 0.25}})
@@ -334,14 +334,14 @@ the 'a' and 'b' parameters specifies the lengths of the dash and of the blank sp
 
 You can note that we have changed the size of the dashes because in the user coordinate system the value 10 is big as the edge of the triangle.
 
-So, if general, the :func:`add` methods takes two optional arguments, the list of the post-transforms and the list of the pre-transforms. The post-transforms are made when we are already in the window coordinate system while the pre-transforms are made in the user coordinate system.
+So, if general, the :meth:`~Plot.add` methods takes two optional arguments, the list of the post-transforms and the list of the pre-transforms. The post-transforms are made when we are already in the window coordinate system while the pre-transforms are made in the user coordinate system.
 
 Some transformations are naturally expressed as post-transforms because they does operates naturally in term of pixel while other are usually expressed as pre-transforms because they operates in the user coordinates space.
 
 Plot
 ----
 
-We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :func:`add` and :func:`addline`. The method :func:`addline` is just a shortcut to add elements with a 'stroke' post transform of unitary width.
+We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :meth:`~Plot.add` and :meth:`~Plot.addline`. The method :meth:`~Plot.addline` is just a shortcut to add elements with a 'stroke' post transform of unitary width.
 
 You can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
 
@@ -352,7 +352,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Create a new empty plot with an optional title. The plot is not
       attached to any window and is therefore not visible. To show the
       plot on the screen use either the :func:`show` plot's method or
-      use the :func:`attach` window's method to attach the plot to a
+      use the :meth:`~Window.attach` window's method to attach the plot to a
       specific window.
 
       This kind of plot automatically update its limits when the
@@ -360,7 +360,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       initialized to a ``true`` value so that every operation triggers
       an update of all the windows that shows the plot. If you want to
       perform animations you may want to set the ``sync`` property to
-      ``false`` and use the :func:`flush` method to update the windows
+      ``false`` and use the :meth:`~Plot.flush` method to update the windows
       when all the drawing operations have been done.
 
    .. function:: canvas([title])
@@ -415,8 +415,8 @@ You can add elements to a plot in any moments even when it is already shown. GSL
 
       Add a new :ref:`graphical layer <graphical-layer>` and into the
       plot so that it becames the current one and all the elements
-      added with methods :func:`add` or :func:`addline` are associated with
-      this new layer.
+      added with methods :meth:`~Plot.add` or :meth:`~Plot.addline`
+      are associated with this new layer.
 
    .. method:: poplayer()
 
@@ -440,7 +440,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       in the plot will automatically update all the windows where the
       plot is shown. It is useful to set ``sync`` to false for
       animation so that many operations can be performed and the
-      window is updated only when the :func:`flush` method is called.
+      window is updated only when the :meth:`~Plot.flush` method is called.
 
 
 .. _graphical-layer:
@@ -451,7 +451,7 @@ Graphical Layers
 When you want to perform animations with plot you can take advantage of the :ref:`graphical layers <graphical-layer>` that allows to clear and redraw only some graphical elements while keeping other elements always present in the background. The idea is that if you want to make an animation you will probably clear and redraw over and over some graphical elements but you may want to keep some of them fixed in the background. In order to obtain that you can
 
   * add normally all the fixed graphical elements
-  * add a new :ref:`graphical layer <graphical-layer>` with the method :func:`pushlayer`
+  * add a new :ref:`graphical layer <graphical-layer>` with the method :meth:`~Plot.pushlayer`
   * clear and redraw all the elements using the new topmost layer
 
 Here an simple example::
@@ -566,10 +566,9 @@ Here a complete list of all the available transforms:
      * **join**, can be 'miter', 'miter.rev', 'miter.round', 'round' and 'bevel'
 
   **dash**
-    Transform the path to a sequence of dashes. 
+    Transform the path to a sequence of dashes. The following elements in the table are the length of the dashs and gaps.
 
-    * **a**, the length of the dash
-    * **b**, the length of the gap between consecutives dashes
+    For example, to express a dash-dot  line you can write ``{'dash', 7,3,3,3}``.
 
   **curve**
     This transformation make the 'curve3' and 'curve4' path elements became real curves.

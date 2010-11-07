@@ -146,9 +146,9 @@ its gradient at each evaluation point.
      of the line minimization is specified by the parameter TOL.  The
      minimum along this line occurs when the function gradient G and
      the search direction P are orthogonal.  The line minimization
-     terminates when dot(p,g) < tol |p| |g|.  The search direction is
+     terminates when :math:`dot(p,g) < tol |p| |g|`.  The search direction is
      updated  using the Fletcher-Reeves formula p' = g' - \beta g where
-     \beta=-|g'|^2/|g|^2, and the line minimization is then repeated
+     :math:`\beta=-|g'|^2/|g|^2`, and the line minimization is then repeated
      for the new search direction.
 
 ``conjugate_pr``
@@ -190,14 +190,16 @@ its gradient at each evaluation point.
 
 Only one algorithm without derivatives is available and it is always implicitly chosen.
 
-These methods use the Simplex algorithm of Nelder and Mead. Starting from the initial vector X = p_0, the algorithm constructs an additional n vectors p_i using the step size vector s =
-     STEP_SIZE as follows:
+These methods use the Simplex algorithm of Nelder and Mead. Starting from the initial vector X = p_0, the algorithm constructs an additional n vectors p_i using the step size vector s = STEP_SIZE as follows:
 
-          p_0 = (x_0, x_1, ... , x_n)
-          p_1 = (x_0 + s_0, x_1, ... , x_n)
-          p_2 = (x_0, x_1 + s_1, ... , x_n)
-          ... = ...
-          p_n = (x_0, x_1, ... , x_n + s_n)
+.. math::
+        \begin{array}{ll}
+          p_0 & = (x_0, x_1, ... , x_n) \\
+          p_1 & = (x_0 + s_0, x_1, ... , x_n) \\
+          p_2 & = (x_0, x_1 + s_1, ... , x_n) \\
+          \dots & = \dots \\
+          p_n & = (x_0, x_1, ... , x_n + s_n)
+        \end{array}
 
 These vectors form the n+1 vertices of a simplex in n dimensions. On each iteration the algorithm uses simple geometrical transformations to update the vector corresponding to the highest function value.  The geometric transformations are reflection, reflection followed by expansion, contraction and multiple contraction.  Using these transformations the simplex moves through the space towards the minimum, where it contracts itself.
 
