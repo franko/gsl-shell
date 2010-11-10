@@ -46,7 +46,7 @@ Here an examples about the usage of an ODE solver for *real* numbers. The differ
       \begin{array}{ll}
          x' = & -y - x^2 \\
 	 y' = & 2 x - y^3
-      \end{array}{ll}
+      \end{array}
 
 and here the code that we can write to implement it::
 

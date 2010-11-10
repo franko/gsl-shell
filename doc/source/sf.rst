@@ -15,9 +15,7 @@ functions, Error functions, Exponential integrals, Fermi-Dirac
 functions, Gamma functions, Gegenbauer functions, Hypergeometric
 functions, Laguerre functions, Legendre functions and Spherical
 Harmonics, the Psi (Digamma) Function, Synchrotron functions,
-Transport functions, Trigonometric functions and Zeta functions.  Each
-routine also computes an estimate of the numerical error in the
-calculated value of the function.
+Transport functions, Trigonometric functions and Zeta functions.
 
 Functions
 ---------
@@ -252,9 +250,31 @@ Functions
 .. function:: beta(a, b)
 .. function:: lnbeta(a, b)
 
-.. function:: hyperg0F1(a, b)
-.. function:: hyperg1F1(m, n, x)
-.. function:: hypergU(m, n, x)
-
 .. function:: zeta(n)
 
+    These routines compute the Riemann zeta function :math:`\zeta(s)` for arbitrary s, :math:`s \ne 1`.
+   
+Hypergeometric functions
+------------------------
+
+.. function:: hyperg0F1(a, b)
+
+   These routines compute the hypergeometric function 0F1(c,x).
+
+.. function:: hyperg1F1(m, n, x)
+
+   These routines compute the confluent hypergeometric function 1F1(m,n,x) = M(m,n,x). The parameters m and n can be integer or real numbers.
+
+.. function:: hypergU(m, n, x)
+
+    These routines compute the confluent hypergeometric function U(m,n,x). The parameters m and n can be integer or real numbers.
+
+.. function:: hyperg2F1(a, b, c, x)
+
+   These routines compute the Gauss hypergeometric function 2F1(a,b,c,x) = F(a,b,c,x) for :math:`|x| < 1`.
+
+   If the arguments (a,b,c,x) are too close to a singularity then the function can return the error code `GSL_EMAXITER' when the series approximation converges too slowly.  This occurs in the region of x=1, c - a - b = m for integer m.
+
+.. function:: hyperg2F1conj(a, c, x)
+
+   These routines compute the Gauss hypergeometric function 2F1(a, a^*, c, x) where a is complex parameter, c and x are real parameters with :math:`|x| < 1`.
