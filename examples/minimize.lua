@@ -42,7 +42,7 @@ function demo1()
    local x0 = vector {-1.2, 1.0}
 --   local m = fmultimin(frosenbrock, 2)
 --   m:set(x0, vector {0.5, 0.5}, 0.001) 
-   local m = fdfmultimin(frosenbrock, 2, "bfgs2")
+   local m = fdfmultimin(frosenbrock, 2, "bfgs")
    m:set(x0, 0.5) 
 
    local p = contour(cook(frosenbrock), -1.5, -0.5, 1.5, 2, {levels= 12})
