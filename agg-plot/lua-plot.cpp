@@ -82,7 +82,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"limits",      plot_set_limits },
   {"pushlayer",   plot_push_layer },
   {"poplayer",    plot_pop_layer  },
-  {"clear",       plot_clear  },
+  {"clear",       plot_clear      },
   {"__index",     plot_index      },
   {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },

@@ -511,7 +511,7 @@ void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
 template<class VS, class RM>
 void plot<VS,RM>::set_units(bool use_units)
 { 
-  if (use_units != use_units)
+  if (m_use_units != use_units)
     {
       m_use_units = use_units;
       m_need_redraw = true;
