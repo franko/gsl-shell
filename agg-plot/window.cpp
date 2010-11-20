@@ -125,7 +125,7 @@ window::draw_rec(ref::node *n)
   ref *ref = n->content();
   if (ref)
     {
-      draw_slot_by_ref (*ref, true);
+      draw_slot_by_ref (*ref, false);
     }
 }
 
