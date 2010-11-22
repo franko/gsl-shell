@@ -369,7 +369,7 @@ namespace agg
 			    -pmap_tmp.stride());
 
 	    rendering_buffer_ro src_view;
-	    rendering_buffer_get_view(src_view, *src, r, m_bpp / 8, m_flip_y);
+	    rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
 	    convert_pmap(&rbuf_tmp, &src_view, m_format, true);
 
