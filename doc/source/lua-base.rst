@@ -65,7 +65,7 @@ We give an example to build a stateless row "iterator" over the rows of a matrix
    end
 
    -- how it can be used
-   for i, row in my_row_iter(m, i), m, 1 do
+   for i, row in my_row_iter, m, 1 do
       print('Row number', i, ':', row)
    end
 
@@ -79,3 +79,6 @@ Note that in this case we have to provide the "iterator", its "state" and the in
    for i, row in make_row_iter(m) do
       print('Row number', i, ':', row)
    end
+
+To summarize, this example shows how to create an iterator to iterate over the row of a matrix. The iterator builder is a function that returns three values, the first is a function (the iterator itself), the second is the state and the third argument is the first value of the index.
+
