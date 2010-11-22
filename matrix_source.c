@@ -66,7 +66,7 @@ FUNCTION (matrix, check_size) (lua_State *L, TYPE (gsl_matrix) *m,
 {
   if (m->size1 != n1 || m->size2 != n2)
     {
-      luaL_error (L, "expecting matrix %ux%u, got matrix %ux%u",
+      luaL_error (L, "expecting matrix of size %dx%d, got matrix %dx%d",
 		  n1, n2, m->size1, m->size2);
     }
 }
