@@ -51,8 +51,9 @@ namespace agg
         void create_pmap(unsigned width, unsigned height, 
                          rendering_buffer* wnd);
 
-      void display_pmap(HDC dc, const rendering_buffer* src,
-			const agg::rect_base<int> *rect = 0);
+        void display_pmap(HDC dc, const rendering_buffer* src,
+			  const agg::rect_base<int> *rect = 0);
+
         bool load_pmap(const char* fn, unsigned idx, 
                        rendering_buffer* dst);
 
@@ -70,6 +71,7 @@ namespace agg
         unsigned      m_sys_bpp;
         HWND          m_hwnd;
         pixel_map     m_pmap_window;
+        BITMAPINFO*   m_bmp_draw;
         pixel_map     m_pmap_img[platform_support::max_images];
         unsigned      m_keymap[256];
         unsigned      m_last_translated_key;
@@ -85,6 +87,8 @@ namespace agg
       bool m_is_ready;
 
       pthread_mutex_t m_mutex[1];
+
+      static void bitmap_info_resize (BITMAPINFO* bmp, unsigned w, unsigned h);
     };
 
 
@@ -96,6 +100,7 @@ namespace agg
         m_bpp(0),
         m_sys_bpp(0),
         m_hwnd(0),
+	m_bmp_draw(0),
         m_last_translated_key(0),
         m_cur_x(0),
         m_cur_y(0),
@@ -236,6 +241,9 @@ namespace agg
   platform_specific::~platform_specific()
   {
     pthread_mutex_destroy (m_mutex);
+
+    if (m_bmp_draw)
+      delete [] (unsigned char*) m_bmp_draw;
   }
 
   void platform_specific::close()
@@ -256,6 +264,9 @@ namespace agg
                       m_flip_y ?
                       m_pmap_window.stride() :
                      -m_pmap_window.stride());
+
+	m_bmp_draw = agg::pixel_map::create_bitmap_info(width, height, 
+							org_e(m_sys_bpp));
     }
 
 
@@ -348,48 +359,40 @@ namespace agg
       }
     else
       {
-	opt_rect<int> optr(0, 0, src->width(), src->height());
+	agg::rect_base<int> r(0, 0, src->width(), src->height());
 	if (ri)
-	  optr.add<rect_intersect>(*ri);
+	  r = agg::intersect_rectangles(r, *ri);
 
-	const agg::rect_base<int>& r = optr.rect();
-	int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
+	int w = r.x2 - r.x1, h = r.y2 - r.y1;
 
-	try
-	  {
-	    pixel_map pmap_tmp;
-	    pmap_tmp.create(w, h, org_e(m_sys_bpp));
+	bitmap_info_resize (m_bmp_draw, w, h);
 
-	    rendering_buffer rbuf_tmp;
-	    rbuf_tmp.attach(pmap_tmp.buf(),
-			    pmap_tmp.width(),
-			    pmap_tmp.height(),
-			    m_flip_y ?
-			    pmap_tmp.stride() :
-			    -pmap_tmp.stride());
+	pixel_map pmap_tmp;
+	pmap_tmp.attach_to_bmp(m_bmp_draw);
 
-	    rendering_buffer_ro src_view;
-	    rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
+	rendering_buffer rbuf_tmp;
+	int bstride = pmap_tmp.stride();
+	rbuf_tmp.attach(pmap_tmp.buf(), w, h, m_flip_y ? bstride : -bstride);
 
-	    convert_pmap(&rbuf_tmp, &src_view, m_format, true);
+	rendering_buffer_ro src_view;
+	rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-	    unsigned int wh = m_pmap_window.height();
-	    RECT wrect;
-	    wrect.left   = x;
-	    wrect.right  = x + w;
-	    wrect.bottom = wh - y;
-	    wrect.top    = wh - (y+h);
+	convert_pmap(&rbuf_tmp, &src_view, m_format, true);
 
-	    RECT brect;
-	    brect.left   = 0;
-	    brect.right  = w;
-	    brect.bottom = h;
-	    brect.top    = 0;
+	unsigned int wh = m_pmap_window.height();
+	RECT wrect;
+	wrect.left   = r.x1;
+	wrect.right  = r.x2;
+	wrect.bottom = wh - r.y1;
+	wrect.top    = wh - r.y2;
 
-	    pmap_tmp.draw(dc, &wrect, &brect);
-	  }
-	catch (std::bad_alloc&)
-	  { }
+	RECT brect;
+	brect.left   = 0;
+	brect.right  = w;
+	brect.bottom = h;
+	brect.top    = 0;
+
+	pmap_tmp.draw(dc, &wrect, &brect);
       }
   }
 
@@ -614,6 +617,18 @@ namespace agg
         return m_last_translated_key = (keycode > 255) ? 0 : m_keymap[keycode];
     }
 
+  void platform_specific::bitmap_info_resize (BITMAPINFO* bmp, unsigned w, unsigned h)
+  {
+    if (w == 0) w = 1;
+    if (h == 0) h = 1;
+
+    unsigned bits_per_pixel = bmp->bmiHeader.biBitCount;
+    unsigned row_len = agg::pixel_map::calc_row_len(w, bits_per_pixel);
+
+    bmp->bmiHeader.biWidth  = w;
+    bmp->bmiHeader.biHeight = h;
+    bmp->bmiHeader.biSizeImage = row_len * h;
+  }
 
 
     //------------------------------------------------------------------------
