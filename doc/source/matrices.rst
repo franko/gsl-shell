@@ -127,6 +127,14 @@ All the functions described in this section have an equivalent function for comp
    element of an existing matrix ``a`` to the same value of the
    corresponding element of ``b``.
 
+.. function:: fset(m, f)
+
+   Set the elements of the matrix ``m`` to the value given by
+   ``f(i, j)`` where ``i`` and ``j`` are, respectively, the row and column
+   indexes of the matrix. Note that this function have the same
+   semantic of the :func:`new` function with the difference that :func:`fset`
+   operate on a matrix that already exists instead of creating a new one.
+
 .. function:: null(a)
 
    Set each element of the matrix ``a`` to zero.

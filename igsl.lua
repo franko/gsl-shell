@@ -28,7 +28,7 @@ local cat    = table.concat
 local insert = table.insert
 local fmt    = string.format
 
-function matrix_f_set(m, f)
+local function matrix_f_set(m, f)
    local r, c = dim(m)
    for i = 1, r do
       for j = 1, c do
@@ -153,6 +153,10 @@ end
 
 function null(m)
    matrix_f_set(m, |i,j| 0)
+end
+
+function fset(m, f)
+   matrix_f_set(m, f)
 end
 
 local function add_matrix_method(s, m)
