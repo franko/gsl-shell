@@ -180,6 +180,9 @@ namespace agg
             m_bpp = 64;
             m_sys_bpp = 32;
             break;
+
+	default:
+	  /* */;
         }
         ::QueryPerformanceFrequency(&m_sw_freq);
         ::QueryPerformanceCounter(&m_sw_start);
@@ -293,6 +296,9 @@ namespace agg
       case pix_format_rgba64:
 	my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
 	break;
+
+      default:
+	/* */;
       }
   }
 
@@ -314,12 +320,11 @@ namespace agg
 
 	bitmap_info_resize (m_bmp_draw, w, h);
 
-	pixel_map pmap_tmp;
-	pmap_tmp.attach_to_bmp(m_bmp_draw);
+	pixel_map pmap;
+	pmap.attach_to_bmp(m_bmp_draw);
 
 	rendering_buffer rbuf_tmp;
-	int bstride = pmap_tmp.stride();
-	rbuf_tmp.attach(pmap_tmp.buf(), w, h, m_flip_y ? bstride : -bstride);
+	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
 	rendering_buffer_ro src_view;
 	rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
@@ -339,7 +344,7 @@ namespace agg
 	brect.bottom = h;
 	brect.top    = 0;
 
-	pmap_tmp.draw(dc, &wrect, &brect);
+	pmap.draw(dc, &wrect, &brect);
       }
   }
 
@@ -513,6 +518,8 @@ namespace agg
             }
             break;
 
+	default:
+	  return false;
         }
 
         return true;
