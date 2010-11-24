@@ -35,6 +35,13 @@
 
 namespace agg
 {
+
+  static inline void pixel_map_attach (pixel_map& pm, rendering_buffer *rbuf,
+				       bool flip_y)
+  {
+    int stride = pm.stride();
+    rbuf->attach(pm.buf(), pm.width(), pm.height(), flip_y ? stride : -stride);
+  }
     
     //------------------------------------------------------------------------
     HINSTANCE g_windows_instance = 0;
@@ -162,8 +169,7 @@ namespace agg
         m_keymap[VK_CAPITAL]    = key_capslock;
         m_keymap[VK_SCROLL]     = key_scrollock;
 
-
-        switch(m_format)
+      switch(m_format)
         {
         case pix_format_bw:
             m_sys_format = pix_format_bw;
@@ -258,15 +264,12 @@ namespace agg
                                         rendering_buffer* wnd)
     {
         m_pmap_window.create(width, height, org_e(m_bpp));
-        wnd->attach(m_pmap_window.buf(), 
-                    m_pmap_window.width(),
-                    m_pmap_window.height(),
-                      m_flip_y ?
-                      m_pmap_window.stride() :
-                     -m_pmap_window.stride());
+	pixel_map_attach (m_pmap_window, wnd, m_flip_y);
 
-	m_bmp_draw = agg::pixel_map::create_bitmap_info(width, height, 
-							org_e(m_sys_bpp));
+	if (m_bmp_draw)
+	  delete [] (unsigned char*) m_bmp_draw;
+	m_bmp_draw = pixel_map::create_bitmap_info(width, height,
+						   org_e(m_sys_bpp));
     }
 
 
@@ -402,26 +405,21 @@ namespace agg
     bool platform_specific::save_pmap(const char* fn, unsigned idx, 
                                       const rendering_buffer* src)
     {
+	pixel_map& img = m_pmap_img[idx];
+
         if(m_sys_format == m_format)
         {
-            return m_pmap_img[idx].save_as_bmp(fn);
+	  return img.save_as_bmp(fn);
         }
 
-        pixel_map pmap_tmp;
-        pmap_tmp.create(m_pmap_img[idx].width(), 
-                          m_pmap_img[idx].height(),
-                          org_e(m_sys_bpp));
+        pixel_map pmap;
+        pmap.create(img.width(), img.height(), org_e(m_sys_bpp));
 
         rendering_buffer rbuf_tmp;
-        rbuf_tmp.attach(pmap_tmp.buf(),
-                          pmap_tmp.width(),
-                          pmap_tmp.height(),
-                          m_flip_y ?
-                          pmap_tmp.stride() :
-                          -pmap_tmp.stride());
+	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
         convert_pmap(&rbuf_tmp, src, m_format, false);
-        return pmap_tmp.save_as_bmp(fn);
+        return pmap.save_as_bmp(fn);
     }
 
 
@@ -430,33 +428,21 @@ namespace agg
     bool platform_specific::load_pmap(const char* fn, unsigned idx, 
                                       rendering_buffer* dst)
     {
-        pixel_map pmap_tmp;
-        if(!pmap_tmp.load_from_bmp(fn)) return false;
+	pixel_map& img = m_pmap_img[idx];
+
+        pixel_map pmap;
+        if(!pmap.load_from_bmp(fn)) return false;
 
         rendering_buffer rbuf_tmp;
-        rbuf_tmp.attach(pmap_tmp.buf(),
-                        pmap_tmp.width(),
-                        pmap_tmp.height(),
-                        m_flip_y ?
-                          pmap_tmp.stride() :
-                         -pmap_tmp.stride());
+	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
-        m_pmap_img[idx].create(pmap_tmp.width(), 
-                               pmap_tmp.height(), 
-                               org_e(m_bpp),
-                               0);
-
-        dst->attach(m_pmap_img[idx].buf(),
-                    m_pmap_img[idx].width(),
-                    m_pmap_img[idx].height(),
-                    m_flip_y ?
-                       m_pmap_img[idx].stride() :
-                      -m_pmap_img[idx].stride());
+        img.create(pmap.width(), pmap.height(), org_e(m_bpp), 0);
+	pixel_map_attach (img, dst, m_flip_y);
 
         switch(m_format)
         {
         case pix_format_gray8:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_gray8()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_gray8()); break;
@@ -465,7 +451,7 @@ namespace agg
             break;
 
         case pix_format_gray16:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_gray16()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_gray16()); break;
@@ -474,7 +460,7 @@ namespace agg
             break;
 
         case pix_format_rgb555:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb555()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb555()); break;
@@ -483,7 +469,7 @@ namespace agg
             break;
 
         case pix_format_rgb565:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb565()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb565()); break;
@@ -492,7 +478,7 @@ namespace agg
             break;
 
         case pix_format_rgb24:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb24()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb24()); break;
@@ -501,7 +487,7 @@ namespace agg
             break;
 
         case pix_format_bgr24:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgr24()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgr24()); break;
@@ -510,7 +496,7 @@ namespace agg
             break;
 
         case pix_format_rgb48:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb48()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb48()); break;
@@ -519,7 +505,7 @@ namespace agg
             break;
 
         case pix_format_bgr48:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgr48()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgr48()); break;
@@ -528,7 +514,7 @@ namespace agg
             break;
 
         case pix_format_abgr32:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_abgr32()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_abgr32()); break;
@@ -537,7 +523,7 @@ namespace agg
             break;
 
         case pix_format_argb32:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_argb32()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_argb32()); break;
@@ -546,7 +532,7 @@ namespace agg
             break;
 
         case pix_format_bgra32:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgra32()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgra32()); break;
@@ -555,7 +541,7 @@ namespace agg
             break;
 
         case pix_format_rgba32:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgba32()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgba32()); break;
@@ -564,7 +550,7 @@ namespace agg
             break;
 
         case pix_format_abgr64:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_abgr64()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_abgr64()); break;
@@ -573,7 +559,7 @@ namespace agg
             break;
 
         case pix_format_argb64:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_argb64()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_argb64()); break;
@@ -582,7 +568,7 @@ namespace agg
             break;
 
         case pix_format_bgra64:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgra64()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgra64()); break;
@@ -591,7 +577,7 @@ namespace agg
             break;
 
         case pix_format_rgba64:
-            switch(pmap_tmp.bpp())
+            switch(pmap.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgba64()); break;
             case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgba64()); break;
@@ -738,8 +724,7 @@ namespace agg
         case WM_SIZE:
 	  try
 	    {
-	      app->m_specific->create_pmap(LOWORD(lParam), 
-					   HIWORD(lParam),
+	      app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
 					   &app->rbuf_window());
 
 	      app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
@@ -1233,13 +1218,10 @@ namespace agg
         {
             if(width  == 0) width  = m_specific->m_pmap_window.width();
             if(height == 0) height = m_specific->m_pmap_window.height();
-            m_specific->m_pmap_img[idx].create(width, height, org_e(m_specific->m_bpp));
-            m_rbuf_img[idx].attach(m_specific->m_pmap_img[idx].buf(), 
-                                   m_specific->m_pmap_img[idx].width(),
-                                   m_specific->m_pmap_img[idx].height(),
-                                   m_flip_y ?
-                                    m_specific->m_pmap_img[idx].stride() :
-                                   -m_specific->m_pmap_img[idx].stride());
+
+	    pixel_map& pmap = m_specific->m_pmap_img[idx];
+            pmap.create(width, height, org_e(m_specific->m_bpp));
+	    pixel_map_attach (pmap, &m_rbuf_img[idx], m_flip_y);
             return true;
         }
         return false;
