@@ -777,7 +777,8 @@ end
 
 function contour(f, x1, y1, x2, y2, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
-				   colormap= default_color_map, lines= true})
+				   colormap= default_color_map, 
+				   lines= true, show= true})
 
    local g = grid_create(f, x1, y1, x2, y2, opt'gridx', opt'gridy', opt'levels',
 			 opt'colormap')
@@ -786,15 +787,16 @@ function contour(f, x1, y1, x2, y2, options)
 
    local p = plot()
    g.draw_regions(p)
-   if opt'lines' then g.draw_lines(p, 'black') end
-   p:show()
+   if opt 'lines' then g.draw_lines(p, 'black') end
+   if opt 'show' then p:show() end
 
    return p
 end
 
 function polar_contour(f, R, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
-				   colormap= default_color_map, lines= true})
+				   colormap= default_color_map, 
+				   lines= true, show= true})
    local map = circle_map_gener(R)
    local g = grid_create(f, -1, -1, 1, 1, opt'gridx', opt'gridy', opt'levels',
 			 opt'colormap', map)
@@ -803,8 +805,8 @@ function polar_contour(f, R, options)
 
    local p = plot()
    g.draw_regions(p)
-   if opt'lines' then g.draw_lines(p, 'black') end
-   p:show()
+   if opt 'lines' then g.draw_lines(p, 'black') end
+   if opt 'show' then p:show() end
 
    return p
 end

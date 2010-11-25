@@ -27,7 +27,8 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
    * ``gridx``, number of subdivision along x
    * ``gridy``, number of subdivision along y
    * ``levels``, number of contour levels or a list of the level values in monotonic order.
-   * ``colormap`` a function that return a color for the contour region. The argumet of the function will be a number between 0 and 1.
+   * ``colormap`` a function that return a color for the contour region. The argument of the function will be a number between 0 and 1.
+   * ``show``, specify if the plot should be shown. By default it is ``true``.
 
 .. function:: polar_contour(f, R[, options]])
 
