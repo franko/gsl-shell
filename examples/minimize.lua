@@ -38,14 +38,8 @@ local function cook(f)
 	  end
 end
 
-function demo1()
-   local x0 = vector {-1.2, 1.0}
---   local m = fmultimin(frosenbrock, 2)
---   m:set(x0, vector {0.5, 0.5}, 0.001) 
-   local m = fdfmultimin(frosenbrock, 2, "bfgs")
-   m:set(x0, 0.5) 
-
-   local p = contour(cook(frosenbrock), -1.5, -0.5, 1.5, 2, {levels= 12})
+function contour_minimize(f, m, x1, y1, x2, y2, contour_options)
+   local p = contour(cook(f), x1, y1, x2, y2, contour_options)
    local c = path(m.x[1], m.x[2])
    local cx, cy = m.x[1], m.x[2]
    while m:step() == 'continue' do
@@ -59,55 +53,34 @@ function demo1()
 
    p:addline(c, 'black', {{'marker', size=5}})
    p:addline(c, 'red')
-
-   p.title = 'Rosenbrock function minimisation'
    return p
 end
 
-function demo1bis()
+function demo1()
+   local w = window('v..')
+
    local x0 = vector {-1.2, 1.0}
-   m = minimizer {f= frosenbrock, n= 2}
-   m:set(x0, vector {1, 1}) 
+   local m = fmultimin(frosenbrock, 2)
+   m:set(x0, vector {0.5, 0.5}, 0.01^2/2) 
 
-   p = contour(cook(frosenbrock), -1.5, -0.5, 1.5, 2, {levels= 12})
-   p.title = 'Rosenbrock function minimisation'
-   p.sync = false
-   p:pushlayer()
-   io.read('*l')
-   local ox, oy = m.x[1], m.x[2]
-   while m:step() == 'continue' do
-      print(m.x[1], m.x[2], m.value)
-      local nx, ny = m.x[1], m.x[2]
-      p:addline(segment(ox, oy, nx, ny))
-      p:flush()
-      ox, oy = nx, ny
-   end
-   print(m.x[1], m.x[2], m.value)
+   local copts = {levels= 12, show= false}
+   local p1 = contour_minimize(frosenbrock, m, -1.5, -0.5, 1.5, 2, copts)
+   p1.title = 'Rosenbrock function minimisation, algorithm w/o derivates'
+   w:attach(p1, 1)
 
-   return p
+   local m = fdfmultimin(frosenbrock, 2, "bfgs")
+   m:set(x0, 0.5) 
+
+   local p2 = contour_minimize(frosenbrock, m, -1.5, -0.5, 1.5, 2, copts)
+   p2.title = 'Rosenbrock function minimisation, BFGS solver'
+   w:attach(p2, 2)
 end
-
 
 function demo2()
    local x0 = vector {-1.2, 1.0}
    local m = fmultimin(f, 2)
    m:set(x0, vector {1, 1}, 0.01)
-
-   local p=contour(cook(f), -2, -3, 8, 2)
-   local c = path(m.x[1], m.x[2])
-   local cx, cy = m.x[1], m.x[2]
-   while m:step() == 'continue' do
-      if cx ~= m.x[1] or cy ~= m.x[2] then
-	 c:line_to(m.x[1], m.x[2])
-	 cx, cy = m.x[1], m.x[2]
-      end
-   end
-   c:line_to(m.x[1], m.x[2])
-   print(m.x[1], m.x[2], m.value)
-
-   p:addline(c, 'black', {{'marker', size=5}})
-   p:addline(c, 'red')
-
+   local p = contour_minimize(f, m, -2, -3, 8, 2)
    p.title = 'Quadratic function minimisation'
    return p
 end
@@ -117,22 +90,14 @@ function demo3()
    local x0 = vector {-0.5, 1.0}
    local m = fdfmultimin(fex, 2, "bfgs")
    m:set(x0, 0.5)
-
-   local p=contour(cook(fex), -2, -2.5, 1, 1.5, {gridx=30, gridy= 30, levels= 22})
-   local c = path(m.x[1], m.x[2])
-   local cx, cy = m.x[1], m.x[2]
-   while m:step() == 'continue' do
-      if cx ~= m.x[1] or cy ~= m.x[2] then
-	 c:line_to(m.x[1], m.x[2])
-	 cx, cy = m.x[1], m.x[2]
-      end
-   end
-   c:line_to(m.x[1], m.x[2])
-   print(m.x[1], m.x[2], m.value)
-
-   p:addline(c, 'black', {{'marker', size=5}})
-   p:addline(c, 'green')
-
+   local p = contour_minimize(fex, m, -2, -2.5, 1, 1.5, 
+			      {gridx=30, gridy= 30, levels= 22})
    p.title = 'f(x,y) = exp(x) * (4 x^2 + 2 y^2 + 4 x y + 2 y + 1)'
    return p
 end
+
+print ("demo1() - minimization of Rosenbrock function with different algorithms")
+print ("demo2() - minimization of quadratic function without derivates")
+print ("demo3() - function minimization using BFGS solver")
+
+
