@@ -26,6 +26,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <new>
+#include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
@@ -923,6 +924,23 @@ namespace agg
   void platform_support::on_ctrl_change() {}
   void platform_support::on_draw() {}
   void platform_support::on_post_draw(void* raw_handler) {}
+}
+
+agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_bgr24;
+unsigned gslshell::bpp = 24;
+unsigned gslshell::sys_bpp = 24;
+
+bool
+platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
+{
+  agg::pixel_map pmap;
+  pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
+
+  agg::rendering_buffer rbuf_tmp;
+  pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
+
+  agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
+  return pmap.save_as_bmp (fn);
 }
 
 void

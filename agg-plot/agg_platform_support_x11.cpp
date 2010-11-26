@@ -35,6 +35,7 @@
 #include <new>
 #include "agg_basics.h"
 #include "util/agg_color_conv_rgb8.h"
+#include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 #include "rect.h"
 
@@ -106,6 +107,11 @@ public:
 
   XImage * ximage() { return m_img; };
 };
+
+unsigned gslshell::bpp = 24;
+
+agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_undefined;
+unsigned gslshell::sys_bpp = 0;
 
 buffer_image::buffer_image(unsigned bpp, unsigned byte_order,
                            unsigned width, unsigned height, x_connection *xc)
@@ -421,6 +427,8 @@ namespace agg
               0, 0, x_dst, y_dst, w, h);
   }
 
+  bool platform_specific::initialized = false;
+
   //------------------------------------------------------------------------
   platform_support::platform_support(pix_format_e format, bool flip_y) :
     m_specific(new platform_specific(format, flip_y)),
@@ -588,6 +596,9 @@ namespace agg
         m_specific->close_connections();
         return false;
       }
+
+    gslshell::sys_pixel_format = m_specific->m_sys_format;
+    gslshell::sys_bpp = m_specific->m_sys_bpp;
 
     XSetWindowAttributes *win_attr = &m_specific->m_window_attributes;
                 
@@ -970,78 +981,11 @@ namespace agg
   }
 
 
-
-
   //------------------------------------------------------------------------
   bool platform_support::save_img(unsigned idx, const char* file)
   {
-    if(idx < max_images &&  rbuf_img(idx).buf())
-      {
-        char buf[1024];
-        strcpy(buf, file);
-        int len = strlen(buf);
-        if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
-          {
-            strcat(buf, ".ppm");
-          }
-            
-        FILE* fd = fopen(buf, "wb");
-        if(fd == 0) return false;
-            
-        unsigned w = rbuf_img(idx).width();
-        unsigned h = rbuf_img(idx).height();
-            
-        fprintf(fd, "P6\n%d %d\n255\n", w, h);
-                
-        unsigned y; 
-        unsigned char* tmp_buf = new unsigned char [w * 3];
-        for(y = 0; y < rbuf_img(idx).height(); y++)
-          {
-            const unsigned char* src = rbuf_img(idx).row_ptr(m_flip_y ? h - 1 - y : y);
-            switch(m_format)
-              {
-              default: break;
-              case pix_format_rgb555:
-                color_conv_row(tmp_buf, src, w, color_conv_rgb555_to_rgb24());
-                break;
-                        
-              case pix_format_rgb565:
-                color_conv_row(tmp_buf, src, w, color_conv_rgb565_to_rgb24());
-                break;
-                        
-              case pix_format_bgr24:
-                color_conv_row(tmp_buf, src, w, color_conv_bgr24_to_rgb24());
-                break;
-                        
-              case pix_format_rgb24:
-                color_conv_row(tmp_buf, src, w, color_conv_rgb24_to_rgb24());
-                break;
-                       
-              case pix_format_rgba32:
-                color_conv_row(tmp_buf, src, w, color_conv_rgba32_to_rgb24());
-                break;
-                        
-              case pix_format_argb32:
-                color_conv_row(tmp_buf, src, w, color_conv_argb32_to_rgb24());
-                break;
-                        
-              case pix_format_bgra32:
-                color_conv_row(tmp_buf, src, w, color_conv_bgra32_to_rgb24());
-                break;
-                        
-              case pix_format_abgr32:
-                color_conv_row(tmp_buf, src, w, color_conv_abgr32_to_rgb24());
-                break;
-              }
-            fwrite(tmp_buf, 1, w * 3, fd);
-          }
-        delete [] tmp_buf;
-        fclose(fd);
-        return true;
-      }
     return false;
   }
-
 
 
   //------------------------------------------------------------------------
@@ -1107,8 +1051,6 @@ namespace agg
   void platform_support::on_post_draw(void* raw_handler) {}
 }
 
-bool agg::platform_specific::initialized = false;
-
 void
 platform_support_ext::prepare()
 {
@@ -1167,4 +1109,62 @@ platform_support_ext::do_window_update()
 {
   agg::rect_base<int> r(0, 0, rbuf_window().width(), rbuf_window().height());
   update_region(r);
+}
+
+bool
+platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *filename)
+{
+  FILE* fd = fopen(filename, "wb");
+  if(fd == 0) return false;
+            
+  unsigned w = rbuf.width();
+  unsigned h = rbuf.height();
+            
+  fprintf(fd, "P6\n%d %d\n255\n", w, h);
+                
+  unsigned y; 
+  unsigned char* tmp_buf = new unsigned char [w * 3];
+  for(y = 0; y < rbuf.height(); y++)
+    {
+      const unsigned char* src = rbuf.row_ptr(gslshell::flip_y ? h - 1 - y : y);
+      switch(gslshell::pixel_format)
+	{
+	default: break;
+	case agg::pix_format_rgb555:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb555_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_rgb565:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb565_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_bgr24:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgr24_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_rgb24:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb24_to_rgb24());
+	  break;
+                       
+	case agg::pix_format_rgba32:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgba32_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_argb32:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_argb32_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_bgra32:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgra32_to_rgb24());
+	  break;
+                        
+	case agg::pix_format_abgr32:
+	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_abgr32_to_rgb24());
+	  break;
+	}
+      fwrite(tmp_buf, 1, w * 3, fd);
+    }
+  delete [] tmp_buf;
+  fclose(fd);
+  return true;
 }
