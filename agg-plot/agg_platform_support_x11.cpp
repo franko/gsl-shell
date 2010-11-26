@@ -88,15 +88,15 @@ class buffer_image {
 
 public:
   buffer_image(unsigned bpp, unsigned byte_order, 
-	       unsigned width, unsigned height, x_connection *xc = 0);
+               unsigned width, unsigned height, x_connection *xc = 0);
 
   ~buffer_image()
   {
     delete [] m_buffer;
     if (m_img)
       {
-	m_img->data = 0;
-	XDestroyImage(m_img);
+        m_img->data = 0;
+        XDestroyImage(m_img);
       }
     m_x_connection = 0;
   };
@@ -108,7 +108,7 @@ public:
 };
 
 buffer_image::buffer_image(unsigned bpp, unsigned byte_order,
-			   unsigned width, unsigned height, x_connection *xc)
+                           unsigned width, unsigned height, x_connection *xc)
 {
   unsigned row_size = width * (bpp / 8);
   unsigned buf_size = height * row_size;
@@ -122,8 +122,8 @@ buffer_image::buffer_image(unsigned bpp, unsigned byte_order,
   if (xc)
     {
       m_img = XCreateImage(xc->display, xc->visual, xc->depth, 
-			   ZPixmap, 0, (char*) m_buffer,
-			   m_width, m_height, m_bpp, row_size);
+                           ZPixmap, 0, (char*) m_buffer,
+                           m_width, m_height, m_bpp, row_size);
       m_img->byte_order = byte_order;
     }
   else
@@ -222,25 +222,25 @@ namespace agg
       {
       default: break;
       case pix_format_gray8:
-	m_bpp = 8;
-	break;
+        m_bpp = 8;
+        break;
 
       case pix_format_rgb565:
       case pix_format_rgb555:
-	m_bpp = 16;
-	break;
+        m_bpp = 16;
+        break;
 
       case pix_format_rgb24:
       case pix_format_bgr24:
-	m_bpp = 24;
-	break;
+        m_bpp = 24;
+        break;
 
       case pix_format_bgra32:
       case pix_format_abgr32:
       case pix_format_argb32:
       case pix_format_rgba32:
-	m_bpp = 32;
-	break;
+        m_bpp = 32;
+        break;
       }
     m_sw_start = clock();
 
@@ -269,7 +269,7 @@ namespace agg
     close_connections();
   }
 
- void platform_specific::send_close_request(x_connection *xc)
+  void platform_specific::send_close_request(x_connection *xc)
   {
     XEvent ev;
 
@@ -315,110 +315,110 @@ namespace agg
 
     if (m_format == m_sys_format)
       {
-	rbuf_draw.copy_from(src_view);
+        rbuf_draw.copy_from(src_view);
       }
     else
       {
-	switch(m_sys_format)            
-	  {
-	  default: break;
-	  case pix_format_rgb555:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgb555()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgb555()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgb555());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgb555());  break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgb555()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgb555()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgb555()); break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgb555()); break;
-	      }
-	    break;
+        switch(m_sys_format)            
+          {
+          default: break;
+          case pix_format_rgb555:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgb555()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgb555()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgb555());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgb555());  break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgb555()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgb555()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgb555()); break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgb555()); break;
+              }
+            break;
                     
-	  case pix_format_rgb565:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgb565()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgb565()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgb565());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgb565());  break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgb565()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgb565()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgb565()); break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgb565()); break;
-	      }
-	    break;
+          case pix_format_rgb565:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgb565()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgb565()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgb565());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgb565());  break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgb565()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgb565()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgb565()); break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgb565()); break;
+              }
+            break;
                     
-	  case pix_format_rgba32:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgba32()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgba32()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgba32());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgba32());  break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgba32()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgba32()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgba32()); break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgba32()); break;
-	      }
-	    break;
+          case pix_format_rgba32:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_rgba32()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_rgba32()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_rgba32());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_rgba32());  break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_rgba32()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_rgba32()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_rgba32()); break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_rgba32()); break;
+              }
+            break;
                     
-	  case pix_format_abgr32:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_abgr32()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_abgr32()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_abgr32());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_abgr32());  break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_abgr32()); break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_abgr32()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_abgr32()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_abgr32()); break;
-	      }
-	    break;
+          case pix_format_abgr32:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_abgr32()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_abgr32()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_abgr32());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_abgr32());  break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_abgr32()); break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_abgr32()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_abgr32()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_abgr32()); break;
+              }
+            break;
                     
-	  case pix_format_argb32:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_argb32()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_argb32()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_argb32());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_argb32());  break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_argb32()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_argb32()); break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_argb32()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_argb32()); break;
-	      }
-	    break;
+          case pix_format_argb32:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_argb32()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_argb32()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_argb32());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_argb32());  break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_argb32()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_argb32()); break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_argb32()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_argb32()); break;
+              }
+            break;
                     
-	  case pix_format_bgra32:
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_bgra32()); break;
-	      case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_bgra32()); break;
-	      case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_bgra32());  break;
-	      case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_bgra32());  break;
-	      case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_bgra32()); break;
-	      case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_bgra32()); break;
-	      case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_bgra32()); break;
-	      case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_bgra32()); break;
-	      }
-	    break;
-	  }
+          case pix_format_bgra32:
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb555_to_bgra32()); break;
+              case pix_format_rgb565: my_color_conv(&rbuf_draw, &src_view, color_conv_rgb565_to_bgra32()); break;
+              case pix_format_rgb24:  my_color_conv(&rbuf_draw, &src_view, color_conv_rgb24_to_bgra32());  break;
+              case pix_format_bgr24:  my_color_conv(&rbuf_draw, &src_view, color_conv_bgr24_to_bgra32());  break;
+              case pix_format_rgba32: my_color_conv(&rbuf_draw, &src_view, color_conv_rgba32_to_bgra32()); break;
+              case pix_format_argb32: my_color_conv(&rbuf_draw, &src_view, color_conv_argb32_to_bgra32()); break;
+              case pix_format_abgr32: my_color_conv(&rbuf_draw, &src_view, color_conv_abgr32_to_bgra32()); break;
+              case pix_format_bgra32: my_color_conv(&rbuf_draw, &src_view, color_conv_bgra32_to_bgra32()); break;
+              }
+            break;
+          }
       }
 
     Display *dsp = m_draw_conn.display;
 
     int x_dst = r.x1, y_dst = (m_flip_y ? src->height() - (r.y1 + h) : r.y1);
     XPutImage(dsp, m_window, m_gc, m_draw_img->ximage(), 
-	      0, 0, x_dst, y_dst, w, h);
+              0, 0, x_dst, y_dst, w, h);
   }
 
   //------------------------------------------------------------------------
@@ -449,7 +449,7 @@ namespace agg
     strcpy(m_caption, cap);
     if(m_specific->m_initialized)
       {
-	m_specific->caption(cap);
+        m_specific->caption(cap);
       }
   }
 
@@ -477,8 +477,8 @@ namespace agg
 
     if (!m_specific->m_draw_conn.init())
       {
-	m_specific->close_connections();
-	return false;
+        m_specific->close_connections();
+        return false;
       }
         
     x_connection *xc = &m_specific->m_main_conn;
@@ -490,11 +490,11 @@ namespace agg
 
     if(xc->depth < 15 || r_mask == 0 || g_mask == 0 || b_mask == 0)
       {
-	fprintf(stderr,
-		"There's no Visual compatible with minimal AGG requirements:\n"
-		"At least 15-bit color depth and True- or DirectColor class.\n\n");
-	m_specific->close_connections();
-	return false;
+        fprintf(stderr,
+                "There's no Visual compatible with minimal AGG requirements:\n"
+                "At least 15-bit color depth and True- or DirectColor class.\n\n");
+        m_specific->close_connections();
+        return false;
       }
         
     int t = 1;
@@ -505,88 +505,88 @@ namespace agg
     switch(xc->depth)
       {
       case 15:
-	m_specific->m_sys_bpp = 16;
-	if(r_mask == 0x7C00 && g_mask == 0x3E0 && b_mask == 0x1F)
-	  {
-	    m_specific->m_sys_format = pix_format_rgb555;
-	    m_specific->m_byte_order = hw_byte_order;
-	  }
-	break;
+        m_specific->m_sys_bpp = 16;
+        if(r_mask == 0x7C00 && g_mask == 0x3E0 && b_mask == 0x1F)
+          {
+            m_specific->m_sys_format = pix_format_rgb555;
+            m_specific->m_byte_order = hw_byte_order;
+          }
+        break;
                 
       case 16:
-	m_specific->m_sys_bpp = 16;
-	if(r_mask == 0xF800 && g_mask == 0x7E0 && b_mask == 0x1F)
-	  {
-	    m_specific->m_sys_format = pix_format_rgb565;
-	    m_specific->m_byte_order = hw_byte_order;
-	  }
-	break;
+        m_specific->m_sys_bpp = 16;
+        if(r_mask == 0xF800 && g_mask == 0x7E0 && b_mask == 0x1F)
+          {
+            m_specific->m_sys_format = pix_format_rgb565;
+            m_specific->m_byte_order = hw_byte_order;
+          }
+        break;
                 
       case 24:
       case 32:
-	m_specific->m_sys_bpp = 32;
-	if(g_mask == 0xFF00)
-	  {
-	    if(r_mask == 0xFF && b_mask == 0xFF0000)
-	      {
-		switch(m_specific->m_format)
-		  {
-		  case pix_format_rgba32:
-		    m_specific->m_sys_format = pix_format_rgba32;
-		    m_specific->m_byte_order = LSBFirst;
-		    break;
+        m_specific->m_sys_bpp = 32;
+        if(g_mask == 0xFF00)
+          {
+            if(r_mask == 0xFF && b_mask == 0xFF0000)
+              {
+                switch(m_specific->m_format)
+                  {
+                  case pix_format_rgba32:
+                    m_specific->m_sys_format = pix_format_rgba32;
+                    m_specific->m_byte_order = LSBFirst;
+                    break;
                                 
-		  case pix_format_abgr32:
-		    m_specific->m_sys_format = pix_format_abgr32;
-		    m_specific->m_byte_order = MSBFirst;
-		    break;
+                  case pix_format_abgr32:
+                    m_specific->m_sys_format = pix_format_abgr32;
+                    m_specific->m_byte_order = MSBFirst;
+                    break;
 
-		  default:                            
-		    m_specific->m_byte_order = hw_byte_order;
-		    m_specific->m_sys_format = 
-		      (hw_byte_order == LSBFirst) ?
-		      pix_format_rgba32 :
-		      pix_format_abgr32;
-		    break;
-		  }
-	      }
+                  default:                            
+                    m_specific->m_byte_order = hw_byte_order;
+                    m_specific->m_sys_format = 
+                      (hw_byte_order == LSBFirst) ?
+                      pix_format_rgba32 :
+                      pix_format_abgr32;
+                    break;
+                  }
+              }
                     
-	    if(r_mask == 0xFF0000 && b_mask == 0xFF)
-	      {
-		switch(m_specific->m_format)
-		  {
-		  case pix_format_argb32:
-		    m_specific->m_sys_format = pix_format_argb32;
-		    m_specific->m_byte_order = MSBFirst;
-		    break;
+            if(r_mask == 0xFF0000 && b_mask == 0xFF)
+              {
+                switch(m_specific->m_format)
+                  {
+                  case pix_format_argb32:
+                    m_specific->m_sys_format = pix_format_argb32;
+                    m_specific->m_byte_order = MSBFirst;
+                    break;
                                 
-		  case pix_format_bgra32:
-		    m_specific->m_sys_format = pix_format_bgra32;
-		    m_specific->m_byte_order = LSBFirst;
-		    break;
+                  case pix_format_bgra32:
+                    m_specific->m_sys_format = pix_format_bgra32;
+                    m_specific->m_byte_order = LSBFirst;
+                    break;
 
-		  default:                            
-		    m_specific->m_byte_order = hw_byte_order;
-		    m_specific->m_sys_format = 
-		      (hw_byte_order == MSBFirst) ?
-		      pix_format_argb32 :
-		      pix_format_bgra32;
-		    break;
-		  }
-	      }
-	  }
-	break;
+                  default:                            
+                    m_specific->m_byte_order = hw_byte_order;
+                    m_specific->m_sys_format = 
+                      (hw_byte_order == MSBFirst) ?
+                      pix_format_argb32 :
+                      pix_format_bgra32;
+                    break;
+                  }
+              }
+          }
+        break;
       }
         
     if(m_specific->m_sys_format == pix_format_undefined)
       {
-	fprintf(stderr,
-		"RGB masks are not compatible with AGG pixel formats:\n"
-		"R=%08x, R=%08x, B=%08x\n", 
-		(unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
+        fprintf(stderr,
+                "RGB masks are not compatible with AGG pixel formats:\n"
+                "R=%08x, R=%08x, B=%08x\n", 
+                (unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
 
-	m_specific->close_connections();
-	return false;
+        m_specific->close_connections();
+        return false;
       }
 
     XSetWindowAttributes *win_attr = &m_specific->m_window_attributes;
@@ -602,9 +602,9 @@ namespace agg
 
     m_specific->m_window = 
       XCreateWindow(xc->display, XDefaultRootWindow(xc->display), 
-		    0, 0, width, height,
-		    0, xc->depth, InputOutput, CopyFromParent,
-		    window_mask, win_attr);
+                    0, 0, width, height,
+                    0, xc->depth, InputOutput, CopyFromParent,
+                    window_mask, win_attr);
 
     m_specific->m_gc = XCreateGC(xc->display, m_specific->m_window, 0, 0);
 
@@ -615,10 +615,10 @@ namespace agg
 
     if (m_specific->m_main_img == 0 || m_specific->m_draw_img == 0)
       {
-	XFreeGC(xc->display, m_specific->m_gc);
-	XDestroyWindow(xc->display, m_specific->m_window);
-	m_specific->close_connections();
-	return false;
+        XFreeGC(xc->display, m_specific->m_gc);
+        XDestroyWindow(xc->display, m_specific->m_window);
+        m_specific->close_connections();
+        return false;
       }
        
     m_specific->m_main_img->attach(m_rbuf_window, m_flip_y);
@@ -629,8 +629,8 @@ namespace agg
         
     if(!m_specific->m_initialized)
       {
-	on_init();
-	m_specific->m_initialized = true;
+        on_init();
+        m_specific->m_initialized = true;
       }
 
     trans_affine_resizing(width, height);
@@ -640,25 +640,25 @@ namespace agg
     XSizeHints *hints = XAllocSizeHints();
     if(hints) 
       {
-	if(flags & window_resize)
-	  {
-	    hints->min_width = 32;
-	    hints->min_height = 32;
-	    hints->max_width = 4096;
-	    hints->max_height = 4096;
-	  }
-	else
-	  {
-	    hints->min_width  = width;
-	    hints->min_height = height;
-	    hints->max_width  = width;
-	    hints->max_height = height;
-	  }
-	hints->flags = PMaxSize | PMinSize;
+        if(flags & window_resize)
+          {
+            hints->min_width = 32;
+            hints->min_height = 32;
+            hints->max_width = 4096;
+            hints->max_height = 4096;
+          }
+        else
+          {
+            hints->min_width  = width;
+            hints->min_height = height;
+            hints->max_width  = width;
+            hints->max_height = height;
+          }
+        hints->flags = PMaxSize | PMinSize;
 
-	XSetWMNormalHints(xc->display, m_specific->m_window, hints);
+        XSetWMNormalHints(xc->display, m_specific->m_window, hints);
 
-	XFree(hints);
+        XFree(hints);
       }
 
 
@@ -709,112 +709,112 @@ namespace agg
 
     while(!quit)
       {
-	if(ps->m_update_flag && ps->m_is_mapped)
-	  {
-	    on_draw();
-	    update_window();
-	    ps->m_update_flag = false;
-	  }
+        if(ps->m_update_flag && ps->m_is_mapped)
+          {
+            on_draw();
+            update_window();
+            ps->m_update_flag = false;
+          }
 
-	if(!m_wait_mode)
-	  {
-	    if(XPending(xc->display) == 0)
-	      {
-		on_idle();
-		continue;
-	      }
-	  }
+        if(!m_wait_mode)
+          {
+            if(XPending(xc->display) == 0)
+              {
+                on_idle();
+                continue;
+              }
+          }
 
-	XEvent x_event;
-	if (ps->m_is_mapped)
-	  {
-	    pthread_mutex_unlock (ps->m_mutex);
-	    XNextEvent(xc->display, &x_event);
-	    pthread_mutex_lock (ps->m_mutex);
-	  }
-	else
-	  {
-	    XNextEvent(xc->display, &x_event);
-	  }
+        XEvent x_event;
+        if (ps->m_is_mapped)
+          {
+            pthread_mutex_unlock (ps->m_mutex);
+            XNextEvent(xc->display, &x_event);
+            pthread_mutex_lock (ps->m_mutex);
+          }
+        else
+          {
+            XNextEvent(xc->display, &x_event);
+          }
             
-	// In the Idle mode discard all intermediate MotionNotify events
-	if(!m_wait_mode && x_event.type == MotionNotify)
-	  {
-	    XEvent te = x_event;
-	    for(;;)
-	      {
-		if(XPending(xc->display) == 0) break;
-		XNextEvent(xc->display, &te);
-		if(te.type != MotionNotify) break;
-	      }
-	    x_event = te;
-	  }
+        // In the Idle mode discard all intermediate MotionNotify events
+        if(!m_wait_mode && x_event.type == MotionNotify)
+          {
+            XEvent te = x_event;
+            for(;;)
+              {
+                if(XPending(xc->display) == 0) break;
+                XNextEvent(xc->display, &te);
+                if(te.type != MotionNotify) break;
+              }
+            x_event = te;
+          }
 
-	switch(x_event.type) 
-	  {
-	  case MapNotify: 
-	    {
-	      on_draw();
-	      update_window();
-	      ps->m_is_mapped = true;
-	      ps->m_update_flag = false;
-	    }
-	    break;
+        switch(x_event.type) 
+          {
+          case MapNotify: 
+            {
+              on_draw();
+              update_window();
+              ps->m_is_mapped = true;
+              ps->m_update_flag = false;
+            }
+            break;
 
-	  case ConfigureNotify: 
-	    {
-	      if(x_event.xconfigure.width  != int(m_rbuf_window.width()) ||
-		 x_event.xconfigure.height != int(m_rbuf_window.height()))
-		{
-		  int width  = x_event.xconfigure.width;
-		  int height = x_event.xconfigure.height;
+          case ConfigureNotify: 
+            {
+              if(x_event.xconfigure.width  != int(m_rbuf_window.width()) ||
+                 x_event.xconfigure.height != int(m_rbuf_window.height()))
+                {
+                  int width  = x_event.xconfigure.width;
+                  int height = x_event.xconfigure.height;
 
-		  delete ps->m_main_img;
-		  delete ps->m_draw_img;
+                  delete ps->m_main_img;
+                  delete ps->m_draw_img;
 
-		  ps->m_main_img = new(std::nothrow) buffer_image(ps->m_bpp, ps->m_byte_order, width, height);
-		  ps->m_draw_img = new(std::nothrow) buffer_image(ps->m_sys_bpp, ps->m_byte_order, width, height, dc);
+                  ps->m_main_img = new(std::nothrow) buffer_image(ps->m_bpp, ps->m_byte_order, width, height);
+                  ps->m_draw_img = new(std::nothrow) buffer_image(ps->m_sys_bpp, ps->m_byte_order, width, height, dc);
 
-		  if (ps->m_main_img == 0 || ps->m_draw_img == 0)
-		    {
-		      quit = true;
-		      ret = 1;
-		      break;
-		    }
+                  if (ps->m_main_img == 0 || ps->m_draw_img == 0)
+                    {
+                      quit = true;
+                      ret = 1;
+                      break;
+                    }
        
-		  ps->m_main_img->attach(m_rbuf_window, m_flip_y);
+                  ps->m_main_img->attach(m_rbuf_window, m_flip_y);
 
-		  trans_affine_resizing(width, height);
-		  on_resize(width, height);
-		  on_draw();
-		  update_window();
-		}
-	    }
-	    break;
+                  trans_affine_resizing(width, height);
+                  on_resize(width, height);
+                  on_draw();
+                  update_window();
+                }
+            }
+            break;
 
-	  case Expose:
-	    ps->put_image(&m_rbuf_window);
-	    XFlush(xc->display);
-	    XSync(xc->display, false);
-	    break;
+          case Expose:
+            ps->put_image(&m_rbuf_window);
+            XFlush(xc->display);
+            XSync(xc->display, false);
+            break;
 
-	  case ClientMessage:
-	    if((x_event.xclient.format == 32) &&
-	       (x_event.xclient.data.l[0] == int(ps->m_close_atom)))
-	      {
-		quit = true;
-	      }
-	    break;
-	  }           
+          case ClientMessage:
+            if((x_event.xclient.format == 32) &&
+               (x_event.xclient.data.l[0] == int(ps->m_close_atom)))
+              {
+                quit = true;
+              }
+            break;
+          }           
       }
 
     unsigned i = platform_support::max_images;
     while(i--)
       {
-	if(ps->m_buf_img[i]) 
-	  {
-	    delete [] ps->m_buf_img[i];
-	  }
+        if(ps->m_buf_img[i]) 
+          {
+            delete [] ps->m_buf_img[i];
+          }
       }
 
     ps->free_x_resources();
@@ -839,132 +839,132 @@ namespace agg
   {
     if(idx < max_images)
       {
-	char buf[1024];
-	strcpy(buf, file);
-	int len = strlen(buf);
-	if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
-	  {
-	    strcat(buf, ".ppm");
-	  }
+        char buf[1024];
+        strcpy(buf, file);
+        int len = strlen(buf);
+        if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
+          {
+            strcat(buf, ".ppm");
+          }
             
-	FILE* fd = fopen(buf, "rb");
-	if(fd == 0) return false;
+        FILE* fd = fopen(buf, "rb");
+        if(fd == 0) return false;
 
-	if((len = fread(buf, 1, 1022, fd)) == 0)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	buf[len] = 0;
+        if((len = fread(buf, 1, 1022, fd)) == 0)
+          {
+            fclose(fd);
+            return false;
+          }
+        buf[len] = 0;
             
-	if(buf[0] != 'P' && buf[1] != '6')
-	  {
-	    fclose(fd);
-	    return false;
-	  }
+        if(buf[0] != 'P' && buf[1] != '6')
+          {
+            fclose(fd);
+            return false;
+          }
             
-	char* ptr = buf + 2;
+        char* ptr = buf + 2;
             
-	while(*ptr && !isdigit(*ptr)) ptr++;
-	if(*ptr == 0)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
+        while(*ptr && !isdigit(*ptr)) ptr++;
+        if(*ptr == 0)
+          {
+            fclose(fd);
+            return false;
+          }
             
-	unsigned width = atoi(ptr);
-	if(width == 0 || width > 4096)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	while(*ptr && isdigit(*ptr)) ptr++;
-	while(*ptr && !isdigit(*ptr)) ptr++;
-	if(*ptr == 0)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	unsigned height = atoi(ptr);
-	if(height == 0 || height > 4096)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	while(*ptr && isdigit(*ptr)) ptr++;
-	while(*ptr && !isdigit(*ptr)) ptr++;
-	if(atoi(ptr) != 255)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	while(*ptr && isdigit(*ptr)) ptr++;
-	if(*ptr == 0)
-	  {
-	    fclose(fd);
-	    return false;
-	  }
-	ptr++;
-	fseek(fd, long(ptr - buf), SEEK_SET);
+        unsigned width = atoi(ptr);
+        if(width == 0 || width > 4096)
+          {
+            fclose(fd);
+            return false;
+          }
+        while(*ptr && isdigit(*ptr)) ptr++;
+        while(*ptr && !isdigit(*ptr)) ptr++;
+        if(*ptr == 0)
+          {
+            fclose(fd);
+            return false;
+          }
+        unsigned height = atoi(ptr);
+        if(height == 0 || height > 4096)
+          {
+            fclose(fd);
+            return false;
+          }
+        while(*ptr && isdigit(*ptr)) ptr++;
+        while(*ptr && !isdigit(*ptr)) ptr++;
+        if(atoi(ptr) != 255)
+          {
+            fclose(fd);
+            return false;
+          }
+        while(*ptr && isdigit(*ptr)) ptr++;
+        if(*ptr == 0)
+          {
+            fclose(fd);
+            return false;
+          }
+        ptr++;
+        fseek(fd, long(ptr - buf), SEEK_SET);
             
-	create_img(idx, width, height);
-	bool ret = true;
+        create_img(idx, width, height);
+        bool ret = true;
             
-	if(m_format == pix_format_rgb24)
-	  {
-	    fread(m_specific->m_buf_img[idx], 1, width * height * 3, fd);
-	  }
-	else
-	  {
-	    unsigned char* buf_img = new unsigned char [width * height * 3];
-	    rendering_buffer rbuf_img;
-	    rbuf_img.attach(buf_img,
-			    width,
-			    height,
-			    m_flip_y ?
-			    -width * 3 :
-			    width * 3);
+        if(m_format == pix_format_rgb24)
+          {
+            fread(m_specific->m_buf_img[idx], 1, width * height * 3, fd);
+          }
+        else
+          {
+            unsigned char* buf_img = new unsigned char [width * height * 3];
+            rendering_buffer rbuf_img;
+            rbuf_img.attach(buf_img,
+                            width,
+                            height,
+                            m_flip_y ?
+                            -width * 3 :
+                            width * 3);
                 
-	    fread(buf_img, 1, width * height * 3, fd);
+            fread(buf_img, 1, width * height * 3, fd);
                 
-	    switch(m_format)
-	      {
-	      case pix_format_rgb555:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb555());
-		break;
+            switch(m_format)
+              {
+              case pix_format_rgb555:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb555());
+                break;
                         
-	      case pix_format_rgb565:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb565());
-		break;
+              case pix_format_rgb565:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb565());
+                break;
                         
-	      case pix_format_bgr24:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgr24());
-		break;
+              case pix_format_bgr24:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgr24());
+                break;
                         
-	      case pix_format_rgba32:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgba32());
-		break;
+              case pix_format_rgba32:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgba32());
+                break;
                         
-	      case pix_format_argb32:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_argb32());
-		break;
+              case pix_format_argb32:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_argb32());
+                break;
                         
-	      case pix_format_bgra32:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgra32());
-		break;
+              case pix_format_bgra32:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgra32());
+                break;
                         
-	      case pix_format_abgr32:
-		color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_abgr32());
-		break;
+              case pix_format_abgr32:
+                color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_abgr32());
+                break;
                         
-	      default:
-		ret = false;
-	      }
-	    delete [] buf_img;
-	  }
+              default:
+                ret = false;
+              }
+            delete [] buf_img;
+          }
                         
-	fclose(fd);
-	return ret;
+        fclose(fd);
+        return ret;
       }
     return false;
   }
@@ -977,67 +977,67 @@ namespace agg
   {
     if(idx < max_images &&  rbuf_img(idx).buf())
       {
-	char buf[1024];
-	strcpy(buf, file);
-	int len = strlen(buf);
-	if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
-	  {
-	    strcat(buf, ".ppm");
-	  }
+        char buf[1024];
+        strcpy(buf, file);
+        int len = strlen(buf);
+        if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
+          {
+            strcat(buf, ".ppm");
+          }
             
-	FILE* fd = fopen(buf, "wb");
-	if(fd == 0) return false;
+        FILE* fd = fopen(buf, "wb");
+        if(fd == 0) return false;
             
-	unsigned w = rbuf_img(idx).width();
-	unsigned h = rbuf_img(idx).height();
+        unsigned w = rbuf_img(idx).width();
+        unsigned h = rbuf_img(idx).height();
             
-	fprintf(fd, "P6\n%d %d\n255\n", w, h);
+        fprintf(fd, "P6\n%d %d\n255\n", w, h);
                 
-	unsigned y; 
-	unsigned char* tmp_buf = new unsigned char [w * 3];
-	for(y = 0; y < rbuf_img(idx).height(); y++)
-	  {
-	    const unsigned char* src = rbuf_img(idx).row_ptr(m_flip_y ? h - 1 - y : y);
-	    switch(m_format)
-	      {
-	      default: break;
-	      case pix_format_rgb555:
-		color_conv_row(tmp_buf, src, w, color_conv_rgb555_to_rgb24());
-		break;
+        unsigned y; 
+        unsigned char* tmp_buf = new unsigned char [w * 3];
+        for(y = 0; y < rbuf_img(idx).height(); y++)
+          {
+            const unsigned char* src = rbuf_img(idx).row_ptr(m_flip_y ? h - 1 - y : y);
+            switch(m_format)
+              {
+              default: break;
+              case pix_format_rgb555:
+                color_conv_row(tmp_buf, src, w, color_conv_rgb555_to_rgb24());
+                break;
                         
-	      case pix_format_rgb565:
-		color_conv_row(tmp_buf, src, w, color_conv_rgb565_to_rgb24());
-		break;
+              case pix_format_rgb565:
+                color_conv_row(tmp_buf, src, w, color_conv_rgb565_to_rgb24());
+                break;
                         
-	      case pix_format_bgr24:
-		color_conv_row(tmp_buf, src, w, color_conv_bgr24_to_rgb24());
-		break;
+              case pix_format_bgr24:
+                color_conv_row(tmp_buf, src, w, color_conv_bgr24_to_rgb24());
+                break;
                         
-	      case pix_format_rgb24:
-		color_conv_row(tmp_buf, src, w, color_conv_rgb24_to_rgb24());
-		break;
+              case pix_format_rgb24:
+                color_conv_row(tmp_buf, src, w, color_conv_rgb24_to_rgb24());
+                break;
                        
-	      case pix_format_rgba32:
-		color_conv_row(tmp_buf, src, w, color_conv_rgba32_to_rgb24());
-		break;
+              case pix_format_rgba32:
+                color_conv_row(tmp_buf, src, w, color_conv_rgba32_to_rgb24());
+                break;
                         
-	      case pix_format_argb32:
-		color_conv_row(tmp_buf, src, w, color_conv_argb32_to_rgb24());
-		break;
+              case pix_format_argb32:
+                color_conv_row(tmp_buf, src, w, color_conv_argb32_to_rgb24());
+                break;
                         
-	      case pix_format_bgra32:
-		color_conv_row(tmp_buf, src, w, color_conv_bgra32_to_rgb24());
-		break;
+              case pix_format_bgra32:
+                color_conv_row(tmp_buf, src, w, color_conv_bgra32_to_rgb24());
+                break;
                         
-	      case pix_format_abgr32:
-		color_conv_row(tmp_buf, src, w, color_conv_abgr32_to_rgb24());
-		break;
-	      }
-	    fwrite(tmp_buf, 1, w * 3, fd);
-	  }
-	delete [] tmp_buf;
-	fclose(fd);
-	return true;
+              case pix_format_abgr32:
+                color_conv_row(tmp_buf, src, w, color_conv_abgr32_to_rgb24());
+                break;
+              }
+            fwrite(tmp_buf, 1, w * 3, fd);
+          }
+        delete [] tmp_buf;
+        fclose(fd);
+        return true;
       }
     return false;
   }
@@ -1049,19 +1049,19 @@ namespace agg
   {
     if(idx < max_images)
       {
-	if(width  == 0) width  = rbuf_window().width();
-	if(height == 0) height = rbuf_window().height();
-	delete [] m_specific->m_buf_img[idx];
-	m_specific->m_buf_img[idx] = 
-	  new unsigned char[width * height * (m_bpp / 8)];
+        if(width  == 0) width  = rbuf_window().width();
+        if(height == 0) height = rbuf_window().height();
+        delete [] m_specific->m_buf_img[idx];
+        m_specific->m_buf_img[idx] = 
+          new unsigned char[width * height * (m_bpp / 8)];
 
-	m_rbuf_img[idx].attach(m_specific->m_buf_img[idx],
-			       width,
-			       height,
-			       m_flip_y ? 
-			       -width * (m_bpp / 8) : 
-			       width * (m_bpp / 8));
-	return true;
+        m_rbuf_img[idx].attach(m_specific->m_buf_img[idx],
+                               width,
+                               height,
+                               m_flip_y ? 
+                               -width * (m_bpp / 8) : 
+                               width * (m_bpp / 8));
+        return true;
       }
     return false;
   }
