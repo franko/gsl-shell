@@ -933,6 +933,10 @@ unsigned gslshell::sys_bpp = 24;
 bool
 platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
 {
+  unsigned slen = strlen (fn);
+  char *fn_ext = new char[slen+5];
+  sprintf(fn_ext, "%s.bmp", fn);
+
   agg::pixel_map pmap;
   pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
 
@@ -940,7 +944,10 @@ platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *f
   pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
 
   agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
-  return pmap.save_as_bmp (fn);
+  bool status = pmap.save_as_bmp (fn_ext);
+
+  delete [] fn_ext;
+  return status;
 }
 
 void

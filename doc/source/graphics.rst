@@ -53,6 +53,11 @@ In this example we have used the :func:`plot` function to create a plot, the :fu
 where the first arguments is the function to plot and the following
 arguments are the extrema of variation of the indipendent variable x.
 
+To finish our example we show how to add a title to the plot by using the :attr:`~Plot.title` attribute and how to save the plot in a file as an image by using the :meth:`~Plot.save` method::
+
+  p.title = "y = sin(x)"
+  p:save('sin-function', 640, 480)
+
 Graphics Functions
 ------------------
 
@@ -421,6 +426,16 @@ You can add elements to a plot in any moments even when it is already shown. GSL
    .. method:: poplayer()
 
       Remove the current :ref:`graphical layer <graphical-layer>` and
+      all its graphical elements and make the previous level the
+      current one.
+
+   .. method:: save(filename[, w, h])
+
+      Save the plot in a file in a bitmap image format. The first
+      argument is the file name without extension while the other
+      optional arguments are the width and the height in pixel of the
+      image. The format used is BMP on windows and PPM on Linux.
+
       all its graphical elements and make the previous level the
       current one.
 

@@ -22,6 +22,7 @@
 // MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
+#include <memory>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1112,10 +1113,18 @@ platform_support_ext::do_window_update()
 }
 
 bool
-platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *filename)
+platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *fn)
 {
-  FILE* fd = fopen(filename, "wb");
-  if(fd == 0) return false;
+  unsigned slen = strlen (fn);
+  char *fn_ext = new char[slen+5];
+  sprintf(fn_ext, "%s.ppm", fn);
+
+  FILE* fd = fopen(fn_ext, "wb");
+  if(fd == 0) 
+    {
+      delete [] fn_ext;
+      return false;
+    }
             
   unsigned w = rbuf.width();
   unsigned h = rbuf.height();
@@ -1123,7 +1132,8 @@ platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *
   fprintf(fd, "P6\n%d %d\n255\n", w, h);
                 
   unsigned y; 
-  unsigned char* tmp_buf = new unsigned char [w * 3];
+  unsigned char *tmp_buf = new unsigned char [w * 3];
+
   for(y = 0; y < rbuf.height(); y++)
     {
       const unsigned char* src = rbuf.row_ptr(gslshell::flip_y ? h - 1 - y : y);
@@ -1164,6 +1174,7 @@ platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *
 	}
       fwrite(tmp_buf, 1, w * 3, fd);
     }
+
   delete [] tmp_buf;
   fclose(fd);
   return true;
