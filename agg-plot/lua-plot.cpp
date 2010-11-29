@@ -25,6 +25,7 @@ extern "C" {
 
 #include "lua-plot.h"
 #include "lua-plot-cpp.h"
+#include "bitmap-plot.h"
 #include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
@@ -83,6 +84,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"pushlayer",   plot_push_layer },
   {"poplayer",    plot_pop_layer  },
   {"clear",       plot_clear      },
+  {"save",        bitmap_save_image },
   {"__index",     plot_index      },
   {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },

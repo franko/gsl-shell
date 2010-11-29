@@ -26,6 +26,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <new>
+#include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
 #include "util/agg_color_conv_rgb8.h"
@@ -37,10 +38,92 @@ namespace agg
 {
 
   static inline void pixel_map_attach (pixel_map& pm, rendering_buffer *rbuf,
-				       bool flip_y)
+                                       bool flip_y)
   {
     int stride = pm.stride();
     rbuf->attach(pm.buf(), pm.width(), pm.height(), flip_y ? stride : -stride);
+  }
+
+  //------------------------------------------------------------------------
+  template <class RenBufDst, class RenBufSrc>
+  static void convert_pmap(RenBufDst* dst, const RenBufSrc* src, 
+                           pix_format_e format, bool copy_req)
+  {
+    switch(format)
+      {
+      case pix_format_gray8:
+      case pix_format_bgr24:
+        if (copy_req)
+          dst->copy_from(*src);
+        break;
+
+      case pix_format_gray16:
+        my_color_conv(dst, src, color_conv_gray16_to_gray8());
+        break;
+
+      case pix_format_rgb565:
+        my_color_conv(dst, src, color_conv_rgb565_to_rgb555());
+        break;
+
+      case pix_format_rgbAAA:
+        my_color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
+        break;
+
+      case pix_format_bgrAAA:
+        my_color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
+        break;
+
+      case pix_format_rgbBBA:
+        my_color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
+        break;
+
+      case pix_format_bgrABB:
+        my_color_conv(dst, src, color_conv_bgrABB_to_bgr24());
+        break;
+
+      case pix_format_rgb24:
+        my_color_conv(dst, src, color_conv_rgb24_to_bgr24());
+        break;
+
+      case pix_format_rgb48:
+        my_color_conv(dst, src, color_conv_rgb48_to_bgr24());
+        break;
+
+      case pix_format_bgr48:
+        my_color_conv(dst, src, color_conv_bgr48_to_bgr24());
+        break;
+
+      case pix_format_abgr32:
+        my_color_conv(dst, src, color_conv_abgr32_to_bgra32());
+        break;
+
+      case pix_format_argb32:
+        my_color_conv(dst, src, color_conv_argb32_to_bgra32());
+        break;
+
+      case pix_format_rgba32:
+        my_color_conv(dst, src, color_conv_rgba32_to_bgra32());
+        break;
+
+      case pix_format_bgra64:
+        my_color_conv(dst, src, color_conv_bgra64_to_bgra32());
+        break;
+
+      case pix_format_abgr64:
+        my_color_conv(dst, src, color_conv_abgr64_to_bgra32());
+        break;
+
+      case pix_format_argb64:
+        my_color_conv(dst, src, color_conv_argb64_to_bgra32());
+        break;
+
+      case pix_format_rgba64:
+        my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
+        break;
+
+      default:
+        /* */;
+      }
   }
     
     //------------------------------------------------------------------------
@@ -59,7 +142,7 @@ namespace agg
                          rendering_buffer* wnd);
 
         void display_pmap(HDC dc, const rendering_buffer* src,
-			  const agg::rect_base<int> *rect = 0);
+                          const agg::rect_base<int> *rect = 0);
 
         bool load_pmap(const char* fn, unsigned idx, 
                        rendering_buffer* dst);
@@ -103,14 +186,14 @@ namespace agg
         m_bpp(0),
         m_sys_bpp(0),
         m_hwnd(0),
-	m_bmp_draw(0),
+        m_bmp_draw(0),
         m_cur_x(0),
         m_cur_y(0),
         m_input_flags(0),
         m_redraw_flag(true),
         m_current_dc(0),
-	m_is_mapped(false),
-	m_is_ready(false)
+        m_is_mapped(false),
+        m_is_ready(false)
     {
 
       switch(m_format)
@@ -181,13 +264,13 @@ namespace agg
             m_sys_bpp = 32;
             break;
 
-	default:
-	  /* */;
+        default:
+          /* */;
         }
         ::QueryPerformanceFrequency(&m_sw_freq);
         ::QueryPerformanceCounter(&m_sw_start);
 
-	pthread_mutex_init (m_mutex, NULL);
+        pthread_mutex_init (m_mutex, NULL);
     }
 
   //------------------------------------------------------------------------
@@ -211,140 +294,57 @@ namespace agg
                                         rendering_buffer* wnd)
     {
         m_pmap_window.create(width, height, org_e(m_bpp));
-	pixel_map_attach (m_pmap_window, wnd, m_flip_y);
+        pixel_map_attach (m_pmap_window, wnd, m_flip_y);
 
-	if (m_bmp_draw)
-	  delete [] (unsigned char*) m_bmp_draw;
-	m_bmp_draw = pixel_map::create_bitmap_info(width, height,
-						   org_e(m_sys_bpp));
+        if (m_bmp_draw)
+          delete [] (unsigned char*) m_bmp_draw;
+        m_bmp_draw = pixel_map::create_bitmap_info(width, height,
+                                                   org_e(m_sys_bpp));
     }
-
-
-  //------------------------------------------------------------------------
-  template <class RenBufDst, class RenBufSrc>
-  static void convert_pmap(RenBufDst* dst, const RenBufSrc* src, 
-			   pix_format_e format, bool copy_req)
-  {
-    switch(format)
-      {
-      case pix_format_gray8:
-      case pix_format_bgr24:
-	if (copy_req)
-	  dst->copy_from(*src);
-	break;
-
-      case pix_format_gray16:
-	my_color_conv(dst, src, color_conv_gray16_to_gray8());
-	break;
-
-      case pix_format_rgb565:
-	my_color_conv(dst, src, color_conv_rgb565_to_rgb555());
-	break;
-
-      case pix_format_rgbAAA:
-	my_color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
-	break;
-
-      case pix_format_bgrAAA:
-	my_color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
-	break;
-
-      case pix_format_rgbBBA:
-	my_color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
-	break;
-
-      case pix_format_bgrABB:
-	my_color_conv(dst, src, color_conv_bgrABB_to_bgr24());
-	break;
-
-      case pix_format_rgb24:
-	my_color_conv(dst, src, color_conv_rgb24_to_bgr24());
-	break;
-
-      case pix_format_rgb48:
-	my_color_conv(dst, src, color_conv_rgb48_to_bgr24());
-	break;
-
-      case pix_format_bgr48:
-	my_color_conv(dst, src, color_conv_bgr48_to_bgr24());
-	break;
-
-      case pix_format_abgr32:
-	my_color_conv(dst, src, color_conv_abgr32_to_bgra32());
-	break;
-
-      case pix_format_argb32:
-	my_color_conv(dst, src, color_conv_argb32_to_bgra32());
-	break;
-
-      case pix_format_rgba32:
-	my_color_conv(dst, src, color_conv_rgba32_to_bgra32());
-	break;
-
-      case pix_format_bgra64:
-	my_color_conv(dst, src, color_conv_bgra64_to_bgra32());
-	break;
-
-      case pix_format_abgr64:
-	my_color_conv(dst, src, color_conv_abgr64_to_bgra32());
-	break;
-
-      case pix_format_argb64:
-	my_color_conv(dst, src, color_conv_argb64_to_bgra32());
-	break;
-
-      case pix_format_rgba64:
-	my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
-	break;
-
-      default:
-	/* */;
-      }
-  }
 
     //------------------------------------------------------------------------
   void platform_specific::display_pmap(HDC dc, const rendering_buffer* src,
-				       const agg::rect_base<int> *ri)
+                                       const agg::rect_base<int> *ri)
   {
     if(m_sys_format == m_format && ri == 0)
       {
-	m_pmap_window.draw(dc);
+        m_pmap_window.draw(dc);
       }
     else
       {
-	agg::rect_base<int> r(0, 0, src->width(), src->height());
-	if (ri)
-	  r = agg::intersect_rectangles(r, *ri);
+        agg::rect_base<int> r(0, 0, src->width(), src->height());
+        if (ri)
+          r = agg::intersect_rectangles(r, *ri);
 
-	int w = r.x2 - r.x1, h = r.y2 - r.y1;
+        int w = r.x2 - r.x1, h = r.y2 - r.y1;
 
-	bitmap_info_resize (m_bmp_draw, w, h);
+        bitmap_info_resize (m_bmp_draw, w, h);
 
-	pixel_map pmap;
-	pmap.attach_to_bmp(m_bmp_draw);
+        pixel_map pmap;
+        pmap.attach_to_bmp(m_bmp_draw);
 
-	rendering_buffer rbuf_tmp;
-	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
+        rendering_buffer rbuf_tmp;
+        pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
-	rendering_buffer_ro src_view;
-	rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
+        rendering_buffer_ro src_view;
+        rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-	convert_pmap(&rbuf_tmp, &src_view, m_format, true);
+        convert_pmap(&rbuf_tmp, &src_view, m_format, true);
 
-	unsigned int wh = m_pmap_window.height();
-	RECT wrect;
-	wrect.left   = r.x1;
-	wrect.right  = r.x2;
-	wrect.bottom = wh - r.y1;
-	wrect.top    = wh - r.y2;
+        unsigned int wh = m_pmap_window.height();
+        RECT wrect;
+        wrect.left   = r.x1;
+        wrect.right  = r.x2;
+        wrect.bottom = wh - r.y1;
+        wrect.top    = wh - r.y2;
 
-	RECT brect;
-	brect.left   = 0;
-	brect.right  = w;
-	brect.bottom = h;
-	brect.top    = 0;
+        RECT brect;
+        brect.left   = 0;
+        brect.right  = w;
+        brect.bottom = h;
+        brect.top    = 0;
 
-	pmap.draw(dc, &wrect, &brect);
+        pmap.draw(dc, &wrect, &brect);
       }
   }
 
@@ -354,18 +354,18 @@ namespace agg
     bool platform_specific::save_pmap(const char* fn, unsigned idx, 
                                       const rendering_buffer* src)
     {
-	pixel_map& img = m_pmap_img[idx];
+        pixel_map& img = m_pmap_img[idx];
 
         if(m_sys_format == m_format)
         {
-	  return img.save_as_bmp(fn);
+          return img.save_as_bmp(fn);
         }
 
         pixel_map pmap;
         pmap.create(img.width(), img.height(), org_e(m_sys_bpp));
 
         rendering_buffer rbuf_tmp;
-	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
+        pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
         convert_pmap(&rbuf_tmp, src, m_format, false);
         return pmap.save_as_bmp(fn);
@@ -377,16 +377,16 @@ namespace agg
     bool platform_specific::load_pmap(const char* fn, unsigned idx, 
                                       rendering_buffer* dst)
     {
-	pixel_map& img = m_pmap_img[idx];
+        pixel_map& img = m_pmap_img[idx];
 
         pixel_map pmap;
         if(!pmap.load_from_bmp(fn)) return false;
 
         rendering_buffer rbuf_tmp;
-	pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
+        pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
         img.create(pmap.width(), pmap.height(), org_e(m_bpp), 0);
-	pixel_map_attach (img, dst, m_flip_y);
+        pixel_map_attach (img, dst, m_flip_y);
 
         switch(m_format)
         {
@@ -518,8 +518,8 @@ namespace agg
             }
             break;
 
-	default:
-	  return false;
+        default:
+          return false;
         }
 
         return true;
@@ -630,23 +630,23 @@ namespace agg
         
         //--------------------------------------------------------------------
         case WM_SIZE:
-	  try
-	    {
-	      app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
-					   &app->rbuf_window());
+          try
+            {
+              app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
+                                           &app->rbuf_window());
 
-	      app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
-	      app->on_resize(LOWORD(lParam), HIWORD(lParam));
-	      app->force_redraw();
-	    }
-	  catch (std::bad_alloc&)
-	    {
-	      ::PostQuitMessage(1);
-	    }
+              app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
+              app->on_resize(LOWORD(lParam), HIWORD(lParam));
+              app->force_redraw();
+            }
+          catch (std::bad_alloc&)
+            {
+              ::PostQuitMessage(1);
+            }
 
-	  app->m_specific->m_is_ready = false;
+          app->m_specific->m_is_ready = false;
 
-	  break;
+          break;
         
         //--------------------------------------------------------------------
         case WM_ERASEBKGND:
@@ -666,8 +666,8 @@ namespace agg
             app->m_specific->m_current_dc = 0;
             ::EndPaint(hWnd, &ps);
 
-	    app->m_specific->m_is_mapped = true;
-	    app->m_specific->m_is_ready = true;
+            app->m_specific->m_is_mapped = true;
+            app->m_specific->m_is_ready = true;
             break;
         
         //--------------------------------------------------------------------
@@ -748,31 +748,31 @@ namespace agg
         }
 
 
-	try
-	  {
-	    RECT rct;
-	    ::GetClientRect(m_specific->m_hwnd, &rct);
+        try
+          {
+            RECT rct;
+            ::GetClientRect(m_specific->m_hwnd, &rct);
 
-	    ::MoveWindow(m_specific->m_hwnd,   // handle to window
-			 100,                  // horizontal position
-			 100,                  // vertical position
-			 width + (width - (rct.right - rct.left)),
-			 height + (height - (rct.bottom - rct.top)),
-			 FALSE);
+            ::MoveWindow(m_specific->m_hwnd,   // handle to window
+                         100,                  // horizontal position
+                         100,                  // vertical position
+                         width + (width - (rct.right - rct.left)),
+                         height + (height - (rct.bottom - rct.top)),
+                         FALSE);
    
-	    ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
-	    m_specific->create_pmap(width, height, &m_rbuf_window);
-	    m_initial_width = width;
-	    m_initial_height = height;
-	    on_init();
-	    m_specific->m_redraw_flag = true;
-	    ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
-	    ::SetForegroundWindow(m_specific->m_hwnd);
-	  }
-	catch (std::bad_alloc&)
-	  {
-	    return false;
-	  }
+            ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+            m_specific->create_pmap(width, height, &m_rbuf_window);
+            m_initial_width = width;
+            m_initial_height = height;
+            on_init();
+            m_specific->m_redraw_flag = true;
+            ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+            ::SetForegroundWindow(m_specific->m_hwnd);
+          }
+        catch (std::bad_alloc&)
+          {
+            return false;
+          }
         return true;
     }
 
@@ -787,25 +787,25 @@ namespace agg
         {
             if(m_wait_mode)
             {
-	      bool status;
+              bool status;
 
-	      if (m_specific->m_is_ready)
-		{
-		  pthread_mutex_unlock (m_specific->m_mutex);
-		  status = ::GetMessage(&msg, 0, 0, 0);
-		  pthread_mutex_lock (m_specific->m_mutex);
-		}
-	      else
-		{
-		  status = ::GetMessage(&msg, 0, 0, 0);
-		}
-
-	      if(! status)
+              if (m_specific->m_is_ready)
                 {
-		  break;
+                  pthread_mutex_unlock (m_specific->m_mutex);
+                  status = ::GetMessage(&msg, 0, 0, 0);
+                  pthread_mutex_lock (m_specific->m_mutex);
                 }
-	      ::TranslateMessage(&msg);
-	      ::DispatchMessage(&msg);
+              else
+                {
+                  status = ::GetMessage(&msg, 0, 0, 0);
+                }
+
+              if(! status)
+                {
+                  break;
+                }
+              ::TranslateMessage(&msg);
+              ::DispatchMessage(&msg);
             }
             else
             {
@@ -885,9 +885,9 @@ namespace agg
             if(width  == 0) width  = m_specific->m_pmap_window.width();
             if(height == 0) height = m_specific->m_pmap_window.height();
 
-	    pixel_map& pmap = m_specific->m_pmap_img[idx];
+            pixel_map& pmap = m_specific->m_pmap_img[idx];
             pmap.create(width, height, org_e(m_specific->m_bpp));
-	    pixel_map_attach (pmap, &m_rbuf_img[idx], m_flip_y);
+            pixel_map_attach (pmap, &m_rbuf_img[idx], m_flip_y);
             return true;
         }
         return false;
@@ -923,6 +923,38 @@ namespace agg
     void platform_support::on_ctrl_change() {}
     void platform_support::on_draw() {}
     void platform_support::on_post_draw(void* raw_handler) {}
+}
+
+agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_bgr24;
+unsigned gslshell::bpp = 24;
+unsigned gslshell::sys_bpp = 24;
+
+bool
+platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
+{
+  unsigned slen = strlen (fn);
+  char *fnext = new char[slen+5];
+  sprintf (fnext, "%s.bmp", fn);
+
+  agg::pixel_map pmap;
+  try
+    {
+      pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
+
+      agg::rendering_buffer rbuf_tmp;
+      pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
+
+      agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
+    }
+  catch (std::bad_alloc&)
+    {
+      delete [] fnext;
+      return false;
+    }
+
+  bool status = pmap.save_as_bmp (fnext);
+  delete [] fnext;
+  return status;
 }
 
 void
