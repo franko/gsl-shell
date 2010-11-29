@@ -13,6 +13,26 @@ extern "C" {
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 
+bool
+bitmap_save_image_throw (lua_plot *p, const char *fn, unsigned w, unsigned h)
+{
+  agg::rendering_buffer rbuf_tmp;
+  unsigned row_size = w * (gslshell::bpp / 8);
+  unsigned buf_size = h * row_size;
+  agg::pod_array<unsigned char> buffer(buf_size);
+  rbuf_tmp.attach(buffer.data(), w, h, gslshell::flip_y ? row_size : -row_size);
+
+  canvas can(rbuf_tmp, w, h, colors::white);
+  agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
+
+  agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
+  can.clear_box(r);
+
+  p->draw(can, mtx);
+  
+  return platform_support_ext::save_image_file (rbuf_tmp, fn);
+}
+
 int
 bitmap_save_image (lua_State *L)
 {
@@ -26,35 +46,16 @@ bitmap_save_image (lua_State *L)
   if (h <= 0 || h > 1024 * 8)
     luaL_error (L, "height out of range");
 
-  unsigned char * buffer = 0;
   try
     {
-      agg::rendering_buffer rbuf_tmp;
-      unsigned row_size = w * (gslshell::bpp / 8);
-      unsigned buf_size = h * row_size;
-      buffer = new unsigned char[buf_size];
-      rbuf_tmp.attach(buffer, w, h, gslshell::flip_y ? row_size : -row_size);
-
-      canvas can(rbuf_tmp, w, h, colors::white);
-      agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
-
-      agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
-      can.clear_box(r);
-
-      p->draw(can, mtx);
-
-      if (! platform_support_ext::save_image_file (rbuf_tmp, fn))
-	{
-	  delete [] buffer;
-	  return luaL_error (L, "error saving image in filename %s", fn);
-	}
+      if (! bitmap_save_image_throw (p, fn, w, h))
+	return luaL_error (L, "error writing file \"%s\"", fn);
     }
   catch (std::bad_alloc&)
     {
-      if (buffer == 0) delete [] buffer;
       return luaL_error (L, "out of virtual memory");
     }
 
-  delete [] buffer;
   return 0;
+
 }

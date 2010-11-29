@@ -933,28 +933,18 @@ bool
 platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
 {
   unsigned slen = strlen (fn);
-  char *fnext = new char[slen+5];
-  sprintf (fnext, "%s.bmp", fn);
+  agg::pod_array<char> fnext(slen+5);
+  sprintf (fnext.data(), "%s.bmp", fn);
 
   agg::pixel_map pmap;
-  try
-    {
-      pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
+  pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
 
-      agg::rendering_buffer rbuf_tmp;
-      pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
+  agg::rendering_buffer rbuf_tmp;
+  pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
 
-      agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
-    }
-  catch (std::bad_alloc&)
-    {
-      delete [] fnext;
-      return false;
-    }
+  agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
 
-  bool status = pmap.save_as_bmp (fnext);
-  delete [] fnext;
-  return status;
+  return pmap.save_as_bmp (fnext.data());
 }
 
 void
