@@ -13,35 +13,14 @@ extern "C" {
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 
-int
-bitmap_save_image (lua_State *L)
+bool
+bitmap_save_image_throw (lua_plot *p, const char *fn, unsigned w, unsigned h)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  const char *fn = lua_tostring (L, 2);
-  unsigned w, h;
-
-  if (fn == NULL)
-    return gs_type_error (L, 2, "string");
-
-  if (lua_gettop (L) >= 4)
-    {
-      int iw = luaL_checkinteger (L, 3), ih = luaL_checkinteger (L, 4);
-      if (iw <= 0 || iw > 1024 * 8 || ih <= 0 || ih > 1024 * 8)
-	return luaL_error (L, "width and height should be positive numbers");
-      w = (unsigned) iw;
-      h = (unsigned) ih;
-    }
-  else
-    {
-      w = 480;
-      h = 480;
-    }
-
   agg::rendering_buffer rbuf_tmp;
   unsigned row_size = w * (gslshell::bpp / 8);
   unsigned buf_size = h * row_size;
-  unsigned char *buffer = new unsigned char[buf_size];
-  rbuf_tmp.attach(buffer, w, h, gslshell::flip_y ? row_size : -row_size);
+  agg::pod_array<unsigned char> buffer(buf_size);
+  rbuf_tmp.attach(buffer.data(), w, h, gslshell::flip_y ? row_size : -row_size);
 
   canvas can(rbuf_tmp, w, h, colors::white);
   agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
@@ -50,13 +29,33 @@ bitmap_save_image (lua_State *L)
   can.clear_box(r);
 
   p->draw(can, mtx);
+  
+  return platform_support_ext::save_image_file (rbuf_tmp, fn);
+}
 
-  if (! platform_support_ext::save_image_file (rbuf_tmp, fn))
+int
+bitmap_save_image (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  const char *fn = luaL_checkstring (L, 2);
+  int w = luaL_optint (L, 3, 480), h = luaL_optint (L, 4, 480);
+
+  if (w <= 0 || w > 1024 * 8)
+    luaL_error (L, "width out of range");
+
+  if (h <= 0 || h > 1024 * 8)
+    luaL_error (L, "height out of range");
+
+  try
     {
-      delete buffer;
-      return luaL_error (L, "error saving image in filename %s", fn);
+      if (! bitmap_save_image_throw (p, fn, w, h))
+	return luaL_error (L, "error writing file \"%s\"", fn);
+    }
+  catch (std::bad_alloc&)
+    {
+      return luaL_error (L, "out of virtual memory");
     }
 
-  delete buffer;
   return 0;
+
 }
