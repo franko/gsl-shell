@@ -43,88 +43,6 @@ namespace agg
     int stride = pm.stride();
     rbuf->attach(pm.buf(), pm.width(), pm.height(), flip_y ? stride : -stride);
   }
-
-  //------------------------------------------------------------------------
-  template <class RenBufDst, class RenBufSrc>
-  static void convert_pmap(RenBufDst* dst, const RenBufSrc* src, 
-                           pix_format_e format, bool copy_req)
-  {
-    switch(format)
-      {
-      case pix_format_gray8:
-      case pix_format_bgr24:
-        if (copy_req)
-          dst->copy_from(*src);
-        break;
-
-      case pix_format_gray16:
-        my_color_conv(dst, src, color_conv_gray16_to_gray8());
-        break;
-
-      case pix_format_rgb565:
-        my_color_conv(dst, src, color_conv_rgb565_to_rgb555());
-        break;
-
-      case pix_format_rgbAAA:
-        my_color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
-        break;
-
-      case pix_format_bgrAAA:
-        my_color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
-        break;
-
-      case pix_format_rgbBBA:
-        my_color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
-        break;
-
-      case pix_format_bgrABB:
-        my_color_conv(dst, src, color_conv_bgrABB_to_bgr24());
-        break;
-
-      case pix_format_rgb24:
-        my_color_conv(dst, src, color_conv_rgb24_to_bgr24());
-        break;
-
-      case pix_format_rgb48:
-        my_color_conv(dst, src, color_conv_rgb48_to_bgr24());
-        break;
-
-      case pix_format_bgr48:
-        my_color_conv(dst, src, color_conv_bgr48_to_bgr24());
-        break;
-
-      case pix_format_abgr32:
-        my_color_conv(dst, src, color_conv_abgr32_to_bgra32());
-        break;
-
-      case pix_format_argb32:
-        my_color_conv(dst, src, color_conv_argb32_to_bgra32());
-        break;
-
-      case pix_format_rgba32:
-        my_color_conv(dst, src, color_conv_rgba32_to_bgra32());
-        break;
-
-      case pix_format_bgra64:
-        my_color_conv(dst, src, color_conv_bgra64_to_bgra32());
-        break;
-
-      case pix_format_abgr64:
-        my_color_conv(dst, src, color_conv_abgr64_to_bgra32());
-        break;
-
-      case pix_format_argb64:
-        my_color_conv(dst, src, color_conv_argb64_to_bgra32());
-        break;
-
-      case pix_format_rgba64:
-        my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
-        break;
-
-      default:
-        /* */;
-      }
-  }
     
   //------------------------------------------------------------------------
   HINSTANCE g_windows_instance = 0;
@@ -1006,30 +924,6 @@ namespace agg
   void platform_support::on_ctrl_change() {}
   void platform_support::on_draw() {}
   void platform_support::on_post_draw(void* raw_handler) {}
-}
-
-agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_bgr24;
-unsigned gslshell::bpp = 24;
-unsigned gslshell::sys_bpp = 24;
-
-bool
-platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
-{
-  unsigned slen = strlen (fn);
-  char *fn_ext = new char[slen+5];
-  sprintf(fn_ext, "%s.bmp", fn);
-
-  agg::pixel_map pmap;
-  pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
-
-  agg::rendering_buffer rbuf_tmp;
-  pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
-
-  agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
-  bool status = pmap.save_as_bmp (fn_ext);
-
-  delete [] fn_ext;
-  return status;
 }
 
 agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_bgr24;
