@@ -48,7 +48,7 @@ rgba8_lookup (lua_State *L, const char *color_str)
 agg::rgba8
 color_arg_lookup (lua_State *L, int index)
 {
-  if (lua_isnil (L, index))
+  if (lua_isnoneornil (L, index))
     {
       return colors::cdefault;
     }

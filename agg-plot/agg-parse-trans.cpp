@@ -7,6 +7,7 @@ extern "C" {
 }
 
 #include "agg-parse-trans.h"
+#include "lua-defs.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
 #include "lua-draw.h"
@@ -225,8 +226,16 @@ template <class context> typename context::base_type *
 parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
 {
   typedef builder<context> builder_type;
-
   const char *tag;
+
+  INDEX_SET_ABS(L, specindex);
+
+  if (lua_type (L, specindex) != LUA_TTABLE)
+    {
+      lua_management::dispose(obj);
+      luaL_error (L, "invalide graphical transformation spec");
+      return NULL;
+    }
 
   lua_rawgeti (L, specindex, 1);
   if (! lua_isstring (L, -1))
@@ -251,7 +260,7 @@ parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
       catch (std::bad_alloc&) 
 	{
 	  lua_management::dispose(obj);
-	  luaL_error (L, "out of memory");
+	  luaL_error (L, OUT_OF_MEMORY_MSG);
 	  return NULL;
 	}
     }
@@ -278,7 +287,7 @@ parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
   for (k = nb; k > 0; k--)
     {
       lua_rawgeti (L, index, k);
-      obj = parse_spec<context> (L, index+1, obj);
+      obj = parse_spec<context> (L, -1, obj);
       lua_pop (L, 1);
     }
 
@@ -288,18 +297,7 @@ parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
 drawable *
 parse_graph_args (lua_State *L, agg::rgba8& color)
 {
-  int narg = lua_gettop (L);
-
-  if (narg <= 2)
-    color = colors::cdefault;
-  else
-    color = color_arg_lookup (L, 3);
-      
-  if (narg > 5)
-    {
-      luaL_error (L, "too much arguments in add or addline plot method");
-      return NULL;
-    }
+  color = color_arg_lookup (L, 3);
 
   drawable *w;
 
@@ -308,7 +306,7 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
       vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
       scalable *s = new boxed_scalable(vs);
 
-      if (narg > 4)
+      if (! lua_isnoneornil (L, 5))
 	{
 	  s = parse_spec_pipeline<scalable_context> (L, 5, s);
 	  lua_pop (L, 1);
@@ -318,7 +316,7 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
       if (w == 0)
 	{
 	  lua_management::dispose(s);
-	  luaL_error (L, "out of memory");
+	  luaL_error (L, OUT_OF_MEMORY_MSG);
 	  return NULL;
 	}	
     }
@@ -332,7 +330,7 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
       gs_type_error (L, 2, "graphical object");
     }
       
-  if (narg > 3)
+  if (! lua_isnoneornil (L, 4))
     {
       w = parse_spec_pipeline<drawable_context> (L, 4, w);
       lua_pop (L, 1);
