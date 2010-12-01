@@ -53,7 +53,7 @@ bitmap_save_image (lua_State *L)
     }
   catch (std::bad_alloc&)
     {
-      return luaL_error (L, "out of virtual memory");
+      return luaL_error (L, OUT_OF_MEMORY_MSG);
     }
 
   return 0;

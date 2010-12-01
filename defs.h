@@ -45,7 +45,7 @@ typedef int bool;
 #include <stdbool.h>
 #endif
 
-#define OUT_OF_MEMORY_MSG "out of memory"
-#define INVALID_INDEX_MSG "index out of limits"
+extern char const * const OUT_OF_MEMORY_MSG;
+extern char const * const INVALID_INDEX_MSG;
 
 #endif
