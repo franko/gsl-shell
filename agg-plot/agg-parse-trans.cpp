@@ -6,6 +6,8 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include <memory>
+
 #include "agg-parse-trans.h"
 #include "lua-defs.h"
 #include "lua-cpp-utils.h"
@@ -39,6 +41,13 @@ struct property_reg line_join_properties[] = {
   {(int) agg::bevel_join,        "bevel"      },
   {(int) agg::miter_join_round,  "miter.round"},
   {0, NULL}
+};
+
+const char *agg_spec_error::m_msg[] = {
+  "invalid specification tag",
+  "invalid specification table",
+  "invalid graphical object",
+  "generic error during graphical operation"
 };
 
 static int
@@ -231,58 +240,30 @@ parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
   INDEX_SET_ABS(L, specindex);
 
   if (lua_type (L, specindex) != LUA_TTABLE)
-    {
-      lua_management::dispose(obj);
-      luaL_error (L, "invalide graphical transformation spec");
-      return NULL;
-    }
+    throw agg_spec_error(agg_spec_error::invalid_spec);
 
   lua_rawgeti (L, specindex, 1);
   if (! lua_isstring (L, -1))
-    {
-      lua_management::dispose(obj);
-      luaL_error (L, "the tag of the transformation is invalid");
-      return NULL;
-    }
+    throw agg_spec_error(agg_spec_error::invalid_tag);
 
   tag = lua_tostring (L, -1);
   lua_pop (L, 1);
 
   typename builder_type::func_type *f = builder_type::lookup(tag);
 
-  if (f)
-    {
-      try
-	{
-	  typename context::base_type *retval = f (L, specindex, obj);
-	  return retval;
-	} 
-      catch (std::bad_alloc&) 
-	{
-	  lua_management::dispose(obj);
-	  luaL_error (L, OUT_OF_MEMORY_MSG);
-	  return NULL;
-	}
-    }
+  if (f == 0) throw agg_spec_error(agg_spec_error::invalid_tag);
 
-  lua_management::dispose(obj);
-  luaL_error (L, "invalid trasformation tag");
-  return NULL;
+  typename context::base_type *retval = f (L, specindex, obj);
+  return retval;
 }
 
 template <class context> typename context::base_type *
 parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
 {
-  size_t k, nb;
+  if (lua_type (L, index) != LUA_TTABLE)
+    throw agg_spec_error(agg_spec_error::invalid_spec);
 
-  if (lua_type (L, index) == LUA_TTABLE)
-    nb = lua_objlen (L, index);
-  else
-    {
-      lua_management::dispose(obj);
-      luaL_error (L, "post transform argument should be a table");
-      return NULL;
-    }
+  size_t k, nb = lua_objlen (L, index);
 
   for (k = nb; k > 0; k--)
     {
@@ -299,42 +280,41 @@ parse_graph_args (lua_State *L, agg::rgba8& color)
 {
   color = color_arg_lookup (L, 3);
 
-  drawable *w;
+  std::auto_ptr<drawable> wobj;
 
   if (gs_is_userdata (L, 2, GS_DRAW_SCALABLE))
     {
       vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
-      scalable *s = new boxed_scalable(vs);
+      std::auto_ptr<scalable> sobj(new boxed_scalable(vs));
 
       if (! lua_isnoneornil (L, 5))
 	{
-	  s = parse_spec_pipeline<scalable_context> (L, 5, s);
-	  lua_pop (L, 1);
+	  scalable *st = parse_spec_pipeline<scalable_context> (L, 5, sobj.get());
+	  sobj.release();
+	  sobj = std::auto_ptr<scalable>(st);
 	}
     
-      w = new(std::nothrow) window_scalable(s);
-      if (w == 0)
-	{
-	  lua_management::dispose(s);
-	  luaL_error (L, OUT_OF_MEMORY_MSG);
-	  return NULL;
-	}	
+      drawable *ws = new window_scalable(sobj.get());
+
+      sobj.release();
+      wobj = std::auto_ptr<drawable>(ws);
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
       drawable *vs = (drawable *) lua_touserdata (L, 2);
-      w = new boxed_drawable(vs);
+      wobj = std::auto_ptr<drawable>(new boxed_drawable(vs));
     }
   else
     {
-      gs_type_error (L, 2, "graphical object");
+      throw agg_spec_error(agg_spec_error::invalid_object);
     }
-      
+
+  drawable *w = wobj.get();
   if (! lua_isnoneornil (L, 4))
     {
       w = parse_spec_pipeline<drawable_context> (L, 4, w);
-      lua_pop (L, 1);
     }
 
+  wobj.release();
   return w;
 }

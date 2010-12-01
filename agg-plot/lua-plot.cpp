@@ -154,18 +154,29 @@ plot_add_gener (lua_State *L, bool as_line)
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
   agg::rgba8 color;
-  drawable *obj = parse_graph_args (L, color);
 
-  object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
+  try {
+    drawable *obj = parse_graph_args (L, color);
 
-  AGG_LOCK();
+    object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
 
-  p->add(obj, color, as_line);
+    AGG_LOCK();
 
-  AGG_UNLOCK();
+    p->add(obj, color, as_line);
 
-  if (p->sync_mode())
-    plot_flush (L);
+    AGG_UNLOCK();
+
+    if (p->sync_mode())
+      plot_flush (L);
+  }
+  catch (std::bad_alloc&)
+    {
+      return luaL_error (L, OUT_OF_MEMORY_MSG); 
+    }
+  catch (agg_spec_error& e)
+    {
+      return luaL_error (L, e.message());
+    }
 
   return 0;
 }
