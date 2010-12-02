@@ -12,6 +12,29 @@ __END_DECLS
 
 #include "gs-types.h"
 
+namespace gslshell {
+  
+  class ret_status {
+    bool m_success;
+    const char *m_error_msg;
+    const char *m_context;
+
+  public:
+    ret_status() : m_success(true) {};
+
+    void success() { m_success = true; }
+    void error(const char *msg, const char *ctx) 
+    { 
+      m_success = false; 
+      m_error_msg = msg;
+      m_context = ctx;
+    };
+
+    const char *error_msg() const { return (m_success ? 0 : m_error_msg); };
+    const char *context()   const { return (m_success ? 0 : m_context); };
+  };
+}
+
 inline void* operator new(size_t nbytes, lua_State *L, enum gs_type_e tp)
 {
   void* p = lua_newuserdata(L, nbytes);

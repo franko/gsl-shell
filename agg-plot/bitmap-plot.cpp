@@ -13,24 +13,34 @@ extern "C" {
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 
-bool
-bitmap_save_image_throw (lua_plot *p, const char *fn, unsigned w, unsigned h)
+void
+bitmap_save_image_cpp (lua_plot *p, const char *fn, unsigned w, unsigned h,
+		       gslshell::ret_status& st)
 {
-  agg::rendering_buffer rbuf_tmp;
-  unsigned row_size = w * (gslshell::bpp / 8);
-  unsigned buf_size = h * row_size;
-  agg::pod_array<unsigned char> buffer(buf_size);
-  rbuf_tmp.attach(buffer.data(), w, h, gslshell::flip_y ? row_size : -row_size);
+  try {
+    agg::rendering_buffer rbuf_tmp;
+    unsigned row_size = w * (gslshell::bpp / 8);
+    unsigned buf_size = h * row_size;
+    agg::pod_array<unsigned char> buffer(buf_size);
+    rbuf_tmp.attach(buffer.data(), w, h, gslshell::flip_y ? row_size : -row_size);
 
-  canvas can(rbuf_tmp, w, h, colors::white);
-  agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
+    canvas can(rbuf_tmp, w, h, colors::white);
+    agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
 
-  agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
-  can.clear_box(r);
+    agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
+    can.clear_box(r);
 
-  p->draw(can, mtx);
+    p->draw(can, mtx);
   
-  return platform_support_ext::save_image_file (rbuf_tmp, fn);
+    bool success = platform_support_ext::save_image_file (rbuf_tmp, fn);
+
+    if (! success)
+      st.error("cannot save image file", "plot save");
+  }
+  catch (std::exception& e)
+    {
+      st.error(e.what(), "plot save");
+    }
 }
 
 int
@@ -46,15 +56,10 @@ bitmap_save_image (lua_State *L)
   if (h <= 0 || h > 1024 * 8)
     luaL_error (L, "height out of range");
 
-  try
-    {
-      if (! bitmap_save_image_throw (p, fn, w, h))
-	return luaL_error (L, "error writing file \"%s\"", fn);
-    }
-  catch (std::bad_alloc&)
-    {
-      return luaL_error (L, OUT_OF_MEMORY_MSG);
-    }
+  gslshell::ret_status st;
+  bitmap_save_image_cpp (p, fn, w, h, st);
+  if (st.error_msg())
+    return luaL_error (L, "%s in %s", st.error_msg(), st.context());
 
   return 0;
 

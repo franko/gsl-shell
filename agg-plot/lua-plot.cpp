@@ -25,6 +25,7 @@ extern "C" {
 
 #include "lua-plot.h"
 #include "lua-plot-cpp.h"
+#include "lua-cpp-utils.h"
 #include "bitmap-plot.h"
 #include "window.h"
 #include "gs-types.h"
@@ -148,35 +149,39 @@ plot_free (lua_State *L)
   return object_free<lua_plot>(L, 1, GS_PLOT);
 }
 
+void
+plot_add_gener_cpp (lua_State *L, lua_plot *p, bool as_line, 
+		    gslshell::ret_status& st)
+{
+  try {
+    agg::rgba8 color;
+    drawable *obj = parse_graph_args (L, color);
+
+    AGG_LOCK();
+    p->add(obj, color, as_line);
+    AGG_UNLOCK();
+
+    object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
+
+    if (p->sync_mode())
+      plot_flush (L);
+  }
+  catch (std::exception& e)
+    {
+      st.error(e.what(), "plot add or addline");
+    }
+}
+
 int
 plot_add_gener (lua_State *L, bool as_line)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  agg::rgba8 color;
+  gslshell::ret_status st;
+  plot_add_gener_cpp (L, p, as_line, st);
 
-  try {
-    drawable *obj = parse_graph_args (L, color);
-
-    object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
-
-    AGG_LOCK();
-
-    p->add(obj, color, as_line);
-
-    AGG_UNLOCK();
-
-    if (p->sync_mode())
-      plot_flush (L);
-  }
-  catch (std::bad_alloc&)
-    {
-      return luaL_error (L, OUT_OF_MEMORY_MSG); 
-    }
-  catch (agg_spec_error& e)
-    {
-      return luaL_error (L, e.message());
-    }
+  if (st.error_msg())
+    return luaL_error (L, "%s in %s", st.error_msg(), st.context());
 
   return 0;
 }

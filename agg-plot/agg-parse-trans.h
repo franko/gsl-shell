@@ -5,12 +5,13 @@ extern "C" {
 #include "lua.h"
 }
 
-#include "agg_color_rgba.h"
+#include <exception>
 
 #include "scalable.h"
 #include "drawable.h"
+#include "agg_color_rgba.h"
 
-class agg_spec_error {
+class agg_spec_error : public std::exception {
 public:
   enum err_e {
     invalid_tag = 0,
@@ -22,7 +23,10 @@ public:
   agg_spec_error(enum err_e err) : m_code(err) {};
   agg_spec_error() : m_code(generic_error) {};
 
-  const char * message() const { return m_msg[(int) m_code]; };
+  virtual const char* what() const throw()
+  {
+    return m_msg[(int) m_code];
+  }
 
 private:
   err_e m_code;
