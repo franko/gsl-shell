@@ -3,8 +3,13 @@
 News
 ====
 
+**December 2010**
+  Final Release of GSL Shell 1.0
+
+  Many bug was fixed for this final release. A function to :meth:`~Plot.save` a plot as an image in bitmap format is now available.
+
 **November 2010**
-  Release of GSL Shell 1.0
+  Release of GSL Shell 1.0 beta
 
   This new release brings a lot of improvements in the graphics functions. Among the most remarkable new features you can now:
    

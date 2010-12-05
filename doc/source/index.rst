@@ -24,6 +24,8 @@ GSL shell is free software, everyone can freely use it, adapt or study the sourc
 .. raw:: html
    :file: donate.html
 
+:ref:`Why donate <why-donate>`
+
 You can subscribe the `mailing list <http://lists.nongnu.org/mailman/listinfo/gsl-shell-info>`_ to discuss about GSL Shell. The author of the software is Francesco Abbate, you can contact him at the followng address:
 
 .. image:: email-gslshell.png
@@ -58,4 +60,5 @@ Contents:
    plot3d.rst
    contour.rst
    examples.rst
+   why-donate.rst
    acknowledgments.rst
