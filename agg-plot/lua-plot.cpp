@@ -161,8 +161,6 @@ plot_add_gener_cpp (lua_State *L, lua_plot *p, bool as_line,
     p->add(obj, color, as_line);
     AGG_UNLOCK();
 
-    object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
-
     if (p->sync_mode())
       plot_flush (L);
   }
@@ -182,6 +180,8 @@ plot_add_gener (lua_State *L, bool as_line)
 
   if (st.error_msg())
     return luaL_error (L, "%s in %s", st.error_msg(), st.context());
+
+  object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
 
   return 0;
 }
