@@ -467,11 +467,7 @@ namespace agg
   enum xevent_mask_e
     { 
       xevent_mask =
-      PointerMotionMask|
-      ButtonPressMask|
-      ButtonReleaseMask|
       ExposureMask|
-      KeyPressMask|
       StructureNotifyMask
     };
 
@@ -605,12 +601,9 @@ namespace agg
                 
     memset(win_attr, 0, sizeof(XSetWindowAttributes));
         
-    win_attr->border_pixel     = XBlackPixel(xc->display, xc->screen);
-    win_attr->background_pixel = XWhitePixel(xc->display, xc->screen);
-
     win_attr->override_redirect = 0;
 
-    unsigned long window_mask = CWBackPixel | CWBorderPixel;
+    unsigned long window_mask = 0;
 
     m_specific->m_window = 
       XCreateWindow(xc->display, XDefaultRootWindow(xc->display), 
@@ -799,7 +792,6 @@ namespace agg
                   trans_affine_resizing(width, height);
                   on_resize(width, height);
                   on_draw();
-                  update_window();
                 }
             }
             break;
