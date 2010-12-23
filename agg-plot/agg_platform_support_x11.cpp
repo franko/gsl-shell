@@ -821,8 +821,8 @@ namespace agg
           }
       }
 
+    ps->m_is_mapped = false;
     ps->free_x_resources();
-    ps->m_initialized = false;
 
     return ret;
   }
