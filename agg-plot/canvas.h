@@ -12,8 +12,7 @@
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
-#include "agg_rasterizer_outline_aa.h"
-#include "agg_renderer_outline_aa.h"
+#include "agg_conv_stroke.h"
 
 #include "agg_gamma_lut.h"
 
@@ -45,15 +44,9 @@ template <class pixel, int linewidth>
 class canvas_gen : private pixel {
   typedef agg::renderer_base<typename pixel::fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
-  typedef agg::renderer_outline_aa<renderer_base> renderer_oaa;
-  typedef agg::rasterizer_outline_aa<renderer_oaa> rasterizer_outline_aa;
 
   renderer_base rb;
   renderer_solid rs;
-
-  agg::line_profile_aa prof;
-  renderer_oaa ren_oaa;
-  rasterizer_outline_aa ras_oaa;
 
   agg::rasterizer_scanline_aa<> ras;
   agg::scanline_p8 sl;
@@ -66,12 +59,10 @@ class canvas_gen : private pixel {
 public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height, 
 	     agg::rgba bgcol): 
-    pixel(ren_buf), rb(pixel::pixfmt), rs(rb), prof(), 
-    ren_oaa(rb, prof), ras_oaa(ren_oaa),
+    pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
-    prof.width(linewidth / 10.0L);
   };
 
   double width()  const { return m_width; };
@@ -103,8 +94,13 @@ public:
   template<class VertexSource>
   void draw_outline(VertexSource& vs, agg::rgba8 c)
   {
-    this->ren_oaa.color(c);
-    this->ras_oaa.add_path(vs);
+    agg::conv_stroke<VertexSource> line(vs);
+    line.width(linewidth / 10.0L);
+    line.line_cap(agg::round_cap);
+
+    this->ras.add_path(line);
+    this->rs.color(c);
+    agg::render_scanlines(this->ras, this->sl, this->rs);
   };
 };
 

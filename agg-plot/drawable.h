@@ -35,7 +35,7 @@ class boxed_drawable : public drawable {
 };
 
 /* this class take a "scalable" object and it does transform it to a
-   "drawable" by adding a conv_transform taht manage the window size
+   "drawable" by adding a conv_transform that manage the window size
    transformation. */
 class window_scalable : public drawable
 {
