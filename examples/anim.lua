@@ -1,22 +1,5 @@
 
-function demo1()
-   local x1 = 25
-   local p = plot('Inviluppo')
-   p.sync = false
-   p:addline(fxline(|x|  exp(-0.1*x), 0, x1), 'blue')
-   p:addline(fxline(|x| -exp(-0.1*x), 0, x1), 'blue')
-   p:pushlayer()
-   p:show()
-   for j=0, 256 do
-      local w = 4*exp((j-256)/256)
-      p:clear()
-      local ln = fxline(|x| exp(-0.1*x)*cos(w*x), 0, x1)
-      p:addline(ln, 'red')
-      p:flush()
-   end
-end
-
-function star(r)
+local function star(r)
    local a, ae = 54*pi/180, 72*pi/180
    local li, hi = r*cos(a), r*sin(a)
    local he = li*tan(ae)
@@ -33,8 +16,8 @@ function star(r)
    return p
 end
 
-function demo2()
-   local plt = canvas('Pre3D')
+function demo1()
+   local plt = canvas 'rotating star'
    plt.units = false
    plt:show()
    local a = 15.0
@@ -61,7 +44,7 @@ function demo2()
    end
 end
 
-function demo3()
+function demo2()
    local f = |x| exp(-0.1*x) * cos(x)
    local p = plot 'y = f(x)'
    local x0, x1 = 0, 10*pi
@@ -82,7 +65,7 @@ function demo3()
    end
 end
 
-function demo4()
+function demo3()
    local p = plot 'box plot'
    local r = rng()
    r:set(os.time())
@@ -108,3 +91,7 @@ function demo4()
 
    return p
 end
+
+print 'demo1() - rotating star'
+print 'demo2() - function integral illustrations'
+print 'demo3() - animation capability stress test'

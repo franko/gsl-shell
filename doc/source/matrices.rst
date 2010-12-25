@@ -23,55 +23,89 @@ In GSL Shell we can define the matrix with the following command::
 
 where you have previously defined n to be a small integer number.
 
+Accessing Matrix Elements
+-------------------------
+
+To access an element of a matrix placed at the i-th row and the j-th column you can use the syntax ``m:get(i, j)`` where ``m`` is the matrix. You can also change the value with the following syntax ``m:set(i, j, x)`` to set the element to the value ``x``.
+
+In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in ``v[i]``. This syntax can be used also to assign a new value to the given element like we illustrate in the following example::
+
+  -- we define a vector, it is just a matrix with one column
+  v = vector {0, 0.2, 0.4, 7.6, 0.8, 1.0}
+
+  -- we can obtain the value of the 4th element with the syntax
+  v[4]
+
+  -- but we can change also its value
+  v[4] = 0.6
+
+For the other side simple indexing will not work for matrix with more than one column and in this latter case you shound use the methods :meth:`~Matrix.get` and :meth:`~Matrix.set`.
+
+Matrix Dimensions
+~~~~~~~~~~~~~~~~~
+
+To obtain the dimension of a matrix you should use the :func:`dim` function that takes the matrix as argument and returns its number of rows and columns. Here an example::
+
+   -- we define a matrix
+   m = matrix {{0.2, 4, -0.5}, {2, 0, 1.1}}
+
+   -- we obtain the number of rows and columns, r and c respectively
+   r, c = dim(m)
+
+.. note::
+
+  You can also use the length operator ``#`` with a matrix to obtain just the number of rows.
 
 Matrix methods
 --------------
 
-.. method:: get(i, j)
-   
-   This function returns the (i,j)-th element of a matrix. As a
-   general convention in GSL Shell the index of the first element is 1.
+.. class:: Matrix
 
-.. method:: set(i, j, v)
-
-   This function sets the value of the (i,j)-th element of the matrix to v.   
-
-.. method:: slice(k0, k1, n0, n1)
-
-   Return a sub-matrix obtained from the original matrix by starting
-   at the element (k0, k1) and taking n0 rows and n1 columns. The
-   matrix that is returned is a "view" of the existing matrix in the
-   sense that it make reference to the same underlying matrix. So if
-   you modify the submatrix you will implicitely modify the original
-   matrix and viceversa.
-
-.. method:: norm()
-
-   Return the Frobenius norm of the matrix. It is defined as:
-
-   .. math::
-      \|a\| = \sqrt{\sum_i \sum_j | a_{ij} |^2}
-
-   where a\ :sub:`ij` are the elements of the matrix.
-
-.. method:: row(i)
-
-   Return the submatrix given by the i-th row of the matrix.
-
-.. method:: col(j)
-
-   Return the submatrix given by the j-th column of the matrix.
-
-.. method:: rows()
-
-   Return an iterator that gives all the rows of the matrix as a submatrix.
-
-   Example to calculate the norm of each row of a matrix ``m``::
-      
-      for r in m:rows() do
-         print(r:norm())
-      end
-
+  .. method:: get(i, j)
+     
+     This function returns the (i,j)-th element of a matrix. As a
+     general convention in GSL Shell the index of the first element is 1.
+  
+  .. method:: set(i, j, v)
+  
+     This function sets the value of the (i,j)-th element of the matrix to v.   
+  
+  .. method:: slice(k0, k1, n0, n1)
+  
+     Return a sub-matrix obtained from the original matrix by starting
+     at the element (k0, k1) and taking n0 rows and n1 columns. The
+     matrix that is returned is a "view" of the existing matrix in the
+     sense that it make reference to the same underlying matrix. So if
+     you modify the submatrix you will implicitely modify the original
+     matrix and viceversa.
+  
+  .. method:: norm()
+  
+     Return the Frobenius norm of the matrix. It is defined as:
+  
+     .. math::
+        \|a\| = \sqrt{\sum_i \sum_j | a_{ij} |^2}
+  
+     where a\ :sub:`ij` are the elements of the matrix.
+  
+  .. method:: row(i)
+  
+     Return the submatrix given by the i-th row of the matrix.
+  
+  .. method:: col(j)
+  
+     Return the submatrix given by the j-th column of the matrix.
+  
+  .. method:: rows()
+  
+     Return an iterator that gives all the rows of the matrix as a submatrix.
+  
+     Example to calculate the norm of each row of a matrix ``m``::
+        
+        for r in m:rows() do
+           print(r:norm())
+        end
+  
 
 
 Matrix Functions

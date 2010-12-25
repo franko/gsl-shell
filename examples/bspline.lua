@@ -29,5 +29,4 @@ function demo1()
    return p
 end
 
-print([[
-demo1() - B-Spline approximation of noisy data]])
+print 'demo1() - B-Spline approximation of noisy data'

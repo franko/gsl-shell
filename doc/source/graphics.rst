@@ -592,6 +592,7 @@ Here a complete list of all the available transforms:
     Replace each vertex of the path with a circular mark
    
     * **size**, the size of the marker
+    * **mark**, the kind of marker, can be 'circle', 'triangle' or 'square'
 
   **translate**
     A translation along the x and y axis. This transformation can be used only in the user coordinate system.

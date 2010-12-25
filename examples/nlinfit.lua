@@ -20,17 +20,14 @@
 function demo1()
    local n = 50
    local p = {a= (-1+4i) * 4, phi= 0.23, A= 0.55}
-   local y = cnew(n, 1, 
-		  function (i,j)
-		     return p.A * exp(p.a * (i-1)/n + 1i * p.phi)
-		  end)
+   local y = cnew(n, 1, |i,j| p.A * exp(p.a * (i-1)/n + 1i * p.phi))
 
    local function cexpf(x, f, J)
       for k=1, n do
 	 local t, y = (k-1)/n, y[k]
 	 local A, a, phi = x[1], x[2] + 1i * x[3], x[4]
 	 local e = exp(a * t + 1i * phi)
-	 if f then f:set(k, 1, A * e - y) end
+	 if f then f[k] = A * e - y end
 	 if J then
 	    J:set(k, 1, e)
 	    J:set(k, 2, t * A * e)
@@ -76,7 +73,7 @@ function demo2()
    local function expf(x, f, J)
       for k=1, n do
 	 local ym = fmodel(x, xs(k), J and J:row(k))
-	 if f then f:set(k, 1, ym - y[k]) end
+	 if f then f[k] = ym - y[k] end
       end
    end
 
@@ -127,7 +124,7 @@ function demo2bis()
    local function expf(x, f, J)
       for k=1, n do
 	 local ym = fmodel(x, xs(k), J and J:row(k))
-	 if f then f:set(k, 1, ym - y[k]) end
+	 if f then f[k] = ym - y[k] end
       end
    end
 
@@ -184,7 +181,7 @@ function demo3()
    print('Fit result:', tr(pr))
 
    pl = plot('Non-linear fit / A * exp(a t) sin(w t)') 
-   pl:addline(xyline(x, y), 'blue', {{'marker', size= 5}})
+   pl:addline(xyline(x, y), 'blue', {{'marker', size= 4}})
 
    pl:addline(fxline(|x| f(p0, x), 0, xs(n)), 'red', {{'dash', 7, 3, 3, 3}})
    pl:addline(fxline(fit, 0, xs(n)), 'red')
