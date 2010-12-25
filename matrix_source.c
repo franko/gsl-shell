@@ -319,6 +319,48 @@ FUNCTION(matrix, solve_raw) (lua_State *L,
 }
 
 int
+FUNCTION(matrix, newindex) (lua_State *L)
+{
+  TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
+
+  if (lua_isnumber (L, 2))
+    {
+      int index = lua_tointeger (L, 2);
+
+#ifdef LUA_INDEX_CONVENTION
+      index -= 1;
+#endif
+
+      if (m->size2 != 1)
+	gs_type_error (L, 1, "vector");
+
+      if (index >= m->size1 || index < 0)
+	luaL_error (L, INVALID_INDEX_MSG);
+
+      if (LUA_FUNCTION(is) (L, 3))
+	{
+	  BASE gslval;
+	  LUA_TYPE v = LUA_FUNCTION(to) (L, 3);
+
+	  gslval = TYPE (value_assign) (v);
+	  FUNCTION (gsl_matrix, set) (m, (size_t) index, 0, gslval);
+
+	  return 0;
+	}
+      else
+	{
+	  return gs_type_error (L, 3, "number");
+	}
+    }
+  
+  lua_pushvalue (L, lua_upvalueindex(1));
+  lua_replace (L, 1);
+  lua_rawset (L, 1);
+
+  return 1;
+}
+
+int
 FUNCTION(matrix, index) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
@@ -334,7 +376,7 @@ FUNCTION(matrix, index) (lua_State *L)
 #endif
 
       if (m->size2 != 1)
-	luaL_typerror (L, 1, "vector");
+	gs_type_error (L, 1, "vector");
 
       if (index >= m->size1 || index < 0)
 	luaL_error (L, INVALID_INDEX_MSG);
@@ -345,10 +387,11 @@ FUNCTION(matrix, index) (lua_State *L)
       LUA_FUNCTION (push) (L, v);
       return 1;
     }
-
-  lua_getmetatable (L, 1);
+  
+  lua_pushvalue (L, lua_upvalueindex(1));
   lua_replace (L, 1);
-  lua_gettable (L, 1);
+  lua_rawget (L, 1);
+
   return 1;
 }
 
@@ -357,12 +400,21 @@ void
 FUNCTION (matrix, register) (lua_State *L)
 {
   luaL_newmetatable (L, GS_TYPENAME(MATRIX));
-  lua_pushcfunction (L, FUNCTION (matrix, index));
-  lua_setfield (L, -2, "__index");
+  lua_newtable (L);
   luaL_register (L, NULL, FUNCTION (matrix, methods));
+
+  lua_pushvalue (L, -1);
+  lua_pushcclosure (L, FUNCTION (matrix, index), 1);
+  lua_setfield (L, -3, "__index");
+
+  lua_pushvalue (L, -1);
+  lua_pushcclosure (L, FUNCTION (matrix, newindex), 1);
+  lua_setfield (L, -3, "__newindex");
+
+  lua_insert (L, -2);
+  luaL_register (L, NULL, FUNCTION (matrix, meta_methods));
   lua_pop (L, 1);
 
-  luaL_getmetatable (L, GS_TYPENAME(MATRIX));
   lua_setfield (L, -2, PREFIX "Matrix");
 
   luaL_register (L, NULL, FUNCTION (matrix, functions));

@@ -200,7 +200,19 @@ end
 ODE.iter  = ode_iter
 if have_complex then cODE.iter = ode_iter end
 
-add_matrix_method('__tostring', matrix_to_string)
+local function add_matrix_meta_method(key, method)
+   local m = new(1,1)
+   local mt = getmetatable(m)
+   mt[key] = method
+   if have_complex then
+      m = cnew(1,1)
+      mt = getmetatable(m)
+      mt[key] = method
+   end
+end
+
+add_matrix_meta_method('__tostring', matrix_to_string)
+
 add_matrix_method('norm',       matrix_norm)
 add_matrix_method('col',        matrix_column)
 add_matrix_method('row',        matrix_row)
