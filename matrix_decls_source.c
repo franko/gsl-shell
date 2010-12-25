@@ -23,6 +23,7 @@
 static int  FUNCTION (matrix, get)               (lua_State *L);
 static int  FUNCTION (matrix, index)             (lua_State *L);
 static int  FUNCTION (matrix, newindex)          (lua_State *L);
+static int  FUNCTION (matrix, len)               (lua_State *L);
 static int  FUNCTION (matrix, set)               (lua_State *L);
 static int  FUNCTION (matrix, free)              (lua_State *L);
 static int  FUNCTION (matrix, new)               (lua_State *L);
@@ -36,6 +37,7 @@ static const struct luaL_Reg FUNCTION (matrix, meta_methods)[] = {
   {"__mul",         matrix_mul_elements},
   {"__div",         matrix_div_elements},
   {"__unm",         matrix_unm},
+  {"__len",         FUNCTION (matrix, len)},
   {"__gc",          FUNCTION (matrix, free)},
   {NULL, NULL}
 };

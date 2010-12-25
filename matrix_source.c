@@ -319,6 +319,14 @@ FUNCTION(matrix, solve_raw) (lua_State *L,
 }
 
 int
+FUNCTION(matrix, len) (lua_State *L)
+{
+  TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
+  lua_pushinteger (L, m->size1);
+  return 1;
+}
+
+int
 FUNCTION(matrix, newindex) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
