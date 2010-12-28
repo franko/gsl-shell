@@ -86,6 +86,12 @@ struct trans {
     {
       this->m_source->apply_transform(m, as * m_norm);
     };
+
+    virtual bool affine_compose(agg::trans_affine& m) 
+    { 
+      trans_affine_compose (this->m_matrix, m);
+      return true; 
+    };
   };
 
   typedef agg::conv_transform<vertex_source> symbol_type;

@@ -27,6 +27,7 @@ struct vertex_source {
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
+  virtual bool affine_compose(agg::trans_affine& m) { return false; };
   virtual ~vertex_source() { };
 };
 
