@@ -166,7 +166,7 @@ static void l_message (const char *pname, const char *msg) {
 }
 
 
-int error_report (lua_State *L, int status) {
+static int error_report (lua_State *L, int status) {
   if (status && !lua_isnil(L, -1)) {
     const char *msg = lua_tostring(L, -1);
     if (msg == NULL) msg = "(error object is not a string)";

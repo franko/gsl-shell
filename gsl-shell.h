@@ -6,9 +6,6 @@
 
 __BEGIN_DECLS
 
-#include "lua.h"
-
-extern int  error_report (lua_State *L, int status);
 extern void gsl_shell_unref_plot (int id);
 
 extern pthread_mutex_t gsl_shell_mutex[1];
