@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <memory>
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
@@ -43,6 +45,13 @@ static void * canvas_thread_function        (void *_win);
 
 __END_DECLS
 
+struct canvas_thread_info {
+  lua_State *L;
+  canvas_window *win;
+
+  canvas_thread_info (lua_State *L, canvas_window *win) : L(L), win(win) {};
+};
+
 void
 canvas_window::on_resize(int sx, int sy)
 {
@@ -67,7 +76,7 @@ canvas_window::start_new_thread (lua_State *L)
   if (status != not_ready && status != closed)
     return;
 
-  this->id = object_index_add (L, OBJECT_WINDOW, -1);
+  this->id = object_index_add (L, -1);
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -79,11 +88,13 @@ canvas_window::start_new_thread (lua_State *L)
     
   this->status = canvas_window::starting;
 
-  if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
+  canvas_thread_info *inf = new canvas_thread_info(L, this);
+  if (pthread_create(win_thread, attr, canvas_thread_function, (void*) inf))
     {
-      object_index_remove (L, OBJECT_WINDOW, this->id);
-
+      delete inf;
+      object_index_remove (L, this->id);
       pthread_attr_destroy (attr);
+
       this->status = canvas_window::error; 
 
       luaL_error(L, "error creating thread");
@@ -93,11 +104,11 @@ canvas_window::start_new_thread (lua_State *L)
 }
 
 void *
-canvas_thread_function (void *_win)
+canvas_thread_function (void *_inf)
 {
+  std::auto_ptr<canvas_thread_info> inf((canvas_thread_info *) _inf);
   platform_support_ext::prepare();
-
-  canvas_window *win = (canvas_window *) _win;
+  canvas_window *win = inf->win;
 
   win->caption("GSL shell plot");
   if (win->init(480, 480, agg::window_resize))
@@ -110,12 +121,12 @@ canvas_thread_function (void *_win)
     {
       win->status = canvas_window::error;
     }
-  
-  GSL_SHELL_LOCK();
-  gsl_shell_unref_plot (win->id);
-  GSL_SHELL_UNLOCK();
 
   win->unlock();
+
+  GSL_SHELL_LOCK();
+  object_index_remove (inf->L, win->id);
+  GSL_SHELL_UNLOCK();
 
   return NULL;
 }

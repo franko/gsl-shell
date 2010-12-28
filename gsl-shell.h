@@ -6,8 +6,6 @@
 
 __BEGIN_DECLS
 
-extern void gsl_shell_unref_plot (int id);
-
 extern pthread_mutex_t gsl_shell_mutex[1];
 
 __END_DECLS

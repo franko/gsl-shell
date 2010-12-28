@@ -4,24 +4,24 @@
 
 #include "object-index.h"
 
-static const char *table_name[] = {"GSL.reg.wins"};
+static const char *table_name = "GSL.reg.wins";
 
 void
 object_index_prepare (lua_State *L)
 {
   lua_newtable (L);
-  lua_setfield (L, LUA_REGISTRYINDEX, table_name[OBJECT_WINDOW]);
+  lua_setfield (L, LUA_REGISTRYINDEX, table_name);
 }
 
 int
-object_index_add(lua_State *L, int obj_class, int index)
+object_index_add(lua_State *L, int index)
 {
   int n;
 
   if (index < 0)
     index = lua_gettop (L) - (index+1);
 
-  lua_getfield (L, LUA_REGISTRYINDEX, table_name[obj_class]);
+  lua_getfield (L, LUA_REGISTRYINDEX, table_name);
 
   n = lua_objlen (L, -1);
 
@@ -33,26 +33,26 @@ object_index_add(lua_State *L, int obj_class, int index)
 }
 
 void
-object_index_get (lua_State *L, int obj_class, int id)
+object_index_get (lua_State *L, int id)
 {
-  lua_getfield (L, LUA_REGISTRYINDEX, table_name[obj_class]);
+  lua_getfield (L, LUA_REGISTRYINDEX, table_name);
   lua_rawgeti (L, -1, id);
   lua_remove (L, -2);
 }
 
 void
-object_index_remove (lua_State *L, int obj_class, int id)
+object_index_remove (lua_State *L, int id)
 {
-  lua_getfield (L, LUA_REGISTRYINDEX, table_name[obj_class]);
+  lua_getfield (L, LUA_REGISTRYINDEX, table_name);
   lua_pushnil (L);
   lua_rawseti (L, -2, id);
   lua_pop (L, 1);
 }
 
 void
-object_index_apply_all (lua_State *L, int obj_class, lua_CFunction f)
+object_index_apply_all (lua_State *L, lua_CFunction f)
 {
-  lua_getfield (L, LUA_REGISTRYINDEX, table_name[obj_class]);
+  lua_getfield (L, LUA_REGISTRYINDEX, table_name);
 
   lua_pushnil (L);  /* first key */
   while (lua_next(L, -2) != 0) 
@@ -66,11 +66,11 @@ object_index_apply_all (lua_State *L, int obj_class, lua_CFunction f)
 }
 
 int
-object_index_count (lua_State *L, int obj_class)
+object_index_count (lua_State *L)
 {
   int count = 0;
 
-  lua_getfield (L, LUA_REGISTRYINDEX, table_name[obj_class]);
+  lua_getfield (L, LUA_REGISTRYINDEX, table_name);
 
   lua_pushnil (L);  /* first key */
   while (lua_next(L, -2) != 0) 
