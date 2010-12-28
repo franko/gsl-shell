@@ -46,11 +46,16 @@ struct x_connection {
   int                  depth;
   Visual*              visual;
 
-  x_connection() : display(0) {};
-  ~x_connection() { this->close(); };
+  x_connection() : display(0), m_busy(false) {};
+  ~x_connection() { if (! m_busy) this->close(); };
   
   bool init();
   void close();
+
+  void busy(bool s) { m_busy = s; };
+
+private:
+  bool m_busy;
 };
 
 bool x_connection::init()
@@ -712,6 +717,8 @@ namespace agg
 
     platform_specific *ps = m_specific;
 
+    xc->busy(true);
+
     while(!quit)
       {
         if(ps->m_update_flag && ps->m_is_mapped)
@@ -811,6 +818,8 @@ namespace agg
             break;
           }           
       }
+
+    xc->busy(false);
 
     unsigned i = platform_support::max_images;
     while(i--)
