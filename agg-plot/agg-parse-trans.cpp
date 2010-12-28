@@ -46,6 +46,7 @@ struct property_reg line_join_properties[] = {
 const char *agg_spec_error::m_msg[] = {
   "invalid specification tag",
   "invalid specification table",
+  "missing specification parameter",
   "invalid graphical object",
   "generic error during graphical operation"
 };
@@ -177,6 +178,25 @@ build_translate (lua_State *L, int specindex, typename context::base_type *obj)
 }
 
 template <class context> typename context::base_type*
+build_scale (lua_State *L, int specindex, typename context::base_type *obj)
+{
+  typedef typename trans<context>::affine affine_type;
+
+  lua_rawgeti (L, specindex, 2);
+
+  if (! lua_isnumber (L, -1))
+    throw agg_spec_error(agg_spec_error::missing_parameter);
+
+  double s = lua_tonumber (L, -1);
+  lua_pop (L, 1);
+
+  agg::trans_affine mtx(s, 0.0, 0.0, s, 0.0, 0.0);
+  affine_type *t = new affine_type(obj, mtx);
+
+  return (typename context::base_type *) t;
+}
+
+template <class context> typename context::base_type*
 build_rotate (lua_State *L, int specindex, typename context::base_type *obj)
 {
   typedef typename trans<context>::affine affine_type;
@@ -227,6 +247,7 @@ const typename builder<context>::reg builder<context>::builder_table[] = {
   {"marker",        build_marker   <context>},
   {"extend",        build_extend   <context>},
   {"translate",     build_translate<context>},
+  {"scale",         build_scale    <context>},
   {"rotate",        build_rotate   <context>},
   {NULL, NULL}
 };

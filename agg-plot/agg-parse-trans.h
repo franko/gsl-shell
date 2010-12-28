@@ -16,6 +16,7 @@ public:
   enum err_e {
     invalid_tag = 0,
     invalid_spec,
+    missing_parameter,
     invalid_object,
     generic_error
   };

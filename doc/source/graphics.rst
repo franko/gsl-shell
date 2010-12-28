@@ -600,6 +600,11 @@ Here a complete list of all the available transforms:
     * **x**, translation along the x axis
     * **y**, translation along the y axis
 
+  **scale**
+    A scaling of the image around the point (0, 0). Only one numeric
+    parameter should be supplied to indicate the scaling factor. For
+    example ``{'scale', 2}`` will scale the image of a factor two.
+
   **rotate**
     A rotation of a given angle with respect of the origin. This transformation can be used only in the user coordinate system.
 
