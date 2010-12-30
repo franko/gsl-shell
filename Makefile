@@ -58,7 +58,7 @@ SUBDIRS = lua
 
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
-C_SRC_FILES = common.c gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
+C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
@@ -90,9 +90,9 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 endif
 
-ifneq ($(strip $(ENABLE_GAMMA_CORR)), no)
-  DEFS += -DENABLE_GAMMA_CORR
-  SUBDIRS_DEFS += -DENABLE_GAMMA_CORR
+ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
+  DEFS += -DDISABLE_GAMMA_CORR
+  SUBDIRS_DEFS += -DDISABLE_GAMMA_CORR
 endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)

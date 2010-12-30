@@ -24,8 +24,6 @@
 #include "gs-types.h"
 #include "multimin.h"
 
-static int multimin_new (lua_State *L);
-
 static const struct luaL_Reg multimin_functions[] = {
   {"fdfmultimin",    fdfmultimin_new},
   {"fmultimin",      fmultimin_new},

@@ -21,18 +21,13 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <string.h>
+#include <math.h>
 #include <gsl/gsl_rng.h>
 
 #include "gs-types.h"
-#include "common.h"
 #include "random.h"
 
-struct rng_type_info {
-  const char *name;
-  const gsl_rng_type *t;
-};
-
-struct rng_type_info *rng_table;
+#define GSL_RNG_TABLE_REG_NAME "GSL.rng-table"
 
 static int random_rng_free      (lua_State *L);
 static int random_rng_new       (lua_State *L);
@@ -67,15 +62,7 @@ random_rng_free (lua_State *L)
 int
 random_rng_type_list (lua_State *L)
 {
-  size_t k;
-
-  lua_newtable (L);
-  for (k = 0; rng_table[k].t; k++)
-    {
-      lua_pushstring (L, rng_table[k].name);
-      lua_rawseti (L, -2, k+1);
-    }
-
+  lua_getfield(L, LUA_REGISTRYINDEX, GSL_RNG_TABLE_REG_NAME);
   return 1;
 }
 
@@ -98,15 +85,16 @@ push_rng (lua_State *L, const gsl_rng_type *T)
 int
 random_rng_new (lua_State *L)
 {
-  size_t k;
   const char *reqname = luaL_optstring (L, 1, "taus2");
+  const gsl_rng_type **t, **t0;
 
-  for (k = 0; rng_table[k].t; k++)
+  t0 = gsl_rng_types_setup ();
+
+  for (t = t0; *t != NULL; t++)
     {
-      struct rng_type_info *inf = & rng_table[k];
-      if (strcmp (inf->name, reqname) == 0)
+      if (strcmp ((*t)->name, reqname) == 0)
 	{
-	  push_rng (L, inf->t);
+	  push_rng (L, *t);
 	  return 1;
 	}
     }
@@ -159,7 +147,7 @@ void
 random_register (lua_State *L)
 {
   const gsl_rng_type **t, **t0;
-  size_t rng_type_count, k;
+  size_t k;
 
   luaL_newmetatable (L, GS_METATABLE(GS_RNG));
   lua_pushvalue (L, -1);
@@ -168,19 +156,14 @@ random_register (lua_State *L)
   lua_pop (L, 1);
 
   t0 = gsl_rng_types_setup ();
-  
-  rng_type_count = 0;
-  for (t = t0; *t != NULL; t++)
-    rng_type_count ++;
 
-  rng_table = emalloc (sizeof(struct rng_type_info) * (rng_type_count + 1));
+  lua_newtable (L);
   for (t = t0, k = 0; *t != NULL; t++, k++)
     {
-      rng_table[k].name = (*t)->name;
-      rng_table[k].t = *t;
+      lua_pushstring (L, (*t)->name);
+      lua_rawseti (L, -2, k+1);
     }
-  rng_table[k].name = NULL;
-  rng_table[k].t    = NULL;
+  lua_setfield(L, LUA_REGISTRYINDEX, GSL_RNG_TABLE_REG_NAME);
 
   /* gsl module registration */
   luaL_register (L, NULL, random_functions);

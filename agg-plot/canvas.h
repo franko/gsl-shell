@@ -104,10 +104,10 @@ public:
   };
 };
 
-#ifdef ENABLE_GAMMA_CORR
-typedef canvas_gen<pixel_gamma_corr, 15> canvas;
-#else
+#ifdef DISABLE_GAMMA_CORR
 typedef canvas_gen<pixel_simple, 10> canvas;
+#else
+typedef canvas_gen<pixel_gamma_corr, 15> canvas;
 #endif
 
 #endif
