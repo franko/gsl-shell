@@ -47,7 +47,7 @@ struct x_connection {
   Visual*              visual;
 
   x_connection() : display(0), m_busy(false) {};
-  ~x_connection() { if (! m_busy) this->close(); };
+  ~x_connection() { this->close(); };
   
   bool init();
   void close();
@@ -76,7 +76,7 @@ bool x_connection::init()
 
 void x_connection::close()
 {
-  if (display)
+  if (display && !m_busy)
     {
       XCloseDisplay(display);
       display = 0;
@@ -717,8 +717,6 @@ namespace agg
 
     platform_specific *ps = m_specific;
 
-    xc->busy(true);
-
     while(!quit)
       {
         if(ps->m_update_flag && ps->m_is_mapped)
@@ -727,6 +725,8 @@ namespace agg
             update_window();
             ps->m_update_flag = false;
           }
+
+	xc->busy(true);
 
         if(!m_wait_mode)
           {
@@ -761,6 +761,8 @@ namespace agg
               }
             x_event = te;
           }
+
+	xc->busy(false);
 
         switch(x_event.type) 
           {
@@ -804,9 +806,11 @@ namespace agg
             break;
 
           case Expose:
+	    xc->busy(true);
             ps->put_image(&m_rbuf_window);
             XFlush(xc->display);
             XSync(xc->display, false);
+	    xc->busy(false);
             break;
 
           case ClientMessage:
@@ -818,8 +822,6 @@ namespace agg
             break;
           }           
       }
-
-    xc->busy(false);
 
     unsigned i = platform_support::max_images;
     while(i--)
