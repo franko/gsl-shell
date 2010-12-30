@@ -85,9 +85,9 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 endif
 
-ifneq ($(strip $(ENABLE_GAMMA_CORR)), no)
-  DEFS += -DENABLE_GAMMA_CORR
-  SUBDIRS_DEFS += -DENABLE_GAMMA_CORR
+ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
+  DEFS += -DDISABLE_GAMMA_CORR
+  SUBDIRS_DEFS += -DDISABLE_GAMMA_CORR
 endif
 
 ifeq ($(strip $(ENABLE_COMPLEX)), yes)
