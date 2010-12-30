@@ -25,7 +25,6 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 
-#include "common.h"
 #include "gs-types.h"
 #include "random.h"
 #include "randist.h"

@@ -21,12 +21,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <string.h>
+#include <math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_sf_erf.h>
 
-#include "common.h"
 #include "random.h"
 #include "cdf.h"
 
