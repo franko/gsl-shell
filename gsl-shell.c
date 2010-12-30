@@ -64,6 +64,12 @@
 #include "lua-gsl.h"
 #include "lua-utils.h"
 
+#if defined(GSL_SHELL_DEBUG) && defined(AGG_PLOT_ENABLED)
+#include "object-index.h"
+#include "window.h"
+#include "debug-support.h"
+#endif
+
 #define report error_report
 
 static lua_State *globalL = NULL;
@@ -352,6 +358,18 @@ static void dotty (lua_State *L) {
 	    }
 	}
     }
+
+#if defined(GSL_SHELL_DEBUG) && defined(AGG_PLOT_ENABLED)
+  object_index_apply_all (L, window_close);
+
+  do
+    {
+      GSL_SHELL_UNLOCK();
+      msleep(50);
+      GSL_SHELL_LOCK();
+    }
+  while (object_index_count (L) > 0);
+#endif
 
   lua_settop(L, 0);  /* clear stack */
 
