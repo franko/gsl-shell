@@ -27,8 +27,6 @@
 #include "gs-types.h"
 #include "random.h"
 
-#define GSL_RNG_TABLE_REG_NAME "GSL.rng-table"
-
 static int random_rng_free      (lua_State *L);
 static int random_rng_new       (lua_State *L);
 static int random_rng_type_list (lua_State *L);
@@ -62,7 +60,18 @@ random_rng_free (lua_State *L)
 int
 random_rng_type_list (lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, GSL_RNG_TABLE_REG_NAME);
+  const gsl_rng_type **t, **t0;
+  size_t k;
+
+  t0 = gsl_rng_types_setup ();
+
+  lua_newtable (L);
+  for (t = t0, k = 0; *t != NULL; t++, k++)
+    {
+      lua_pushstring (L, (*t)->name);
+      lua_rawseti (L, -2, k+1);
+    }
+
   return 1;
 }
 
@@ -146,24 +155,11 @@ random_rng_getint (lua_State *L)
 void
 random_register (lua_State *L)
 {
-  const gsl_rng_type **t, **t0;
-  size_t k;
-
   luaL_newmetatable (L, GS_METATABLE(GS_RNG));
   lua_pushvalue (L, -1);
   lua_setfield (L, -2, "__index");
   luaL_register (L, NULL, rng_methods);
   lua_pop (L, 1);
-
-  t0 = gsl_rng_types_setup ();
-
-  lua_newtable (L);
-  for (t = t0, k = 0; *t != NULL; t++, k++)
-    {
-      lua_pushstring (L, (*t)->name);
-      lua_rawseti (L, -2, k+1);
-    }
-  lua_setfield(L, LUA_REGISTRYINDEX, GSL_RNG_TABLE_REG_NAME);
 
   /* gsl module registration */
   luaL_register (L, NULL, random_functions);
