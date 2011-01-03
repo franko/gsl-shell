@@ -68,6 +68,7 @@ C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 ifeq ($(strip $(DEBUG)), yes)
   C_SRC_FILES += debug-support.c
   DEFS += -DGSL_SHELL_DEBUG
+  SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
 endif
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)

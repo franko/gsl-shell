@@ -78,6 +78,7 @@ void x_connection::close()
 {
   if (display && !m_busy)
     {
+      XSync(display, True);
       XCloseDisplay(display);
       display = 0;
     }
@@ -267,8 +268,8 @@ namespace agg
 
   void platform_specific::close_connections()
   {
-    m_main_conn.close();
     m_draw_conn.close();
+    m_main_conn.close();
   }
 
   void platform_specific::free_x_resources()
@@ -1055,12 +1056,36 @@ namespace agg
   void platform_support::on_post_draw(void* raw_handler) {}
 }
 
+#if defined(GSL_SHELL_DEBUG)
+#include <unistd.h>
+
+static int
+my_x_error_handler (Display *d, XErrorEvent *e)
+{
+  char err_msg[256];
+  printf("WARNING: X protocol error.\n");
+  XGetErrorText(d, e->error_code, err_msg, 256);
+  printf("%s\n", err_msg);
+  printf("waiting");
+  for (int k = 0; k < 60 * 15; k++)
+    {
+      sleep(1);
+      printf(".");
+      fflush(stdout);
+    }
+  return 0;
+}
+#endif
+
 void
 platform_support_ext::prepare()
 {
   if (! agg::platform_specific::initialized)
     {
-      XInitThreads();
+      XInitThreads(); 
+#if defined(GSL_SHELL_DEBUG)
+      XSetErrorHandler(my_x_error_handler);
+#endif
       agg::platform_specific::initialized = true;
     }
 }
