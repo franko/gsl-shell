@@ -815,6 +815,7 @@ namespace agg
                 ::TranslateMessage(&msg);
                 if(msg.message == WM_QUIT)
                   {
+		    m_specific->m_is_mapped = false;
                     break;
                   }
                 ::DispatchMessage(&msg);

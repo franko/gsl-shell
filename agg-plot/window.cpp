@@ -487,15 +487,20 @@ window_split (lua_State *L)
   win->lock();
 
   win->cleanup_refs(L, 1);
-  if (!win->split(spec))
+
+  if (! win->split(spec))
     {
-      win->do_window_update();
+      if (win->status == canvas_window::running)
+	win->do_window_update();
       win->unlock();
       return luaL_error(L, window::error_message(window::invalid_split_string));
     }
 
-  win->on_draw();
-  win->do_window_update();
+  if (win->status == canvas_window::running)
+    {
+      win->on_draw();
+      win->do_window_update();
+    }
 
   win->unlock();
   return 0;
@@ -514,7 +519,8 @@ window_attach (lua_State *L)
 
   if (slot_id >= 0)
     {
-      win->draw_slot(slot_id, true);
+      if (win->status == canvas_window::running)
+	win->draw_slot(slot_id, true);
       win->unlock();
       object_refs_add (L, table_window_plot, slot_id, 1, 2);
     }
@@ -544,9 +550,12 @@ window_update (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
 
-  win->lock();
-  win->on_draw();
-  win->do_window_update();
+  win->lock(); 
+  if (win->status == canvas_window::running)
+    {
+      win->on_draw();
+      win->do_window_update();
+    }
   win->unlock();
 
   return 0;
