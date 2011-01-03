@@ -22,8 +22,9 @@ public:
     invalid_split_string,
     invalid_slot,
   };
-
   typedef plot<drawable, lua_management> plot_type;
+
+  int window_id;
 
   typedef agg::trans_affine bmatrix;
 
@@ -76,6 +77,7 @@ public:
   int attach(lua_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
   void refresh_slot(int slot_id);
+  bool start(lua_State *L);
 
   void save_slot_image(int slot_id);
   void restore_slot_image(int slot_id);

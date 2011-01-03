@@ -418,18 +418,46 @@ int window_generic_oper_ext (lua_State *L,
   return 0;
 }
 
+bool window::start (lua_State *L)
+{
+  this->lock();
+
+  if (this->status != canvas_window::running)
+    {
+      typedef canvas_window::thread_info thread_info;
+      std::auto_ptr<thread_info> inf(new thread_info(L, this));
+
+      this->window_id = object_index_add (L, -1);
+      inf->window_id = this->window_id;
+
+      if (! this->start_new_thread (inf))
+	{
+	  object_index_remove (L, this->window_id);
+	  this->unlock();
+	  return false;
+	}
+    }
+  else
+    {
+      this->unlock();
+      return false;
+    }
+
+  return true;
+}
+
 int
 window_new (lua_State *L)
 {
   window *win = push_new_object<window>(L, GS_WINDOW, colors::white);
   const char *spec = lua_tostring (L, 1);
 
-  win->start_new_thread (L);
+  if (! win->start(L))
+    return luaL_error (L, "error during window initialization");
 
   if (spec)
     {
       win->split(spec);
-      // return luaL_error(L, window::error_message(window::invalid_split_string));
     }
 
   return 1;
@@ -439,7 +467,8 @@ int
 window_show (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
-  win->start_new_thread (L);
+  if (! win->start(L))
+    return luaL_error (L, "error during window initialization");
   return 0;
 }
 

@@ -18,13 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <memory>
-
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
-
 #include "defs.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
@@ -45,13 +38,6 @@ static void * canvas_thread_function        (void *_win);
 
 __END_DECLS
 
-struct canvas_thread_info {
-  lua_State *L;
-  canvas_window *win;
-
-  canvas_thread_info (lua_State *L, canvas_window *win) : L(L), win(win) {};
-};
-
 void
 canvas_window::on_resize(int sx, int sy)
 {
@@ -70,13 +56,10 @@ canvas_window::on_init()
   this->on_resize(width(), height());
 }
 
-void
-canvas_window::start_new_thread (lua_State *L)
+bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>& inf)
 {
   if (status != not_ready && status != closed)
-    return;
-
-  this->id = object_index_add (L, -1);
+    return false;
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -84,29 +67,30 @@ canvas_window::start_new_thread (lua_State *L)
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
 
-  this->lock();
-    
   this->status = canvas_window::starting;
 
-  canvas_thread_info *inf = new canvas_thread_info(L, this);
-  if (pthread_create(win_thread, attr, canvas_thread_function, (void*) inf))
+  void *user_data = (void *) inf.get();
+  if (pthread_create(win_thread, attr, canvas_thread_function, user_data))
     {
-      delete inf;
-      object_index_remove (L, this->id);
-      pthread_attr_destroy (attr);
-
       this->status = canvas_window::error; 
-
-      luaL_error(L, "error creating thread");
+      pthread_attr_destroy (attr);
+      return false;
+    }
+  else
+    {
+      inf.release();
+      pthread_attr_destroy (attr);
     }
 
-  pthread_attr_destroy (attr);
+  return true;
 }
 
 void *
 canvas_thread_function (void *_inf)
 {
-  std::auto_ptr<canvas_thread_info> inf((canvas_thread_info *) _inf);
+  typedef canvas_window::thread_info thread_info;
+
+  std::auto_ptr<thread_info> inf((thread_info *) _inf);
   platform_support_ext::prepare();
   canvas_window *win = inf->win;
 
@@ -125,7 +109,7 @@ canvas_thread_function (void *_inf)
   win->unlock();
 
   GSL_SHELL_LOCK();
-  object_index_remove (inf->L, win->id);
+  object_index_remove (inf->L, inf->window_id);
   GSL_SHELL_UNLOCK();
 
   return NULL;
