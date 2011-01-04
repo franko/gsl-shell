@@ -367,22 +367,6 @@ int window::attach(lua_plot *plot, const char *spec)
   return r->slot_id;
 }
 
-const char *
-window::error_message(window::error_e code)
-{
-  switch (code)
-    {
-    case invalid_split_string:
-      return "invalid window subdivision specification";
-    case invalid_slot:
-      return "invalid slot specification";
-    default:
-      ;
-    }
-  return "unknown error";
-}
-
-
 typedef void (window::*window_slot_method_type)(int slot_id);
 
 int window_generic_oper (lua_State *L, window_slot_method_type method)
@@ -418,11 +402,11 @@ int window_generic_oper_ext (lua_State *L,
   return 0;
 }
 
-bool window::start (lua_State *L)
+void window::start (lua_State *L, gslshell::ret_status& st)
 {
   this->lock();
 
-  if (this->status != canvas_window::running)
+  if (status != canvas_window::running && status != canvas_window::starting)
     {
       typedef canvas_window::thread_info thread_info;
       std::auto_ptr<thread_info> inf(new thread_info(L, this));
@@ -434,16 +418,14 @@ bool window::start (lua_State *L)
 	{
 	  object_index_remove (L, this->window_id);
 	  this->unlock();
-	  return false;
+	  st.error("error during thread initialization", "window creation");
 	}
     }
   else
     {
       this->unlock();
-      return false;
+      st.error("window is already active", "window creation");
     }
-
-  return true;
 }
 
 int
@@ -452,13 +434,14 @@ window_new (lua_State *L)
   window *win = push_new_object<window>(L, GS_WINDOW, colors::white);
   const char *spec = lua_tostring (L, 1);
 
-  if (! win->start(L))
-    return luaL_error (L, "error during window initialization");
+  gslshell::ret_status st;
+  win->start(L, st);
+
+  if (st.error_msg())
+    return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
 
   if (spec)
-    {
-      win->split(spec);
-    }
+    win->split(spec);
 
   return 1;
 }
@@ -467,8 +450,13 @@ int
 window_show (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
-  if (! win->start(L))
-    return luaL_error (L, "error during window initialization");
+
+  gslshell::ret_status st;
+  win->start(L, st);
+
+  if (st.error_msg())
+    return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+
   return 0;
 }
 
@@ -493,7 +481,7 @@ window_split (lua_State *L)
       if (win->status == canvas_window::running)
 	win->do_window_update();
       win->unlock();
-      return luaL_error(L, window::error_message(window::invalid_split_string));
+      return luaL_error(L, "invalid window subdivision specification");
     }
 
   if (win->status == canvas_window::running)
@@ -527,7 +515,7 @@ window_attach (lua_State *L)
   else
     {
       win->unlock();
-      luaL_error (L, window::error_message(window::invalid_slot));
+      luaL_error (L, "invalid slot specification");
     }
 
   return 0;
