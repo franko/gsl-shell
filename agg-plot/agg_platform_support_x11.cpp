@@ -78,7 +78,6 @@ void x_connection::close()
 {
   if (display && !m_busy)
     {
-      XSync(display, True);
       XCloseDisplay(display);
       display = 0;
     }
@@ -729,15 +728,6 @@ namespace agg
 
 	xc->busy(true);
 
-        if(!m_wait_mode)
-          {
-            if(XPending(xc->display) == 0)
-              {
-                on_idle();
-                continue;
-              }
-          }
-
         XEvent x_event;
         if (ps->m_is_mapped)
           {
@@ -748,19 +738,6 @@ namespace agg
         else
           {
             XNextEvent(xc->display, &x_event);
-          }
-            
-        // In the Idle mode discard all intermediate MotionNotify events
-        if(!m_wait_mode && x_event.type == MotionNotify)
-          {
-            XEvent te = x_event;
-            for(;;)
-              {
-                if(XPending(xc->display) == 0) break;
-                XNextEvent(xc->display, &te);
-                if(te.type != MotionNotify) break;
-              }
-            x_event = te;
           }
 
 	xc->busy(false);
@@ -792,6 +769,8 @@ namespace agg
 
                   if (ps->m_main_img == 0 || ps->m_draw_img == 0)
                     {
+		      if (ps->m_main_img) delete ps->m_main_img;
+		      if (ps->m_draw_img) delete ps->m_draw_img;
                       quit = true;
                       ret = 1;
                       break;
@@ -1129,8 +1108,7 @@ platform_support_ext::update_region (const agg::rect_base<int>& r)
   // the X server does not accumulate mouse motion events.
   // When m_wait_mode is false, i.e. we have some idle drawing
   // we cannot afford to miss any events
-  // XSync(xd->display, wait_mode());
-  XFlush(xd->display);
+  XSync(xd->display, wait_mode());
 }
 
 void
