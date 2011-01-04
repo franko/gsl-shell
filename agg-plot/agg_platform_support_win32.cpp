@@ -62,9 +62,6 @@ namespace agg
     void display_pmap(HDC dc, const rendering_buffer* src,
                       const agg::rect_base<int> *rect = 0);
 
-    bool load_pmap(const char* fn, unsigned idx, 
-                   rendering_buffer* dst);
-
     bool save_pmap(const char* fn, unsigned idx, 
                    const rendering_buffer* src);
 
@@ -98,11 +95,11 @@ namespace agg
 
   //------------------------------------------------------------------------
   platform_specific::platform_specific(pix_format_e format, bool flip_y) :
-    m_format(format),
-    m_sys_format(pix_format_undefined),
-    m_flip_y(flip_y),
-    m_bpp(0),
-    m_sys_bpp(0),
+    m_format(gslshell::sys_pixel_format),
+    m_sys_format(gslshell::sys_pixel_format),
+    m_flip_y(gslshell::flip_y),
+    m_bpp(gslshell::bpp),
+    m_sys_bpp(gslshell::sys_bpp),
     m_hwnd(0),
     m_bmp_draw(0),
     m_cur_x(0),
@@ -113,78 +110,6 @@ namespace agg
     m_is_mapped(false),
     m_is_ready(false)
   {
-
-    switch(m_format)
-      {
-      case pix_format_bw:
-        m_sys_format = pix_format_bw;
-        m_bpp = 1;
-        m_sys_bpp = 1;
-        break;
-
-      case pix_format_gray8:
-        m_sys_format = pix_format_gray8;
-        m_bpp = 8;
-        m_sys_bpp = 8;
-        break;
-
-      case pix_format_gray16:
-        m_sys_format = pix_format_gray8;
-        m_bpp = 16;
-        m_sys_bpp = 8;
-        break;
-
-      case pix_format_rgb565:
-      case pix_format_rgb555:
-        m_sys_format = pix_format_rgb555;
-        m_bpp = 16;
-        m_sys_bpp = 16;
-        break;
-
-      case pix_format_rgbAAA:
-      case pix_format_bgrAAA:
-      case pix_format_rgbBBA:
-      case pix_format_bgrABB:
-        m_sys_format = pix_format_bgr24;
-        m_bpp = 32;
-        m_sys_bpp = 24;
-        break;
-
-      case pix_format_rgb24:
-      case pix_format_bgr24:
-        m_sys_format = pix_format_bgr24;
-        m_bpp = 24;
-        m_sys_bpp = 24;
-        break;
-
-      case pix_format_rgb48:
-      case pix_format_bgr48:
-        m_sys_format = pix_format_bgr24;
-        m_bpp = 48;
-        m_sys_bpp = 24;
-        break;
-
-      case pix_format_bgra32:
-      case pix_format_abgr32:
-      case pix_format_argb32:
-      case pix_format_rgba32:
-        m_sys_format = pix_format_bgra32;
-        m_bpp = 32;
-        m_sys_bpp = 32;
-        break;
-
-      case pix_format_bgra64:
-      case pix_format_abgr64:
-      case pix_format_argb64:
-      case pix_format_rgba64:
-        m_sys_format = pix_format_bgra32;
-        m_bpp = 64;
-        m_sys_bpp = 32;
-        break;
-
-      default:
-        /* */;
-      }
     ::QueryPerformanceFrequency(&m_sw_freq);
     ::QueryPerformanceCounter(&m_sw_start);
 
@@ -220,89 +145,6 @@ namespace agg
                                                org_e(m_sys_bpp));
   }
 
-
-  //------------------------------------------------------------------------
-  template <class RenBufDst, class RenBufSrc>
-  static void convert_pmap(RenBufDst* dst, const RenBufSrc* src, 
-                           pix_format_e format, bool copy_req)
-  {
-    switch(format)
-      {
-      case pix_format_gray8:
-      case pix_format_bgr24:
-        if (copy_req)
-          dst->copy_from(*src);
-        break;
-
-      case pix_format_gray16:
-        my_color_conv(dst, src, color_conv_gray16_to_gray8());
-        break;
-
-      case pix_format_rgb565:
-        my_color_conv(dst, src, color_conv_rgb565_to_rgb555());
-        break;
-
-      case pix_format_rgbAAA:
-        my_color_conv(dst, src, color_conv_rgbAAA_to_bgr24());
-        break;
-
-      case pix_format_bgrAAA:
-        my_color_conv(dst, src, color_conv_bgrAAA_to_bgr24());
-        break;
-
-      case pix_format_rgbBBA:
-        my_color_conv(dst, src, color_conv_rgbBBA_to_bgr24());
-        break;
-
-      case pix_format_bgrABB:
-        my_color_conv(dst, src, color_conv_bgrABB_to_bgr24());
-        break;
-
-      case pix_format_rgb24:
-        my_color_conv(dst, src, color_conv_rgb24_to_bgr24());
-        break;
-
-      case pix_format_rgb48:
-        my_color_conv(dst, src, color_conv_rgb48_to_bgr24());
-        break;
-
-      case pix_format_bgr48:
-        my_color_conv(dst, src, color_conv_bgr48_to_bgr24());
-        break;
-
-      case pix_format_abgr32:
-        my_color_conv(dst, src, color_conv_abgr32_to_bgra32());
-        break;
-
-      case pix_format_argb32:
-        my_color_conv(dst, src, color_conv_argb32_to_bgra32());
-        break;
-
-      case pix_format_rgba32:
-        my_color_conv(dst, src, color_conv_rgba32_to_bgra32());
-        break;
-
-      case pix_format_bgra64:
-        my_color_conv(dst, src, color_conv_bgra64_to_bgra32());
-        break;
-
-      case pix_format_abgr64:
-        my_color_conv(dst, src, color_conv_abgr64_to_bgra32());
-        break;
-
-      case pix_format_argb64:
-        my_color_conv(dst, src, color_conv_argb64_to_bgra32());
-        break;
-
-      case pix_format_rgba64:
-        my_color_conv(dst, src, color_conv_rgba64_to_bgra32());
-        break;
-
-      default:
-        /* */;
-      }
-  }
-
   //------------------------------------------------------------------------
   void platform_specific::display_pmap(HDC dc, const rendering_buffer* src,
                                        const agg::rect_base<int> *ri)
@@ -330,7 +172,7 @@ namespace agg
         rendering_buffer_ro src_view;
         rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-        convert_pmap(&rbuf_tmp, &src_view, m_format, true);
+	rbuf_tmp.copy_from(src_view);
 
         unsigned int wh = m_pmap_window.height();
         RECT wrect;
@@ -356,174 +198,7 @@ namespace agg
                                     const rendering_buffer* src)
   {
     pixel_map& img = m_pmap_img[idx];
-
-    if(m_sys_format == m_format)
-      {
-        return img.save_as_bmp(fn);
-      }
-
-    pixel_map pmap;
-    pmap.create(img.width(), img.height(), org_e(m_sys_bpp));
-
-    rendering_buffer rbuf_tmp;
-    pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
-
-    convert_pmap(&rbuf_tmp, src, m_format, false);
-    return pmap.save_as_bmp(fn);
-  }
-
-
-
-  //------------------------------------------------------------------------
-  bool platform_specific::load_pmap(const char* fn, unsigned idx, 
-                                    rendering_buffer* dst)
-  {
-    pixel_map& img = m_pmap_img[idx];
-
-    pixel_map pmap;
-    if(!pmap.load_from_bmp(fn)) return false;
-
-    rendering_buffer rbuf_tmp;
-    pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
-
-    img.create(pmap.width(), pmap.height(), org_e(m_bpp), 0);
-    pixel_map_attach (img, dst, m_flip_y);
-
-    switch(m_format)
-      {
-      case pix_format_gray8:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_gray8()); break;
-          }
-        break;
-
-      case pix_format_gray16:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_gray16()); break;
-          }
-        break;
-
-      case pix_format_rgb555:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb555()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb555()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgb555()); break;
-          }
-        break;
-
-      case pix_format_rgb565:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb565()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb565()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgb565()); break;
-          }
-        break;
-
-      case pix_format_rgb24:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb24()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb24()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgb24()); break;
-          }
-        break;
-
-      case pix_format_bgr24:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgr24()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgr24()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_bgr24()); break;
-          }
-        break;
-
-      case pix_format_rgb48:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb48()); break;
-          }
-        break;
-
-      case pix_format_bgr48:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgr48()); break;
-          }
-        break;
-
-      case pix_format_abgr32:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_abgr32()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_abgr32()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_abgr32()); break;
-          }
-        break;
-
-      case pix_format_argb32:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_argb32()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_argb32()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_argb32()); break;
-          }
-        break;
-
-      case pix_format_bgra32:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgra32()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgra32()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_bgra32()); break;
-          }
-        break;
-
-      case pix_format_rgba32:
-        switch(pmap.bpp())
-          {
-          case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgba32()); break;
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgba32()); break;
-          case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgba32()); break;
-          }
-        break;
-
-      case pix_format_abgr64:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_abgr64()); break;
-          }
-        break;
-
-      case pix_format_argb64:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_argb64()); break;
-          }
-        break;
-
-      case pix_format_bgra64:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgra64()); break;
-          }
-        break;
-
-      case pix_format_rgba64:
-        switch(pmap.bpp())
-          {
-          case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgba64()); break;
-          }
-        break;
-
-      default:
-        return false;
-      }
-
-    return true;
+    return img.save_as_bmp(fn);
   }
 
   void platform_specific::bitmap_info_resize (BITMAPINFO* bmp, unsigned w, unsigned h)
@@ -844,18 +519,7 @@ namespace agg
   //------------------------------------------------------------------------
   bool platform_support::load_img(unsigned idx, const char* file)
   {
-    if(idx < max_images)
-      {
-        char fn[1024];
-        strcpy(fn, file);
-        int len = strlen(fn);
-        if(len < 4 || stricmp(fn + len - 4, ".BMP") != 0)
-          {
-            strcat(fn, ".bmp");
-          }
-        return m_specific->load_pmap(fn, idx, &m_rbuf_img[idx]);
-      }
-    return true;
+    return false;
   }
 
 
@@ -944,7 +608,7 @@ platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *f
   agg::rendering_buffer rbuf_tmp;
   pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
 
-  agg::convert_pmap (&rbuf_tmp, &src, gslshell::pixel_format, true);
+  rbuf_tmp.copy_from(src);
 
   return pmap.save_as_bmp (fnext.data());
 }
