@@ -18,8 +18,6 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
 
-local M = {}
-
 local insert = table.insert
 local default_color_map = color_function('redyellow', 0.9)
 
@@ -810,5 +808,3 @@ function polar_contour(f, R, options)
 
    return p
 end
-
-return M
