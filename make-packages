@@ -26,7 +26,7 @@ ifeq ($(strip $(PLATFORM)), mingw)
   AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
 
   PTHREADS_CFLAGS = -I$(PTHREADS_HOME)/include
-  PTHREADS_LIBS = -L$(PTHREADS_HOME)/lib -lpthreadGC2
+  PTHREADS_LIBS = -L$(PTHREADS_HOME)/lib -lpthreadGCE2
 else
   AGG_INCLUDES = -I/usr/include/agg2
   AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
