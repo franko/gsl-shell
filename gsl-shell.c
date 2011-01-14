@@ -302,7 +302,6 @@ static int loadline (lua_State *L) {
   if (!pushline(L, 1))
     return -1;  /* no input */
 
-#warning DEBUG CODE
   if (strcmp (lua_tostring(L, 1), "exit") == 0)
     return -1;
 
