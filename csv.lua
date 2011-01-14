@@ -35,7 +35,9 @@ end
 function csv.read(filename)
    local t = {}
    for line in io.lines(filename) do
-      t[#t+1] = csv.line(line)
+      if not string.match('^%s*$', line) then
+	 t[#t+1] = csv.line(line)
+      end
    end
    return t
 end
