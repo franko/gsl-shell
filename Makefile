@@ -71,15 +71,9 @@ ifeq ($(strip $(DEBUG)), yes)
   SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
 endif
 
-ifeq ($(strip $(BUILD_LUA_DLL)), yes)
-  CFLAGS += -fpic
-  DEFS += -DLUA_MODULE -DUSE_SEPARATE_NAMESPACE
-  TARGETS = $(LUA_DLL)
-else
-  C_SRC_FILES += gsl-shell.c
-  SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
-  TARGETS = $(GSL_SHELL)
-endif
+C_SRC_FILES += gsl-shell.c
+SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
+TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   C_SRC_FILES += refs.c object-index.c object-refs.c 

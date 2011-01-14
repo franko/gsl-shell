@@ -28,8 +28,6 @@ LIB_O=	lauxlib.o lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o \
 ifeq ($(strip $(PLATFORM)), mingw)
   LUA_T  = lua.exe
   LUAC_T = luac.exe
-  CFLAGS += -DLUA_DL_DLL -DLUA_BUILD_AS_DLL
-  LDFLAGS += -s
 else
   LUA_T  = lua
   LUAC_T = luac
