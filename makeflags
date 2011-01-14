@@ -2,12 +2,13 @@
 CC = gcc
 CXX = g++
 
-DEBUG = yes
+DEBUG = no
 
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall
 else
-  CFLAGS = -O3 -Wall
-  CXXFLAGS = -O3 -fno-rtti -Wall
+  # on windows do not use -fomit-frame-pointer
+  CFLAGS = -O3 -fomit-frame-pointer -ffast-math -Wall
+  CXXFLAGS = -Os -ffast-math -fno-rtti -Wall
 endif
