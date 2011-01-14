@@ -50,10 +50,11 @@ TO_MAN= lua.1 luac.1
 V= 5.1
 R= 5.1.4
 
-all:	$(PLATFORM)
+all:
+	cd src && $(MAKE) DEFS="$(DEFS)" PLATFORM=$(PLATFORM)
 
-$(PLATS) clean:
-	cd src && $(MAKE) DEFS="$(DEFS)" $@
+clean:
+	cd src && $(MAKE) DEFS="$(DEFS)" PLATFORM=$(PLATFORM) clean
 
 test:	dummy
 	src/lua test/hello.lua

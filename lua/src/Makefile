@@ -4,44 +4,47 @@
 
 # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
 
-# Your platform. See PLATS for possible values.
-PLATFORM = none
+GSH_BASE_DIR = ../..
 
-CC= gcc --std=c99
-CFLAGS= -g -Wall $(DEFS) $(MYCFLAGS)
-AR= ar rcu
-RANLIB= ranlib
-RM= rm -f
-LIBS= -lm $(MYLIBS)
+include $(GSH_BASE_DIR)/makeflags
 
-MYCFLAGS=
-MYLDFLAGS=
-MYLIBS=
+CC += --std=c99
+CFLAGS += $(DEFS)
+
+LUA_A = liblua.a
+AR = ar rcu
+RANLIB = ranlib
+RM = rm -f
+LIBS = -lm
 
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 
-PLATS= aix ansi bsd freebsd generic linux linux_sse macosx mingw posix solaris
-
-LUA_A=	liblua.a
 CORE_O=	lapi.o lcode.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o \
 	lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o  \
 	lundump.o lvm.o lzio.o lnum.o
 LIB_O=	lauxlib.o lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o \
 	lstrlib.o loadlib.o linit.o
 
-LUA_T=	lua
-LUA_O=	lua.o
+ifeq ($(strip $(PLATFORM)), mingw)
+  LUA_T  = lua.exe
+  LUAC_T = luac.exe
+  CFLAGS += -DLUA_DL_DLL -DLUA_BUILD_AS_DLL
+  LDFLAGS += -s
+else
+  LUA_T  = lua
+  LUAC_T = luac
+  CFLAGS += -DLUA_USE_LINUX
+  LIBS += -Wl,-E -ldl -lreadline -lhistory -lncurses
+endif
 
-LUAC_T=	luac
+LUA_O=	lua.o
 LUAC_O=	luac.o print.o
 
 ALL_O= $(CORE_O) $(LIB_O) $(LUA_O) $(LUAC_O)
 ALL_T= $(LUA_A) $(LUA_T) $(LUAC_T)
 ALL_A= $(LUA_A)
 
-default: $(PLATFORM)
-
-all:	$(ALL_T)
+all:	$(ALL_A)
 
 o:	$(ALL_O)
 
@@ -52,10 +55,10 @@ $(LUA_A): $(CORE_O) $(LIB_O)
 	$(RANLIB) $@
 
 $(LUA_T): $(LUA_O) $(LUA_A)
-	$(CC) -o $@ $(MYLDFLAGS) $(LUA_O) $(LUA_A) $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(LUA_O) $(LUA_A) $(LIBS)
 
 $(LUAC_T): $(LUAC_O) $(LUA_A)
-	$(CC) -o $@ $(MYLDFLAGS) $(LUAC_O) $(LUA_A) $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(LUAC_O) $(LUA_A) $(LIBS)
 
 clean:
 	$(RM) $(ALL_T) $(ALL_O)
@@ -63,63 +66,10 @@ clean:
 depend:
 	@$(CC) $(CFLAGS) -MM l*.c print.c
 
-echo:
-	@echo "PLATFORM = $(PLATFORM)"
-	@echo "CC = $(CC)"
-	@echo "CFLAGS = $(CFLAGS)"
-	@echo "AR = $(AR)"
-	@echo "RANLIB = $(RANLIB)"
-	@echo "RM = $(RM)"
-	@echo "MYCFLAGS = $(MYCFLAGS)"
-	@echo "MYLDFLAGS = $(MYLDFLAGS)"
-	@echo "MYLIBS = $(MYLIBS)"
-
 # convenience targets for popular platforms
 
-none:
-	@echo "Please choose a platform:"
-	@echo "   $(PLATS)"
-
-aix:
-	$(MAKE) all CC="xlc" CFLAGS="-O2 -DLUA_USE_POSIX -DLUA_USE_DLOPEN" MYLIBS="-ldl" MYLDFLAGS="-brtl -bexpall"
-
-ansi:
-	$(MAKE) all MYCFLAGS=-DLUA_ANSI
-
-bsd:
-	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN" MYLIBS="-Wl,-E"
-
-freebsd:
-	$(MAKE) all MYCFLAGS="-DLUA_USE_LINUX" MYLIBS="-Wl,-E -lreadline"
-
-generic:
-	$(MAKE) all MYCFLAGS=
-
-linux:
-	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-Wl,-E -ldl -lreadline -lhistory -lncurses"
-
-linux_sse:
-	$(MAKE) all MYCFLAGS="-DLUA_USE_LINUX -mfpmath=sse -msse2" MYLIBS="-Wl,-E -ldl -lreadline -lhistory -lncurses"
-
-macosx:
-	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-lreadline"
-# use this on Mac OS X 10.3-
-#	$(MAKE) all MYCFLAGS=-DLUA_USE_MACOSX
-
-mingw:
-	$(MAKE) "LUA_A=lua51.dll" "LUA_T=lua.exe" \
-	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
-	"MYCFLAGS='-DLUA_DL_DLL -DLUA_BUILD_AS_DLL'" "MYLIBS=" "MYLDFLAGS=-s" lua.exe
-	$(MAKE) "LUAC_T=luac.exe" luac.exe
-
-posix:
-	$(MAKE) all MYCFLAGS=-DLUA_USE_POSIX
-
-solaris:
-	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN" MYLIBS="-ldl"
-
 # list targets that do not create files (but not all makes understand .PHONY)
-.PHONY: all $(PLATS) default o a clean depend echo none
+.PHONY: all default o a clean depend
 
 # DO NOT DELETE
 
