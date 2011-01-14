@@ -122,6 +122,19 @@ All the functions described in this section have an equivalent function for comp
    the column index. Then the value returned by the function is assigned
    to the matrix elements.
 
+.. function:: matrix(t)
+
+    Convert the table t into a matrix. The table should be in the form ``{{row1_v1, row1_v2, ...}, {row2_v1, row2_v2, ...}, ...}`` where each term is a number. You should also ensure that all the lines contains the same number of elements. Example::
+
+      th = pi/6
+      -- create a 2x2 rotation matrix using the angle th
+      m = matrix {{cos(th), sin(th)}, {-sin(th), cos(th)}}
+
+.. function:: vector(t)
+
+    Convert the table t into a column matrix. In GSL Shell column matrices are considered vectors. The table should be in the form ``{v1, v2, v3, ...}``.
+
+
 .. function:: dim(m)
    
    Returns two values, in the order, the number of rows and of columns of

@@ -11,7 +11,7 @@ The module ``csv`` offer a few useful functions to read data files in 'csv' form
 
 .. function:: read(filename)
 
-   Read the given filename and returns a table that store the values from the given file (``filename`` argument). The table returned is in the form ``{{row1_v1, row1_v2, ...}, {row2_v1, row2_v2, ...}, ...}`` so that you can obtain the number of lines read by using the ``#`` operator (number of element is a table). The table can contains both numeric values or strings accordingly to the csv specifications. Each row can potentially contain a different number of elements. The user can check the number of number of elements of each row if needed.
+   Read the given filename and returns a table that store the values from the given file (``filename`` argument). The table returned is in the form ``{{row1_v1, row1_v2, ...}, {row2_v1, row2_v2, ...}, ...}`` so that you can obtain the number of lines read by using the ``#`` operator (number of element in a table). The table can contains both numeric values or strings accordingly to the csv specifications. Each row can potentially contain a different number of elements. The user can check the number of number of elements of each row if needed.
 
    Here an example of utilisation::
 
@@ -27,9 +27,10 @@ The module ``csv`` offer a few useful functions to read data files in 'csv' form
       -- using the matrix m is very easy to plot the data
       p = plot("SiGe SIMS profile")
       p:addline(xyline(m:col(1), m:col(2)), 'blue')
+      p:show()
 
-   Please note that the table is not a matrix. If the table is in rectangular form and it does contains only number it can be easily converted into a matrix using the function :func:`matrix` as shown in the example above.
+   Please note the function returns a table, not a matrix. If the table is in rectangular form and it does contains only number it can be easily converted into a matrix using the function :func:`matrix` as shown in the example above.
 
 .. function:: line(str)
 
-   This function convert the string ``str`` to a table with the values stored in the string in 'csv' format. This function can be useful to build a customised csv parser.
+   This function split the string ``str`` using commas as separators accordingly to the csv format specifications. This function can be useful to build a customised csv parser.
