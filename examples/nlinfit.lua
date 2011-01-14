@@ -190,6 +190,6 @@ function demo3()
    return pl
 end
 
-print 'demo1() - examples on non-linear fit of complex data'
-print 'demo2() - examples on non-linear fit of real data and plots'
-print 'demo3() - the same of demo2() using a slightly different approach'
+echo 'demo1() - examples on non-linear fit of complex data'
+echo 'demo2() - examples on non-linear fit of real data and plots'
+echo 'demo3() - the same of demo2() using a slightly different approach'

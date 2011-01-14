@@ -92,6 +92,6 @@ function demo3()
    return p
 end
 
-print 'demo1() - rotating star'
-print 'demo2() - function integral illustrations'
-print 'demo3() - animation capability stress test'
+echo 'demo1() - rotating star'
+echo 'demo2() - function integral illustrations'
+echo 'demo3() - animation capability stress test'

@@ -235,7 +235,7 @@ function demo3q()
    return pl
 end
 
-print([[
+echo([[
 demo1() - Von Koch's curve
 demo2() - Levy's C curve
 demo3() - Pythagorean Tree (symmetric)

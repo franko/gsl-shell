@@ -200,10 +200,10 @@ function demo7()
    return plot_lines(ln)
 end
 
-print 'demo1() - ODE integration example'
-print 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
-print 'demo3() - GSL example of Var der Pol oscillator integration'
-print 'demo4() - same as demo3 but using \'bsimp\' method'
-print 'demo5() - spriral obtained by ODE integration'
-print 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
-print 'demo7() - another ODE integration example'
+echo 'demo1() - ODE integration example'
+echo 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
+echo 'demo3() - GSL example of Var der Pol oscillator integration'
+echo 'demo4() - same as demo3 but using \'bsimp\' method'
+echo 'demo5() - spriral obtained by ODE integration'
+echo 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
+echo 'demo7() - another ODE integration example'

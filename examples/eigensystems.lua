@@ -32,6 +32,6 @@ function demo2()
    print(mul(inv(v),m,v))
 end
 
-print([[
+echo([[
 demo1() - example of eigensystem solving for a real symmetrix matrix
 demo2() - example of eigensystem solving for a real non-symmetrix matrix]])

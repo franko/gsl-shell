@@ -31,6 +31,6 @@ demo1 = || demo_gen(hermiteLp)
 demo2 = || demo_gen(hermiteFp)
 demo3 = || demo_gen(hermiteU)
 
-print 'demo1() - hermite function using Laguerre polynomials'
-print 'demo2() - hermite function using Hypergeometric 1F1 function'
-print 'demo3() - hermite function using Hypergeometric U function (broken)'
+echo 'demo1() - hermite function using Laguerre polynomials'
+echo 'demo2() - hermite function using Hypergeometric 1F1 function'
+echo 'demo3() - hermite function using Hypergeometric U function (broken)'

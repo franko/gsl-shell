@@ -71,7 +71,7 @@ function demo5()
    return p
 end
 
-print([[
+echo([[
 demo1() - contour plot of simple function with a local minimum
 demo2() - contour plot of rosenbrock function
 demo3() - contour plot of function with gaussian peaks

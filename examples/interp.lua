@@ -47,6 +47,5 @@ function demo2()
    return p, ap
 end
 
-print 'demo1() - Akima interpolation of simple sine data'
-print 'demo2() - Cubic Spline interpolation of a function with random sampling'
-
+echo 'demo1() - Akima interpolation of simple sine data'
+echo 'demo2() - Cubic Spline interpolation of a function with random sampling'

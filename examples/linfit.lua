@@ -63,6 +63,6 @@ function demo3()
    return p
 end
 
-print 'demo1() - examples of linear regression of (x, y) data'
-print 'demo2() - examples of linear regression based on legendre polynomials'
-print 'demo3() - same of demo2 with slightly different procedure'
+echo 'demo1() - examples of linear regression of (x, y) data'
+echo 'demo2() - examples of linear regression based on legendre polynomials'
+echo 'demo3() - same of demo2 with slightly different procedure'

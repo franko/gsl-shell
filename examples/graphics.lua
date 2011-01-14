@@ -110,6 +110,6 @@ function demo3()
    return p
 end
 
-print 'demo1() - path objects with bezier segments and various transformations'
-print 'demo2() - example of text object utilisation'
-print 'demo3() - example of animation with window and text object'
+echo 'demo1() - path objects with bezier segments and various transformations'
+echo 'demo2() - example of text object utilisation'
+echo 'demo3() - example of animation with window and text object'

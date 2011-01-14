@@ -184,7 +184,7 @@ function demo4()
 end
 
 
-print([[
+echo([[
 demo1() - multiple plots window with 3D animations on a fixed background
 demo2() - rotating sphere
 demo3() - rotating Moebius strip

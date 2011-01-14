@@ -18,7 +18,7 @@ function demo3()
    return plot3d(f, -3, -3, 3, 3, {stroke= true})
 end
 
-print([[
+echo([[
 demo1() - Plot the mobieus strip using a parametric rapresentation
 demo2() - Plot example of function f(x,y) = exp(-(x^2+y^2))*sin(x)
 demo3() - Plot example of function f(x,y) = x^2 - y^2]])

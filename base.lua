@@ -55,6 +55,7 @@ local function myprint(...)
    io.write('\n')
 end
 
+echo = print
 print = myprint
 
 function sequence(f, a, b)
