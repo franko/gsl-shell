@@ -1,9 +1,16 @@
 #ifndef CANVAS_WINDOW_CPP_H
 #define CANVAS_WINDOW_CPP_H
 
+#include <memory>
+
 #include "platform_support_ext.h"
 #include "agg_trans_affine.h"
 #include "agg_color_rgba.h"
+
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+}
 
 #include "defs.h"
 #include "drawable.h"
@@ -19,14 +26,21 @@ protected:
 
 public:
 
+  struct thread_info {
+    lua_State *L;
+    canvas_window *win;
+    int window_id;
+
+    thread_info (lua_State *L, canvas_window *win) : L(L), win(win) {};
+  };
+
   enum win_status_e { not_ready, starting, running, error, closed };
 
-  int id;
   enum win_status_e status;
 
   canvas_window(agg::rgba& bgcol) :
     platform_support_ext(agg::pix_format_bgr24, true), 
-    m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), id(-1), status(not_ready)
+    m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), status(not_ready)
   { };
 
   virtual ~canvas_window() 
@@ -38,7 +52,7 @@ public:
   virtual void on_init();
   virtual void on_resize(int sx, int sy);
 
-  void start_new_thread (lua_State *L);
+  bool start_new_thread (std::auto_ptr<thread_info>& inf);
 
   void scale (agg::trans_affine& m) { trans_affine_compose (m, m_matrix); };
 };

@@ -64,23 +64,14 @@
 #include "lua-gsl.h"
 #include "lua-utils.h"
 
-#ifdef AGG_PLOT_ENABLED
+#if defined(GSL_SHELL_DEBUG) && defined(AGG_PLOT_ENABLED)
 #include "object-index.h"
 #include "window.h"
+#include "debug-support.h"
 #endif
 
 #define report error_report
 
-struct window_unref_cell {
-  int id;
-  struct window_unref_cell *next;
-};
-
-#define UNREF_FIXED_SIZE 8
-static int unref_fixed_list[UNREF_FIXED_SIZE];
-static size_t unref_fixed_count = 0;
-
-static struct window_unref_cell *window_unref_list = NULL;
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
@@ -285,8 +276,13 @@ static int pushline (lua_State *L, int firstline) {
   char *b = buffer;
   size_t l;
   const char *prmt = get_prompt(L, firstline);
+  int ok;
 
-  if (lua_readline(L, b, prmt) == 0)
+  GSL_SHELL_UNLOCK();
+  ok = lua_readline(L, b, prmt);
+  GSL_SHELL_LOCK();
+
+  if (ok == 0)
     {
       return 0;  /* no input */
     }
@@ -335,35 +331,12 @@ static int loadline (lua_State *L) {
   return status;
 }
 
-static void do_windows_unref (lua_State *L)
-{
-  struct window_unref_cell *wu;
-  size_t j;
-
-  GSL_SHELL_LOCK();
-
-  for (j = 0; j < unref_fixed_count; j++)
-    {
-      object_index_remove (L, OBJECT_WINDOW, unref_fixed_list[j]);
-    }
-
-  unref_fixed_count = 0;
-
-  for (wu = window_unref_list; wu != NULL; /* */)
-    {
-      struct window_unref_cell *nxt = wu->next;
-      object_index_remove (L, OBJECT_WINDOW, wu->id);
-      free (wu);
-      wu = nxt;
-    }
-  window_unref_list = NULL;
-
-  GSL_SHELL_UNLOCK();
-}
-
 static void dotty (lua_State *L) {
   const char *oldprogname = progname;
   progname = NULL;
+
+  GSL_SHELL_LOCK();
+
   for (;;)
     {
       int status = loadline(L);
@@ -384,23 +357,23 @@ static void dotty (lua_State *L) {
 	      l_message(progname, emsg);
 	    }
 	}
-
-#ifdef AGG_PLOT_ENABLED
-      do_windows_unref (L);
-#endif
     }
 
-#ifdef AGG_PLOT_ENABLED
-  object_index_apply_all (L, OBJECT_WINDOW, window_close);
+#if defined(GSL_SHELL_DEBUG) && defined(AGG_PLOT_ENABLED)
+  object_index_apply_all (L, window_close);
 
-  do 
+  do
     {
-      do_windows_unref (L);
-    } 
-  while (object_index_count (L, OBJECT_WINDOW) > 0);
+      GSL_SHELL_UNLOCK();
+      msleep(50);
+      GSL_SHELL_LOCK();
+    }
+  while (object_index_count (L) > 0);
 #endif
-  
+
   lua_settop(L, 0);  /* clear stack */
+
+  GSL_SHELL_UNLOCK();
 
   fputs("\n", stdout);
   fflush(stdout);
@@ -588,23 +561,4 @@ int main (int argc, char **argv) {
   pthread_mutex_destroy (gsl_shell_mutex);
 
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
-}
-
-void
-gsl_shell_unref_plot (int id)
-{
-  if (unref_fixed_count < UNREF_FIXED_SIZE)
-    {
-      unref_fixed_list[unref_fixed_count] = id;
-      unref_fixed_count ++;
-    }
-  else
-    {
-      struct window_unref_cell *cell = malloc(sizeof(struct window_unref_cell));
-
-      cell->id = id;
-      cell->next = window_unref_list;
-
-      window_unref_list = cell;
-    }
 }

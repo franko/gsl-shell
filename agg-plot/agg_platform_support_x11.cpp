@@ -46,11 +46,16 @@ struct x_connection {
   int                  depth;
   Visual*              visual;
 
-  x_connection() : display(0) {};
+  x_connection() : display(0), m_busy(false) {};
   ~x_connection() { this->close(); };
   
   bool init();
   void close();
+
+  void busy(bool s) { m_busy = s; };
+
+private:
+  bool m_busy;
 };
 
 bool x_connection::init()
@@ -71,7 +76,7 @@ bool x_connection::init()
 
 void x_connection::close()
 {
-  if (display)
+  if (display && !m_busy)
     {
       XCloseDisplay(display);
       display = 0;
@@ -262,8 +267,8 @@ namespace agg
 
   void platform_specific::close_connections()
   {
-    m_main_conn.close();
     m_draw_conn.close();
+    m_main_conn.close();
   }
 
   void platform_specific::free_x_resources()
@@ -721,14 +726,7 @@ namespace agg
             ps->m_update_flag = false;
           }
 
-        if(!m_wait_mode)
-          {
-            if(XPending(xc->display) == 0)
-              {
-                on_idle();
-                continue;
-              }
-          }
+	xc->busy(true);
 
         XEvent x_event;
         if (ps->m_is_mapped)
@@ -741,19 +739,8 @@ namespace agg
           {
             XNextEvent(xc->display, &x_event);
           }
-            
-        // In the Idle mode discard all intermediate MotionNotify events
-        if(!m_wait_mode && x_event.type == MotionNotify)
-          {
-            XEvent te = x_event;
-            for(;;)
-              {
-                if(XPending(xc->display) == 0) break;
-                XNextEvent(xc->display, &te);
-                if(te.type != MotionNotify) break;
-              }
-            x_event = te;
-          }
+
+	xc->busy(false);
 
         switch(x_event.type) 
           {
@@ -782,6 +769,8 @@ namespace agg
 
                   if (ps->m_main_img == 0 || ps->m_draw_img == 0)
                     {
+		      if (ps->m_main_img) delete ps->m_main_img;
+		      if (ps->m_draw_img) delete ps->m_draw_img;
                       quit = true;
                       ret = 1;
                       break;
@@ -797,9 +786,11 @@ namespace agg
             break;
 
           case Expose:
+	    xc->busy(true);
             ps->put_image(&m_rbuf_window);
             XFlush(xc->display);
             XSync(xc->display, false);
+	    xc->busy(false);
             break;
 
           case ClientMessage:
@@ -1044,12 +1035,36 @@ namespace agg
   void platform_support::on_post_draw(void* raw_handler) {}
 }
 
+#if defined(GSL_SHELL_DEBUG)
+#include <unistd.h>
+
+static int
+my_x_error_handler (Display *d, XErrorEvent *e)
+{
+  char err_msg[256];
+  printf("WARNING: X protocol error.\n");
+  XGetErrorText(d, e->error_code, err_msg, 256);
+  printf("%s\n", err_msg);
+  printf("waiting");
+  for (int k = 0; k < 60 * 15; k++)
+    {
+      sleep(1);
+      printf(".");
+      fflush(stdout);
+    }
+  return 0;
+}
+#endif
+
 void
 platform_support_ext::prepare()
 {
   if (! agg::platform_specific::initialized)
     {
-      XInitThreads();
+      XInitThreads(); 
+#if defined(GSL_SHELL_DEBUG)
+      XSetErrorHandler(my_x_error_handler);
+#endif
       agg::platform_specific::initialized = true;
     }
 }
@@ -1093,8 +1108,7 @@ platform_support_ext::update_region (const agg::rect_base<int>& r)
   // the X server does not accumulate mouse motion events.
   // When m_wait_mode is false, i.e. we have some idle drawing
   // we cannot afford to miss any events
-  // XSync(xd->display, wait_mode());
-  XFlush(xd->display);
+  XSync(xd->display, wait_mode());
 }
 
 void

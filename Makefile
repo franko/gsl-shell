@@ -65,6 +65,12 @@ C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
                 multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
 		lua-gsl.c
 
+ifeq ($(strip $(DEBUG)), yes)
+  C_SRC_FILES += debug-support.c
+  DEFS += -DGSL_SHELL_DEBUG
+  SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
+endif
+
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
   DEFS += -DLUA_MODULE -DUSE_SEPARATE_NAMESPACE

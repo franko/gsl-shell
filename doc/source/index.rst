@@ -59,6 +59,7 @@ Contents:
    graphics.rst
    plot3d.rst
    contour.rst
+   csv.rst
    examples.rst
    why-donate.rst
    acknowledgments.rst

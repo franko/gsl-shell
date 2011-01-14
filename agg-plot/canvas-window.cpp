@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
-
 #include "defs.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
@@ -61,13 +56,10 @@ canvas_window::on_init()
   this->on_resize(width(), height());
 }
 
-void
-canvas_window::start_new_thread (lua_State *L)
+bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>& inf)
 {
   if (status != not_ready && status != closed)
-    return;
-
-  this->id = object_index_add (L, OBJECT_WINDOW, -1);
+    return false;
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -75,29 +67,32 @@ canvas_window::start_new_thread (lua_State *L)
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
 
-  this->lock();
-    
   this->status = canvas_window::starting;
 
-  if (pthread_create(win_thread, attr, canvas_thread_function, (void*) this))
+  void *user_data = (void *) inf.get();
+  if (pthread_create(win_thread, attr, canvas_thread_function, user_data))
     {
-      object_index_remove (L, OBJECT_WINDOW, this->id);
-
-      pthread_attr_destroy (attr);
       this->status = canvas_window::error; 
-
-      luaL_error(L, "error creating thread");
+      pthread_attr_destroy (attr);
+      return false;
+    }
+  else
+    {
+      inf.release();
+      pthread_attr_destroy (attr);
     }
 
-  pthread_attr_destroy (attr);
+  return true;
 }
 
 void *
-canvas_thread_function (void *_win)
+canvas_thread_function (void *_inf)
 {
-  platform_support_ext::prepare();
+  typedef canvas_window::thread_info thread_info;
 
-  canvas_window *win = (canvas_window *) _win;
+  std::auto_ptr<thread_info> inf((thread_info *) _inf);
+  platform_support_ext::prepare();
+  canvas_window *win = inf->win;
 
   win->caption("GSL shell plot");
   if (win->init(480, 480, agg::window_resize))
@@ -110,12 +105,12 @@ canvas_thread_function (void *_win)
     {
       win->status = canvas_window::error;
     }
-  
-  GSL_SHELL_LOCK();
-  gsl_shell_unref_plot (win->id);
-  GSL_SHELL_UNLOCK();
 
   win->unlock();
+
+  GSL_SHELL_LOCK();
+  object_index_remove (inf->L, inf->window_id);
+  GSL_SHELL_UNLOCK();
 
   return NULL;
 }
