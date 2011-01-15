@@ -66,7 +66,7 @@ so you don't need to store N complex values but only N/2.
 A sequence with this symmetry is called "conjugate-complex" or
 "half-complex". The results of a Fourier Transform of real data will be an half-complex array. In GSL Shell half-complex array are treated like special kind of arrays in order to be more efficient. To access element in half-complex array you can use the following functions:
 
-.. class:: half-complex array
+.. class:: HCArray
 
    Store the half-complex sequence resulting from a Fourier transform on real data.
 

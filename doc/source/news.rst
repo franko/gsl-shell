@@ -3,6 +3,13 @@
 News
 ====
 
+**January 2011**
+  Release of GSL Shell 1.1
+
+  Some bugs fixed, most notably a couple of bugs related to the X Window implementation.
+
+  Added a module to read data in CSV format.
+
 **December 2010**
   Final Release of GSL Shell 1.0
 

@@ -127,6 +127,57 @@ With a similar procedure, the code is in ``examples/fractals.lua`` we can produc
 
 .. figure:: examples-levy-c-curve-1.png
 
+Reading and plotting data from files
+------------------------------------
+
+In this examples we show how to load some data stored in a file in CSV format and to make some plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just a plain text with several lines where each line consists of a comma-separated list of numbers or strings.
+
+In order to load the data you need to charge the module :mod:`csv` and the to use the function :func:`~csv.read`. In this examples we will use the data stored in the file ``examples/data/sige-sims-prof.csv`` this set of data contains just two columns, the first one is the x and the second column represent the y. Here the simple code to load the data::
+
+   require 'csv'
+   t = csv.read('examples/data/sige-sims-prof.csv')
+
+we can then print the number of lines in the table:
+
+   >>> #t
+   316
+
+If you want to plot the data in the table there isn't actually any function that will do that right way but you can do it by using a few functions::
+
+  p = plot()
+  p:addline(ipath(sequence(function(i) return t[i][1], t[i][2] end, #t)))
+  p:show()
+
+the idea is that, in order to plot the curve we need to *build* the curve before. What we want is actually a line that connects the points ``(x[i], y[i])`` where ``x[i]`` and ``y[i]`` are taken from the rows of the table ``t``. The last resort to obtain that would be to create a :class:`Path` object and to give all the points in a procedural way like this::
+
+  -- we create a path and gives it the starting point
+  ln = path(t[1][1], t[1][2])
+ 
+  for i=2, #t do
+    ln:line_to(t[i][1], t[i][2])
+  end
+
+but it can be more handy to use the :func:`ipath` function to build the curve. This latter function build a curve using an iterator that returns values in the form ``(x, y)``. Then to obtain the iterator we use the :func:`sequence` function that let us easily build an iterator over a sequence of integer numbers.
+
+So to make more clear the code given above we can separate the curve and the iterator instatiations like in the following example::
+
+  p = plot()
+
+  -- we define our iterator
+  it = sequence(function(i) return t[i][1], t[i][2] end, #t)
+
+  -- we create the curve using the iterator just defined
+  line = ipath(it)
+
+  -- then we add it to the plot, we give a title and show the result
+  p:addline(line)
+  p.title = "SiGe SIMS profile"
+  p:show()
+
+and here the resulting image:
+
+.. figure:: sige-plot-example.png
+
 Zernike Polynomials
 -------------------
 
