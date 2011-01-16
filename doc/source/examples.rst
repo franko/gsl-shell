@@ -130,9 +130,9 @@ With a similar procedure, the code is in ``examples/fractals.lua`` we can produc
 Reading and plotting data from files
 ------------------------------------
 
-In this examples we show how to load some data stored in a file in CSV format and to make some plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just a plain text with several lines where each line consists of a comma-separated list of numbers or strings.
+In this example we show how to load some data stored in a file in CSV format and to make some plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just a plain text with several lines where each line consists of a comma-separated list of numbers or strings.
 
-In order to load the data you need to charge the module :mod:`csv` and the to use the function :func:`~csv.read`. In this examples we will use the data stored in the file ``examples/data/sige-sims-prof.csv`` this set of data contains just two columns, the first one is the x and the second column represent the y. Here the simple code to load the data::
+In order to load the data you need to charge the module :mod:`csv` and the to use the function :func:`~csv.read`. In this example we will use the data stored in the file ``examples/data/sige-sims-prof.csv`` this set of data contains just two columns, the first one is the x and the second column represent the y. Here the simple code to load the data::
 
    require 'csv'
    t = csv.read('examples/data/sige-sims-prof.csv')
