@@ -65,6 +65,9 @@ C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
                 multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
 		lua-gsl.c
 
+LUA_BASE_DIRS = 
+LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
+
 ifeq ($(strip $(DEBUG)), yes)
   C_SRC_FILES += debug-support.c
   DEFS += -DGSL_SHELL_DEBUG
@@ -76,6 +79,9 @@ SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
+  LUA_BASE_DIRS += pre3d
+  LUA_BASE_FILES += draw.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua \
+		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
   C_SRC_FILES += refs.c object-index.c object-refs.c 
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
@@ -133,9 +139,12 @@ gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	ln -sf ./.libs/libluagsl.so $@
 
 install: gsl-shell
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
+	strip $(DESTDIR)$(PREFIX)/bin/gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
-	cp igsl.lua base.lua integ.lua draw.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell
+	mkdir -p $(LUA_BASE_DIRS) 
+	cp --parents $(LUA_BASE_FILES) $(DESTDIR)$(PREFIX)/lib/gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 	cp examples/*.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 
