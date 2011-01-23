@@ -21,15 +21,16 @@ class pixel_gamma_corr {
   typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
 
   gamma_type m_gamma;
-
 public:
   typedef pixel_fmt fmt;
+
+  pixel_fmt pixfmt;
 
   pixel_gamma_corr(agg::rendering_buffer& ren_buf): 
     m_gamma(2.2), pixfmt(ren_buf, m_gamma) 
   { };
 
-  pixel_fmt pixfmt;
+  enum { line_width = 150 };
 };
 
 struct pixel_simple {
@@ -38,9 +39,11 @@ struct pixel_simple {
   typedef agg::pixfmt_bgr24 fmt;
 
   pixel_simple(agg::rendering_buffer& ren_buf): pixfmt(ren_buf) { };
+
+  enum { line_width = 100 };
 };
 
-template <class pixel, int linewidth>
+template <class pixel>
 class canvas_gen : private pixel {
   typedef agg::renderer_base<typename pixel::fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
@@ -95,7 +98,7 @@ public:
   void draw_outline(VertexSource& vs, agg::rgba8 c)
   {
     agg::conv_stroke<VertexSource> line(vs);
-    line.width(linewidth / 10.0L);
+    line.width(pixel::line_width / 100.0);
     line.line_cap(agg::round_cap);
 
     this->ras.add_path(line);
@@ -105,9 +108,9 @@ public:
 };
 
 #ifdef DISABLE_GAMMA_CORR
-typedef canvas_gen<pixel_simple, 10> canvas;
+typedef canvas_gen<pixel_simple> canvas;
 #else
-typedef canvas_gen<pixel_gamma_corr, 15> canvas;
+typedef canvas_gen<pixel_gamma_corr> canvas;
 #endif
 
 #endif
