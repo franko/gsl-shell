@@ -80,6 +80,7 @@ interp_new (lua_State *L)
   const gsl_interp_type *T;
   size_t n = x->size1;
   struct interp *obj;
+  bool need_copy;
 
   if (x->size2 != 1 || y->size2 != 1)
     return luaL_error (L, "both arguments should be column matrix");
@@ -104,10 +105,27 @@ interp_new (lua_State *L)
   obj->acc = gsl_interp_accel_alloc ();
   obj->n = n;
 
-  obj->xsrc = x->data;
-  obj->ysrc = y->data;
+  need_copy = (x->tda != 1 || y->tda != 1);
+
+  if (need_copy)
+    {
+      gsl_matrix *xsrc = matrix_push_raw (L, n, 1);
+      gsl_matrix *ysrc = matrix_push_raw (L, n, 1);
+      gsl_matrix_memcpy (xsrc, x);
+      gsl_matrix_memcpy (ysrc, y);
+      obj->xsrc = xsrc->data;
+      obj->ysrc = ysrc->data;
+    }
+  else
+    {
+      obj->xsrc = x->data;
+      obj->ysrc = y->data;
+    }
   
-  gsl_interp_init (obj->interp, x->data, y->data, n);
+  gsl_interp_init (obj->interp, obj->xsrc, obj->ysrc, n);
+
+  if (need_copy)
+    lua_pop (L, 2);
 
   interp_set_ref (L, 2, 3);
 
