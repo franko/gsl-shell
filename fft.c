@@ -163,7 +163,7 @@ fft_hc_radix2_get_index (size_t _n, int i, int *rindex, int *cindex, int *csign)
 void
 fft_hc_radix2_transform (lua_State *L, gsl_matrix *hc)
 {
-  gsl_fft_halfcomplex_radix2_inverse (hc->data, 1, hc->size1);
+  gsl_fft_halfcomplex_radix2_inverse (hc->data, hc->tda, hc->size1);
 }
 
 int
@@ -208,7 +208,7 @@ fft_hc_mixed_radix_transform (lua_State *L, gsl_matrix *hc)
 {
   const size_t n = hc->size1;
   struct fft_cache *cache = check_fft_cache_dim (L, n, false);
-  gsl_fft_halfcomplex_transform (hc->data, 1, n, cache->hcwt, cache->ws);
+  gsl_fft_halfcomplex_transform (hc->data, hc->tda, n, cache->hcwt, cache->ws);
   gsl_matrix_scale (hc, 1/(double)n);
 }
 
@@ -271,9 +271,9 @@ fft_hc_get (lua_State *L)
     return luaL_error (L, "index out of range");
 
   if (csign != 0)
-    r = hc->data[rindex] + csign * hc->data[cindex] * I;
+    r = gsl_matrix_get (hc, rindex, 0) + csign * gsl_matrix_get (hc, cindex, 0) * I;
   else
-    r = hc->data[rindex];
+    r = gsl_matrix_get (hc, rindex, 0);
 
   lua_pushcomplex (L, r);
   return 1;
@@ -297,14 +297,14 @@ fft_hc_set (lua_State *L)
 
   if (csign != 0)
     {
-      hc->data[rindex] = creal(val);
-      hc->data[cindex] = csign * cimag(val);
+      gsl_matrix_set (hc, rindex, 0, creal(val));
+      gsl_matrix_set (hc, cindex, 0, csign * cimag(val));
     }
   else
     {
       if (cimag(val) != 0)
 	return luaL_error (L, "imaginary part should be 0 for this term");
-      hc->data[rindex] = creal(val);
+      gsl_matrix_set (hc, rindex, 0, creal(val));
     }
 
   return 0;
@@ -318,7 +318,7 @@ check_fft_cache_dim (lua_State *L, size_t n, bool want_complex)
   lua_getfield(L, LUA_ENVIRONINDEX, "cache");
   cache = lua_touserdata (L, -1);
   lua_pop (L, 1);
-  
+
   assert (cache != NULL);
 
   if (want_complex)
@@ -393,14 +393,14 @@ fft_real (lua_State *L)
 
   if (is_twopower (n))
     {
-      gsl_fft_real_radix2_transform (v->data, 1, n);
+      gsl_fft_real_radix2_transform (v->data, v->tda, n);
       luaL_getmetatable (L, GS_METATABLE(GS_HALFCMPL_R2));
       lua_setmetatable (L, -2);
     }
   else
     {
       struct fft_cache *cache = check_fft_cache_dim (L, n, false);
-      gsl_fft_real_transform (v->data, 1, n, cache->rwt, cache->ws);
+      gsl_fft_real_transform (v->data, v->tda, n, cache->rwt, cache->ws);
       luaL_getmetatable (L, GS_METATABLE(GS_HALFCMPL_MR));
       lua_setmetatable (L, -2);
     }
@@ -449,7 +449,7 @@ fft_complex (lua_State *L)
   csign = (sign > 0 ? -1 : 1);
 
   cache = check_fft_cache_dim (L, n, true);
-  gsl_fft_complex_transform (v->data, 1, n, cache->cwt, cache->cws, csign);
+  gsl_fft_complex_transform (v->data, v->tda, n, cache->cwt, cache->cws, csign);
 
   if (csign < 0)
     {

@@ -18,28 +18,31 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 function demo1()
-   local n, ncut = 256, 16
+   local n, ncut = 256, 24
 
-   local sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   local NS = 5
+   local sqa = new(n, NS, |i,j| i < n/(j+1) and 0 or (i < 2*n/(j+1) and 1 or 0))
 
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
+   for j= 1, NS do
+      local sq = sqa:col(j)
 
-   pt:addline(filine(|i| sq[i], n), 'black')
+      local pt = plot('Original signal / reconstructed')
+      local pf = plot('FFT Power Spectrum')
 
-   fft(sq)
+      pt:addline(filine(|i| sq[i], n), 'black')
 
-   pf:add(ibars(isample(|k| abs(sq:get(k)), 0, 60)), 'black')
+      fft(sq)
 
-   for k=ncut, n/2 do sq:set(k,0) end
-   fft_inv(sq)
+      pf:add(ibars(isample(|k| abs(sq:get(k)), 0, 60)), 'black')
 
-   pt:addline(filine(|i| sq[i], n), 'red')
+      for k=ncut, n/2 do sq:set(k,0) end
+      fft_inv(sq)
 
-   pf:show()
-   pt:show()
+      pt:addline(filine(|i| sq[i], n), 'red')
 
-   return pt, pf
+      pf:show()
+      pt:show()
+   end
 end
 
 function demo2()
