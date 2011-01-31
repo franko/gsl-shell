@@ -21,12 +21,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <math.h>
-#include <complex.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_linalg.h>
 
+#include "complex/lcomplex.h"
 #include "gs-types.h"
 #include "matrix.h"
 #include "cmatrix.h"
@@ -40,8 +40,6 @@ struct pmatrix {
     gsl_matrix_complex *cmpl;
   } m;
 };
-
-typedef double _Complex cmpl;
 
 static int matrix_inv   (lua_State *L);
 static int matrix_solve (lua_State *L);
@@ -84,7 +82,8 @@ push_matrix_complex_of_real (lua_State *L, const gsl_matrix *a)
       double *rp0 = r->data + 2 * (r->tda * i);
       double *rp1 = r->data + 2 * (r->tda * i + n2);
       double *ap = a->data + a->tda * i;
-      for (double *rp = rp0; rp < rp1; rp += 2, ap += 1)
+      double *rp;
+      for (rp = rp0; rp < rp1; rp += 2, ap += 1)
 	{
 	  rp[0] = *ap;
 	  rp[1] = 0.0;
@@ -164,7 +163,9 @@ matrix_unm (lua_State *L)
 	  double *rp0 = r->data + (r->tda * i);
 	  double *rp1 = r->data + (r->tda * i + n2);
 	  double *ap = a->data + a->tda * i;
-	  for (double *rp = rp0; rp < rp1; rp++, ap++)
+    double *rp;
+
+	  for (rp = rp0; rp < rp1; rp++, ap++)
 	    *rp = - (*ap);
 	}
     }
@@ -180,7 +181,9 @@ matrix_unm (lua_State *L)
 	  double *rp0 = r->data + 2* (r->tda * i);
 	  double *rp1 = r->data + 2* (r->tda * i + n2);
 	  double *ap  = a->data + 2* (a->tda * i);
-	  for (double *rp = rp0; rp < rp1; rp += 2, ap += 2)
+    double *rp;
+
+	  for (rp = rp0; rp < rp1; rp += 2, ap += 2)
 	    {
 	      rp[0] = - ap[0];
 	      rp[1] = - ap[1];

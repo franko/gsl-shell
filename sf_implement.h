@@ -166,7 +166,7 @@ int GSH_LUA_NAME(fermi_dirac) (lua_State *L)
   gsl_sf_result res;				\
   int status;
 
-  if (lua_isinteger (L, 1))
+  if (lua_isnumber (L, 1))
     {
       int i = lua_tointeger (L, 1);
       switch (i)
@@ -265,7 +265,7 @@ int GSH_LUA_NAME(hyperg1F1) (lua_State *L)
   gsl_sf_result res;				\
   int status;
 
-  if (lua_isinteger (L, 1) && lua_isinteger (L, 2))
+  if (lua_isnumber (L, 1) && lua_isnumber (L, 2))
     {
       int m = lua_tointeger (L, 1);
       int n = lua_tointeger (L, 2);
@@ -292,7 +292,7 @@ int GSH_LUA_NAME(hypergU) (lua_State *L)
   gsl_sf_result res;
   int status;
 
-  if (lua_isinteger (L, 1) && lua_isinteger (L, 2))
+  if (lua_isnumber (L, 1) && lua_isnumber (L, 2))
     {
       int m = lua_tointeger (L, 1);
       int n = lua_tointeger (L, 2);
@@ -315,7 +315,7 @@ int GSH_LUA_NAME(hypergU) (lua_State *L)
 
 int GSH_LUA_NAME(hyperg2F1conj) (lua_State *L)
 {
-  double complex a = luaL_checkcomplex(L, 1);
+  Complex a = luaL_checkcomplex(L, 1);
   double c = luaL_checknumber(L, 2);
   double x = luaL_checknumber (L, 3);
   gsl_sf_result res;
@@ -423,7 +423,7 @@ int GSH_LUA_NAME(zeta) (lua_State *L)
   gsl_sf_result res;
   int status;
 
-  if (lua_isinteger (L, 1))
+  if (lua_isnumber (L, 1))
     {
       int n = lua_tointeger (L, 1);
       status = gsl_sf_zeta_int_e (n, &res);
@@ -521,9 +521,10 @@ int GSH_LUA_NAME(legendreQ) (lua_State *L)
 #ifdef LNUM_COMPLEX
 int GSH_LUA_NAME(cdilog) (lua_State *L)
 {
-  lua_Complex z = luaL_checkcomplex (L, 1);
+  Complex z = luaL_checkcomplex (L, 1);
   gsl_sf_result rr, ri;
-  double r = sqrt(CSQABS(z)), th = atan2(cimag(z), creal(z));
+  double zr = creal(z), zi = cimag(z);
+  double r = sqrt(zr*zr+zi*zi), th = atan2(cimag(z), creal(z));
   int status;
 
   status = gsl_sf_complex_dilog_e (r, th, &rr, &ri);

@@ -28,6 +28,7 @@
 #include "cnlinfit.h"
 #include "matrix.h"
 #include "cmatrix.h"
+#include "complex/lcomplex.h"
 #include "matrix_arith.h"
 #include "linalg.h"
 #include "integ.h"
@@ -78,6 +79,7 @@ luaopen_gsl (lua_State *L)
   solver_register (L);
   matrix_register (L);
   matrix_arith_register (L);
+  lcomplex_register (L);
   linalg_register (L);
   integ_register (L);
   ode_register (L);

@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#define lua_iscomplex lua_isnumber
+#define lua_Complex double _Complex
 
 #if   defined(BASE_GSL_COMPLEX)
 #undef complex
+#undef Complex
 #define BASE gsl_complex
 #define SHORT complex
 #define MULTIPLICITY 2

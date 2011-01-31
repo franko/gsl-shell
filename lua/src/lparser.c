@@ -539,14 +539,13 @@ static void constructor (LexState *ls, expdesc *t) {
 /* }====================================================================== */
 
 
-
-static void parlist (LexState *ls) {
+static void parlist_ext (LexState *ls, int end_token) {
   /* parlist -> [ param { `,' param } ] */
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
   int nparams = 0;
   f->is_vararg = 0;
-  if (ls->t.token != ')') {  /* is `parlist' not empty? */
+  if (ls->t.token != end_token) {  /* is `parlist' not empty? */
     do {
       switch (ls->t.token) {
         case TK_NAME: {  /* param -> NAME */
@@ -570,6 +569,10 @@ static void parlist (LexState *ls) {
   adjustlocalvars(ls, nparams);
   f->numparams = cast_byte(fs->nactvar - (f->is_vararg & VARARG_HASARG));
   luaK_reserveregs(fs, fs->nactvar);  /* reserve register for parameters */
+}
+
+static void parlist (LexState *ls) {
+  parlist_ext (ls, ')');
 }
 
 

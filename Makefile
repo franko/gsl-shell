@@ -54,9 +54,9 @@ else
   PTHREADS_LIBS = -lpthread
 endif
 
-SUBDIRS = lua
+SUBDIRS = lua complex
 
-LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
+LUAGSL_LIBS = $(LUADIR)/src/liblua.a complex/liblcomplex.a
 
 C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
@@ -75,7 +75,7 @@ ifeq ($(strip $(DEBUG)), yes)
 endif
 
 C_SRC_FILES += gsl-shell.c
-SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
+SUBDIRS_DEFS += -DGSL_SHELL_LUA # -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
@@ -102,7 +102,7 @@ ifeq ($(strip $(ENABLE_COMPLEX)), yes)
   SUBDIRS_DEFS += -DLNUM_COMPLEX
 endif
 
-COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)

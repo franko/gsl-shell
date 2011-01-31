@@ -29,18 +29,19 @@
 #include <gsl/gsl_linalg.h>
 
 #include "gs-types.h"
+#include "complex/lcomplex.h"
 #include "lua-utils.h"
 #include "cmatrix.h"
 #include "matrix_arith.h"
 
-static lua_Complex
+static Complex
 value_retrieve_complex (gsl_complex v)
 {
   return GSL_REAL(v) + GSL_IMAG(v) * I;
 }
 
 static gsl_complex
-value_assign_complex (lua_Complex v)
+value_assign_complex (Complex v)
 {
   gsl_complex z;
   GSL_SET_COMPLEX(&z, creal(v), cimag(v));

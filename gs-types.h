@@ -13,6 +13,7 @@ enum gs_type_e {
   GS_MATRIX = 0, /* needs to start from zero because it is used as a 
 		    table index */
   GS_CMATRIX,
+  GS_COMPLEX,
   GS_RNG,
   GS_NLINFIT,
   GS_CNLINFIT,

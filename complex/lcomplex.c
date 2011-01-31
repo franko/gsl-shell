@@ -6,15 +6,14 @@
 * This code is hereby placed in the public domain.
 */
 
-#include <complex.h>
-#define Complex	double complex
+#include "lcomplex.h"
 
 #include "lua.h"
 #include "lauxlib.h"
 
+#include "gs-types.h"
+
 #define MYNAME		"complex"
-#define MYTYPE		MYNAME " number"
-#define MYVERSION	MYTYPE " library for " LUA_VERSION " / Nov 2009"
 
 #define Z(i)		Pget(L,i)
 #define O(i)		luaL_optnumber(L,i,0)
@@ -34,16 +33,14 @@ static Complex Pget(lua_State *L, int i)
   case LUA_TSTRING:
    return luaL_checknumber(L,i);
   default:
-   return *((Complex*)luaL_checkudata(L,i,MYTYPE));
+   return *((Complex*) gs_check_userdata (L, i, GS_COMPLEX));
  }
 }
 
-static int pushcomplex(lua_State *L, Complex z)
+int lua_pushcomplex(lua_State *L, Complex z)
 {
- Complex *p=lua_newuserdata(L,sizeof(Complex));
+ Complex *p= gs_new_object (sizeof(Complex), L, GS_COMPLEX);
  *p=z;
- luaL_getmetatable(L,MYTYPE);
- lua_setmetatable(L,-2);
  return 1;
 }
 
@@ -79,7 +76,40 @@ static int Ltostring(lua_State *L)		/** tostring(z) */
  return 1;
 }
 
-#define A(f,e)	static int L##f(lua_State *L) { return pushcomplex(L,e); }
+int lua_iscomplex (lua_State *L, int i)
+{
+  if (lua_isnumber (L, i))
+    return 1;
+  else
+  {
+    void *p = gs_is_userdata (L, i, GS_COMPLEX);
+    return (p != NULL);
+  }
+  return 0;
+}
+
+Complex luaL_checkcomplex (lua_State *L, int i)
+{
+	return Pget(L, i);
+};
+
+Complex lua_tocomplex (lua_State *L, int i)
+{
+  if (lua_isnumber (L, i))
+    {
+      double n = lua_tonumber (L, i);
+      return n;
+    }
+  else if (gs_is_userdata (L, i, GS_COMPLEX))
+  {
+    Complex *p = lua_touserdata (L, i);
+    return *p;
+  }
+
+  return 0;
+}
+
+#define A(f,e)	static int L##f(lua_State *L) { return lua_pushcomplex(L,e); }
 #define B(f)	A(f,c##f(Z(1),Z(2)))
 #define F(f)	A(f,c##f(Z(1)))
 #define G(f)	static int L##f(lua_State *L) { lua_pushnumber(L,c##f(Z(1))); return 1; }
@@ -113,14 +143,22 @@ F(sqrt)			/** sqrt(z) */
 F(tan)			/** tan(z) */
 F(tanh)			/** tanh(z) */
 
-static const luaL_Reg R[] =
+static const luaL_Reg lcomplex_methods[] =
 {
-	{ "__add",	Ladd	},
-	{ "__div",	Ldiv	},
-	{ "__eq",	Leq	},
-	{ "__mul",	Lmul	},
-	{ "__sub",	Lsub	},
-	{ "__unm",	Lneg	},
+	{ "__add",	    Ladd	},
+	{ "__div",	    Ldiv	},
+	{ "__eq",	    Leq	},
+	{ "__mul",	    Lmul	},
+	{ "__sub",	    Lsub	},
+	{ "__unm",	    Lneg	},
+	{ "__pow",	    Lpow	},
+	{ "__tostring",	Ltostring},
+	{ NULL,		NULL	}
+};
+
+
+static const luaL_Reg lcomplex_functions[] =
+{
 	{ "abs",	Labs	},
 	{ "acos",	Lacos	},
 	{ "acosh",	Lacosh	},
@@ -144,31 +182,20 @@ static const luaL_Reg R[] =
 	{ "sqrt",	Lsqrt	},
 	{ "tan",	Ltan	},
 	{ "tanh",	Ltanh	},
-	{ "tostring",	Ltostring},
 	{ NULL,		NULL	}
 };
 
-LUALIB_API int luaopen_complex(lua_State *L)
+void lcomplex_register (lua_State *L)
 {
- luaL_newmetatable(L,MYTYPE);
- lua_setglobal(L,MYNAME);
- luaL_register(L,MYNAME,R);
- lua_pushliteral(L,"version");			/** version */
- lua_pushliteral(L,MYVERSION);
- lua_settable(L,-3);
- lua_pushliteral(L,"__index");
- lua_pushvalue(L,-2);
- lua_settable(L,-3);
- lua_pushliteral(L,"I");			/** I */
- pushcomplex(L,I);
- lua_settable(L,-3);
- lua_pushliteral(L,"__pow");			/** __pow(z,w) */
- lua_pushliteral(L,"pow");
- lua_gettable(L,-3);
- lua_settable(L,-3);
- lua_pushliteral(L,"__tostring");		/** __tostring(z) */
- lua_pushliteral(L,"tostring");
- lua_gettable(L,-3);
- lua_settable(L,-3);
- return 1;
+  luaL_newmetatable (L, GS_METATABLE(GS_COMPLEX));
+  luaL_register (L, NULL, lcomplex_methods);
+  lua_pop (L, 1);
+
+  luaL_register(L, MYNAME, lcomplex_functions);
+
+  lua_pushliteral(L, "I");      /** I */
+  lua_pushcomplex(L, I);
+  lua_settable(L,-3);
+
+  lua_pop (L, 1);
 }

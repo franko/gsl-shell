@@ -1,66 +1,65 @@
-# makefile for complex library for Lua
 
-# change these to reflect your Lua installation
-LUA= /tmp/lhf/lua-5.1.4
-LUAINC= $(LUA)/src
-LUALIB= $(LUA)/src
-LUABIN= $(LUA)/src
+# Makefile
+# 
+# Copyright (C) 2009 Francesco Abbate
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or (at
+# your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
 
-# these will probably work if Lua has been installed globally
-#LUA= /usr/local
-#LUAINC= $(LUA)/include
-#LUALIB= $(LUA)/lib
-#LUABIN= $(LUA)/bin
+GSH_BASE_DIR = ..
 
-# probably no need to change anything below here
-CC= gcc
-CFLAGS= $(INCS) $(WARN) -O2 $G
-WARN= -std=c99 -pedantic -Wall
-INCS= -I$(LUAINC)
-MAKESO= $(CC) -shared
-#MAKESO= env MACOSX_DEPLOYMENT_TARGET=10.3 $(CC) -bundle -undefined dynamic_lookup
+include $(GSH_BASE_DIR)/makeconfig
+include $(GSH_BASE_DIR)/makeflags
+include $(GSH_BASE_DIR)/make-packages
 
-MYNAME= complex
-MYLIB= l$(MYNAME)
-T= $(MYNAME).so
-OBJS= $(MYLIB).o
-TEST= test.lua
+LUADIR = $(GSH_BASE_DIR)/lua
+AR= ar rcu
+RANLIB= ranlib
 
-all:	test
+INCLUDES += -I$(GSH_BASE_DIR) -I$(LUADIR)/src
 
-test:	$T
-	$(LUABIN)/lua $(TEST)
+CMPL_SRC_FILES = lcomplex.c
 
-o:	$(MYLIB).o
+CMPL_OBJ_FILES := $(CMPL_SRC_FILES:%.c=%.o)
 
-so:	$T
+DEP_FILES := $(CMPL_SRC_FILES:%.c=.deps/%.P)
 
-$T:	$(OBJS)
-	$(MAKESO) -o $@ $(OBJS)
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES) 
+
+TARGETS = liblcomplex.a
+
+all: $(TARGETS)
+
+liblcomplex.a: $(CMPL_OBJ_FILES)
+	$(AR) $@ $?
+	$(RANLIB) $@
+
+%.o: %.c
+	@echo $(COMPILE) -c $<
+	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+            >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+.PHONY: clean all
 
 clean:
-	rm -f $(OBJS) $T core core.*
+	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
 
-doc:
-	@echo "$(MYNAME) library:"
-	@fgrep '/**' $(MYLIB).c | cut -f2 -d/ | tr -d '*' | sort | column
-
-# distribution
-
-FTP= www:www/ftp/lua/5.1
-F= http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/5.1/$A
-D= $(MYNAME)
-A= $(MYLIB).tar.gz
-TOTAR= Makefile,README,$(MYLIB).c,test.lua
-
-distr:	clean
-	tar zcvf $A -C .. $D/{$(TOTAR)}
-	touch -r $A .stamp
-	scp -p $A $(FTP)
-
-diff:	clean
-	wget -q -N $F
-	tar zxf $A
-	diff $D .
-
-# eof
+-include $(DEP_FILES)

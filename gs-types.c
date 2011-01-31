@@ -12,6 +12,7 @@ static int gs_type_string (lua_State *L);
 
 #define GS_MATRIX_NAME_DEF      "GSL.matrix"
 #define GS_CMATRIX_NAME_DEF     "GSL.cmatrix"
+#define GS_COMPLEX_NAME_DEF     "GSL.cmpl"
 #define GS_RNG_NAME_DEF         "GSL.rng"
 #define GS_NLINFIT_NAME_DEF     "GSL.solver"
 #define GS_CNLINFIT_NAME_DEF    "GSL.csolver"
@@ -46,6 +47,7 @@ static int gs_type_string (lua_State *L);
 const struct gs_type gs_type_table[] = {
   MY_EXPAND(MATRIX, "real matrix"),
   MY_EXPAND(CMATRIX, "complex matrix"),
+  MY_EXPAND(COMPLEX, "complex number"),
   MY_EXPAND(RNG, "random number generator"),
   MY_EXPAND(NLINFIT, "real values non-linear solver"),
   MY_EXPAND(CNLINFIT, "complex values non-linear solver"),

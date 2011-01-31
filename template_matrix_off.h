@@ -26,3 +26,5 @@
 #undef value_retrieve
 #undef value_assign
 #endif
+
+#define Complex double _Complex

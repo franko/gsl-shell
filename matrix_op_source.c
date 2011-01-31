@@ -23,7 +23,7 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
 				     bool direct)
 {
   struct pmatrix p;
-  lua_Complex sc = lua_tocomplex (L, sidx);
+  Complex sc = lua_tocomplex (L, sidx);
   int rtp;
 
   check_matrix_type (L, midx, &p);
@@ -54,7 +54,7 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
     }
   else
     {
-      cmpl s = sc;
+      Complex s = sc;
       if (p.tp == GS_CMATRIX)
 	{
 	  gsl_matrix_complex *m = p.m.cmpl;
@@ -64,14 +64,14 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
 
 	  for (i = 0; i < n1; i++)
 	    {
-	      cmpl *mp0 = (cmpl *) (m->data + 2 * (m->tda * i));
-	      cmpl *mp1 = (cmpl *) (m->data + 2 * (m->tda * i + n2));
-	      cmpl *rp  = (cmpl *) (r->data + 2 * (r->tda * i));
-	      cmpl *mp;
+	      Complex *mp0 = (Complex *) (m->data + 2 * (m->tda * i));
+	      Complex *mp1 = (Complex *) (m->data + 2 * (m->tda * i + n2));
+	      Complex *rp  = (Complex *) (r->data + 2 * (r->tda * i));
+	      Complex *mp;
 
 	      for (mp = mp0; mp < mp1; mp++, rp++)
 		{
-		  cmpl a = (direct ? s : *mp), b = (direct ? *mp : s);
+		  Complex a = (direct ? s : *mp), b = (direct ? *mp : s);
 		  *rp = BASE_OPER(a, b);
 		}
 	    }
@@ -87,13 +87,13 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
 	    {
 	      double *mp0 = m->data + (m->tda * i);
 	      double *mp1 = m->data + (m->tda * i + n2);
-	      cmpl *rp  = (cmpl *) (r->data + 2 * (r->tda * i));
+	      Complex *rp  = (Complex *) (r->data + 2 * (r->tda * i));
 	      double *mp;
 
 	      for (mp = mp0; mp < mp1; mp++, rp++)
 		{
-		  cmpl mc = *mp;
-		  cmpl a = (direct ? s : mc), b = (direct ? mc : s);
+		  Complex mc = *mp;
+		  Complex a = (direct ? s : mc), b = (direct ? mc : s);
 		  *rp = BASE_OPER(a, b);
 		}
 	    }
@@ -106,11 +106,11 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
 int
 OPER_FUNCTION (matrix) (lua_State *L)
 {
-  if (lua_isnumber (L, 1))
+  if (lua_iscomplex (L, 1))
     {
       return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 1, 2, true);
     }
-  else if (lua_isnumber (L, 2))
+  else if (lua_iscomplex (L, 2))
     {
       return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 2, 1, false);
     }
