@@ -1,0 +1,29 @@
+This code provides support for complex numbers in Lua using the functions
+available in C99.
+
+To try the library, just edit Makefile to reflect your installation of Lua and
+then run make. This will build the library and run a simple test. For detailed
+installation instructions, see
+	http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/install.html
+
+There is no manual: see the summary below and a C99 reference manual, e.g.
+http://www.dinkumware.com/manuals/default.aspx?manual=compleat&page=complex2.html
+
+Read also test.lua, which shows the library in action.
+
+This code is hereby placed in the public domain.
+
+Please send comments, suggestions, and bug reports to lhf@tecgraf.puc-rio.br .
+
+-------------------------------------------------------------------------------
+
+complex library:
+ __add(z,w) 	 __unm(z) 	 atan(z) 	 log(z) 	 sqrt(z) 
+ __div(z,w) 	 abs(z) 	 atanh(z) 	 new(x,y) 	 tan(z) 
+ __eq(z,w) 	 acos(z) 	 conj(z) 	 pow(z,w) 	 tanh(z) 
+ __mul(z,w) 	 acosh(z) 	 cos(z) 	 proj(z) 	 tostring(z) 
+ __pow(z,w) 	 arg(z) 	 cosh(z) 	 real(z) 	 version 
+ __sub(z,w) 	 asin(z) 	 exp(z) 	 sin(z) 	 I
+ __tostring(z) 	 asinh(z) 	 imag(z) 	 sinh(z) 
+
+-------------------------------------------------------------------------------
