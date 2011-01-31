@@ -593,6 +593,26 @@ static void body (LexState *ls, expdesc *e, int needself, int line) {
 }
 
 
+#ifdef GSL_SHELL_LUA
+static void simplebody (LexState *ls, expdesc *e, int line) {
+  /* simplebody ->  parlist `|' expr END */
+  FuncState new_fs;
+  expdesc ebody;
+  int reg;
+  open_func(ls, &new_fs);
+  new_fs.f->linedefined = line;
+  parlist_ext(ls, '|');
+  checknext(ls, '|');
+  expr(ls, &ebody);
+  reg = luaK_exp2anyreg(&new_fs, &ebody);
+  luaK_ret(&new_fs, reg, 1);
+  new_fs.f->lastlinedefined = ls->linenumber;
+  close_func(ls);
+  pushclosure(ls, &new_fs, e);
+}
+#endif
+
+
 static int explist1 (LexState *ls, expdesc *v) {
   /* explist1 -> expr { `,' expr } */
   int n = 1;  /* at least one expression */
@@ -766,6 +786,13 @@ static void simpleexp (LexState *ls, expdesc *v) {
       body(ls, v, 0, ls->linenumber);
       return;
     }
+#ifdef GSL_SHELL_LUA
+    case '|': {
+      luaX_next(ls);
+      simplebody(ls, v, ls->linenumber);
+      return;
+    }
+#endif
     default: {
       primaryexp(ls, v);
       return;
