@@ -73,15 +73,6 @@ static lua_Number LoadNumber(LoadState* S)
  return x;
 }
 
-#ifdef LUA_TINT
-static lua_Integer LoadInteger(LoadState* S)
-{
- lua_Integer x;
- LoadVar(S,x);
- return x;
-}
-#endif
-
 static TString* LoadString(LoadState* S)
 {
  size_t size;
@@ -128,11 +119,6 @@ static void LoadConstants(LoadState* S, Proto* f)
    case LUA_TNUMBER:
 	setnvalue(o,LoadNumber(S));
 	break;
-#ifdef LUA_TINT
-   case LUA_TINT:   /* Integer type saved in bytecode (see lcode.c) */
-	setivalue(o,LoadInteger(S));
-	break;
-#endif
    case LUA_TSTRING:
 	setsvalue2n(S->L,o,LoadString(S));
 	break;
@@ -237,19 +223,5 @@ void luaU_header (char* h)
  *h++=(char)sizeof(size_t);
  *h++=(char)sizeof(Instruction);
  *h++=(char)sizeof(lua_Number);
-
- /* 
-  * Last byte of header (0/1 in unpatched Lua 5.1.3):
-  *
-  * 0: lua_Number is float/double/ldouble (nonpatched only)
-  * 1: lua_Number is integer (nonpatched only)
-  * 4: LNUM_INT32: sizeof(lua_Integer)
-  * 8: LNUM_INT64: sizeof(lua_Integer)
-  * +0x80: LNUM_COMPLEX
-  */
- *h++ = (char)( sizeof(lua_Integer)
-#ifdef LNUM_COMPLEX
-    | 0x80
-#endif
-    );
+ *h++=(char)(((lua_Number)0.5)==0);		/* is lua_Number integral? */
 }

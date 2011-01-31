@@ -22,7 +22,6 @@
 #include "lstring.h"
 #include "ltable.h"
 #include "lzio.h"
-#include "lnum.h"
 
 
 
@@ -42,10 +41,6 @@ const char *const luaX_tokens [] = {
     "return", "then", "true", "until", "while",
     "..", "...", "==", ">=", "<=", "~=",
     "<number>", "<name>", "<string>", "<eof>",
-    "<integer>",
-#ifdef LNUM_COMPLEX
-    "<number2>",
-#endif
     NULL
 };
 
@@ -95,11 +90,7 @@ static const char *txtToken (LexState *ls, int token) {
   switch (token) {
     case TK_NAME:
     case TK_STRING:
-    case TK_INT:
     case TK_NUMBER:
-#ifdef LNUM_COMPLEX
-    case TK_NUMBER2:
-#endif
       save(ls, '\0');
       return luaZ_buffer(ls->buff);
     default:
@@ -182,27 +173,23 @@ static void buffreplace (LexState *ls, char from, char to) {
     if (p[n] == from) p[n] = to;
 }
 
-/* TK_NUMBER (/ TK_NUMBER2) */
-static int trydecpoint (LexState *ls, SemInfo *seminfo) {
+
+static void trydecpoint (LexState *ls, SemInfo *seminfo) {
   /* format error: try to update decimal point separator */
   struct lconv *cv = localeconv();
   char old = ls->decpoint;
-  int ret;
   ls->decpoint = (cv ? cv->decimal_point[0] : '.');
   buffreplace(ls, old, ls->decpoint);  /* try updated decimal separator */
-  ret= luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r, NULL);
-  if (!ret) {
+  if (!luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r)) {
     /* format error with correct decimal point: no more options */
     buffreplace(ls, ls->decpoint, '.');  /* undo change (for error message) */
     luaX_lexerror(ls, "malformed number", TK_NUMBER);
   }
-  return ret;
 }
 
 
-/* TK_NUMBER / TK_INT (/TK_NUMBER2) */
-static int read_numeral (LexState *ls, SemInfo *seminfo) {
-  int ret;
+/* LUA_NUMBER */
+static void read_numeral (LexState *ls, SemInfo *seminfo) {
   lua_assert(isdigit(ls->current));
   do {
     save_and_next(ls);
@@ -213,9 +200,8 @@ static int read_numeral (LexState *ls, SemInfo *seminfo) {
     save_and_next(ls);
   save(ls, '\0');
   buffreplace(ls, '.', ls->decpoint);  /* follow locale for decimal point */
-  ret= luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r, &seminfo->i );
-  if (!ret) return trydecpoint(ls, seminfo); /* try to update decimal point separator */
-  return ret;
+  if (!luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r))  /* format error? */
+    trydecpoint(ls, seminfo); /* try to update decimal point separator */
 }
 
 
@@ -343,7 +329,6 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
 }
 
 
-/* char / TK_* */
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
@@ -415,7 +400,8 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         }
         else if (!isdigit(ls->current)) return '.';
         else {
-          return read_numeral(ls, seminfo);
+          read_numeral(ls, seminfo);
+          return TK_NUMBER;
         }
       }
       case EOZ: {
@@ -428,7 +414,8 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           continue;
         }
         else if (isdigit(ls->current)) {
-          return read_numeral(ls, seminfo);
+          read_numeral(ls, seminfo);
+          return TK_NUMBER;
         }
         else if (isalpha(ls->current) || ls->current == '_') {
           /* identifier or reserved word */

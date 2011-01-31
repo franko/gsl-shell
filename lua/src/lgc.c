@@ -334,17 +334,6 @@ static size_t propagateall (global_State *g) {
 ** other objects: if really collected, cannot keep them; for userdata
 ** being finalized, keep them in keys, but not in values
 */
-#ifdef GSL_SHELL_LUA
-static int iscleared (const TValue *o, int iskey) {
-  (void) iskey;
-  if (!iscollectable(o)) return 0;
-  if (ttisstring(o)) {
-    stringmark(rawtsvalue(o));  /* strings are `values', so are never weak */
-    return 0;
-  }
-  return iswhite(gcvalue(o)) || (ttisuserdata(o) && isfinalized(uvalue(o)));
-}
-#else
 static int iscleared (const TValue *o, int iskey) {
   if (!iscollectable(o)) return 0;
   if (ttisstring(o)) {
@@ -354,7 +343,7 @@ static int iscleared (const TValue *o, int iskey) {
   return iswhite(gcvalue(o)) ||
     (ttisuserdata(o) && (!iskey && isfinalized(uvalue(o))));
 }
-#endif
+
 
 /*
 ** clear collected entries from weaktables

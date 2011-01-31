@@ -33,6 +33,7 @@
 
 #define luaY_checklimit(fs,v,l,m)	if ((v)>(l)) errorlimit(fs,l,m)
 
+
 /*
 ** nodes for block list (list of active blocks)
 */
@@ -71,7 +72,7 @@ static void errorlimit (FuncState *fs, int limit, const char *what) {
   const char *msg = (fs->f->linedefined == 0) ?
     luaO_pushfstring(fs->L, "main function has more than %d %s", limit, what) :
     luaO_pushfstring(fs->L, "function at line %d has more than %d %s",
-                            (fs->f->linedefined), limit, what);
+                            fs->f->linedefined, limit, what);
   luaX_lexerror(fs->ls, msg, 0);
 }
 
@@ -538,13 +539,14 @@ static void constructor (LexState *ls, expdesc *t) {
 /* }====================================================================== */
 
 
-static void parlist_ext (LexState *ls, int end_token) {
+
+static void parlist (LexState *ls) {
   /* parlist -> [ param { `,' param } ] */
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
   int nparams = 0;
   f->is_vararg = 0;
-  if (ls->t.token != end_token) {  /* is `parlist' not empty? */
+  if (ls->t.token != ')') {  /* is `parlist' not empty? */
     do {
       switch (ls->t.token) {
         case TK_NAME: {  /* param -> NAME */
@@ -570,9 +572,6 @@ static void parlist_ext (LexState *ls, int end_token) {
   luaK_reserveregs(fs, fs->nactvar);  /* reserve register for parameters */
 }
 
-static void parlist (LexState *ls) {
-  parlist_ext (ls, ')');
-}
 
 static void body (LexState *ls, expdesc *e, int needself, int line) {
   /* body ->  `(' parlist `)' chunk END */
@@ -593,24 +592,6 @@ static void body (LexState *ls, expdesc *e, int needself, int line) {
   pushclosure(ls, &new_fs, e);
 }
 
-#ifdef GSL_SHELL_LUA
-static void simplebody (LexState *ls, expdesc *e, int line) {
-  /* simplebody ->  parlist `|' expr END */
-  FuncState new_fs;
-  expdesc ebody;
-  int reg;
-  open_func(ls, &new_fs);
-  new_fs.f->linedefined = line;
-  parlist_ext(ls, '|');
-  checknext(ls, '|');
-  expr(ls, &ebody);
-  reg = luaK_exp2anyreg(&new_fs, &ebody);
-  luaK_ret(&new_fs, reg, 1);
-  new_fs.f->lastlinedefined = ls->linenumber;
-  close_func(ls);
-  pushclosure(ls, &new_fs, e);
-}
-#endif
 
 static int explist1 (LexState *ls, expdesc *v) {
   /* explist1 -> expr { `,' expr } */
@@ -752,18 +733,6 @@ static void simpleexp (LexState *ls, expdesc *v) {
       v->u.nval = ls->t.seminfo.r;
       break;
     }
-    case TK_INT: {
-      init_exp(v, VKINT, 0);
-      v->u.ival = ls->t.seminfo.i;
-      break;
-    }
-#ifdef LNUM_COMPLEX
-    case TK_NUMBER2: {
-      init_exp(v, VKNUM2, 0);
-      v->u.nval = ls->t.seminfo.r;
-      break;
-    }
-#endif
     case TK_STRING: {
       codestring(ls, v, ls->t.seminfo.ts);
       break;
@@ -797,13 +766,6 @@ static void simpleexp (LexState *ls, expdesc *v) {
       body(ls, v, 0, ls->linenumber);
       return;
     }
-#ifdef GSL_SHELL_LUA
-    case '|': {
-      luaX_next(ls);
-      simplebody(ls, v, ls->linenumber);
-      return;
-    }
-#endif
     default: {
       primaryexp(ls, v);
       return;
@@ -1117,7 +1079,7 @@ static void fornum (LexState *ls, TString *varname, int line) {
   if (testnext(ls, ','))
     exp1(ls);  /* optional step */
   else {  /* default step = 1 */
-    luaK_codeABx(fs, OP_LOADK, fs->freereg, luaK_integerK(fs, 1));
+    luaK_codeABx(fs, OP_LOADK, fs->freereg, luaK_numberK(fs, 1));
     luaK_reserveregs(fs, 1);
   }
   forbody(ls, base, line, 1, 1);

@@ -49,7 +49,6 @@ typedef LUAI_USER_ALIGNMENT_T L_Umaxalign;
 
 /* result of a `usual argument conversion' over lua_Number */
 typedef LUAI_UACNUMBER l_uacNumber;
-typedef LUAI_UACINTEGER l_uacInteger;
 
 
 /* internal assertions for in-house debugging */
@@ -60,7 +59,7 @@ typedef LUAI_UACINTEGER l_uacInteger;
 
 #else
 
-#define lua_assert(c)		((void)(0))
+#define lua_assert(c)		((void)0)
 #define check_exp(c,e)		(e)
 #define api_check		luai_apicheck
 
@@ -79,6 +78,7 @@ typedef LUAI_UACINTEGER l_uacInteger;
 #define cast_byte(i)	cast(lu_byte, (i))
 #define cast_num(i)	cast(lua_Number, (i))
 #define cast_int(i)	cast(int, (i))
+
 
 
 /*
