@@ -29,7 +29,7 @@
 #include <gsl/gsl_linalg.h>
 
 #include "gs-types.h"
-#include "complex/lcomplex.h"
+#include "lcomplex.h"
 #include "lua-utils.h"
 #include "cmatrix.h"
 #include "matrix_arith.h"

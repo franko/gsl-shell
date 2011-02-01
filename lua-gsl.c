@@ -28,7 +28,7 @@
 #include "cnlinfit.h"
 #include "matrix.h"
 #include "cmatrix.h"
-#include "complex/lcomplex.h"
+#include "lcomplex.h"
 #include "matrix_arith.h"
 #include "linalg.h"
 #include "integ.h"

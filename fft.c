@@ -26,7 +26,7 @@
 #include <gsl/gsl_fft_halfcomplex.h>
 
 #include "gs-types.h"
-#include "complex/lcomplex.h"
+#include "lcomplex.h"
 #include "matrix.h"
 #include "cmatrix.h"
 #include "fft.h"

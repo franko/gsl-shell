@@ -26,7 +26,7 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_linalg.h>
 
-#include "complex/lcomplex.h"
+#include "lcomplex.h"
 #include "gs-types.h"
 #include "matrix.h"
 #include "cmatrix.h"
