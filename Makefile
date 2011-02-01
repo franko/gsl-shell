@@ -75,7 +75,7 @@ ifeq ($(strip $(DEBUG)), yes)
 endif
 
 C_SRC_FILES += gsl-shell.c
-SUBDIRS_DEFS += -DGSL_SHELL_LUA # -DLUA_ROOT=$(PREFIX)
+SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)

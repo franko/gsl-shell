@@ -8,6 +8,9 @@
 #ifndef lconfig_h
 #define lconfig_h
 
+#define QUOTEME_(x) #x
+#define QUOTEME(x) QUOTEME_(x)
+
 #include <limits.h>
 #include <stddef.h>
 
@@ -80,6 +83,27 @@
 ** hierarchy or if you want to install your libraries in
 ** non-conventional directories.
 */
+#ifdef GSL_SHELL_LUA
+#if defined(_WIN32)
+/*
+** In Windows, any exclamation mark ('!') in the path is replaced by the
+** path of the directory of the executable file of the current process.
+*/
+#define GSL_SHELL_CDIR	"!\\"
+#define LUA_PATH_DEFAULT  \
+		".\\?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?\\init.lua"
+#define LUA_CPATH_DEFAULT \
+	".\\?.dll;"  GSL_SHELL_CDIR"?.dll;" GSL_SHELL_CDIR"loadall.dll"
+
+#else
+#define LUA_ROOT_Q QUOTEME(LUA_ROOT) "/"
+#define GSL_SHELL_CDIR	LUA_ROOT_Q "lib/gsl-shell/"
+#define LUA_PATH_DEFAULT  \
+		"./?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?/init.lua"
+#define LUA_CPATH_DEFAULT \
+	"./?.so;"  GSL_SHELL_CDIR"?.so;" GSL_SHELL_CDIR"loadall.so"
+#endif
+#else
 #if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
@@ -103,7 +127,7 @@
 #define LUA_CPATH_DEFAULT \
 	"./?.so;"  LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
 #endif
-
+#endif
 
 /*
 @@ LUA_DIRSEP is the directory separator (for submodules).
