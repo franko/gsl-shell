@@ -128,7 +128,7 @@ function unit(n)
 end
 
 function matrix_norm(m)
-   local sq = matrix_reduce(m, |p, z| p + z*conj(z), 0)
+   local sq = matrix_reduce(m, |p, z| p + real(z)*real(z) + imag(z)*imag(z), 0)
    return sqrt(sq)
 end
 

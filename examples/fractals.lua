@@ -4,7 +4,7 @@ local function c_generator(n, n_angle, len_frac, g)
    local w, r, k = ilist(|| 0, n+1), #g
 
    local s = len_frac^n
-   local sz = cnew(n_angle, 1, |k| s * exp(2i*pi*(k-1)/n_angle))
+   local sz = cnew(n_angle, 1, |k| s * exp(2*I*pi*(k-1)/n_angle))
 
    local sh = ilist(|k| g[k%r+1] - g[(k-1)%r+1], 0, r-1)
    local a = (g[1]*n) % n_angle

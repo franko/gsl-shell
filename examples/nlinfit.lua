@@ -19,20 +19,20 @@
 
 function demo1()
    local n = 50
-   local p = {a= (-1+4i) * 4, phi= 0.23, A= 0.55}
-   local y = cnew(n, 1, |i,j| p.A * exp(p.a * (i-1)/n + 1i * p.phi))
+   local p = {a= (-1+4*I) * 4, phi= 0.23, A= 0.55}
+   local y = cnew(n, 1, |i,j| p.A * exp(p.a * (i-1)/n + I * p.phi))
 
    local function cexpf(x, f, J)
       for k=1, n do
 	 local t, y = (k-1)/n, y[k]
-	 local A, a, phi = x[1], x[2] + 1i * x[3], x[4]
-	 local e = exp(a * t + 1i * phi)
+	 local A, a, phi = x[1], x[2] + I * x[3], x[4]
+	 local e = exp(a * t + I * phi)
 	 if f then f[k] = A * e - y end
 	 if J then
 	    J:set(k, 1, e)
 	    J:set(k, 2, t * A * e)
-	    J:set(k, 3, 1i * t * A * e)
-	    J:set(k, 4, 1i * A * e)
+	    J:set(k, 3, I * t * A * e)
+	    J:set(k, 4, I * A * e)
 	 end
       end
    end

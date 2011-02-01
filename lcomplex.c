@@ -6,14 +6,14 @@
 * This code is hereby placed in the public domain.
 */
 
+#include <math.h>
+
 #include "lcomplex.h"
 
 #include "lua.h"
 #include "lauxlib.h"
 
 #include "gs-types.h"
-
-#define MYNAME		"complex"
 
 #define Z(i)		Pget(L,i)
 #define O(i)		luaL_optnumber(L,i,0)
@@ -114,6 +114,18 @@ Complex lua_tocomplex (lua_State *L, int i)
 #define F(f)	A(f,c##f(Z(1)))
 #define G(f)	static int L##f(lua_State *L) { lua_pushnumber(L,c##f(Z(1))); return 1; }
 
+#define RFIMP(f,er,ez)  static int L##f(lua_State *L) { \
+  if (lua_isnumber (L, 1)) \
+    lua_pushnumber(L,er(lua_tonumber(L,1))); \
+  else { \
+    Complex *z = gs_check_userdata (L, 1, GS_COMPLEX); \
+    lua_pushcomplex (L, ez(*z)); \
+  } \
+  return 1; \
+}
+
+#define RF(f)  RFIMP(f,f,c##f)
+
 A(new,O(1)+O(2)*I)	/** new(x,y) */
 B(add)			/** __add(z,w) */
 B(div)			/** __div(z,w) */
@@ -121,33 +133,33 @@ B(mul)			/** __mul(z,w) */
 B(sub)			/** __sub(z,w) */
 F(neg)			/** __unm(z) */
 G(abs)			/** abs(z) */
-F(acos)			/** acos(z) */
-F(acosh)		/** acosh(z) */
+RF(acos)			/** acos(z) */
+RF(acosh)		/** acosh(z) */
 G(arg)			/** arg(z) */
-F(asin)			/** asin(z) */
-F(asinh)		/** asinh(z) */
-F(atan)			/** atan(z) */
-F(atanh)		/** atanh(z) */
+RF(asin)			/** asin(z) */
+RF(asinh)		/** asinh(z) */
+RF(atan)			/** atan(z) */
+RF(atanh)		/** atanh(z) */
 F(conj)			/** conj(z) */
-F(cos)			/** cos(z) */
-F(cosh)			/** cosh(z) */
-F(exp)			/** exp(z) */
+RF(cos)			/** cos(z) */
+RF(cosh)			/** cosh(z) */
+RF(exp)			/** exp(z) */
 G(imag)			/** imag(z) */
-F(log)			/** log(z) */
+RF(log)			/** log(z) */
 B(pow)			/** pow(z,w) */
 F(proj)			/** proj(z) */
 G(real)			/** real(z) */
-F(sin)			/** sin(z) */
-F(sinh)			/** sinh(z) */
-F(sqrt)			/** sqrt(z) */
-F(tan)			/** tan(z) */
-F(tanh)			/** tanh(z) */
+RF(sin)			/** sin(z) */
+RF(sinh)			/** sinh(z) */
+RF(sqrt)			/** sqrt(z) */
+RF(tan)			/** tan(z) */
+RF(tanh)			/** tanh(z) */
 
 static const luaL_Reg lcomplex_methods[] =
 {
 	{ "__add",	    Ladd	},
 	{ "__div",	    Ldiv	},
-	{ "__eq",	    Leq	},
+	{ "__eq",	      Leq	},
 	{ "__mul",	    Lmul	},
 	{ "__sub",	    Lsub	},
 	{ "__unm",	    Lneg	},
@@ -173,7 +185,7 @@ static const luaL_Reg lcomplex_functions[] =
 	{ "exp",	Lexp	},
 	{ "imag",	Limag	},
 	{ "log",	Llog	},
-	{ "new",	Lnew	},
+	{ "complex",	Lnew	},
 	{ "pow",	Lpow	},
 	{ "proj",	Lproj	},
 	{ "real",	Lreal	},
@@ -191,11 +203,8 @@ void lcomplex_register (lua_State *L)
   luaL_register (L, NULL, lcomplex_methods);
   lua_pop (L, 1);
 
-  luaL_register(L, MYNAME, lcomplex_functions);
+  luaL_register(L, NULL, lcomplex_functions);
 
-  lua_pushliteral(L, "I");      /** I */
   lua_pushcomplex(L, I);
-  lua_settable(L,-3);
-
-  lua_pop (L, 1);
+  lua_setfield(L, -2, "I");
 }

@@ -132,8 +132,8 @@ end
 
 function demo5()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local alpha = 1i - 0.08
-   local z0 = 1.0 + 0.0i
+   local alpha = I - 0.08
+   local z0 = I
 
    local odef = function(t, z, f)
 		   f:set(1,1, alpha * z[1])
@@ -154,8 +154,8 @@ end
 
 function demo6()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local alpha = 1i - 0.08
-   local z0 = 1.0 + 0.0i
+   local alpha = I - 0.08
+   local z0 = 1
 
    local odef = function(t, z, f)
 		   f:set(1,1, alpha * z[1])
