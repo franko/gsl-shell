@@ -8,6 +8,8 @@
 #ifndef lconfig_h
 #define lconfig_h
 
+#define GSL_SHELL_GC_PATCH 1
+
 #define QUOTEME_(x) #x
 #define QUOTEME(x) QUOTEME_(x)
 
