@@ -62,8 +62,8 @@ C_SRC_FILES = gs-types.c lcomplex.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
-                multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
-		lua-gsl.c
+    multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
+    cmatrix.c cnlinfit.c code.c fft.c lua-gsl.c
 
 LUA_BASE_DIRS = 
 LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
@@ -94,12 +94,6 @@ endif
 ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
   DEFS += -DDISABLE_GAMMA_CORR
   SUBDIRS_DEFS += -DDISABLE_GAMMA_CORR
-endif
-
-ifeq ($(strip $(ENABLE_COMPLEX)), yes)
-  C_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
-  DEFS += -DLNUM_COMPLEX
-  SUBDIRS_DEFS += -DLNUM_COMPLEX
 endif
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)

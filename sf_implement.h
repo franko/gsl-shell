@@ -518,7 +518,6 @@ int GSH_LUA_NAME(legendreQ) (lua_State *L)
   return push_gsl_result (L, &res);
 }
 
-#ifdef LNUM_COMPLEX
 int GSH_LUA_NAME(cdilog) (lua_State *L)
 {
   Complex z = luaL_checkcomplex (L, 1);
@@ -535,4 +534,3 @@ int GSH_LUA_NAME(cdilog) (lua_State *L)
   lua_pushcomplex (L, rr.val + I * ri.val);
   return 1;
 }
-#endif

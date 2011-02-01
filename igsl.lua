@@ -18,12 +18,6 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-if not have_complex then
-   conj = |x| x
-   real = conj
-   imag = |x| 0
-end
-
 local cat    = table.concat
 local insert = table.insert
 local fmt    = string.format
@@ -161,9 +155,7 @@ end
 
 local function add_matrix_method(s, m)
    Matrix[s] = m
-   if have_complex then
-      cMatrix[s] = m
-   end
+   cMatrix[s] = m
 end
 
 function ode_iter(s, t0, y0, t1, h, tstep)
@@ -192,23 +184,21 @@ local function hc_print(hc)
    return cat(hc_reduce(hc, f, {}), '\n')
 end
 
-if have_complex then
-   FFT_hc_mixed_radix.__tostring = hc_print
-   FFT_hc_radix2.__tostring = hc_print
-end
+FFT_hc_mixed_radix.__tostring = hc_print
+FFT_hc_radix2.__tostring = hc_print
 
 ODE.iter  = ode_iter
-if have_complex then cODE.iter = ode_iter end
+cODE.iter = ode_iter
 
 local function add_matrix_meta_method(key, method)
-   local m = new(1,1)
-   local mt = getmetatable(m)
+   local m, mt
+   m = new(1,1)
+   mt = getmetatable(m)
    mt[key] = method
-   if have_complex then
-      m = cnew(1,1)
-      mt = getmetatable(m)
-      mt[key] = method
-   end
+
+   m = cnew(1,1)
+   mt = getmetatable(m)
+   mt[key] = method
 end
 
 add_matrix_meta_method('__tostring', matrix_to_string)

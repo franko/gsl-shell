@@ -1,5 +1,4 @@
 
-ENABLE_COMPLEX = yes
 ENABLE_AGG_PLOT = yes
 
 # set this to "yes" if you want to disable gamma correction

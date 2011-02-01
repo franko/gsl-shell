@@ -43,22 +43,18 @@ struct eigen_cache {
 
 static int           eigen_symm                 (lua_State *L);
 static int           eigen_symmv                (lua_State *L);
-#ifdef LNUM_COMPLEX
 static int           eigen_herm                 (lua_State *L);
 static int           eigen_hermv                (lua_State *L);
 static int           eigen_nonsymm              (lua_State *L);
 static int           eigen_nonsymmv             (lua_State *L);
 static int           schur_decomp               (lua_State *L);
-#endif
 static int           eigen_cache_free           (lua_State *L);
 
 static void          eigen_push_cache           (lua_State *L);
 
 static struct eigen_symm_cache * eigen_cache_symm_set (lua_State *L, size_t n);
-#ifdef LNUM_COMPLEX
 static struct eigen_herm_cache * eigen_cache_herm_set (lua_State *L, size_t n);
 static struct eigen_nonsymm_cache * eigen_cache_nonsymm_set (lua_State *L, size_t n);
-#endif
 
 static const struct luaL_Reg eigen_cache_methods[] = {
   {"__gc",       eigen_cache_free},
@@ -68,13 +64,11 @@ static const struct luaL_Reg eigen_cache_methods[] = {
 static const struct luaL_Reg eigen_functions[] = {
   {"eigs",        eigen_symm},
   {"eigsv",       eigen_symmv},
-#ifdef LNUM_COMPLEX
   {"eigh",        eigen_herm},
   {"eighv",       eigen_hermv},
   {"eigns",       eigen_nonsymm},
   {"eignsv",      eigen_nonsymmv},
   {"schur",       schur_decomp},
-#endif
   {NULL, NULL}
 };  
 
@@ -167,7 +161,6 @@ eigen_cache_symm_set (lua_State *L, size_t n)
   return cache->symm;
 }
 
-#ifdef LNUM_COMPLEX
 struct eigen_herm_cache *
 eigen_cache_herm_set (lua_State *L, size_t n)
 {
@@ -217,7 +210,6 @@ eigen_cache_nonsymm_set (lua_State *L, size_t n)
 
   return cache->nonsymm;
 }
-#endif
 
 int
 eigen_symm_raw (lua_State *L, int compute_evecs)
@@ -272,7 +264,6 @@ eigen_symmv (lua_State *L)
   return eigen_symm_raw (L, 1);
 }
 
-#ifdef LNUM_COMPLEX
 static int
 eigen_herm_raw (lua_State *L, int compute_evecs)
 {
@@ -427,7 +418,6 @@ schur_decomp (lua_State *L)
 
   return 2;
 }
-#endif
 
 void
 eigen_register (lua_State *L)
