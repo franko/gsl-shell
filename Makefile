@@ -33,6 +33,18 @@ nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
 
+ifeq ($(strip $(LUA_COMPATIBLE)), yes)
+  CFGFLAGS = -DGSH_SHORT_FSYNTAX -DWINDOW_LIVE_CHECK
+else
+  ifeq ($(strip $(LUA_COMPATIBLE)), strict)
+    CFGFLAGS = -DWINDOW_LIVE_CHECK -DLUA_STRICT
+  else
+    CFGFLAGS = -DGSH_SHORT_FSYNTAX -DGSH_GC_PATCH
+  endif
+endif
+
+DEFS += $(CFGFLAGS)
+SUBDIRS_DEFS += $(CFGFLAGS)
 
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform

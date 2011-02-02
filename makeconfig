@@ -1,6 +1,12 @@
 
 ENABLE_AGG_PLOT = yes
 
+# can be yes, no or strict
+# Generally you should use 'no'. If you need to use other Lua modules
+# you can use 'yes'. Use 'strict' only if you need a fully conformant Lua
+# interpreter but be aware that this may break some things.
+LUA_COMPATIBLE = no
+
 # set this to "yes" if you want to disable gamma correction
 DISABLE_GAMMA_CORR = no
 

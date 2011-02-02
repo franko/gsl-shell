@@ -85,7 +85,7 @@ static const luaL_Reg gshlibs[] = {
   {LUA_IOLIBNAME,    luaopen_io},
   {LUA_OSLIBNAME,    luaopen_os},
   {LUA_STRLIBNAME,   luaopen_string},
-#if 0
+#ifdef LUA_STRICT
   {LUA_MATHLIBNAME,  luaopen_math},
   {LUA_DBLIBNAME,    luaopen_debug},
   {MLUA_GSLLIBNAME,  luaopen_gsl},
@@ -135,6 +135,7 @@ gsl_shell_openlibs (lua_State *L)
       lua_call(L, 1, 0);
     }
 
+#ifndef LUA_STRICT
   lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
   lua_setglobal (L, LUA_MATHLIBNAME);
   luaopen_math (L);
@@ -148,6 +149,7 @@ gsl_shell_openlibs (lua_State *L)
   lua_pop (L, 1);
   lua_pushnil (L);                      /* remove gsl */
   lua_setglobal (L, MLUA_GSLLIBNAME);
+#endif
 }
 
 static void l_message (const char *pname, const char *msg) {
@@ -495,9 +497,11 @@ static int pmain (lua_State *L) {
   lua_gc(L, LUA_GCRESTART, 0);
 
   dolibrary (L, "base");
-  dolibrary (L, "igsl");
   dolibrary (L, "integ");
+#ifndef LUA_STRICT
+  dolibrary (L, "igsl");
   dolibrary (L, "draw");
+#endif
 
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
@@ -544,13 +548,6 @@ int main (int argc, char **argv) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
-  /* Checking 'sizeof(lua_Integer)' cannot be made in preprocessor on all compilers.
-  */
-#ifdef LNUM_INT32
-  lua_assert( sizeof(lua_Integer) == 4 );
-#elif defined(LNUM_INT64)
-  lua_assert( sizeof(lua_Integer) == 8 );
-#endif
   s.argc = argc;
   s.argv = argv;
   status = lua_cpcall(L, &pmain, &s);

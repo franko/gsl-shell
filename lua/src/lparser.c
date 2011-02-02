@@ -596,7 +596,7 @@ static void body (LexState *ls, expdesc *e, int needself, int line) {
 }
 
 
-#ifdef GSL_SHELL_LUA
+#ifdef GSH_SHORT_FSYNTAX
 static void simplebody (LexState *ls, expdesc *e, int line) {
   /* simplebody ->  parlist `|' expr END */
   FuncState new_fs;
@@ -789,7 +789,7 @@ static void simpleexp (LexState *ls, expdesc *v) {
       body(ls, v, 0, ls->linenumber);
       return;
     }
-#ifdef GSL_SHELL_LUA
+#ifdef GSH_SHORT_FSYNTAX
     case '|': {
       luaX_next(ls);
       simplebody(ls, v, ls->linenumber);

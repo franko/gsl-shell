@@ -334,7 +334,7 @@ static size_t propagateall (global_State *g) {
 ** other objects: if really collected, cannot keep them; for userdata
 ** being finalized, keep them in keys, but not in values
 */
-#if defined(GSL_SHELL_LUA) && defined(GSL_SHELL_GC_PATCH)
+#ifdef GSH_GC_PATCH
 static int iscleared (const TValue *o, int iskey) {
   (void) iskey;
   if (!iscollectable(o)) return 0;

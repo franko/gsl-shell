@@ -40,7 +40,7 @@ tos = function (t, maxdepth)
    elseif tp == 'userdata' then
       local ftostr = getmetatable(t).__tostring
       if ftostr then return ftostr(t) else
-	 return string.format('<%s>', gsltype(t))
+	 return gsltype and string.format('<%s>', gsltype(t)) or '<userdata>'
       end
    else
       return tostring(t)

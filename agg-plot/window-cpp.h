@@ -89,3 +89,21 @@ public:
   virtual void on_draw();
   virtual void on_resize(int sx, int sy);
 };
+
+#ifdef WINDOW_LIVE_CHECK
+class window_boxed : public window {
+  bool m_is_alive;
+
+public:
+  window_boxed(agg::rgba& bgcol) : window(bgcol), m_is_alive(true) {};
+  ~window_boxed() { m_is_alive = false; }
+
+  bool is_alive() const { return m_is_alive; };
+};
+#else
+class window_boxed : public window {
+public:
+  window_boxed(agg::rgba& bgcol) : window(bgcol) {};
+  bool is_alive() const { return true; };
+};
+#endif

@@ -56,7 +56,9 @@
 #include "lua-plot.h"
 #endif
 
+#ifdef LUA_STRICT
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
+#endif
 
 int
 luaopen_gsl (lua_State *L)
@@ -68,7 +70,7 @@ luaopen_gsl (lua_State *L)
   object_refs_prepare (L);
 #endif
 
-#ifdef USE_SEPARATE_NAMESPACE
+#ifdef LUA_STRICT
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
 #else
   lua_pushvalue (L, LUA_GLOBALSINDEX);
