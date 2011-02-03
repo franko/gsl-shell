@@ -1,11 +1,9 @@
 
 ENABLE_AGG_PLOT = yes
 
-# can be yes, no or strict
-# Generally you should use 'no'. If you need to use other Lua modules
-# you can use 'yes'. Use 'strict' only if you need a fully conformant Lua
-# interpreter but be aware that this may break some things.
-LUA_COMPATIBLE = no
+# If you set to yes a Lua interpreter will be built and the GSL specific
+# functions will be loaded in a separate module 'gsl'
+LUA_BUILD = no
 
 # set this to "yes" if you want to disable gamma correction
 DISABLE_GAMMA_CORR = no

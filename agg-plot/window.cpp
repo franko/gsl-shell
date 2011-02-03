@@ -370,14 +370,8 @@ typedef void (window::*window_slot_method_type)(int slot_id);
 
 int window_generic_oper (lua_State *L, window_slot_method_type method)
 {
-  window_boxed *win = object_check<window_boxed>(L, 1, GS_WINDOW);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
   int slot_id = luaL_checkinteger (L, 2);
-
-  // we check to be sure that the window was not garbage collected
-  // by Lua. In this case the destructor was called but the momory
-  // itself is not disposed. Since the is_alive method is non-virtual
-  // that shoud be always fine.
-  if (! win->is_alive()) return 0;
 
   win->lock();
   if (win->status == canvas_window::running)
@@ -394,11 +388,8 @@ int window_generic_oper_ext (lua_State *L,
 			     void (window::*method)(int, param_type),
 			     param_type param)
 {
-  window_boxed *win = object_check<window_boxed>(L, 1, GS_WINDOW);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
   int slot_id = luaL_checkinteger (L, 2);
-
-  // see comment is the function window_generic_oper
-  if (! win->is_alive()) return 0;
 
   win->lock();
   if (win->status == canvas_window::running)
@@ -439,7 +430,7 @@ void window::start (lua_State *L, gslshell::ret_status& st)
 int
 window_new (lua_State *L)
 {
-  window_boxed *win = push_new_object<window_boxed>(L, GS_WINDOW, colors::white);
+  window *win = push_new_object<window>(L, GS_WINDOW, colors::white);
   const char *spec = lua_tostring (L, 1);
 
   gslshell::ret_status st;
