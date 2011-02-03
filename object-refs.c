@@ -7,19 +7,18 @@
 #include "refs.h"
 #include "object-refs.h"
 
-static char const * const table_name[] = {"GSL.oirfs.wp", "GSL.oirfs.plt"};
-static bool table_mult_valued[] = {false, true};
+static char const * const table_name[] = {"GSL.oirfs.wp"};
+static bool table_mult_valued[] = {false};
 
 void
 object_refs_prepare (lua_State *L)
 {
-  assert (table_window_plot == 0 && table_plot_obj == 1);
+  assert (table_window_plot == 0);
   register_ref_table (L, table_name[0]);
-  register_ref_table (L, table_name[1]);
 }
 
-static void
-mult_ref_add (lua_State *L, int index, int table_index, int value_index)
+void
+objref_mref_add (lua_State *L, int table_index, int index, int value_index)
 {
   int n;
   INDEX_SET_ABS(L, table_index);
@@ -65,7 +64,7 @@ object_refs_add (lua_State *L, int table, int index,
     }
 
   if (mult)
-    mult_ref_add (L, index, -1, value_index);
+    objref_mref_add (L, -1, index, value_index);
   else
     {
       lua_pushvalue (L, value_index);

@@ -116,6 +116,9 @@ plot_new (lua_State *L)
   typedef plot_auto<drawable, lua_management> plot_type;
   lua_plot *p = push_new_object<plot_type>(L, GS_PLOT);
 
+  lua_newtable (L);
+  lua_setfenv (L, -2);
+
   if (lua_isstring (L, 1))
     {
       const char *title = lua_tostring (L, 1);
@@ -130,6 +133,9 @@ int
 canvas_new (lua_State *L)
 {
   lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
+
+  lua_newtable (L);
+  lua_setfenv (L, -2);
 
   p->sync_mode(false);
 
@@ -181,7 +187,8 @@ plot_add_gener (lua_State *L, bool as_line)
   if (st.error_msg())
     return luaL_error (L, "%s in %s", st.error_msg(), st.context());
 
-  object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
+  lua_getfenv (L, 1);
+  objref_mref_add (L, -1, p->current_layer_index(), 2);
 
   return 0;
 }
@@ -336,12 +343,21 @@ plot_push_layer (lua_State *L)
   return 0;
 }
 
+static void
+plot_ref_clear (lua_State *L, int index, int layer_id)
+{
+  lua_getfenv (L, index);
+  lua_newtable (L);
+  lua_rawseti (L, -2, layer_id);
+  lua_pop (L, 1);
+ }
+
 int
 plot_pop_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_remove (L, table_plot_obj, p->current_layer_index(), 1);
+  plot_ref_clear (L, 1, p->current_layer_index());
 
   AGG_LOCK();
   p->pop_layer();
@@ -356,7 +372,7 @@ plot_clear (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_remove (L, table_plot_obj, p->current_layer_index(), 1);
+  plot_ref_clear (L, 1, p->current_layer_index());
 
   AGG_LOCK();
   p->clear_current_layer();

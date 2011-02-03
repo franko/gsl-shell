@@ -7,7 +7,7 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
-enum object_table_e { table_window_plot = 0, table_plot_obj = 1 };
+enum object_table_e { table_window_plot = 0 };
 
 extern void object_refs_prepare (lua_State *L);
 
@@ -18,6 +18,10 @@ extern void object_refs_remove (lua_State *L, int table, int index, int key_inde
 
 extern void object_refs_lookup_apply (lua_State *L, int table, int value_index, 
 				      lua_CFunction func);
+
+extern void objref_mref_add (lua_State *L, int table_index, int index,
+                             int value_index);
+
 
 __END_DECLS
 
