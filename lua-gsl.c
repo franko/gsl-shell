@@ -48,8 +48,7 @@
 #include "interp.h"
 
 #ifdef AGG_PLOT_ENABLED
-#include "object-index.h"
-#include "object-refs.h"
+#include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-text.h"
 #include "window.h"
@@ -60,14 +59,23 @@
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 #endif
 
+#ifdef GSL_SHELL_DEBUG
+
+static int gsl_shell_lua_registry (lua_State *L);
+
+static const struct luaL_Reg gsl_shell_debug_functions[] = {
+  {"registry", gsl_shell_lua_registry},
+  {NULL, NULL}
+};
+#endif
+
 int
 luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
 #ifdef AGG_PLOT_ENABLED
-  object_index_prepare (L);
-  object_refs_prepare (L);
+  window_registry_prepare (L);
 #endif
 
 #ifdef LUA_STRICT
@@ -107,7 +115,18 @@ luaopen_gsl (lua_State *L)
   ode_complex_register (L);
   solver_complex_register (L);
 
+  luaL_register (L, NULL, gsl_shell_debug_functions);
+
   lua_pop (L, 1);
 
   return 1;
 }
+
+#ifdef GSL_SHELL_DEBUG
+int
+gsl_shell_lua_registry (lua_State *L)
+{
+  lua_pushvalue (L, LUA_REGISTRYINDEX);
+  return 1;
+}
+#endif

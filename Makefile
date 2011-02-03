@@ -94,7 +94,6 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   LUA_BASE_DIRS += pre3d
   LUA_BASE_FILES += draw.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua \
 		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
-  C_SRC_FILES += refs.c object-index.c object-refs.c 
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED

@@ -30,7 +30,7 @@ extern "C" {
 #include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "object-refs.h"
+#include "window_registry.h"
 #include "lua-cpp-utils.h"
 #include "lua-draw.h"
 #include "colors.h"
@@ -176,6 +176,31 @@ plot_add_gener_cpp (lua_State *L, lua_plot *p, bool as_line,
     }
 }
 
+static void
+objref_mref_add (lua_State *L, int table_index, int index, int value_index)
+{
+  int n;
+  INDEX_SET_ABS(L, table_index);
+
+  lua_rawgeti (L, table_index, index);
+  if (lua_isnil (L, -1))
+    {
+      lua_pop (L, 1);
+      lua_newtable (L);
+      lua_pushvalue (L, -1);
+      lua_rawseti (L, table_index, index);
+      n = 0;
+    }
+  else
+    {
+      n = lua_objlen (L, -1);
+    }
+
+  lua_pushvalue (L, value_index);
+  lua_rawseti (L, -2, n+1);
+  lua_pop (L, 1);
+}
+
 int
 plot_add_gener (lua_State *L, bool as_line)
 {
@@ -277,7 +302,7 @@ plot_newindex (lua_State *L)
 void
 plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
 {
-  object_refs_lookup_apply (L, table_window_plot, plot_index, window_slot_update);
+  window_refs_lookup_apply (L, plot_index, window_slot_update);
   p->commit_pending_draw();
 }
 
@@ -293,7 +318,7 @@ int
 plot_flush (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  object_refs_lookup_apply (L, table_window_plot, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, window_slot_refresh);
   p->commit_pending_draw();
   return 0;
 }
@@ -332,13 +357,13 @@ plot_push_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, window_slot_refresh);
 
   AGG_LOCK();
   p->push_layer();
   AGG_UNLOCK();
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_save_slot_image);
+  window_refs_lookup_apply (L, 1, window_save_slot_image);
 
   return 0;
 }
@@ -378,7 +403,7 @@ plot_clear (lua_State *L)
   p->clear_current_layer();
   AGG_UNLOCK();
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_restore_slot_image);
+  window_refs_lookup_apply (L, 1, window_restore_slot_image);
 
   if (p->sync_mode())
     plot_update_raw (L, p, 1);

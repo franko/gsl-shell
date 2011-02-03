@@ -6,11 +6,10 @@ extern "C" {
 
 #include "lua-defs.h"
 #include "window-cpp.h"
+#include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
-#include "object-refs.h"
-#include "object-index.h"
 #include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-parser.h"
@@ -289,7 +288,7 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
   if (ref)
     {
       if (ref->plot)
-	object_refs_remove (L, table_window_plot, ref->slot_id, window_index);
+	window_refs_remove (L, ref->slot_id, window_index);
     }
 }
 
@@ -420,12 +419,12 @@ void window::start (lua_State *L, gslshell::ret_status& st)
       typedef canvas_window::thread_info thread_info;
       std::auto_ptr<thread_info> inf(new thread_info(L, this));
 
-      this->window_id = object_index_add (L, -1);
+      this->window_id = window_index_add (L, -1);
       inf->window_id = this->window_id;
 
       if (! this->start_new_thread (inf))
 	{
-	  object_index_remove (L, this->window_id);
+	  window_index_remove (L, this->window_id);
 	  this->unlock();
 	  st.error("error during thread initialization", "window creation");
 	}
@@ -519,7 +518,7 @@ window_attach (lua_State *L)
       if (win->status == canvas_window::running)
 	win->draw_slot(slot_id, true);
       win->unlock();
-      object_refs_add (L, table_window_plot, slot_id, 1, 2);
+      window_refs_add (L, slot_id, 1, 2);
     }
   else
     {

@@ -25,7 +25,7 @@
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
-#include "object-index.h"
+#include "window_registry.h"
 #include "lua-draw.h"
 #include "gs-types.h"
 #include "colors.h"
@@ -109,7 +109,7 @@ canvas_thread_function (void *_inf)
   win->unlock();
 
   GSL_SHELL_LOCK();
-  object_index_remove (inf->L, inf->window_id);
+  window_index_remove (inf->L, inf->window_id);
   GSL_SHELL_UNLOCK();
 
   return NULL;
