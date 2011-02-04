@@ -24,7 +24,7 @@ include $(GSH_BASE_DIR)/makeconfig
 include $(GSH_BASE_DIR)/makeflags
 include $(GSH_BASE_DIR)/make-packages
 
-LUADIR = $(GSH_BASE_DIR)/lua
+LUADIR = $(GSH_BASE_DIR)/$(strip $(LUA_ENGINE))
 AR= ar rcu
 RANLIB= ranlib
 

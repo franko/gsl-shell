@@ -22,7 +22,7 @@ include makeconfig
 include makeflags
 include make-packages
 
-LUADIR = lua
+LUADIR = $(strip $(LUA_ENGINE))
 AR= ar rcu
 RANLIB= ranlib
 
@@ -62,9 +62,7 @@ else
   PTHREADS_LIBS = -lpthread
 endif
 
-SUBDIRS = lua
-
-LUAGSL_LIBS = $(LUADIR)/src/liblua.a
+SUBDIRS = $(LUADIR)
 
 C_SRC_FILES = gs-types.c lcomplex.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
@@ -82,7 +80,14 @@ ifeq ($(strip $(DEBUG)), yes)
   SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
 endif
 
-C_SRC_FILES += gsl-shell.c
+ifeq ($(LUADIR), luajit2)
+  LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
+  C_SRC_FILES += gsl-shell-jit.c
+else
+  LUAGSL_LIBS = $(LUADIR)/src/liblua.a
+  C_SRC_FILES += gsl-shell.c
+endif
+
 SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
