@@ -1,0 +1,11 @@
+*.dll
+.deps
+*.[oa]
+*~
+*.exe
+*.cm[ioa]
+.trash
+luajit2/lib/vmdef.lua
+luajit2/src/lj_*def.h
+luajit2/src/lj_vm.s
+
