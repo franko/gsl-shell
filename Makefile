@@ -181,7 +181,7 @@ $(SUBDIRS):
 
 clean:
 	$(MAKE) -C agg-plot clean
-	$(MAKE) -C lua clean
+	$(MAKE) -C $(LUADIR) clean
 	$(RM) *.o $(TARGETS)
 	$(RM) -r ./.libs/
 

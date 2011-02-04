@@ -31,6 +31,7 @@ CC= gcc
 # unwinding are not affected -- the assembler part has frame unwind
 # information and GCC emits it where needed (x64) or with -g (see CCDEBUG).
 # CCOPT= -O2 -fomit-frame-pointer
+CCOPT= -g
 # Use this if you want to generate a smaller binary (but it's slower):
 #CCOPT= -Os -fomit-frame-pointer
 # Note: it's no longer recommended to use -O3 with GCC 4.x.
@@ -57,7 +58,7 @@ CCWARN= -Wall
 # Compile time definitions: change them as needed, but make sure you force
 # a full recompile with "make clean", followed by "make".
 # Note that most of these are NOT suitable for benchmarking or release mode!
-XCFLAGS= -g -Wall $(DEFS)
+XCFLAGS= $(DEFS)
 #
 # Disable the use of CMOV and FCOMI*/FUCOMI* instructions in the interpreter.
 # This is only necessary if you intend to run the code on REALLY ANCIENT CPUs
@@ -209,7 +210,7 @@ else
   endif
 endif
 ifeq (Windows,$(HOST_SYS))
-  HOST_RM= rm
+  HOST_RM= rm -f
 endif
 
 TARGET_SYS= $(HOST_SYS)
@@ -462,8 +463,8 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 
 %.o: %.c
 	$(E) "CC        $@"
-	$(TARGET_DYNCC) $(TARGET_ACFLAGS) -c -o $(@:.o=_dyn.o) $<
-	$(TARGET_CC) $(TARGET_ACFLAGS) -c -o $@ $<
+	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) -c -o $(@:.o=_dyn.o) $<
+	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) -c -o $@ $<
 
 %.o: %.s
 	$(E) "ASM       $@"
