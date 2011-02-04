@@ -92,7 +92,7 @@ INSTALL_DEP= src/luajit
 
 default all $(INSTALL_DEP):
 	@echo "==== Building LuaJIT $(VERSION) ===="
-	$(MAKE) -C src
+	$(MAKE) DEFS="$(DEFS)" -C src
 	@echo "==== Successfully built LuaJIT $(VERSION) ===="
 
 install: $(INSTALL_DEP)
