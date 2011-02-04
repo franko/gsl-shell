@@ -48,7 +48,9 @@ tos = function (t, maxdepth)
 end
 
 local function myprint(...)
-   for i, v in ipairs(arg) do
+   local n, ls = select('#', ...), {}
+   for i=1, n do ls[i] = select(i, ...) end
+   for i, v in ipairs(ls) do
       if i > 1 then io.write(', ') end
       io.write(tos(v, 3))
    end
