@@ -262,10 +262,7 @@ static int pushline(lua_State *L, int firstline)
     if (len > 0 && buf[len-1] == '\n')
       buf[len-1] = '\0';
     GSL_SHELL_LOCK();
-    if (firstline && buf[0] == '=')
-      lua_pushfstring(L, "return %s", buf+1);
-    else
-      lua_pushstring(L, buf);
+    lua_pushstring(L, buf);
     return 1;
   }
   GSL_SHELL_LOCK();
@@ -278,6 +275,20 @@ static int loadline(lua_State *L)
   lua_settop(L, 0);
   if (!pushline(L, 1))
     return -1;  /* no input */
+
+  if (strcmp (lua_tostring(L, 1), "exit") == 0)
+    return -1;
+
+  lua_pushfstring(L, "return %s", lua_tostring(L, 1));
+  status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
+  if (status == 0)
+    {
+      lua_replace (L, 1);
+      lua_settop (L, 1);
+      return 0;
+    }
+  lua_settop(L, 1);
+
   for (;;) {  /* repeat until gets a complete line */
     status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
     if (!incomplete(L, status)) break;  /* cannot try to add lines? */
@@ -520,6 +531,12 @@ static int pmain(lua_State *L)
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   gsl_shell_openlibs(L);  /* open libraries */
   lua_gc(L, LUA_GCRESTART, -1);
+
+  dolibrary (L, "base");
+  dolibrary (L, "integ");
+  dolibrary (L, "igsl");
+  dolibrary (L, "draw");
+
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
   script = collectargs(argv, &has_i, &has_v, &has_e);
