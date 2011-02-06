@@ -1,5 +1,7 @@
 -- integr module follows
 
+local gsl = gsl or _G
+
 local function get_spec(spec, key, mtype)
    local defaults = {eps_abs= 1e-6, eps_rel= 1e-6, limit= 512,
 		     rule= 'SINGULAR'}
@@ -17,7 +19,7 @@ local function type_check(v, mtype, name)
    end
 end
 
-function integ(spec)
+function gsl.integ(spec)
    local limit_min = 512
 
    local f = spec.f
@@ -59,15 +61,15 @@ function integ(spec)
 	    if (inttype == 'awf') then
 	       cspec.eps_abs = cspec.eps_abs / 2
 	       cspec.a, cspec.b = 0, 0
-	       local lint, lerr = integ_raw(f, 'awfl', cspec, w)
-	       local uint, uerr = integ_raw(f, 'awfu', cspec, w)
+	       local lint, lerr = gsl.integ_raw(f, 'awfl', cspec, w)
+	       local uint, uerr = gsl.integ_raw(f, 'awfu', cspec, w)
 	       return lint + uint, lerr + uerr
 	    end
-	    return integ_raw(f, inttype, cspec, w)
+	    return gsl.integ_raw(f, inttype, cspec, w)
 	 end
 	 error('cannot calculate indefinite integral with this weight')
       end
-      return integ_raw(f, inttype, cspec)
+      return gsl.integ_raw(f, inttype, cspec)
    end
 
    for i,v in ipairs(pts) do 
@@ -91,7 +93,7 @@ function integ(spec)
       else
 	 error('unknown wight type')
       end
-      return integ_raw(f, inttype, cspec, w)
+      return gsl.integ_raw(f, inttype, cspec, w)
    end
 
    if not spec.adaptive then
@@ -115,5 +117,5 @@ function integ(spec)
       inttype = 'ag'
    end
 
-   return integ_raw(f, inttype, cspec)
+   return gsl.integ_raw(f, inttype, cspec)
 end

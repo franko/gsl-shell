@@ -9,6 +9,6 @@ ifeq ($(strip $(DEBUG)), yes)
   CXXFLAGS = -g -Wall
 else
   # on windows do not use -fomit-frame-pointer
-  CFLAGS = -O3 -fomit-frame-pointer -ffast-math -Wall
-  CXXFLAGS = -Os -ffast-math -fno-rtti -Wall
+  CFLAGS = -O3 -fno-stack-protector -fomit-frame-pointer -ffast-math -Wall
+  CXXFLAGS = -Os -fno-stack-protector -ffast-math -fno-rtti -Wall
 endif

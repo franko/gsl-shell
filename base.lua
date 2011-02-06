@@ -1,8 +1,28 @@
 
-local cat    = table.concat
-local insert = table.insert
+ -- base.lua
+ -- 
+ -- Copyright (C) 2009 Francesco Abbate
+ -- 
+ -- This program is free software; you can redistribute it and/or modify
+ -- it under the terms of the GNU General Public License as published by
+ -- the Free Software Foundation; either version 3 of the License, or (at
+ -- your option) any later version.
+ -- 
+ -- This program is distributed in the hope that it will be useful, but
+ -- WITHOUT ANY WARRANTY; without even the implied warranty of
+ -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ -- General Public License for more details.
+ -- 
+ -- You should have received a copy of the GNU General Public License
+ -- along with this program; if not, write to the Free Software
+ -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ --
 
-function divmod(n, p)
+local gsl = gsl or _G
+
+local cat, insert = table.concat, table.insert
+
+function gsl.divmod(n, p)
    local r = n % p
    return (n-r)/p, r
 end
@@ -48,19 +68,18 @@ tos = function (t, maxdepth)
 end
 
 local function myprint(...)
-   local n, ls = select('#', ...), {}
-   for i=1, n do ls[i] = select(i, ...) end
-   for i, v in ipairs(ls) do
+   local n = select('#', ...)
+   for i=1, n do
       if i > 1 then io.write(', ') end
-      io.write(tos(v, 3))
+      io.write(tos(select(i, ...), 3))
    end
    io.write('\n')
 end
 
-echo = print
-print = myprint
+gsl.echo = print
+gsl.print = myprint
 
-function sequence(f, a, b)
+function gsl.sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
    if not b or type(b) ~= 'number' then 
       error 'argument #2 should be an integer number' 
@@ -76,17 +95,20 @@ end
 
 -- take the function f and return an iterator that gives the couple (x, f(x))
 -- for x going from 'xi' to 'xs' with n sampling points
-function sample(f, xi, xs, n)
+function gsl.sample(f, xi, xs, n)
    local c = (xs-xi)/n
-   return sequence(function(k) return xi+k*c, f(xi+k*c) end, 0, n)
+   return gsl.sequence(function(k)
+			  local x = xi+k*c
+			  return x, f(x)
+		       end, 0, n)
 end
 
-function ilist(f, a, b)
+function gsl.ilist(f, a, b)
    local ls = {}
-   for x in sequence(f, a, b) do insert(ls, x) end
+   for x in gsl.sequence(f, a, b) do insert(ls, x) end
    return ls
 end
 
-function isample(f, a, b)
-   return sequence(function(i) return i, f(i) end, a, b)
+function gsl.isample(f, a, b)
+   return gsl.sequence(function(i) return i, f(i) end, a, b)
 end

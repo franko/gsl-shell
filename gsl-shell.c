@@ -85,9 +85,9 @@ static const luaL_Reg gshlibs[] = {
   {LUA_IOLIBNAME,    luaopen_io},
   {LUA_OSLIBNAME,    luaopen_os},
   {LUA_STRLIBNAME,   luaopen_string},
+  {LUA_DBLIBNAME,    luaopen_debug},
 #ifdef LUA_STRICT
   {LUA_MATHLIBNAME,  luaopen_math},
-  {LUA_DBLIBNAME,    luaopen_debug},
   {MLUA_GSLLIBNAME,  luaopen_gsl},
 #endif
   {NULL, NULL}
@@ -493,16 +493,8 @@ static int pmain (lua_State *L) {
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   gsl_shell_openlibs (L);  /* open libraries */
-
   lua_gc(L, LUA_GCRESTART, 0);
-
-  dolibrary (L, "base");
-  dolibrary (L, "integ");
-#ifndef LUA_STRICT
-  dolibrary (L, "igsl");
-  dolibrary (L, "draw");
-#endif
-
+  dolibrary (L, "gslext");
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
   script = collectargs(argv, &has_i, &has_v, &has_e);

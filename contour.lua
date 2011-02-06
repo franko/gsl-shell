@@ -17,9 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
+local gsl = gsl or _G
+local math = math or _G
 
-local insert = table.insert
-local default_color_map = color_function('redyellow', 0.9)
+local insert, sqrt, abs, divmod = table.insert, math.sqrt, math.abs, gsl.divmod
+
+local default_color_map = gsl.color_function('redyellow', 0.9)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -29,29 +32,25 @@ local function reverse(ls)
    end
 end
 
+local function quad_approx(fl, fc, fr)
+  local a0, a1, a2 = (fr + 2*fc + fl)/4, (fr - fl)/2, (fr - 2*fc + fl)/4
+  if abs(a2) > 0.05 * abs(a1) then return end
+  local r0, r2 = (a0-a2)/a1, 2*a2/a1
+  local q = -r0 - r2*r0^2 - 2*r2^2*r0^3
+  if q >= -1 and q <= 1 then return q end
+end
+
 local function root_solve(f, z0, x, y, dx0, dy0, z_eps)
    local dx, dy = dx0, dy0
-   local fl, fc, fr
-
-   local yield = function(q) return x + q * dx, y + q * dy end
-   local qeval = function(q) return f(x + q * dx, y + q * dy) - z0 end
-
-   local function quad_approx()
-      local a0, a1, a2 = (fr + 2*fc + fl)/4, (fr - fl)/2, (fr - 2*fc + fl)/4
-      if abs(a2) > 0.05 * abs(a1) then return end
-      local r0, r2 = (a0-a2)/a1, 2*a2/a1
-      local q = -r0 - r2*r0^2 - 2*r2^2*r0^3
-      if q >= -1 and q <= 1 then return q end
-   end
 
    for k=1,10 do
-      fl, fc, fr = qeval(-1), qeval(0), qeval(1)
+      local fl, fc, fr = f(x-dx, y-dy) - z0, f(x, y) - z0, f(x+dx, y+dy) - z0
 
-      if     abs(fl) < z_eps then return yield(-1)
-      elseif abs(fr) < z_eps then return yield( 1) end
+      if     abs(fl) < z_eps then return x-dx, y-dy
+      elseif abs(fr) < z_eps then return x+dx, y+dy end
 
-      local q = quad_approx()
-      if q then return yield(q) else
+      local q = quad_approx(fl, fc, fr)
+      if q then return x + q * dx, y + q * dy else
 	 dx, dy = dx/2, dy/2
 	 local sign = (fc * fl < 0 and -1 or 1)
 	 x, y = x + sign * dx, y + sign * dy
@@ -352,24 +351,20 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	     end
    end
 
-   local function zmap()
-      for i=0, ny do
-	 for j=0, nx do
-	    local x, y = grid_point(i, j) 
-	    local z = f(x, y)
-	    if not (z == z) then
-	       local msg = string.format('function eval at: (%g, %g) gives %g', 
-					 x, y, z)
-	       error(msg)
-	    end
-	    if z < g.zmin then g.zmin = z end
-	    if z > g.zmax then g.zmax = z end
-	    g.z[index(i,j)] = z
+   for i=0, ny do
+      for j=0, nx do
+	 local x, y = grid_point(i, j) 
+	 local z = f(x, y)
+	 if not (z == z) then
+	    local msg = string.format('function eval at: (%g, %g) gives %g', 
+				      x, y, z)
+	    error(msg)
 	 end
+	 if z < g.zmin then g.zmin = z end
+	 if z > g.zmax then g.zmax = z end
+	 g.z[index(i,j)] = z
       end
    end
-
-   zmap()
 
    zlevels = {}
    if type(nlevels_or_levels) == 'table' then
@@ -679,7 +674,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function domain_draw_path(domid)
-      local ln = path()
+      local ln = gsl.path()
       local n0, n1
       for _, join in ipairs(domains[domid]) do
 	 local na, nb = curve_extrema(curves[join.id], join.direction)
@@ -716,7 +711,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function curve_draw(pl, id)
-      local ln = path()
+      local ln = gsl.path()
       curve_add_path(ln, id, 'acw')
       local tree = order_tree[id]
       if tree then
@@ -745,7 +740,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function grid_draw_lines(pl, col)
-      local ln = path()
+      local ln = gsl.path()
       for id = 1, #curves do
 	 curve_add_path(ln, id, 'cw')
       end
@@ -773,7 +768,7 @@ local function opt_gener(options, defaults)
 	  end
 end
 
-function contour(f, x1, y1, x2, y2, options)
+function gsl.contour(f, x1, y1, x2, y2, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
 				   colormap= default_color_map, 
 				   lines= true, show= true})
@@ -783,7 +778,7 @@ function contour(f, x1, y1, x2, y2, options)
 
    g.find_curves()
 
-   local p = plot()
+   local p = gsl.plot()
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
    if opt 'show' then p:show() end
@@ -791,7 +786,7 @@ function contour(f, x1, y1, x2, y2, options)
    return p
 end
 
-function polar_contour(f, R, options)
+function gsl.polar_contour(f, R, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
 				   colormap= default_color_map, 
 				   lines= true, show= true})
@@ -801,7 +796,7 @@ function polar_contour(f, R, options)
 
    g.find_curves()
 
-   local p = plot()
+   local p = gsl.plot()
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
    if opt 'show' then p:show() end

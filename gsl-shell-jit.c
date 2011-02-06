@@ -42,15 +42,18 @@ pthread_mutex_t gsl_shell_mutex[1];
 
 static const luaL_Reg lualibs[] = {
   { "",     luaopen_base },
-  { LUA_LOADLIBNAME,  luaopen_package },
-  { LUA_TABLIBNAME, luaopen_table },
-  { LUA_IOLIBNAME,  luaopen_io },
-  { LUA_OSLIBNAME,  luaopen_os },
-  { LUA_STRLIBNAME, luaopen_string },
-//  { LUA_MATHLIBNAME,  luaopen_math },
-  { LUA_DBLIBNAME,  luaopen_debug },
-  { LUA_BITLIBNAME, luaopen_bit },
-  { LUA_JITLIBNAME, luaopen_jit },
+  { LUA_LOADLIBNAME, luaopen_package },
+  { LUA_TABLIBNAME,  luaopen_table },
+  { LUA_IOLIBNAME,   luaopen_io },
+  { LUA_OSLIBNAME,   luaopen_os },
+  { LUA_STRLIBNAME,  luaopen_string },
+  { LUA_BITLIBNAME,  luaopen_bit },
+  { LUA_JITLIBNAME,  luaopen_jit },
+  { LUA_DBLIBNAME,   luaopen_debug },
+#ifdef LUA_STRICT
+  { LUA_MATHLIBNAME, luaopen_math },
+  {MLUA_GSLLIBNAME,  luaopen_gsl},
+#endif
   { NULL,   NULL }
 };
 
@@ -63,6 +66,7 @@ static void gsl_shell_openlibs(lua_State *L)
     lua_call(L, 1, 0);
   }
 
+#ifndef LUA_STRICT
   lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
   lua_setglobal (L, LUA_MATHLIBNAME);
   luaopen_math (L);
@@ -76,7 +80,7 @@ static void gsl_shell_openlibs(lua_State *L)
   lua_pop (L, 1);
   lua_pushnil (L);                      /* remove gsl */
   lua_setglobal (L, MLUA_GSLLIBNAME);
-
+#endif
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -531,12 +535,7 @@ static int pmain(lua_State *L)
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   gsl_shell_openlibs(L);  /* open libraries */
   lua_gc(L, LUA_GCRESTART, -1);
-
-  dolibrary (L, "base");
-  dolibrary (L, "integ");
-  dolibrary (L, "igsl");
-  dolibrary (L, "draw");
-
+  dolibrary (L, "gslext");
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
   script = collectargs(argv, &has_i, &has_v, &has_e);

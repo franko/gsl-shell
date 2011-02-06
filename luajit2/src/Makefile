@@ -8,6 +8,11 @@
 # Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
 ##############################################################################
 
+GSH_BASE_DIR = ../..
+
+include $(GSH_BASE_DIR)/makeconfig
+include $(GSH_BASE_DIR)/makeflags
+
 MAJVER=  2
 MINVER=  0
 RELVER=  0
@@ -31,7 +36,6 @@ CC= gcc
 # unwinding are not affected -- the assembler part has frame unwind
 # information and GCC emits it where needed (x64) or with -g (see CCDEBUG).
 # CCOPT= -O2 -fomit-frame-pointer
-CCOPT= -g
 # Use this if you want to generate a smaller binary (but it's slower):
 #CCOPT= -Os -fomit-frame-pointer
 # Note: it's no longer recommended to use -O3 with GCC 4.x.
@@ -177,7 +181,9 @@ TARGET_ASHLDFLAGS= $(LDOPTIONS) $(TARGET_XSHLDFLAGS) $(TARGET_SHLDFLAGS)
 TARGET_ALIBS= $(TARGET_XLIBS) $(LIBS) $(TARGET_LIBS)
 
 ifneq (,$(findstring stack-protector,$(shell $(TARGET_CC) -dumpspecs)))
-  TARGET_XCFLAGS+= -fno-stack-protector
+  ifeq (,$(findstring no-stack-protector,$(CFLAGS)))
+    TARGET_XCFLAGS+= -fno-stack-protector
+  endif
 endif
 
 ifeq (,$(findstring __i386__,$(shell echo __i386__ | $(TARGET_CC) -P -E -)))
