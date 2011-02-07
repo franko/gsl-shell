@@ -251,15 +251,15 @@ static int dolibrary(lua_State *L, const char *name)
   return report(L, docall(L, 1, 1));
 }
 
-static void write_prompt(lua_State *L, int firstline)
+static const char *
+get_prompt(lua_State *L, int firstline)
 {
   const char *p;
   lua_getfield(L, LUA_GLOBALSINDEX, firstline ? "_PROMPT" : "_PROMPT2");
   p = lua_tostring(L, -1);
   if (p == NULL) p = firstline ? LUA_PROMPT : LUA_PROMPT2;
-  fputs(p, stdout);
-  fflush(stdout);
   lua_pop(L, 1);  /* remove global */
+  return p;
 }
 
 static int incomplete(lua_State *L, int status)
@@ -276,21 +276,28 @@ static int incomplete(lua_State *L, int status)
   return 0;  /* else... */
 }
 
-static int pushline(lua_State *L, int firstline)
-{
-  char buf[LUA_MAXINPUT];
+static int pushline (lua_State *L, int firstline) {
+  char buffer[LUA_MAXINPUT];
+  char *b = buffer;
+  size_t l;
+  const char *prmt = get_prompt(L, firstline);
+  int ok;
+
   GSL_SHELL_UNLOCK();
-  write_prompt(L, firstline);
-  if (fgets(buf, LUA_MAXINPUT, stdin)) {
-    size_t len = strlen(buf);
-    if (len > 0 && buf[len-1] == '\n')
-      buf[len-1] = '\0';
-    GSL_SHELL_LOCK();
-    lua_pushstring(L, buf);
-    return 1;
-  }
+  ok = lua_readline(L, b, prmt);
   GSL_SHELL_LOCK();
-  return 0;
+
+  if (ok == 0)
+    {
+      return 0;  /* no input */
+    }
+
+  l = strlen(b);
+  if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
+    b[l-1] = '\0';  /* remove it */
+  lua_pushstring(L, b);
+  lua_freeline(L, b);
+  return 1;
 }
 
 static int loadline(lua_State *L)
@@ -307,6 +314,7 @@ static int loadline(lua_State *L)
   status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
   if (status == 0)
     {
+      lua_saveline(L, 1);
       lua_replace (L, 1);
       lua_settop (L, 1);
       return 0;
@@ -322,6 +330,7 @@ static int loadline(lua_State *L)
     lua_insert(L, -2);  /* ...between the two lines */
     lua_concat(L, 3);  /* join them */
   }
+  lua_saveline(L, 1);
   lua_remove(L, 1);  /* remove line */
   return status;
 }
