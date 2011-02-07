@@ -1,9 +1,28 @@
-/*
-** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
-**
-** Major portions taken verbatim or adapted from the Lua interpreter.
-** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
+/* 
+ * GSL shell interactive interface to GSL library
+ * Based on the Lua programming language
+ *
+ * Copyright (C) 2009 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * Major portions taken verbatim or adapted from LuaJIT2 frontend.
+ * Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+ *
+ * Major portions taken verbatim or adapted from the Lua interpreter.
+ * Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
 */
 
 #include <signal.h>
@@ -173,8 +192,9 @@ static int docall(lua_State *L, int narg, int clear)
 
 static void print_version(void)
 {
-  fprintf(stderr,
-    LUAJIT_VERSION " -- " LUAJIT_COPYRIGHT ". " LUAJIT_URL "\n");
+  l_message(NULL, "GSL Shell, Copyright (C) 2009, 2010 Francesco Abbate");
+  l_message(NULL, "GNU Scientific Library, Copyright (C) The GSL Team");
+  l_message(NULL, LUAJIT_VERSION " -- " LUAJIT_COPYRIGHT ". " LUAJIT_URL);
 }
 
 static void print_jit_status(lua_State *L)
