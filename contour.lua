@@ -147,20 +147,20 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function segment_index(s)
-      return segment_index_i(s.i1, s.j1, s.i2, s.j2)
+      return segment_index_i(s[1], s[2], s[3], s[4])
    end
 
    local function segment_pivot(s)
-      local di, dj = s.j2 - s.j1, -(s.i2 - s.i1)
-      s.i1, s.j1, s.i2, s.j2 = s.i2, s.j2, s.i2 + di, s.j2 + dj
+      local di, dj = s[4] - s[2], -(s[3] - s[1])
+      s[1], s[2], s[3], s[4] = s[3], s[4], s[3] + di, s[4] + dj
    end
 
    local function segment_invert(s)
-      s.i1, s.j1, s.i2, s.j2 = s.i2, s.j2, s.i1, s.j1
+      s[1], s[2], s[3], s[4] = s[3], s[4], s[1], s[2]
    end
 
    local function segment_copy(s)
-      return {i1=  s.i1, j1= s.j1, i2= s.i2, j2= s.j2}
+      return {s[1], s[2], s[3], s[4]}
    end
 
    local function grid_intersect(si, level)
@@ -332,8 +332,8 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 		   else
 		      j, di, dj = r-nx, 1, 0
 		   end
-		   s.i1, s.j1 = q, j
-		   s.i2, s.j2 = s.i1 + di, s.j1 + dj
+		   s[1], s[2] = q, j
+		   s[3], s[4] = s[1] + di, s[2] + dj
 		   cnt = cnt+1
 		   if cnt <= ny * n + nx then return s end
 		end
@@ -381,7 +381,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 
    local function grid_populate(level, z)
       for s in grid_iter_segments(level) do
-	 local idx1, idx2 = index(s.i1, s.j1), index(s.i2, s.j2)
+	 local idx1, idx2 = index(s[1], s[2]), index(s[3], s[4])
 	 local z1, z2 = g.z[idx1], g.z[idx2]
 	 local dz1, dz2 = z1 - z, z2 - z
 
@@ -398,7 +398,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    for k, z in pairs(zlevels) do grid_populate(k, z) end
 
    local function find_inner_level(s, level)
-      local z2, zc = g.z[index(s.i2, s.j2)], zlevels[level]
+      local z2, zc = g.z[index(s[3], s[4])], zlevels[level]
       return (z2 > zc and -1 or 1)
    end
 
@@ -455,8 +455,8 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       local z0 = zlevels[level]
       local si0 = segment_index(s0)
 
-      local irt, jrt = s0.i1, s0.j1
-      if s0.i1 == s0.i2 then irt = nil else irt = nil end
+      local irt, jrt = s0[1], s0[2]
+      if s0[1] == s0[3] then irt = nil else irt = nil end
       local cw = 0
 
       local function curve_add_point(c, si)
@@ -468,7 +468,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       local function segment_lookup(s, idx0)
 	 segment_pivot(s)
 
-	 if not point_is_valid(s.i2, s.j2) then return 'boundary' end
+	 if not point_is_valid(s[3], s[4]) then return 'boundary' end
 
 	 for cnt = 1,3 do
 	    local si = segment_index(s)
@@ -494,10 +494,10 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	       curve_add_point(c, segment_index(s))
 
 	       local p
-	       if     s.i1 == irt and s.i1 == s.i2 then 
-		  p = (s.j1 - s0.j1) * (s.j2 - s.j1)
-	       elseif s.j1 == jrt and s.j1 == s.j2 then 
-		  p = (s.i1 - s0.i1) * (s.i2 - s.i1)
+	       if     s[1] == irt and s[1] == s[3] then 
+		  p = (s[2] - s0[2]) * (s[4] - s[2])
+	       elseif s[2] == jrt and s[2] == s[4] then 
+		  p = (s[1] - s0[1]) * (s[3] - s[1])
 	       end
 	       if p then cw = cw + (p < 0 and 1 or -1) end
 	    end
@@ -720,7 +720,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	    curve_draw(pl, sid)
 	 end
       end
-      local a = curves[id].level/nlevels
+      local a = (curves[id].level+1)/(nlevels+1)
       pl:add(ln, color(a))
    end
 
@@ -734,7 +734,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	       curve_draw(pl, sid)
 	    end
 	 end
-	 local a = dom.level/nlevels
+	 local a = (dom.level+1)/(nlevels+1)
 	 pl:add(dpath, color(a))
       end
    end
