@@ -133,7 +133,7 @@ agg_text_justif_set (lua_State *L)
 	  hjf = 1.0;
 	  break;
 	default:
-	  luaL_error (L, "invalid text justification");
+	  return luaL_error (L, "invalid text justification");
 	}
 
       t->hjustif(hjf);
@@ -155,7 +155,7 @@ agg_text_justif_set (lua_State *L)
 	  vjf = 1.0;
 	  break;
 	default:
-	  luaL_error (L, "invalid text justification");
+	  return luaL_error (L, "invalid text justification");
 	}
 
       t->vjustif(vjf);
