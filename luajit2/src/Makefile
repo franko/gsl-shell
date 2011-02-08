@@ -12,6 +12,7 @@ GSH_BASE_DIR = ../..
 
 include $(GSH_BASE_DIR)/makeconfig
 include $(GSH_BASE_DIR)/makeflags
+include $(GSH_BASE_DIR)/makedefs
 
 MAJVER=  2
 MINVER=  0

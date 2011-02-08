@@ -14,5 +14,7 @@ LUA_ENGINE = luajit2
 # PLATFORM should can be linux or mingw
 PLATFORM = none
 
+DEBUG = no
+
 PREFIX= /usr/local
 DESTDIR= 

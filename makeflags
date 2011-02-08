@@ -2,8 +2,6 @@
 CC = gcc
 CXX = g++
 
-DEBUG = no
-
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall

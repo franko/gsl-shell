@@ -1,0 +1,40 @@
+##############################################################################
+# Makefile definitions and common commands
+#
+# Setup of C definitions based on makeconfig options
+#
+# Suitable for POSIX platforms (Linux, *BSD, OSX etc.).
+# Note: the configurable options are in makeconfig.
+# 
+# Copyright (C) 2009-2010 Francesco Abbate. See Copyright Notice in gsl-shell.c
+##############################################################################
+
+AR= ar rcu
+RANLIB= ranlib
+
+ifeq ($(strip $(LUA_BUILD)), yes)
+  CFG_FLAGS = -DLUA_STRICT
+else
+  CFG_FLAGS = -DGSH_SHORT_FSYNTAX
+endif
+
+DEFS += $(CFG_FLAGS)
+
+ifeq ($(strip $(PLATFORM)), mingw)
+  DEFS += -DWIN32
+  EXE_EXT = .exe
+else
+  DEFS += -DLUA_USE_LINUX
+  EXE_EXT = 
+endif
+
+ifeq ($(strip $(DEBUG)), yes)
+  DEFS += -DGSL_SHELL_DEBUG
+endif
+
+ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
+  DEFS += -DAGG_PLOT_ENABLED
+  ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
+    DEFS += -DDISABLE_GAMMA_CORR
+  endif
+endif

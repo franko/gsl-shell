@@ -22,11 +22,10 @@ GSH_BASE_DIR = ..
 
 include $(GSH_BASE_DIR)/makeconfig
 include $(GSH_BASE_DIR)/makeflags
-include $(GSH_BASE_DIR)/make-packages
+include $(GSH_BASE_DIR)/makepackages
+include $(GSH_BASE_DIR)/makedefs
 
 LUADIR = $(GSH_BASE_DIR)/$(strip $(LUA_ENGINE))
-AR= ar rcu
-RANLIB= ranlib
 
 ifeq ($(PLATFORM), none)
 nono:
@@ -34,8 +33,6 @@ nono:
 endif
 
 ifeq ($(strip $(PLATFORM)), mingw)
-# Option for Windows Platform
-  DEFS += -DWIN32 -DAGG_PLOT_ENABLED
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
@@ -59,26 +56,11 @@ TARGETS = libaggplot.a
 all: $(TARGETS)
 
 libaggplot.a: $(AGGPLOT_OBJ_FILES)
-	$(AR) $@ $?
-	$(RANLIB) $@
+	@echo Archive $@
+	@$(AR) $@ $?
+	@$(RANLIB) $@
 
-%.o: %.cpp
-	@echo $(CXXCOMPILE) -c $< 
-	@$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
-
-%.o: %.c
-	@echo $(COMPILE) -c $<
-	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
+include $(GSH_BASE_DIR)/makerules
 
 .PHONY: clean all
 

@@ -1,7 +1,7 @@
 
 # Makefile
 # 
-# Copyright (C) 2009 Francesco Abbate
+# Copyright (C) 2009, 2010 Francesco Abbate
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,46 +20,28 @@
 
 include makeconfig
 include makeflags
-include make-packages
+include makepackages
+include makedefs
 
 LUADIR = $(strip $(LUA_ENGINE))
-AR= ar rcu
-RANLIB= ranlib
-
-SUBDIRS_DEFS = -DGSL_SHELL
 
 ifeq ($(strip $(PLATFORM)), none)
 nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
 
-ifeq ($(strip $(LUA_BUILD)), yes)
-  CFG_FLAGS = -DLUA_STRICT
-else
-  CFG_FLAGS = -DGSH_SHORT_FSYNTAX
-endif
-
-DEFS += $(CFG_FLAGS)
-SUBDIRS_DEFS += $(CFG_FLAGS)
+INCLUDES += -I.
+GSL_SHELL = gsl-shell$(EXE_EXT)
+LUA_CFLAGS = -I$(LUADIR)/src
 
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
-  DEFS += -DWIN32
-  INCLUDES += -I. -I/usr/include
+  INCLUDES += -I/usr/include
+  LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib
-
-  LUA_CFLAGS = -I$(LUADIR)/src
-  LUA_LIBS = -L$(LUADIR)/src -llua51
-  LUA_DLL = gsl.dll
-
-  GSL_SHELL = gsl-shell.exe
 else
-  INCLUDES += -I. -DLUA_USE_LINUX
-  AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
-  LUA_CFLAGS = -I$(LUADIR)/src
-  LUA_DLL = gsl.so
-  GSL_SHELL = gsl-shell
-  PTHREADS_LIBS = -lpthread
+  LDFLAGS += -Wl,-E
+  LIBS += -ldl -lreadline -lhistory -lncurses
 endif
 
 SUBDIRS = $(LUADIR)
@@ -76,8 +58,6 @@ LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
 
 ifeq ($(strip $(DEBUG)), yes)
   C_SRC_FILES += debug-support.c
-  DEFS += -DGSL_SHELL_DEBUG
-  SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
 endif
 
 ifeq ($(LUADIR), luajit2)
@@ -88,7 +68,7 @@ else
   C_SRC_FILES += gsl-shell.c
 endif
 
-SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
+DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
@@ -97,19 +77,13 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
 		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
-  DEFS += -DAGG_PLOT_ENABLED
-  SUBDIRS_DEFS += -DAGG_PLOT_ENABLED
   LUAGSL_LIBS += agg-plot/libaggplot.a
   LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 endif
 
-ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
-  DEFS += -DDISABLE_GAMMA_CORR
-  SUBDIRS_DEFS += -DDISABLE_GAMMA_CORR
-endif
-
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
+LINK_EXE = $(CC) $(LDFLAGS)
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 
@@ -118,33 +92,16 @@ DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
-#GSL_LIBS = -lgsl -L/usr/lib/ATLAS_P4SSE2 -lcblas -latlas -lm
 GSL_LIBS = -lgsl -lgslcblas -lm
 LIBS += $(GSL_LIBS)
 
 all: $(SUBDIRS) $(TARGETS)
 
-ifeq ($(PLATFORM), mingw)
+$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	@echo Linking $@
+	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
-gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
-
-luagsl.a: $(LUAGSL_OBJ_FILES)
-	$(AR) $@ $?
-	$(RANLIB) $@
-
-gsl.dll: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
-else
-
-gsl-shell: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
-
-gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
-	ln -sf ./.libs/libluagsl.so $@
-
-install: gsl-shell
+install: $(GSL_SHELL)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
 	strip $(DESTDIR)$(PREFIX)/bin/gsl-shell
@@ -154,30 +111,12 @@ install: gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 	cp examples/*.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 
-endif
-
-%.o: %.c
-	@echo $(COMPILE) -c $<
-	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
-
-%.o: %.cpp
-	@echo $(CXXCOMPILE) -c $< 
-	@$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
-
 .PHONY: clean all $(SUBDIRS)
 
+include makerules
+
 $(SUBDIRS):
-	cd $@; $(MAKE) DEFS="$(SUBDIRS_DEFS)" PLATFORM=$(strip $(PLATFORM))
+	cd $@; $(MAKE)
 
 clean:
 	$(MAKE) -C agg-plot clean
