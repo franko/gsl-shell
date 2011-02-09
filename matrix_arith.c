@@ -43,7 +43,6 @@ struct pmatrix {
 
 static int matrix_inv   (lua_State *L);
 static int matrix_solve (lua_State *L);
-static int matrix_mul   (lua_State *L);
 static int matrix_dim   (lua_State *L);
 static int matrix_copy  (lua_State *L);
 static int matrix_prod    (lua_State *L);
@@ -51,14 +50,14 @@ static int matrix_prod    (lua_State *L);
 static const struct luaL_Reg matrix_arith_functions[] = {
   {"dim",           matrix_dim},
   {"copy",          matrix_copy},
-  {"mul",           matrix_mul},
   {"solve",         matrix_solve},
   {"inv",           matrix_inv},
   {"prod",          matrix_prod},
   {NULL, NULL}
 };
 
-static const char * size_err_msg = "matrices should have the same size in %s";
+static char const * const genop_dim_err_msg = "matrices should have the same size in %s";
+static char const * const mm_dim_err_msg = "incompatible matrix dimensions in multiplication";
 
 static void
 check_matrix_mul_dim (lua_State *L, struct pmatrix *a, struct pmatrix *b, 
@@ -68,7 +67,7 @@ check_matrix_mul_dim (lua_State *L, struct pmatrix *a, struct pmatrix *b,
   size_t row2 = (b->tp == GS_MATRIX ? (btrans ? b->m.real->size2 : b->m.real->size1) : (btrans ? b->m.cmpl->size2 : b->m.cmpl->size1));
 
   if (col1 != row2)
-    luaL_error (L, "incompatible matrix dimensions in multiplication");
+    luaL_error (L, mm_dim_err_msg);
 }
 
 static gsl_matrix_complex *
@@ -145,6 +144,88 @@ matrix_complex_promote (lua_State *L, int index, struct pmatrix *a)
 #undef OPER_DIV
 
 int
+matrix_op_mul (lua_State *L)
+{
+  bool a_is_scalar = lua_iscomplex (L, 1);
+  bool b_is_scalar = lua_iscomplex (L, 2);
+
+  if (a_is_scalar && b_is_scalar)
+    {
+      Complex a = lua_tocomplex (L, 1), b = lua_tocomplex (L, 2);
+      lua_pushcomplex (L, a * b);
+      return 1;
+    }
+
+  if (a_is_scalar)
+    {
+      return scalar_matrix_mul (L, 1, 2, true);
+    }
+  else if (b_is_scalar)
+    {
+      return scalar_matrix_mul (L, 2, 1, true);
+    }
+
+  struct pmatrix pa, pb;
+  int rtp;
+
+  check_matrix_type (L, 1, &pa);
+  check_matrix_type (L, 2, &pb);
+
+  rtp = (pa.tp == GS_MATRIX && pb.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (pa.tp != rtp)
+    matrix_complex_promote (L, 1, &pa);
+
+  if (pb.tp != rtp)
+    matrix_complex_promote (L, 1, &pb);
+
+  if (rtp == GS_MATRIX)
+    {
+      const gsl_matrix *a = pa.m.real, *b = pb.m.real;
+      gsl_matrix *r = matrix_push (L, a->size1, b->size2);
+
+      if (a->size2 != b->size1)
+	return luaL_error (L, mm_dim_err_msg);
+
+      gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, a, b, 1.0, r);
+    }
+  else
+    {
+      const gsl_matrix_complex *a = pa.m.cmpl, *b = pb.m.cmpl;
+      gsl_matrix_complex *r = matrix_complex_push (L, a->size1, b->size2);
+      gsl_complex u = {{1.0, 0.0}};
+
+      if (a->size2 != b->size1)
+	return luaL_error (L, mm_dim_err_msg);
+
+      gsl_blas_zgemm (CblasNoTrans, CblasNoTrans, u, a, b, u, r);
+    }
+
+  return 1;
+}
+
+int
+matrix_op_div (lua_State *L)
+{
+  bool a_is_scalar = lua_iscomplex (L, 1);
+  bool b_is_scalar = lua_iscomplex (L, 2);
+
+  if (a_is_scalar && b_is_scalar)
+    {
+      Complex a = lua_tocomplex (L, 1), b = lua_tocomplex (L, 2);
+      lua_pushcomplex (L, a / b);
+      return 1;
+    }
+
+  if (b_is_scalar)
+    {
+      return scalar_matrix_div (L, 2, 1, false);
+    }
+
+  return luaL_error (L, "cannot divide by a matrix");
+}
+
+int
 matrix_unm (lua_State *L)
 {
   struct pmatrix p;
@@ -189,55 +270,6 @@ matrix_unm (lua_State *L)
 	      rp[1] = - ap[1];
 	    }
 	}
-    }
-
-  return 1;
-}
-
-int
-matrix_mul (lua_State *L)
-{
-  int nargs = lua_gettop (L);
-  struct pmatrix a, b, r;
-  int k;
-
-  if (nargs == 0)
-    luaL_error (L, "no arguments given");
-
-  for (k = nargs - 1; k >= 1; k--)
-    {
-      check_matrix_type (L, k, &a);
-      check_matrix_type (L, k+1, &b);
-
-      check_matrix_mul_dim (L, &a, &b, false, false);
-
-      r.tp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
-	
-      if (a.tp != r.tp)
-	matrix_complex_promote (L, k, &a);
-
-      if (b.tp != r.tp)
-	matrix_complex_promote (L, k+1, &b);
-
-      if (r.tp == GS_MATRIX)
-	r.m.real = matrix_push (L, a.m.real->size1, b.m.real->size2);
-      else
-	r.m.cmpl = matrix_complex_push (L, a.m.cmpl->size1, b.m.cmpl->size2);
-
-      if (r.tp == GS_MATRIX)
-	{
-	  gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 
-			  1.0, a.m.real, b.m.real, 1.0, r.m.real);
-	}
-      else
-	{
-	  gsl_complex u = {{1.0, 0.0}};
-	  gsl_blas_zgemm (CblasNoTrans, CblasNoTrans, 
-			  u, a.m.cmpl, b.m.cmpl, u, r.m.cmpl);
-	}
-
-      lua_insert (L, k);
-      lua_pop (L, 2);
     }
 
   return 1;

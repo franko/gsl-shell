@@ -32,10 +32,10 @@ static int  FUNCTION (matrix, slice)             (lua_State *L);
 static void FUNCTION (matrix, set_ref)           (lua_State *L, int index);
 
 static const struct luaL_Reg FUNCTION (matrix, meta_methods)[] = {
-  {"__add",         matrix_add},
-  {"__sub",         matrix_sub},
-  {"__mul",         matrix_mul_elements},
-  {"__div",         matrix_div_elements},
+  {"__add",         matrix_op_add},
+  {"__sub",         matrix_op_sub},
+  {"__mul",         matrix_op_mul},
+  {"__div",         matrix_op_div},
   {"__unm",         matrix_unm},
   {"__len",         FUNCTION (matrix, len)},
   {"__gc",          FUNCTION (matrix, free)},

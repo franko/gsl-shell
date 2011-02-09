@@ -258,7 +258,7 @@ FUNCTION(matrix, inverse_raw) (lua_State *L, const TYPE (gsl_matrix) *a)
   int status, sign;
 
   if (a->size2 != n)
-    luaL_typerror (L, 1, "square matrix");
+    gs_type_error (L, 1, "square matrix");
 
   p = gsl_permutation_alloc (n);
 
@@ -295,9 +295,9 @@ FUNCTION(matrix, solve_raw) (lua_State *L,
   int sign;
 
   if (a->size2 != n)
-    luaL_typerror (L, 1, "square matrix");
+    gs_type_error (L, 1, "square matrix");
   if (b->size2 != 1)
-    luaL_typerror (L, 1, "vector");
+    gs_type_error (L, 1, "vector");
   if (b->size1 != n)
     luaL_error (L, "dimensions of vector does not match with matrix");
 

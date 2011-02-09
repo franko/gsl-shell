@@ -2,6 +2,8 @@
 #undef SCALAR_OP
 #undef OP_NAME
 #undef OPER
+#undef OPER_ELEM
+#undef OP_ELEM_DEF
 #undef BASE_OPER
 
 #undef CONCAT2x

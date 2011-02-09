@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include "lcomplex.h"
+#include "matrix_arith.h"
 
 #include "lua.h"
 #include "lauxlib.h"
@@ -127,10 +128,6 @@ Complex lua_tocomplex (lua_State *L, int i)
 #define RF(f)  RFIMP(f,f,c##f)
 
 A(new,O(1)+O(2)*I)	/** new(x,y) */
-B(add)			/** __add(z,w) */
-B(div)			/** __div(z,w) */
-B(mul)			/** __mul(z,w) */
-B(sub)			/** __sub(z,w) */
 F(neg)			/** __unm(z) */
 G(abs)			/** abs(z) */
 RF(acos)			/** acos(z) */
@@ -157,11 +154,11 @@ RF(tanh)			/** tanh(z) */
 
 static const luaL_Reg lcomplex_methods[] =
 {
-	{ "__add",	    Ladd	},
-	{ "__div",	    Ldiv	},
+	{ "__add",	    matrix_op_add	},
+	{ "__div",	    matrix_op_div	},
 	{ "__eq",	      Leq	},
-	{ "__mul",	    Lmul	},
-	{ "__sub",	    Lsub	},
+	{ "__mul",	    matrix_op_mul	},
+	{ "__sub",	    matrix_op_sub	},
 	{ "__unm",	    Lneg	},
 	{ "__pow",	    Lpow	},
 	{ "__tostring",	Ltostring},

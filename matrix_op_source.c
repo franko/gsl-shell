@@ -103,14 +103,25 @@ SCALAR_MAT_FUNCTION (scalar_matrix) (lua_State *L, int sidx, int midx,
   return 1;
 }
 
+#if (OP_ELEM_DEF == 1)
 int
-OPER_FUNCTION (matrix) (lua_State *L)
+OPER_FUNCTION(matrix_elemop) (lua_State *L)
 {
-  if (lua_iscomplex (L, 1))
+  bool a_is_scalar = lua_iscomplex (L, 1);
+  bool b_is_scalar = lua_iscomplex (L, 2);
+
+  if (a_is_scalar && b_is_scalar)
+    {
+      Complex a = lua_tocomplex (L, 1), b = lua_tocomplex (L, 2);
+      lua_pushcomplex (L, BASE_OPER(a, b));
+      return 1;
+    }
+
+  if (a_is_scalar)
     {
       return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 1, 2, true);
     }
-  else if (lua_iscomplex (L, 2))
+  else if (b_is_scalar)
     {
       return SCALAR_MAT_FUNCTION (scalar_matrix) (L, 2, 1, false);
     }
@@ -135,7 +146,7 @@ OPER_FUNCTION (matrix) (lua_State *L)
       gsl_matrix *r = matrix_push_raw (L, a->size1, a->size2);
 
       if (a->size1 != b->size1 || a->size2 != b->size2)
-	return luaL_error (L, size_err_msg, OP_NAME);
+	return luaL_error (L, genop_dim_err_msg, OP_NAME);
 
       gsl_matrix_memcpy (r, a);
       OPER_FUNCTION (gsl_matrix) (r, b);
@@ -146,7 +157,7 @@ OPER_FUNCTION (matrix) (lua_State *L)
       gsl_matrix_complex *r = matrix_complex_push_raw (L, a->size1, a->size2);
 
       if (a->size1 != b->size1 || a->size2 != b->size2)
-	return luaL_error (L, size_err_msg, OP_NAME);
+	return luaL_error (L, genop_dim_err_msg, OP_NAME);
 
       gsl_matrix_complex_memcpy (r, a);
       OPER_FUNCTION (gsl_matrix_complex) (r, b);
@@ -154,3 +165,4 @@ OPER_FUNCTION (matrix) (lua_State *L)
 
   return 1;
 }
+#endif

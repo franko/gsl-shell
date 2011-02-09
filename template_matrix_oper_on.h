@@ -20,24 +20,32 @@
 
 #if defined(OPER_ADD)
 #define OPER add
+#define OPER_ELEM add
+#define OP_ELEM_DEF 1
 #define SCALAR_OP add_constant
 #define OP_NAME "addition"
 #define BASE_OPER(a,b) ((a) + (b))
 
 #elif defined(OPER_MUL)
-#define OPER mul_elements
+#define OPER mul
+#define OPER_ELEM mul_elements
+#define OP_ELEM_DEF 0
 #define SCALAR_OP scale
 #define OP_NAME "multiplication"
 #define BASE_OPER(a,b) ((a) * (b))
 
 #elif defined(OPER_SUB)
 #define OPER sub
+#define OPER_ELEM sub
+#define OP_ELEM_DEF 1
 #define SCALAR_OP add_constant
 #define OP_NAME "subtraction"
 #define BASE_OPER(a,b) ((a) - (b))
 
 #elif defined(OPER_DIV)
-#define OPER div_elements
+#define OPER div
+#define OPER_ELEM div_elements
+#define OP_ELEM_DEF 0
 #define SCALAR_OP scale
 #define OP_NAME "division"
 #define BASE_OPER(a,b) ((a) / (b))
@@ -49,5 +57,5 @@
 #define CONCAT2x(a,b) a ## _ ## b 
 #define CONCAT2(a,b) CONCAT2x(a,b)
 
-#define OPER_FUNCTION(base) CONCAT2(base,OPER)
-#define SCALAR_MAT_FUNCTION(base) CONCAT2(base_scalar,OPER)
+#define OPER_FUNCTION(base) CONCAT2(base,OPER_ELEM)
+#define SCALAR_MAT_FUNCTION(base) CONCAT2(base,OPER)
