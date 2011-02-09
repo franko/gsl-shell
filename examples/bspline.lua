@@ -22,7 +22,7 @@ function demo1()
    local c, cov = mlinear(X, y, w)
 
    local p = plot('B-splines curve approximation')
-   p:addline(xyline(x, mul(X, c)))
+   p:addline(xyline(x, X*c))
    p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
    p:show()
 

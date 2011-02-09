@@ -54,7 +54,7 @@ function demo3()
    local legmodel = |j, x| j == 0 and 1 or legendreP(j, xn(x))
    local X = new(n, kfit+1, |i,j| legmodel(j-1, x[i]))
    local c = mlinear(X, y)
-   local yfit = mul(X, c)
+   local yfit = X * c
    p = plot('Legendre Polinomial fit of Bessel J3(x)')
    p:addline(xyline(x, yfit))
    p:addline(xyline(x, y), 'blue', {{'marker', size=5}})

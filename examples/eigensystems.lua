@@ -7,29 +7,31 @@ end
 
 function demo1()
    local m = new(4, 4, |i,j| 1/(i+j-1))
-   print('Matrix:')
-   print(m, '\n')
+   echo 'Matrix:'
+   print(m)
    local e, v = eigsv(m)
-   print('Eigenvalues:', ilist(|i| e[i], 4), '\n')
+   echo('Eigenvalues:')
+   print(ilist(|i| e[i], 4))
 
    -- the following expression will give a diagonal matrix with the eigenvalues
    --- along the diagonal
-   print('Matrix diagonal form:')
-   print(prod(v,mul(m,v)))
+   echo('Matrix diagonal form:')
+   print(prod(v, m*v))
 end
 
 function demo2()
    local m = vandermonde {-1, -2, 3, 4}
-   print('Matrix:')
-   print(m, '\n')
+   echo 'Matrix:'
+   print(m)
 
    local e, v = eignsv(m)
-   print('Eigenvalues:', ilist(|i| e[i], 4), '\n')
+   echo 'Eigenvalues:'
+   print(ilist(|i| e[i], 4))
 
    -- the following expression will give a diagonal matrix with the eigenvalues
    --- along the diagonal
-   print('Matrix diagonal form:')
-   print(mul(inv(v),m,v))
+   echo('Matrix diagonal form:')
+   print(inv(v) * m * v)
 end
 
 echo([[
