@@ -234,6 +234,9 @@ FUNCTION(matrix, new) (lua_State *L)
 		  lua_pushnumber (L, jg);
 		  lua_call (L, 2, 1);
 
+		  if (! LUA_FUNCTION(is) (L, 5))
+		    return luaL_error (L, "expecting real or complex number" \
+				       " in matrix initialization");
 		  z = LUA_FUNCTION(to) (L, 5);
 		  gslz = TYPE (value_assign) (z);
 		  FUNCTION (gsl_matrix, set) (m, i, j, gslz);
