@@ -46,18 +46,6 @@ function gsl.matrix_reduce(m, f, accu)
    return accu
 end
 
-local function tostring_eps(z, eps)
-   local a, b = gsl.real(z), gsl.imag(z)
-   local s = abs(a) > eps and fmt('%g', a) or ''
-   if b > eps then
-      local sign = (s == '' and '' or '+')
-      s = s .. fmt('%s%gi', sign, b)
-   elseif b < -eps then
-      s = s .. fmt('-%gi', -b)
-   end
-   return s == '' and '0' or s
-end
-
 local function matrix_from_table(ctor, t)
    local r, c = #t, #t[1]
    return matrix_f_set(ctor(r, c), function(i,j) return t[i][j] end)
