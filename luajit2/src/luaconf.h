@@ -25,16 +25,16 @@
 #endif
 
 /* Default path for loading Lua and C modules with require(). */
+#ifndef LUA_STRICT 
+  #define STDLIB_NAME "gsl-shell"
+#else
+  #define STDLIB_NAME "lua/5.1"
+#endif
 #ifdef LUA_USE_WIN
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-  #ifdef GSL_SHELL_LUA
-  #define STDLIB_NAME "gsl-shell"
-  #else
-  #define STDLIB_NAME "lua"
-  #endif
 #define LUA_LDIR	"!\\" STDLIB_NAME "\\"
 #define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT \
@@ -42,33 +42,12 @@
 #define LUA_CPATH_DEFAULT \
   ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
-  #ifdef GSL_SHELL_LUA
-  #define STDLIB_NAME "gsl-shell"
-  #else
-  #define STDLIB_NAME "lua/5.1"
-  #endif
 #define LUA_ROOT_Q      QUOTEME(LUA_ROOT) "/"
 #define LUA_LDIR	LUA_ROOT_Q "share/" STDLIB_NAME "/"
 #define LUA_CDIR	LUA_ROOT_Q "lib/" STDLIB_NAME  "/"
-#ifdef LUA_XROOT
-#define LUA_JDIR	LUA_XROOT "share/luajit-2.0.0-beta5/"
-#define LUA_XPATH \
-  ";" LUA_XROOT "share/" STDLIB_NAME "/?.lua;" LUA_XROOT "share/" STDLIB_NAME "/?/init.lua"
-#define LUA_XCPATH	LUA_XROOT "lib/" STDLIB_NAME "/?.so;"
-#else
-#define LUA_JDIR	LUA_ROOT_Q "share/luajit-2.0.0-beta5/"
-#define LUA_XPATH
-#define LUA_XCPATH
-#endif
-  #ifdef GSL_SHELL_LUA
-  #define LUA_PATH_DEFAULT "./?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua"
-  #define LUA_CPATH_DEFAULT "./?.so;" LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
-  #else
-  #define LUA_PATH_DEFAULT \
-  "./?.lua;" LUA_JDIR"?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" LUA_XPATH
-  #define LUA_CPATH_DEFAULT \
-  "./?.so;" LUA_CDIR"?.so;" LUA_XCPATH LUA_CDIR"loadall.so"
-  #endif
+#define LUA_PATH_DEFAULT "./?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" \
+                                ";" LUA_CDIR"?.lua;" LUA_CDIR"?/init.lua"
+#define LUA_CPATH_DEFAULT "./?.so;" LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
 #endif
 
 /* Environment variable names for path overrides and initialization code. */

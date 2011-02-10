@@ -83,50 +83,30 @@
 ** hierarchy or if you want to install your libraries in
 ** non-conventional directories.
 */
-#ifdef GSL_SHELL_LUA
-#if defined(_WIN32)
-/*
-** In Windows, any exclamation mark ('!') in the path is replaced by the
-** path of the directory of the executable file of the current process.
-*/
-#define GSL_SHELL_CDIR	"!\\"
-#define LUA_PATH_DEFAULT  \
-		".\\?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?\\init.lua"
-#define LUA_CPATH_DEFAULT \
-	".\\?.dll;"  GSL_SHELL_CDIR"?.dll;" GSL_SHELL_CDIR"loadall.dll"
-
+/* Default path for loading Lua and C modules with require(). */
+#ifndef LUA_STRICT 
+  #define STDLIB_NAME "gsl-shell"
 #else
-#define LUA_ROOT_Q QUOTEME(LUA_ROOT) "/"
-#define GSL_SHELL_CDIR	LUA_ROOT_Q "lib/gsl-shell/"
-#define LUA_PATH_DEFAULT  \
-		"./?.lua;"  GSL_SHELL_CDIR"?.lua;"  GSL_SHELL_CDIR"?/init.lua"
-#define LUA_CPATH_DEFAULT \
-	"./?.so;"  GSL_SHELL_CDIR"?.so;" GSL_SHELL_CDIR"loadall.so"
+  #define STDLIB_NAME "lua/5.1"
 #endif
-#else
 #if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-#define LUA_LDIR	"!\\lua\\"
+#define LUA_LDIR	"!\\" STDLIB_NAME "\\"
 #define LUA_CDIR	"!\\"
-#define LUA_PATH_DEFAULT  \
-		".\\?.lua;"  LUA_LDIR"?.lua;"  LUA_LDIR"?\\init.lua;" \
-		             LUA_CDIR"?.lua;"  LUA_CDIR"?\\init.lua"
+#define LUA_PATH_DEFAULT \
+  ".\\?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;"
 #define LUA_CPATH_DEFAULT \
-	".\\?.dll;"  LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
-
+  ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
-#define LUA_ROOT	"/usr/local/"
-#define LUA_LDIR	LUA_ROOT "share/lua/5.1/"
-#define LUA_CDIR	LUA_ROOT "lib/lua/5.1/"
-#define LUA_PATH_DEFAULT  \
-		"./?.lua;"  LUA_LDIR"?.lua;"  LUA_LDIR"?/init.lua;" \
-		            LUA_CDIR"?.lua;"  LUA_CDIR"?/init.lua"
-#define LUA_CPATH_DEFAULT \
-	"./?.so;"  LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
-#endif
+#define LUA_ROOT_Q      QUOTEME(LUA_ROOT) "/"
+#define LUA_LDIR	LUA_ROOT_Q "share/" STDLIB_NAME "/"
+#define LUA_CDIR	LUA_ROOT_Q "lib/" STDLIB_NAME  "/"
+#define LUA_PATH_DEFAULT "./?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" \
+                                ";" LUA_CDIR"?.lua;" LUA_CDIR"?/init.lua"
+#define LUA_CPATH_DEFAULT "./?.so;" LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
 #endif
 
 /*

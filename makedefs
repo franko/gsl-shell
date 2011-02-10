@@ -38,3 +38,6 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
     DEFS += -DDISABLE_GAMMA_CORR
   endif
 endif
+
+DEFS += -DLUA_ROOT="$(PREFIX)"
+
