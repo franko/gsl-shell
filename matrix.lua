@@ -27,10 +27,11 @@ local sqrt, abs = math.sqrt, math.abs
 
 local function matrix_f_set(m, f)
    local r, c = gsl.dim(m)
+   local mset = m.set
    for i = 1, r do
       for j = 1, c do
 	 local z = f(i, j)
-	 m:set(i, j, z)
+	 mset(m, i, j, z)
       end
    end
    return m
@@ -38,9 +39,10 @@ end
 
 function gsl.matrix_reduce(m, f, accu)
    local r, c = gsl.dim(m)
+   local mget = m.get
    for i = 1, r do
       for j = 1, c do
-	 accu = f(accu, m:get(i, j))
+	 accu = f(accu, mget(m, i, j))
       end
    end
    return accu
@@ -147,11 +149,13 @@ local function matrix_rows(m)
 end
 
 function gsl.set(d, s)
-   local r, c = gsl.dim(m)
+   local r, c = gsl.dim(d)
+   local rs, cs = gsl.dim(s)
+   if rs ~= r or cs ~= c then error 'matrix dimensions does not match' end
    local dset, sget = d.set, s.get
    for i=1, r do
       for j=1, c do
-	 dset(i, j, sget(i, j))
+	 dset(d, i, j, sget(s, i, j))
       end
    end
 end
@@ -161,7 +165,7 @@ function gsl.null(m)
    local mset = m.set
    for i=1, r do
       for j=1, c do
-	 mset(i, j, 0)
+	 mset(m, i, j, 0)
       end
    end
 end
