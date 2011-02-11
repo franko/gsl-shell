@@ -1,6 +1,6 @@
 /*
 ** VM error messages.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* This file may be included multiple times with different ERRDEF macros. */
@@ -44,7 +44,6 @@ ERRDEF(BADVAL,	"invalid value")
 ERRDEF(NOVAL,	"value expected")
 ERRDEF(NOCORO,	"coroutine expected")
 ERRDEF(NOTABN,	"nil or table expected")
-ERRDEF(NOLFUNC,	"Lua function expected")
 ERRDEF(NOFUNCL,	"function or level expected")
 ERRDEF(NOSFT,	"string/function/table expected")
 ERRDEF(NOPROXY,	"boolean or proxy expected")
@@ -57,7 +56,7 @@ ERRDEF(NOENV,	"no calling environment")
 ERRDEF(CYIELD,	"attempt to yield across C-call boundary")
 ERRDEF(BADLU,	"bad light userdata pointer")
 ERRDEF(NOGCMM,	"bad action while in __gc metamethod")
-#ifdef LUA_USE_WIN
+#if LJ_TARGET_WINDOWS
 ERRDEF(BADFPU,	"bad FPU precision (use D3DCREATE_FPU_PRESERVE with DirectX)")
 #endif
 
@@ -118,7 +117,7 @@ ERRDEF(XNUMBER,	"malformed number")
 ERRDEF(XLSTR,	"unfinished long string")
 ERRDEF(XLCOM,	"unfinished long comment")
 ERRDEF(XSTR,	"unfinished string")
-ERRDEF(XESC,	"escape sequence too large")
+ERRDEF(XESC,	"invalid escape sequence")
 ERRDEF(XLDELIM,	"invalid long string delimiter")
 ERRDEF(XBCLOAD,	"cannot load Lua bytecode")
 ERRDEF(XTOKEN,	LUA_QS " expected")
@@ -137,6 +136,30 @@ ERRDEF(XDOTS,	"cannot use " LUA_QL("...") " outside a vararg function")
 ERRDEF(XSYNTAX,	"syntax error")
 ERRDEF(XBREAK,	"no loop to break")
 ERRDEF(XFOR,	LUA_QL("=") " or " LUA_QL("in") " expected")
+
+#if LJ_HASFFI
+/* FFI errors. */
+ERRDEF(FFI_INVTYPE,	"invalid C type")
+ERRDEF(FFI_INVSIZE,	"size of C type is unknown or too large")
+ERRDEF(FFI_BADSCL,	"bad storage class")
+ERRDEF(FFI_DECLSPEC,	"declaration specifier expected")
+ERRDEF(FFI_BADTAG,	"undeclared or implicit tag " LUA_QS)
+ERRDEF(FFI_REDEF,	"attempt to redefine " LUA_QS)
+ERRDEF(FFI_INITOV,	"too many initializers for " LUA_QS)
+ERRDEF(FFI_BADCONV,	"cannot convert " LUA_QS " to " LUA_QS)
+ERRDEF(FFI_BADLEN,	"attempt to get length of " LUA_QS)
+ERRDEF(FFI_BADCONCAT,	"attempt to concatenate " LUA_QS " and " LUA_QS)
+ERRDEF(FFI_BADARITH,	"attempt to perform arithmetic on " LUA_QS " and " LUA_QS)
+ERRDEF(FFI_BADCOMP,	"attempt to compare " LUA_QS " with " LUA_QS)
+ERRDEF(FFI_BADCALL,	LUA_QS " is not callable")
+ERRDEF(FFI_NUMARG,	"wrong number of arguments for function call")
+ERRDEF(FFI_BADMEMBER,	LUA_QS " has no member named " LUA_QS)
+ERRDEF(FFI_BADIDX,	LUA_QS " cannot be indexed")
+ERRDEF(FFI_WRCONST,	"attempt to write to constant location")
+ERRDEF(FFI_NODECL,	"missing declaration for symbol " LUA_QS)
+ERRDEF(FFI_NYIPACKBIT,	"NYI: packed bit fields")
+ERRDEF(FFI_NYICALL,	"NYI: cannot call this C function (yet)")
+#endif
 
 #undef ERRDEF
 

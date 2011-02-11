@@ -1,6 +1,6 @@
 /*
 ** OS library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -17,15 +17,15 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#ifdef LUA_USE_POSIX
+#include "lj_obj.h"
+#include "lj_err.h"
+#include "lj_lib.h"
+
+#if LJ_TARGET_POSIX
 #include <unistd.h>
 #else
 #include <stdio.h>
 #endif
-
-#include "lj_obj.h"
-#include "lj_err.h"
-#include "lj_lib.h"
 
 /* ------------------------------------------------------------------------ */
 
@@ -66,7 +66,7 @@ LJLIB_CF(os_rename)
 
 LJLIB_CF(os_tmpname)
 {
-#ifdef LUA_USE_POSIX
+#if LJ_TARGET_POSIX
   char buf[15+1];
   int fp;
   strcpy(buf, "/tmp/lua_XXXXXX");
@@ -92,8 +92,15 @@ LJLIB_CF(os_getenv)
 
 LJLIB_CF(os_exit)
 {
-  exit(lj_lib_optint(L, 1, EXIT_SUCCESS));
-  return 0;  /* to avoid warnings */
+  int status;
+  if (L->base < L->top && tvisbool(L->base))
+    status = boolV(L->base) ? EXIT_SUCCESS : EXIT_FAILURE;
+  else
+    status = lj_lib_optint(L, 1, EXIT_SUCCESS);
+  if (L->base+1 < L->top && tvistruecond(L->base+1))
+    lua_close(L);
+  exit(status);
+  return 0;  /* Unreachable. */
 }
 
 LJLIB_CF(os_clock)
@@ -243,7 +250,7 @@ LJLIB_CF(os_setlocale)
 
 LUALIB_API int luaopen_os(lua_State *L)
 {
-  LJ_LIB_REG(L, os);
+  LJ_LIB_REG(L, LUA_OSLIBNAME, os);
   return 1;
 }
 

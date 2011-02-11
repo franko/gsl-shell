@@ -1,6 +1,6 @@
 /*
 ** String library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -22,7 +22,7 @@
 #include "lj_tab.h"
 #include "lj_state.h"
 #include "lj_ff.h"
-#include "lj_ctype.h"
+#include "lj_char.h"
 #include "lj_lib.h"
 
 /* ------------------------------------------------------------------------ */
@@ -181,9 +181,9 @@ static const char *classend(MatchState *ms, const char *p)
 }
 
 static const unsigned char match_class_map[32] = {
-  0, LJ_CTYPE_ALPHA, 0, LJ_CTYPE_CNTRL, LJ_CTYPE_DIGIT, 0,0,0,0,0,0,0,
-  LJ_CTYPE_LOWER, 0,0,0, LJ_CTYPE_PUNCT, 0,0, LJ_CTYPE_SPACE, 0,
-  LJ_CTYPE_UPPER, 0, LJ_CTYPE_ALNUM, LJ_CTYPE_XDIGIT, 0,0,0,0,0,0,0
+  0,LJ_CHAR_ALPHA,0,LJ_CHAR_CNTRL,LJ_CHAR_DIGIT,0,0,LJ_CHAR_GRAPH,0,0,0,0,
+  LJ_CHAR_LOWER,0,0,0,LJ_CHAR_PUNCT,0,0,LJ_CHAR_SPACE,0,
+  LJ_CHAR_UPPER,0,LJ_CHAR_ALNUM,LJ_CHAR_XDIGIT,0,0,0,0,0,0,0
 };
 
 static int match_class(int c, int cl)
@@ -191,7 +191,7 @@ static int match_class(int c, int cl)
   if ((cl & 0xc0) == 0x40) {
     int t = match_class_map[(cl&0x1f)];
     if (t) {
-      t = lj_ctype_isa(c, t);
+      t = lj_char_isa(c, t);
       return (cl & 0x20) ? t : !t;
     }
     if (cl == 'z') return c == 0;
@@ -353,7 +353,7 @@ static const char *match(MatchState *ms, const char *s, const char *p)
       goto init;  /* else return match(ms, s, ep); */
       }
     default:
-      if (lj_ctype_isdigit(uchar(*(p+1)))) {  /* capture results (%0-%9)? */
+      if (lj_char_isdigit(uchar(*(p+1)))) {  /* capture results (%0-%9)? */
 	s = match_capture(ms, s, uchar(*(p+1)));
 	if (s == NULL) return NULL;
 	p+=2;
@@ -549,7 +549,7 @@ static void add_s(MatchState *ms, luaL_Buffer *b, const char *s, const char *e)
       luaL_addchar(b, news[i]);
     } else {
       i++;  /* skip ESC */
-      if (!lj_ctype_isdigit(uchar(news[i]))) {
+      if (!lj_char_isdigit(uchar(news[i]))) {
 	luaL_addchar(b, news[i]);
       } else if (news[i] == '0') {
 	luaL_addlstring(b, s, (size_t)(e - s));
@@ -653,20 +653,18 @@ static void addquoted(lua_State *L, luaL_Buffer *b, int arg)
   const char *s = strdata(str);
   luaL_addchar(b, '"');
   while (len--) {
-    switch (*s) {
-    case '"': case '\\': case '\n':
+    if (*s == '"' || *s == '\\' || *s == '\n') {
       luaL_addchar(b, '\\');
       luaL_addchar(b, *s);
-      break;
-    case '\r':
-      luaL_addlstring(b, "\\r", 2);
-      break;
-    case '\0':
-      luaL_addlstring(b, "\\000", 4);
-      break;
-    default:
+    } else if (lj_char_iscntrl(uchar(*s))) {
+      uint32_t c1, c2, c3;
+      luaL_addchar(b, '\\');
+      c1 = uchar(*s); c3 = c1 % 10; c1 /= 10; c2 = c1 % 10; c1 /= 10;
+      if (c1 + lj_char_isdigit(uchar(s[1]))) luaL_addchar(b, '0' + c1);
+      if (c2 + (c1 + lj_char_isdigit(uchar(s[1])))) luaL_addchar(b, '0' + c2);
+      luaL_addchar(b, '0' + c3);
+    } else {
       luaL_addchar(b, *s);
-      break;
     }
     s++;
   }
@@ -679,14 +677,14 @@ static const char *scanformat(lua_State *L, const char *strfrmt, char *form)
   while (*p != '\0' && strchr(FMT_FLAGS, *p) != NULL) p++;  /* skip flags */
   if ((size_t)(p - strfrmt) >= sizeof(FMT_FLAGS))
     lj_err_caller(L, LJ_ERR_STRFMTR);
-  if (lj_ctype_isdigit(uchar(*p))) p++;  /* skip width */
-  if (lj_ctype_isdigit(uchar(*p))) p++;  /* (2 digits at most) */
+  if (lj_char_isdigit(uchar(*p))) p++;  /* skip width */
+  if (lj_char_isdigit(uchar(*p))) p++;  /* (2 digits at most) */
   if (*p == '.') {
     p++;
-    if (lj_ctype_isdigit(uchar(*p))) p++;  /* skip precision */
-    if (lj_ctype_isdigit(uchar(*p))) p++;  /* (2 digits at most) */
+    if (lj_char_isdigit(uchar(*p))) p++;  /* skip precision */
+    if (lj_char_isdigit(uchar(*p))) p++;  /* (2 digits at most) */
   }
-  if (lj_ctype_isdigit(uchar(*p)))
+  if (lj_char_isdigit(uchar(*p)))
     lj_err_caller(L, LJ_ERR_STRFMTW);
   *(form++) = '%';
   strncpy(form, strfrmt, (size_t)(p - strfrmt + 1));
@@ -793,7 +791,7 @@ LUALIB_API int luaopen_string(lua_State *L)
 {
   GCtab *mt;
   global_State *g;
-  LJ_LIB_REG(L, string);
+  LJ_LIB_REG(L, LUA_STRLIBNAME, string);
 #if defined(LUA_COMPAT_GFIND)
   lua_getfield(L, -1, "gmatch");
   lua_setfield(L, -2, "gfind");

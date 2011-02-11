@@ -1,6 +1,6 @@
 /*
 ** Snapshot handling.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_snap_c
@@ -87,15 +87,14 @@ static void snapshot_framelinks(jit_State *J, SnapEntry *map)
     if (frame_islua(frame)) {
       map[f++] = SNAP_MKPC(frame_pc(frame));
       frame = frame_prevl(frame);
-    } else if (frame_ispcall(frame)) {
-      map[f++] = SNAP_MKFTSZ(frame_ftsz(frame));
-      frame = frame_prevd(frame);
     } else if (frame_iscont(frame)) {
       map[f++] = SNAP_MKFTSZ(frame_ftsz(frame));
       map[f++] = SNAP_MKPC(frame_contpc(frame));
       frame = frame_prevd(frame);
     } else {
-      lua_assert(0);
+      lua_assert(!frame_isc(frame));
+      map[f++] = SNAP_MKFTSZ(frame_ftsz(frame));
+      frame = frame_prevd(frame);
     }
   }
   lua_assert(f == (MSize)(1 + J->framedepth));
@@ -231,7 +230,7 @@ const BCIns *lj_snap_restore(jit_State *J, void *exptr)
   setcframe_pc(cframe_raw(L->cframe), pc+1);
 
   /* Make sure the stack is big enough for the slots from the snapshot. */
-  if (LJ_UNLIKELY(L->base + nslots > L->maxstack)) {
+  if (LJ_UNLIKELY(L->base + nslots > tvref(L->maxstack))) {
     L->top = curr_topL(L);
     lj_state_growstack(L, nslots - curr_proto(L)->framesize);
   }
@@ -255,10 +254,10 @@ const BCIns *lj_snap_restore(jit_State *J, void *exptr)
 	  if (isluafunc(fn)) {
 	    MSize framesize = funcproto(fn)->framesize;
 	    L->base = ++o;
-	    if (LJ_UNLIKELY(o + framesize > L->maxstack)) {  /* Grow again? */
+	    if (LJ_UNLIKELY(o + framesize > tvref(L->maxstack))) {
 	      ptrdiff_t fsave = savestack(L, frame);
 	      L->top = o;
-	      lj_state_growstack(L, framesize);
+	      lj_state_growstack(L, framesize);  /* Grow again. */
 	      frame = restorestack(L, fsave);
 	    }
 	  }

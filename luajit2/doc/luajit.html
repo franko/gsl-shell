@@ -4,7 +4,7 @@
 <title>LuaJIT</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="Author" content="Mike Pall">
-<meta name="Copyright" content="Copyright (C) 2005-2010, Mike Pall">
+<meta name="Copyright" content="Copyright (C) 2005-2011, Mike Pall">
 <meta name="Language" content="en">
 <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
 <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
@@ -24,8 +24,22 @@
 <a href="install.html">Installation</a>
 </li><li>
 <a href="running.html">Running</a>
+</li></ul>
 </li><li>
-<a href="api.html">API Extensions</a>
+<a href="extensions.html">Extensions</a>
+<ul><li>
+<a href="ext_ffi.html">FFI Library</a>
+<ul><li>
+<a href="ext_ffi_tutorial.html">FFI Tutorial</a>
+</li><li>
+<a href="ext_ffi_api.html">ffi.* API</a>
+</li><li>
+<a href="ext_ffi_semantics.html">FFI Semantics</a>
+</li></ul>
+</li><li>
+<a href="ext_jit.html">jit.* Library</a>
+</li><li>
+<a href="ext_c_api.html">Lua/C API</a>
 </li></ul>
 </li><li>
 <a href="status.html">Status</a>
@@ -46,7 +60,7 @@ LuaJIT is a <b>Just-In-Time Compiler</b> for the Lua<sup>*</sup>
 programming language.
 </p>
 <p>
-LuaJIT is Copyright &copy; 2005-2010 Mike Pall.
+LuaJIT is Copyright &copy; 2005-2011 Mike Pall.
 LuaJIT is open source software, released under the
 <a href="http://www.opensource.org/licenses/mit-license.php"><span class="ext">&raquo;</span>&nbsp;MIT/X license</a>.
 </p>
@@ -65,7 +79,8 @@ standard Lua interpreter and can be deployed as a drop-in replacement.
 <p>
 LuaJIT offers more performance, at the expense of portability. It
 currently runs on all popular operating systems based on
-<b>x86 or x64 CPUs</b> (Linux, Windows, OSX etc.).
+<b>x86</b> or <b>x64 CPUs</b> (Linux, Windows, OSX etc.) or embedded Linux
+systems based on <b>PPC/e500v2 CPUs</b>.
 Other platforms will be supported in the future, based on user demand
 and sponsoring.
 </p>
@@ -76,12 +91,12 @@ LuaJIT has been successfully used as a <b>scripting middleware</b> in
 games, 3D modellers, numerical simulations, trading platforms and many
 other specialty applications. It combines high flexibility with high
 performance and an unmatched <b>low memory footprint</b>: less than
-<b>120K</b> for the VM plus less than <b>80K</b> for the JIT compiler.
+<b>120K</b> for the VM plus less than <b>80K</b> for the JIT compiler (on x86).
 </p>
 <p>
 LuaJIT has been in continuous development since 2005. It's widely
 considered to be <b>one of the fastest dynamic language
-implementations</b>. It has outperfomed other dynamic languages on many
+implementations</b>. It has outperformed other dynamic languages on many
 cross-language benchmarks since its first release &mdash; often by a
 substantial margin. In 2009 other dynamic language VMs started to catch up
 with the performance of LuaJIT 1.x. Well, I couldn't let that slide. ;-)
@@ -96,9 +111,13 @@ written in assembler, with a state-of-the-art JIT compiler.
 An innovative <b>trace compiler</b> is integrated with advanced,
 SSA-based optimizations and a highly tuned code generation backend. This
 allows a substantial reduction of the overhead associated with dynamic
-language features. It's destined to break into the
-<a href="http://luajit.org/performance.html"><span class="ext">&raquo;</span>&nbsp;performance</a> range
-traditionally reserved for offline, static language compilers.
+language features.
+</p>
+<p>
+It's destined to break into the <a href="http://luajit.org/performance.html"><span class="ext">&raquo;</span>&nbsp;performance</a>
+range traditionally reserved for offline, static language compilers.
+Have look at these <a href="http://shootout.alioth.debian.org/u32/benchmark.php?test=all&amp;lang=all&amp;d=data&amp;calc=calculate&amp;gpp=on&amp;java=on&amp;luajit=on&amp;v8=on&amp;lua=on&amp;tracemonkey=on&amp;box=1"><span class="ext">&raquo;</span>&nbsp;cross-language benchmarks</a>
+to see how it ranks against the competition.
 </p>
 
 <h2>More ...</h2>
@@ -115,7 +134,7 @@ resources are marked with a '<span class="ext">&raquo;</span>'.
 </div>
 <div id="foot">
 <hr class="hide">
-Copyright &copy; 2005-2010 Mike Pall
+Copyright &copy; 2005-2011 Mike Pall
 <span class="noprint">
 &middot;
 <a href="contact.html">Contact</a>

@@ -1,6 +1,6 @@
 /*
 ** Lua parser (source code -> bytecode).
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -17,6 +17,9 @@
 #include "lj_func.h"
 #include "lj_state.h"
 #include "lj_bc.h"
+#if LJ_HASFFI
+#include "lj_ctype.h"
+#endif
 #include "lj_lex.h"
 #include "lj_parse.h"
 #include "lj_vm.h"
@@ -33,6 +36,7 @@ typedef enum {
   VKSTR,	/* sval = string value */
   VKNUM,	/* nval = number value */
   VKLAST = VKNUM,
+  VKCDATA,	/* nval = cdata value, not treated as a constant expression */
   /* Non-constant expressions follow: */
   VLOCAL,	/* info = local register */
   VUPVAL,	/* info = upvalue index */
@@ -61,12 +65,12 @@ typedef struct ExpDesc {
 } ExpDesc;
 
 /* Macros for expressions. */
-#define expr_hasnojump(e)	((e)->t != (e)->f)
+#define expr_hasjump(e)		((e)->t != (e)->f)
 
 #define expr_isk(e)		((e)->k <= VKLAST)
-#define expr_isk_nojump(e)	(expr_isk(e) && !expr_hasnojump(e))
+#define expr_isk_nojump(e)	(expr_isk(e) && !expr_hasjump(e))
 #define expr_isnumk(e)		((e)->k == VKNUM)
-#define expr_isnumk_nojump(e)	(expr_isnumk(e) && !expr_hasnojump(e))
+#define expr_isnumk_nojump(e)	(expr_isnumk(e) && !expr_hasjump(e))
 #define expr_isstrk(e)		((e)->k == VKSTR)
 
 #define expr_numV(e)		check_exp(expr_isnumk((e)), numV(&(e)->u.nval))
@@ -116,7 +120,7 @@ typedef struct FuncState {
   BCPos bclim;			/* Limit of bytecode stack. */
   MSize vbase;			/* Base of variable stack for this function. */
   uint8_t flags;		/* Prototype flags. */
-  uint8_t numparams;		/* Number of active local variables. */
+  uint8_t numparams;		/* Number of parameters. */
   uint8_t framesize;		/* Fixed frame size. */
   uint8_t nuv;			/* Number of upvalues */
   VarIndex varmap[LJ_MAX_LOCVAR];  /* Map from register to variable idx. */
@@ -215,6 +219,17 @@ GCstr *lj_parse_keepstr(LexState *ls, const char *str, size_t len)
   lj_gc_check(L);
   return s;
 }
+
+#if LJ_HASFFI
+/* Anchor cdata to avoid GC. */
+void lj_parse_keepcdata(LexState *ls, TValue *tv, GCcdata *cd)
+{
+  /* NOBARRIER: the key is new or kept alive. */
+  lua_State *L = ls->L;
+  setcdataV(L, tv, cd);
+  setboolV(lj_tab_set(L, ls->fs->kt, tv), 1);
+}
+#endif
 
 /* -- Jump list handling -------------------------------------------------- */
 
@@ -419,14 +434,48 @@ static void expr_discharge(FuncState *fs, ExpDesc *e)
   e->k = VRELOCABLE;
 }
 
+/* Emit bytecode to set a range of registers to nil. */
+static void bcemit_nil(FuncState *fs, BCReg from, BCReg n)
+{
+  if (fs->pc > fs->lasttarget) {  /* No jumps to current position? */
+    BCIns *ip = &fs->bcbase[fs->pc-1].ins;
+    BCReg pto, pfrom = bc_a(*ip);
+    switch (bc_op(*ip)) {  /* Try to merge with the previous instruction. */
+    case BC_KPRI:
+      if (bc_d(*ip) != ~LJ_TNIL) break;
+      if (from == pfrom) {
+	if (n == 1) return;
+      } else if (from == pfrom+1) {
+	from = pfrom;
+	n++;
+      } else {
+	break;
+      }
+      fs->pc--;  /* Drop KPRI. */
+      break;
+    case BC_KNIL:
+      pto = bc_d(*ip);
+      if (pfrom <= from && from <= pto+1) {  /* Can we connect both ranges? */
+	if (from+n-1 > pto)
+	  setbc_d(ip, from+n-1);  /* Patch previous instruction range. */
+	return;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  /* Emit new instruction or replace old instruction. */
+  bcemit_INS(fs, n == 1 ? BCINS_AD(BC_KPRI, from, VKNIL) :
+			  BCINS_AD(BC_KNIL, from, from+n-1));
+}
+
 /* Discharge an expression to a specific register. Ignore branches. */
 static void expr_toreg_nobranch(FuncState *fs, ExpDesc *e, BCReg reg)
 {
   BCIns ins;
   expr_discharge(fs, e);
-  if (e->k <= VKTRUE) {
-    ins = BCINS_AD(BC_KPRI, reg, const_pri(e));
-  } else if (e->k == VKSTR) {
+  if (e->k == VKSTR) {
     ins = BCINS_AD(BC_KSTR, reg, const_str(fs, e));
   } else if (e->k == VKNUM) {
     lua_Number n = expr_numV(e);
@@ -435,6 +484,11 @@ static void expr_toreg_nobranch(FuncState *fs, ExpDesc *e, BCReg reg)
       ins = BCINS_AD(BC_KSHORT, reg, (BCReg)(uint16_t)k);
     else
       ins = BCINS_AD(BC_KNUM, reg, const_num(fs, e));
+#if LJ_HASFFI
+  } else if (e->k == VKCDATA) {
+    ins = BCINS_AD(BC_KCDATA, reg,
+		   const_gc(fs, obj2gco(cdataV(&e->u.nval)), LJ_TCDATA));
+#endif
   } else if (e->k == VRELOCABLE) {
     setbc_a(bcptr(fs, e), reg);
     goto noins;
@@ -442,6 +496,11 @@ static void expr_toreg_nobranch(FuncState *fs, ExpDesc *e, BCReg reg)
     if (reg == e->u.s.info)
       goto noins;
     ins = BCINS_AD(BC_MOV, reg, e->u.s.info);
+  } else if (e->k == VKNIL) {
+    bcemit_nil(fs, reg, 1);
+    goto noins;
+  } else if (e->k <= VKTRUE) {
+    ins = BCINS_AD(BC_KPRI, reg, const_pri(e));
   } else {
     lua_assert(e->k == VVOID || e->k == VJMP);
     return;
@@ -461,7 +520,7 @@ static void expr_toreg(FuncState *fs, ExpDesc *e, BCReg reg)
   expr_toreg_nobranch(fs, e, reg);
   if (e->k == VJMP)
     jmp_append(fs, &e->t, e->u.s.info);  /* Add it to the true jump list. */
-  if (expr_hasnojump(e)) {  /* Discharge expression with branches. */
+  if (expr_hasjump(e)) {  /* Discharge expression with branches. */
     BCPos jend, jfalse = NO_JMP, jtrue = NO_JMP;
     if (jmp_novalue(fs, e->t) || jmp_novalue(fs, e->f)) {
       BCPos jval = (e->k == VJMP) ? NO_JMP : bcemit_jmp(fs);
@@ -494,7 +553,7 @@ static BCReg expr_toanyreg(FuncState *fs, ExpDesc *e)
 {
   expr_discharge(fs, e);
   if (e->k == VNONRELOC) {
-    if (!expr_hasnojump(e)) return e->u.s.info;  /* Already in a register. */
+    if (!expr_hasjump(e)) return e->u.s.info;  /* Already in a register. */
     if (e->u.s.info >= fs->nactvar) {
       expr_toreg(fs, e, e->u.s.info);  /* Discharge to temp. register. */
       return e->u.s.info;
@@ -507,7 +566,7 @@ static BCReg expr_toanyreg(FuncState *fs, ExpDesc *e)
 /* Partially discharge expression to a value. */
 static void expr_toval(FuncState *fs, ExpDesc *e)
 {
-  if (expr_hasnojump(e))
+  if (expr_hasjump(e))
     expr_toanyreg(fs, e);
   else
     expr_discharge(fs, e);
@@ -577,42 +636,6 @@ static void bcemit_method(FuncState *fs, ExpDesc *e, ExpDesc *key)
   e->k = VNONRELOC;
 }
 
-/* Emit bytecode to set a range of registers to nil. */
-static void bcemit_nil(FuncState *fs, BCReg from, BCReg n)
-{
-  if (fs->pc > fs->lasttarget) {  /* No jumps to current position? */
-    BCIns *ip = &fs->bcbase[fs->pc-1].ins;
-    BCReg pto, pfrom = bc_a(*ip);
-    switch (bc_op(*ip)) {  /* Try to merge with the previous instruction. */
-    case BC_KPRI:
-      if (bc_d(*ip) != ~LJ_TNIL) break;
-      if (from == pfrom) {
-	if (n == 1) return;
-      } else if (from == pfrom+1) {
-	from = pfrom;
-	n++;
-      } else {
-	break;
-      }
-      fs->pc--;  /* Drop KPRI. */
-      break;
-    case BC_KNIL:
-      pto = bc_d(*ip);
-      if (pfrom <= from && from <= pto+1) {  /* Can we connect both ranges? */
-	if (from+n-1 > pto)
-	  setbc_d(ip, from+n-1);  /* Patch previous instruction range. */
-	return;
-      }
-      break;
-    default:
-      break;
-    }
-  }
-  /* Emit new instruction or replace old instruction. */
-  bcemit_INS(fs, n == 1 ? BCINS_AD(BC_KPRI, from, VKNIL) :
-			  BCINS_AD(BC_KNIL, from, from+n-1));
-}
-
 /* -- Bytecode emitter for branches --------------------------------------- */
 
 /* Emit unconditional branch. */
@@ -668,8 +691,6 @@ static void bcemit_branch_t(FuncState *fs, ExpDesc *e)
     pc = NO_JMP;  /* Never jump. */
   else if (e->k == VJMP)
     invertcond(fs, e), pc = e->u.s.info;
-  else if (e->k == VKFALSE && !expr_hasnojump(e))
-    pc = bcemit_jmp(fs);  /* Always jump. */
   else
     pc = bcemit_branch(fs, e, 0);
   jmp_append(fs, &e->f, pc);
@@ -686,8 +707,6 @@ static void bcemit_branch_f(FuncState *fs, ExpDesc *e)
     pc = NO_JMP;  /* Never jump. */
   else if (e->k == VJMP)
     pc = e->u.s.info;
-  else if (e->k == VKTRUE && !expr_hasnojump(e))
-    pc = bcemit_jmp(fs);  /* Always jump. */
   else
     pc = bcemit_branch(fs, e, 1);
   jmp_append(fs, &e->t, pc);
@@ -853,7 +872,7 @@ static void bcemit_unop(FuncState *fs, BCOp op, ExpDesc *e)
     if (e->k == VKNIL || e->k == VKFALSE) {
       e->k = VKTRUE;
       return;
-    } else if (expr_isk(e)) {
+    } else if (expr_isk(e) || (LJ_HASFFI && e->k == VKCDATA)) {
       e->k = VKFALSE;
       return;
     } else if (e->k == VJMP) {
@@ -869,10 +888,22 @@ static void bcemit_unop(FuncState *fs, BCOp op, ExpDesc *e)
     }
   } else {
     lua_assert(op == BC_UNM || op == BC_LEN);
-    /* Constant-fold negations. But avoid folding to -0. */
-    if (op == BC_UNM && expr_isnumk_nojump(e) && expr_numV(e) != 0) {
-      setnumV(&e->u.nval, -expr_numV(e));
-      return;
+    if (op == BC_UNM && !expr_hasjump(e)) {  /* Constant-fold negations. */
+#if LJ_HASFFI
+      if (e->k == VKCDATA) {  /* Fold in-place since cdata is not interned. */
+	GCcdata *cd = cdataV(&e->u.nval);
+	int64_t *p = (int64_t *)cdataptr(cd);
+	if (cd->typeid == CTID_COMPLEX_DOUBLE)
+	  p[1] ^= (int64_t)U64x(80000000,00000000);
+	else
+	  *p = -*p;
+	return;
+      } else
+#endif
+      if (expr_isnumk(e) && expr_numV(e) != 0) {  /* Avoid folding to -0. */
+	e->u.nval.u64 ^= U64x(80000000,00000000);
+	return;
+      }
     }
     expr_toanyreg(fs, e);
   }
@@ -1230,7 +1261,7 @@ static void fs_init(LexState *ls, FuncState *fs)
   fs->nuv = 0;
   fs->bl = NULL;
   fs->flags = 0;
-  fs->framesize = 2;  /* Minimum frame size. */
+  fs->framesize = 1;  /* Minimum frame size. */
   fs->kt = lj_tab_new(L, 0, 0);
   /* Anchor table of constants in stack to avoid being collected. */
   settabV(L, L->top, fs->kt);
@@ -1366,7 +1397,8 @@ static void expr_table(LexState *ls, ExpDesc *e)
     lua_assert(bc_a(ilp->ins) == freg &&
 	       bc_op(ilp->ins) == (narr > 256 ? BC_TSETV : BC_TSETB));
     expr_init(&en, VKNUM, 0);
-    setintV(&en.u.nval, narr-1);
+    en.u.nval.u32.lo = narr-1;
+    en.u.nval.u32.hi = 0x43300000;  /* Biased integer to avoid denormals. */
     if (narr > 256) { fs->pc--; ilp--; }
     ilp->ins = BCINS_AD(BC_TSETM, freg, const_num(fs, &en));
     setbc_b(&ilp[-1].ins, 0);
@@ -1393,10 +1425,8 @@ static BCReg parse_params(LexState *ls, int needself)
   FuncState *fs = ls->fs;
   BCReg nparams = 0;
   lex_check(ls, '(');
-  if (needself) {
-    var_new_lit(ls, 0, "self");
-    var_add(ls, 1);
-  }
+  if (needself)
+    var_new_lit(ls, nparams++, "self");
   if (ls->token != ')') {
     do {
       if (ls->token == TK_name) {
@@ -1411,9 +1441,10 @@ static BCReg parse_params(LexState *ls, int needself)
     } while (lex_opt(ls, ','));
   }
   var_add(ls, nparams);
-  bcreg_reserve(fs, fs->nactvar);
+  lua_assert(fs->nactvar == nparams);
+  bcreg_reserve(fs, nparams);
   lex_check(ls, ')');
-  return fs->nactvar;
+  return nparams;
 }
 
 /* Forward declaration. */
@@ -1551,8 +1582,8 @@ static void expr_simple(LexState *ls, ExpDesc *v)
 {
   switch (ls->token) {
   case TK_number:
-    expr_init(v, VKNUM, 0);
-    setnumV(&v->u.nval, numV(&ls->tokenval));
+    expr_init(v, (LJ_HASFFI && tviscdata(&ls->tokenval)) ? VKCDATA : VKNUM, 0);
+    copyTV(ls->L, &v->u.nval, &ls->tokenval);
     break;
   case TK_string:
     expr_init(v, VKSTR, 0);
@@ -1573,7 +1604,7 @@ static void expr_simple(LexState *ls, ExpDesc *v)
     checkcond(ls, fs->flags & PROTO_IS_VARARG, LJ_ERR_XDOTS);
     bcreg_reserve(fs, 1);
     base = fs->freereg-1;
-    expr_init(v, VCALL, bcemit_ABC(fs, BC_VARG, base, 2, 1));
+    expr_init(v, VCALL, bcemit_ABC(fs, BC_VARG, base, 2, fs->numparams));
     v->u.s.aux = base;
     break;
   }
@@ -1749,14 +1780,18 @@ static void parse_break(LexState *ls)
 {
   FuncState *fs = ls->fs;
   FuncScope *bl;
+  BCReg savefr;
   int upval = 0;
   for (bl = fs->bl; bl && !bl->isbreakable; bl = bl->prev)
     upval |= bl->upval;  /* Collect upvalues in intervening scopes. */
   if (!bl)  /* Error if no breakable scope found. */
     err_syntax(ls, LJ_ERR_XBREAK);
+  savefr = fs->freereg;
+  fs->freereg = bl->nactvar;  /* Shrink slots to help data-flow analysis. */
   if (upval)
     bcemit_AJ(fs, BC_UCLO, bl->nactvar, 0);  /* Close upvalues. */
   jmp_append(fs, &bl->breaklist, bcemit_jmp(fs));
+  fs->freereg = savefr;
 }
 
 /* Check for end of block. */
@@ -2027,41 +2062,13 @@ static void parse_repeat(LexState *ls, BCLine line)
   scope_end(fs);  /* End loop scope. */
 }
 
-/* Parse body of a 'for' statement. */
-static void parse_for_body(LexState *ls, BCReg base, BCLine line,
-			   BCReg nvars, int isnum)
-{
-  FuncScope bl;
-  FuncState *fs = ls->fs;
-  BCPos loop, loopend;
-  var_add(ls, 3);  /* Hidden control variables. */
-  lex_check(ls, TK_do);
-  loop = isnum ? bcemit_AJ(fs, BC_FORI, base, NO_JMP) :
-		 bcemit_AJ(fs, BC_JMP, fs->freereg, NO_JMP);
-  scope_begin(fs, &bl, 0);  /* Scope for visible variables. */
-  var_add(ls, nvars);
-  bcreg_reserve(fs, nvars);
-  parse_block(ls);
-  scope_end(fs);
-  /* Perform loop inversion. Loop control instructions are at the end. */
-  if (isnum) {
-    loopend = bcemit_AJ(fs, BC_FORL, base, NO_JMP);
-    jmp_patchins(fs, loop, fs->pc);
-  } else {
-    jmp_patchins(fs, loop, fs->pc);
-    bcemit_ABC(fs, BC_ITERC, base+3, nvars+1, 2+1);
-    loopend = bcemit_AJ(fs, BC_ITERL, base+3, NO_JMP);
-    fs->bcbase[loopend-1].line = line;
-  }
-  fs->bcbase[loopend].line = line;  /* Fix line for control ins. */
-  jmp_patchins(fs, loopend, loop+1);
-}
-
 /* Parse numeric 'for'. */
 static void parse_for_num(LexState *ls, GCstr *varname, BCLine line)
 {
   FuncState *fs = ls->fs;
   BCReg base = fs->freereg;
+  FuncScope bl;
+  BCPos loop, loopend;
   /* Hidden control variables. */
   var_new_lit(ls, FORL_IDX, "(for index)");
   var_new_lit(ls, FORL_STOP, "(for limit)");
@@ -2078,7 +2085,51 @@ static void parse_for_num(LexState *ls, GCstr *varname, BCLine line)
     bcemit_AD(fs, BC_KSHORT, fs->freereg, 1);  /* Default step is 1. */
     bcreg_reserve(fs, 1);
   }
-  parse_for_body(ls, base, line, 1, 1);
+  var_add(ls, 3);  /* Hidden control variables. */
+  lex_check(ls, TK_do);
+  loop = bcemit_AJ(fs, BC_FORI, base, NO_JMP);
+  scope_begin(fs, &bl, 0);  /* Scope for visible variables. */
+  var_add(ls, 1);
+  bcreg_reserve(fs, 1);
+  parse_block(ls);
+  scope_end(fs);
+  /* Perform loop inversion. Loop control instructions are at the end. */
+  loopend = bcemit_AJ(fs, BC_FORL, base, NO_JMP);
+  fs->bcbase[loopend].line = line;  /* Fix line for control ins. */
+  jmp_patchins(fs, loopend, loop+1);
+  jmp_patchins(fs, loop, fs->pc);
+}
+
+/* Try to predict whether the iterator is next() and specialize the bytecode.
+** Detecting next() and pairs() by name is simplistic, but quite effective.
+** The interpreter backs off if the check for the closure fails at runtime.
+*/
+static int predict_next(LexState *ls, FuncState *fs, BCPos pc)
+{
+  BCIns ins = fs->bcbase[pc].ins;
+  GCstr *name;
+  cTValue *o;
+  switch (bc_op(ins)) {
+  case BC_MOV:
+    name = gco2str(gcref(var_get(ls, fs, bc_d(ins)).name));
+    break;
+  case BC_UGET:
+    name = gco2str(gcref(ls->vstack[fs->uvloc[bc_d(ins)].vidx].name));
+    break;
+  case BC_GGET:
+    /* There's no inverse index (yet), so lookup the strings. */
+    o = lj_tab_getstr(fs->kt, lj_str_newlit(ls->L, "pairs"));
+    if (o && tvisnum(o) && o->u32.lo == bc_d(ins))
+      return 1;
+    o = lj_tab_getstr(fs->kt, lj_str_newlit(ls->L, "next"));
+    if (o && tvisnum(o) && o->u32.lo == bc_d(ins))
+      return 1;
+    return 0;
+  default:
+    return 0;
+  }
+  return (name->len == 5 && !strcmp(strdata(name), "pairs")) ||
+	 (name->len == 4 && !strcmp(strdata(name), "next"));
 }
 
 /* Parse 'for' iterator. */
@@ -2088,7 +2139,10 @@ static void parse_for_iter(LexState *ls, GCstr *indexname)
   ExpDesc e;
   BCReg nvars = 0;
   BCLine line;
-  BCReg base = fs->freereg;
+  BCReg base = fs->freereg + 3;
+  BCPos loop, loopend, exprpc = fs->pc;
+  FuncScope bl;
+  int isnext;
   /* Hidden control variables. */
   var_new_lit(ls, nvars++, "(for generator)");
   var_new_lit(ls, nvars++, "(for state)");
@@ -2101,7 +2155,22 @@ static void parse_for_iter(LexState *ls, GCstr *indexname)
   line = ls->linenumber;
   assign_adjust(ls, 3, expr_list(ls, &e), &e);
   bcreg_bump(fs, 3);  /* The iterator needs another 3 slots (func + 2 args). */
-  parse_for_body(ls, base, line, nvars - 3, 0);
+  isnext = (nvars <= 5 && predict_next(ls, fs, exprpc));
+  var_add(ls, 3);  /* Hidden control variables. */
+  lex_check(ls, TK_do);
+  loop = bcemit_AJ(fs, isnext ? BC_ISNEXT : BC_JMP, base, NO_JMP);
+  scope_begin(fs, &bl, 0);  /* Scope for visible variables. */
+  var_add(ls, nvars-3);
+  bcreg_reserve(fs, nvars-3);
+  parse_block(ls);
+  scope_end(fs);
+  /* Perform loop inversion. Loop control instructions are at the end. */
+  jmp_patchins(fs, loop, fs->pc);
+  bcemit_ABC(fs, isnext ? BC_ITERN : BC_ITERC, base, nvars-3+1, 2+1);
+  loopend = bcemit_AJ(fs, BC_ITERL, base, NO_JMP);
+  fs->bcbase[loopend-1].line = line;  /* Fix line for control ins. */
+  fs->bcbase[loopend].line = line;
+  jmp_patchins(fs, loopend, loop+1);
 }
 
 /* Parse 'for' statement. */

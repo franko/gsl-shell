@@ -1,6 +1,6 @@
 /*
 ** JIT library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lib_jit_c
@@ -52,7 +52,7 @@ static int setjitmode(lua_State *L, int mode)
     if ((mode & LUAJIT_MODE_MASK) == LUAJIT_MODE_ENGINE)
       lj_err_caller(L, LJ_ERR_NOJIT);
   err:
-    lj_err_arg(L, 1, LJ_ERR_NOLFUNC);
+    lj_err_argt(L, 1, LUA_TFUNCTION);
   }
   return 0;
 }
@@ -133,6 +133,7 @@ LJLIB_CF(jit_attach)
   return 0;
 }
 
+LJLIB_PUSH(top-5) LJLIB_SET(os)
 LJLIB_PUSH(top-4) LJLIB_SET(arch)
 LJLIB_PUSH(top-3) LJLIB_SET(version_num)
 LJLIB_PUSH(top-2) LJLIB_SET(version)
@@ -376,6 +377,17 @@ LJLIB_CF(jit_util_traceexitstub)
   return 0;
 }
 
+/* local addr = jit.util.ircalladdr(idx) */
+LJLIB_CF(jit_util_ircalladdr)
+{
+  uint32_t idx = (uint32_t)lj_lib_checkint(L, 1);
+  if (idx < IRCALL__MAX) {
+    setnumV(L->top-1, cast_num((uintptr_t)(void *)lj_ir_callinfo[idx].func));
+    return 1;
+  }
+  return 0;
+}
+
 #else
 
 static int trace_nojit(lua_State *L)
@@ -389,6 +401,7 @@ static int trace_nojit(lua_State *L)
 #define lj_cf_jit_util_tracesnap	trace_nojit
 #define lj_cf_jit_util_tracemc		trace_nojit
 #define lj_cf_jit_util_traceexitstub	trace_nojit
+#define lj_cf_jit_util_ircalladdr	trace_nojit
 
 #endif
 
@@ -517,6 +530,7 @@ static uint32_t jit_cpudetect(lua_State *L)
     flags |= ((features[3] >> 15)&1) * JIT_F_CMOV;
     flags |= ((features[3] >> 26)&1) * JIT_F_SSE2;
 #if LJ_HASJIT
+    flags |= ((features[2] >> 0)&1) * JIT_F_SSE3;
     flags |= ((features[2] >> 19)&1) * JIT_F_SSE4_1;
     if (vendor[2] == 0x6c65746e) {  /* Intel. */
       if ((features[0] & 0x0ff00f00) == 0x00000f00)  /* P4. */
@@ -543,10 +557,14 @@ static uint32_t jit_cpudetect(lua_State *L)
     luaL_error(L, "CPU does not support SSE2 (recompile without -DLUAJIT_CPU_SSE2)");
 #endif
 #endif
-  UNUSED(L);
+#elif LJ_TARGET_ARM
+  /* NYI */
+#elif LJ_TARGET_PPC
+  /* Nothing to do. */
 #else
 #error "Missing CPU detection for this architecture"
 #endif
+  UNUSED(L);
   return flags;
 }
 
@@ -570,14 +588,15 @@ static void jit_init(lua_State *L)
 
 LUALIB_API int luaopen_jit(lua_State *L)
 {
+  lua_pushliteral(L, LJ_OS_NAME);
   lua_pushliteral(L, LJ_ARCH_NAME);
   lua_pushinteger(L, LUAJIT_VERSION_NUM);
   lua_pushliteral(L, LUAJIT_VERSION);
-  LJ_LIB_REG(L, jit);
+  LJ_LIB_REG(L, LUA_JITLIBNAME, jit);
 #ifndef LUAJIT_DISABLE_JITUTIL
-  LJ_LIB_REG_(L, "jit.util", jit_util);
+  LJ_LIB_REG(L, "jit.util", jit_util);
 #endif
-  LJ_LIB_REG_(L, "jit.opt", jit_opt);
+  LJ_LIB_REG(L, "jit.opt", jit_opt);
   L->top -= 2;
   jit_init(L);
   return 1;

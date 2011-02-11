@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------
 -- LuaJIT compiler dump module.
 --
--- Copyright (C) 2005-2010 Mike Pall. All rights reserved.
+-- Copyright (C) 2005-2011 Mike Pall. All rights reserved.
 -- Released under the MIT/X license. See Copyright Notice in luajit.h
 ----------------------------------------------------------------------------
 --
@@ -59,8 +59,8 @@ local jutil = require("jit.util")
 local vmdef = require("jit.vmdef")
 local funcinfo, funcbc = jutil.funcinfo, jutil.funcbc
 local traceinfo, traceir, tracek = jutil.traceinfo, jutil.traceir, jutil.tracek
-local tracemc, traceexitstub = jutil.tracemc, jutil.traceexitstub
-local tracesnap = jutil.tracesnap
+local tracemc, tracesnap = jutil.tracemc, jutil.tracesnap
+local traceexitstub, ircalladdr = jutil.traceexitstub, jutil.ircalladdr
 local bit = require("bit")
 local band, shl, shr = bit.band, bit.lshift, bit.rshift
 local sub, gsub, format = string.sub, string.gsub, string.format
@@ -82,6 +82,10 @@ local nexitsym = 0
 -- Fill symbol table with trace exit addresses.
 local function fillsymtab(nexit)
   local t = symtab
+  if nexitsym == 0 then
+    local ircall = vmdef.ircall
+    for i=0,#ircall do t[ircalladdr(i)] = ircall[i] end
+  end
   if nexit > nexitsym then
     for i=nexitsym,nexit-1 do t[traceexitstub(i)] = tostring(i) end
     nexitsym = nexit
@@ -125,19 +129,24 @@ local irtype_text = {
   "tru",
   "lud",
   "str",
-  "ptr",
+  "p32",
   "thr",
   "pro",
   "fun",
-  "t09",
+  "p64",
+  "cdt",
   "tab",
   "udt",
+  "flt",
   "num",
-  "int",
   "i8 ",
   "u8 ",
   "i16",
   "u16",
+  "int",
+  "u32",
+  "i64",
+  "u64",
 }
 
 local colortype_ansi = {
@@ -151,9 +160,14 @@ local colortype_ansi = {
   "%s",
   "\027[1m%s\027[m",
   "%s",
+  "\027[33m%s\027[m",
   "\027[31m%s\027[m",
   "\027[36m%s\027[m",
   "\027[34m%s\027[m",
+  "\027[34m%s\027[m",
+  "\027[35m%s\027[m",
+  "\027[35m%s\027[m",
+  "\027[35m%s\027[m",
   "\027[35m%s\027[m",
   "\027[35m%s\027[m",
   "\027[35m%s\027[m",
@@ -207,12 +221,30 @@ span.irt_int, span.irt_i8, span.irt_u8, span.irt_i16, span.irt_u16 { color: #b04
 
 local colorize, irtype
 
--- Lookup table to convert some literals into names.
+-- Lookup tables to convert some literals into names.
 local litname = {
-  ["SLOAD "] = { [0] = "", "I", "R", "RI", "P", "PI", "PR", "PRI",
-		 "T", "IT", "RT", "RIT", "PT", "PIT", "PRT", "PRIT", },
-  ["XLOAD "] = { [0] = "", "R", "U", "RU", },
-  ["TOINT "] = { [0] = "check", "index", "", },
+  ["SLOAD "] = setmetatable({}, { __index = function(t, mode)
+    local s = ""
+    if band(mode, 1) ~= 0 then s = s.."P" end
+    if band(mode, 2) ~= 0 then s = s.."F" end
+    if band(mode, 4) ~= 0 then s = s.."T" end
+    if band(mode, 8) ~= 0 then s = s.."C" end
+    if band(mode, 16) ~= 0 then s = s.."R" end
+    if band(mode, 32) ~= 0 then s = s.."I" end
+    t[mode] = s
+    return s
+  end}),
+  ["XLOAD "] = { [0] = "", "R", "V", "RV", "U", "RU", "VU", "RVU", },
+  ["CONV  "] = setmetatable({}, { __index = function(t, mode)
+    local s = irtype[band(mode, 31)]
+    s = irtype[band(shr(mode, 5), 31)].."."..s
+    if band(mode, 0x400) ~= 0 then s = s.." trunc"
+    elseif band(mode, 0x800) ~= 0 then s = s.." sext" end
+    local c = shr(mode, 14)
+    if c == 2 then s = s.." index" elseif c == 3 then s = s.." check" end
+    t[mode] = s
+    return s
+  end}),
   ["FLOAD "] = vmdef.irfield,
   ["FREF  "] = vmdef.irfield,
   ["FPMATH"] = vmdef.irfpm,
@@ -257,12 +289,15 @@ local function formatk(tr, idx)
   elseif tn == "table" then
     s = format("{%p}", k)
   elseif tn == "userdata" then
-    if t == 11 then
+    if t == 12 then
       s = format("userdata:%p", k)
     else
       s = format("[%p]", k)
       if s == "[0x00000000]" then s = "NULL" end
     end
+  elseif t == 21 then -- int64_t
+    s = sub(tostring(k), 1, -3)
+    if sub(s, 1, 1) ~= "-" then s = "+"..s end
   else
     s = tostring(k) -- For primitives.
   end
@@ -284,7 +319,7 @@ local function printsnap(tr, snap)
 	out:write(formatk(tr, ref))
       else
 	local m, ot, op1, op2 = traceir(tr, ref)
-	out:write(colorize(format("%04d", ref), band(ot, 15)))
+	out:write(colorize(format("%04d", ref), band(ot, 31)))
       end
       out:write(band(sn, 0x10000) == 0 and " " or "|") -- SNAP_FRAME
     else
@@ -394,18 +429,25 @@ local function dump_ir(tr, dumpsnap, dumpreg)
 		       band(ot, 128) == 0 and " " or ">",
 		       band(ot, 64) == 0 and " " or "+",
 		       irtype[t], op))
-      local m1 = band(m, 3)
+      local m1, m2 = band(m, 3), band(m, 3*4)
       if sub(op, 1, 4) == "CALL" then
-	out:write(format("%-10s  (", vmdef.ircall[op2]))
+	if m2 == 1*4 then -- op2 == IRMlit
+	  out:write(format("%-10s  (", vmdef.ircall[op2]))
+	elseif op2 < 0 then
+	  out:write(format("[0x%x](", tonumber((tracek(tr, op2)))))
+	else
+	  out:write(format("%04d (", op2))
+	end
 	if op1 ~= -1 then dumpcallargs(tr, op1) end
 	out:write(")")
+      elseif op == "CNEW  " and op2 == -1 then
+	out:write(formatk(tr, op1))
       elseif m1 ~= 3 then -- op1 != IRMnone
 	if op1 < 0 then
 	  out:write(formatk(tr, op1))
 	else
 	  out:write(format(m1 == 0 and "%04d" or "#%-3d", op1))
 	end
-	local m2 = band(m, 3*4)
 	if m2 ~= 3*4 then -- op2 != IRMnone
 	  if m2 == 1*4 then -- op2 == IRMlit
 	    local litn = litname[op]

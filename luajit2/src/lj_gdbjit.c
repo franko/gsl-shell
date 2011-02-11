@@ -1,6 +1,6 @@
 /*
 ** Client for the GDB JIT API.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_gdbjit_c
@@ -335,7 +335,7 @@ static const ELFheader elfhdr_template = {
   .eclass = LJ_64 ? 2 : 1,
   .eendian = LJ_ENDIAN_SELECT(1, 2),
   .eversion = 1,
-#if defined(__linux__)
+#if LJ_TARGET_LINUX
   .eosabi = 0,  /* Nope, it's not 3. */
 #elif defined(__FreeBSD__)
   .eosabi = 9,
@@ -709,8 +709,7 @@ void lj_gdbjit_addtrace(jit_State *J, GCtrace *T)
   GDBJITctx ctx;
   GCproto *pt = &gcref(T->startpt)->pt;
   TraceNo parent = T->ir[REF_BASE].op1;
-  uintptr_t pcofs = (uintptr_t)(T->snap[0].mapofs+T->snap[0].nent);
-  const BCIns *startpc = snap_pc(T->snapmap[pcofs]);
+  const BCIns *startpc = mref(T->startpc, const BCIns);
   ctx.T = T;
   ctx.mcaddr = (uintptr_t)T->mcode;
   ctx.szmcode = T->szmcode;

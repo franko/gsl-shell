@@ -2,7 +2,7 @@
 ** FOLD: Constant Folding, Algebraic Simplifications and Reassociation.
 ** ABCelim: Array Bounds Check Elimination.
 ** CSE: Common-Subexpression Elimination.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_opt_fold_c
@@ -18,6 +18,7 @@
 #include "lj_jit.h"
 #include "lj_iropt.h"
 #include "lj_trace.h"
+#include "lj_carith.h"
 #include "lj_vm.h"
 
 /* Here's a short description how the FOLD engine processes instructions:
@@ -152,10 +153,10 @@ typedef IRRef (LJ_FASTCALL *FoldFunc)(jit_State *J);
 */
 #define gcstep_barrier(J, ref) \
   ((ref) < J->chain[IR_LOOP] && \
-   (J->chain[IR_TNEW] || J->chain[IR_TDUP] || \
-    J->chain[IR_SNEW] || J->chain[IR_TOSTR]))
+   (J->chain[IR_SNEW] || J->chain[IR_TNEW] || J->chain[IR_TDUP] || \
+    J->chain[IR_CNEW] || J->chain[IR_CNEWI] || J->chain[IR_TOSTR]))
 
-/* -- Constant folding ---------------------------------------------------- */
+/* -- Constant folding for FP numbers ------------------------------------- */
 
 LJFOLD(ADD KNUM KNUM)
 LJFOLD(SUB KNUM KNUM)
@@ -183,20 +184,39 @@ LJFOLDF(kfold_fpmath)
   return lj_ir_knum(J, y);
 }
 
-LJFOLD(POWI KNUM KINT)
-LJFOLDF(kfold_powi)
+LJFOLD(POW KNUM KINT)
+LJFOLDF(kfold_numpow)
 {
   lua_Number a = knumleft;
   lua_Number b = cast_num(fright->i);
-  lua_Number y = lj_vm_foldarith(a, b, IR_POWI - IR_ADD);
+  lua_Number y = lj_vm_foldarith(a, b, IR_POW - IR_ADD);
   return lj_ir_knum(J, y);
 }
+
+/* Must not use kfold_kref for numbers (could be NaN). */
+LJFOLD(EQ KNUM KNUM)
+LJFOLD(NE KNUM KNUM)
+LJFOLD(LT KNUM KNUM)
+LJFOLD(GE KNUM KNUM)
+LJFOLD(LE KNUM KNUM)
+LJFOLD(GT KNUM KNUM)
+LJFOLD(ULT KNUM KNUM)
+LJFOLD(UGE KNUM KNUM)
+LJFOLD(ULE KNUM KNUM)
+LJFOLD(UGT KNUM KNUM)
+LJFOLDF(kfold_numcomp)
+{
+  return CONDFOLD(lj_ir_numcmp(knumleft, knumright, (IROp)fins->o));
+}
+
+/* -- Constant folding for 32 bit integers -------------------------------- */
 
 static int32_t kfold_intop(int32_t k1, int32_t k2, IROp op)
 {
   switch (op) {
   case IR_ADD: k1 += k2; break;
   case IR_SUB: k1 -= k2; break;
+  case IR_MUL: k1 *= k2; break;
   case IR_BAND: k1 &= k2; break;
   case IR_BOR: k1 |= k2; break;
   case IR_BXOR: k1 ^= k2; break;
@@ -212,6 +232,7 @@ static int32_t kfold_intop(int32_t k1, int32_t k2, IROp op)
 
 LJFOLD(ADD KINT KINT)
 LJFOLD(SUB KINT KINT)
+LJFOLD(MUL KINT KINT)
 LJFOLD(BAND KINT KINT)
 LJFOLD(BOR KINT KINT)
 LJFOLD(BXOR KINT KINT)
@@ -235,117 +256,6 @@ LJFOLD(BSWAP KINT)
 LJFOLDF(kfold_bswap)
 {
   return INTFOLD((int32_t)lj_bswap((uint32_t)fleft->i));
-}
-
-LJFOLD(TONUM KINT)
-LJFOLDF(kfold_tonum)
-{
-  return lj_ir_knum(J, cast_num(fleft->i));
-}
-
-LJFOLD(TOBIT KNUM KNUM)
-LJFOLDF(kfold_tobit)
-{
-  TValue tv;
-  tv.n = knumleft + knumright;
-  return INTFOLD((int32_t)tv.u32.lo);
-}
-
-LJFOLD(TOINT KNUM any)
-LJFOLDF(kfold_toint)
-{
-  lua_Number n = knumleft;
-  int32_t k = lj_num2int(n);
-  if (irt_isguard(fins->t) && n != cast_num(k)) {
-    /* We're about to create a guard which always fails, like TOINT +1.5.
-    ** Some pathological loops cause this during LICM, e.g.:
-    **   local x,k,t = 0,1.5,{1,[1.5]=2}
-    **   for i=1,200 do x = x+ t[k]; k = k == 1 and 1.5 or 1 end
-    **   assert(x == 300)
-    */
-    return FAILFOLD;
-  }
-  return INTFOLD(k);
-}
-
-LJFOLD(TOSTR KNUM)
-LJFOLDF(kfold_tostr_knum)
-{
-  return lj_ir_kstr(J, lj_str_fromnum(J->L, &knumleft));
-}
-
-LJFOLD(TOSTR KINT)
-LJFOLDF(kfold_tostr_kint)
-{
-  return lj_ir_kstr(J, lj_str_fromint(J->L, fleft->i));
-}
-
-LJFOLD(STRTO KGC)
-LJFOLDF(kfold_strto)
-{
-  TValue n;
-  if (lj_str_tonum(ir_kstr(fleft), &n))
-    return lj_ir_knum(J, numV(&n));
-  return FAILFOLD;
-}
-
-LJFOLD(SNEW KPTR KINT)
-LJFOLDF(kfold_snew_kptr)
-{
-  GCstr *s = lj_str_new(J->L, (const char *)ir_kptr(fleft), (size_t)fright->i);
-  return lj_ir_kstr(J, s);
-}
-
-LJFOLD(SNEW any KINT)
-LJFOLDF(kfold_snew_empty)
-{
-  if (fright->i == 0)
-    return lj_ir_kstr(J, lj_str_new(J->L, "", 0));
-  return NEXTFOLD;
-}
-
-LJFOLD(STRREF KGC KINT)
-LJFOLDF(kfold_strref)
-{
-  GCstr *str = ir_kstr(fleft);
-  lua_assert((MSize)fright->i < str->len);
-  return lj_ir_kptr(J, (char *)strdata(str) + fright->i);
-}
-
-LJFOLD(STRREF SNEW any)
-LJFOLDF(kfold_strref_snew)
-{
-  PHIBARRIER(fleft);
-  if (irref_isk(fins->op2) && fright->i == 0) {
-    return fleft->op1;  /* strref(snew(ptr, len), 0) ==> ptr */
-  } else {
-    /* Reassociate: strref(snew(strref(str, a), len), b) ==> strref(str, a+b) */
-    IRIns *ir = IR(fleft->op1);
-    IRRef1 str = ir->op1;  /* IRIns * is not valid across emitir. */
-    lua_assert(ir->o == IR_STRREF);
-    PHIBARRIER(ir);
-    fins->op2 = emitir(IRTI(IR_ADD), ir->op2, fins->op2);  /* Clobbers fins! */
-    fins->op1 = str;
-    fins->ot = IRT(IR_STRREF, IRT_PTR);
-    return RETRYFOLD;
-  }
-  return NEXTFOLD;
-}
-
-/* Must not use kfold_kref for numbers (could be NaN). */
-LJFOLD(EQ KNUM KNUM)
-LJFOLD(NE KNUM KNUM)
-LJFOLD(LT KNUM KNUM)
-LJFOLD(GE KNUM KNUM)
-LJFOLD(LE KNUM KNUM)
-LJFOLD(GT KNUM KNUM)
-LJFOLD(ULT KNUM KNUM)
-LJFOLD(UGE KNUM KNUM)
-LJFOLD(ULE KNUM KNUM)
-LJFOLD(UGT KNUM KNUM)
-LJFOLDF(kfold_numcomp)
-{
-  return CONDFOLD(lj_ir_numcmp(knumleft, knumright, (IROp)fins->o));
 }
 
 LJFOLD(LT KINT KINT)
@@ -374,6 +284,199 @@ LJFOLDF(kfold_intcomp)
   }
 }
 
+LJFOLD(UGE any KINT)
+LJFOLDF(kfold_intcomp0)
+{
+  if (fright->i == 0)
+    return DROPFOLD;
+  return NEXTFOLD;
+}
+
+/* -- Constant folding for 64 bit integers -------------------------------- */
+
+static uint64_t kfold_int64arith(uint64_t k1, uint64_t k2, IROp op)
+{
+  switch (op) {
+#if LJ_64 || LJ_HASFFI
+  case IR_ADD: k1 += k2; break;
+  case IR_SUB: k1 -= k2; break;
+#endif
+#if LJ_HASFFI
+  case IR_MUL: k1 *= k2; break;
+  case IR_BAND: k1 &= k2; break;
+  case IR_BOR: k1 |= k2; break;
+  case IR_BXOR: k1 ^= k2; break;
+#endif
+  default: UNUSED(k2); lua_assert(0); break;
+  }
+  return k1;
+}
+
+LJFOLD(ADD KINT64 KINT64)
+LJFOLD(SUB KINT64 KINT64)
+LJFOLD(MUL KINT64 KINT64)
+LJFOLD(BAND KINT64 KINT64)
+LJFOLD(BOR KINT64 KINT64)
+LJFOLD(BXOR KINT64 KINT64)
+LJFOLDF(kfold_int64arith)
+{
+  return INT64FOLD(kfold_int64arith(ir_k64(fleft)->u64,
+				    ir_k64(fright)->u64, (IROp)fins->o));
+}
+
+LJFOLD(DIV KINT64 KINT64)
+LJFOLD(MOD KINT64 KINT64)
+LJFOLD(POW KINT64 KINT64)
+LJFOLDF(kfold_int64arith2)
+{
+#if LJ_HASFFI
+  uint64_t k1 = ir_k64(fleft)->u64, k2 = ir_k64(fright)->u64;
+  if (irt_isi64(fins->t)) {
+    k1 = fins->o == IR_DIV ? lj_carith_divi64((int64_t)k1, (int64_t)k2) :
+	 fins->o == IR_MOD ? lj_carith_modi64((int64_t)k1, (int64_t)k2) :
+			     lj_carith_powi64((int64_t)k1, (int64_t)k2);
+  } else {
+    k1 = fins->o == IR_DIV ? lj_carith_divu64(k1, k2) :
+	 fins->o == IR_MOD ? lj_carith_modu64(k1, k2) :
+			     lj_carith_powu64(k1, k2);
+  }
+  return INT64FOLD(k1);
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+LJFOLD(BSHL KINT64 KINT)
+LJFOLD(BSHR KINT64 KINT)
+LJFOLD(BSAR KINT64 KINT)
+LJFOLD(BROL KINT64 KINT)
+LJFOLD(BROR KINT64 KINT)
+LJFOLDF(kfold_int64shift)
+{
+#if LJ_HASFFI || LJ_64
+  uint64_t k = ir_k64(fleft)->u64;
+  int32_t sh = (fright->i & 63);
+  switch ((IROp)fins->o) {
+  case IR_BSHL: k <<= sh; break;
+#if LJ_HASFFI
+  case IR_BSHR: k >>= sh; break;
+  case IR_BSAR: k = (uint64_t)((int64_t)k >> sh); break;
+  case IR_BROL: k = lj_rol(k, sh); break;
+  case IR_BROR: k = lj_ror(k, sh); break;
+#endif
+  default: lua_assert(0); break;
+  }
+  return INT64FOLD(k);
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+LJFOLD(BNOT KINT64)
+LJFOLDF(kfold_bnot64)
+{
+#if LJ_HASFFI
+  return INT64FOLD(~ir_k64(fleft)->u64);
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+LJFOLD(BSWAP KINT64)
+LJFOLDF(kfold_bswap64)
+{
+#if LJ_HASFFI
+  return INT64FOLD(lj_bswap64(ir_k64(fleft)->u64));
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+LJFOLD(LT KINT64 KINT)
+LJFOLD(GE KINT64 KINT)
+LJFOLD(LE KINT64 KINT)
+LJFOLD(GT KINT64 KINT)
+LJFOLD(ULT KINT64 KINT)
+LJFOLD(UGE KINT64 KINT)
+LJFOLD(ULE KINT64 KINT)
+LJFOLD(UGT KINT64 KINT)
+LJFOLDF(kfold_int64comp)
+{
+#if LJ_HASFFI
+  uint64_t a = ir_k64(fleft)->u64, b = ir_k64(fright)->u64;
+  switch ((IROp)fins->o) {
+  case IR_LT: return CONDFOLD(a < b);
+  case IR_GE: return CONDFOLD(a >= b);
+  case IR_LE: return CONDFOLD(a <= b);
+  case IR_GT: return CONDFOLD(a > b);
+  case IR_ULT: return CONDFOLD((uint64_t)a < (uint64_t)b);
+  case IR_UGE: return CONDFOLD((uint64_t)a >= (uint64_t)b);
+  case IR_ULE: return CONDFOLD((uint64_t)a <= (uint64_t)b);
+  case IR_UGT: return CONDFOLD((uint64_t)a > (uint64_t)b);
+  default: lua_assert(0); return FAILFOLD;
+  }
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+LJFOLD(UGE any KINT64)
+LJFOLDF(kfold_int64comp0)
+{
+#if LJ_HASFFI
+  if (ir_k64(fright)->u64 == 0)
+    return DROPFOLD;
+  return NEXTFOLD;
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
+}
+
+/* -- Constant folding for strings ---------------------------------------- */
+
+LJFOLD(SNEW KKPTR KINT)
+LJFOLDF(kfold_snew_kptr)
+{
+  GCstr *s = lj_str_new(J->L, (const char *)ir_kptr(fleft), (size_t)fright->i);
+  return lj_ir_kstr(J, s);
+}
+
+LJFOLD(SNEW any KINT)
+LJFOLDF(kfold_snew_empty)
+{
+  if (fright->i == 0)
+    return lj_ir_kstr(J, lj_str_new(J->L, "", 0));
+  return NEXTFOLD;
+}
+
+LJFOLD(STRREF KGC KINT)
+LJFOLDF(kfold_strref)
+{
+  GCstr *str = ir_kstr(fleft);
+  lua_assert((MSize)fright->i < str->len);
+  return lj_ir_kkptr(J, (char *)strdata(str) + fright->i);
+}
+
+LJFOLD(STRREF SNEW any)
+LJFOLDF(kfold_strref_snew)
+{
+  PHIBARRIER(fleft);
+  if (irref_isk(fins->op2) && fright->i == 0) {
+    return fleft->op1;  /* strref(snew(ptr, len), 0) ==> ptr */
+  } else {
+    /* Reassociate: strref(snew(strref(str, a), len), b) ==> strref(str, a+b) */
+    IRIns *ir = IR(fleft->op1);
+    IRRef1 str = ir->op1;  /* IRIns * is not valid across emitir. */
+    lua_assert(ir->o == IR_STRREF);
+    PHIBARRIER(ir);
+    fins->op2 = emitir(IRTI(IR_ADD), ir->op2, fins->op2);  /* Clobbers fins! */
+    fins->op1 = str;
+    fins->ot = IRT(IR_STRREF, IRT_P32);
+    return RETRYFOLD;
+  }
+  return NEXTFOLD;
+}
+
 LJFOLD(CALLN CARG IRCALL_lj_str_cmp)
 LJFOLDF(kfold_strcmp)
 {
@@ -384,6 +487,149 @@ LJFOLDF(kfold_strcmp)
   }
   return NEXTFOLD;
 }
+
+/* -- Constant folding of pointer arithmetic ------------------------------ */
+
+LJFOLD(ADD KGC KINT)
+LJFOLD(ADD KGC KINT64)
+LJFOLDF(kfold_add_kgc)
+{
+  GCobj *o = ir_kgc(fleft);
+#if LJ_64
+  ptrdiff_t ofs = (ptrdiff_t)ir_kint64(fright)->u64;
+#else
+  ptrdiff_t ofs = fright->i;
+#endif
+  return lj_ir_kkptr(J, (char *)o + ofs);
+}
+
+LJFOLD(ADD KPTR KINT)
+LJFOLD(ADD KPTR KINT64)
+LJFOLD(ADD KKPTR KINT)
+LJFOLD(ADD KKPTR KINT64)
+LJFOLDF(kfold_add_kptr)
+{
+  void *p = ir_kptr(fleft);
+#if LJ_64
+  ptrdiff_t ofs = (ptrdiff_t)ir_kint64(fright)->u64;
+#else
+  ptrdiff_t ofs = fright->i;
+#endif
+  return lj_ir_kptr_(J, fleft->o, (char *)p + ofs);
+}
+
+/* -- Constant folding of conversions ------------------------------------- */
+
+LJFOLD(TOBIT KNUM KNUM)
+LJFOLDF(kfold_tobit)
+{
+  TValue tv;
+  tv.n = knumleft + knumright;
+  return INTFOLD((int32_t)tv.u32.lo);
+}
+
+LJFOLD(CONV KINT IRCONV_NUM_INT)
+LJFOLDF(kfold_conv_kint_num)
+{
+  return lj_ir_knum(J, cast_num(fleft->i));
+}
+
+LJFOLD(CONV KINT IRCONV_NUM_U32)
+LJFOLDF(kfold_conv_kintu32_num)
+{
+  return lj_ir_knum(J, cast_num((uint32_t)fleft->i));
+}
+
+LJFOLD(CONV KINT IRCONV_I64_INT)
+LJFOLD(CONV KINT IRCONV_U64_INT)
+LJFOLDF(kfold_conv_kint_i64)
+{
+  return INT64FOLD((uint64_t)(int64_t)fleft->i);
+}
+
+LJFOLD(CONV KINT64 IRCONV_NUM_I64)
+LJFOLDF(kfold_conv_kint64_num_i64)
+{
+  return lj_ir_knum(J, cast_num((int64_t)ir_kint64(fleft)->u64));
+}
+
+LJFOLD(CONV KINT64 IRCONV_NUM_U64)
+LJFOLDF(kfold_conv_kint64_num_u64)
+{
+  return lj_ir_knum(J, cast_num(ir_kint64(fleft)->u64));
+}
+
+LJFOLD(CONV KINT64 IRCONV_INT_I64)
+LJFOLD(CONV KINT64 IRCONV_U32_I64)
+LJFOLDF(kfold_conv_kint64_int_i64)
+{
+  return INTFOLD((int32_t)ir_kint64(fleft)->u64);
+}
+
+LJFOLD(CONV KNUM IRCONV_INT_NUM)
+LJFOLDF(kfold_conv_knum_int_num)
+{
+  lua_Number n = knumleft;
+  if (!(fins->op2 & IRCONV_TRUNC)) {
+    int32_t k = lj_num2int(n);
+    if (irt_isguard(fins->t) && n != cast_num(k)) {
+      /* We're about to create a guard which always fails, like CONV +1.5.
+      ** Some pathological loops cause this during LICM, e.g.:
+      **   local x,k,t = 0,1.5,{1,[1.5]=2}
+      **   for i=1,200 do x = x+ t[k]; k = k == 1 and 1.5 or 1 end
+      **   assert(x == 300)
+      */
+      return FAILFOLD;
+    }
+    return INTFOLD(k);
+  } else {
+    return INTFOLD((int32_t)n);
+  }
+}
+
+LJFOLD(CONV KNUM IRCONV_U32_NUM)
+LJFOLDF(kfold_conv_knum_u32_num)
+{
+  lua_assert((fins->op2 & IRCONV_TRUNC));
+  return INTFOLD((int32_t)(uint32_t)knumleft);
+}
+
+LJFOLD(CONV KNUM IRCONV_I64_NUM)
+LJFOLDF(kfold_conv_knum_i64_num)
+{
+  lua_assert((fins->op2 & IRCONV_TRUNC));
+  return INT64FOLD((uint64_t)(int64_t)knumleft);
+}
+
+LJFOLD(CONV KNUM IRCONV_U64_NUM)
+LJFOLDF(kfold_conv_knum_u64_num)
+{
+  lua_assert((fins->op2 & IRCONV_TRUNC));
+  return INT64FOLD(lj_num2u64(knumleft));
+}
+
+LJFOLD(TOSTR KNUM)
+LJFOLDF(kfold_tostr_knum)
+{
+  return lj_ir_kstr(J, lj_str_fromnum(J->L, &knumleft));
+}
+
+LJFOLD(TOSTR KINT)
+LJFOLDF(kfold_tostr_kint)
+{
+  return lj_ir_kstr(J, lj_str_fromint(J->L, fleft->i));
+}
+
+LJFOLD(STRTO KGC)
+LJFOLDF(kfold_strto)
+{
+  TValue n;
+  if (lj_str_tonum(ir_kstr(fleft), &n))
+    return lj_ir_knum(J, numV(&n));
+  return FAILFOLD;
+}
+
+/* -- Constant folding of equality checks --------------------------------- */
 
 /* Don't constant-fold away FLOAD checks against KNULL. */
 LJFOLD(EQ FLOAD KNULL)
@@ -397,6 +643,8 @@ LJFOLD(EQ KNULL any)
 LJFOLD(NE KNULL any)
 LJFOLD(EQ KINT KINT)  /* Constants are unique, so same refs <==> same value. */
 LJFOLD(NE KINT KINT)
+LJFOLD(EQ KINT64 KINT64)
+LJFOLD(NE KINT64 KINT64)
 LJFOLD(EQ KGC KGC)
 LJFOLD(NE KGC KGC)
 LJFOLDF(kfold_kref)
@@ -417,9 +665,6 @@ LJFOLDF(shortcut_round)
   return NEXTFOLD;
 }
 
-LJFOLD(FPMATH TONUM IRFPM_FLOOR)
-LJFOLD(FPMATH TONUM IRFPM_CEIL)
-LJFOLD(FPMATH TONUM IRFPM_TRUNC)
 LJFOLD(ABS ABS KNUM)
 LJFOLDF(shortcut_left)
 {
@@ -441,23 +686,6 @@ LJFOLD(BSWAP BSWAP)
 LJFOLDF(shortcut_leftleft)
 {
   PHIBARRIER(fleft);  /* See above. Fold would be ok, but not beneficial. */
-  return fleft->op1;  /* f(g(x)) ==> x */
-}
-
-LJFOLD(TONUM TOINT)
-LJFOLDF(shortcut_leftleft_toint)
-{
-  PHIBARRIER(fleft);
-  if (irt_isguard(fleft->t))  /* Only safe with a guarded TOINT. */
-    return fleft->op1;  /* f(g(x)) ==> x */
-  return NEXTFOLD;
-}
-
-LJFOLD(TOINT TONUM any)
-LJFOLD(TOBIT TONUM KNUM)  /* The inverse must NOT be shortcut! */
-LJFOLDF(shortcut_leftleft_across_phi)
-{
-  /* Fold even across PHI to avoid expensive int->num->int conversions. */
   return fleft->op1;  /* f(g(x)) ==> x */
 }
 
@@ -556,8 +784,8 @@ LJFOLDF(simplify_nummuldiv_negneg)
   return RETRYFOLD;
 }
 
-LJFOLD(POWI any KINT)
-LJFOLDF(simplify_powi_xk)
+LJFOLD(POW any KINT)
+LJFOLDF(simplify_numpow_xk)
 {
   int32_t k = fright->i;
   TRef ref = fins->op1;
@@ -586,14 +814,14 @@ LJFOLDF(simplify_powi_xk)
   return ref;
 }
 
-LJFOLD(POWI KNUM any)
-LJFOLDF(simplify_powi_kx)
+LJFOLD(POW KNUM any)
+LJFOLDF(simplify_numpow_kx)
 {
   lua_Number n = knumleft;
   if (n == 2.0) {  /* 2.0 ^ i ==> ldexp(1.0, tonum(i)) */
-    fins->o = IR_TONUM;
+    fins->o = IR_CONV;
     fins->op1 = fins->op2;
-    fins->op2 = 0;
+    fins->op2 = IRCONV_NUM_INT;
     fins->op2 = (IRRef1)lj_opt_fold(J);
     fins->op1 = (IRRef1)lj_ir_knum_one(J);
     fins->o = IR_LDEXP;
@@ -602,33 +830,153 @@ LJFOLDF(simplify_powi_kx)
   return NEXTFOLD;
 }
 
-/* -- FP conversion narrowing --------------------------------------------- */
+/* -- Simplify conversions ------------------------------------------------ */
 
-LJFOLD(TOINT ADD any)
-LJFOLD(TOINT SUB any)
+LJFOLD(CONV CONV IRCONV_NUM_INT)  /* _NUM */
+LJFOLDF(shortcut_conv_num_int)
+{
+  PHIBARRIER(fleft);
+  /* Only safe with a guarded conversion to int. */
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_NUM && irt_isguard(fleft->t))
+    return fleft->op1;  /* f(g(x)) ==> x */
+  return NEXTFOLD;
+}
+
+LJFOLD(CONV CONV IRCONV_INT_NUM)  /* _INT */
+LJFOLDF(simplify_conv_int_num)
+{
+  /* Fold even across PHI to avoid expensive num->int conversions in loop. */
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT)
+    return fleft->op1;
+  return NEXTFOLD;
+}
+
+LJFOLD(CONV CONV IRCONV_U32_NUM)  /* _U32*/
+LJFOLDF(simplify_conv_u32_num)
+{
+  /* Fold even across PHI to avoid expensive num->int conversions in loop. */
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_U32)
+    return fleft->op1;
+  return NEXTFOLD;
+}
+
+LJFOLD(CONV CONV IRCONV_I64_NUM)  /* _INT or _U32*/
+LJFOLD(CONV CONV IRCONV_U64_NUM)  /* _INT or _U32*/
+LJFOLDF(simplify_conv_i64_num)
+{
+  PHIBARRIER(fleft);
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT) {
+    /* Reduce to a sign-extension. */
+    fins->op1 = fleft->op1;
+    fins->op2 = ((IRT_I64<<5)|IRT_INT|IRCONV_SEXT);
+    return RETRYFOLD;
+  } else if ((fleft->op2 & IRCONV_SRCMASK) == IRT_U32) {
+#if LJ_TARGET_X64
+    return fleft->op1;
+#else
+    /* Reduce to a zero-extension. */
+    fins->op1 = fleft->op1;
+    fins->op2 = (IRT_I64<<5)|IRT_U32;
+    return RETRYFOLD;
+#endif
+  }
+  return NEXTFOLD;
+}
+
+/* Shortcut TOBIT + IRT_NUM <- IRT_INT/IRT_U32 conversion. */
+LJFOLD(TOBIT CONV KNUM)
+LJFOLDF(simplify_tobit_conv)
+{
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT ||
+      (fleft->op2 & IRCONV_SRCMASK) == IRT_U32) {
+    /* Fold even across PHI to avoid expensive num->int conversions in loop. */
+    lua_assert(irt_isnum(fleft->t));
+    return fleft->op1;
+  }
+  return NEXTFOLD;
+}
+
+/* Shortcut floor/ceil/round + IRT_NUM <- IRT_INT/IRT_U32 conversion. */
+LJFOLD(FPMATH CONV IRFPM_FLOOR)
+LJFOLD(FPMATH CONV IRFPM_CEIL)
+LJFOLD(FPMATH CONV IRFPM_TRUNC)
+LJFOLDF(simplify_floor_conv)
+{
+  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT ||
+      (fleft->op2 & IRCONV_SRCMASK) == IRT_U32)
+    return LEFTFOLD;
+  return NEXTFOLD;
+}
+
+/* Strength reduction of widening. */
+LJFOLD(CONV any IRCONV_I64_INT)
+LJFOLDF(simplify_conv_sext)
+{
+  IRRef ref = fins->op1;
+  int64_t ofs = 0;
+  if (!(fins->op2 & IRCONV_SEXT))
+    return NEXTFOLD;
+  PHIBARRIER(fleft);
+  if (fleft->o == IR_XLOAD && (irt_isu8(fleft->t) || irt_isu16(fleft->t)))
+    goto ok_reduce;
+  if (fleft->o == IR_ADD && irref_isk(fleft->op2)) {
+    ofs = (int64_t)IR(fleft->op2)->i;
+    ref = fleft->op1;
+  }
+  /* Use scalar evolution analysis results to strength-reduce sign-extension. */
+  if (ref == J->scev.idx) {
+    IRRef lo = J->scev.dir ? J->scev.start : J->scev.stop;
+    lua_assert(irt_isint(J->scev.t));
+    if (lo && IR(lo)->i + ofs >= 0) {
+    ok_reduce:
+#if LJ_TARGET_X64
+      /* Eliminate widening. All 32 bit ops do an implicit zero-extension. */
+      return LEFTFOLD;
+#else
+      /* Reduce to a (cheaper) zero-extension. */
+      fins->op2 &= ~IRCONV_SEXT;
+      return RETRYFOLD;
+#endif
+    }
+  }
+  return NEXTFOLD;
+}
+
+/* Special CSE rule for CONV. */
+LJFOLD(CONV any any)
+LJFOLDF(cse_conv)
+{
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_CSE)) {
+    IRRef op1 = fins->op1, op2 = (fins->op2 & IRCONV_MODEMASK);
+    uint8_t guard = irt_isguard(fins->t);
+    IRRef ref = J->chain[IR_CONV];
+    while (ref > op1) {
+      IRIns *ir = IR(ref);
+      /* Commoning with stronger checks is ok. */
+      if (ir->op1 == op1 && (ir->op2 & IRCONV_MODEMASK) == op2 &&
+	  irt_isguard(ir->t) >= guard)
+	return ref;
+      ref = ir->prev;
+    }
+  }
+  return EMITFOLD;  /* No fallthrough to regular CSE. */
+}
+
+/* FP conversion narrowing. */
 LJFOLD(TOBIT ADD KNUM)
 LJFOLD(TOBIT SUB KNUM)
+LJFOLD(CONV ADD IRCONV_INT_NUM)
+LJFOLD(CONV SUB IRCONV_INT_NUM)
+LJFOLD(CONV ADD IRCONV_I64_NUM)
+LJFOLD(CONV SUB IRCONV_I64_NUM)
 LJFOLDF(narrow_convert)
 {
   PHIBARRIER(fleft);
   /* Narrowing ignores PHIs and repeating it inside the loop is not useful. */
   if (J->chain[IR_LOOP])
     return NEXTFOLD;
+  lua_assert(fins->o != IR_CONV || (fins->op2&IRCONV_CONVMASK) != IRCONV_TOBIT);
   return lj_opt_narrow_convert(J);
-}
-
-/* Relaxed CSE rule for TOINT allows commoning with stronger checks, too. */
-LJFOLD(TOINT any any)
-LJFOLDF(cse_toint)
-{
-  if (LJ_LIKELY(J->flags & JIT_F_OPT_CSE)) {
-    IRRef ref, op1 = fins->op1;
-    uint8_t guard = irt_isguard(fins->t);
-    for (ref = J->chain[IR_TOINT]; ref > op1; ref = IR(ref)->prev)
-      if (IR(ref)->op1 == op1 && irt_isguard(IR(ref)->t) >= guard)
-	return ref;
-  }
-  return EMITFOLD;  /* No fallthrough to regular CSE. */
 }
 
 /* -- Integer algebraic simplifications ----------------------------------- */
@@ -653,12 +1001,71 @@ LJFOLDF(simplify_intsub_k)
   return RETRYFOLD;
 }
 
+LJFOLD(ADD any KINT64)
+LJFOLDF(simplify_intadd_k64)
+{
+  if (ir_kint64(fright)->u64 == 0)  /* i + 0 ==> i */
+    return LEFTFOLD;
+  return NEXTFOLD;
+}
+
+LJFOLD(SUB any KINT64)
+LJFOLDF(simplify_intsub_k64)
+{
+  uint64_t k = ir_kint64(fright)->u64;
+  if (k == 0)  /* i - 0 ==> i */
+    return LEFTFOLD;
+  fins->o = IR_ADD;  /* i - k ==> i + (-k) */
+  fins->op2 = (IRRef1)lj_ir_kint64(J, (uint64_t)-(int64_t)k);
+  return RETRYFOLD;
+}
+
+static TRef simplify_intmul_k(jit_State *J, int32_t k)
+{
+  /* Note: many more simplifications are possible, e.g. 2^k1 +- 2^k2.
+  ** But this is mainly intended for simple address arithmetic.
+  ** Also it's easier for the backend to optimize the original multiplies.
+  */
+  if (k == 1) {  /* i * 1 ==> i */
+    return LEFTFOLD;
+  } else if ((k & (k-1)) == 0) {  /* i * 2^k ==> i << k */
+    fins->o = IR_BSHL;
+    fins->op2 = lj_ir_kint(J, lj_fls((uint32_t)k));
+    return RETRYFOLD;
+  }
+  return NEXTFOLD;
+}
+
+LJFOLD(MUL any KINT)
+LJFOLDF(simplify_intmul_k32)
+{
+  if (fright->i == 0)  /* i * 0 ==> 0 */
+    return INTFOLD(0);
+  else if (fright->i > 0)
+    return simplify_intmul_k(J, fright->i);
+  return NEXTFOLD;
+}
+
+LJFOLD(MUL any KINT64)
+LJFOLDF(simplify_intmul_k64)
+
+{
+  if (ir_kint64(fright)->u64 == 0)  /* i * 0 ==> 0 */
+    return INT64FOLD(0);
+#if LJ_64
+  /* NYI: SPLIT for BSHL and 32 bit backend support. */
+  else if (ir_kint64(fright)->u64 < 0x80000000u)
+    return simplify_intmul_k(J, (int32_t)ir_kint64(fright)->u64);
+#endif
+  return NEXTFOLD;
+}
+
 LJFOLD(SUB any any)
 LJFOLD(SUBOV any any)
 LJFOLDF(simplify_intsub)
 {
   if (fins->op1 == fins->op2 && !irt_isnum(fins->t))  /* i - i ==> 0 */
-    return INTFOLD(0);
+    return irt_is64(fins->t) ? INT64FOLD(0) : INTFOLD(0);
   return NEXTFOLD;
 }
 
@@ -750,31 +1157,40 @@ LJFOLDF(simplify_intsubaddadd_cancel)
 }
 
 LJFOLD(BAND any KINT)
+LJFOLD(BAND any KINT64)
 LJFOLDF(simplify_band_k)
 {
-  if (fright->i == 0)  /* i & 0 ==> 0 */
+  int64_t k = fright->o == IR_KINT ? (int64_t)fright->i :
+				     (int64_t)ir_k64(fright)->u64;
+  if (k == 0)  /* i & 0 ==> 0 */
     return RIGHTFOLD;
-  if (fright->i == -1)  /* i & -1 ==> i */
+  if (k == -1)  /* i & -1 ==> i */
     return LEFTFOLD;
   return NEXTFOLD;
 }
 
 LJFOLD(BOR any KINT)
+LJFOLD(BOR any KINT64)
 LJFOLDF(simplify_bor_k)
 {
-  if (fright->i == 0)  /* i | 0 ==> i */
+  int64_t k = fright->o == IR_KINT ? (int64_t)fright->i :
+				     (int64_t)ir_k64(fright)->u64;
+  if (k == 0)  /* i | 0 ==> i */
     return LEFTFOLD;
-  if (fright->i == -1)  /* i | -1 ==> -1 */
+  if (k == -1)  /* i | -1 ==> -1 */
     return RIGHTFOLD;
   return NEXTFOLD;
 }
 
 LJFOLD(BXOR any KINT)
+LJFOLD(BXOR any KINT64)
 LJFOLDF(simplify_bxor_k)
 {
-  if (fright->i == 0)  /* i xor 0 ==> i */
+  int64_t k = fright->o == IR_KINT ? (int64_t)fright->i :
+				     (int64_t)ir_k64(fright)->u64;
+  if (k == 0)  /* i xor 0 ==> i */
     return LEFTFOLD;
-  if (fright->i == -1) {  /* i xor -1 ==> ~i */
+  if (k == -1) {  /* i xor -1 ==> ~i */
     fins->o = IR_BNOT;
     fins->op2 = 0;
     return RETRYFOLD;
@@ -789,16 +1205,22 @@ LJFOLD(BROL any KINT)
 LJFOLD(BROR any KINT)
 LJFOLDF(simplify_shift_ik)
 {
-  int32_t k = (fright->i & 31);
+  int32_t mask = irt_is64(fins->t) ? 63 : 31;
+  int32_t k = (fright->i & mask);
   if (k == 0)  /* i o 0 ==> i */
     return LEFTFOLD;
-  if (k != fright->i) {  /* i o k ==> i o (k & 31) */
+  if (k == 1 && fins->o == IR_BSHL) {  /* i << 1 ==> i + i */
+    fins->o = IR_ADD;
+    fins->op2 = fins->op1;
+    return RETRYFOLD;
+  }
+  if (k != fright->i) {  /* i o k ==> i o (k & mask) */
     fins->op2 = (IRRef1)lj_ir_kint(J, k);
     return RETRYFOLD;
   }
-  if (fins->o == IR_BROR) {  /* bror(i, k) ==> brol(i, (-k)&31) */
+  if (fins->o == IR_BROR) {  /* bror(i, k) ==> brol(i, (-k)&mask) */
     fins->o = IR_BROL;
-    fins->op2 = (IRRef1)lj_ir_kint(J, (-k)&31);
+    fins->op2 = (IRRef1)lj_ir_kint(J, (-k)&mask);
     return RETRYFOLD;
   }
   return NEXTFOLD;
@@ -811,25 +1233,29 @@ LJFOLD(BROL any BAND)
 LJFOLD(BROR any BAND)
 LJFOLDF(simplify_shift_andk)
 {
-#if LJ_TARGET_MASKEDSHIFT
   IRIns *irk = IR(fright->op2);
   PHIBARRIER(fright);
-  if (irk->o == IR_KINT) {  /* i o (j & 31) ==> i o j */
-    int32_t k = irk->i & 31;
-    if (k == 31) {
+  if ((fins->o < IR_BROL ? LJ_TARGET_MASKSHIFT : LJ_TARGET_MASKROT) &&
+      irk->o == IR_KINT) {  /* i o (j & mask) ==> i o j */
+    int32_t mask = irt_is64(fins->t) ? 63 : 31;
+    int32_t k = irk->i & mask;
+    if (k == mask) {
       fins->op2 = fright->op1;
       return RETRYFOLD;
     }
   }
-#endif
   return NEXTFOLD;
 }
 
 LJFOLD(BSHL KINT any)
 LJFOLD(BSHR KINT any)
+LJFOLD(BSHL KINT64 any)
+LJFOLD(BSHR KINT64 any)
 LJFOLDF(simplify_shift1_ki)
 {
-  if (fleft->i == 0)  /* 0 o i ==> 0 */
+  int64_t k = fleft->o == IR_KINT ? (int64_t)fleft->i :
+				    (int64_t)ir_k64(fleft)->u64;
+  if (k == 0)  /* 0 o i ==> 0 */
     return LEFTFOLD;
   return NEXTFOLD;
 }
@@ -837,9 +1263,14 @@ LJFOLDF(simplify_shift1_ki)
 LJFOLD(BSAR KINT any)
 LJFOLD(BROL KINT any)
 LJFOLD(BROR KINT any)
+LJFOLD(BSAR KINT64 any)
+LJFOLD(BROL KINT64 any)
+LJFOLD(BROR KINT64 any)
 LJFOLDF(simplify_shift2_ki)
 {
-  if (fleft->i == 0 || fleft->i == -1)  /* 0 o i ==> 0; -1 o i ==> -1 */
+  int64_t k = fleft->o == IR_KINT ? (int64_t)fleft->i :
+				    (int64_t)ir_k64(fleft)->u64;
+  if (k == 0 || k == -1)  /* 0 o i ==> 0; -1 o i ==> -1 */
     return LEFTFOLD;
   return NEXTFOLD;
 }
@@ -847,6 +1278,7 @@ LJFOLDF(simplify_shift2_ki)
 /* -- Reassociation ------------------------------------------------------- */
 
 LJFOLD(ADD ADD KINT)
+LJFOLD(MUL MUL KINT)
 LJFOLD(BAND BAND KINT)
 LJFOLD(BOR BOR KINT)
 LJFOLD(BXOR BXOR KINT)
@@ -863,6 +1295,29 @@ LJFOLDF(reassoc_intarith_k)
     return RETRYFOLD;  /* (i o k1) o k2 ==> i o (k1 o k2) */
   }
   return NEXTFOLD;
+}
+
+LJFOLD(ADD ADD KINT64)
+LJFOLD(MUL MUL KINT64)
+LJFOLD(BAND BAND KINT64)
+LJFOLD(BOR BOR KINT64)
+LJFOLD(BXOR BXOR KINT64)
+LJFOLDF(reassoc_intarith_k64)
+{
+#if LJ_HASFFI || LJ_64
+  IRIns *irk = IR(fleft->op2);
+  if (irk->o == IR_KINT64) {
+    uint64_t k = kfold_int64arith(ir_k64(irk)->u64,
+				  ir_k64(fright)->u64, (IROp)fins->o);
+    PHIBARRIER(fleft);
+    fins->op1 = fleft->op1;
+    fins->op2 = (IRRef1)lj_ir_kint64(J, k);
+    return RETRYFOLD;  /* (i o k1) o k2 ==> i o (k1 o k2) */
+  }
+  return NEXTFOLD;
+#else
+  UNUSED(J); lua_assert(0); return FAILFOLD;
+#endif
 }
 
 LJFOLD(MIN MIN any)
@@ -898,14 +1353,15 @@ LJFOLDF(reassoc_shift)
   IRIns *irk = IR(fleft->op2);
   PHIBARRIER(fleft);  /* The (shift any KINT) rule covers k2 == 0 and more. */
   if (irk->o == IR_KINT) {  /* (i o k1) o k2 ==> i o (k1 + k2) */
-    int32_t k = (irk->i & 31) + (fright->i & 31);
-    if (k > 31) {  /* Combined shift too wide? */
+    int32_t mask = irt_is64(fins->t) ? 63 : 31;
+    int32_t k = (irk->i & mask) + (fright->i & mask);
+    if (k > mask) {  /* Combined shift too wide? */
       if (fins->o == IR_BSHL || fins->o == IR_BSHR)
-	return INTFOLD(0);
+	return mask == 31 ? INTFOLD(0) : INT64FOLD(0);
       else if (fins->o == IR_BSAR)
-	k = 31;
+	k = mask;
       else
-	k &= 31;
+	k &= mask;
     }
     fins->op1 = fleft->op1;
     fins->op2 = (IRRef1)lj_ir_kint(J, k);
@@ -1086,24 +1542,29 @@ LJFOLD(BXOR any any)
 LJFOLDF(comm_bxor)
 {
   if (fins->op1 == fins->op2)  /* i xor i ==> 0 */
-    return INTFOLD(0);
+    return irt_is64(fins->t) ? INT64FOLD(0) : INTFOLD(0);
   return fold_comm_swap(J);
 }
 
 /* -- Simplification of compound expressions ------------------------------ */
 
-static int32_t kfold_xload(IRIns *ir, const void *p)
+static TRef kfold_xload(jit_State *J, IRIns *ir, const void *p)
 {
+  int32_t k;
 #if !LJ_TARGET_X86ORX64
 #error "Missing support for unaligned loads"
 #endif
   switch (irt_type(ir->t)) {
-  case IRT_I8: return (int32_t)*(int8_t *)p;
-  case IRT_U8: return (int32_t)*(uint8_t *)p;
-  case IRT_I16: return (int32_t)*(int16_t *)p;
-  case IRT_U16: return (int32_t)*(uint16_t *)p;
-  default: lua_assert(irt_isint(ir->t)); return (int32_t)*(int32_t *)p;
+  case IRT_NUM: return lj_ir_knum_u64(J, *(uint64_t *)p);
+  case IRT_I8: k = (int32_t)*(int8_t *)p; break;
+  case IRT_U8: k = (int32_t)*(uint8_t *)p; break;
+  case IRT_I16: k = (int32_t)*(int16_t *)p; break;
+  case IRT_U16: k = (int32_t)*(uint16_t *)p; break;
+  case IRT_INT: case IRT_U32: k = *(int32_t *)p; break;
+  case IRT_I64: case IRT_U64: return lj_ir_kint64(J, *(uint64_t *)p);
+  default: return 0;
   }
+  return lj_ir_kint(J, k);
 }
 
 /* Turn: string.sub(str, a, b) == kstr
@@ -1138,7 +1599,7 @@ LJFOLDF(merge_eqne_snew_kgc)
 			       IRTI(IR_XLOAD));
       TRef tmp = emitir(ot, strref,
 			IRXLOAD_READONLY | (len > 1 ? IRXLOAD_UNALIGNED : 0));
-      TRef val = lj_ir_kint(J, kfold_xload(IR(tref_ref(tmp)), strdata(kstr)));
+      TRef val = kfold_xload(J, IR(tref_ref(tmp)), strdata(kstr));
       if (len == 3)
 	tmp = emitir(IRTI(IR_BAND), tmp,
 		     lj_ir_kint(J, LJ_ENDIAN_SELECT(0x00ffffff, 0xffffff00)));
@@ -1165,8 +1626,8 @@ LJFOLD(ALOAD any)
 LJFOLDX(lj_opt_fwd_aload)
 
 /* From HREF fwd (see below). Must eliminate, not supported by fwd/backend. */
-LJFOLD(HLOAD KPTR)
-LJFOLDF(kfold_hload_kptr)
+LJFOLD(HLOAD KKPTR)
+LJFOLDF(kfold_hload_kkptr)
 {
   UNUSED(J);
   lua_assert(ir_kptr(fleft) == niltvg(J2G(J)));
@@ -1216,7 +1677,7 @@ LJFOLD(HREF TNEW any)
 LJFOLDF(fwd_href_tnew)
 {
   if (lj_opt_fwd_href_nokey(J))
-    return lj_ir_kptr(J, niltvg(J2G(J)));
+    return lj_ir_kkptr(J, niltvg(J2G(J)));
   return NEXTFOLD;
 }
 
@@ -1229,28 +1690,20 @@ LJFOLDF(fwd_href_tdup)
   lj_ir_kvalue(J->L, &keyv, fright);
   if (lj_tab_get(J->L, ir_ktab(IR(fleft->op1)), &keyv) == niltvg(J2G(J)) &&
       lj_opt_fwd_href_nokey(J))
-    return lj_ir_kptr(J, niltvg(J2G(J)));
+    return lj_ir_kkptr(J, niltvg(J2G(J)));
   return NEXTFOLD;
 }
 
 /* We can safely FOLD/CSE array/hash refs and field loads, since there
-** are no corresponding stores. But NEWREF may invalidate all of them.
-** Lacking better disambiguation for table references, these optimizations
-** are simply disabled across any NEWREF.
+** are no corresponding stores. But we need to check for any NEWREF with
+** an aliased table, as it may invalidate all of the pointers and fields.
 ** Only HREF needs the NEWREF check -- AREF and HREFK already depend on
 ** FLOADs. And NEWREF itself is treated like a store (see below).
 */
-LJFOLD(HREF any any)
-LJFOLDF(cse_href)
-{
-  TRef tr = lj_opt_cse(J);
-  return tref_ref(tr) < J->chain[IR_NEWREF] ? EMITFOLD : tr;
-}
-
 LJFOLD(FLOAD TNEW IRFL_TAB_ASIZE)
 LJFOLDF(fload_tab_tnew_asize)
 {
-  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && fins->op1 > J->chain[IR_NEWREF])
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && lj_opt_fwd_tptr(J, fins->op1))
     return INTFOLD(fleft->op1);
   return NEXTFOLD;
 }
@@ -1258,7 +1711,7 @@ LJFOLDF(fload_tab_tnew_asize)
 LJFOLD(FLOAD TNEW IRFL_TAB_HMASK)
 LJFOLDF(fload_tab_tnew_hmask)
 {
-  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && fins->op1 > J->chain[IR_NEWREF])
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && lj_opt_fwd_tptr(J, fins->op1))
     return INTFOLD((1 << fleft->op2)-1);
   return NEXTFOLD;
 }
@@ -1266,7 +1719,7 @@ LJFOLDF(fload_tab_tnew_hmask)
 LJFOLD(FLOAD TDUP IRFL_TAB_ASIZE)
 LJFOLDF(fload_tab_tdup_asize)
 {
-  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && fins->op1 > J->chain[IR_NEWREF])
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && lj_opt_fwd_tptr(J, fins->op1))
     return INTFOLD((int32_t)ir_ktab(IR(fleft->op1))->asize);
   return NEXTFOLD;
 }
@@ -1274,11 +1727,12 @@ LJFOLDF(fload_tab_tdup_asize)
 LJFOLD(FLOAD TDUP IRFL_TAB_HMASK)
 LJFOLDF(fload_tab_tdup_hmask)
 {
-  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && fins->op1 > J->chain[IR_NEWREF])
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD) && lj_opt_fwd_tptr(J, fins->op1))
     return INTFOLD((int32_t)ir_ktab(IR(fleft->op1))->hmask);
   return NEXTFOLD;
 }
 
+LJFOLD(HREF any any)
 LJFOLD(FLOAD any IRFL_TAB_ARRAY)
 LJFOLD(FLOAD any IRFL_TAB_NODE)
 LJFOLD(FLOAD any IRFL_TAB_ASIZE)
@@ -1286,7 +1740,7 @@ LJFOLD(FLOAD any IRFL_TAB_HMASK)
 LJFOLDF(fload_tab_ah)
 {
   TRef tr = lj_opt_cse(J);
-  return tref_ref(tr) < J->chain[IR_NEWREF] ? EMITFOLD : tr;
+  return lj_opt_fwd_tptr(J, tref_ref(tr)) ? tr : EMITFOLD;
 }
 
 /* Strings are immutable, so we can safely FOLD/CSE the related FLOAD. */
@@ -1308,7 +1762,54 @@ LJFOLDF(fload_str_len_snew)
   return NEXTFOLD;
 }
 
+/* The C type ID of cdata objects is immutable. */
+LJFOLD(FLOAD KGC IRFL_CDATA_TYPEID)
+LJFOLDF(fload_cdata_typeid_kgc)
+{
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD))
+    return INTFOLD((int32_t)ir_kcdata(fleft)->typeid);
+  return NEXTFOLD;
+}
+
+/* Get the contents of immutable cdata objects. */
+LJFOLD(FLOAD KGC IRFL_CDATA_PTR)
+LJFOLD(FLOAD KGC IRFL_CDATA_INT64)
+LJFOLDF(fload_cdata_int64_kgc)
+{
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD)) {
+    void *p = cdataptr(ir_kcdata(fleft));
+    if (irt_is64(fins->t))
+      return INT64FOLD(*(uint64_t *)p);
+    else
+      return INTFOLD(*(int32_t *)p);
+  }
+  return NEXTFOLD;
+}
+
+LJFOLD(FLOAD CNEW IRFL_CDATA_TYPEID)
+LJFOLD(FLOAD CNEWI IRFL_CDATA_TYPEID)
+LJFOLDF(fload_cdata_typeid_cnew)
+{
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD))
+    return fleft->op1;  /* No PHI barrier needed. CNEW/CNEWI op1 is const. */
+  return NEXTFOLD;
+}
+
+/* Pointer and int64 cdata objects are immutable. */
+LJFOLD(FLOAD CNEWI IRFL_CDATA_PTR)
+LJFOLD(FLOAD CNEWI IRFL_CDATA_INT64)
+LJFOLDF(fload_cdata_ptr_int64_cnew)
+{
+  if (LJ_LIKELY(J->flags & JIT_F_OPT_FOLD))
+    return fleft->op2;  /* Fold even across PHI to avoid allocations. */
+  return NEXTFOLD;
+}
+
 LJFOLD(FLOAD any IRFL_STR_LEN)
+LJFOLD(FLOAD any IRFL_CDATA_TYPEID)
+LJFOLD(FLOAD any IRFL_CDATA_PTR)
+LJFOLD(FLOAD any IRFL_CDATA_INT64)
+LJFOLD(VLOAD any any)  /* Vararg loads have no corresponding stores. */
 LJFOLDX(lj_opt_cse)
 
 /* All other field loads need alias analysis. */
@@ -1319,32 +1820,25 @@ LJFOLDX(lj_opt_fwd_fload)
 LJFOLD(SLOAD any any)
 LJFOLDF(fwd_sload)
 {
-  lua_assert(J->slot[fins->op1] != 0);
-  return J->slot[fins->op1];
+  if ((fins->op2 & IRSLOAD_FRAME)) {
+    TRef tr = lj_opt_cse(J);
+    return tref_ref(tr) < J->chain[IR_RETF] ? EMITFOLD : tr;
+  } else {
+    lua_assert(J->slot[fins->op1] != 0);
+    return J->slot[fins->op1];
+  }
 }
 
-LJFOLD(XLOAD KPTR any)
+/* Only fold for KKPTR. The pointer _and_ the contents must be const. */
+LJFOLD(XLOAD KKPTR any)
 LJFOLDF(xload_kptr)
 {
-  /* Only fold read-only integer loads for now. */
-  if ((fins->op2 & IRXLOAD_READONLY) && irt_isinteger(fins->t))
-    return INTFOLD(kfold_xload(fins, ir_kptr(fleft)));
-  return NEXTFOLD;
+  TRef tr = kfold_xload(J, fins, ir_kptr(fleft));
+  return tr ? tr : NEXTFOLD;
 }
 
-/* CSE for XLOAD depends on the type, but not on the IRXLOAD_* flags. */
 LJFOLD(XLOAD any any)
-LJFOLDF(fwd_xload)
-{
-  IRRef ref = J->chain[IR_XLOAD];
-  IRRef op1 = fins->op1;
-  while (ref > op1) {
-    if (IR(ref)->op1 == op1 && irt_sametype(IR(ref)->t, fins->t))
-      return ref;
-    ref = IR(ref)->prev;
-  }
-  return EMITFOLD;
-}
+LJFOLDX(lj_opt_fwd_xload)
 
 /* -- Write barriers ------------------------------------------------------ */
 
@@ -1394,24 +1888,30 @@ LJFOLDX(lj_opt_dse_ustore)
 LJFOLD(FSTORE any any)
 LJFOLDX(lj_opt_dse_fstore)
 
+LJFOLD(XSTORE any any)
+LJFOLDX(lj_opt_dse_xstore)
+
 LJFOLD(NEWREF any any)  /* Treated like a store. */
 LJFOLD(CALLS any any)
 LJFOLD(CALLL any any)  /* Safeguard fallback. */
+LJFOLD(CALLXS any any)
+LJFOLD(XBAR)
 LJFOLD(RETF any any)  /* Modifies BASE. */
 LJFOLD(TNEW any any)
 LJFOLD(TDUP any)
+LJFOLD(CNEW any any)
 LJFOLDX(lj_ir_emit)
 
 /* ------------------------------------------------------------------------ */
 
 /* Every entry in the generated hash table is a 32 bit pattern:
 **
-** xxxxxxxx iiiiiiii llllllll rrrrrrrr
+** xxxxxxxx iiiiiii lllllll rrrrrrrrrr
 **
-** xxxxxxxx = 8 bit index into fold function table
-** iiiiiiii = 8 bit folded instruction opcode
-** llllllll = 8 bit left instruction opcode
-** rrrrrrrr = 8 bit right instruction opcode or 8 bits from literal field
+**   xxxxxxxx = 8 bit index into fold function table
+**    iiiiiii = 7 bit folded instruction opcode
+**    lllllll = 7 bit left instruction opcode
+** rrrrrrrrrr = 8 bit right instruction opcode or 10 bits from literal field
 */
 
 #include "lj_folddef.h"
@@ -1445,22 +1945,22 @@ TRef LJ_FASTCALL lj_opt_fold(jit_State *J)
   /* Fold engine start/retry point. */
 retry:
   /* Construct key from opcode and operand opcodes (unless literal/none). */
-  key = ((uint32_t)fins->o << 16);
+  key = ((uint32_t)fins->o << 17);
   if (fins->op1 >= J->cur.nk) {
-    key += (uint32_t)IR(fins->op1)->o << 8;
+    key += (uint32_t)IR(fins->op1)->o << 10;
     *fleft = *IR(fins->op1);
   }
   if (fins->op2 >= J->cur.nk) {
     key += (uint32_t)IR(fins->op2)->o;
     *fright = *IR(fins->op2);
   } else {
-    key += (fins->op2 & 0xffu);  /* For IRFPM_* and IRFL_*. */
+    key += (fins->op2 & 0x3ffu);  /* Literal mask. Must include IRCONV_*MASK. */
   }
 
   /* Check for a match in order from most specific to least specific. */
   any = 0;
   for (;;) {
-    uint32_t k = key | any;
+    uint32_t k = key | (any & 0x1ffff);
     uint32_t h = fold_hashkey(k);
     uint32_t fh = fold_hash[h];  /* Lookup key in semi-perfect hash table. */
     if ((fh & 0xffffff) == k || (fh = fold_hash[h+1], (fh & 0xffffff) == k)) {
@@ -1468,9 +1968,9 @@ retry:
       if (ref != NEXTFOLD)
 	break;
     }
-    if (any == 0xffff)  /* Exhausted folding. Pass on to CSE. */
+    if (any == 0xfffff)  /* Exhausted folding. Pass on to CSE. */
       return lj_opt_cse(J);
-    any = (any | (any >> 8)) ^ 0xff00;
+    any = (any | (any >> 10)) ^ 0xffc00;
   }
 
   /* Return value processing, ordered by frequency. */

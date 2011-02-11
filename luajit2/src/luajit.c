@@ -1,6 +1,6 @@
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -18,10 +18,12 @@
 #include "lualib.h"
 #include "luajit.h"
 
-#if defined(LUA_USE_POSIX)
+#include "lj_arch.h"
+
+#if LJ_TARGET_POSIX
 #include <unistd.h>
 #define lua_stdin_is_tty()	isatty(0)
-#elif defined(LUA_USE_WIN)
+#elif LJ_TARGET_WINDOWS
 #include <io.h>
 #ifdef __BORLANDC__
 #define lua_stdin_is_tty()	isatty(_fileno(stdin))

@@ -1,6 +1,6 @@
 /*
 ** String handling.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -16,7 +16,7 @@
 #include "lj_err.h"
 #include "lj_str.h"
 #include "lj_state.h"
-#include "lj_ctype.h"
+#include "lj_char.h"
 
 /* -- String interning ---------------------------------------------------- */
 
@@ -29,7 +29,7 @@ int32_t LJ_FASTCALL lj_str_cmp(GCstr *a, GCstr *b)
     uint32_t va = *(const uint32_t *)(strdata(a)+i);
     uint32_t vb = *(const uint32_t *)(strdata(b)+i);
     if (va != vb) {
-#if LJ_ARCH_ENDIAN == LUAJIT_LE
+#if LJ_LE
       va = lj_bswap(va); vb = lj_bswap(vb);
 #endif
       i -= n;
@@ -53,7 +53,7 @@ static LJ_AINLINE int str_fastcmp(const char *a, const char *b, MSize len)
     uint32_t v = *(const uint32_t *)(a+i) ^ *(const uint32_t *)(b+i);
     if (v) {
       i -= len;
-#if LJ_ARCH_ENDIAN == LUAJIT_LE
+#if LJ_LE
       return (int32_t)i >= -3 ? (v << (32+(i<<3))) : 1;
 #else
       return (int32_t)i >= -3 ? (v >> (32+(i<<3))) : 1;
@@ -180,25 +180,27 @@ int LJ_FASTCALL lj_str_numconv(const char *s, TValue *n)
 {
   lua_Number sign = 1;
   const uint8_t *p = (const uint8_t *)s;
-  while (lj_ctype_isspace(*p)) p++;
+  while (lj_char_isspace(*p)) p++;
   if (*p == '-') { p++; sign = -1; } else if (*p == '+') { p++; }
   if ((uint32_t)(*p - '0') < 10) {
     uint32_t k = (uint32_t)(*p++ - '0');
     if (k == 0 && ((*p & ~0x20) == 'X')) {
       p++;
-      while (lj_ctype_isxdigit(*p)) {
+      if (!lj_char_isxdigit(*p))
+	return 0;  /* Don't accept '0x' without hex digits. */
+      do {
 	if (k >= 0x10000000) goto parsedbl;
 	k = (k << 4) + (*p & 15u);
-	if (!lj_ctype_isdigit(*p)) k += 9;
+	if (!lj_char_isdigit(*p)) k += 9;
 	p++;
-      }
+      } while (lj_char_isxdigit(*p));
     } else {
       while ((uint32_t)(*p - '0') < 10) {
 	if (k >= 0x19999999) goto parsedbl;
 	k = k * 10u + (uint32_t)(*p++ - '0');
       }
     }
-    while (LJ_UNLIKELY(lj_ctype_isspace(*p))) p++;
+    while (LJ_UNLIKELY(lj_char_isspace(*p))) p++;
     if (LJ_LIKELY(*p == '\0')) {
       setnumV(n, sign * cast_num(k));
       return 1;
@@ -209,10 +211,10 @@ parsedbl:
     TValue tv;
     char *endptr;
     setnumV(&tv, lua_str2number(s, &endptr));
-    if (endptr == s) return 0;  /* conversion failed */
+    if (endptr == s) return 0;  /* Conversion failed. */
     if (LJ_UNLIKELY(*endptr != '\0')) {
-      while (lj_ctype_isspace((uint8_t)*endptr)) endptr++;
-      if (*endptr != '\0') return 0;  /* invalid trailing characters? */
+      while (lj_char_isspace((uint8_t)*endptr)) endptr++;
+      if (*endptr != '\0') return 0;  /* Invalid trailing characters? */
     }
     if (LJ_LIKELY(!tvisnan(&tv)))
       setnumV(n, numV(&tv));

@@ -4,7 +4,7 @@
 <title>Running LuaJIT</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="Author" content="Mike Pall">
-<meta name="Copyright" content="Copyright (C) 2005-2010, Mike Pall">
+<meta name="Copyright" content="Copyright (C) 2005-2011, Mike Pall">
 <meta name="Language" content="en">
 <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
 <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
@@ -45,8 +45,22 @@ td.param_default {
 <a href="install.html">Installation</a>
 </li><li>
 <a class="current" href="running.html">Running</a>
+</li></ul>
 </li><li>
-<a href="api.html">API Extensions</a>
+<a href="extensions.html">Extensions</a>
+<ul><li>
+<a href="ext_ffi.html">FFI Library</a>
+<ul><li>
+<a href="ext_ffi_tutorial.html">FFI Tutorial</a>
+</li><li>
+<a href="ext_ffi_api.html">ffi.* API</a>
+</li><li>
+<a href="ext_ffi_semantics.html">FFI Semantics</a>
+</li></ul>
+</li><li>
+<a href="ext_jit.html">jit.* Library</a>
+</li><li>
+<a href="ext_c_api.html">Lua/C API</a>
 </li></ul>
 </li><li>
 <a href="status.html">Status</a>
@@ -71,11 +85,11 @@ interactive mode, too.
 <p class="indent" style="color: #c00000;">
 Note: the beta test releases only install under the versioned name on
 POSIX systems (to avoid overwriting a previous version). You either need
-to type <tt>luajit-2.0.0-beta5</tt> to start it or create a symlink
+to type <tt>luajit-2.0.0-beta6</tt> to start it or create a symlink
 with a command like this:
 </p>
 <pre class="code" style="color: #c00000;">
-sudo ln -sf luajit-2.0.0-beta5&nbsp;/usr/local/bin/luajit
+sudo ln -sf luajit-2.0.0-beta6&nbsp;/usr/local/bin/luajit
 </pre>
 <p>
 Unlike previous versions <b>optimization is turned on by default</b> in
@@ -121,12 +135,12 @@ itself. For a description of their options and output format, please
 read the comment block at the start of their source.
 They can be found in the <tt>lib</tt> directory of the source
 distribution or installed under the <tt>jit</tt> directory. By default
-this is <tt>/usr/local/share/luajit-2.0.0-beta5/jit</tt> on POSIX
+this is <tt>/usr/local/share/luajit-2.0.0-beta6/jit</tt> on POSIX
 systems.
 </p>
 
 <h3 id="opt_O"><tt>-O[level]</tt><br>
-<tt>-O[+]flag</tt> <tt>-O-flag</tt><br>
+<tt>-O[+]flag</tt>&nbsp;&nbsp;&nbsp;<tt>-O-flag</tt><br>
 <tt>-Oparam=value</tt></h3>
 <p>
 This options allows fine-tuned control of the optimizations used by
@@ -229,7 +243,7 @@ Here are the parameters and their default settings:
 </div>
 <div id="foot">
 <hr class="hide">
-Copyright &copy; 2005-2010 Mike Pall
+Copyright &copy; 2005-2011 Mike Pall
 <span class="noprint">
 &middot;
 <a href="contact.html">Contact</a>

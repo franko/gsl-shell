@@ -1,6 +1,6 @@
 /*
 ** Trace management.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_trace_c
@@ -96,8 +96,7 @@ static void perftools_addtrace(GCtrace *T)
 {
   static FILE *fp;
   GCproto *pt = &gcref(T->startpt)->pt;
-  uintptr_t pcofs = (uintptr_t)(T->snap[0].mapofs+T->snap[0].nent);
-  const BCIns *startpc = snap_pc(T->snapmap[pcofs]);
+  const BCIns *startpc = mref(T->startpc, const BCIns);
   const char *name = strdata(proto_chunkname(pt));
   BCLine lineno;
   if (name[0] == '@' || name[0] == '=')
@@ -183,34 +182,36 @@ void lj_trace_reenableproto(GCproto *pt)
 static void trace_unpatch(jit_State *J, GCtrace *T)
 {
   BCOp op = bc_op(T->startins);
-  MSize pcofs = T->snap[0].mapofs + T->snap[0].nent;
-  BCIns *pc = ((BCIns *)snap_pc(T->snapmap[pcofs])) - 1;
+  BCIns *pc = mref(T->startpc, BCIns);
   UNUSED(J);
-  switch (op) {
-  case BC_FORL:
+  if (op == BC_JMP)
+    return;  /* No need to unpatch branches in parent traces (yet). */
+  switch (bc_op(*pc)) {
+  case BC_JFORL:
+    lua_assert(traceref(J, bc_d(*pc)) == T);
+    *pc = T->startins;
+    pc += bc_j(T->startins);
     lua_assert(bc_op(*pc) == BC_JFORI);
-    setbc_op(pc, BC_FORI);  /* Unpatch JFORI, too. */
-    pc += bc_j(*pc);
-    lua_assert(bc_op(*pc) == BC_JFORL && traceref(J, bc_d(*pc)) == T);
+    setbc_op(pc, BC_FORI);
+    break;
+  case BC_JITERL:
+  case BC_JLOOP:
+    lua_assert(op == BC_ITERL || op == BC_LOOP || bc_isret(op));
     *pc = T->startins;
     break;
-  case BC_LOOP:
-    lua_assert(bc_op(*pc) == BC_JLOOP && traceref(J, bc_d(*pc)) == T);
-    *pc = T->startins;
-    break;
-  case BC_ITERL:
-    lua_assert(bc_op(*pc) == BC_JMP);
+  case BC_JMP:
+    lua_assert(op == BC_ITERL);
     pc += bc_j(*pc)+2;
-    lua_assert(bc_op(*pc) == BC_JITERL && traceref(J, bc_d(*pc)) == T);
+    if (bc_op(*pc) == BC_JITERL) {
+      lua_assert(traceref(J, bc_d(*pc)) == T);
+      *pc = T->startins;
+    }
+    break;
+  case BC_JFUNCF:
+    lua_assert(op == BC_FUNCF);
     *pc = T->startins;
     break;
-  case BC_FUNCF:
-    lua_assert(bc_op(*pc) == BC_JFUNCF && traceref(J, bc_d(*pc)) == T);
-    *pc = T->startins;
-    break;
-  case BC_JMP:  /* No need to unpatch branches in parent traces (yet). */
-  default:
-    lua_assert(0);
+  default:  /* Already unpatched. */
     break;
   }
 }
@@ -225,13 +226,15 @@ static void trace_flushroot(jit_State *J, GCtrace *T)
   /* Unlink root trace from chain anchored in prototype. */
   if (pt->trace == T->traceno) {  /* Trace is first in chain. Easy. */
     pt->trace = T->nextroot;
-  } else {  /* Otherwise search in chain of root traces. */
+  } else if (pt->trace) {  /* Otherwise search in chain of root traces. */
     GCtrace *T2 = traceref(J, pt->trace);
-    while (T2->nextroot != T->traceno) {
-      lua_assert(T2->nextroot != 0);
-      T2 = traceref(J, T2->nextroot);
+    if (T2) {
+      for (; T2->nextroot; T2 = traceref(J, T2->nextroot))
+	if (T2->nextroot == T->traceno) {
+	  T2->nextroot = T->nextroot;  /* Unlink from chain. */
+	  break;
+	}
     }
-    T2->nextroot = T->nextroot;  /* Unlink from chain. */
   }
 }
 
@@ -271,6 +274,8 @@ int lj_trace_flushall(lua_State *L)
   }
   J->cur.traceno = 0;
   J->freetrace = 0;
+  /* Clear penalty cache. */
+  memset(J->penalty, 0, sizeof(J->penalty));
   /* Free the whole machine code and invalidate all exit stub groups. */
   lj_mcode_free(J);
   memset(J->exitstubgroup, 0, sizeof(J->exitstubgroup));
@@ -306,7 +311,7 @@ void lj_trace_freestate(global_State *g)
   }
 #endif
   lj_mcode_free(J);
-  lj_ir_knum_freeall(J);
+  lj_ir_k64_freeall(J);
   lj_mem_freevec(g, J->snapmapbuf, J->sizesnapmap, SnapEntry);
   lj_mem_freevec(g, J->snapbuf, J->sizesnap, SnapShot);
   lj_mem_freevec(g, J->irbuf + J->irbotlim, J->irtoplim - J->irbotlim, IRIns);
@@ -386,7 +391,10 @@ static void trace_start(jit_State *J)
   J->cur.snapmap = J->snapmapbuf;
   J->mergesnap = 0;
   J->needsnap = 0;
+  J->bcskip = 0;
   J->guardemit.irt = 0;
+  J->postproc = LJ_POST_NONE;
+  lj_resetsplit(J);
   setgcref(J->cur.startpt, obj2gco(J->pt));
 
   L = J->L;
@@ -406,7 +414,7 @@ static void trace_start(jit_State *J)
 /* Stop tracing. */
 static void trace_stop(jit_State *J)
 {
-  BCIns *pc = (BCIns *)J->startpc;  /* Not const here. */
+  BCIns *pc = mref(J->cur.startpc, BCIns);
   BCOp op = bc_op(J->cur.startins);
   GCproto *pt = &gcref(J->cur.startpt)->pt;
   TraceNo traceno = J->cur.traceno;
@@ -453,6 +461,7 @@ static void trace_stop(jit_State *J)
 
   /* Commit new mcode only after all patching is done. */
   lj_mcode_commit(J, J->cur.mcode);
+  J->postproc = LJ_POST_NONE;
   trace_save(J);
 
   L = J->L;
@@ -484,6 +493,7 @@ static int trace_abort(jit_State *J)
   TraceError e = LJ_TRERR_RECERR;
   TraceNo traceno;
 
+  J->postproc = LJ_POST_NONE;
   lj_mcode_abort(J);
   if (tvisnum(L->top-1))
     e = (TraceError)lj_num2int(numV(L->top-1));
@@ -510,7 +520,7 @@ static int trace_abort(jit_State *J)
       frame = J->L->base-1;
       pc = J->pc;
       while (!isluafunc(frame_func(frame))) {
-	pc = frame_pc(frame) - 1;
+	pc = (frame_iscont(frame) ? frame_contpc(frame) : frame_pc(frame)) - 1;
 	frame = frame_prev(frame);
       }
       fn = frame_func(frame);
@@ -583,6 +593,7 @@ static TValue *trace_state(lua_State *L, lua_CFunction dummy, void *ud)
 	}
 	J->loopref = J->chain[IR_LOOP];  /* Needed by assembler. */
       }
+      lj_opt_split(J);
       J->state = LJ_TRACE_ASM;
       break;
 

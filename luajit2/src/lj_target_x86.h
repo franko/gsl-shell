@@ -1,6 +1,6 @@
 /*
 ** Definitions for x86 and x64 CPUs.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_TARGET_X86_H
@@ -40,7 +40,7 @@ enum {
 
   /* These definitions must match with the *.dasc file(s): */
   RID_BASE = RID_EDX,		/* Interpreter BASE. */
-#if LJ_64 && !defined(_WIN64)
+#if LJ_64 && !LJ_ABI_WIN
   RID_PC = RID_EBX,		/* Interpreter PC. */
   RID_DISPATCH = RID_R14D,	/* Interpreter DISPATCH table. */
 #else
@@ -74,7 +74,7 @@ enum {
 /* ABI-specific register sets. */
 #define RSET_ACD	(RID2RSET(RID_EAX)|RID2RSET(RID_ECX)|RID2RSET(RID_EDX))
 #if LJ_64
-#ifdef _WIN64
+#if LJ_ABI_WIN
 /* Windows x64 ABI. */
 #define RSET_SCRATCH \
   (RSET_ACD|RSET_RANGE(RID_R8D, RID_R11D+1)|RSET_RANGE(RID_XMM0, RID_XMM5+1))
@@ -117,7 +117,7 @@ enum {
 ** SPS_FIRST: First spill slot for general use. Reserve min. two 32 bit slots.
 */
 #if LJ_64
-#ifdef _WIN64
+#if LJ_ABI_WIN
 #define SPS_FIXED	(4*2)
 #define SPS_FIRST	(4*2)	/* Don't use callee register save area. */
 #else
@@ -187,13 +187,13 @@ typedef enum {
   XI_PUSHi8 =	0x6a,
   XI_TEST =	0x85,
   XI_MOVmi =	0xc7,
-  XI_BSWAP =	0xc8, /* Really 0fc8+r. */
 
   /* Note: little-endian byte-order! */
   XI_FLDZ =	0xeed9,
   XI_FLD1 =	0xe8d9,
   XI_FLDLG2 =	0xecd9,
   XI_FLDLN2 =	0xedd9,
+  XI_FDUP =	0xc0d9,  /* Really fld st0. */
   XI_FPOP =	0xd8dd,  /* Really fstp st0. */
   XI_FPOP1 =	0xd9dd,  /* Really fstp st1. */
   XI_FRNDINT =	0xfcd9,
@@ -219,6 +219,8 @@ typedef enum {
   XO_SHIFTi =	XO_(c1),
   XO_SHIFT1 =	XO_(d1),
   XO_SHIFTcl =	XO_(d3),
+  XO_IMUL =	XO_0f(af),
+  XO_IMULi =	XO_(69),
   XO_IMULi8 =	XO_(6b),
   XO_CMP =	XO_(3b),
   XO_TEST =	XO_(85),
@@ -230,9 +232,13 @@ typedef enum {
   XO_MOVZXw =	XO_0f(b7),
   XO_MOVSXb =	XO_0f(be),
   XO_MOVSXw =	XO_0f(bf),
+  XO_MOVSXd =	XO_(63),
+  XO_BSWAP =	XO_0f(c8),
 
   XO_MOVSD =	XO_f20f(10),
   XO_MOVSDto =	XO_f20f(11),
+  XO_MOVSS =	XO_f30f(10),
+  XO_MOVSSto =	XO_f30f(11),
   XO_MOVLPD =	XO_660f(12),
   XO_MOVAPS =	XO_0f(28),
   XO_XORPS =	XO_0f(57),
@@ -249,13 +255,26 @@ typedef enum {
   XO_CVTSI2SD =	XO_f20f(2a),
   XO_CVTSD2SI =	XO_f20f(2d),
   XO_CVTTSD2SI=	XO_f20f(2c),
+  XO_CVTSI2SS =	XO_f30f(2a),
+  XO_CVTSS2SI =	XO_f30f(2d),
+  XO_CVTTSS2SI=	XO_f30f(2c),
+  XO_CVTSS2SD =	XO_f30f(5a),
+  XO_CVTSD2SS =	XO_f20f(5a),
+  XO_ADDSS =	XO_f30f(58),
   XO_MOVD =	XO_660f(6e),
   XO_MOVDto =	XO_660f(7e),
 
+  XO_FLDd =	XO_(d9), XOg_FLDd = 0,
   XO_FLDq =	XO_(dd), XOg_FLDq = 0,
   XO_FILDd =	XO_(db), XOg_FILDd = 0,
+  XO_FILDq =	XO_(df), XOg_FILDq = 5,
+  XO_FSTPd =	XO_(d9), XOg_FSTPd = 3,
   XO_FSTPq =	XO_(dd), XOg_FSTPq = 3,
   XO_FISTPq =	XO_(df), XOg_FISTPq = 7,
+  XO_FISTTPq =	XO_(dd), XOg_FISTTPq = 1,
+  XO_FADDq =	XO_(dc), XOg_FADDq = 0,
+  XO_FLDCW =	XO_(d9), XOg_FLDCW = 5,
+  XO_FNSTCW =	XO_(d9), XOg_FNSTCW = 7
 } x86Op;
 
 /* x86 opcode groups. */
@@ -267,9 +286,11 @@ typedef uint32_t x86Group;
 #define XG_TOXOi8(xg)	((x86Op)(0x000000fe + (((xg)<<8) & 0xff000000)))
 
 #define XO_ARITH(a)	((x86Op)(0x030000fe + ((a)<<27)))
+#define XO_ARITHw(a)	((x86Op)(0x036600fd + ((a)<<27)))
 
 typedef enum {
-  XOg_ADD, XOg_OR, XOg_ADC, XOg_SBB, XOg_AND, XOg_SUB, XOg_XOR, XOg_CMP
+  XOg_ADD, XOg_OR, XOg_ADC, XOg_SBB, XOg_AND, XOg_SUB, XOg_XOR, XOg_CMP,
+  XOg_X_IMUL
 } x86Arith;
 
 typedef enum {

@@ -1,6 +1,6 @@
 /*
 ** Garbage collector.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -19,6 +19,9 @@
 #include "lj_meta.h"
 #include "lj_state.h"
 #include "lj_frame.h"
+#if LJ_HASFFI
+#include "lj_cdata.h"
+#endif
 #include "lj_trace.h"
 #include "lj_vm.h"
 
@@ -65,7 +68,7 @@ static void gc_mark(global_State *g, GCobj *o)
     gc_marktv(g, uvval(uv));
     if (uv->closed)
       gray2black(o);  /* Closed upvalues are never gray. */
-  } else if (o->gch.gct != ~LJ_TSTR) {
+  } else if (o->gch.gct != ~LJ_TSTR && o->gch.gct != ~LJ_TCDATA) {
     lua_assert(o->gch.gct == ~LJ_TFUNC || o->gch.gct == ~LJ_TTAB ||
 	       o->gch.gct == ~LJ_TTHREAD || o->gch.gct == ~LJ_TPROTO);
     setgcrefr(o->gch.gclist, g->gc.gray);
@@ -230,6 +233,7 @@ static void gc_marktrace(global_State *g, TraceNo traceno)
 static void gc_traverse_trace(global_State *g, GCtrace *T)
 {
   IRRef ref;
+  if (T->traceno == 0) return;
   for (ref = T->nk; ref < REF_TRUE; ref++) {
     IRIns *ir = &T->ir[ref];
     if (ir->o == IR_KGC)
@@ -242,8 +246,7 @@ static void gc_traverse_trace(global_State *g, GCtrace *T)
 }
 
 /* The current trace is a GC root while not anchored in the prototype (yet). */
-#define gc_traverse_curtrace(g) \
-  { if (G2J(g)->cur.traceno != 0) gc_traverse_trace(g, &G2J(g)->cur); }
+#define gc_traverse_curtrace(g)	gc_traverse_trace(g, &G2J(g)->cur)
 #else
 #define gc_traverse_curtrace(g)	UNUSED(g)
 #endif
@@ -267,28 +270,28 @@ static void gc_traverse_proto(global_State *g, GCproto *pt)
 /* Traverse the frame structure of a stack. */
 static MSize gc_traverse_frames(global_State *g, lua_State *th)
 {
-  TValue *frame, *top = th->top-1;
+  TValue *frame, *top = th->top-1, *bot = tvref(th->stack);
   /* Note: extra vararg frame not skipped, marks function twice (harmless). */
-  for (frame = th->base-1; frame > th->stack; frame = frame_prev(frame)) {
+  for (frame = th->base-1; frame > bot; frame = frame_prev(frame)) {
     GCfunc *fn = frame_func(frame);
     TValue *ftop = frame;
     if (isluafunc(fn)) ftop += funcproto(fn)->framesize;
     if (ftop > top) top = ftop;
-    gc_markobj(g, frame_gc(frame));  /* Need to mark hidden function (or L). */
+    gc_markobj(g, fn);  /* Need to mark hidden function (or L). */
   }
   top++;  /* Correct bias of -1 (frame == base-1). */
-  if (top > th->maxstack) top = th->maxstack;
-  return (MSize)(top - th->stack);  /* Return minimum needed stack size. */
+  if (top > tvref(th->maxstack)) top = tvref(th->maxstack);
+  return (MSize)(top - bot);  /* Return minimum needed stack size. */
 }
 
 /* Traverse a thread object. */
 static void gc_traverse_thread(global_State *g, lua_State *th)
 {
   TValue *o, *top = th->top;
-  for (o = th->stack+1; o < top; o++)
+  for (o = tvref(th->stack)+1; o < top; o++)
     gc_marktv(g, o);
   if (g->gc.state == GCSatomic) {
-    top = th->stack + th->stacksize;
+    top = tvref(th->stack) + th->stacksize;
     for (; o < top; o++)  /* Clear unmarked slots. */
       setnilV(o);
   }
@@ -370,6 +373,11 @@ static const GCFreeFunc gc_freefunc[] = {
   (GCFreeFunc)lj_func_free,
 #if LJ_HASJIT
   (GCFreeFunc)lj_trace_free,
+#else
+  (GCFreeFunc)0,
+#endif
+#if LJ_HASFFI
+  (GCFreeFunc)lj_cdata_free,
 #else
   (GCFreeFunc)0,
 #endif
@@ -769,7 +777,7 @@ void *lj_mem_realloc(lua_State *L, void *p, MSize osz, MSize nsz)
 }
 
 /* Allocate new GC object and link it to the root set. */
-void *lj_mem_newgco(lua_State *L, MSize size)
+void * LJ_FASTCALL lj_mem_newgco(lua_State *L, MSize size)
 {
   global_State *g = G(L);
   GCobj *o = (GCobj *)g->allocf(g->allocd, NULL, 0, size);

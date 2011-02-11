@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 -- DynASM x86/x64 module.
 --
--- Copyright (C) 2005-2010 Mike Pall. All rights reserved.
+-- Copyright (C) 2005-2011 Mike Pall. All rights reserved.
 -- See dynasm.lua for full copyright notice.
 ------------------------------------------------------------------------------
 
@@ -11,9 +11,9 @@ local x64 = x64
 local _info = {
   arch =	x64 and "x64" or "x86",
   description =	"DynASM x86/x64 module",
-  version =	"1.2.1",
-  vernum =	 10201,
-  release =	"2010-01-09",
+  version =	"1.2.2",
+  vernum =	 10202,
+  release =	"2011-01-09",
   author =	"Mike Pall",
   license =	"MIT",
 }
@@ -1699,7 +1699,7 @@ if x64 then
 	end
 	op64 = params[2]
 	opcode = 0xb8 + (a.reg%8) -- !x64: no VREG support.
-        rex = a.reg > 7 and 9 or 8
+	rex = a.reg > 7 and 9 or 8
       end
     end
     wputop(sz, opcode, rex)

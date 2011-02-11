@@ -1,6 +1,6 @@
 /*
 ** Trace compiler error messages.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* This file may be included multiple times with different TREDEF macros. */
@@ -23,7 +23,6 @@ TREDEF(BADTYPE,	"bad argument type")
 TREDEF(CJITOFF,	"call to JIT-disabled function")
 TREDEF(CUNROLL,	"call unroll limit reached")
 TREDEF(DOWNREC,	"down-recursion, restarting")
-TREDEF(NYIVF,	"NYI: vararg function")
 TREDEF(NYICF,	"NYI: C function %p")
 TREDEF(NYIFF,	"NYI: FastFunc %s")
 TREDEF(NYIFFU,	"NYI: unsupported variant of FastFunc %s")
@@ -34,6 +33,11 @@ TREDEF(STORENN,	"store with nil or NaN key")
 TREDEF(NOMM,	"missing metamethod")
 TREDEF(IDXLOOP,	"looping index lookup")
 TREDEF(NYITMIX,	"NYI: mixed sparse/dense table")
+
+/* Recording C data operations. */
+TREDEF(NOCACHE,	"symbol not in cache")
+TREDEF(NYICONV,	"NYI: unsupported C type conversion")
+TREDEF(NYICALL,	"NYI: unsupported C function type")
 
 /* Optimizations. */
 TREDEF(GFAIL,	"guard would always fail")

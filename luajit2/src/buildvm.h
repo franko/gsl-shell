@@ -1,6 +1,6 @@
 /*
 ** LuaJIT VM builder.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _BUILDVM_H
@@ -96,6 +96,7 @@ extern void emit_fold(BuildCtx *ctx);
 
 extern const char *const bc_names[];
 extern const char *const ir_names[];
+extern const char *const irt_names[];
 extern const char *const irfpm_names[];
 extern const char *const irfield_names[];
 extern const char *const ircall_names[];

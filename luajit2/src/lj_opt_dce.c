@@ -1,6 +1,6 @@
 /*
 ** DCE: Dead Code Elimination. Pre-LOOP only -- ASM already performs DCE.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_opt_dce_c
@@ -27,7 +27,7 @@ static void dce_marksnap(jit_State *J)
     MSize n, nent = snap->nent;
     for (n = 0; n < nent; n++) {
       IRRef ref = snap_ref(map[n]);
-      if (!irref_isk(ref))
+      if (ref >= REF_FIRST)
 	irt_setmark(IR(ref)->t);
     }
   }
@@ -54,8 +54,8 @@ static void dce_propagate(jit_State *J)
       pchain[IR_NOP] = &ir->prev;
       continue;
     }
-    if (!irref_isk(ir->op1)) irt_setmark(IR(ir->op1)->t);
-    if (!irref_isk(ir->op2)) irt_setmark(IR(ir->op2)->t);
+    if (ir->op1 >= REF_FIRST) irt_setmark(IR(ir->op1)->t);
+    if (ir->op2 >= REF_FIRST) irt_setmark(IR(ir->op2)->t);
   }
   *pchain[IR_NOP] = 0;  /* Terminate NOP chain. */
 }

@@ -1,11 +1,13 @@
 ##############################################################################
 # LuaJIT Makefile. Requires GNU Make.
 #
+# Please read doc/install.html before changing any variables!
+#
 # Suitable for POSIX platforms (Linux, *BSD, OSX etc.).
 # Also works with MinGW and Cygwin on Windows.
 # Please check msvcbuild.bat for building with MSVC on Windows.
 #
-# Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+# Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 ##############################################################################
 
 MAJVER=  2
@@ -15,10 +17,12 @@ ABIVER=  5.1
 NODOTABIVER= 51
 
 ##############################################################################
-# Compiler options: change them as needed. This mainly affects the speed of
-# the JIT compiler itself, not the speed of the JIT compiled code.
-# Turn any of the optional settings on by removing the '#' in front of them.
-# You need to 'make clean' and 'make' again, if you change any options.
+#############################  COMPILER OPTIONS  #############################
+##############################################################################
+# These options mainly affect the speed of the JIT compiler itself, not the
+# speed of the JIT-compiled code. Turn any of the optional settings on by
+# removing the '#' in front of them. Make sure you force a full recompile
+# with "make clean", followed by "make" if you change any options.
 #
 # LuaJIT builds as a native 32 or 64 bit binary by default.
 CC= gcc
@@ -36,12 +40,19 @@ CCOPT= -O2 -fomit-frame-pointer
 # Note: it's no longer recommended to use -O3 with GCC 4.x.
 # The I-Cache bloat usually outweighs the benefits from aggressive inlining.
 #
-# It's recommended to compile at least for i686. By default the assembler part
-# of the interpreter makes use of CMOV/FCOMI*/FUCOMI* instructions, anyway.
-# For GCC 4.2 or higher and if you don't intend to distribute the
-# binaries to a different machine you could also use: -march=native
+# Target-specific compiler options:
+#
+# x86 only: it's recommended to compile at least for i686. By default the
+# assembler part of the interpreter makes use of CMOV/FCOMI*/FUCOMI*
+# instructions, anyway.
+#
+# x86/x64 only: For GCC 4.2 or higher and if you don't intend to distribute
+# the binaries to a different machine you could also use: -march=native
+#
 CCOPT_X86= -march=i686
 CCOPT_X64=
+CCOPT_ARM=
+CCOPT_PPCSPE=
 #
 CCDEBUG=
 # Uncomment the next line to generate debug information:
@@ -54,18 +65,45 @@ CCWARN= -Wall
 ##############################################################################
 
 ##############################################################################
-# Compile time definitions: change them as needed, but make sure you force
-# a full recompile with "make clean", followed by "make".
-# Note that most of these are NOT suitable for benchmarking or release mode!
+################################  BUILD MODE  ################################
+##############################################################################
+# The default build mode is mixed mode on POSIX. On Windows this is the same
+# as dynamic mode.
+#
+# Mixed mode creates a static + dynamic library and a statically linked luajit.
+BUILDMODE= mixed
+#
+# Static mode creates a static library and a statically linked luajit.
+#BUILDMODE= static
+#
+# Dynamic mode creates a dynamic library and a dynamically linked luajit.
+# Note: this executable will only run when the library is installed!
+#BUILDMODE= dynamic
+#
+##############################################################################
+
+##############################################################################
+#################################  FEATURES  #################################
+##############################################################################
+# Enable/disable these features as needed, but make sure you force a full
+# recompile with "make clean", followed by "make".
 XCFLAGS=
 #
-# Disable the use of CMOV and FCOMI*/FUCOMI* instructions in the interpreter.
-# This is only necessary if you intend to run the code on REALLY ANCIENT CPUs
-# (before Pentium Pro, or on the VIA C3). This generally slows down the
-# interpreter. Don't bother if your OS wouldn't run on them, anyway.
-#XCFLAGS+= -DLUAJIT_CPU_NOCMOV
+# Permanently disable the FFI extension to reduce the size of the LuaJIT
+# executable. But please consider that the FFI library is compiled-in,
+# but NOT loaded by default. It only allocates any memory, if you actually
+# make use of it.
+#XCFLAGS+= -DLUAJIT_DISABLE_FFI
 #
-# Use SSE2 instructions instead of x87 instructions in the x86 interpreter
+# Enable some upwards-compatible features from Lua 5.2 that are unlikely
+# to break existing code (e.g. __pairs). Note that this does not provide
+# full compatibility with Lua 5.2 at this time.
+#XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
+#
+# Disable the JIT compiler, i.e. turn LuaJIT into a pure interpreter.
+#XCFLAGS+= -DLUAJIT_DISABLE_JIT
+#
+# x86 only: use SSE2 instead of x87 instructions in the interpreter
 # (always enabled for x64). A pure interpreter built with this flag won't
 # run on older CPUs (before P4 or K8). There isn't much of a speed
 # difference, so this is not enabled by default.
@@ -73,8 +111,20 @@ XCFLAGS=
 # CPU feature detection before emitting code for SSE2 up to SSE4.1.
 #XCFLAGS+= -DLUAJIT_CPU_SSE2
 #
-# Disable the JIT compiler, i.e. turn LuaJIT into a pure interpreter:
-#XCFLAGS+= -DLUAJIT_DISABLE_JIT
+# x86 only: Disable the use of CMOV and FCOMI*/FUCOMI* instructions in the
+# interpreter. Do this only if you intend to use REALLY ANCIENT CPUs
+# (before Pentium Pro, or on the VIA C3). This generally slows down the
+# interpreter. Don't bother if your OS wouldn't run on them, anyway.
+#XCFLAGS+= -DLUAJIT_CPU_NOCMOV
+#
+##############################################################################
+
+##############################################################################
+############################  DEBUGGING SUPPORT  #############################
+##############################################################################
+# Enable these options as needed, but make sure you force a full recompile
+# with "make clean", followed by "make".
+# Note that most of these are NOT suitable for benchmarking or release mode!
 #
 # Use the system provided memory allocator (realloc) instead of the
 # bundled memory allocator. This is slower, but sometimes helpful for
@@ -100,37 +150,23 @@ XCFLAGS=
 #XCFLAGS+= -DLUA_USE_ASSERT
 #
 ##############################################################################
-
-##############################################################################
-# Build mode: override the mode as needed. Default is mixed mode on POSIX.
-# On Windows this is the same as dynamic mode.
-#
-# Mixed mode creates a static + dynamic library and a statically linked luajit.
-#BUILDMODE= mixed
-#
-# Static mode creates a static library and a statically linked luajit.
-BUILDMODE= static
-#
-# Dynamic mode creates a dynamic library and a dynamically linked luajit.
-# Note: this executable will only run when the library is installed!
-#BUILDMODE= dynamic
-##############################################################################
-# You probably don't need to change anything below this line.
+# You probably don't need to change anything below this line!
 ##############################################################################
 
 ##############################################################################
 # Flags and options for host and target.
 ##############################################################################
 
-# You may also override the following variables at the make command line:
+# You can override the following variables at the make command line:
 #   CC       HOST_CC       STATIC_CC       DYNAMIC_CC
 #   CFLAGS   HOST_CFLAGS   TARGET_CFLAGS
 #   LDFLAGS  HOST_LDFLAGS  TARGET_LDFLAGS  TARGET_SHLDFLAGS
 #   LIBS     HOST_LIBS     TARGET_LIBS
 #   CROSS    HOST_SYS      TARGET_SYS
 #
-# Cross-compilation example:
-#   make CC="gcc -m32" CROSS=i586-mingw32msvc- TARGET_SYS=Windows
+# Cross-compilation examples:
+#   make HOST_CC="gcc -m32" CROSS=i586-mingw32msvc- TARGET_SYS=Windows
+#   make HOST_CC="gcc -m32" CROSS=powerpc-e500v2-linux-gnuspe- TARGET=ppcspe
 
 CCOPTIONS= $(CCDEBUG) $(CCOPT) $(CCWARN) $(XCFLAGS) $(CFLAGS)
 LDOPTIONS= $(CCDEBUG) $(LDFLAGS)
@@ -167,7 +203,7 @@ TARGET_DLLNAME= lua$(NODOTABIVER).dll
 TARGET_XSHLDFLAGS= -shared -fPIC -Wl,-soname,$(TARGET_SONAME)
 TARGET_DYNXLDOPTS=
 
-TARGET_XCFLAGS= -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE
+TARGET_XCFLAGS= -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -U_FORTIFY_SOURCE
 TARGET_XLDFLAGS=
 TARGET_XLIBS= -lm
 TARGET_ACFLAGS= $(CCOPTIONS) $(TARGET_XCFLAGS) $(TARGET_ARCH) $(TARGET_CFLAGS)
@@ -179,12 +215,27 @@ ifneq (,$(findstring stack-protector,$(shell $(TARGET_CC) -dumpspecs)))
   TARGET_XCFLAGS+= -fno-stack-protector
 endif
 
-ifeq (,$(findstring __i386__,$(shell echo __i386__ | $(TARGET_CC) -P -E -)))
+TARGET_TESTARCH=$(shell $(TARGET_CC) $(TARGET_ACFLAGS) -E lj_arch.h -dM)
+ifneq (,$(findstring LJ_TARGET_X64 ,$(TARGET_TESTARCH)))
+  TARGET_CCARCH= x64
+  TARGET_XCFLAGS+= $(CCOPT_X64)
+else
+ifneq (,$(findstring LJ_TARGET_X86 ,$(TARGET_TESTARCH)))
   TARGET_CCARCH= x86
   TARGET_XCFLAGS+= $(CCOPT_X86)
 else
-  TARGET_CCARCH= x64
-  TARGET_XCFLAGS+= $(CCOPT_X64)
+ifneq (,$(findstring LJ_TARGET_ARM ,$(TARGET_TESTARCH)))
+  TARGET_CCARCH= arm
+  TARGET_XCFLAGS+= $(CCOPT_ARM)
+else
+ifneq (,$(findstring LJ_TARGET_PPCSPE ,$(TARGET_TESTARCH)))
+  TARGET_CCARCH= ppcspe
+  TARGET_XCFLAGS+= $(CCOPT_PPCSPE)
+else
+  $(error Unsupported target architecture)
+endif
+endif
+endif
 endif
 
 ifneq (,$(PREFIX))
@@ -257,6 +308,7 @@ DASM_DISTFLAGS= -LN
 DASM_FLAGS_X86=
 DASM_FLAGS_X64= -D X64
 DASM_FLAGS_X64WIN= -D X64 -D X64WIN
+DASM_FLAGS_PPCSPE= -D SPE
 
 BUILDVM_O= buildvm.o buildvm_asm.o buildvm_peobj.o buildvm_lib.o buildvm_fold.o
 BUILDVM_T= buildvm
@@ -271,16 +323,19 @@ LJVM_BOUT= $(LJVM_S)
 LJVM_MODE= elfasm
 
 LJLIB_O= lib_base.o lib_math.o lib_bit.o lib_string.o lib_table.o \
-	 lib_io.o lib_os.o lib_package.o lib_debug.o lib_jit.o
+	 lib_io.o lib_os.o lib_package.o lib_debug.o lib_jit.o lib_ffi.o
 LJLIB_C= $(LJLIB_O:.o=.c)
 
-LJCORE_O= lj_gc.o lj_err.o lj_ctype.o lj_bc.o lj_obj.o \
+LJCORE_O= lj_gc.o lj_err.o lj_char.o lj_bc.o lj_obj.o \
 	  lj_str.o lj_tab.o lj_func.o lj_udata.o lj_meta.o \
 	  lj_state.o lj_dispatch.o lj_vmevent.o lj_api.o \
 	  lj_lex.o lj_parse.o \
 	  lj_ir.o lj_opt_mem.o lj_opt_fold.o lj_opt_narrow.o \
-	  lj_opt_dce.o lj_opt_loop.o \
-	  lj_mcode.o lj_snap.o lj_record.o lj_asm.o lj_trace.o lj_gdbjit.o \
+	  lj_opt_dce.o lj_opt_loop.o lj_opt_split.o \
+	  lj_mcode.o lj_snap.o lj_record.o lj_crecord.o lj_ffrecord.o \
+	  lj_asm.o lj_trace.o lj_gdbjit.o \
+	  lj_ctype.o lj_cdata.o lj_cconv.o lj_ccall.o lj_carith.o lj_clib.o \
+	  lj_cparse.o \
 	  lj_lib.o lj_alloc.o lib_aux.o \
 	  $(LJLIB_O) lib_init.o
 
@@ -296,9 +351,9 @@ LUAJIT_SO= libluajit.so
 LUAJIT_T= luajit
 
 ALL_T= $(LUAJIT_T) $(LUAJIT_A) $(LUAJIT_SO) $(BUILDVM_T)
-ALL_GEN= $(LJVM_S) lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h \
-	 $(LIB_VMDEFP) lj_folddef.h
-ALL_DYNGEN= buildvm_*.h
+ALL_HDRGEN= lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h
+ALL_GEN= $(LJVM_S) $(ALL_HDRGEN) $(LIB_VMDEFP)
+ALL_DYNGEN= buildvm_x86.h buildvm_x64.h buildvm_x64win.h buildvm_ppcspe.h
 WIN_RM= *.obj *.lib *.exp *.dll *.exe *.manifest *.pdb *.ilk
 ALL_RM= $(ALL_T) $(ALL_GEN) *.o $(WIN_RM)
 
@@ -321,7 +376,7 @@ ifeq (Windows,$(TARGET_SYS))
   LUAJIT_SO= $(TARGET_DLLNAME)
   LUAJIT_T= luajit.exe
   ifneq ($(HOST_SYS),$(TARGET_SYS))
-    HOST_XCFLAGS+= -malign-double
+    HOST_XCFLAGS+= -malign-double -DLUAJIT_OS=LUAJIT_OS_WINDOWS
   endif
   # Mixed mode is not supported on Windows. And static mode doesn't work well.
   # C modules cannot be loaded, because they bind to lua51.dll.
@@ -381,28 +436,19 @@ distclean:	clean
 	$(Q)$(DASM) $(DASM_DISTFLAGS) $(DASM_FLAGS_X86) -o buildvm_x86.h buildvm_x86.dasc
 	$(Q)$(DASM) $(DASM_DISTFLAGS) $(DASM_FLAGS_X64) -o buildvm_x64.h buildvm_x86.dasc
 	$(Q)$(DASM) $(DASM_DISTFLAGS) $(DASM_FLAGS_X64WIN) -o buildvm_x64win.h buildvm_x86.dasc
+	$(Q)$(DASM) $(DASM_DISTFLAGS) $(DASM_FLAGS_PPCSPE) -o buildvm_ppcspe.h buildvm_ppc.dasc
 
 depend:
-	@test -f lj_bcdef.h || touch lj_bcdef.h
-	@test -f lj_ffdef.h || touch lj_ffdef.h
-	@test -f lj_libdef.h || touch lj_libdef.h
-	@test -f lj_recdef.h || touch lj_recdef.h
-	@test -f lj_folddef.h || touch lj_folddef.h
-	@test -f buildvm_x86.h || touch buildvm_x86.h
-	@test -f buildvm_x64.h || touch buildvm_x64.h
-	@test -f buildvm_x64win.h || touch buildvm_x64win.h
+	@for file in $(ALL_HDRGEN) $(ALL_DYNGEN); do \
+	  test -f $$file || touch $$file; \
+	  done
 	@$(HOST_CC) $(HOST_ACFLAGS) -MM *.c | \
 	  sed -e "s| [^ ]*/dasm_\S*\.h||g" \
 	      -e "s| buildvm_\S*\.h||g" \
 	      -e "s| lj_target_\S*\.h| lj_target_*.h|g" >Makefile.dep
-	@test -s lj_bcdef.h || $(HOST_RM) lj_bcdef.h
-	@test -s lj_ffdef.h || $(HOST_RM) lj_ffdef.h
-	@test -s lj_libdef.h || $(HOST_RM) lj_libdef.h
-	@test -s lj_recdef.h || $(HOST_RM) lj_recdef.h
-	@test -s lj_folddef.h || $(HOST_RM) lj_folddef.h
-	@test -s buildvm_x86.h || $(HOST_RM) buildvm_x86.h
-	@test -s buildvm_x64.h || $(HOST_RM) buildvm_x64.h
-	@test -s buildvm_x64win.h || $(HOST_RM) buildvm_x64win.h
+	@for file in $(ALL_HDRGEN) $(ALL_DYNGEN); do \
+	  test -s $$file || $(HOST_RM) $$file; \
+	  done
 
 .PHONY: default all amalg clean cleaner distclean depend
 
@@ -422,7 +468,11 @@ buildvm_x64win.h: buildvm_x86.dasc
 	$(E) "DYNASM    $@"
 	$(Q)$(DASM) $(DASM_FLAGS) $(DASM_FLAGS_X64WIN) -o $@ buildvm_x86.dasc
 
-buildvm.o: buildvm_x86.h buildvm_x64.h buildvm_x64win.h $(DASM_DIR)/dasm_*.h
+buildvm_ppcspe.h: buildvm_ppc.dasc
+	$(E) "DYNASM    $@"
+	$(Q)$(DASM) $(DASM_FLAGS) $(DASM_FLAGS_PPCSPE) -o $@ buildvm_ppc.dasc
+
+buildvm.o: $(ALL_DYNGEN) $(DASM_DIR)/dasm_*.h
 
 $(BUILDVM_T): $(BUILDVM_O)
 	$(E) "HOSTLINK  $@"
