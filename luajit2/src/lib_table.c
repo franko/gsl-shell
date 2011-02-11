@@ -1,6 +1,6 @@
 /*
 ** Table library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -225,12 +225,12 @@ static void auxsort(lua_State *L, int l, int u)
     for (;;) {  /* invariant: a[l..i] <= P <= a[j..u] */
       /* repeat ++i until a[i] >= P */
       while (lua_rawgeti(L, 1, ++i), sort_comp(L, -1, -2)) {
-	if (i>u) lj_err_caller(L, LJ_ERR_TABSORT);
+	if (i>=u) lj_err_caller(L, LJ_ERR_TABSORT);
 	lua_pop(L, 1);  /* remove a[i] */
       }
       /* repeat --j until a[j] <= P */
       while (lua_rawgeti(L, 1, --j), sort_comp(L, -3, -1)) {
-	if (j<l) lj_err_caller(L, LJ_ERR_TABSORT);
+	if (j<=l) lj_err_caller(L, LJ_ERR_TABSORT);
 	lua_pop(L, 1);  /* remove a[j] */
       }
       if (j<i) {
@@ -270,7 +270,7 @@ LJLIB_CF(table_sort)
 
 LUALIB_API int luaopen_table(lua_State *L)
 {
-  LJ_LIB_REG(L, table);
+  LJ_LIB_REG(L, LUA_TABLIBNAME, table);
   return 1;
 }
 

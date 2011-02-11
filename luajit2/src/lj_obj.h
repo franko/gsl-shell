@@ -1,6 +1,6 @@
 /*
 ** LuaJIT VM tags, values and objects.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -165,6 +165,7 @@ typedef const TValue cTValue;
 /* More external and GCobj tags for internal objects. */
 #define LAST_TT		LUA_TTHREAD
 #define LUA_TPROTO	(LAST_TT+1)
+#define LUA_TCDATA	(LAST_TT+2)
 
 /* Internal object tags.
 **
@@ -196,10 +197,11 @@ typedef const TValue cTValue;
 #define LJ_TPROTO		(~7u)
 #define LJ_TFUNC		(~8u)
 #define LJ_TTRACE		(~9u)
-#define LJ_TTAB			(~10u)
-#define LJ_TUDATA		(~11u)
+#define LJ_TCDATA		(~10u)
+#define LJ_TTAB			(~11u)
+#define LJ_TUDATA		(~12u)
 /* This is just the canonical number type used in some places. */
-#define LJ_TNUMX		(~12u)
+#define LJ_TNUMX		(~13u)
 
 #if LJ_64
 #define LJ_TISNUM		0xfffeffffu
@@ -245,11 +247,34 @@ typedef struct GCudata {
 enum {
   UDTYPE_USERDATA,	/* Regular userdata. */
   UDTYPE_IO_FILE,	/* I/O library FILE. */
+  UDTYPE_FFI_CLIB,	/* FFI C library namespace. */
   UDTYPE__MAX
 };
 
 #define uddata(u)	((void *)((u)+1))
 #define sizeudata(u)	(sizeof(struct GCudata)+(u)->len)
+
+/* -- C data object ------------------------------------------------------- */
+
+/* C data object. Payload follows. */
+typedef struct GCcdata {
+  GCHeader;
+  uint16_t typeid;	/* C type ID. */
+} GCcdata;
+
+/* Prepended to variable-sized or realigned C data objects. */
+typedef struct GCcdataVar {
+  uint16_t offset;	/* Offset to allocated memory (relative to GCcdata). */
+  uint16_t extra;	/* Extra space allocated (incl. GCcdata + GCcdatav). */
+  MSize len;		/* Size of payload. */
+} GCcdataVar;
+
+#define cdataptr(cd)	((void *)((cd)+1))
+#define cdataisv(cd)	((cd)->marked & 0x80)
+#define cdatav(cd)	((GCcdataVar *)((char *)(cd) - sizeof(GCcdataVar)))
+#define cdatavlen(cd)	check_exp(cdataisv(cd), cdatav(cd)->len)
+#define sizecdatav(cd)	(cdatavlen(cd) + cdatav(cd)->extra)
+#define memcdatav(cd)	((void *)((char *)(cd) - cdatav(cd)->offset))
 
 /* -- Prototype object ---------------------------------------------------- */
 
@@ -409,7 +434,13 @@ enum {
 
 #define setvmstate(g, st)	((g)->vmstate = ~LJ_VMST_##st)
 
-/* Metamethods. */
+/* Metamethods. ORDER MM */
+#ifdef LUAJIT_ENABLE_LUA52COMPAT
+#define MMDEF_52(_) _(pairs) _(ipairs)
+#else
+#define MMDEF_52(_)
+#endif
+
 #define MMDEF(_) \
   _(index) _(newindex) _(gc) _(mode) _(eq) \
   /* Only the above (fast) metamethods are negative cached (max. 8). */ \
@@ -417,7 +448,7 @@ enum {
   /* The following must be in ORDER ARITH. */ \
   _(add) _(sub) _(mul) _(div) _(mod) _(pow) _(unm) \
   /* The following are used in the standard libraries. */ \
-  _(metatable) _(tostring)
+  _(metatable) _(tostring) MMDEF_52(_)
 
 typedef enum {
 #define MMENUM(name)	MM_##name,
@@ -480,7 +511,7 @@ typedef struct global_State {
   uint8_t vmevmask;	/* VM event mask. */
   GCRef mainthref;	/* Link to main thread. */
   TValue registrytv;	/* Anchor for registry. */
-  TValue tmptv;		/* Temporary TValue. */
+  TValue tmptv, tmptv2;	/* Temporary TValues. */
   GCupval uvhead;	/* Head of double-linked list of all open upvalues. */
   int32_t hookcount;	/* Instruction hook countdown. */
   int32_t hookcstart;	/* Start count for instruction hook counter. */
@@ -492,6 +523,7 @@ typedef struct global_State {
   BCIns bc_cfunc_ext;	/* Bytecode for external C function calls. */
   GCRef jit_L;		/* Current JIT code lua_State or NULL. */
   MRef jit_base;	/* Current JIT code L->base. */
+  MRef ctype_state;	/* Pointer to C type state. */
   GCRef gcroot[GCROOT_MAX];  /* GC roots. */
 } global_State;
 
@@ -525,8 +557,8 @@ struct lua_State {
   GCRef gclist;		/* GC chain. */
   TValue *base;		/* Base of currently executing function. */
   TValue *top;		/* First free slot in the stack. */
-  TValue *maxstack;	/* Last free slot in the stack. */
-  TValue *stack;	/* Stack base. */
+  MRef maxstack;	/* Last free slot in the stack. */
+  MRef stack;		/* Stack base. */
   GCRef openupval;	/* List of open upvalues in the stack. */
   GCRef env;		/* Thread environment (table of globals). */
   void *cframe;		/* End of C stack frame chain. */
@@ -576,6 +608,7 @@ typedef union GCobj {
   lua_State th;
   GCproto pt;
   GCfunc fn;
+  GCcdata cd;
   GCtab tab;
   GCudata ud;
 } GCobj;
@@ -586,6 +619,7 @@ typedef union GCobj {
 #define gco2th(o)	check_exp((o)->gch.gct == ~LJ_TTHREAD, &(o)->th)
 #define gco2pt(o)	check_exp((o)->gch.gct == ~LJ_TPROTO, &(o)->pt)
 #define gco2func(o)	check_exp((o)->gch.gct == ~LJ_TFUNC, &(o)->fn)
+#define gco2cd(o)	check_exp((o)->gch.gct == ~LJ_TCDATA, &(o)->cd)
 #define gco2tab(o)	check_exp((o)->gch.gct == ~LJ_TTAB, &(o)->tab)
 #define gco2ud(o)	check_exp((o)->gch.gct == ~LJ_TUDATA, &(o)->ud)
 
@@ -613,6 +647,7 @@ typedef union GCobj {
 #define tvisfunc(o)	(itype(o) == LJ_TFUNC)
 #define tvisthread(o)	(itype(o) == LJ_TTHREAD)
 #define tvisproto(o)	(itype(o) == LJ_TPROTO)
+#define tviscdata(o)	(itype(o) == LJ_TCDATA)
 #define tvistab(o)	(itype(o) == LJ_TTAB)
 #define tvisudata(o)	(itype(o) == LJ_TUDATA)
 #define tvisnum(o)	(itype(o) <= LJ_TISNUM)
@@ -651,6 +686,7 @@ typedef union GCobj {
 #define funcV(o)	check_exp(tvisfunc(o), &gcval(o)->fn)
 #define threadV(o)	check_exp(tvisthread(o), &gcval(o)->th)
 #define protoV(o)	check_exp(tvisproto(o), &gcval(o)->pt)
+#define cdataV(o)	check_exp(tviscdata(o), &gcval(o)->cd)
 #define tabV(o)		check_exp(tvistab(o), &gcval(o)->tab)
 #define udataV(o)	check_exp(tvisudata(o), &gcval(o)->ud)
 #define numV(o)		check_exp(tvisnum(o), (o)->n)
@@ -697,11 +733,14 @@ define_setV(setstrV, GCstr, LJ_TSTR)
 define_setV(setthreadV, lua_State, LJ_TTHREAD)
 define_setV(setprotoV, GCproto, LJ_TPROTO)
 define_setV(setfuncV, GCfunc, LJ_TFUNC)
+define_setV(setcdataV, GCcdata, LJ_TCDATA)
 define_setV(settabV, GCtab, LJ_TTAB)
 define_setV(setudataV, GCudata, LJ_TUDATA)
 
 #define setnumV(o, x)		((o)->n = (x))
 #define setnanV(o)		((o)->u64 = U64x(fff80000,00000000))
+#define setpinfV(o)		((o)->u64 = U64x(7ff00000,00000000))
+#define setminfV(o)		((o)->u64 = U64x(fff00000,00000000))
 #define setintV(o, i)		((o)->n = cast_num((int32_t)(i)))
 
 /* Copy tagged values. */
@@ -719,16 +758,26 @@ static LJ_AINLINE int32_t lj_num2bit(lua_Number n)
   return (int32_t)o.u32.lo;
 }
 
-#if (defined(__i386__) || defined(_M_IX86)) && !defined(__SSE2__)
+#if LJ_TARGET_X86 && !defined(__SSE2__)
 #define lj_num2int(n)   lj_num2bit((n))
 #else
 #define lj_num2int(n)   ((int32_t)(n))
 #endif
 
+static LJ_AINLINE uint64_t lj_num2u64(lua_Number n)
+{
+#ifdef _MSC_VER
+  if (n >= 9223372036854775808.0)  /* They think it's a feature. */
+    return (uint64_t)(int64_t)(n - 18446744073709551616.0);
+  else
+#endif
+    return (uint64_t)n;
+}
+
 /* -- Miscellaneous object handling --------------------------------------- */
 
 /* Names and maps for internal and external object tags. */
-LJ_DATA const char *const lj_obj_typename[1+LUA_TPROTO+1];
+LJ_DATA const char *const lj_obj_typename[1+LUA_TCDATA+1];
 LJ_DATA const char *const lj_obj_itypename[~LJ_TNUMX+1];
 
 #define typename(o)	(lj_obj_itypename[itypemap(o)])

@@ -1,6 +1,6 @@
 /*
 ** Library function support.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_LIB_H
@@ -28,6 +28,7 @@
 #define FFH_RETRY	0
 #define FFH_UNREACHABLE	FFH_RETRY
 #define FFH_RES(n)	((n)+1)
+#define FFH_TAILCALL	(-1)
 
 LJ_FUNC TValue *lj_lib_checkany(lua_State *L, int narg);
 LJ_FUNC GCstr *lj_lib_checkstr(lua_State *L, int narg);
@@ -48,7 +49,7 @@ LJ_FUNC int lj_lib_checkopt(lua_State *L, int narg, int def, const char *lst);
 #define lj_lib_upvalue(L, n) \
   (&gcref((L->base-1)->fr.func)->fn.c.upvalue[(n)-1])
 
-#ifdef LUA_USE_WIN
+#if LJ_TARGET_WINDOWS
 #define lj_lib_checkfpu(L) \
   do { setnumV(L->top++, (lua_Number)1437217655); \
     if (lua_tointeger(L, -1) != 1437217655) lj_err_caller(L, LJ_ERR_BADFPU); \
@@ -80,9 +81,7 @@ static LJ_AINLINE void lj_lib_pushcc(lua_State *L, lua_CFunction f,
 #define LJLIB_NOREGUV
 #define LJLIB_NOREG
 
-#define LJ_LIB_REG(L, name) \
-  lj_lib_register(L, #name, lj_lib_init_##name, lj_lib_cf_##name)
-#define LJ_LIB_REG_(L, regname, name) \
+#define LJ_LIB_REG(L, regname, name) \
   lj_lib_register(L, regname, lj_lib_init_##name, lj_lib_cf_##name)
 
 LJ_FUNC void lj_lib_register(lua_State *L, const char *libname,

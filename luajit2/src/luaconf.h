@@ -1,6 +1,6 @@
 /*
 ** Configuration header.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef luaconf_h
@@ -56,7 +56,7 @@
 #define LUA_INIT	"LUA_INIT"
 
 /* Special file system characters. */
-#ifdef LUA_USE_WIN
+#if defined(_WIN32)
 #define LUA_DIRSEP	"\\"
 #else
 #define LUA_DIRSEP	"/"

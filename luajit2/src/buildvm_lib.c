@@ -1,12 +1,11 @@
 /*
 ** LuaJIT VM builder: library definition compiler.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
+#include "buildvm.h"
 #include "lj_obj.h"
 #include "lj_lib.h"
-
-#include "buildvm.h"
 
 /* Context for library definitions. */
 static uint8_t obuf[8192];

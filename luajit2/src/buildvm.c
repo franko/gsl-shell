@@ -1,6 +1,6 @@
 /*
 ** LuaJIT VM builder.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** This is a tool to build the hand-tuned assembler code required for
 ** LuaJIT's bytecode interpreter. It supports a variety of output formats
@@ -14,22 +14,22 @@
 ** It's a one-shot tool -- any effort fixing this would be wasted.
 */
 
-#include "lua.h"
-#include "luajit.h"
-
-#ifdef LUA_USE_WIN
-#include <fcntl.h>
-#include <io.h>
-#endif
-
+#include "buildvm.h"
 #include "lj_obj.h"
 #include "lj_gc.h"
 #include "lj_bc.h"
 #include "lj_ir.h"
 #include "lj_frame.h"
 #include "lj_dispatch.h"
+#if LJ_HASFFI
+#include "lj_ccall.h"
+#endif
+#include "luajit.h"
 
-#include "buildvm.h"
+#if defined(_WIN32)
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 /* ------------------------------------------------------------------------ */
 
@@ -37,6 +37,7 @@
 #define Dst		ctx
 #define Dst_DECL	BuildCtx *ctx
 #define Dst_REF		(ctx->D)
+#define DASM_CHECKS	1
 
 #include "../dynasm/dasm_proto.h"
 
@@ -66,15 +67,22 @@ static int collect_reloc(BuildCtx *ctx, uint8_t *addr, int idx, int type);
 #define DASM_ALIGNED_WRITES	1
 
 /* Embed architecture-specific DynASM encoder and backend. */
-#if LJ_TARGET_X86ORX64
+#if LJ_TARGET_X86
 #include "../dynasm/dasm_x86.h"
-#if LJ_32
 #include "buildvm_x86.h"
-#elif defined(_WIN64)
+#elif LJ_TARGET_X64
+#include "../dynasm/dasm_x86.h"
+#if LJ_ABI_WIN
 #include "buildvm_x64win.h"
 #else
 #include "buildvm_x64.h"
 #endif
+#elif LJ_TARGET_ARM
+#include "../dynasm/dasm_arm.h"
+#include "buildvm_arm.h"
+#elif LJ_TARGET_PPCSPE
+#include "../dynasm/dasm_ppc.h"
+#include "buildvm_ppcspe.h"
 #else
 #error "No support for this architecture (yet)"
 #endif
@@ -205,10 +213,10 @@ static int build_code(BuildCtx *ctx)
     int32_t ofs = dasm_getpclabel(Dst, i);
     if (ofs < 0) return 0x22000000|i;
     ctx->bc_ofs[i] = ofs;
-#if !LJ_HASJIT
-    if (!(i == BC_JFORI || i == BC_JFORL || i == BC_JITERL || i == BC_JLOOP ||
-	  i == BC_IFORL || i == BC_IITERL || i == BC_ILOOP))
-#endif
+    if ((LJ_HASJIT ||
+	 !(i == BC_JFORI || i == BC_JFORL || i == BC_JITERL || i == BC_JLOOP ||
+	   i == BC_IFORL || i == BC_IITERL || i == BC_ILOOP)) &&
+	(LJ_HASFFI || i != BC_KCDATA))
       sym_insert(ctx, ofs, LABEL_PREFIX_BC, bc_names[i]);
   }
 
@@ -248,6 +256,13 @@ const char *const ir_names[] = {
 #define IRNAME(name, m, m1, m2)	#name,
 IRDEF(IRNAME)
 #undef IRNAME
+  NULL
+};
+
+const char *const irt_names[] = {
+#define IRTNAME(name)	#name,
+IRTDEF(IRTNAME)
+#undef IRTNAME
   NULL
 };
 
@@ -422,6 +437,12 @@ int main(int argc, char **argv)
   BuildCtx *ctx = &ctx_;
   int status, binmode;
 
+  if (sizeof(void *) != 4*LJ_32+8*LJ_64) {
+    fprintf(stderr,"Error: pointer size mismatch in cross-build.\n");
+    fprintf(stderr,"Try: make CC=\"gcc -m32\" CROSS=... TARGET=...\n\n");
+    return 1;
+  }
+
   UNUSED(argc);
   parseargs(ctx, argv);
 
@@ -442,7 +463,7 @@ int main(int argc, char **argv)
 
   if (ctx->outname[0] == '-' && ctx->outname[1] == '\0') {
     ctx->fp = stdout;
-#ifdef LUA_USE_WIN
+#if defined(_WIN32)
     if (binmode)
       _setmode(_fileno(stdout), _O_BINARY);  /* Yuck. */
 #endif

@@ -1,6 +1,6 @@
 /*
 ** Miscellaneous object handling.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_obj_c
@@ -11,12 +11,12 @@
 /* Object type names. */
 LJ_DATADEF const char *const lj_obj_typename[] = {  /* ORDER LUA_T */
   "no value", "nil", "boolean", "userdata", "number", "string",
-  "table", "function", "userdata", "thread", "proto"
+  "table", "function", "userdata", "thread", "proto", "cdata"
 };
 
 LJ_DATADEF const char *const lj_obj_itypename[] = {  /* ORDER LJ_T */
   "nil", "boolean", "boolean", "userdata", "string", "upval", "thread",
-  "proto", "function", "trace", "table", "userdata", "number"
+  "proto", "function", "trace", "cdata", "table", "userdata", "number"
 };
 
 /* Compare two objects without calling metamethods. */

@@ -1,6 +1,6 @@
 /*
 ** Base and coroutine library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -22,10 +22,14 @@
 #include "lj_tab.h"
 #include "lj_meta.h"
 #include "lj_state.h"
+#if LJ_HASFFI
+#include "lj_ctype.h"
+#include "lj_cconv.h"
+#endif
 #include "lj_bc.h"
 #include "lj_ff.h"
 #include "lj_dispatch.h"
-#include "lj_ctype.h"
+#include "lj_char.h"
 #include "lj_lib.h"
 
 /* -- Base library: checks ------------------------------------------------ */
@@ -55,8 +59,9 @@ LJLIB_PUSH("thread")
 LJLIB_PUSH("proto")
 LJLIB_PUSH("function")
 LJLIB_PUSH("trace")
+LJLIB_PUSH("cdata")
 LJLIB_PUSH("table")
-LJLIB_PUSH(top-8)  /* userdata */
+LJLIB_PUSH(top-9)  /* userdata */
 LJLIB_PUSH("number")
 LJLIB_ASM_(type)		LJLIB_REC(.)
 /* Recycle the lj_lib_checkany(L, 1) from assert. */
@@ -163,7 +168,7 @@ LJLIB_CF(unpack)
   return n;
 }
 
-LJLIB_CF(select)
+LJLIB_CF(select)		LJLIB_REC(.)
 {
   int32_t n = (int32_t)(L->top - L->base);
   if (n >= 1 && tvisstr(L->base) && *strVdata(L->base) == '#') {
@@ -189,6 +194,14 @@ LJLIB_ASM(tonumber)		LJLIB_REC(.)
       setnumV(L->base-1, numV(o));
       return FFH_RES(1);
     }
+#if LJ_HASFFI
+    if (tviscdata(o)) {
+      CTState *cts = ctype_cts(L);
+      lj_cconv_ct_tv(cts, ctype_get(cts, CTID_DOUBLE),
+		     (uint8_t *)&(L->base-1)->n, o, 0);
+      return FFH_RES(1);
+    }
+#endif
   } else {
     const char *p = strdata(lj_lib_checkstr(L, 1));
     char *ep;
@@ -197,7 +210,7 @@ LJLIB_ASM(tonumber)		LJLIB_REC(.)
       lj_err_arg(L, 2, LJ_ERR_BASERNG);
     ul = strtoul(p, &ep, base);
     if (p != ep) {
-      while (lj_ctype_isspace((unsigned char)(*ep))) ep++;
+      while (lj_char_isspace((unsigned char)(*ep))) ep++;
       if (*ep == '\0') {
 	setnumV(L->base-1, cast_num(ul));
 	return FFH_RES(1);
@@ -218,7 +231,7 @@ LJLIB_ASM(tostring)		LJLIB_REC(.)
   L->top = o+1;  /* Only keep one argument. */
   if (!tvisnil(mo = lj_meta_lookup(L, o, MM_tostring))) {
     copyTV(L, L->base-1, mo);  /* Replace callable. */
-    return FFH_RETRY;
+    return FFH_TAILCALL;
   } else {
     GCstr *s;
     if (tvisnum(o)) {
@@ -240,20 +253,53 @@ LJLIB_ASM(tostring)		LJLIB_REC(.)
 
 /* -- Base library: iterators --------------------------------------------- */
 
+/* This solves a circular dependency problem -- change FF_next_N as needed. */
+LJ_STATIC_ASSERT((int)FF_next == FF_next_N);
+
 LJLIB_ASM(next)
 {
   lj_lib_checktab(L, 1);
-  lj_lib_checknum(L, 2);  /* For ipairs_aux. */
+  return FFH_UNREACHABLE;
+}
+
+#ifdef LUAJIT_ENABLE_LUA52COMPAT
+static int ffh_pairs(lua_State *L, MMS mm)
+{
+  TValue *o = lj_lib_checkany(L, 1);
+  cTValue *mo = lj_meta_lookup(L, o, mm);
+  if (!tvisnil(mo)) {
+    L->top = o+1;  /* Only keep one argument. */
+    copyTV(L, L->base-1, mo);  /* Replace callable. */
+    return FFH_TAILCALL;
+  } else {
+    if (!tvistab(o)) lj_err_argt(L, 1, LUA_TTABLE);
+    setfuncV(L, o-1, funcV(lj_lib_upvalue(L, 1)));
+    if (mm == MM_pairs) setnilV(o+1); else setintV(o+1, 0);
+    return FFH_RES(3);
+  }
+}
+#else
+#define ffh_pairs(L, mm)	(lj_lib_checktab(L, 1), FFH_UNREACHABLE)
+#endif
+
+LJLIB_PUSH(lastcl)
+LJLIB_ASM(pairs)
+{
+  return ffh_pairs(L, MM_pairs);
+}
+
+LJLIB_NOREGUV LJLIB_ASM(ipairs_aux)	LJLIB_REC(.)
+{
+  lj_lib_checktab(L, 1);
+  lj_lib_checknum(L, 2);
   return FFH_UNREACHABLE;
 }
 
 LJLIB_PUSH(lastcl)
-LJLIB_ASM_(pairs)
-
-LJLIB_NOREGUV LJLIB_ASM_(ipairs_aux)	LJLIB_REC(.)
-
-LJLIB_PUSH(lastcl)
-LJLIB_ASM_(ipairs)		LJLIB_REC(.)
+LJLIB_ASM(ipairs)		LJLIB_REC(.)
+{
+  return ffh_pairs(L, MM_ipairs);
+}
 
 /* -- Base library: throw and catch errors -------------------------------- */
 
@@ -356,7 +402,7 @@ LJLIB_CF(collectgarbage)
     "\4stop\7restart\7collect\5count\1\377\4step\10setpause\12setstepmul");
   int32_t data = lj_lib_optint(L, 2, 0);
   if (opt == LUA_GCCOUNT) {
-    setnumV(L->top, cast_num((int32_t)G(L)->gc.total)/1024.0);
+    setnumV(L->top, cast_num(G(L)->gc.total)/1024.0);
   } else {
     int res = lua_gc(L, opt, data);
     if (opt == LUA_GCSTEP)
@@ -459,7 +505,7 @@ LJLIB_CF(coroutine_status)
   if (co == L) s = "running";
   else if (co->status == LUA_YIELD) s = "suspended";
   else if (co->status != 0) s = "dead";
-  else if (co->base > co->stack+1) s = "normal";
+  else if (co->base > tvref(co->stack)+1) s = "normal";
   else if (co->top == co->base) s = "dead";
   else s = "suspended";
   lua_pushstring(L, s);
@@ -476,8 +522,8 @@ LJLIB_CF(coroutine_running)
 LJLIB_CF(coroutine_create)
 {
   lua_State *L1 = lua_newthread(L);
-  if (!(L->top > L->base && tvisfunc(L->base) && isluafunc(funcV(L->base))))
-    lj_err_arg(L, 1, LJ_ERR_NOLFUNC);
+  if (!(L->base < L->top && tvisfunc(L->base)))
+    lj_err_argt(L, 1, LUA_TFUNCTION);
   setfuncV(L, L1->top++, funcV(L->base));
   return 1;
 }
@@ -498,7 +544,7 @@ static int ffh_resume(lua_State *L, lua_State *co, int wrap)
     setstrV(L, L->base, lj_err_str(L, em));
     return FFH_RES(2);
   }
-  lj_state_growstack(co, (MSize)(L->top - L->base - 1));
+  lj_state_growstack(co, (MSize)(L->top - L->base));
   return FFH_RETRY;
 }
 
@@ -568,8 +614,8 @@ LUALIB_API int luaopen_base(lua_State *L)
   settabV(L, lj_tab_setstr(L, env, lj_str_newlit(L, "_G")), env);
   lua_pushliteral(L, LUA_VERSION);  /* top-3. */
   newproxy_weaktable(L);  /* top-2. */
-  LJ_LIB_REG_(L, "_G", base);
-  LJ_LIB_REG(L, coroutine);
+  LJ_LIB_REG(L, "_G", base);
+  LJ_LIB_REG(L, LUA_COLIBNAME, coroutine);
   return 2;
 }
 

@@ -1,6 +1,6 @@
 /*
 ** SSA IR (Intermediate Representation) format.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_IR_H
@@ -10,32 +10,10 @@
 
 /* -- IR instructions ----------------------------------------------------- */
 
-/* IR instruction definition. Order matters, see below. */
+/* IR instruction definition. Order matters, see below. ORDER IR */
 #define IRDEF(_) \
-  /* Miscellaneous ops. */ \
-  _(NOP,	N , ___, ___) \
-  _(BASE,	N , lit, lit) \
-  _(LOOP,	S , ___, ___) \
-  _(PHI,	S , ref, ref) \
-  _(RENAME,	S , ref, lit) \
-  \
-  /* Constants. */ \
-  _(KPRI,	N , ___, ___) \
-  _(KINT,	N , cst, ___) \
-  _(KGC,	N , cst, ___) \
-  _(KPTR,	N , cst, ___) \
-  _(KNULL,	N , cst, ___) \
-  _(KNUM,	N , cst, ___) \
-  _(KSLOT,	N , ref, lit) \
-  \
   /* Guarded assertions. */ \
   /* Must be properly aligned to flip opposites (^1) and (un)ordered (^4). */ \
-  _(EQ,		C , ref, ref) \
-  _(NE,		C , ref, ref) \
-  \
-  _(ABC,	N , ref, ref) \
-  _(RETF,	S , ref, ref) \
-  \
   _(LT,		N , ref, ref) \
   _(GE,		N , ref, ref) \
   _(LE,		N , ref, ref) \
@@ -45,6 +23,31 @@
   _(UGE,	N , ref, ref) \
   _(ULE,	N , ref, ref) \
   _(UGT,	N , ref, ref) \
+  \
+  _(EQ,		C , ref, ref) \
+  _(NE,		C , ref, ref) \
+  \
+  _(ABC,	N , ref, ref) \
+  _(RETF,	S , ref, ref) \
+  \
+  /* Miscellaneous ops. */ \
+  _(NOP,	N , ___, ___) \
+  _(BASE,	N , lit, lit) \
+  _(HIOP,	S , ref, ref) \
+  _(LOOP,	S , ___, ___) \
+  _(PHI,	S , ref, ref) \
+  _(RENAME,	S , ref, lit) \
+  \
+  /* Constants. */ \
+  _(KPRI,	N , ___, ___) \
+  _(KINT,	N , cst, ___) \
+  _(KGC,	N , cst, ___) \
+  _(KPTR,	N , cst, ___) \
+  _(KKPTR,	N , cst, ___) \
+  _(KNULL,	N , cst, ___) \
+  _(KNUM,	N , cst, ___) \
+  _(KINT64,	N , cst, ___) \
+  _(KSLOT,	N , ref, lit) \
   \
   /* Bit ops. */ \
   _(BNOT,	N , ref, ___) \
@@ -58,21 +61,21 @@
   _(BROL,	N , ref, ref) \
   _(BROR,	N , ref, ref) \
   \
-  /* Arithmetic ops. ORDER ARITH (FPMATH/POWI take the space for MOD/POW). */ \
+  /* Arithmetic ops. ORDER ARITH */ \
   _(ADD,	C , ref, ref) \
   _(SUB,	N , ref, ref) \
   _(MUL,	C , ref, ref) \
   _(DIV,	N , ref, ref) \
-  \
-  _(FPMATH,	N , ref, lit) \
-  _(POWI,	N , ref, ref) \
-  \
+  _(MOD,	N , ref, ref) \
+  _(POW,	N , ref, ref) \
   _(NEG,	N , ref, ref) \
+  \
   _(ABS,	N , ref, ref) \
   _(ATAN2,	N , ref, ref) \
   _(LDEXP,	N , ref, ref) \
   _(MIN,	C , ref, ref) \
   _(MAX,	C , ref, ref) \
+  _(FPMATH,	N , ref, lit) \
   \
   /* Overflow-checking arithmetic ops. */ \
   _(ADDOV,	C , ref, ref) \
@@ -95,26 +98,30 @@
   _(HLOAD,	L , ref, ___) \
   _(ULOAD,	L , ref, ___) \
   _(FLOAD,	L , ref, lit) \
-  _(SLOAD,	L , lit, lit) \
   _(XLOAD,	L , ref, lit) \
+  _(SLOAD,	L , lit, lit) \
+  _(VLOAD,	L , ref, ___) \
   \
   _(ASTORE,	S , ref, ref) \
   _(HSTORE,	S , ref, ref) \
   _(USTORE,	S , ref, ref) \
   _(FSTORE,	S , ref, ref) \
+  _(XSTORE,	S , ref, ref) \
   \
   /* Allocations. */ \
-  _(SNEW,	N , ref, ref) /* CSE is ok, so not marked as A. */ \
+  _(SNEW,	N , ref, ref)  /* CSE is ok, not marked as A. */ \
   _(TNEW,	AW, lit, lit) \
   _(TDUP,	AW, ref, ___) \
+  _(CNEW,	AW, ref, ref) \
+  _(CNEWI,	NW, ref, ref)  /* CSE is ok, not marked as A. */ \
   \
-  /* Write barriers. */ \
+  /* Barriers. */ \
   _(TBAR,	S , ref, ___) \
   _(OBAR,	S , ref, ref) \
+  _(XBAR,	S , ___, ___) \
   \
   /* Type conversions. */ \
-  _(TONUM,	N , ref, ___) \
-  _(TOINT,	N , ref, lit) \
+  _(CONV,	N , ref, lit) \
   _(TOBIT,	N , ref, ref) \
   _(TOSTR,	N , ref, ___) \
   _(STRTO,	N , ref, ___) \
@@ -123,6 +130,7 @@
   _(CALLN,	N , ref, lit) \
   _(CALLL,	L , ref, lit) \
   _(CALLS,	S , ref, lit) \
+  _(CALLXS,	S , ref, ref) \
   _(CARG,	N , ref, ref) \
   \
   /* End of list. */
@@ -150,6 +158,7 @@ LJ_STATIC_ASSERT(((int)IR_LT^4) == (int)IR_ULT);
 LJ_STATIC_ASSERT((int)IR_HLOAD + IRDELTA_L2S == (int)IR_HSTORE);
 LJ_STATIC_ASSERT((int)IR_ULOAD + IRDELTA_L2S == (int)IR_USTORE);
 LJ_STATIC_ASSERT((int)IR_FLOAD + IRDELTA_L2S == (int)IR_FSTORE);
+LJ_STATIC_ASSERT((int)IR_XLOAD + IRDELTA_L2S == (int)IR_XSTORE);
 
 /* -- Named IR literals --------------------------------------------------- */
 
@@ -179,7 +188,11 @@ IRFPMDEF(FPMENUM)
   _(TAB_NOMM,	offsetof(GCtab, nomm)) \
   _(UDATA_META,	offsetof(GCudata, metatable)) \
   _(UDATA_UDTYPE, offsetof(GCudata, udtype)) \
-  _(UDATA_FILE,	sizeof(GCudata))
+  _(UDATA_FILE,	sizeof(GCudata)) \
+  _(CDATA_TYPEID, offsetof(GCcdata, typeid)) \
+  _(CDATA_PTR,	sizeof(GCcdata)) \
+  _(CDATA_INT64, sizeof(GCcdata)) \
+  _(CDATA_INT64HI, sizeof(GCcdata) + 4)
 
 typedef enum {
 #define FLENUM(name, ofs)	IRFL_##name,
@@ -189,20 +202,34 @@ IRFLDEF(FLENUM)
 } IRFieldID;
 
 /* SLOAD mode bits, stored in op2. */
-#define IRSLOAD_INHERIT		1	/* Inherited by exits/side traces. */
-#define IRSLOAD_READONLY	2	/* Read-only, omit slot store. */
-#define IRSLOAD_PARENT		4	/* Coalesce with parent trace. */
-#define IRSLOAD_TYPECHECK	8	/* Needs type check. */
+#define IRSLOAD_PARENT		0x01	/* Coalesce with parent trace. */
+#define IRSLOAD_FRAME		0x02	/* Load hiword of frame. */
+#define IRSLOAD_TYPECHECK	0x04	/* Needs type check. */
+#define IRSLOAD_CONVERT		0x08	/* Number to integer conversion. */
+#define IRSLOAD_READONLY	0x10	/* Read-only, omit slot store. */
+#define IRSLOAD_INHERIT		0x20	/* Inherited by exits/side traces. */
 
 /* XLOAD mode, stored in op2. */
 #define IRXLOAD_READONLY	1	/* Load from read-only data. */
-#define IRXLOAD_UNALIGNED	2	/* Unaligned load. */
+#define IRXLOAD_VOLATILE	2	/* Load from volatile data. */
+#define IRXLOAD_UNALIGNED	4	/* Unaligned load. */
 
-/* TOINT mode, stored in op2. Ordered by strength of the checks. */
-#define IRTOINT_CHECK		0	/* Number checked for integerness. */
-#define IRTOINT_INDEX		1	/* Checked + special backprop rules. */
-#define IRTOINT_ANY		2	/* Any FP number is ok. */
-#define IRTOINT_TOBIT		3	/* Cache only: TOBIT conversion. */
+/* CONV mode, stored in op2. */
+#define IRCONV_SRCMASK		0x001f	/* Source IRType. */
+#define IRCONV_DSTMASK		0x03e0	/* Dest. IRType (also in ir->t). */
+#define IRCONV_DSH		5
+#define IRCONV_NUM_INT		((IRT_NUM<<IRCONV_DSH)|IRT_INT)
+#define IRCONV_INT_NUM		((IRT_INT<<IRCONV_DSH)|IRT_NUM)
+#define IRCONV_TRUNC		0x0400	/* Truncate number to integer. */
+#define IRCONV_SEXT		0x0800	/* Sign-extend integer to integer. */
+#define IRCONV_MODEMASK		0x0fff
+#define IRCONV_CONVMASK		0xf000
+#define IRCONV_CSH		12
+/* Number to integer conversion mode. Ordered by strength of the checks. */
+#define IRCONV_TOBIT  (0<<IRCONV_CSH)	/* None. Cache only: TOBIT conv. */
+#define IRCONV_ANY    (1<<IRCONV_CSH)	/* Any FP number is ok. */
+#define IRCONV_INDEX  (2<<IRCONV_CSH)	/* Check + special backprop rules. */
+#define IRCONV_CHECK  (3<<IRCONV_CSH)	/* Number checked for integerness. */
 
 /* C call info for CALL* instructions. */
 typedef struct CCallInfo {
@@ -211,7 +238,7 @@ typedef struct CCallInfo {
 } CCallInfo;
 
 #define CCI_NARGS(ci)		((ci)->flags & 0xff)	/* Extract # of args. */
-#define CCI_NARGS_MAX		16		/* Max. # of args. */
+#define CCI_NARGS_MAX		32			/* Max. # of args. */
 
 #define CCI_OTSHIFT		16
 #define CCI_OPTYPE(ci)		((ci)->flags >> CCI_OTSHIFT)  /* Get op/type. */
@@ -232,6 +259,29 @@ typedef struct CCallInfo {
 #define CCI_FASTCALL		0x0800	/* Fastcall convention. */
 
 /* Function definitions for CALL* instructions. */
+#if LJ_HASFFI
+#if LJ_32
+#define ARG2_64		4	/* Treat as 4 32 bit arguments. */
+#define IRCALLDEF_FFI32(_) \
+  _(lj_carith_mul64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER)
+#else
+#define ARG2_64		2
+#define IRCALLDEF_FFI32(_)
+#endif
+#define IRCALLDEF_FFI(_) \
+  IRCALLDEF_FFI32(_) \
+  _(lj_carith_divi64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER) \
+  _(lj_carith_divu64,	ARG2_64,   N, U64, CCI_NOFPRCLOBBER) \
+  _(lj_carith_modi64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER) \
+  _(lj_carith_modu64,	ARG2_64,   N, U64, CCI_NOFPRCLOBBER) \
+  _(lj_carith_powi64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER) \
+  _(lj_carith_powu64,	ARG2_64,   N, U64, CCI_NOFPRCLOBBER) \
+  _(strlen,		1,         N, INTP, 0) \
+  _(memcpy,		3,         S, PTR, 0) \
+  _(memset,		3,         S, PTR, 0)
+#else
+#define IRCALLDEF_FFI(_)
+#endif
 #define IRCALLDEF(_) \
   _(lj_str_cmp,		2,  FN, INT, CCI_NOFPRCLOBBER) \
   _(lj_str_new,		3,   S, STR, CCI_L) \
@@ -240,11 +290,13 @@ typedef struct CCallInfo {
   _(lj_str_fromnum,	2,  FN, STR, CCI_L) \
   _(lj_tab_new1,	2,  FS, TAB, CCI_L) \
   _(lj_tab_dup,		2,  FS, TAB, CCI_L) \
-  _(lj_tab_newkey,	3,   S, PTR, CCI_L) \
+  _(lj_tab_newkey,	3,   S, P32, CCI_L) \
   _(lj_tab_len,		1,  FL, INT, 0) \
   _(lj_gc_step_jit,	2,  FS, NIL, CCI_L) \
   _(lj_gc_barrieruv,	2,  FS, NIL, 0) \
+  _(lj_mem_newgco,	2,  FS, P32, CCI_L) \
   _(lj_math_random_step, 1, FS, NUM, CCI_CASTU64|CCI_NOFPRCLOBBER) \
+  IRCALLDEF_FFI(_) \
   _(sinh,		1,  N, NUM, 0) \
   _(cosh,		1,  N, NUM, 0) \
   _(tanh,		1,  N, NUM, 0) \
@@ -285,6 +337,7 @@ typedef enum {
 
 #define IRM_W			0x80
 
+#define IRM_NW			(IRM_N|IRM_W)
 #define IRM_AW			(IRM_A|IRM_W)
 #define IRM_LW			(IRM_L|IRM_W)
 
@@ -299,34 +352,29 @@ LJ_DATA const uint8_t lj_ir_mode[IR__MAX+1];
 
 /* -- IR instruction types ------------------------------------------------ */
 
+/* Map of itypes to non-negative numbers. ORDER LJ_T.
+** LJ_TUPVAL/LJ_TTRACE never appear in a TValue. Use these itypes for
+** IRT_P32 and IRT_P64, which never escape the IR.
+** The various integers are only used in the IR and can only escape to
+** a TValue after implicit or explicit conversion. Their types must be
+** contiguous and next to IRT_NUM (see the typerange macros below).
+*/
+#define IRTDEF(_) \
+  _(NIL) _(FALSE) _(TRUE) _(LIGHTUD) _(STR) _(P32) _(THREAD) \
+  _(PROTO) _(FUNC) _(P64) _(CDATA) _(TAB) _(UDATA) \
+  _(FLOAT) _(NUM) _(I8) _(U8) _(I16) _(U16) _(INT) _(U32) _(I64) _(U64) \
+  /* There is room for 10 more types. */
+
 /* IR result type and flags (8 bit). */
 typedef enum {
-  /* Map of itypes to non-negative numbers. ORDER LJ_T */
-  IRT_NIL,
-  IRT_FALSE,
-  IRT_TRUE,
-  IRT_LIGHTUD,
-  /* GCobj types are from here ... */
-  IRT_STR,
-  IRT_PTR,		/* IRT_PTR never escapes the IR (map of LJ_TUPVAL). */
-  IRT_THREAD,
-  IRT_PROTO,
-  IRT_FUNC,
-  IRT_9,		/* Unused (map of LJ_TTRACE). */
-  IRT_TAB,
-  IRT_UDATA,
-  /* ... until here. */
-  IRT_NUM,
-  /* The various integers are only used in the IR and can only escape to
-  ** a TValue after implicit or explicit conversion (TONUM). Their types
-  ** must be contiguous and next to IRT_NUM (see the typerange macros below).
-  */
-  IRT_INT,
-  IRT_I8,
-  IRT_U8,
-  IRT_I16,
-  IRT_U16,
-  /* There is room for 14 more types. */
+#define IRTENUM(name)	IRT_##name,
+IRTDEF(IRTENUM)
+#undef IRTENUM
+
+  /* Native pointer type and the corresponding integer type. */
+  IRT_PTR = LJ_64 ? IRT_P64 : IRT_P32,
+  IRT_INTP = LJ_64 ? IRT_I64 : IRT_INT,
+  IRT_UINTP = LJ_64 ? IRT_U64 : IRT_U32,
 
   /* Additional flags. */
   IRT_MARK = 0x20,	/* Marker for misc. purposes. */
@@ -359,18 +407,33 @@ typedef struct IRType1 { uint8_t irt; } IRType1;
 #define irt_ispri(t)		((uint32_t)irt_type(t) <= IRT_TRUE)
 #define irt_islightud(t)	(irt_type(t) == IRT_LIGHTUD)
 #define irt_isstr(t)		(irt_type(t) == IRT_STR)
-#define irt_isfunc(t)		(irt_type(t) == IRT_FUNC)
 #define irt_istab(t)		(irt_type(t) == IRT_TAB)
+#define irt_isfloat(t)		(irt_type(t) == IRT_FLOAT)
 #define irt_isnum(t)		(irt_type(t) == IRT_NUM)
 #define irt_isint(t)		(irt_type(t) == IRT_INT)
 #define irt_isi8(t)		(irt_type(t) == IRT_I8)
 #define irt_isu8(t)		(irt_type(t) == IRT_U8)
 #define irt_isi16(t)		(irt_type(t) == IRT_I16)
 #define irt_isu16(t)		(irt_type(t) == IRT_U16)
+#define irt_isu32(t)		(irt_type(t) == IRT_U32)
+#define irt_isi64(t)		(irt_type(t) == IRT_I64)
+#define irt_isu64(t)		(irt_type(t) == IRT_U64)
 
-#define irt_isinteger(t)	(irt_typerange((t), IRT_INT, IRT_U16))
+#define irt_isfp(t)		(irt_isnum(t) || irt_isfloat(t))
+#define irt_isinteger(t)	(irt_typerange((t), IRT_I8, IRT_INT))
 #define irt_isgcv(t)		(irt_typerange((t), IRT_STR, IRT_UDATA))
 #define irt_isaddr(t)		(irt_typerange((t), IRT_LIGHTUD, IRT_UDATA))
+#define irt_isint64(t)		(irt_typerange((t), IRT_I64, IRT_U64))
+
+#if LJ_64
+#define IRT_IS64 \
+  ((1u<<IRT_NUM)|(1u<<IRT_I64)|(1u<<IRT_U64)|(1u<<IRT_P64)|(1u<<IRT_LIGHTUD))
+#else
+#define IRT_IS64 \
+  ((1u<<IRT_NUM)|(1u<<IRT_I64)|(1u<<IRT_U64))
+#endif
+
+#define irt_is64(t)		((IRT_IS64 >> irt_type(t)) & 1)
 
 static LJ_AINLINE IRType itype2irt(const TValue *tv)
 {
@@ -458,6 +521,7 @@ typedef uint32_t TRef;
 #define tref_istrue(tr)		(tref_istype((tr), IRT_TRUE))
 #define tref_isstr(tr)		(tref_istype((tr), IRT_STR))
 #define tref_isfunc(tr)		(tref_istype((tr), IRT_FUNC))
+#define tref_iscdata(tr)	(tref_istype((tr), IRT_CDATA))
 #define tref_istab(tr)		(tref_istype((tr), IRT_TAB))
 #define tref_isudata(tr)	(tref_istype((tr), IRT_UDATA))
 #define tref_isnum(tr)		(tref_istype((tr), IRT_NUM))
@@ -466,8 +530,8 @@ typedef uint32_t TRef;
 #define tref_isbool(tr)		(tref_typerange((tr), IRT_FALSE, IRT_TRUE))
 #define tref_ispri(tr)		(tref_typerange((tr), IRT_NIL, IRT_TRUE))
 #define tref_istruecond(tr)	(!tref_typerange((tr), IRT_NIL, IRT_FALSE))
-#define tref_isinteger(tr)	(tref_typerange((tr), IRT_INT, IRT_U16))
-#define tref_isnumber(tr)	(tref_typerange((tr), IRT_NUM, IRT_U16))
+#define tref_isinteger(tr)	(tref_typerange((tr), IRT_I8, IRT_INT))
+#define tref_isnumber(tr)	(tref_typerange((tr), IRT_NUM, IRT_INT))
 #define tref_isnumber_str(tr)	(tref_isnumber((tr)) || tref_isstr((tr)))
 #define tref_isgcv(tr)		(tref_typerange((tr), IRT_STR, IRT_UDATA))
 
@@ -523,15 +587,20 @@ typedef union IRIns {
 #define ir_kstr(ir)	(gco2str(ir_kgc((ir))))
 #define ir_ktab(ir)	(gco2tab(ir_kgc((ir))))
 #define ir_kfunc(ir)	(gco2func(ir_kgc((ir))))
+#define ir_kcdata(ir)	(gco2cd(ir_kgc((ir))))
 #define ir_knum(ir)	check_exp((ir)->o == IR_KNUM, mref((ir)->ptr, cTValue))
-#define ir_kptr(ir)	check_exp((ir)->o == IR_KPTR, mref((ir)->ptr, void))
-
-LJ_STATIC_ASSERT((int)IRT_GUARD == (int)IRM_W);
+#define ir_kint64(ir)	check_exp((ir)->o == IR_KINT64, mref((ir)->ptr,cTValue))
+#define ir_k64(ir) \
+  check_exp((ir)->o == IR_KNUM || (ir)->o == IR_KINT64, mref((ir)->ptr,cTValue))
+#define ir_kptr(ir) \
+  check_exp((ir)->o == IR_KPTR || (ir)->o == IR_KKPTR, mref((ir)->ptr, void))
 
 /* A store or any other op with a non-weak guard has a side-effect. */
 static LJ_AINLINE int ir_sideeff(IRIns *ir)
 {
   return (((ir->t.irt | ~IRT_GUARD) & lj_ir_mode[ir->o]) >= IRM_S);
 }
+
+LJ_STATIC_ASSERT((int)IRT_GUARD == (int)IRM_W);
 
 #endif

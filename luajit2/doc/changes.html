@@ -4,7 +4,7 @@
 <title>LuaJIT Change History</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="Author" content="Mike Pall">
-<meta name="Copyright" content="Copyright (C) 2005-2010, Mike Pall">
+<meta name="Copyright" content="Copyright (C) 2005-2011, Mike Pall">
 <meta name="Language" content="en">
 <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
 <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
@@ -26,8 +26,22 @@ div.major { max-width: 600px; padding: 1em; margin: 1em 0 1em 0; }
 <a href="install.html">Installation</a>
 </li><li>
 <a href="running.html">Running</a>
+</li></ul>
 </li><li>
-<a href="api.html">API Extensions</a>
+<a href="extensions.html">Extensions</a>
+<ul><li>
+<a href="ext_ffi.html">FFI Library</a>
+<ul><li>
+<a href="ext_ffi_tutorial.html">FFI Tutorial</a>
+</li><li>
+<a href="ext_ffi_api.html">ffi.* API</a>
+</li><li>
+<a href="ext_ffi_semantics.html">FFI Semantics</a>
+</li></ul>
+</li><li>
+<a href="ext_jit.html">jit.* Library</a>
+</li><li>
+<a href="ext_c_api.html">Lua/C API</a>
 </li></ul>
 </li><li>
 <a href="status.html">Status</a>
@@ -45,7 +59,7 @@ div.major { max-width: 600px; padding: 1em; margin: 1em 0 1em 0; }
 <div id="main">
 <p>
 This is a list of changes between the released versions of LuaJIT.<br>
-The current <span style="color: #c00000;">development version</span> is <strong>LuaJIT&nbsp;2.0.0-beta5</strong>.<br>
+The current <span style="color: #c00000;">development version</span> is <strong>LuaJIT&nbsp;2.0.0-beta6</strong>.<br>
 The current <span style="color: #0000c0;">stable version</span> is <strong>LuaJIT&nbsp;1.1.6</strong>.
 </p>
 <p>
@@ -55,6 +69,51 @@ to see whether newer versions are available.
 </p>
 
 <div class="major" style="background: #ffd0d0;">
+<h2 id="LuaJIT-2.0.0-beta6">LuaJIT 2.0.0-beta6 &mdash; 2011-02-11</h2>
+<ul>
+<li>New features:
+<ul>
+<li>PowerPC/e500v2 port of the LuaJIT interpreter is complete.</li>
+<li>Various minor features from Lua 5.2: Hex escapes in literals,
+<tt>'\*'</tt> escape, reversible <tt>string.format("%q",s)</tt>,
+<tt>"%g"</tt> pattern, <tt>table.sort</tt> checks callbacks,
+<tt>os.exit(status|true|false[,close])</tt>.</li>
+<li>Lua 5.2 <tt>__pairs</tt> and <tt>__ipairs</tt> metamethods
+(disabled by default).</li>
+<li>Initial release of the FFI library.</li>
+</ul></li>
+<li>Correctness and completeness:
+<ul>
+<li>Fix <tt>string.format()</tt> for non-finite numbers.</li>
+<li>Fix memory leak when compiled to use the built-in allocator.</li>
+<li>x86/x64: Fix unnecessary resize in <tt>TSETM</tt> bytecode.</li>
+<li>Fix various GC issues with traces and <tt>jit.flush()</tt>.</li>
+<li>x64: Fix fusion of indexes for array references.</li>
+<li>x86/x64: Fix stack overflow handling for coroutine results.</li>
+<li>Enable low-2GB memory allocation on FreeBSD/x64.</li>
+<li>Fix <tt>collectgarbage("count")</tt> result if more than 2GB is in use.</li>
+<li>Fix parsing of hex floats.</li>
+<li>x86/x64: Fix loop branch inversion with trailing
+<tt>HREF+NE/EQ</tt>.</li>
+<li>Add <tt>jit.os</tt> string.</li>
+<li><tt>coroutine.create()</tt> permits running C functions, too.</li>
+<li>Fix OSX build to work with newer ld64 versions.</li>
+<li>Fix bytecode optimization of <tt>and</tt>/<tt>or</tt> operators.</li>
+</ul></li>
+<li>Structural and performance enhancements:
+<ul>
+<li>Emit specialized bytecode for <tt>pairs()</tt>/<tt>next()</tt>.</li>
+<li>Improve bytecode coalescing of <tt>nil</tt> constants.</li>
+<li>Compile calls to vararg functions.</li>
+<li>Compile <tt>select()</tt>.</li>
+<li>Improve alias analysis, esp. for loads from allocations.</li>
+<li>Tuning of various compiler heuristics.</li>
+<li>Refactor and extend IR conversion instructions.</li>
+<li>x86/x64: Various backend enhancements related to the FFI.</li>
+<li>Add SPLIT pass to split 64 bit IR instructions for 32 bit CPUs.</li>
+</ul></li>
+</ul>
+
 <h2 id="LuaJIT-2.0.0-beta5">LuaJIT 2.0.0-beta5 &mdash; 2010-08-24</h2>
 <ul>
 <li>Correctness and completeness:
@@ -105,7 +164,7 @@ to see whether newer versions are available.
 
 <h2 id="LuaJIT-2.0.0-beta3">LuaJIT 2.0.0-beta3 &mdash; 2010-03-07</h2>
 <ul>
-<li>LuaJIT x64 port:</li>
+<li>LuaJIT x64 port:
 <ul>
 <li>Port integrated memory allocator to Linux/x64, Windows/x64 and OSX/x64.</li>
 <li>Port interpreter and JIT compiler to x64.</li>
@@ -242,7 +301,7 @@ to avoid joining by the compiler/linker.</li>
 <li>Merged with Lua 5.1.1. Fixes all
 <a href="http://www.lua.org/bugs.html#5.1"><span class="ext">&raquo;</span>&nbsp;known bugs in Lua 5.1</a>.</li>
 <li>Enforce (dynamic) linker error for EXE/DLL version mismatches.</li>
-<li>Minor changes to DynASM: faster preprocessing, smaller encoding
+<li>Minor changes to DynASM: faster pre-processing, smaller encoding
 for some immediates.</li>
 </ul>
 <p>
@@ -409,7 +468,7 @@ This is the initial non-public release of LuaJIT.
 </div>
 <div id="foot">
 <hr class="hide">
-Copyright &copy; 2005-2010 Mike Pall
+Copyright &copy; 2005-2011 Mike Pall
 <span class="noprint">
 &middot;
 <a href="contact.html">Contact</a>

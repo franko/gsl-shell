@@ -1,6 +1,6 @@
 /*
 ** Package library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -27,7 +27,7 @@
 #define PACKAGE_LIB_FAIL	"open"
 #define setprogdir(L)		((void)0)
 
-#if defined(LUA_DL_DLOPEN)
+#if LJ_TARGET_DLOPEN
 
 #include <dlfcn.h>
 
@@ -50,7 +50,7 @@ static lua_CFunction ll_sym(lua_State *L, void *lib, const char *sym)
   return f;
 }
 
-#elif defined(LUA_DL_DLL)
+#elif LJ_TARGET_WINDOWS
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -107,7 +107,7 @@ static lua_CFunction ll_sym(lua_State *L, void *lib, const char *sym)
 #undef PACKAGE_LIB_FAIL
 #define PACKAGE_LIB_FAIL	"absent"
 
-#define DLMSG	"dynamic libraries not enabled; check your Lua installation"
+#define DLMSG	"dynamic libraries not enabled; no support for target OS"
 
 static void ll_unloadlib(void *lib)
 {
@@ -499,7 +499,7 @@ LUALIB_API int luaopen_package(lua_State *L)
   lua_setfield(L, -2, "config");
   luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 16);
   lua_setfield(L, -2, "loaded");
-  lua_newtable(L);
+  luaL_findtable(L, LUA_REGISTRYINDEX, "_PRELOAD", 4);
   lua_setfield(L, -2, "preload");
   lua_pushvalue(L, LUA_GLOBALSINDEX);
   luaL_register(L, NULL, package_global);

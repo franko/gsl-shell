@@ -1,6 +1,6 @@
 /*
 ** Common definitions for the JIT compiler.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_JIT_H
@@ -14,17 +14,18 @@
 
 /* CPU-specific JIT engine flags. */
 #if LJ_TARGET_X86ORX64
-#define JIT_F_CMOV		0x00000100
-#define JIT_F_SSE2		0x00000200
-#define JIT_F_SSE4_1		0x00000400
-#define JIT_F_P4		0x00000800
-#define JIT_F_PREFER_IMUL	0x00001000
-#define JIT_F_SPLIT_XMM		0x00002000
-#define JIT_F_LEA_AGU		0x00004000
+#define JIT_F_CMOV		0x00000010
+#define JIT_F_SSE2		0x00000020
+#define JIT_F_SSE3		0x00000040
+#define JIT_F_SSE4_1		0x00000080
+#define JIT_F_P4		0x00000100
+#define JIT_F_PREFER_IMUL	0x00000200
+#define JIT_F_SPLIT_XMM		0x00000400
+#define JIT_F_LEA_AGU		0x00000800
 
 /* Names for the CPU-specific flags. Must match the order above. */
 #define JIT_F_CPU_FIRST		JIT_F_CMOV
-#define JIT_F_CPUSTRING		"\4CMOV\4SSE2\6SSE4.1\2P4\3AMD\2K8\4ATOM"
+#define JIT_F_CPUSTRING		"\4CMOV\4SSE2\4SSE3\6SSE4.1\2P4\3AMD\2K8\4ATOM"
 #else
 #error "Missing CPU-specific JIT engine flags"
 #endif
@@ -55,7 +56,7 @@
   (JIT_F_OPT_2|JIT_F_OPT_FWD|JIT_F_OPT_DSE|JIT_F_OPT_ABC|JIT_F_OPT_FUSE)
 #define JIT_F_OPT_DEFAULT	JIT_F_OPT_3
 
-#if defined(LUA_USE_WIN) || LJ_64
+#if LJ_TARGET_WINDOWS || LJ_64
 /* See: http://blogs.msdn.com/oldnewthing/archive/2003/10/08/55239.aspx */
 #define JIT_P_sizemcode_DEFAULT		64
 #else
@@ -104,8 +105,16 @@ typedef enum {
   LJ_TRACE_START,	/* New trace started. */
   LJ_TRACE_END,		/* End of trace. */
   LJ_TRACE_ASM,		/* Assemble trace. */
-  LJ_TRACE_ERR,		/* Trace aborted with error. */
+  LJ_TRACE_ERR		/* Trace aborted with error. */
 } TraceState;
+
+/* Post-processing action. */
+typedef enum {
+  LJ_POST_NONE,		/* No action. */
+  LJ_POST_FIXCOMP,	/* Fixup comparison and emit pending guard. */
+  LJ_POST_FIXGUARD,	/* Fixup and emit pending guard. */
+  LJ_POST_FIXBOOL	/* Fixup boolean result. */
+} PostProc;
 
 /* Machine code type. */
 typedef uint8_t MCode;
@@ -166,9 +175,10 @@ typedef struct GCtrace {
   SnapShot *snap;	/* Snapshot array. */
   SnapEntry *snapmap;	/* Snapshot map. */
   GCRef startpt;	/* Starting prototype. */
+  MRef startpc;		/* Bytecode PC of starting instruction. */
   BCIns startins;	/* Original bytecode of starting instruction. */
-  MCode *mcode;		/* Start of machine code. */
   MSize szmcode;	/* Size of machine code. */
+  MCode *mcode;		/* Start of machine code. */
   MSize mcloop;		/* Offset of loop start in machine code. */
   uint16_t nchild;	/* Number of child traces (root trace only). */
   uint16_t spadjust;	/* Stack pointer adjustment (offset in bytes). */
@@ -205,7 +215,7 @@ typedef struct HotPenalty {
 typedef struct BPropEntry {
   IRRef1 key;		/* Key: original reference. */
   IRRef1 val;		/* Value: reference after conversion. */
-  IRRef mode;		/* Mode for this entry (currently IRTOINT_*). */
+  IRRef mode;		/* Mode for this entry (currently IRCONV_*). */
 } BPropEntry;
 
 /* Number of slots for the backpropagation cache. Must be a power of 2. */
@@ -218,7 +228,7 @@ typedef struct ScEvEntry {
   IRRef1 stop;		/* Constant stop reference. */
   IRRef1 step;		/* Constant step reference. */
   IRType1 t;		/* Scalar type. */
-  uint8_t dir;		/* Direction. 0: +, 1: -. */
+  uint8_t dir;		/* Direction. 1: +, 0: -. */
 } ScEvEntry;
 
 /* 128 bit SIMD constants. */
@@ -231,6 +241,15 @@ enum {
 /* Get 16 byte aligned pointer to SIMD constant. */
 #define LJ_KSIMD(J, n) \
   ((TValue *)(((intptr_t)&J->ksimd[2*(n)] + 15) & ~(intptr_t)15))
+
+/* Set/reset flag to activate the SPLIT pass for the current trace. */
+#if LJ_32 && LJ_HASFFI
+#define lj_needsplit(J)		(J->needsplit = 1)
+#define lj_resetsplit(J)	(J->needsplit = 0)
+#else
+#define lj_needsplit(J)		UNUSED(J)
+#define lj_resetsplit(J)	UNUSED(J)
+#endif
 
 /* Fold state is used to fold instructions on-the-fly. */
 typedef struct FoldState {
@@ -256,7 +275,7 @@ typedef struct jit_State {
   uint8_t mergesnap;	/* Allowed to merge with next snapshot. */
   uint8_t needsnap;	/* Need snapshot before recording next bytecode. */
   IRType1 guardemit;	/* Accumulated IRT_GUARD for emitted instructions. */
-  uint8_t unused1;
+  uint8_t bcskip;	/* Number of bytecode instructions to skip. */
 
   FoldState fold;	/* Fold state. */
 
@@ -271,7 +290,7 @@ typedef struct jit_State {
   int32_t framedepth;	/* Current frame depth. */
   int32_t retdepth;	/* Return frame depth (count of RETF). */
 
-  MRef knum;		/* Pointer to chained array of KNUM constants. */
+  MRef k64;		/* Pointer to chained array of 64 bit constants. */
   TValue ksimd[LJ_KSIMD__MAX*2+1];  /* 16 byte aligned SIMD constants. */
 
   IRIns *irbuf;		/* Temp. IR instruction buffer. Biased with REF_BIAS. */
@@ -283,6 +302,11 @@ typedef struct jit_State {
   SnapShot *snapbuf;	/* Temp. snapshot buffer. */
   SnapEntry *snapmapbuf;  /* Temp. snapshot map buffer. */
   MSize sizesnapmap;	/* Size of temp. snapshot map buffer. */
+
+  PostProc postproc;	/* Required post-processing after execution. */
+#if LJ_32 && LJ_HASFFI
+  int needsplit;	/* Need SPLIT pass. */
+#endif
 
   GCRef *trace;		/* Array of traces. */
   TraceNo freetrace;	/* Start of scan for next free trace. */

@@ -1,6 +1,6 @@
 /*
 ** Error handling and debugging API.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -32,7 +32,7 @@
 **
 ** - EXT requires unwind tables for *all* functions on the C stack between
 **   the pcall/catch and the error/throw. This is the default on x64,
-**   but needs to be manually enabled on x86 for non-C++ code.
+**   but needs to be manually enabled on x86/PPC for non-C++ code.
 **
 ** - INT is faster when actually throwing errors (but this happens rarely).
 **   Setting up error handlers is zero-cost in any case.
@@ -48,9 +48,9 @@
 **   the wrapper function feature. Lua errors thrown through C++ frames
 **   cannot be caught by C++ code and C++ destructors are not run.
 **
-** INT is the default on x86 systems, EXT is the default on x64 systems.
+** EXT is the default on x64 systems, INT is the default on all other systems.
 **
-** EXT can only be manually enabled on POSIX/x86 systems using DWARF2 stack
+** EXT can be manually enabled on POSIX systems using GCC and DWARF2 stack
 ** unwinding with -DLUAJIT_UNWIND_EXTERNAL. *All* C code must be compiled
 ** with -funwind-tables (or -fexceptions). This includes LuaJIT itself (set
 ** TARGET_CFLAGS), all of your C/Lua binding code, all loadable C modules
@@ -63,29 +63,19 @@
 ** EXT is mandatory on POSIX/x64 since the interpreter doesn't save r12/r13.
 */
 
-#if defined(__GNUC__)
-#if LJ_TARGET_X86
-#ifdef LUAJIT_UNWIND_EXTERNAL
+#if defined(__GNUC__) && (LJ_TARGET_X64 || defined(LUAJIT_UNWIND_EXTERNAL))
 #define LJ_UNWIND_EXT	1
-#endif
-#elif LJ_TARGET_X64
+#elif LJ_TARGET_X64 && LJ_TARGET_WINDOWS
 #define LJ_UNWIND_EXT	1
-#endif
-#elif defined(LUA_USE_WIN)
-#if LJ_TARGET_X64
-#define LJ_UNWIND_EXT	1
-#endif
 #endif
 
 /* -- Error messages ------------------------------------------------------ */
 
 /* Error message strings. */
-static const char *lj_err_allmsg =
+LJ_DATADEF const char *lj_err_allmsg =
 #define ERRDEF(name, msg)	msg "\0"
 #include "lj_errmsg.h"
 ;
-
-#define err2msg(em)	(lj_err_allmsg+(int)(em))
 
 /* -- Frame and function introspection ------------------------------------ */
 
@@ -283,7 +273,7 @@ static TValue *findlocal(lua_State *L, const lua_Debug *ar,
 {
   uint32_t offset = (uint32_t)ar->i_ci & 0xffff;
   uint32_t size = (uint32_t)ar->i_ci >> 16;
-  TValue *frame = L->stack + offset;
+  TValue *frame = tvref(L->stack) + offset;
   TValue *nextframe = size ? frame + size : NULL;
   GCfunc *fn = frame_func(frame);
   BCPos pc = currentpc(L, fn, nextframe);
@@ -335,9 +325,10 @@ LUA_API int lua_getinfo(lua_State *L, const char *what, lua_Debug *ar)
     uint32_t offset = (uint32_t)ar->i_ci & 0xffff;
     uint32_t size = (uint32_t)ar->i_ci >> 16;
     lua_assert(offset != 0);
-    frame = L->stack + offset;
+    frame = tvref(L->stack) + offset;
     if (size) nextframe = frame + size;
-    lua_assert(frame<=L->maxstack && (!nextframe || nextframe<=L->maxstack));
+    lua_assert(frame <= tvref(L->maxstack) &&
+	       (!nextframe || nextframe <= tvref(L->maxstack)));
     fn = frame_func(frame);
     lua_assert(fn->c.gct == ~LJ_TFUNC);
   }
@@ -399,9 +390,9 @@ LUA_API int lua_getinfo(lua_State *L, const char *what, lua_Debug *ar)
 
 cTValue *lj_err_getframe(lua_State *L, int level, int *size)
 {
-  cTValue *frame, *nextframe;
+  cTValue *frame, *nextframe, *bot = tvref(L->stack);
   /* Traverse frames backwards. */
-  for (nextframe = frame = L->base-1; frame > L->stack; ) {
+  for (nextframe = frame = L->base-1; frame > bot; ) {
     if (frame_gc(frame) == obj2gco(L))
       level++;  /* Skip dummy frames. See lj_meta_call(). */
     if (level-- == 0) {
@@ -426,7 +417,7 @@ LUA_API int lua_getstack(lua_State *L, int level, lua_Debug *ar)
   int size;
   cTValue *frame = lj_err_getframe(L, level, &size);
   if (frame) {
-    ar->i_ci = (size << 16) + cast_int(frame - L->stack);
+    ar->i_ci = (size << 16) + cast_int(frame - tvref(L->stack));
     return 1;
   } else {
     ar->i_ci = level - size;
@@ -465,7 +456,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
 	return cf;
       }
     }
-    if (frame <= L->stack)
+    if (frame <= tvref(L->stack))
       break;
     switch (frame_typep(frame)) {
     case FRAME_LUA:  /* Lua frame. */
@@ -524,7 +515,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
   /* No C frame. */
   if (errcode) {
     L->cframe = NULL;
-    L->base = L->stack+1;
+    L->base = tvref(L->stack)+1;
     unwindstack(L, L->base);
     if (G(L)->panic)
       G(L)->panic(L);
@@ -535,7 +526,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
 
 /* -- External frame unwinding -------------------------------------------- */
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !LJ_TARGET_ARM
 
 #include <unwind.h>
 
@@ -578,15 +569,15 @@ LJ_FUNCA int lj_err_unwind_dwarf(int version, _Unwind_Action actions,
 #if LJ_UNWIND_EXT
     cf = err_unwind(L, cf, errcode);
     if (cf) {
-      _Unwind_SetGR(ctx, 0, errcode);
+      _Unwind_SetGR(ctx, LJ_TARGET_EHRETREG, errcode);
       _Unwind_SetIP(ctx, (_Unwind_Ptr)(cframe_unwind_ff(cf) ?
 				       lj_vm_unwind_ff_eh :
 				       lj_vm_unwind_c_eh));
       return _URC_INSTALL_CONTEXT;
     }
 #else
-    /* This is not the proper way to escape from the unwinder. We get away
-    ** with it on x86 because the interpreter restores all callee-saved regs.
+    /* This is not the proper way to escape from the unwinder. We get away with
+    ** it on x86/PPC because the interpreter restores all callee-saved regs.
     */
     lj_err_throw(L, errcode);
 #endif
@@ -607,7 +598,7 @@ static void err_raise_ext(int errcode)
 }
 #endif
 
-#elif defined(_WIN64)
+#elif LJ_TARGET_X64 && LJ_TARGET_WINDOWS
 
 /*
 ** Someone in Redmond owes me several days of my life. A lot of this is
@@ -712,8 +703,8 @@ LJ_NOINLINE void LJ_FASTCALL lj_err_throw(lua_State *L, int errcode)
   ** unwound. We have no choice but to call the panic function and exit.
   **
   ** Usually this is caused by a C function without unwind information.
-  ** This should never happen on x64, but may happen on x86 if you've
-  ** manually enabled LUAJIT_UNWIND_EXTERNAL and forgot to recompile *every*
+  ** This should never happen on x64, but may happen if you've manually
+  ** enabled LUAJIT_UNWIND_EXTERNAL and forgot to recompile *every*
   ** non-C++ file with -funwind-tables.
   */
   if (G(L)->panic)
@@ -749,9 +740,9 @@ LJ_NOINLINE void lj_err_mem(lua_State *L)
 /* Find error function for runtime errors. Requires an extra stack traversal. */
 static ptrdiff_t finderrfunc(lua_State *L)
 {
-  TValue *frame = L->base-1;
+  cTValue *frame = L->base-1, *bot = tvref(L->stack);
   void *cf = L->cframe;
-  while (frame > L->stack) {
+  while (frame > bot) {
     lua_assert(cf != NULL);
     while (cframe_nres(cframe_raw(cf)) < 0) {  /* cframe without frame? */
       if (frame >= restorestack(L, -cframe_nres(cf)))
@@ -910,8 +901,12 @@ LJ_NOINLINE void lj_err_optype_call(lua_State *L, TValue *o)
 /* Error in context of caller. */
 LJ_NOINLINE void lj_err_callermsg(lua_State *L, const char *msg)
 {
-  cTValue *frame = L->base-1;
-  cTValue *pframe = frame_islua(frame) ? frame_prevl(frame) : NULL;
+  TValue *frame = L->base-1;
+  TValue *pframe = NULL;
+  if (frame_islua(frame))
+    pframe = frame_prevl(frame);
+  else if (frame_iscont(frame))
+    L->base = (pframe = frame_prevd(frame))+1;  /* Remove metamethod frame. */
   err_loc(L, msg, pframe, frame);
   lj_err_run(L);
 }

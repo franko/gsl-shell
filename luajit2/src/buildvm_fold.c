@@ -1,12 +1,11 @@
 /*
 ** LuaJIT VM builder: IR folding hash table generator.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
+#include "buildvm.h"
 #include "lj_obj.h"
 #include "lj_ir.h"
-
-#include "buildvm.h"
 
 /* Context for the folding hash table generator. */
 static int lineno;
@@ -111,8 +110,21 @@ static uint32_t nexttoken(char **pp, int allowlit, int allowany)
       for (i = 0; ircall_names[i]; i++)
 	if (!strcmp(ircall_names[i], p+7))
 	  return i;
+    } else if (allowlit && !strncmp(p, "IRCONV_", 7)) {
+      for (i = 0; irt_names[i]; i++)
+	if (!strncmp(irt_names[i], p+7, 3) && p[10] == '_') {
+	  uint32_t j;
+	  for (j = 0; irt_names[j]; j++)
+	    if (!strncmp(irt_names[j], p+11, 3))
+	      return (i << 5) + j;
+	}
+    } else if (allowlit && *p >= '0' && *p <= '9') {
+      for (i = 0; *p >= '0' && *p <= '9'; p++)
+	i = i*10 + (*p - '0');
+      if (*p == '\0')
+	return i;
     } else if (allowany && !strcmp("any", p)) {
-      return 0xff;
+      return allowany;
     } else {
       for (i = 0; ir_names[i]; i++)
 	if (!strcmp(ir_names[i], p))
@@ -128,9 +140,9 @@ static uint32_t nexttoken(char **pp, int allowlit, int allowany)
 static void foldrule(char *p)
 {
   uint32_t op = nexttoken(&p, 0, 0);
-  uint32_t left = nexttoken(&p, 0, 1);
-  uint32_t right = nexttoken(&p, 1, 1);
-  uint32_t key = (funcidx << 24) | (op << 16) | (left << 8) | right;
+  uint32_t left = nexttoken(&p, 0, 0x7f);
+  uint32_t right = nexttoken(&p, 1, 0x3ff);
+  uint32_t key = (funcidx << 24) | (op << 17) | (left << 10) | right;
   uint32_t i;
   if (nkeys >= BUILD_MAX_FOLD) {
     fprintf(stderr, "Error: too many fold rules, increase BUILD_MAX_FOLD.\n");

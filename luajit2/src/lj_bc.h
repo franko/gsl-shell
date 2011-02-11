@@ -1,6 +1,6 @@
 /*
 ** Bytecode instruction format.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_BC_H
@@ -121,6 +121,7 @@
   \
   /* Constant ops. */ \
   _(KSTR,	dst,	___,	str,	___) \
+  _(KCDATA,	dst,	___,	cdata,	___) \
   _(KSHORT,	dst,	___,	lits,	___) \
   _(KNUM,	dst,	___,	num,	___) \
   _(KPRI,	dst,	___,	pri,	___) \
@@ -154,6 +155,8 @@
   _(CALLMT,	base,	___,	lit,	call) \
   _(CALLT,	base,	___,	lit,	call) \
   _(ITERC,	base,	lit,	lit,	call) \
+  _(ITERN,	base,	lit,	lit,	call) \
+  _(ISNEXT,	base,	___,	jump,	___) \
   _(VARG,	base,	lit,	lit,	___) \
   \
   /* Returns. */ \
@@ -221,6 +224,9 @@ LJ_STATIC_ASSERT((int)BC_FUNCF + 2 == (int)BC_JFUNCF);
 LJ_STATIC_ASSERT((int)BC_FUNCV + 1 == (int)BC_IFUNCV);
 LJ_STATIC_ASSERT((int)BC_FUNCV + 2 == (int)BC_JFUNCV);
 
+/* This solves a circular dependency problem, change as needed. */
+#define FF_next_N	15
+
 /* Stack slots used by FORI/FORL, relative to operand A. */
 enum {
   FORL_IDX, FORL_STOP, FORL_STEP, FORL_EXT
@@ -229,7 +235,7 @@ enum {
 /* Bytecode operand modes. ORDER BCMode */
 typedef enum {
   BCMnone, BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
-  BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump,
+  BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump, BCMcdata,
   BCM_max
 } BCMode;
 #define BCM___		BCMnone

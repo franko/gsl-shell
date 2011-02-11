@@ -1,6 +1,6 @@
 /*
 ** Public Lua/C API.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -121,9 +121,9 @@ LUA_API int lua_gettop(lua_State *L)
 LUA_API void lua_settop(lua_State *L, int idx)
 {
   if (idx >= 0) {
-    api_check(L, idx <= L->maxstack - L->base);
+    api_check(L, idx <= tvref(L->maxstack) - L->base);
     if (L->base + idx > L->top) {
-      if (L->base + idx >= L->maxstack)
+      if (L->base + idx >= tvref(L->maxstack))
 	lj_state_growstack(L, (MSize)idx - (MSize)(L->top - L->base));
       do { setnilV(L->top++); } while (L->top < L->base + idx);
     } else {
@@ -196,7 +196,11 @@ LUA_API int lua_type(lua_State *L, int idx)
     return LUA_TNONE;
   } else {  /* Magic internal/external tag conversion. ORDER LJ_T */
     uint32_t t = ~itype(o);
-    int tt = (int)(((t < 8 ? 0x98042110 : 0x7506) >> 4*(t&7)) & 15u);
+#if LJ_64
+    int tt = (int)((U64x(75a06,98042110) >> 4*t) & 15u);
+#else
+    int tt = (int)(((t < 8 ? 0x98042110u : 0x75a06u) >> 4*(t&7)) & 15u);
+#endif
     lua_assert(tt != LUA_TNIL || tvisnil(o));
     return tt;
   }
@@ -521,6 +525,8 @@ LUA_API const void *lua_topointer(lua_State *L, int idx)
     return uddata(udataV(o));
   else if (tvislightud(o))
     return lightudV(o);
+  else if (tviscdata(o))
+    return cdataptr(cdataV(o));
   else if (tvisgcv(o))
     return gcV(o);
   else

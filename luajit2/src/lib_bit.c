@@ -1,6 +1,6 @@
 /*
 ** Bit manipulation library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lib_bit_c
@@ -68,7 +68,7 @@ LJLIB_CF(bit_tohex)
 
 LUALIB_API int luaopen_bit(lua_State *L)
 {
-  LJ_LIB_REG(L, bit);
+  LJ_LIB_REG(L, LUA_BITLIBNAME, bit);
   return 1;
 }
 

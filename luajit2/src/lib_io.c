@@ -1,6 +1,6 @@
 /*
 ** I/O library.
-** Copyright (C) 2005-2010 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -114,9 +114,9 @@ static int io_file_close(lua_State *L, IOFileUD *iof)
   if ((iof->type & IOFILE_TYPE_MASK) == IOFILE_TYPE_FILE) {
     ok = (fclose(iof->fp) == 0);
   } else if ((iof->type & IOFILE_TYPE_MASK) == IOFILE_TYPE_PIPE) {
-#if defined(LUA_USE_POSIX)
+#if LJ_TARGET_POSIX
     ok = (pclose(iof->fp) != -1);
-#elif defined(LUA_USE_WIN)
+#elif LJ_TARGET_WINDOWS
     ok = (_pclose(iof->fp) != -1);
 #else
     ok = 0;
@@ -289,7 +289,7 @@ LJLIB_CF(io_method_seek)
     ,
     ofs = 0;
   )
-#if defined(LUA_USE_POSIX)
+#if LJ_TARGET_POSIX
   res = fseeko(fp, (int64_t)ofs, opt);
 #elif _MSC_VER >= 1400
   res = _fseeki64(fp, (int64_t)ofs, opt);
@@ -300,7 +300,7 @@ LJLIB_CF(io_method_seek)
 #endif
   if (res)
     return io_pushresult(L, 0, NULL);
-#if defined(LUA_USE_POSIX)
+#if LJ_TARGET_POSIX
   ofs = cast_num(ftello(fp));
 #elif _MSC_VER >= 1400
   ofs = cast_num(_ftelli64(fp));
@@ -374,13 +374,13 @@ LJLIB_CF(io_open)
 
 LJLIB_CF(io_popen)
 {
-#if defined(LUA_USE_POSIX) || defined(LUA_USE_WIN)
+#if LJ_TARGET_POSIX || LJ_TARGET_WINDOWS
   const char *fname = strdata(lj_lib_checkstr(L, 1));
   GCstr *s = lj_lib_optstr(L, 2);
   const char *mode = s ? strdata(s) : "r";
   IOFileUD *iof = io_file_new(L);
   iof->type = IOFILE_TYPE_PIPE;
-#ifdef LUA_USE_POSIX
+#if LJ_TARGET_POSIX
   fflush(NULL);
   iof->fp = popen(fname, mode);
 #else
@@ -504,10 +504,10 @@ static GCobj *io_std_new(lua_State *L, FILE *fp, const char *name)
 LUALIB_API int luaopen_io(lua_State *L)
 {
   lj_lib_pushcf(L, lj_cf_io_lines_iter, FF_io_lines_iter);
-  LJ_LIB_REG_(L, NULL, io_method);
+  LJ_LIB_REG(L, NULL, io_method);
   copyTV(L, L->top, L->top-1); L->top++;
   lua_setfield(L, LUA_REGISTRYINDEX, LUA_FILEHANDLE);
-  LJ_LIB_REG(L, io);
+  LJ_LIB_REG(L, LUA_IOLIBNAME, io);
   setgcref(G(L)->gcroot[GCROOT_IO_INPUT], io_std_new(L, stdin, "stdin"));
   setgcref(G(L)->gcroot[GCROOT_IO_OUTPUT], io_std_new(L, stdout, "stdout"));
   io_std_new(L, stderr, "stderr");
