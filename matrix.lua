@@ -82,7 +82,7 @@ end
 local function matrix_to_string(m)
    local eps = m:norm() * 1e-8
    local fwidth = function(w, val)
-		     local ln = # tostring_eps(val, eps)
+		     local ln = # gsl.tostring_eps(val, eps)
 		     return (ln > w and ln or w)
 		  end
    local width = gsl.matrix_reduce(m, fwidth, 0)
@@ -91,7 +91,7 @@ local function matrix_to_string(m)
    for i=1,r do
       local ln = {}
       for j=1,c do
-	 insert(ln, padstr(tostring_eps(m:get(i,j), eps), width))
+	 insert(ln, padstr(gsl.tostring_eps(m:get(i,j), eps), width))
       end
       insert(lines, fmt('[ %s ]', cat(ln, ' ')))
    end
@@ -148,18 +148,6 @@ local function matrix_rows(m)
    return gsl.sequence(function(i) m:slice(i, 1, 1, c) end, r)
 end
 
-function gsl.set(d, s)
-   local r, c = gsl.dim(d)
-   local rs, cs = gsl.dim(s)
-   if rs ~= r or cs ~= c then error 'matrix dimensions does not match' end
-   local dset, sget = d.set, s.get
-   for i=1, r do
-      for j=1, c do
-	 dset(d, i, j, sget(s, i, j))
-      end
-   end
-end
-
 function gsl.null(m)
    local r, c = gsl.dim(m)
    local mset = m.set
@@ -199,7 +187,7 @@ end
 local function hc_print(hc)
    local eps = 1e-8 * hc_reduce(hc, function(p,z) return p + csqr(z) end, 0)
    local f = function(p, z)
-		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+		insert(p, fmt('%6i: %s', #p, gsl.tostring_eps(z, eps)))
 		return p
 	     end
    return cat(hc_reduce(hc, f, {}), '\n')

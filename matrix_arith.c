@@ -45,7 +45,8 @@ static int matrix_inv   (lua_State *L);
 static int matrix_solve (lua_State *L);
 static int matrix_dim   (lua_State *L);
 static int matrix_copy  (lua_State *L);
-static int matrix_prod    (lua_State *L);
+static int matrix_prod  (lua_State *L);
+static int matrix_set   (lua_State *L);
 
 static const struct luaL_Reg matrix_arith_functions[] = {
   {"dim",           matrix_dim},
@@ -53,6 +54,7 @@ static const struct luaL_Reg matrix_arith_functions[] = {
   {"solve",         matrix_solve},
   {"inv",           matrix_inv},
   {"prod",          matrix_prod},
+  {"set",           matrix_set},
   {NULL, NULL}
 };
 
@@ -401,6 +403,48 @@ matrix_prod (lua_State *L)
     }
 
   return 1;
+}
+
+int
+matrix_set (lua_State *L)
+{
+  struct pmatrix a, b;
+  int rtp;
+
+  check_matrix_type (L, 1, &a);
+  check_matrix_type (L, 2, &b);
+
+  rtp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (a.tp != rtp)
+    matrix_complex_promote (L, 1, &a);
+
+  if (b.tp != rtp)
+    matrix_complex_promote (L, 2, &b);
+
+  switch (rtp)
+    {
+    case GS_MATRIX:
+      {
+	gsl_matrix *dst = a.m.real, *src = b.m.real;
+	if (dst->size1 != src->size1 || dst->size2 != src->size2)
+	  luaL_error (L, "matrix dimensions does not match");
+	gsl_matrix_memcpy (dst, src);
+	break;
+      }
+    case GS_CMATRIX:
+      {
+	gsl_matrix_complex *dst = a.m.cmpl, *src = b.m.cmpl;
+	if (dst->size1 != src->size1 || dst->size2 != src->size2)
+	  luaL_error (L, "matrix dimensions does not match");
+	gsl_matrix_complex_memcpy (dst, src);
+	break;
+      }
+    default:
+      /* */;
+    }
+
+  return 0;
 }
 
 void

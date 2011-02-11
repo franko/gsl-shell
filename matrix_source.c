@@ -138,7 +138,7 @@ FUNCTION(matrix, slice) (lua_State *L)
 }
 
 int
-FUNCTION(matrix, get) (lua_State *L)
+FUNCTION(matrix, get_elem) (lua_State *L)
 {
   const TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
   lua_Integer r = luaL_checkinteger (L, 2);
@@ -163,7 +163,7 @@ FUNCTION(matrix, get) (lua_State *L)
 }
 
 int
-FUNCTION(matrix, set) (lua_State *L)
+FUNCTION(matrix, set_elem) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
   lua_Integer r = luaL_checkinteger (L, 2);
@@ -302,7 +302,7 @@ FUNCTION(matrix, solve_raw) (lua_State *L,
   if (b->size2 != 1)
     gs_type_error (L, 1, "vector");
   if (b->size1 != n)
-    luaL_error (L, "dimensions of vector does not match with matrix");
+    luaL_error (L, "dimensions of vector does not match");
 
   x = FUNCTION (matrix, push_raw) (L, n, 1);
   x_view = FUNCTION (gsl_matrix, column) (x, 0);
