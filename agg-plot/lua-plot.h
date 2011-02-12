@@ -5,6 +5,8 @@
 
 __BEGIN_DECLS
 
+#include "lua.h"
+
 extern void plot_register (lua_State *L);
 
 __END_DECLS
