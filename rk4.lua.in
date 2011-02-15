@@ -1,0 +1,141 @@
+# N = 2
+
+# function VL(var)
+#  local res = {}
+#  for i = 0, N-1 do
+#    res[i+1] = var..'_'..i
+#  end
+#  return table.concat(res,',')
+# end
+
+# function AL(var)
+#  local res = {}
+#  for i = 0, N-1 do
+#    res[i+1] = var..'['..i..']'
+#  end
+#  return table.concat(res,',')
+# end
+
+ffi = require 'ffi'
+darray = ffi.typeof("double[?]")
+
+ffi.cdef[[
+  typedef struct {
+    double y[$(N)];
+    double dydt[$(N)];
+  } rk4_state;
+]]
+
+function rk4_new()
+   return ffi.new('rk4_state')
+end
+
+function rk4_step($(VL'y'), dydt, h, t, f)
+   -- Makes a Runge-Kutta 4th order advance with step size h.
+
+   -- initial values of variables y.
+   local $(VL'y0') = $(VL'y')
+
+   -- work space
+   local $(VL'ytmp')
+
+   -- Runge-Kutta coefficients. Contains values of coefficient k1
+   -- in the beginning
+   local $(VL'k') = $(AL'dydt')
+
+   -- k1 step
+# for i = 0, N-1 do
+   y_$(i) = y_$(i) + h / 6 * k_$(i)
+   ytmp_$(i) = y0_$(i) + 0.5 * h * k_$(i)
+# end
+
+   -- k2 step
+   $(VL'k') = f(t + 0.5 + h, $(VL'ytmp'))
+
+# for i = 0, N-1 do
+   y_$(i) = y_$(i) + h / 3 * k_$(i)
+   ytmp_$(i) = y0_$(i) + 0.5 * h * k_$(i)
+# end
+
+   -- k3 step
+   $(VL'k') = f(t + 0.5 + h,$(VL'ytmp'))
+
+# for i = 0, N-1 do
+   y_$(i) = y_$(i) + h / 3 * k_$(i)
+   ytmp_$(i) = y0_$(i) + h * k_$(i)
+# end
+
+   -- k4 step
+   $(VL'k') = f(t + h, $(VL'ytmp'))
+
+# for i = 0, N-1 do
+   local res_$(i) = y_$(i) + h / 6 * k_$(i)
+# end
+
+   return $(VL'res')
+end
+
+function rk4_apply(s, t, h, yerr, f)
+   local dydt = s.dydt
+
+   local $(VL'y') = $(AL's.y')
+
+   -- First traverse h with one step (save to yonestep)
+   local $(VL'yonestep') = rk4_step ($(VL'y'), dydt, h, t, f)
+
+   -- first step of h/2
+   $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t, f)
+
+   $(AL'dydt') = f(t + h/2, $(VL'y'))
+
+   -- second step of h/2
+   $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t + h/2, f)
+
+   -- Derivatives at output
+   $(AL'dydt') = f(t + h, $(VL'y'))
+
+  -- Error estimation
+  --
+  --   yerr = C * 0.5 * | y(onestep) - y(twosteps) | / (2^order - 1)
+  --
+  --   constant C is approximately 8.0 to ensure 90% of samples lie within
+  --   the error (assuming a gaussian distribution with prior p(sigma)=1/sigma.)
+
+#for i = 0, N-1 do
+   yerr[$(i)] = 4 * (y_$(i) - yonestep_$(i)) / 15
+#end
+
+   $(AL's.y') = $(VL'y') 
+end
+
+
+t0, t1, h0 = 0, 200, 0.001
+
+function do_rk($(VL 'y'), f, sample)
+   local s = rk4_new()
+   local yerr = darray($(N))
+
+   $(AL's.y') = $(VL'y')
+   $(AL's.dydt') = f(t0, $(VL'y'))
+
+   local t, tsamp = t0, t0
+   while t < t1 do
+      rk4_apply(s, t, h0, yerr, f)
+      t = t + h0
+      if sample and t - tsamp > sample then
+        print(t, $(AL's.y'))
+        tsamp = t
+      end
+   end
+   print(t, $(AL's.y'))
+end
+
+function f_ode1(t, p, q)
+   return -q - p^2,  2*p - q^3
+end
+
+for k=1, 10 do
+  local th = pi/4
+  local p0, q0 = cos(th), sin(th)
+  do_rk(p0, q0, f_ode1)
+end
