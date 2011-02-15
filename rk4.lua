@@ -1,114 +1,76 @@
 
-use = 'Lua'
+ffi = require 'ffi'
+darray = ffi.typeof("double[?]")
 
-if use == 'FFI' then
-   ffi = require 'ffi'
-   darray = ffi.typeof("double[?]")
-elseif use == 'GSL' then
-   darray = function(n) return new(n, 1) end
-else
-   darray = function(n) return {} end
+ffi.cdef[[
+  typedef struct { 
+    double y[2];
+    double dydt[2];
+  } rk4_state;
+]]
+
+function rk4_new()
+   return ffi.new('rk4_state')
 end
 
-rk4 = {}
+function rk4_step(y_0, y_1, dydt, h, t, f)
+   -- Makes a Runge-Kutta 4th order advance with step size h.
 
-function rk4.new(n)
-  local s = {
-    k=         darray(n+1), 
-    k1=        darray(n+1),
-    y0=        darray(n+1),
-    ytmp=      darray(n+1),
-    y_onestep= darray(n+1),
-    dim = n
-  }
-  return s
-end
-
-function rk4.step(y, state, h, t, sys)
-  -- Makes a Runge-Kutta 4th order advance with step size h.
-  local dim = state.dim
-  local f = sys.f
-
-  -- initial values of variables y.
-  local y0 = state.y0
+   -- initial values of variables y.
+   local y0_0, y0_1 = y_0, y_1
   
-  -- work space 
-  local ytmp = state.ytmp
+   -- work space 
+   local ytmp_0, ytmp_1
 
-  -- Runge-Kutta coefficients. Contains values of coefficient k1
-  -- in the beginning 
-  local k = state.k
+   -- Runge-Kutta coefficients. Contains values of coefficient k1
+   -- in the beginning 
+   local k_0, k_1 = dydt[0], dydt[1]
 
-  -- k1 step 
-  for i=1, dim do
-    y[i] = y[i] + h / 6 * k[i]
-    ytmp[i] = y0[i] + 0.5 * h * k[i]
-  end
+   -- k1 step 
+   y_0 = y_0 + h / 6 * k_0
+   ytmp_0 = y0_0 + 0.5 * h * k_0
+   y_1 = y_1 + h / 6 * k_1
+   ytmp_1 = y0_1 + 0.5 * h * k_1
  
-  -- k2 step
+   -- k2 step
+   k_0, k_1 = f(t + 0.5 * h, ytmp_0, ytmp_1)
 
-  f(t + 0.5 * h, ytmp, k)
+   y_0 = y_0 + h / 3 * k_0
+   ytmp_0 = y0_0 + 0.5 * h * k_0
+   y_1 = y_1 + h / 3 * k_1
+   ytmp_1 = y0_1 + 0.5 * h * k_1
 
-  for i=1, dim do
-    y[i] = y[i] + h / 3 * k[i]
-    ytmp[i] = y0[i] + 0.5 * h * k[i]
-  end
+   -- k3 step 
+   k_0, k_1 = f(t + 0.5 * h, ytmp_0, ytmp_1)
 
-  -- k3 step 
-  f(t + 0.5 * h, ytmp, k)
+   y_0 = y_0 + h / 3 * k_0
+   ytmp_0 = y0_0 + h * k_0
+   y_1 = y_1 + h / 3 * k_1
+   ytmp_1 = y0_1 + h * k_1
 
-  for i=1, dim do
-    y[i] = y[i] + h / 3 * k[i]
-    ytmp[i] = y0[i] + h * k[i]
-  end
+   -- k4 step 
+   k_0, k_1 = f(t + h, ytmp_0, ytmp_1)
 
-  -- k4 step 
-  f(t + h, ytmp, k)
-
-  for i=1, dim do
-    y[i] = y[i] + h / 6 * k[i]
-  end
+   return y_0 + h / 6 * k_0, y_1 + h / 6 * k_1
 end
 
-function rk4.apply(state, t, h, y, yerr, dydt_in, dydt_out, sys)
-  local f, dim = sys.f, state.dim
-  local k, k1, y0, y_onestep = state.k, state.k1, state.y0, state.y_onestep
+function rk4_apply(s, t, h, yerr, f)
+   local y_0, y_1 = s.y[0], s.y[1]
+   local dydt = s.dydt
 
-  for j=1,dim do y0[j] = y[j] end
+   -- First traverse h with one step (save to yonestep) 
+   local yonestep_0, yonestep_1 = rk4_step (y_0, y_1, dydt, h, t, f)
 
-  if dydt_in then 
-     for j=1,dim do k[j] = dydt_in[j] end
-  else 
-     f(t, y0, k)
-  end
+   -- first step of h/2
+   y_0, y_1 = rk4_step(y_0, y_1, dydt, h/2, t, f)
 
-  -- Error estimation is done by step doubling procedure 
-  -- Save first point derivatives
-  for j=1,dim do k1[j] = k[j] end
-
-  -- First traverse h with one step (save to y_onestep) 
-  for j=1,dim do y_onestep[j] = y[j] end
-
-  rk4.step (y_onestep, state, h, t, sys)
-
-  -- Then with two steps with half step length (save to y) 
-  for j=1,dim do k[j] = k1[j] end
-
-  rk4.step(y, state, h/2, t, sys)
-
-  -- Update before second step 
-  f(t + h/2, y, k)
+   dydt[0], dydt[1] = f(t + h/2, y_0, y_1)
   
-  -- Save original y0 to k1 for possible failures 
-  for j=1,dim do k1[j] = y0[j] end
+   -- second step of h/2
+   y_0, y_1 = rk4_step(y_0, y_1, dydt, h/2, t + h/2, f)
 
-  -- Update y0 for second step 
-  for j=1,dim do y0[j] = y[j] end
-
-  rk4.step(y, state, h/2, t + h/2, sys)
-
-  -- Derivatives at output
-  if dydt_out then f(t + h, y, dydt_out) end
+   -- Derivatives at output
+   dydt[0], dydt[1] = f(t + h, y_0, y_1)
   
   -- Error estimation
   --
@@ -117,40 +79,36 @@ function rk4.apply(state, t, h, y, yerr, dydt_in, dydt_out, sys)
   --   constant C is approximately 8.0 to ensure 90% of samples lie within
   --   the error (assuming a gaussian distribution with prior p(sigma)=1/sigma.)
 
-  for i=1, dim do
-    yerr[i] = 4 * (y[i] - y_onestep[i]) / 15
-  end
+  yerr[0] = 4 * (y_0 - yonestep_0) / 15
+  yerr[1] = 4 * (y_1 - yonestep_1) / 15
+
+  s.y[0], s.y[1] = y_0, y_1
 end
 
-function f_ode1(t, y, dydt)
-   local p, q = y[1], y[2]
-   dydt[1] = - q - p^2
-   dydt[2] = 2*p - q^3
+function f_ode1(t, p, q)
+   return -q - p^2,  2*p - q^3
 end
 
 t0, t1, h0 = 0, 200, 0.001
 
 function do_rk(p0, q0, sample)
-  local dim = 2
-  local state = rk4.new(dim)
-  local y, dydt, yerr = darray(dim+1), darray(dim+1), darray(dim+1)
-  local sys = {f = f_ode1}
+   local f = f_ode1
+   local s = rk4_new()
+   local yerr = darray(2)
 
-  y[1], y[2] = p0, q0
+   s.y[0], s.y[1] = p0, q0
+   s.dydt[0], s.dydt[1] = f(t, p0, q0)
 
-  local t = t0
-  local tsamp = t0
-  rk4.apply(state, t, h0, y, yerr, nil, dydt, sys)
-  t = t + h0
-  while t < t1 do
-     rk4.apply(state, t, h0, y, yerr, dydt, dydt, sys)
-     t = t + h0
-     if sample and t - tsamp > sample then
-        print(t, y[1], y[2])
-	tsamp = t
-     end
-  end
-  print(t, y[1], y[2])
+   local t, tsamp = t0, t0
+   while t < t1 do
+      rk4_apply(s, t, h0, yerr, f)
+      t = t + h0
+      if sample and t - tsamp > sample then
+	 print(t, s.y[0], s.y[1])
+	 tsamp = t
+      end
+   end
+   print(t, s.y[0], s.y[1])
 end
 
 for k=1, 10 do
