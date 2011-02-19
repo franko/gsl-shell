@@ -1,4 +1,6 @@
 
+local abs, max, min = math.abs, math.max, math.min
+
 # order = 5
 
 $(include 'ode-defs.lua.in')
@@ -22,21 +24,22 @@ $(include 'ode-defs.lua.in')
 
 # y_err_only = (a_dydt == 0)
 
-function rkf45_evolve(s, f, t1)
+local function rkf45_evolve(s, f, t1)
    local t, h = s.t, s.h
-   local dydt = s.dydt
    local hadj, inc
 
    local $(VL'y')
-   local $(VL'k1') = $(AL'dydt')
+   local $(VL'k1') = $(AL's.dydt')
 
    if t + h > t1 then h = t1 - t end
 
    while h > 0 do
       $(VL'y') = $(AL's.y')
+      local rmax = 0
 
+      do
 #     for i = 0, N-1 do
-         ytmp_$(i) = y_$(i) + $(ah[1]) * h * k1_$(i)
+         local ytmp_$(i) = y_$(i) + $(ah[1]) * h * k1_$(i)
 #     end
 
       -- k2 step
@@ -78,22 +81,25 @@ function rkf45_evolve(s, f, t1)
 #     end
  
 #     if not y_err_only then
-         $(AL'dydt') = f(t + h, $(VL'y'))
+         local $(VL'dydt') = f(t + h, $(VL'y'))
+#        for i = 0, N-1 do
+            s.dydt[$(i)] = dydt_$(i)
+#        end
 #     end
 
       local yerr, r, d0
-      local rmax = 0
 
 #     for i = 0, N-1 do
          yerr = h * ($(ec[2]) * k1_$(i) + $(ec[4]) * k3_$(i) + $(ec[5]) * k4_$(i) + $(ec[6]) * k5_$(i) + $(ec[7]) * k6_$(i))
 #     if y_err_only then
          d0 = $(eps_rel) * ($(a_y) * abs(y_$(i))) + $(eps_abs)
 #     else
-         d0 = $(eps_rel) * ($(a_y) * abs(y_$(i)) + $(a_dydt) * abs(h * dydt[$(i)])) + $(eps_abs)
+         d0 = $(eps_rel) * ($(a_y) * abs(y_$(i)) + $(a_dydt) * abs(h * dydt_$(i))) + $(eps_abs)
 #     end
          r = abs(yerr) / abs(d0)
          rmax = max(r, rmax)
 #     end
+      end
 
       hadj, inc = hadjust(rmax, h)
       if inc >= 0 then break end
@@ -102,10 +108,15 @@ function rkf45_evolve(s, f, t1)
    end
 
 #  if y_err_only then
-      $(AL'dydt') = f(t + h, $(VL'y'))
+      local $(VL'dydt') = f(t + h, $(VL'y'))
+#     for i = 0, N-1 do
+         s.dydt[$(i)] = dydt_$(i)
+#     end
 #  end
 
-   $(AL's.y') = $(VL'y') 
+#  for i = 0, N-1 do
+      s.y[$(i)] = y_$(i)
+#  end
    s.t = t + h
    s.h = hadj
 
