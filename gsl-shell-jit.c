@@ -59,60 +59,20 @@ static const char *progname = LUA_PROGNAME;
 
 pthread_mutex_t gsl_shell_mutex[1];
 
-static const luaL_Reg lualibs[] = {
-  { "",     luaopen_base },
-  { LUA_LOADLIBNAME, luaopen_package },
-  { LUA_TABLIBNAME,  luaopen_table },
-  { LUA_IOLIBNAME,   luaopen_io },
-  { LUA_OSLIBNAME,   luaopen_os },
-  { LUA_STRLIBNAME,  luaopen_string },
-  { LUA_BITLIBNAME,  luaopen_bit },
-  { LUA_JITLIBNAME,  luaopen_jit },
-  { LUA_DBLIBNAME,   luaopen_debug },
-#ifdef LUA_STRICT
-  { LUA_MATHLIBNAME, luaopen_math },
-  {MLUA_GSLLIBNAME,  luaopen_gsl},
-#endif
-  { NULL,   NULL }
-};
-
-static const luaL_Reg lj_lib_preload[] = {
-  { LUA_FFILIBNAME,	luaopen_ffi },
-  { NULL,		NULL }
-};
-
 static void gsl_shell_openlibs(lua_State *L)
 {
-  const luaL_Reg *lib = lualibs;
-  for (; lib->func; lib++) {
-    lua_pushcfunction(L, lib->func);
-    lua_pushstring(L, lib->name);
-    lua_call(L, 1, 0);
-  }
-
-  luaL_findtable(L, LUA_REGISTRYINDEX, "_PRELOAD",
-		 sizeof(lj_lib_preload)/sizeof(lj_lib_preload[0])-1);
-  for (lib = lj_lib_preload; lib->func; lib++) {
-    lua_pushcfunction(L, lib->func);
-    lua_setfield(L, -2, lib->name);
-  }
-  lua_pop(L, 1);
-
 #ifndef LUA_STRICT
-  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open math in global scope */
-  lua_setglobal (L, LUA_MATHLIBNAME);
-  luaopen_math (L);
+  lua_getglobal (L, "math");
+  lua_pushnil (L);  /* first key */
+  while (lua_next (L, -2) != 0)
+    {
+      lua_pushvalue (L, -2);
+      lua_insert (L, -2);
+      lua_settable(L, LUA_GLOBALSINDEX);
+    }
   lua_pop (L, 1);
-  lua_pushnil (L);                      /* remove math */
-  lua_setglobal (L, LUA_MATHLIBNAME);
-
-  lua_pushvalue (L, LUA_GLOBALSINDEX);   /* open gsl in global scope */
-  lua_setglobal (L, MLUA_GSLLIBNAME);
-  luaopen_gsl (L);
-  lua_pop (L, 1);
-  lua_pushnil (L);                      /* remove gsl */
-  lua_setglobal (L, MLUA_GSLLIBNAME);
 #endif
+  luaopen_gsl (L);
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -575,7 +535,8 @@ static int pmain(lua_State *L)
   if (argv[0] && argv[0][0]) progname = argv[0];
   LUAJIT_VERSION_SYM();  /* linker-enforced version check */
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-  gsl_shell_openlibs(L);  /* open libraries */
+  luaL_openlibs(L);  /* open libraries */
+  gsl_shell_openlibs(L);
   lua_gc(L, LUA_GCRESTART, -1);
   dolibrary (L, "gslext");
   s->status = handle_luainit(L);
