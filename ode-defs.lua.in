@@ -1,0 +1,36 @@
+
+local ffi = require 'ffi'
+
+ffi.cdef[[
+  typedef struct {
+    double t;
+    double h;
+    double y[$(N)];
+    double dydt[$(N)];
+  } ode_state;
+]]
+
+local function ode_new()
+   return ffi.new('ode_state')
+end
+
+local function ode_init(s, t0, h0, f, $(VL'y'))
+   $(AL's.y') = $(VL'y')
+   $(AL's.dydt') = f(t0, $(VL'y'))
+   s.t = t0
+   s.h = h0
+end
+
+local function hadjust(rmax, h)
+   local S = 0.9
+   if rmax > 1.1 then
+      local r = S / rmax^(1/$(order))
+      r = max(0.2, r)
+      return r * h, -1
+   elseif rmax < 0.5 then
+      local r = S / rmax^(1/($(order)+1))
+      r = max(1, min(r, 5))
+      return r * h, 1
+   end
+   return h, 0
+end

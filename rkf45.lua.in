@@ -1,0 +1,125 @@
+
+# function include(filename)
+#  return template.process(filename, _self)
+# end
+
+# function VL(var)
+#  local res = {}
+#  for i = 0, N-1 do
+#    res[i+1] = var..'_'..i
+#  end
+#  return table.concat(res,',')
+# end
+
+# function AL(var)
+#  local res = {}
+#  for i = 0, N-1 do
+#    res[i+1] = var..'['..i..']'
+#  end
+#  return table.concat(res,',')
+# end
+
+# order = 5
+
+$(include 'ode-defs.lua.in')
+
+# ah = { 1.0/4.0, 3.0/8.0, 12.0/13.0, 1.0, 1.0/2.0 }
+# b3 = { 3.0/32.0, 9.0/32.0 }
+# b4 = { 1932.0/2197.0, -7200.0/2197.0, 7296.0/2197.0}
+# b5 = { 8341.0/4104.0, -32832.0/4104.0, 29440.0/4104.0, -845.0/4104.0}
+# b6 = { -6080.0/20520.0, 41040.0/20520.0, -28352.0/20520.0, 9295.0/20520.0, -5643.0/20520.0}
+
+# c1 = 902880.0/7618050.0
+# c3 = 3953664.0/7618050.0
+# c4 = 3855735.0/7618050.0
+# c5 = -1371249.0/7618050.0
+# c6 = 277020.0/7618050.0
+
+-- These are the differences of fifth and fourth order coefficients
+-- for error estimation */
+
+# ec = { 0.0, 1.0 / 360.0, 0.0, -128.0 / 4275.0, -2197.0 / 75240.0, 1.0 / 50.0, 2.0 / 55.0 }
+
+local eps_abs, eps_rel, a_y, a_dydt = 1e-12, 1e-4, 1, 0
+
+function rkf45_evolve(s, f, t1)
+   local t, h = s.t, s.h
+   local dydt = s.dydt
+   local hadj, inc
+
+   local $(VL'y')
+   local $(VL'k1') = $(AL'dydt')
+
+   if t + h > t1 then h = t1 - t end
+
+   while h > 0 do
+      $(VL'y') = $(AL's.y')
+
+#     for i = 0, N-1 do
+         ytmp_$(i) = y_$(i) + $(ah[1]) * h * k1_$(i)
+#     end
+
+      -- k2 step
+      local $(VL'k2') = f(t + $(ah[1]) * h, $(VL'ytmp'))
+
+#     for i = 0, N-1 do
+         ytmp_$(i) = y_$(i) + h * ($(b3[1]) * k1_$(i) + $(b3[2]) * k2_$(i))
+#     end
+
+      -- k3 step
+      local $(VL'k3') = f(t + $(ah[2]) * h, $(VL'ytmp'))
+
+#     for i = 0, N-1 do
+         ytmp_$(i) = y_$(i) + h * ($(b4[1]) * k1_$(i) + $(b4[2]) * k2_$(i) + $(b4[3]) * k3_$(i))
+#     end
+
+      -- k4 step
+      local $(VL'k4') = f(t + $(ah[3]) * h, $(VL'ytmp'))
+
+#     for i = 0, N-1 do
+         ytmp_$(i) = y_$(i) + h * ($(b5[1]) * k1_$(i) + $(b5[2]) * k2_$(i) + $(b5[3]) * k3_$(i) + $(b5[4]) * k4_$(i))
+#     end
+
+      -- k5 step
+      local $(VL'k5') = f(t + $(ah[4]) * h, $(VL'ytmp'))
+
+#     for i = 0, N-1 do
+         ytmp_$(i) = y_$(i) + h * ($(b6[1]) * k1_$(i) + $(b6[2]) * k2_$(i) + $(b6[3]) * k3_$(i) + $(b6[4]) * k4_$(i) + $(b6[5]) * k5_$(i))
+#     end
+
+      -- k6 step and final sum
+      -- since k2 is no more used we can use k2 to store k6
+      local $(VL'k6') = f(t + $(ah[5]) * h, $(VL'ytmp'))
+
+      local di
+#     for i = 0, N-1 do
+         di = $(c1) * k1_$(i) + $(c3) * k3_$(i) + $(c4) * k4_$(i) + $(c5) * k5_$(i) + $(c6) * k6_$(i)
+         y_$(i) = y_$(i) + h * di
+#     end
+
+      $(AL'dydt') = f(t + h, $(VL'y'))
+
+      local yerr, r, d0
+      local rmax = 0
+
+#     for i = 0, N-1 do
+         yerr = h * ($(ec[2]) * k1_$(i) + $(ec[4]) * k3_$(i) + $(ec[5]) * k4_$(i) + $(ec[6]) * k5_$(i) + $(ec[7]) * k6_$(i))
+         d0 = eps_rel * (a_y * abs(y_$(i)) + a_dydt * abs(h * dydt[$(i)])) + eps_abs
+         r = abs(yerr) / abs(d0)
+         rmax = max(r, rmax)
+#     end
+
+      hadj, inc = hadjust(rmax, h)
+      if inc >= 0 then break end
+        
+      h = hadj
+   end
+
+   $(AL's.y') = $(VL'y') 
+   s.t = t + h
+   s.h = hadj
+
+   return h
+end
+
+return {new= ode_new, init= ode_init, evolve= rkf45_evolve}

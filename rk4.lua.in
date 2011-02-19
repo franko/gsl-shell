@@ -1,4 +1,6 @@
-# N = 2
+# function include(filename)
+#  return template.process(filename, _self)
+# end
 
 # function VL(var)
 #  local res = {}
@@ -16,19 +18,11 @@
 #  return table.concat(res,',')
 # end
 
-ffi = require 'ffi'
-darray = ffi.typeof("double[?]")
+# order = 4
 
-ffi.cdef[[
-  typedef struct {
-    double y[$(N)];
-    double dydt[$(N)];
-  } rk4_state;
-]]
+$(include 'ode-defs.lua.in')
 
-function rk4_new()
-   return ffi.new('rk4_state')
-end
+local eps_abs, eps_rel, a_y, a_dydt = 1e-12, 1e-4, 1, 0
 
 function rk4_step($(VL'y'), dydt, h, t, f)
    -- Makes a Runge-Kutta 4th order advance with step size h.
@@ -75,67 +69,77 @@ function rk4_step($(VL'y'), dydt, h, t, f)
    return $(VL'res')
 end
 
-function rk4_apply(s, t, h, yerr, f)
-   local dydt = s.dydt
+function rk4_evolve(s, f, t1)
+   local dydt, t, h = s.dydt, s.t, s.h
+   local h_new
+   local $(VL'dydt0') = $(AL'dydt')
+   local $(VL'y')
 
-   local $(VL'y') = $(AL's.y')
+   if t + h > t1 then h = t1 - t end
 
-   -- First traverse h with one step (save to yonestep)
-   local $(VL'yonestep') = rk4_step ($(VL'y'), dydt, h, t, f)
+   while h > 0 do
+      $(VL'y') = $(AL's.y')
 
-   -- first step of h/2
-   $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t, f)
+      -- First traverse h with one step (save to yonestep)
+      local $(VL'yonestep') = rk4_step ($(VL'y'), dydt, h, t, f)
 
-   $(AL'dydt') = f(t + h/2, $(VL'y'))
+      -- first step of h/2
+      $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t, f)
 
-   -- second step of h/2
-   $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t + h/2, f)
+      $(AL'dydt') = f(t + h/2, $(VL'y'))
 
-   -- Derivatives at output
-   $(AL'dydt') = f(t + h, $(VL'y'))
+      -- second step of h/2
+      $(VL'y') = rk4_step($(VL'y'), dydt, h/2, t + h/2, f)
 
-  -- Error estimation
-  --
-  --   yerr = C * 0.5 * | y(onestep) - y(twosteps) | / (2^order - 1)
-  --
-  --   constant C is approximately 8.0 to ensure 90% of samples lie within
-  --   the error (assuming a gaussian distribution with prior p(sigma)=1/sigma.)
+      -- Derivatives at output
+      $(AL'dydt') = f(t + h, $(VL'y'))
 
-#for i = 0, N-1 do
-   yerr[$(i)] = 4 * (y_$(i) - yonestep_$(i)) / 15
-#end
+      -- Error estimation
+      --
+      --   yerr = C * 0.5 * | y(onestep) - y(twosteps) | / (2^order - 1)
+      --
+      --   constant C is approximately 8.0 to ensure 90% of samples lie within
+      --   the error (assuming a gaussian distribution with prior p(sigma)=1/sigma.)
+
+#     if debug == 'yes' then
+      local fmt = string.rep('%g, ', $(N))
+      print(string.format('Performed step at t: %g with h=%g, results: y=' .. fmt,
+			  t, h, $(VL'y')))
+      io.read '*l'
+#     end
+
+      local yerr, r, d0
+      local rmax = 0
+
+#     for i = 0, N-1 do
+	 yerr = 4 * (y_$(i) - yonestep_$(i)) / 15
+	 d0 = eps_rel * (a_y * abs(y_$(i)) + a_dydt * abs(h * dydt[$(i)])) + eps_abs
+	 r = abs(yerr) / abs(d0)
+	 rmax = max(r, rmax)
+#     end
+
+#     if debug == 'yes' then
+      print('rmax=', rmax)
+      io.read '*l'
+#     end
+
+      local inc
+      h_new, inc = hadjust(rmax, h)
+      if inc >= 0 then break end
+     
+      h = h_new
+#     if debug == 'yes' then
+      print('New increment:', h)
+#     end
+      
+      $(AL'dydt') = $(VL'dydt0')
+   end
 
    $(AL's.y') = $(VL'y') 
+   s.t = t + h
+   s.h = h_new
+
+   return h
 end
 
-
-t0, t1, h0 = 0, 200, 0.001
-
-function do_rk($(VL 'y'), f, sample)
-   local s = rk4_new()
-   local yerr = darray($(N))
-
-   $(AL's.y') = $(VL'y')
-   $(AL's.dydt') = f(t0, $(VL'y'))
-
-   local t, tsamp = t0, t0
-   while t < t1 do
-      rk4_apply(s, t, h0, yerr, f)
-      t = t + h0
-      if sample and t - tsamp > sample then
-        print(t, $(AL's.y'))
-        tsamp = t
-      end
-   end
-   print(t, $(AL's.y'))
-end
-
-function f_ode1(t, p, q)
-   return -q - p^2,  2*p - q^3
-end
-
-for k=1, 10 do
-  local th = pi/4
-  local p0, q0 = cos(th), sin(th)
-  do_rk(p0, q0, f_ode1)
-end
+return {new= ode_new, init= ode_init, evolve= rk4_evolve}
