@@ -1,22 +1,3 @@
-# function include(filename)
-#  return template.process(filename, _self)
-# end
-
-# function VL(var)
-#  local res = {}
-#  for i = 0, N-1 do
-#    res[i+1] = var..'_'..i
-#  end
-#  return table.concat(res,',')
-# end
-
-# function AL(var)
-#  local res = {}
-#  for i = 0, N-1 do
-#    res[i+1] = var..'['..i..']'
-#  end
-#  return table.concat(res,',')
-# end
 
 # order = 4
 

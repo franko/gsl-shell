@@ -43,12 +43,20 @@ local function preprocess(chunk, name, defs)
       return table.concat(pieces)
    end
 
-   local ppenv = {string= string, table= table, template= M}
-   for k, v in pairs(defs) do ppenv[k] = v end
-   ppenv._self = ppenv
+   local ppenv
 
---      setfenv(parseHashLines, ppenv)
---      setfenv(parseDollarParen, ppenv)
+   if defs._self then
+      ppenv = defs._self
+   else
+      ppenv = {string= string, table= table, template= M}
+      for k, v in pairs(defs) do ppenv[k] = v end
+      ppenv._self = ppenv
+      local include = function(filename)
+			 return M.process(filename, ppenv)
+		      end
+      setfenv(include, ppenv)
+      ppenv.include = include
+   end
 
    local code = parseHashLines(chunk)
    local fcode = loadstring(code, name)
