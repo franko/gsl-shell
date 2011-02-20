@@ -48,11 +48,7 @@
 #include "interp.h"
 
 #ifdef AGG_PLOT_ENABLED
-#include "window_registry.h"
-#include "lua-draw.h"
-#include "lua-text.h"
-#include "window.h"
-#include "lua-plot.h"
+#include "lua-graph.h"
 #endif
 
 #ifdef LUA_STRICT
@@ -75,7 +71,8 @@ luaopen_gsl (lua_State *L)
   gsl_set_error_handler_off ();
 
 #ifdef AGG_PLOT_ENABLED
-  window_registry_prepare (L);
+  luaopen_graph (L);
+  lua_pop (L, 1);
 #endif
 
   luaopen_lcomplex (L);
@@ -105,12 +102,6 @@ luaopen_gsl (lua_State *L)
   mlinear_register (L);
   bspline_register (L);
   interp_register (L);
-#ifdef AGG_PLOT_ENABLED
-  draw_register (L);
-  text_register (L);
-  window_register (L);
-  plot_register (L);
-#endif
 
   fft_register (L);
   matrix_complex_register (L);
