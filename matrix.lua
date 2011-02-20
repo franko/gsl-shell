@@ -23,7 +23,7 @@ local math = math or _G
 
 local cat, insert, fmt = table.concat, table.insert, string.format
 
-local sqrt, abs = math.sqrt, math.abs
+local sqrt, abs, tostring_eps = math.sqrt, math.abs, complex.tostring_eps
 
 local function matrix_f_set(m, f)
    local r, c = gsl.dim(m)
@@ -82,7 +82,7 @@ end
 local function matrix_to_string(m)
    local eps = m:norm() * 1e-8
    local fwidth = function(w, val)
-		     local ln = # gsl.tostring_eps(val, eps)
+		     local ln = # tostring_eps(val, eps)
 		     return (ln > w and ln or w)
 		  end
    local width = gsl.matrix_reduce(m, fwidth, 0)
@@ -91,7 +91,7 @@ local function matrix_to_string(m)
    for i=1,r do
       local ln = {}
       for j=1,c do
-	 insert(ln, padstr(gsl.tostring_eps(m:get(i,j), eps), width))
+	 insert(ln, padstr(tostring_eps(m:get(i,j), eps), width))
       end
       insert(lines, fmt('[ %s ]', cat(ln, ' ')))
    end
@@ -99,7 +99,7 @@ local function matrix_to_string(m)
 end
 
 local function csqr(z)
-   local r, i = gsl.real(z), gsl.imag(z)
+   local r, i = complex.real(z), complex.imag(z)
    return r*r + i*i
 end
 
@@ -110,7 +110,7 @@ end
 
 function gsl.hc(m)
    local r, c = gsl.dim(m)
-   return gsl.cnew(c, r, function(i,j) return gsl.conj(m:get(j,i)) end)
+   return gsl.cnew(c, r, function(i,j) return complex.conj(m:get(j,i)) end)
 end
 
 function gsl.diag(v)
@@ -187,7 +187,7 @@ end
 local function hc_print(hc)
    local eps = 1e-8 * hc_reduce(hc, function(p,z) return p + csqr(z) end, 0)
    local f = function(p, z)
-		insert(p, fmt('%6i: %s', #p, gsl.tostring_eps(z, eps)))
+		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
 		return p
 	     end
    return cat(hc_reduce(hc, f, {}), '\n')

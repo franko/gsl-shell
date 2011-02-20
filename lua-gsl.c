@@ -78,6 +78,9 @@ luaopen_gsl (lua_State *L)
   window_registry_prepare (L);
 #endif
 
+  luaopen_lcomplex (L);
+  lua_pop (L, 1);
+
 #ifdef LUA_STRICT
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
 #else
@@ -89,7 +92,6 @@ luaopen_gsl (lua_State *L)
   solver_register (L);
   matrix_register (L);
   matrix_arith_register (L);
-  lcomplex_register (L);
   linalg_register (L);
   integ_register (L);
   ode_register (L);

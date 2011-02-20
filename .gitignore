@@ -1,0 +1,14 @@
+*.[oa]
+*.exe
+*.so
+*.dll
+luajit2/lib/vmdef.lua
+*~
+gsl-shell
+.deps
+.lib
+.trash
+build
+doc/build
+www
+

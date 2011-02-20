@@ -221,6 +221,7 @@ static const luaL_Reg lcomplex_methods[] =
 
 static const luaL_Reg lcomplex_functions[] =
 {
+	{ "new",	Lnew	},
 	{ "tostring_eps",	Ltostring},
 	{ "abs",	Labs	},
 	{ "acos",	Lacos	},
@@ -236,7 +237,6 @@ static const luaL_Reg lcomplex_functions[] =
 	{ "exp",	Lexp	},
 	{ "imag",	Limag	},
 	{ "log",	Llog	},
-	{ "complex",	Lnew	},
 	{ "pow",	Lpow	},
 	{ "proj",	Lproj	},
 	{ "real",	Lreal	},
@@ -248,14 +248,15 @@ static const luaL_Reg lcomplex_functions[] =
 	{ NULL,		NULL	}
 };
 
-void lcomplex_register (lua_State *L)
+int luaopen_lcomplex (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_COMPLEX));
   luaL_register (L, NULL, lcomplex_methods);
   lua_pop (L, 1);
 
-  luaL_register(L, NULL, lcomplex_functions);
+  luaL_register(L, "complex", lcomplex_functions);
 
   lua_pushcomplex(L, I);
   lua_setfield(L, -2, "I");
+  return 1;
 }
