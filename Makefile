@@ -51,7 +51,7 @@ C_SRC_FILES = gs-types.c lcomplex.c matrix.c matrix_arith.c nlinfit_helper.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
     multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
-    cmatrix.c cnlinfit.c code.c fft.c lua-gsl.c
+    cmatrix.c cnlinfit.c code.c fft.c lua-graph.c lua-gsl.c
 
 LUA_BASE_DIRS = 
 LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
