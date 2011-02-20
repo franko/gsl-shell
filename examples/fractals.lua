@@ -1,6 +1,7 @@
 require 'draw'
 
 local function c_generator(n, n_angle, len_frac, g)
+   local I, exp, real, imag = complex.I, complex.exp, complex.real, complex.imag
    local w, r, k = ilist(|| 0, n+1), #g
 
    local s = len_frac^n

@@ -19,7 +19,7 @@ extern int lua_iscomplex (lua_State *L, int i);
 extern Complex lua_tocomplex (lua_State *L, int i);
 extern Complex luaL_checkcomplex (lua_State *L, int i);
 
-extern void lcomplex_register (lua_State *L);
+extern int luaopen_lcomplex (lua_State *L);
 
 __END_DECLS
 

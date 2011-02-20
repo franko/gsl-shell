@@ -88,7 +88,7 @@ function demo4()
    pt:addline(filine(|i| v[i], n), 'black')
 
    fft(v)
-   pf:add(ibars(sample(|i| abs(v:get(i)), 0, n/2, n/2-1)), 'black')
+   pf:add(ibars(sample(|i| complex.abs(v:get(i)), 0, n/2, n/2-1)), 'black')
    for k=ncut, n/2 do v:set(k,0) end
    fft_inv(v)
 

@@ -29,7 +29,7 @@ function demo1()
 
    fft(sq)
 
-   pf:add(ibars(isample(|k| abs(sq:get(k)), 0, 60)), 'black')
+   pf:add(ibars(isample(|k| complex.abs(sq:get(k)), 0, 60)), 'black')
 
    for k=ncut, n/2 do sq:set(k,0) end
    fft_inv(sq)
@@ -55,7 +55,7 @@ function demo2()
    fft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| abs(bess:get(k)), 0, 60))
+   bars = ibars(isample(|k| complex.abs(bess:get(k)), 0, 60))
    fftplot:add(bars, 'darkgreen')
    fftplot:addline(bars, 'black')
    fftplot:show()

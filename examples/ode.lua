@@ -18,6 +18,8 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+local real, imag = complex.real, complex.imag
+
 function demo1()
    local odef = function(t, y, f)
 		   f:set(1,1, -y[2]-y[1]^2)
@@ -132,6 +134,7 @@ end
 
 function demo5()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
+   local I = complex.I
    local alpha = I - 0.08
    local z0 = I
 
@@ -154,6 +157,7 @@ end
 
 function demo6()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
+   local I = complex.I
    local alpha = I - 0.08
    local z0 = 1
 
