@@ -1,0 +1,181 @@
+
+local abs, max, min = math.abs, math.max, math.min
+
+# order = 5
+
+# ah = { 1.0/4.0, 3.0/8.0, 12.0/13.0, 1.0, 1.0/2.0 }
+# b3 = { 3.0/32.0, 9.0/32.0 }
+# b4 = { 1932.0/2197.0, -7200.0/2197.0, 7296.0/2197.0}
+# b5 = { 8341.0/4104.0, -32832.0/4104.0, 29440.0/4104.0, -845.0/4104.0}
+# b6 = { -6080.0/20520.0, 41040.0/20520.0, -28352.0/20520.0, 9295.0/20520.0, -5643.0/20520.0}
+
+# c1 = 902880.0/7618050.0
+# c3 = 3953664.0/7618050.0
+# c4 = 3855735.0/7618050.0
+# c5 = -1371249.0/7618050.0
+# c6 = 277020.0/7618050.0
+
+# -- These are the differences of fifth and fourth order coefficients
+# -- for error estimation
+
+# ec = { 0.0, 1.0 / 360.0, 0.0, -128.0 / 4275.0, -2197.0 / 75240.0, 1.0 / 50.0, 2.0 / 55.0 }
+
+# y_err_only = (a_dydt == 0)
+
+local ffi = require "ffi"
+
+local vecsize = $(N) * ffi.sizeof('double')
+
+local function ode_new()
+   return ffi.new('ode_state')
+end
+
+local function ode_init(s, t0, h0, f, y)
+   ffi.copy(s.y, y, vecsize)
+   f(t0, s.y, s.dydt)
+   s.t = t0
+   s.h = h0
+end
+
+local function hadjust(rmax, h)
+   local S = 0.9
+   if rmax > 1.1 then
+      local r = S / rmax^(1/$(order))
+      r = max(0.2, r)
+      return r * h, -1
+   elseif rmax < 0.5 then
+      local r = S / rmax^(1/($(order)+1))
+      r = max(1, min(r, 5))
+      return r * h, 1
+   end
+   return h, 0
+end
+
+ffi.cdef[[
+  typedef struct {
+    double t;
+    double h;
+    double y[$(N)];
+    double dydt[$(N)];
+  } ode_state;
+
+  typedef struct {
+    double y0[$(N)];
+    double ytmp[$(N)];
+    double k1[$(N)];
+    double k2[$(N)];
+    double k3[$(N)];
+    double k4[$(N)];
+    double k5[$(N)];
+    double k6[$(N)];
+    double yerr[$(N)];
+  } ode_workspace;
+
+  void cblas_daxpy (const int N, const double ALPHA,
+		    const double * X, const int INCX,
+		    double * Y, const int INCY);
+
+  int cblas_idamax (const int N, const double * X, const int INCX);
+
+  void cblas_dscal (const int N, const double ALPHA, double * X, const int INCX);
+]]
+
+local ws = ffi.new('ode_workspace')
+
+local function rkf45_evolve(s, f, t1)
+   local t, h = s.t, s.h
+   local hadj, inc
+
+   ffi.copy (ws.y0, s.y, vecsize)
+   ffi.copy (ws.k1, s.dydt, vecsize)
+
+   if t + h > t1 then h = t1 - t end
+
+   while h > 0 do
+      local rmax
+
+      do
+	 ffi.copy (ws.ytmp, s.y, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(ah[1]), ws.k1, 1, ws.ytmp, 1)
+
+	 -- k2 step
+	 f(t + $(ah[1]) * h, ws.ytmp, ws.k2)
+
+	 ffi.copy (ws.ytmp, s.y, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(b3[1]), ws.k1, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b3[2]), ws.k2, 1, ws.ytmp, 1)
+
+	 -- k3 step
+	 f(t + $(ah[2]) * h, ws.ytmp, ws.k3)
+
+	 ffi.copy (ws.ytmp, s.y, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(b4[1]), ws.k1, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b4[2]), ws.k2, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b4[3]), ws.k3, 1, ws.ytmp, 1)
+
+	 -- k4 step
+	 f(t + $(ah[3]) * h, ws.ytmp, ws.k4)
+
+	 ffi.copy (ws.ytmp, s.y, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(b5[1]), ws.k1, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b5[2]), ws.k2, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b5[3]), ws.k3, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b5[4]), ws.k4, 1, ws.ytmp, 1)
+
+	 -- k5 step
+	 f(t + $(ah[4]) * h, ws.ytmp, ws.k5)
+
+	 ffi.copy (ws.ytmp, s.y, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(b6[1]), ws.k1, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b6[2]), ws.k2, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b6[3]), ws.k3, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b6[4]), ws.k4, 1, ws.ytmp, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(b6[5]), ws.k5, 1, ws.ytmp, 1)
+
+	 -- k6 step and final sum
+	 -- since k2 is no more used we could use k2 to store k6
+	 f(t + $(ah[5]) * h, ws.ytmp, ws.k6)
+
+	 ffi.C.cblas_daxpy ($(N), h * $(c1), ws.k1, 1, s.y, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(c3), ws.k3, 1, s.y, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(c4), ws.k4, 1, s.y, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(c5), ws.k5, 1, s.y, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(c6), ws.k6, 1, s.y, 1)
+ 
+#        if not y_err_only then
+            f(t + h, s.y, s.dydt)
+#        end
+
+
+         ffi.fill(ws.yerr, vecsize)
+	 ffi.C.cblas_daxpy ($(N), h * $(ec[2]), ws.k1, 1, ws.yerr, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(ec[4]), ws.k3, 1, ws.yerr, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(ec[5]), ws.k4, 1, ws.yerr, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(ec[6]), ws.k5, 1, ws.yerr, 1)
+	 ffi.C.cblas_daxpy ($(N), h * $(ec[7]), ws.k6, 1, ws.yerr, 1)
+
+         -- TODO TODO TODO: implement the complete algorithm
+         d0 = $(eps_abs)
+         ffi.C.cblas_dscal ($(N), 1/abs(d0), ws.yerr, 1)
+
+         local imax = ffi.C.cblas_idamax ($(N), ws.yerr, 1)
+	 rmax = abs(ws.yerr[imax])
+      end
+
+      hadj, inc = hadjust(rmax, h)
+      if inc >= 0 then break end
+
+      ffi.copy(s.y, ws.y0, vecsize)
+      h = hadj
+   end
+
+#  if y_err_only then
+      f(t + h, s.y, s.dydt)
+#  end
+   s.t = t + h
+   s.h = hadj
+
+   return h
+end
+
+return {new= ode_new, init= ode_init, evolve= rkf45_evolve}
