@@ -1,10 +1,13 @@
 
+local gsl, graph = gsl or _G, graph or _G
+
 local template = require 'template'
 
 local ode_spec = {N = 2, eps_abs = 1e-6, eps_rel = 0, a_y = 1, a_dydt = 0}
-local ode = template.require('rkf45', ode_spec)
+local ode = template.load('rkf45.lua.in', ode_spec)
 
-local sin, cos, pi = math.sin, math.cos, math.pi
+local sin, cos, exp, pi = math.sin, math.cos, math.exp, math.pi
+local path, plot, fxplot, fxline = graph.path, graph.plot, graph.fxplot, graph.fxline
 
 function f_ode1(t, p, q)
    return -q - p^2,  2*p - q^3

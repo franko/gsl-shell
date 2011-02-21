@@ -75,20 +75,27 @@ end
 
 local function process(filename, defs)
    local template = read_file(filename)
-   local codegen = preprocess(template, 'ode_codegen', defs or {})
+   local codegen = preprocess(template, 'ode_codegen', defs)
    local code = {}
    local add = function(s) code[#code+1] = s end
    codegen(add)
    return table.concat(code)
 end
 
-local function require(filename, defs)
-   local f = loadstring(process(filename .. '.lua.in', defs), 'ode_out')
+local function require(filename)
+   local f = loadstring(process(filename .. '.lua.in', {}), 'ode_out')
+   if not f then error 'error loading ODE module' end
+   return f()
+end
+
+local function load(filename, defs)
+   local f = loadstring(process(filename, defs), 'ode_out')
    if not f then error 'error loading ODE module' end
    return f()
 end
 
 M.process = process
 M.require = require
+M.load    = load
 
 return M
