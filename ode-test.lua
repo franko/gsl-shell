@@ -2,9 +2,9 @@
 local template = require 'template'
 
 local ode_spec = {N = 2, eps_abs = 1e-6, eps_rel = 0, a_y = 1, a_dydt = 0}
+local ode = template.require('rkf45', ode_spec)
 
-local codegen = template.compile('rkf45.lua.in', ode_spec)
-local ode = codegen()
+local sin, cos, pi = math.sin, math.cos, math.pi
 
 function f_ode1(t, p, q)
    return -q - p^2,  2*p - q^3
@@ -34,7 +34,7 @@ function test1()
    end
    local p = plot()
    p:addline(ln)
-   p:addline(fxline(|t| cos(t) * exp(- damp_f * t), 0, 100), 'blue', {{'dash', 7,3}})
+   p:addline(fxline(function(t) return cos(t) * exp(- damp_f * t) end, 0, 100), 'blue', {{'dash', 7,3}})
    p:show()
    return p
 end
