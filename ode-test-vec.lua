@@ -11,8 +11,9 @@ local ffi = require "ffi"
 local sin, cos, exp, pi = math.sin, math.cos, math.exp, math.pi
 local path, plot, fxplot, fxline = graph.path, graph.plot, graph.fxplot, graph.fxline
 
-function f_ode1(t, p, q)
-   return -q - p^2,  2*p - q^3
+function f_ode1(t, y, f)
+   f[0] = -y[1] - y[0]^2
+   f[1] = 2*y[0] - y[1]^3
 end
 
 function f_vanderpol_gen(mu)
@@ -50,10 +51,10 @@ end
 
 function test2()
    local s, f = ode.new(), f_ode1
-   local x, y = 1, 1
+   local y = ffi.new('double[2]', {1, 1})
    local t0, t1, h0, hsamp = 0, 30, 0.04, 0.04
-   local ln = path(x, y)
-   ode.init(s, t0, h0, f, x, y)
+   local ln = path(y[0], y[1])
+   ode.init(s, t0, h0, f, y)
    for t= hsamp, t1, hsamp do
       while s.t < t do
 	 ode.evolve(s, f, t)
