@@ -3,7 +3,7 @@
 ** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
-** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
+** Copyright (C) 1994-2011 Lua.org, PUC-Rio. See Copyright Notice in lua.h
 */
 
 #include <errno.h>
@@ -153,7 +153,7 @@ static int io_file_testeof(lua_State *L, FILE *fp)
   return (c != EOF);
 }
 
-static int io_file_readline(lua_State *L, FILE *fp)
+static int io_file_readline(lua_State *L, FILE *fp, size_t chop)
 {
   luaL_Buffer b;
   luaL_buffinit(L, &b);
@@ -168,7 +168,7 @@ static int io_file_readline(lua_State *L, FILE *fp)
     if (len == 0 || p[len-1] != '\n') {  /* Partial line? */
       luaL_addsize(&b, len);
     } else {
-      luaL_addsize(&b, len - 1);  /* Don't include EOL. */
+      luaL_addsize(&b, len - chop);  /* Keep or remove EOL. */
       luaL_pushresult(&b);
       return 1;  /* Got at least an EOL. */
     }
@@ -195,10 +195,10 @@ static int io_file_readchars(lua_State *L, FILE *fp, size_t n)
 
 static int io_file_read(lua_State *L, FILE *fp, int start)
 {
-  int ok, n, nargs = cast_int(L->top - L->base) - start;
+  int ok, n, nargs = (int)(L->top - L->base) - start;
   clearerr(fp);
   if (nargs == 0) {
-    ok = io_file_readline(L, fp);
+    ok = io_file_readline(L, fp, 1);
     n = start+1;  /* Return 1 result. */
   } else {
     /* The results plus the buffers go on top of the args. */
@@ -211,8 +211,8 @@ static int io_file_read(lua_State *L, FILE *fp, int start)
 	  lj_err_arg(L, n+1, LJ_ERR_INVOPT);
 	if (p[1] == 'n')
 	  ok = io_file_readnum(L, fp);
-	else if (p[1] == 'l')
-	  ok = io_file_readline(L, fp);
+	else if ((p[1] & ~0x20) == 'L')
+	  ok = io_file_readline(L, fp, (p[1] == 'l'));
 	else if (p[1] == 'a')
 	  io_file_readchars(L, fp, ~((size_t)0));
 	else
@@ -240,10 +240,15 @@ static int io_file_write(lua_State *L, FILE *fp, int start)
     if (tvisstr(tv)) {
       MSize len = strV(tv)->len;
       status = status && (fwrite(strVdata(tv), 1, len, fp) == len);
+    } else if (tvisint(tv)) {
+      char buf[LJ_STR_INTBUF];
+      char *p = lj_str_bufint(buf, intV(tv));
+      size_t len = (size_t)(buf+LJ_STR_INTBUF-p);
+      status = status && (fwrite(p, 1, len, fp) == len);
     } else if (tvisnum(tv)) {
       status = status && (fprintf(fp, LUA_NUMBER_FMT, numV(tv)) > 0);
     } else {
-      lj_err_argt(L, cast_int(tv - L->base) + 1, LUA_TSTRING);
+      lj_err_argt(L, (int)(tv - L->base) + 1, LUA_TSTRING);
     }
   }
   return io_pushresult(L, status, NULL);
@@ -279,37 +284,42 @@ LJLIB_CF(io_method_seek)
 {
   FILE *fp = io_tofile(L)->fp;
   int opt = lj_lib_checkopt(L, 2, 1, "\3set\3cur\3end");
-  lua_Number ofs;
+  int64_t ofs = 0;
+  cTValue *o;
   int res;
   if (opt == 0) opt = SEEK_SET;
   else if (opt == 1) opt = SEEK_CUR;
   else if (opt == 2) opt = SEEK_END;
-  lj_lib_opt(L, 3,
-    ofs = lj_lib_checknum(L, 3);
-    ,
-    ofs = 0;
-  )
+  o = L->base+2;
+  if (o < L->top) {
+    if (tvisint(o))
+      ofs = (int64_t)intV(o);
+    else if (tvisnum(o))
+      ofs = (int64_t)numV(o);
+    else if (!tvisnil(o))
+      lj_err_argt(L, 3, LUA_TNUMBER);
+  }
 #if LJ_TARGET_POSIX
-  res = fseeko(fp, (int64_t)ofs, opt);
+  res = fseeko(fp, ofs, opt);
 #elif _MSC_VER >= 1400
-  res = _fseeki64(fp, (int64_t)ofs, opt);
+  res = _fseeki64(fp, ofs, opt);
 #elif defined(__MINGW32__)
-  res = fseeko64(fp, (int64_t)ofs, opt);
+  res = fseeko64(fp, ofs, opt);
 #else
   res = fseek(fp, (long)ofs, opt);
 #endif
   if (res)
     return io_pushresult(L, 0, NULL);
 #if LJ_TARGET_POSIX
-  ofs = cast_num(ftello(fp));
+  ofs = ftello(fp);
 #elif _MSC_VER >= 1400
-  ofs = cast_num(_ftelli64(fp));
+  ofs = _ftelli64(fp);
 #elif defined(__MINGW32__)
-  ofs = cast_num(ftello64(fp));
+  ofs = ftello64(fp);
 #else
-  ofs = cast_num(ftell(fp));
+  ofs = (int64_t)ftell(fp);
 #endif
-  setnumV(L->top-1, ofs);
+  setint64V(L->top-1, ofs);
   return 1;
 }
 
@@ -449,7 +459,7 @@ LJLIB_CF(io_output)
 LJLIB_NOREG LJLIB_CF(io_lines_iter)
 {
   IOFileUD *iof = io_tofile(L);
-  int ok = io_file_readline(L, iof->fp);
+  int ok = io_file_readline(L, iof->fp, 1);
   if (ferror(iof->fp))
     lj_err_callermsg(L, strerror(errno));
   if (!ok && (iof->type & IOFILE_FLAG_CLOSE))

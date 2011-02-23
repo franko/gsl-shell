@@ -179,18 +179,12 @@ static TRef crec_ct_ct(jit_State *J, CType *d, CType *s, TRef dp, TRef sp,
   case CCX(I, I):
   conv_I_I:
     if (dt == IRT_CDATA || st == IRT_CDATA) goto err_nyi;
-#if LJ_64
-    /* Sign-extend 32 to 64 bit integer. */
-    if (dsize == 8 && ssize < 8 && !(sinfo & CTF_UNSIGNED))
-      sp = emitconv(sp, dt, IRT_INT, IRCONV_SEXT);
-    /* All other conversions are no-ops on x64. */
-#else
-    if (dsize == 8 && ssize < 8)  /* Extend to 64 bit integer. */
+    /* Extend 32 to 64 bit integer. */
+    if (dsize == 8 && ssize < 8 && !(LJ_64 && (sinfo & CTF_UNSIGNED)))
       sp = emitconv(sp, dt, ssize < 4 ? IRT_INT : st,
 		    (sinfo & CTF_UNSIGNED) ? 0 : IRCONV_SEXT);
     else if (dsize < 8 && ssize == 8)  /* Truncate from 64 bit integer. */
       sp = emitconv(sp, dsize < 4 ? IRT_INT : dt, st, 0);
-#endif
   xstore:
     if (dt == IRT_I64 || dt == IRT_U64) lj_needsplit(J);
     if (dp == 0) return sp;
@@ -371,7 +365,7 @@ static TRef crec_ct_tv(jit_State *J, CType *d, TRef dp, TRef sp, TValue *sval)
   } else if (tref_isnil(sp)) {
     sp = lj_ir_kptr(J, NULL);
   } else if (tref_isudata(sp)) {
-    sp = emitir(IRT(IR_ADD, IRT_P32), sp, lj_ir_kint(J, sizeof(GCcdata)));
+    sp = emitir(IRT(IR_ADD, IRT_P32), sp, lj_ir_kint(J, sizeof(GCudata)));
   } else if (tref_isstr(sp)) {
     if (ctype_isenum(d->info)) {  /* Match string against enum constant. */
       GCstr *str = strV(sval);
@@ -713,8 +707,14 @@ static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
     CType *ctr = ctype_rawchild(cts, ct);
     IRType t = crec_ct2irt(ctr);
     TRef tr;
-    if (ctype_isenum(ctr->info)) ctr = ctype_child(cts, ctr);
-    if (!(ctype_isnum(ctr->info) || ctype_isptr(ctr->info)) ||
+    if (ctype_isvoid(ctr->info)) {
+      t = IRT_NIL;
+      rd->nres = 0;
+    } else if (ctype_isenum(ctr->info)) {
+      ctr = ctype_child(cts, ctr);
+    }
+    if (!(ctype_isnum(ctr->info) || ctype_isptr(ctr->info) ||
+	  ctype_isvoid(ctr->info)) ||
 	ctype_isbool(ctr->info) || (ct->info & CTF_VARARG) ||
 #if LJ_TARGET_X86
 	ctype_cconv(ct->info) != CTCC_CDECL ||
@@ -984,11 +984,12 @@ void LJ_FASTCALL recff_ffi_copy(jit_State *J, RecordFFData *rd)
     if (trlen) {
       trlen = crec_toint(J, cts, trlen, &rd->argv[2]);
     } else {
-      trlen = emitir(IRTI(IR_FLOAD), trsrc, IRFL_STR_LEN);
+      trlen = emitir(IRTI(IR_FLOAD), J->base[1], IRFL_STR_LEN);
       trlen = emitir(IRTI(IR_ADD), trlen, lj_ir_kint(J, 1));
     }
     lj_ir_call(J, IRCALL_memcpy, trdst, trsrc, trlen);
     emitir(IRT(IR_XBAR, IRT_NIL), 0, 0);
+    rd->nres = 0;
   }  /* else: interpreter will throw. */
 }
 
@@ -1005,6 +1006,7 @@ void LJ_FASTCALL recff_ffi_fill(jit_State *J, RecordFFData *rd)
       trfill = lj_ir_kint(J, 0);
     lj_ir_call(J, IRCALL_memset, tr, trfill, trlen);
     emitir(IRT(IR_XBAR, IRT_NIL), 0, 0);
+    rd->nres = 0;
   }  /* else: interpreter will throw. */
 }
 
