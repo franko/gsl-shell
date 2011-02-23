@@ -17,6 +17,7 @@
 #include "lj_state.h"
 #include "lj_frame.h"
 #include "lj_bc.h"
+#include "lj_ff.h"
 #include "lj_trace.h"
 #include "lj_vm.h"
 
@@ -396,7 +397,7 @@ cTValue *lj_err_getframe(lua_State *L, int level, int *size)
     if (frame_gc(frame) == obj2gco(L))
       level++;  /* Skip dummy frames. See lj_meta_call(). */
     if (level-- == 0) {
-      *size = cast_int(nextframe - frame);
+      *size = (int)(nextframe - frame);
       return frame;  /* Level found. */
     }
     nextframe = frame;
@@ -417,7 +418,7 @@ LUA_API int lua_getstack(lua_State *L, int level, lua_Debug *ar)
   int size;
   cTValue *frame = lj_err_getframe(L, level, &size);
   if (frame) {
-    ar->i_ci = (size << 16) + cast_int(frame - tvref(L->stack));
+    ar->i_ci = (size << 16) + (int)(frame - tvref(L->stack));
     return 1;
   } else {
     ar->i_ci = level - size;
@@ -485,7 +486,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
       if (cframe_canyield(cf)) {  /* Resume? */
 	if (errcode) {
 	  L->cframe = NULL;
-	  L->status = cast_byte(errcode);
+	  L->status = (uint8_t)errcode;
 	}
 	return cf;
       }
@@ -533,7 +534,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
 #define LJ_UEXCLASS		0x4c55414a49543200ULL	/* LUAJIT2\0 */
 #define LJ_UEXCLASS_MAKE(c)	(LJ_UEXCLASS | (_Unwind_Exception_Class)(c))
 #define LJ_UEXCLASS_CHECK(cl)	(((cl) ^ LJ_UEXCLASS) <= 0xff)
-#define LJ_UEXCLASS_ERRCODE(cl)	(cast_int((cl) & 0xff))
+#define LJ_UEXCLASS_ERRCODE(cl)	((int)((cl) & 0xff))
 
 /* DWARF2 personality handler referenced from interpreter .eh_frame. */
 LJ_FUNCA int lj_err_unwind_dwarf(int version, _Unwind_Action actions,
@@ -641,7 +642,7 @@ extern __DestructExceptionObject(EXCEPTION_RECORD *rec, int nothrow);
 #define LJ_EXCODE		((DWORD)0xe24c4a00)
 #define LJ_EXCODE_MAKE(c)	(LJ_EXCODE | (DWORD)(c))
 #define LJ_EXCODE_CHECK(cl)	(((cl) ^ LJ_EXCODE) <= 0xff)
-#define LJ_EXCODE_ERRCODE(cl)	(cast_int((cl) & 0xff))
+#define LJ_EXCODE_ERRCODE(cl)	((int)((cl) & 0xff))
 
 /* Win64 exception handler for interpreter frame. */
 LJ_FUNCA EXCEPTION_DISPOSITION lj_err_unwind_win64(EXCEPTION_RECORD *rec,
@@ -903,10 +904,19 @@ LJ_NOINLINE void lj_err_callermsg(lua_State *L, const char *msg)
 {
   TValue *frame = L->base-1;
   TValue *pframe = NULL;
-  if (frame_islua(frame))
+  if (frame_islua(frame)) {
     pframe = frame_prevl(frame);
-  else if (frame_iscont(frame))
-    L->base = (pframe = frame_prevd(frame))+1;  /* Remove metamethod frame. */
+  } else if (frame_iscont(frame)) {
+    pframe = frame_prevd(frame);
+#if LJ_HASFFI
+    /* Remove frame for FFI metamethods. */
+    if (frame_func(frame)->c.ffid >= FF_ffi_meta___index &&
+	frame_func(frame)->c.ffid <= FF_ffi_meta___tostring) {
+      L->base = pframe+1;
+      L->top = frame;
+    }
+#endif
+  }
   err_loc(L, msg, pframe, frame);
   lj_err_run(L);
 }
@@ -935,7 +945,7 @@ LJ_NORET LJ_NOINLINE static void err_argmsg(lua_State *L, int narg,
   const char *fname = "?";
   const char *ftype = getfuncname(L, L->base - 1, &fname);
   if (narg < 0 && narg > LUA_REGISTRYINDEX)
-    narg = cast_int(L->top - L->base) + narg + 1;
+    narg = (int)(L->top - L->base) + narg + 1;
   if (ftype && ftype[3] == 'h' && --narg == 0)  /* Check for "method". */
     msg = lj_str_pushf(L, err2msg(LJ_ERR_BADSELF), fname, msg);
   else
