@@ -26,7 +26,7 @@ local ffi = require "ffi"
 
 local vecsize = $(N) * ffi.sizeof('double')
 
-cblas = ffi.load(ffi.os == "Windows" and "libgslcblas-0" or "gslcblas")
+local cblas = ffi.load(ffi.os == "Windows" and "libgslcblas-0" or "gslcblas")
 
 ffi.cdef[[
   typedef struct {
