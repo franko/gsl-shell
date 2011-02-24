@@ -68,6 +68,9 @@ end
 
 local function read_file(filename)
    local f = io.open(filename)
+   if not f then 
+      error(string.format('error opening template file %s', filename))
+   end
    local content = f:read('*a')
    f:close()
    return content
@@ -75,7 +78,7 @@ end
 
 local function process(filename, defs)
    local template = read_file(filename)
-   local codegen = preprocess(template, 'ode_codegen', defs)
+   local codegen = preprocess(template, 'template_gen', defs)
    local code = {}
    local add = function(s) code[#code+1] = s end
    codegen(add)
@@ -83,14 +86,14 @@ local function process(filename, defs)
 end
 
 local function require(filename)
-   local f = loadstring(process(filename .. '.lua.in', {}), 'ode_out')
-   if not f then error 'error loading ODE module' end
+   local f = loadstring(process(filename .. '.lua.in', {}), filename)
+   if not f then error(string.format('error loading module %s', filename)) end
    return f()
 end
 
 local function load(filename, defs)
-   local f = loadstring(process(filename, defs), 'ode_out')
-   if not f then error 'error loading ODE module' end
+   local f = loadstring(process(filename, defs), filename)
+   if not f then error(string.format('error loading module %s', filename)) end
    return f()
 end
 
