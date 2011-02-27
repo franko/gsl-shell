@@ -1,6 +1,6 @@
-# --  integration/qng.c
+# --  num/qng.lua.in
 # --  
-# --  Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Brian Gough
+# --  Copyright (C) 2009-2011 Francesco Abbate
 # --  
 # --  This program is free software; you can redistribute it and/or modify
 # --  it under the terms of the GNU General Public License as published by

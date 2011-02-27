@@ -1,7 +1,7 @@
 
 # order = 4
 
-$(include 'ode-defs.lua.in')
+$(include 'num/ode-defs.lua.in')
 
 local eps_abs, eps_rel, a_y, a_dydt = 1e-12, 1e-4, 1, 0
 

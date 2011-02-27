@@ -1,9 +1,36 @@
 
+# -- num/rkf45.lua.in
+# -- 
+# -- Copyright (C) 2009-2011 Francesco Abbate
+# -- 
+# -- This program is free software; you can redistribute it and/or modify
+# -- it under the terms of the GNU General Public License as published by
+# -- the Free Software Foundation; either version 3 of the License, or (at
+# -- your option) any later version.
+# -- 
+# -- This program is distributed in the hope that it will be useful, but
+# -- WITHOUT ANY WARRANTY; without even the implied warranty of
+# -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# -- General Public License for more details.
+# -- 
+# -- You should have received a copy of the GNU General Public License
+# -- along with this program; if not, write to the Free Software
+# -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# --
+
+# -- Adapted from the GSL Library, version 1.14
+
+# -- Runge-Kutta-Fehlberg 4(5)
+
+# -- Reference eg. Hairer, E., Norsett S.P., Wanner, G. Solving ordinary
+# -- differential equations I, Nonstiff Problems, 2nd revised edition,
+# -- Springer, 2000.
+
 local abs, max, min = math.abs, math.max, math.min
 
 # order = 5
 
-$(include 'ode-defs.lua.in')
+$(include 'num/ode-defs.lua.in')
 
 # ah = { 1.0/4.0, 3.0/8.0, 12.0/13.0, 1.0, 1.0/2.0 }
 # b3 = { 3.0/32.0, 9.0/32.0 }
@@ -17,8 +44,8 @@ $(include 'ode-defs.lua.in')
 # c5 = -1371249.0/7618050.0
 # c6 = 277020.0/7618050.0
 
--- These are the differences of fifth and fourth order coefficients
--- for error estimation */
+# -- These are the differences of fifth and fourth order coefficients
+# -- for error estimation
 
 # ec = { 0.0, 1.0 / 360.0, 0.0, -128.0 / 4275.0, -2197.0 / 75240.0, 1.0 / 50.0, 2.0 / 55.0 }
 
