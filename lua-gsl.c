@@ -46,6 +46,7 @@
 #include "mlinear.h"
 #include "bspline.h"
 #include "interp.h"
+#include "lu_decomp.h"
 
 #ifdef AGG_PLOT_ENABLED
 #include "lua-graph.h"
@@ -102,6 +103,7 @@ luaopen_gsl (lua_State *L)
   mlinear_register (L);
   bspline_register (L);
   interp_register (L);
+  lu_decomp_register (L);
 
   fft_register (L);
   matrix_complex_register (L);

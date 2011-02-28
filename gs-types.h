@@ -25,6 +25,9 @@ enum gs_type_e {
   GS_FMULTIMIN,
   GS_BSPLINE,
   GS_INTERP,
+  GS_LU_DECOMP,
+  GS_CLU_DECOMP,
+  GS_QR_DECOMP,
 #ifdef AGG_PLOT_ENABLED
   GS_DRAW_PLOT,
   GS_DRAW_SCALABLE, /* derived types are declared only after their base class */

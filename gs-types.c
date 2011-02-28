@@ -24,6 +24,9 @@ static int gs_type_string (lua_State *L);
 #define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
 #define GS_BSPLINE_NAME_DEF     "GSL.bspline"
 #define GS_INTERP_NAME_DEF      "GSL.interp"
+#define GS_LU_DECOMP_NAME_DEF   "GSL.LUdec"
+#define GS_CLU_DECOMP_NAME_DEF  "GSL.cLUdec"
+#define GS_QR_DECOMP_NAME_DEF   "GSL.QRdec"
 #ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
@@ -59,6 +62,9 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(FMULTIMIN, "f multimin solver"), 
   MY_EXPAND(BSPLINE, "B-spline"), 
   MY_EXPAND(INTERP, "Interpolation object"), 
+  MY_EXPAND(LU_DECOMP, "real matrix LU decomposition"), 
+  MY_EXPAND(CLU_DECOMP, "complex matrix LU decomposition"), 
+  MY_EXPAND(QR_DECOMP, "QR decomposition"), 
 #ifdef AGG_PLOT_ENABLED
   MY_EXPAND(DRAW_PLOT, "plot"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),
