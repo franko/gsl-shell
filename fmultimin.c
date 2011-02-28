@@ -72,12 +72,16 @@ static const struct luaL_Reg fmultimin_properties[] = {
   {NULL, NULL}
 };
 
-const struct luaL_Reg fmultimin_methods[] = {
-  {"__gc",         fmultimin_free},
-  {"__index",      fmultimin_index},
+static const struct luaL_Reg fmultimin_methods[] = {
   {"step",         fmultimin_step},
   {"run",          fmultimin_run},
   {"set",          fmultimin_set},
+  {NULL, NULL}
+};
+
+const struct luaL_Reg fmultimin_metatable[] = {
+  {"__gc",         fmultimin_free},
+  {"__index",      fmultimin_index},
   {NULL, NULL}
 };
 
@@ -329,5 +333,8 @@ fmultimin_get_value (lua_State *L)
 int
 fmultimin_index (lua_State *L)
 {
-  return mlua_index_with_properties (L, fmultimin_properties, true);
+  return mlua_index_with_properties (L, 
+				     fmultimin_properties,
+				     fmultimin_methods,
+				     true);
 }

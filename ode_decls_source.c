@@ -26,10 +26,15 @@ enum fenv_e {
   FENV_DF,
 };
 
+static const struct luaL_Reg FUNCTION (ode, metatable)[] = {
+  {"__gc",          FUNCTION (ode, free)},
+  {"__index",       FUNCTION (ode, index)},
+  {NULL, NULL}
+};
+
 static const struct luaL_Reg FUNCTION (ode, methods)[] = {
   {"set",           FUNCTION (ode, set)},
   {"evolve",        FUNCTION (ode, evolve)},
-  {"__gc",          FUNCTION (ode, free)},
   {NULL, NULL}
 };
 

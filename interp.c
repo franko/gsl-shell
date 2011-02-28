@@ -6,6 +6,7 @@
 
 #include "interp.h"
 #include "gs-types.h"
+#include "lua-utils.h"
 #include "matrix.h"
 
 struct interp {
@@ -21,14 +22,20 @@ enum fenv_pos {
 };
 
 static int          interp_new       (lua_State *L);
+static int          interp_index     (lua_State *L);
 static int          interp_free      (lua_State *L);
 static int          interp_eval      (lua_State *L);
 static int          interp_deriv     (lua_State *L);
 static int          interp_deriv2    (lua_State *L);
 static int          interp_integ     (lua_State *L);
 
-static const struct luaL_Reg interp_methods[] = {
+static const struct luaL_Reg interp_metatable[] = {
   {"__gc",          interp_free},
+  {"__index",       interp_index},
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg interp_methods[] = {
   {"eval",          interp_eval},
   {"deriv",         interp_deriv},
   {"deriv2",        interp_deriv2},
@@ -182,13 +189,17 @@ interp_integ (lua_State *L)
   return 1;
 };
 
+int
+interp_index (lua_State *L)
+{
+  return mlua_index_methods (L, interp_methods);
+}
+
 void
 interp_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_INTERP));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, interp_methods);
+  luaL_register (L, NULL, interp_metatable);
   lua_pop (L, 1);
 
   luaL_register (L, NULL, interp_functions);

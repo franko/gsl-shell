@@ -29,9 +29,13 @@ static int FUNCTION (solver, get_p)              (lua_State *);
 static int FUNCTION (solver, get_f)              (lua_State *);
 static int FUNCTION (solver, get_jacob)          (lua_State *);
 
-static const struct luaL_Reg FUNCTION (solver, methods)[] = {
+static const struct luaL_Reg FUNCTION (solver, metatable)[] = {
   {"__gc",         FUNCTION (solver, free)},
   {"__index",      FUNCTION (solver, index)},
+  {NULL, NULL}
+};  
+
+static const struct luaL_Reg FUNCTION (solver, methods)[] = {
   {"iterate",      FUNCTION (solver, iterate)},
   {"run",          FUNCTION (solver, run)},
   {NULL, NULL}

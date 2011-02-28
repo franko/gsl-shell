@@ -48,15 +48,12 @@ FUNCTION (solver, push) (lua_State *L, size_t n, size_t p,
 			 int findex)
 {
   gsl_multifit_fdfsolver_type const * const T = gsl_multifit_fdfsolver_lmsder;
-  struct solver *s = lua_newuserdata (L, sizeof (struct solver));
+  struct solver *s = gs_new_object (sizeof (struct solver), L, GS_TYPE(NLINFIT));
  
   s->base = gsl_multifit_fdfsolver_alloc (T, n, p);
 
   if (s->base == NULL)
     luaL_error (L, OUT_OF_MEMORY_MSG);
-
-  luaL_getmetatable (L, GS_TYPENAME(NLINFIT));
-  lua_setmetatable (L, -2);
 
   lua_newtable (L);
 
@@ -348,5 +345,19 @@ FUNCTION (solver, get_jacob) (lua_State *L)
 int
 FUNCTION (solver, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (solver, properties), true);
+  return mlua_index_with_properties (L,
+				     FUNCTION (solver, properties), 
+				     FUNCTION (solver, methods), true);
+}
+
+
+void
+FUNCTION (solver, register) (lua_State *L)
+{
+  luaL_newmetatable (L, GS_TYPENAME(NLINFIT));
+  luaL_register (L, NULL, FUNCTION (solver, metatable));
+  lua_setfield (L, -2, PREFIX "Solver");
+
+  /* gsl module registration */
+  luaL_register (L, NULL, FUNCTION (solver, functions));
 }

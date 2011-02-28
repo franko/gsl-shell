@@ -35,11 +35,11 @@ void
 multimin_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_FMULTIMIN));
-  luaL_register (L, NULL, fmultimin_methods);
+  luaL_register (L, NULL, fmultimin_metatable);
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_FDFMULTIMIN));
-  luaL_register (L, NULL, fdfmultimin_methods);
+  luaL_register (L, NULL, fdfmultimin_metatable);
   lua_pop (L, 1);
 
   luaL_register (L, NULL, multimin_functions);

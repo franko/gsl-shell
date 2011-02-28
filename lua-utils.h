@@ -43,8 +43,11 @@ extern void
 mlua_check_field_type (lua_State *L, int index, const char *key, int type,
 		       const char *error_msg);
 
+extern int mlua_index_methods (lua_State *L, const struct luaL_Reg *methods);
+
 extern int
 mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
+			    const struct luaL_Reg *methods,
 			    bool use_cache);
 
 extern int

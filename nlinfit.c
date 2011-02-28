@@ -34,16 +34,6 @@
 #include "template_matrix_on.h"
 #include "nlinfit_decls_source.c"
 #include "nlinfit_source.c"
-
-void
-FUNCTION (solver, register) (lua_State *L)
-{
-  luaL_newmetatable (L, GS_TYPENAME(NLINFIT));
-  luaL_register (L, NULL, FUNCTION (solver, methods));
-  lua_setfield (L, -2, PREFIX "Solver");
-
-  /* gsl module registration */
-  luaL_register (L, NULL, solver_functions);
-}
+#include "template_matrix_off.h"
 
 #undef BASE_DOUBLE

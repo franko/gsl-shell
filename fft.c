@@ -89,11 +89,15 @@ static struct fft_hc_sel fft_hc_mixed_radix_sel[1] = {{
     .transform = fft_hc_mixed_radix_transform,
   }};
 
+static const struct luaL_Reg fft_hc_metatable[] = {
+  {"__gc",       fft_hc_free},
+  {"__index",    fft_hc_index},
+  {NULL, NULL}
+};  
+
 static const struct luaL_Reg fft_hc_methods[] = {
   {"get",      fft_hc_get},
   {"set",      fft_hc_set},
-  {"__gc",       fft_hc_free},
-  {"__index",    fft_hc_index},
   {NULL, NULL}
 };  
 
@@ -432,7 +436,7 @@ fft_hc_free (lua_State *L)
 int
 fft_hc_index (lua_State *L)
 {
-  return mlua_index_with_properties (L, fft_hc_properties, false);
+  return mlua_index_with_properties (L, fft_hc_properties, fft_hc_methods, false);
 }
 
 int
@@ -487,11 +491,11 @@ void
 fft_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_HALFCMPL_R2));
-  luaL_register (L, NULL, fft_hc_methods);
+  luaL_register (L, NULL, fft_hc_metatable);
   lua_setfield (L, -2, "FFT_hc_radix2");
 
   luaL_newmetatable (L, GS_METATABLE(GS_HALFCMPL_MR));
-  luaL_register (L, NULL, fft_hc_methods);
+  luaL_register (L, NULL, fft_hc_metatable);
   lua_setfield (L, -2, "FFT_hc_mixed_radix");
 
   luaL_newmetatable (L, FFT_CACHE_MT_NAME);

@@ -89,7 +89,9 @@ mlua_null_cache (lua_State *L, int index)
 }
 
 int
-mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
+mlua_index_with_properties (lua_State *L,
+			    const struct luaL_Reg *properties,
+			    const struct luaL_Reg *methods,
 			    bool use_cache)
 {
   char const * key;
@@ -99,34 +101,40 @@ mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
   if (key == NULL)
     return 0;
 
+  reg = mlua_find_method (methods, key);
+  if (reg)
+    {
+      lua_pushcfunction (L, reg->func);
+      return 1;
+    }
+
   reg = mlua_find_method (properties, key);
   if (reg)
     {
       return mlua_get_property (L, reg, use_cache);
     }
 
-  lua_getmetatable (L, 1);
-  lua_pushstring (L, key);
-  lua_rawget (L, -2);
+  return 0;
+}
 
-  if (lua_isnil (L, -1))
+int
+mlua_index_methods (lua_State *L, const struct luaL_Reg *methods)
+{
+  char const * key;
+  const struct luaL_Reg *reg;
+
+  key = lua_tostring (L, 2);
+  if (key == NULL)
+    return 0;
+
+  reg = mlua_find_method (methods, key);
+  if (reg)
     {
-      lua_pop (L, 1);
-      lua_pushstring (L, "__superindex");
-      lua_rawget (L, -2);
-
-      if (! lua_isnil (L, -1))
-	{
-	  lua_insert (L, 1);
-	  lua_pop (L, 1);
-	  lua_call (L, 2, 1);
-	  return 1;
-	}
-
-      return 0;
+      lua_pushcfunction (L, reg->func);
+      return 1;
     }
 
-  return 1;
+  return 0;
 }
 
 int

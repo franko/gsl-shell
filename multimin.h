@@ -34,7 +34,7 @@ extern int  fmultimin_new        (lua_State *L);
 extern int  gradient_auto_check  (lua_State *L);
 
 
-extern const struct luaL_Reg fmultimin_methods[];
-extern const struct luaL_Reg fdfmultimin_methods[];
+extern const struct luaL_Reg fmultimin_metatable[];
+extern const struct luaL_Reg fdfmultimin_metatable[];
 
 #endif

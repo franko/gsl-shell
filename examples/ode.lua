@@ -32,7 +32,7 @@ function demo1()
    local y0 = vector {1,1}
 
    local ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1, h, tstep) do
+   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
       ln:line_to(y[1], y[2])
    end
 
@@ -63,7 +63,7 @@ function demo2()
    local y0 = vector {1,1}
 
    local ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1, h, tstep) do
+   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
       ln:line_to(y[1], y[2])
    end
 
@@ -72,7 +72,7 @@ function demo2()
    p:show()
 
    ln = path(y0[1], y0[2])
-   for t, y in s:iter(t0, y0, t1, h) do
+   for t, y in ode_iter(s, t0, y0, t1, h) do
       ln:line_to(y[1], y[2])
    end
    p:add(ln, 'black', {{'marker', size=4}})
@@ -84,7 +84,7 @@ function ode_lines(s, t0, y0, t1, h, tstep)
    local r = dim(y0)
    local p = {}
    for k=1,r do p[k] = path(t0, y0[k]) end
-   for t, y in s:iter(t0, y0, t1, h, tstep) do
+   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
       for k=1,r do p[k]:line_to(t, y[k]) end
    end
    return p
@@ -145,7 +145,7 @@ function demo5()
    local solver = code {f= odef, n= 1}
 
    local ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1, h, tstep) do
+   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h, tstep) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
 
@@ -173,7 +173,7 @@ function demo6()
    local solver = code {f= odef, df= odedf, n= 1, method='bsimp'}
 
    local ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1, h, tstep) do
+   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h, tstep) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
 
@@ -182,7 +182,7 @@ function demo6()
    p:show()
 
    ln = path(real(z0), imag(z0))
-   for t, z in solver:iter(t0, cvector {z0}, t1, h) do
+   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h) do
       ln:line_to(real(z[1]), imag(z[1]))
    end
    p:add(ln, 'black', {{'marker', size=5}})

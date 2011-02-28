@@ -75,6 +75,13 @@ static const struct luaL_Reg plot_functions[] = {
   {NULL, NULL}
 };
 
+static const struct luaL_Reg plot_metatable[] = {
+  {"__index",     plot_index      },
+  {"__newindex",  plot_newindex   },
+  {"__gc",        plot_free       },
+  {NULL, NULL}
+};
+
 static const struct luaL_Reg plot_methods[] = {
   {"add",         plot_add        },
   {"addline",     plot_add_line   },
@@ -86,9 +93,6 @@ static const struct luaL_Reg plot_methods[] = {
   {"poplayer",    plot_pop_layer  },
   {"clear",       plot_clear      },
   {"save",        bitmap_save_image },
-  {"__index",     plot_index      },
-  {"__newindex",  plot_newindex   },
-  {"__gc",        plot_free       },
   {NULL, NULL}
 };
 
@@ -290,7 +294,9 @@ plot_units_get (lua_State *L)
 int
 plot_index (lua_State *L)
 {
-  return mlua_index_with_properties (L, plot_properties_get, false);
+  return mlua_index_with_properties (L,
+				     plot_properties_get,
+				     plot_methods, false);
 }
 
 int
@@ -457,7 +463,7 @@ plot_register (lua_State *L)
 {
   /* plot declaration */
   luaL_newmetatable (L, GS_METATABLE(GS_PLOT));
-  luaL_register (L, NULL, plot_methods);
+  luaL_register (L, NULL, plot_metatable);
   lua_pop (L, 1);
 
   /* gsl module registration */

@@ -196,9 +196,6 @@ end
 gsl.FFT_hc_mixed_radix.__tostring = hc_print
 gsl.FFT_hc_radix2.__tostring = hc_print
 
-gsl.ODE.iter  = ode_iter
-gsl.cODE.iter = ode_iter
-
 local function add_matrix_meta_method(key, method)
    local m, mt
    m = gsl.new(1,1)

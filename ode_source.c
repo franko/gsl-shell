@@ -282,7 +282,8 @@ FUNCTION (ode, get_y) (lua_State *L)
 int
 FUNCTION (ode, index) (lua_State *L)
 {
-  return mlua_index_with_properties (L, FUNCTION (ode, properties), false);
+  return mlua_index_with_properties (L, FUNCTION (ode, properties),
+				     FUNCTION (ode, methods), false);
 }
 
 void
@@ -291,10 +292,8 @@ FUNCTION (ode, register) (lua_State *L)
   struct solver_type *st = TYPE (ode_solver_type);
 
   luaL_newmetatable (L, st->metatable_name);
-  lua_pushcfunction (L, FUNCTION (ode, index));
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, FUNCTION (ode, methods));
-  lua_setfield (L, -2, PREFIX "ODE");
+  luaL_register (L, NULL, FUNCTION (ode, metatable));
+  lua_pop (L, 1);
 
   luaL_register (L, NULL, FUNCTION (ode, functions));
 }

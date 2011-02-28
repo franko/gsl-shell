@@ -31,10 +31,14 @@ static const struct luaL_Reg text_functions[] = {
   {NULL, NULL}
 };
 
-static const struct luaL_Reg text_methods[] = {
+static const struct luaL_Reg text_metatable[] = {
   {"__gc",        agg_text_free},
   {"__index",     agg_text_index},
   {"__newindex",  agg_text_newindex},
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg text_methods[] = {
   {"set",         agg_text_set_point},
   {"justif",      agg_text_justif_set  },
   {NULL, NULL}
@@ -177,7 +181,7 @@ agg_text_set_point (lua_State *L)
 int
 agg_text_index (lua_State *L)
 {
-  return mlua_index_with_properties (L, text_properties_get, false);
+  return mlua_index_with_properties (L, text_properties_get, text_methods, false);
 }
 
 int
@@ -190,7 +194,7 @@ void
 text_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_TEXT));
-  luaL_register (L, NULL, text_methods);
+  luaL_register (L, NULL, text_metatable);
   lua_pop (L, 1);
 
   luaL_register (L, NULL, text_functions);
