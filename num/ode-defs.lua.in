@@ -15,6 +15,25 @@
 #  return table.concat(res,',')
 # end
 
+# function VLI(var, ord)
+#  local res = {}
+#  for i = 0, N-1 do
+#    res[i+1] = string.format('%s%i_%i', var, ord, i)
+#  end
+#  return table.concat(res,',')
+# end
+
+# function KCONV(var, ord, i)
+#    local sm = {}
+#    for j = 1, ord do
+#       local bc = var[j]
+#       if tonumber(bc) ~= 0 then
+#          sm[#sm+1] = string.format('(%s)*k%i_%i', bc, j, i)
+#       end
+#    end
+#    return table.concat(sm, ' + ')
+# end
+
 local ffi = require 'ffi'
 
 ffi.cdef[[
