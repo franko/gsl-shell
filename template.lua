@@ -48,7 +48,7 @@ local function preprocess(chunk, name, defs)
    if defs._self then
       ppenv = defs._self
    else
-      ppenv = {string= string, table= table, template= M}
+      ppenv = {string= string, table= table, tonumber= tonumber, template= M}
       for k, v in pairs(defs) do ppenv[k] = v end
       ppenv._self = ppenv
       local include = function(filename)

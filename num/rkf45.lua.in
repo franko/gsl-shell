@@ -98,7 +98,6 @@ local function rkf45_evolve(s, f, t1)
 #     end
 
       -- k6 step and final sum
-      -- since k2 is no more used we can use k2 to store k6
       local $(VL'k6') = f(t + $(ah[5]) * h, $(VL'ytmp'))
 
       local di
