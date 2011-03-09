@@ -18,29 +18,28 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local echo = gsl.echo
+local echo = gsl and gsl.echo or echo
+local graph = graph or _G
+
 local sin, cos, exp = math.sin, math.cos, math.exp
 
 local template = require 'template'
-
-local ode_spec = {N = 2, eps_abs = 1e-6, eps_rel = 0, a_y = 1, a_dydt = 0}
-local ode = template.load('num/rkf45.lua.in', ode_spec)
 
 function f_vanderpol_gen(mu)
    return function(t, x, y) return y, -x + mu * y * (1-x^2) end
 end
 
 local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
-   local s = ode.new()
-   local evol = ode.evolve
+   local s = gsl.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
+   local evol = s.evolve
    local ln = graph.path(x0, y0)
-   ode.init(s, t0, h0, f, x0, y0)
+   s:init(t0, h0, f, x0, y0)
    local tsmp = 0.04
    for t = tsmp, t1, tsmp do
       while s.t < t do
 	 evol(s, f, t)
       end
-      ln:line_to(s.y[0], s.y[1])
+      ln:line_to(s.y[1], s.y[2])
    end
 
    local p = graph.plot('ODE integration example')
@@ -53,19 +52,23 @@ local function modeplot(s, f, t0, y0, t1, tsmp)
    local n = #y0
    local t = {}
    for k=1, n do t[k] = graph.path(t0, y0[k]) end
-   local evol = ode.evolve
+   local evol = s.evolve
 
    if tsmp then
       for t = tsmp, t1, tsmp do
 	 while s.t < t do
 	    evol(s, f, t)
 	 end
-	 for k=1, n do t[k]:line_to(s.t, s.y[k-1]) end
+	 for k=1, n do 
+	    t[k]:line_to(s.t, s.y[k])
+	 end
       end
    else
       while s.t < t1 do
 	 evol(s, f, t1)
-	 for k=1, n do t[k]:line_to(s.t, s.y[k-1]) end
+	 for k=1, n do 
+	    t[k]:line_to(s.t, s.y[k])
+	 end
       end
    end
 
@@ -91,8 +94,8 @@ function demo2()
    local t0, t1, h = 0, 50, 0.01
    local y0 = {1, 0}
 
-   local s = ode.new()
-   ode.init(s, t0, h, f, y0[1], y0[2])
+   local s = gsl.ode {N= 2, eps_abs= 1e-8}
+   s:init(t0, h, f, y0[1], y0[2])
 
    return modeplot(s, f, t0, y0, t1)
 end
@@ -106,16 +109,16 @@ end
 function demo3()
    local damp_f = 0.04
    local x, y = 1, 0
-   local s = ode.new()
+   local s = gsl.ode {N= 2, eps_abs= 1e-8}
    local f  = f_sincos_damp(damp_f)
    local t0, t1, h0, hsamp = 0, 100, 1e-6, 0.5
-   ode.init(s, t0, h0, f, x, y)
+   s:init(t0, h0, f, x, y)
    local ln = graph.path(t0, x)
    for t= hsamp, t1, hsamp do
       while s.t < t do
-	 ode.evolve(s, f, t)
+	 s:evolve(f, t)
       end
-      ln:line_to(s.t, s.y[0])
+      ln:line_to(s.t, s.y[1])
    end
    local p = graph.plot()
    p:addline(ln)

@@ -21,6 +21,7 @@
 local gsl = gsl or _G
 
 local cat, insert = table.concat, table.insert
+local fmt = string.format
 
 function gsl.divmod(n, p)
    local r = n % p
@@ -31,7 +32,7 @@ local tos
 
 local function key_tos(k)
    if type(k) == 'string' then
-      return string.match(k, "[%a_][%a%d_]*") and k or string.format('[%q]', k)
+      return string.match(k, "[%a_][%a%d_]*") and k or fmt('[%q]', k)
    else
       return '[' .. tos(k) .. ']'
    end
@@ -56,11 +57,15 @@ tos = function (t, maxdepth)
    elseif tp == 'function' then
       return '<function>'
    elseif tp == 'string' then
-      return string.format('%q', t)
+      return fmt('%q', t)
    elseif tp == 'userdata' then
       local ftostr = getmetatable(t).__tostring
       if ftostr then return ftostr(t) else
-	 return gsltype and string.format('<%s>', gsltype(t)) or '<userdata>'
+	 if gsl.gsltype then
+	    return fmt('<%s: %p>', gsl.gsltype(t), t)
+	 else
+	    return fmt('<userdata: %p>', t)
+	 end
       end
    else
       return tostring(t)

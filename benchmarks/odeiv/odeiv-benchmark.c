@@ -39,7 +39,7 @@ main (void)
   for (k=0; k < 10; k++)
     {
       gsl_odeiv_step * s = gsl_odeiv_step_alloc (T, 2);
-      gsl_odeiv_control * c = gsl_odeiv_control_y_new (1e-6, 0.0);
+      gsl_odeiv_control * c = gsl_odeiv_control_y_new (1e-8, 0.0);
       gsl_odeiv_evolve * e = gsl_odeiv_evolve_alloc (2);
 
       double mu = 10;
