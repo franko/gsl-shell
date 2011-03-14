@@ -85,15 +85,25 @@ local function process(filename, defs)
    return table.concat(code)
 end
 
+local function template_error(code, filename, err)
+   local log = io.open('log-out.lua', 'w')
+   log:write(code)
+   log:close()
+   print('output code log in "log-out.lua"')
+   error('error loading ' .. filename .. ':' .. err)
+end
+
 local function require(filename)
-   local f = loadstring(process(filename .. '.lua.in', {}), filename)
-   if not f then error(string.format('error loading module %s', filename)) end
+   local code = process(filename .. '.lua.in', {})
+   local f, err = loadstring(code, filename)
+   if not f then template_error(code, filename, err) end
    return f()
 end
 
 local function load(filename, defs)
-   local f = loadstring(process(filename, defs), filename)
-   if not f then error(string.format('error loading module %s', filename)) end
+   local code = process(filename, defs)
+   local f, err = loadstring(code, filename)
+   if not f then template_error(code, filename, err) end
    return f()
 end
 
