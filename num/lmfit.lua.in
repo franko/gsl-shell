@@ -1,0 +1,873 @@
+
+local function report_undef(t, k)
+   error(string.format('reference to undefined variable %s', k))
+end
+
+local globals_report = {
+   __index    = report_undef,
+   __newindex = report_undef,
+}
+
+local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
+
+local ffi = require 'gslffi'
+local cgsl = ffi.C
+
+local globals = {io= io, string=string, print= print, setmetatable= setmetatable}
+setmetatable(globals, globals_report)
+setfenv(1, globals)
+
+# GSL_DBL_EPSILON = 2.2204460492503131e-16
+# GSL_DBL_MIN     = 2.2250738585072014e-308
+# GSL_DBL_MAX     = 1.7976931348623157e+308
+
+# p1, p25, p5, p75, p0001 = 0.1, 0.25, 0.5, 0.75, 0.0001
+
+local function perm_print(perm)
+   io.write('PERM: ')
+   for i=0, perm.size-1 do
+      io.write(perm.data[i])
+      if i < perm.size - 1 then io.write(',') end
+   end
+   io.write('\n')
+end
+
+local function array_print(v, n)
+   io.write(string.format('[0]@%i: ', n))
+   for i=0, n-1 do
+      io.write(v[i])
+      if i < n-1 then io.write(', ') end
+   end
+   io.write('\n')
+end
+
+local function vector_print(name, v)
+   io.write(name)
+   io.write(': ')
+   array_print(v.data, v.size)
+end
+
+local function debug_wait()
+   io.write('>> ')
+   local s = io.read '*l'
+   if s == 'quit' then error 'quit on user request' end
+end
+
+local signum_result = ffi.new('int[1]')
+
+local function scaled_enorm(d, f)
+   local e2 = 0
+   local n = f.size
+   for i= 0, n-1 do
+      local fi = cgsl.gsl_vector_get (f, i)
+      local di = cgsl.gsl_vector_get (d, i)
+      local u = di * fi
+      e2 = e2 + u * u
+   end
+   return sqrt(e2)
+end
+
+
+local function compute_delta (diag, x)
+   local Dx = scaled_enorm (diag, x)
+   local factor = 100  -- generally recommended value from MINPACK
+
+   return (Dx > 0 and factor * Dx or factor)
+end
+
+
+local function compute_actual_reduction (fnorm, fnorm1)
+   local actred
+
+   if 0.1 * fnorm1 < fnorm then
+      local u = fnorm1 / fnorm
+      actred = 1 - u * u
+   else
+      actred = -1
+   end
+   
+   return actred
+end
+
+local function compute_diag (J, diag)
+   local n, p = J.size1, J.size2;
+
+   for j = 0, p-1 do
+      local sum = 0
+
+      for i = 0, n-1 do
+	 local Jij = cgsl.gsl_matrix_get (J, i, j)
+	 sum = sum + Jij * Jij
+      end
+      if sum == 0 then sum = 1 end
+
+      cgsl.gsl_vector_set (diag, j, sqrt (sum))
+   end
+end
+
+local function update_diag (J, diag)
+   local n = diag.size
+
+   for j = 0, n-1 do
+      local sum = 0
+
+      for i =0, n-1 do
+	 local Jij = cgsl.gsl_matrix_get (J, i, j)
+	 sum = sum + Jij * Jij
+      end
+      if sum == 0 then sum = 1 end
+
+      local cnorm = sqrt (sum)
+      local diagj = cgsl.gsl_vector_get (diag, j)
+
+      if cnorm > diagj then
+        cgsl.gsl_vector_set (diag, j, cnorm)
+     end
+  end
+end
+
+
+local function compute_rptdx (r, p, dx, rptdx)
+   local n = dx.size
+
+   for i = 0, n-1 do
+      local sum = 0
+
+      for j = i, n-1 do
+	 local pj = cgsl.gsl_permutation_get (p, j)
+
+	 sum = sum + cgsl.gsl_matrix_get (r, i, j) * cgsl.gsl_vector_get (dx, pj)
+      end
+
+      cgsl.gsl_vector_set (rptdx, i, sum)
+   end
+end
+
+
+
+local function compute_trial_step (x, dx, x_trial)
+   local n = x.size;
+
+   for i = 0, n-1 do
+      local pi = cgsl.gsl_vector_get (dx, i)
+      local xi = cgsl.gsl_vector_get (x, i)
+      cgsl.gsl_vector_set (x_trial, i, xi + pi)
+   end
+end
+
+
+
+
+
+-- This function computes the solution to the least squares system
+
+-- phi = [ A x =  b , lambda D x = 0 ]^2
+--  
+-- where A is an M by N matrix, D is an N by N diagonal matrix, lambda
+-- is a scalar parameter and b is a vector of length M.
+
+-- The function requires the factorization of A into A = Q R P^T,
+-- where Q is an orthogonal matrix, R is an upper triangular matrix
+-- with diagonal elements of non-increasing magnitude and P is a
+-- permuation matrix. The system above is then equivalent to
+
+-- [ R z = Q^T b, P^T (lambda D) P z = 0 ]
+
+-- where x = P z. If this system does not have full rank then a least
+-- squares solution is obtained.  On output the function also provides
+-- an upper triangular matrix S such that
+
+-- P^T (A^T A + lambda^2 D^T D) P = S^T S
+
+-- Parameters,
+-- 
+-- r: On input, contains the full upper triangle of R. On output the
+-- strict lower triangle contains the transpose of the strict upper
+-- triangle of S, and the diagonal of S is stored in sdiag.  The full
+-- upper triangle of R is not modified.
+
+-- p: the encoded form of the permutation matrix P. column j of P is
+-- column p[j] of the identity matrix.
+
+-- lambda, diag: contains the scalar lambda and the diagonal elements
+-- of the matrix D
+
+-- qtb: contains the product Q^T b
+
+-- x: on output contains the least squares solution of the system
+
+-- wa: is a workspace of length N
+
+local function qrsolv(r, p, lambda, diag, qtb, x, sdiag, wa)
+   local n = r.size2
+
+   -- Copy r and qtb to preserve input and initialise s. In particular,
+   -- save the diagonal elements of r in x
+
+   for j = 0, n-1 do
+      local rjj = cgsl.gsl_matrix_get (r, j, j)
+      local qtbj = cgsl.gsl_vector_get (qtb, j)
+
+      for i = j+1, n-1 do
+	 local rji = cgsl.gsl_matrix_get (r, j, i)
+	 cgsl.gsl_matrix_set (r, i, j, rji)
+      end
+
+      cgsl.gsl_vector_set (x, j, rjj)
+      cgsl.gsl_vector_set (wa, j, qtbj)
+   end
+
+   -- Eliminate the diagonal matrix d using a Givens rotation
+
+   for j = 0, n-1 do
+      local qtbpj
+
+      local pj = cgsl.gsl_permutation_get (p, j)
+
+      local diagpj = lambda * cgsl.gsl_vector_get (diag, pj)
+
+      if diagpj ~= 0 then
+	 cgsl.gsl_vector_set (sdiag, j, diagpj)
+
+	 for k = j+1, n-1 do cgsl.gsl_vector_set (sdiag, k, 0) end
+
+	 -- The transformations to eliminate the row of d modify only a
+         -- single element of qtb beyond the first n, which is initially
+         -- zero
+
+	 qtbpj = 0
+
+	 for k = j, n-1 do
+	    -- Determine a Givens rotation which eliminates the
+            -- appropriate element in the current row of d
+
+	    local wak = cgsl.gsl_vector_get (wa, k)
+	    local rkk = cgsl.gsl_matrix_get (r, k, k)
+	    local sdiagk = cgsl.gsl_vector_get (sdiag, k)
+	    local sine, cosine
+
+	    if sdiagk ~= 0 then
+	       if abs(rkk) < abs(sdiagk) then
+		  local cotangent = rkk / sdiagk
+		  sine = 0.5 / sqrt (0.25 + 0.25 * cotangent * cotangent)
+		  cosine = sine * cotangent
+	       else
+		  local tangent = sdiagk / rkk
+		  cosine = 0.5 / sqrt (0.25 + 0.25 * tangent * tangent)
+		  sine = cosine * tangent
+	       end
+
+	       -- Compute the modified diagonal element of r and the
+	       -- modified element of [qtb,0]
+
+	       do
+		  local new_rkk = cosine * rkk + sine * sdiagk
+		  local new_wak = cosine * wak + sine * qtbpj
+            
+		  qtbpj = -sine * wak + cosine * qtbpj
+
+		  cgsl.gsl_matrix_set(r, k, k, new_rkk)
+		  cgsl.gsl_vector_set(wa, k, new_wak)
+	       end
+	    end
+	       
+	    -- Accumulate the transformation in the row of s 
+
+	    for i = k + 1, n-1 do
+	       local rik = cgsl.gsl_matrix_get (r, i, k)
+	       local sdiagi = cgsl.gsl_vector_get (sdiag, i)
+              
+	       local new_rik = cosine * rik + sine * sdiagi
+	       local new_sdiagi = -sine * rik + cosine * sdiagi
+              
+	       cgsl.gsl_matrix_set(r, i, k, new_rik)
+	       cgsl.gsl_vector_set(sdiag, i, new_sdiagi)
+	    end
+	 end
+
+	 -- Store the corresponding diagonal element of s and restore the
+         -- corresponding diagonal element of r
+	 
+	 do
+	    local rjj = cgsl.gsl_matrix_get (r, j, j)
+	    local xj = cgsl.gsl_vector_get(x, j)
+        
+	    cgsl.gsl_vector_set (sdiag, j, rjj)
+	    cgsl.gsl_matrix_set (r, j, j, xj)
+	 end
+      end
+   end
+
+   -- Solve the triangular system for z. If the system is singular then
+   -- obtain a least squares solution
+
+   local nsing = n
+
+   for j = 0, n-1 do
+      local sdiagj = cgsl.gsl_vector_get (sdiag, j)
+
+      if sdiagj == 0 then
+	 nsing = j
+	 break
+      end
+   end
+
+  for j = nsing, n-1 do cgsl.gsl_vector_set (wa, j, 0) end
+
+  for k = 0, nsing-1 do
+     local sum = 0
+
+     local j = (nsing - 1) - k
+
+     for i = j + 1, nsing-1 do
+	sum = sum + cgsl.gsl_matrix_get(r, i, j) * cgsl.gsl_vector_get(wa, i)
+     end
+
+     do
+        local waj = cgsl.gsl_vector_get (wa, j)
+        local sdiagj = cgsl.gsl_vector_get (sdiag, j)
+
+        cgsl.gsl_vector_set (wa, j, (waj - sum) / sdiagj)
+     end
+  end
+
+  -- Permute the components of z back to the components of x
+
+  for j = 0, n-1 do
+     local pj = cgsl.gsl_permutation_get (p, j)
+     local waj = cgsl.gsl_vector_get (wa, j)
+
+     cgsl.gsl_vector_set (x, pj, waj)
+  end
+end
+
+
+
+
+
+
+local function count_nsing (r)
+   -- Count the number of nonsingular entries. Returns the index of the
+   -- first entry which is singular.
+
+   local n = r.size2
+   local j = n
+   
+   for i = 0, n-1 do
+      local rii = cgsl.gsl_matrix_get (r, i, i)
+      if rii == 0 then 
+	 j = i
+	 break 
+      end
+   end
+
+   return j
+end
+
+
+local function compute_newton_direction (r, perm, qtf, x)
+   -- Compute and store in x the Gauss-Newton direction. If the
+   -- Jacobian is rank-deficient then obtain a least squares
+   -- solution.
+
+   local n = r.size2
+
+   for i = 0, n-1 do
+      local qtfi = cgsl.gsl_vector_get (qtf, i)
+      cgsl.gsl_vector_set (x, i, qtfi)
+   end
+
+   local nsing = count_nsing (r)
+
+   if $(DEBUG) then
+      print('nsing= ', nsing)
+      io.write('qtf: '); array_print(qtf.data, qtf.size)
+   end
+
+   for i = nsing, n-1 do cgsl.gsl_vector_set (x, i, 0) end
+
+  if nsing > 0 then
+     for j = nsing-1, 0, -1 do
+	local rjj = cgsl.gsl_matrix_get (r, j, j)
+	local temp = cgsl.gsl_vector_get (x, j) / rjj
+          
+	cgsl.gsl_vector_set (x, j, temp)
+          
+	for i = 0, j-1 do
+	   local rij = cgsl.gsl_matrix_get (r, i, j)
+	   local xi = cgsl.gsl_vector_get (x, i)
+	   cgsl.gsl_vector_set (x, i, xi - rij * temp)
+	end
+     end
+  end
+
+  cgsl.gsl_permute_vector_inverse (perm, x)
+end
+
+
+local function compute_newton_correction (r, sdiag, p, x, dxnorm, diag, w)
+   local n = r.size2
+
+   for i=0, n-1 do
+      local pi = cgsl.gsl_permutation_get (p, i)
+
+      local dpi = cgsl.gsl_vector_get (diag, pi)
+      local xpi = cgsl.gsl_vector_get (x, pi)
+
+      cgsl.gsl_vector_set (w, i, dpi * (dpi * xpi) / dxnorm)
+   end
+
+   for j=0, n-1 do
+      local sj = cgsl.gsl_vector_get (sdiag, j)
+      local wj = cgsl.gsl_vector_get (w, j)
+
+      local tj = wj / sj
+
+      cgsl.gsl_vector_set (w, j, tj)
+
+      for i=j+1, n-1 do
+	 local rij = cgsl.gsl_matrix_get (r, i, j)
+	 local wi = cgsl.gsl_vector_get (w, i)
+
+	 cgsl.gsl_vector_set (w, i, wi - rij * tj)
+      end
+   end
+end
+
+
+local function compute_newton_bound (r, x, dxnorm, perm, diag, w)
+   -- If the jacobian is not rank-deficient then the Newton step
+   -- provides a lower bound for the zero of the function. Otherwise
+   -- set this bound to zero.
+
+   local n = r.size2
+
+   local nsing = count_nsing (r)
+
+  if nsing < n then
+     cgsl.gsl_vector_set_zero (w)
+     return
+  end
+
+  for i= 0, n-1 do
+     local pi = cgsl.gsl_permutation_get (perm, i)
+
+     local dpi = cgsl.gsl_vector_get (diag, pi)
+     local xpi = cgsl.gsl_vector_get (x, pi)
+
+     cgsl.gsl_vector_set (w, i, dpi * (dpi * xpi / dxnorm))
+  end
+
+  for j= 0, n-1 do
+     local sum = 0
+
+     for i= 0, j-1 do
+	sum = sum + cgsl.gsl_matrix_get (r, i, j) * cgsl.gsl_vector_get (w, i)
+     end
+
+     do
+        local rjj = cgsl.gsl_matrix_get (r, j, j)
+        local wj = cgsl.gsl_vector_get (w, j)
+
+        cgsl.gsl_vector_set (w, j, (wj - sum) / rjj)
+     end
+  end
+end
+
+
+local function compute_gradient_direction (r, p, qtf, diag, g)
+   local n = r.size2
+
+   for j=0, n-1 do
+      local sum = 0
+
+      for i = 0, j do
+	 sum = sum + cgsl.gsl_matrix_get (r, i, j) * cgsl.gsl_vector_get (qtf, i)
+      end
+
+      do
+        local pj = cgsl.gsl_permutation_get (p, j)
+        local dpj = cgsl.gsl_vector_get (diag, pj)
+
+        cgsl.gsl_vector_set (g, j, sum / dpj)
+      end
+   end
+end
+
+local function lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, x, w)
+   local par_lower, par_upper
+
+   compute_newton_direction (r, perm, qtf, newton)
+
+   if $(DEBUG) then
+      print('LMPAR newton direction')
+      vector_print('newton', newton)
+      vector_print('diag', diag)
+      debug_wait()
+   end
+
+   -- Evaluate the function at the origin and test for acceptance of
+   -- the Gauss-Newton direction.
+
+   local dxnorm = scaled_enorm (diag, newton)
+
+   if $(DEBUG) then
+      print('dxnorm=', dxnorm)
+      print('delta=', delta)
+      debug_wait()
+   end
+
+   local fp = dxnorm - delta
+
+   if fp <= 0.1 * delta then
+      cgsl.gsl_vector_memcpy (x, newton)
+      return 0
+   end
+
+   if $(DEBUG) then
+      vector_print('newton', newton)
+      print('dxnorm= ', dxnorm)
+      debug_wait()
+   end
+
+   compute_newton_bound (r, newton, dxnorm, perm, diag, w)
+
+   if $(DEBUG) then
+      perm_print(perm)
+      vector_print('diag', diag)
+      vector_print('w', w)
+      debug_wait()
+   end
+
+   do
+      local wnorm = cgsl.gsl_blas_dnrm2 (w)
+      local phider = wnorm * wnorm
+
+      -- w == zero if r rank-deficient, 
+      -- then set lower bound to zero form MINPACK, lmder.f 
+      -- Hans E. Plesser 2002-02-25 (hans.plesser@itf.nlh.no) */
+      par_lower = (wnorm > 0 and fp / (delta * phider) or 0)
+   end
+
+   compute_gradient_direction (r, perm, qtf, diag, gradient)
+
+   local gnorm = cgsl.gsl_blas_dnrm2 (gradient)
+
+   par_upper =  gnorm / delta
+
+   if par_upper == 0 then
+      par_upper = $(GSL_DBL_MIN) / min(delta, 0.1)
+   end
+
+   if par > par_upper then
+      par = par_upper
+  elseif par < par_lower then
+     par = par_lower
+  end
+
+  if par == 0 then
+     par = gnorm / dxnorm
+  end
+
+  -- Beginning of iteration
+
+  for iter= 1, 10 do
+
+     -- Evaluate the function at the current value of par
+
+     if par == 0 then
+	par = max(0.001 * par_upper, $(GSL_DBL_MIN))
+     end
+
+     -- Compute the least squares solution of [ R P x - Q^T f, sqrt(par) D x]
+     -- for A = Q R P^T
+
+     do
+	local sqrt_par = sqrt(par)
+
+	qrsolv (r, perm, sqrt_par, diag, qtf, x, sdiag, w)
+     end
+
+     dxnorm = scaled_enorm (diag, x)
+
+     local fp_old = fp
+
+     fp = dxnorm - delta
+
+     -- If the function is small enough, accept the current value of par
+
+     if abs (fp) <= 0.1 * delta then return par end
+
+     if par_lower == 0 and fp <= fp_old and fp_old < 0 then return par end
+
+     -- Check for maximum number of iterations */
+
+     if iter == 10 then return par end
+
+     -- Compute the Newton correction
+
+     compute_newton_correction (r, sdiag, perm, x, dxnorm, diag, w)
+
+     local par_c
+     do
+	local wnorm = cgsl.gsl_blas_dnrm2 (w)
+	par_c = fp / (delta * wnorm * wnorm)
+     end
+
+     -- Depending on the sign of the function, update par_lower or par_upper
+
+     if fp > 0 then
+	if par > par_lower then
+	   par_lower = par
+	end
+     elseif fp < 0 then
+	if par < par_upper then
+	   par_upper = par
+        end
+     end
+
+     -- Compute an improved estimate for par
+
+     par = max (par_lower, par + par_c)
+  end
+
+end
+
+
+
+
+
+
+local state_iter
+local xnorm, fnorm
+local delta, par
+
+local r        = cgsl.gsl_matrix_calloc ($(N), $(P))
+local tau      = cgsl.gsl_vector_calloc (min($(N), $(P)))
+local diag     = cgsl.gsl_vector_calloc ($(P))
+local qtf      = cgsl.gsl_vector_calloc ($(N))
+local newton   = cgsl.gsl_vector_calloc ($(P))
+local gradient = cgsl.gsl_vector_calloc ($(P))
+local x_trial  = cgsl.gsl_vector_calloc ($(P))
+local f_trial  = cgsl.gsl_vector_calloc ($(N))
+local df       = cgsl.gsl_vector_calloc ($(N))
+local sdiag    = cgsl.gsl_vector_calloc ($(P))
+local rptdx    = cgsl.gsl_vector_calloc ($(N))
+local w        = cgsl.gsl_vector_calloc ($(N))
+local work1    = cgsl.gsl_vector_calloc ($(P))
+local perm     = cgsl.gsl_permutation_calloc($(P))
+
+local function lm_set (fdf, x, f, J, dx, scale)
+   -- Evaluate function at x
+   -- return immediately if evaluation raised error */
+   fdf (x, f, J)
+
+   -- DEBUG DEBUG
+   if $(DEBUG) then
+      array_print(f.data, 10)
+      array_print(J.data, J.size1 * J.size2)
+      io.read '*l'
+   end
+
+   par = 0
+   state_iter = 1
+   fnorm = cgsl.gsl_blas_dnrm2 (f)
+
+   cgsl.gsl_vector_set_all (dx, 0)
+
+   -- store column norms in diag
+
+  if scale then
+     compute_diag (J, diag)
+  else
+     cgsl.gsl_vector_set_all (diag, 1)
+  end
+
+  -- set delta to 100 |D x| or to 100 if |D x| is zero
+
+  xnorm = scaled_enorm (diag, x)
+  delta = compute_delta (diag, x)
+
+  -- Factorize J into QR decomposition
+
+  cgsl.gsl_matrix_memcpy (r, J) 
+  cgsl.gsl_linalg_QRPT_decomp (r, tau, perm, signum_result, work1)
+
+  cgsl.gsl_vector_set_zero (rptdx)
+  cgsl.gsl_vector_set_zero (w)
+
+  -- Zero the trial vector, as in the alloc function
+
+  cgsl.gsl_vector_set_zero (f_trial)
+
+  -- DEBUG DEBUG
+  if $(DEBUG) then
+     io.write('R: '); array_print(r.data, 12)
+
+     io.write('diag: '); array_print(diag.data, diag.size)
+     print('xnorm', xnorm)
+
+     print('LM initial set: ')
+     io.write('TAU: '); array_print(tau.data, tau.size)
+     perm_print(perm)
+  end
+end
+
+local function lm_iterate(fdf, x, f, J, dx, scale)
+   local prered, actred
+   local pnorm, fnorm1, fnorm1p, gnorm
+   local ratio
+   local dirder
+
+   if fnorm == 0 then return end
+
+   -- Compute qtf = Q^T f
+
+   cgsl.gsl_vector_memcpy (qtf, f)
+   cgsl.gsl_linalg_QR_QTvec (r, tau, qtf)
+
+   
+  if $(DEBUG) then
+     print('LM iterate: ')
+     io.write('QTF: '); array_print(qtf.data, qtf.size)
+     io.read '*l'
+  end
+
+   -- Compute norm of scaled gradient
+
+   compute_gradient_direction (r, perm, qtf, diag, gradient)
+
+   do
+      local iamax = cgsl.gsl_blas_idamax (gradient)
+      gnorm = abs(cgsl.gsl_vector_get (gradient, iamax) / fnorm)
+   end
+
+   if $(DEBUG) then
+      print('LM iterate: ')
+      io.write('GRADIENT: '); array_print(gradient.data, gradient.size)
+      print('gnorm= ', gnorm)
+      io.read '*l'
+   end
+
+  -- Determine the Levenberg-Marquardt parameter 
+
+   for iter = 1, 10 do
+      par = lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, dx, w)
+      -- Take a trial step 
+
+      if $(DEBUG) then
+	 print('LM iterate: ')
+	 io.write('DX: '); array_print(dx.data, dx.size)
+	 print('par= ', par)
+	 io.read '*l'
+      end
+
+      cgsl.gsl_vector_scale (dx, -1) -- reverse the step to go downhill 
+
+      compute_trial_step (x, dx, x_trial)
+
+      pnorm = scaled_enorm (diag, dx)
+
+      if state_iter == 1 then
+	 delta = min(delta, pnorm)
+      end
+
+      if $(DEBUG) then
+	 vector_print('x_trial', x_trial)
+	 debug_wait()
+      end
+
+      -- Evaluate function at x + p 
+      -- return immediately if evaluation raised error 
+      fdf(x_trial, f_trial)
+
+      fnorm1 = cgsl.gsl_blas_dnrm2 (f_trial)
+
+      -- Compute the scaled actual reduction 
+
+      actred = compute_actual_reduction (fnorm, fnorm1)
+
+      -- Compute rptdx = R P^T dx, noting that |J dx| = |R P^T dx| 
+
+      compute_rptdx (r, perm, dx, rptdx)
+
+      fnorm1p = cgsl.gsl_blas_dnrm2 (rptdx)
+
+      -- Compute the scaled predicted reduction = |J dx|^2 + 2 par |D dx|^2 
+
+      do
+	 local t1 = fnorm1p / fnorm
+	 local t2 = (sqrt(par) * pnorm) / fnorm
+    
+	 prered = t1 * t1 + t2 * t2 / $(p5)
+	 dirder = -(t1 * t1 + t2 * t2)
+      end
+
+      -- compute the ratio of the actual to predicted reduction 
+
+      ratio = (prered > 0 and actred / prered or 0)
+
+      -- update the step bound 
+
+      if ratio > $(p25) then
+	 if par == 0 or ratio >= $(p75) then
+	    delta = pnorm / $(p5)
+	    par = par * $(p5)
+	 end
+      else
+	 local temp = (actred >= 0 and $(p5) or $(p5)*dirder / (dirder + $(p5) * actred))
+
+	 if $(p1) * fnorm1 >= fnorm or temp < $(p1) then
+	    temp = $(p1)
+	 end
+
+	 delta = temp * min (delta, pnorm/$(p1))
+	 
+	 par = par / temp
+      end
+
+      -- test for successful iteration, termination and stringent tolerances 
+
+      if ratio >= $(p0001) then
+	 cgsl.gsl_vector_memcpy (x, x_trial)
+	 cgsl.gsl_vector_memcpy (f, f_trial)
+
+	 -- return immediately if evaluation raised error 
+	 fdf(x_trial, nil, J)
+
+	 -- wa2_j  = diag_j * x_j
+	 xnorm = scaled_enorm(diag, x)
+	 fnorm = fnorm1
+	 state_iter = state_iter + 1
+
+	 -- Rescale if necessary 
+
+	 if scale then
+	    update_diag (J, diag)
+	 end
+
+	 do
+	    cgsl.gsl_matrix_memcpy (r, J)
+	    cgsl.gsl_linalg_QRPT_decomp (r, tau, perm, signum_result, work1)
+
+	    -- DEBUG DEBUG
+	    if $(DEBUG) then
+	       print('LM iterate final')
+	       print('TAU: ')
+	       cgsl.gsl_vector_fprintf (ffi.C.stdout, tau, "%g")
+	       perm_print(perm)
+	    end
+	 end
+
+	 return
+      elseif abs(actred) <= $(GSL_DBL_EPSILON) and prered <= $(GSL_DBL_EPSILON) and $(p5) * ratio <= 1.0 then
+	 return 'error ETOLF'
+      elseif delta <= $(GSL_DBL_EPSILON) * xnorm then
+	 return 'error ETOLX'
+      elseif gnorm <= $(GSL_DBL_EPSILON) then
+	 return 'error ETOLG'
+      end
+   end
+end
+
+return {set = lm_set, iterate= lm_iterate}
