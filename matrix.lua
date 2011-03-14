@@ -62,19 +62,19 @@ local function vector_from_table(ctor, t)
 end
 
 function gsl.vector(t)
-   return vector_from_table(new, t)
+   return vector_from_table(gsl.new, t)
 end
 
 function gsl.cvector(t)
-   return vector_from_table(cnew, t)
+   return vector_from_table(gsl.cnew, t)
 end
 
 function gsl.matrix(t)
-   return matrix_from_table(new, t)
+   return matrix_from_table(gsl.new, t)
 end
 
 function gsl.cmatrix(t)
-   return matrix_from_table(cnew, t)
+   return matrix_from_table(gsl.cnew, t)
 end
 
 local function padstr(s, w)
