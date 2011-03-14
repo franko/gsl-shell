@@ -277,6 +277,7 @@ for i=1, 80 do
    lm.iterate(enso_fdf, xe, fe, Je, dx, true)
    io.write('ITER=', i, ': ')
    for j=0, enso_P-1 do io.write(xe.data[j]); io.write(j < 2 and ', ' or '\n') end
+   if lm.test(dx, xe, 0, 1e-7) then print('solution found'); break end
 end
 
 p = graph.plot()

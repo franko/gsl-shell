@@ -870,4 +870,23 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
    end
 end
 
-return {set = lm_set, iterate= lm_iterate}
+
+local function test_delta (dx, x, epsabs, epsrel)
+   local n = x.size
+
+   if epsrel < 0 then error "relative tolerance is negative" end
+
+   for i = 0, n-1 do
+      local xi  = cgsl.gsl_vector_get (x, i)
+      local dxi = cgsl.gsl_vector_get (dx, i)
+      local tolerance = epsabs + epsrel * abs(xi)
+
+      if abs(dxi) >= tolerance then
+	 return false
+      end
+   end
+
+   return true
+end
+
+return {set = lm_set, iterate= lm_iterate, test= test_delta}
