@@ -1,58 +1,14 @@
 
-local function report_undef(t, k)
-   error(string.format('reference to undefined variable %s', k))
-end
-
-local globals_report = {
-   __index    = report_undef,
-   __newindex = report_undef,
-}
-
 local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
 
 local ffi = require 'gslffi'
 local cgsl = ffi.C
-
-local globals = {io= io, string=string, gsl= gsl, print= print}
-
-setmetatable(globals, globals_report)
-setfenv(1, globals)
 
 # GSL_DBL_EPSILON = 2.2204460492503131e-16
 # GSL_DBL_MIN     = 2.2250738585072014e-308
 # GSL_DBL_MAX     = 1.7976931348623157e+308
 
 # p1, p25, p5, p75, p0001 = 0.1, 0.25, 0.5, 0.75, 0.0001
-
-local function perm_print(perm)
-   io.write('PERM: ')
-   for i=0, perm.size-1 do
-      io.write(perm.data[i])
-      if i < perm.size - 1 then io.write(',') end
-   end
-   io.write('\n')
-end
-
-local function array_print(v, n)
-   io.write(string.format('[0]@%i: ', n))
-   for i=0, n-1 do
-      io.write(v[i])
-      if i < n-1 then io.write(', ') end
-   end
-   io.write('\n')
-end
-
-local function vector_print(name, v)
-   io.write(name)
-   io.write(': ')
-   array_print(v.data, v.size)
-end
-
-local function debug_wait()
-   io.write('>> ')
-   local s = io.read '*l'
-   if s == 'quit' then error 'quit on user request' end
-end
 
 local signum_result = ffi.new('int[1]')
 
@@ -380,11 +336,6 @@ local function compute_newton_direction (r, perm, qtf, x)
 
    local nsing = count_nsing (r)
 
-   if $(DEBUG) then
-      print('nsing= ', nsing)
-      io.write('qtf: '); array_print(qtf.data, qtf.size)
-   end
-
    for i = nsing, n-1 do cgsl.gsl_vector_set (x, i, 0) end
 
   if nsing > 0 then
@@ -500,23 +451,10 @@ local function lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, x
 
    compute_newton_direction (r, perm, qtf, newton)
 
-   if $(DEBUG) then
-      print('LMPAR newton direction')
-      vector_print('newton', newton)
-      vector_print('diag', diag)
-      debug_wait()
-   end
-
    -- Evaluate the function at the origin and test for acceptance of
    -- the Gauss-Newton direction.
 
    local dxnorm = scaled_enorm (diag, newton)
-
-   if $(DEBUG) then
-      print('dxnorm=', dxnorm)
-      print('delta=', delta)
-      debug_wait()
-   end
 
    local fp = dxnorm - delta
 
@@ -525,20 +463,7 @@ local function lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, x
       return 0
    end
 
-   if $(DEBUG) then
-      vector_print('newton', newton)
-      print('dxnorm= ', dxnorm)
-      debug_wait()
-   end
-
    compute_newton_bound (r, newton, dxnorm, perm, diag, w)
-
-   if $(DEBUG) then
-      perm_print(perm)
-      vector_print('diag', diag)
-      vector_print('w', w)
-      debug_wait()
-   end
 
    do
       local wnorm = cgsl.gsl_blas_dnrm2 (w)
@@ -714,13 +639,6 @@ local function lm_set (fdf, x, f, J, dx, scale)
    -- return immediately if evaluation raised error */
    call_fdf (fdf, x, f, J)
 
-   -- DEBUG DEBUG
-   if $(DEBUG) then
-      array_print(f.data, 10)
-      array_print(J.data, J.size1 * J.size2)
-      io.read '*l'
-   end
-
    par = 0
    state_iter = 1
    fnorm = cgsl.gsl_blas_dnrm2 (f)
@@ -751,18 +669,6 @@ local function lm_set (fdf, x, f, J, dx, scale)
   -- Zero the trial vector, as in the alloc function
 
   cgsl.gsl_vector_set_zero (f_trial)
-
-  -- DEBUG DEBUG
-  if $(DEBUG) then
-     io.write('R: '); array_print(r.data, 12)
-
-     io.write('diag: '); array_print(diag.data, diag.size)
-     print('xnorm', xnorm)
-
-     print('LM initial set: ')
-     io.write('TAU: '); array_print(tau.data, tau.size)
-     perm_print(perm)
-  end
 end
 
 local function lm_iterate(fdf, x, f, J, dx, scale)
@@ -778,13 +684,6 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
    cgsl.gsl_vector_memcpy (qtf, f)
    cgsl.gsl_linalg_QR_QTvec (r, tau, qtf)
 
-   
-  if $(DEBUG) then
-     print('LM iterate: ')
-     io.write('QTF: '); array_print(qtf.data, qtf.size)
-     io.read '*l'
-  end
-
    -- Compute norm of scaled gradient
 
    compute_gradient_direction (r, perm, qtf, diag, gradient)
@@ -794,25 +693,11 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
       gnorm = abs(cgsl.gsl_vector_get (gradient, iamax) / fnorm)
    end
 
-   if $(DEBUG) then
-      print('LM iterate: ')
-      io.write('GRADIENT: '); array_print(gradient.data, gradient.size)
-      print('gnorm= ', gnorm)
-      io.read '*l'
-   end
-
   -- Determine the Levenberg-Marquardt parameter 
 
    for iter = 1, 10 do
       par = lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, dx, w)
       -- Take a trial step 
-
-      if $(DEBUG) then
-	 print('LM iterate: ')
-	 io.write('DX: '); array_print(dx.data, dx.size)
-	 print('par= ', par)
-	 io.read '*l'
-      end
 
       cgsl.gsl_vector_scale (dx, -1) -- reverse the step to go downhill 
 
@@ -822,11 +707,6 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
 
       if state_iter == 1 then
 	 delta = min(delta, pnorm)
-      end
-
-      if $(DEBUG) then
-	 vector_print('x_trial', x_trial)
-	 debug_wait()
       end
 
       -- Evaluate function at x + p 
@@ -901,14 +781,6 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
 	 do
 	    cgsl.gsl_matrix_memcpy (r, J)
 	    cgsl.gsl_linalg_QRPT_decomp (r, tau, perm, signum_result, work1)
-
-	    -- DEBUG DEBUG
-	    if $(DEBUG) then
-	       print('LM iterate final')
-	       print('TAU: ')
-	       cgsl.gsl_vector_fprintf (ffi.C.stdout, tau, "%g")
-	       perm_print(perm)
-	    end
 	 end
 
 	 return

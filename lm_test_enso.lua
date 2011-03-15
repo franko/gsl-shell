@@ -258,7 +258,7 @@ local function enso_model_f(x, t)
    return y
 end
 
-lm = template.load('num/lmfit.lua.in', {N= enso_N, P= enso_P, DEBUG= 'false'})
+lm = template.load('num/lmfit.lua.in', {N= enso_N, P= enso_P})
 
 lm.set(enso_fdf, enso_x0)
 

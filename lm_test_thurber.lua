@@ -127,7 +127,7 @@ local function thurber_model_f(x, t)
    return num / den
 end
 
-lm = template.load('num/lmfit.lua.in', {N= thurber_N, P= thurber_P, DEBUG= 'false'})
+lm = template.load('num/lmfit.lua.in', {N= thurber_N, P= thurber_P})
 
 lm.set(thurber_fdf, thurber_x0)
 
