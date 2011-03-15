@@ -6,48 +6,39 @@
 #ifndef luaconf_h
 #define luaconf_h
 
-#define QUOTEME_(x) #x
-#define QUOTEME(x) QUOTEME_(x)
-
 #include <limits.h>
 #include <stddef.h>
 
-/* Try to determine supported features for a couple of standard platforms. */
-#if defined(_WIN32)
-#define LUA_USE_WIN
-#define LUA_DL_DLL
-#elif defined(__linux__) || defined(__solaris__) || defined(__CYGWIN__) || \
-      defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
-      defined(__FreeBSD_kernel__) || (defined(__MACH__) && defined(__APPLE__))
-#define LUA_USE_POSIX
-#define LUA_DL_DLOPEN
-#define LUA_USE_READLINE
-#endif
-
 /* Default path for loading Lua and C modules with require(). */
-#ifndef LUA_STRICT 
-  #define STDLIB_NAME "gsl-shell"
-#else
-  #define STDLIB_NAME "lua/5.1"
-#endif
-#ifdef LUA_USE_WIN
+#if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-#define LUA_LDIR	"!\\" STDLIB_NAME "\\"
+#define LUA_LDIR	"!\\lua\\"
 #define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT \
   ".\\?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;"
 #define LUA_CPATH_DEFAULT \
   ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
-#define LUA_ROOT_Q      QUOTEME(LUA_ROOT) "/"
-#define LUA_LDIR	LUA_ROOT_Q "share/" STDLIB_NAME "/"
-#define LUA_CDIR	LUA_ROOT_Q "lib/" STDLIB_NAME  "/"
-#define LUA_PATH_DEFAULT "./?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" \
-                                ";" LUA_CDIR"?.lua;" LUA_CDIR"?/init.lua"
-#define LUA_CPATH_DEFAULT "./?.so;" LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
+#define LUA_ROOT	"/usr/local/"
+#define LUA_LDIR	LUA_ROOT "share/lua/5.1/"
+#define LUA_CDIR	LUA_ROOT "lib/lua/5.1/"
+#ifdef LUA_XROOT
+#define LUA_JDIR	LUA_XROOT "share/luajit-2.0.0-beta6/"
+#define LUA_XPATH \
+  ";" LUA_XROOT "share/lua/5.1/?.lua;" LUA_XROOT "share/lua/5.1/?/init.lua"
+#define LUA_XCPATH	LUA_XROOT "lib/lua/5.1/?.so;"
+#else
+#define LUA_JDIR	LUA_ROOT "share/luajit-2.0.0-beta6/"
+#define LUA_XPATH
+#define LUA_XCPATH
+#endif
+#define LUA_PATH_DEFAULT \
+  "./?.lua;" LUA_JDIR"?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" LUA_XPATH
+#define LUA_CPATH_DEFAULT \
+  "./?.so;" LUA_CDIR"?.so;" LUA_XCPATH LUA_CDIR"loadall.so"
 #endif
 
 /* Environment variable names for path overrides and initialization code. */
@@ -90,31 +81,6 @@
 #define LUA_PROMPT	"> "	/* Interactive prompt. */
 #define LUA_PROMPT2	">> "	/* Continuation prompt. */
 #define LUA_MAXINPUT	512	/* Max. input line length. */
-#endif
-
-/*
-@@ lua_readline defines how to show a prompt and then read a line from
-@* the standard input.
-@@ lua_saveline defines how to "save" a read line in a "history".
-@@ lua_freeline defines how to free a line read by lua_readline.
-** CHANGE them if you want to improve this functionality (e.g., by using
-** GNU readline and history facilities).
-*/
-#if defined(LUA_USE_READLINE)
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#define lua_readline(L,b,p)	((void)L, ((b)=readline(p)) != NULL)
-#define lua_saveline(L,idx) \
-	if (lua_strlen(L,idx) > 0)  /* non-empty line? */ \
-	  add_history(lua_tostring(L, idx));  /* add it to history */
-#define lua_freeline(L,b)	((void)L, free(b))
-#else
-#define lua_readline(L,b,p)	\
-	((void)L, fputs(p, stdout), fflush(stdout),  /* show prompt */ \
-	fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
-#define lua_saveline(L,idx)	{ (void)L; (void)idx; }
-#define lua_freeline(L,b)	{ (void)L; (void)b; }
 #endif
 
 /* Note: changing the following defines breaks the Lua 5.1 ABI. */

@@ -10,12 +10,6 @@
 # Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
 ##############################################################################
 
-GSH_BASE_DIR = ../..
-
-include $(GSH_BASE_DIR)/makeconfig
-include $(GSH_BASE_DIR)/makeflags
-include $(GSH_BASE_DIR)/makedefs
-
 MAJVER=  2
 MINVER=  0
 RELVER=  0
@@ -40,7 +34,7 @@ CC= gcc
 # to slow down the C part by not omitting it. Debugging, tracebacks and
 # unwinding are not affected -- the assembler part has frame unwind
 # information and GCC emits it where needed (x64) or with -g (see CCDEBUG).
-# CCOPT= -O2 -fomit-frame-pointer
+CCOPT= -O2 -fomit-frame-pointer
 # Use this if you want to generate a smaller binary (but it's slower):
 #CCOPT= -Os -fomit-frame-pointer
 # Note: it's no longer recommended to use -O3 with GCC 4.x.
@@ -77,10 +71,10 @@ CCWARN= -Wall
 # as dynamic mode.
 #
 # Mixed mode creates a static + dynamic library and a statically linked luajit.
-#BUILDMODE= mixed
+BUILDMODE= mixed
 #
 # Static mode creates a static library and a statically linked luajit.
-BUILDMODE= static
+#BUILDMODE= static
 #
 # Dynamic mode creates a dynamic library and a dynamically linked luajit.
 # Note: this executable will only run when the library is installed!
@@ -93,7 +87,7 @@ BUILDMODE= static
 ##############################################################################
 # Enable/disable these features as needed, but make sure you force a full
 # recompile with "make clean", followed by "make".
-XCFLAGS= $(DEFS)
+XCFLAGS=
 #
 # Permanently disable the FFI extension to reduce the size of the LuaJIT
 # executable. But please consider that the FFI library is compiled-in,
@@ -218,9 +212,7 @@ TARGET_ASHLDFLAGS= $(LDOPTIONS) $(TARGET_XSHLDFLAGS) $(TARGET_SHLDFLAGS)
 TARGET_ALIBS= $(TARGET_XLIBS) $(LIBS) $(TARGET_LIBS)
 
 ifneq (,$(findstring stack-protector,$(shell $(TARGET_CC) -dumpspecs)))
-  ifeq (,$(findstring no-stack-protector,$(CFLAGS)))
-    TARGET_XCFLAGS+= -fno-stack-protector
-  endif
+  TARGET_XCFLAGS+= -fno-stack-protector
 endif
 
 TARGET_TESTARCH=$(shell $(TARGET_CC) $(TARGET_ACFLAGS) -E lj_arch.h -dM)
@@ -268,7 +260,7 @@ else
   endif
 endif
 ifeq (Windows,$(HOST_SYS))
-  HOST_RM= rm -f
+  HOST_RM= del
 endif
 
 TARGET_SYS= $(HOST_SYS)
