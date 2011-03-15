@@ -22,6 +22,7 @@
 #if LJ_TARGET_DLOPEN
 
 #include <dlfcn.h>
+#include <stdio.h>
 
 #if defined(RTLD_DEFAULT)
 #define CLIB_DEFHANDLE	RTLD_DEFAULT
@@ -59,11 +60,41 @@ static const char *clib_extname(lua_State *L, const char *name)
   return name;
 }
 
+/* Quick and dirty solution to resolve shared library name from ld script. */
+static const char *clib_resolve_lds(lua_State *L, const char *name)
+{
+  FILE *fp = fopen(name, "r");
+  if (fp) {
+    char *p, *e, buf[256];
+    if (fgets(buf, sizeof(buf), fp) && !strncmp(buf, "/* GNU ld script", 16)) {
+      while (fgets(buf, sizeof(buf), fp)) {
+	if (!strncmp(buf, "GROUP", 5) && (p = strchr(buf, '('))) {
+	  while (*++p == ' ') ;
+	  for (e = p; *e && *e != ' ' && *e != ')'; e++) ;
+	  fclose(fp);
+	  return strdata(lj_str_new(L, p, e-p));
+	}
+      }
+    }
+    fclose(fp);
+  }
+  return NULL;
+}
+
 static void *clib_loadlib(lua_State *L, const char *name, int global)
 {
   void *h = dlopen(clib_extname(L, name),
 		   RTLD_LAZY | (global?RTLD_GLOBAL:RTLD_LOCAL));
-  if (!h) clib_error_(L);
+  if (!h) {
+    const char *e, *err = dlerror();
+    if (*err == '/' && (e = strchr(err, ':')) &&
+	(name = clib_resolve_lds(L, strdata(lj_str_new(L, err, e-err))))) {
+      h = dlopen(name, RTLD_LAZY | (global?RTLD_GLOBAL:RTLD_LOCAL));
+      if (h) return h;
+      err = dlerror();
+    }
+    lj_err_callermsg(L, err);
+  }
   return h;
 }
 
@@ -266,10 +297,10 @@ TValue *lj_clib_index(lua_State *L, CLibrary *cl, GCstr *name)
     if (ctype_isconstval(ct->info)) {
       CType *ctt = ctype_child(cts, ct);
       lua_assert(ctype_isinteger(ctt->info) && ctt->size <= 4);
-      if ((ctt->info & CTF_UNSIGNED) && ctt->size == 4)
+      if ((ctt->info & CTF_UNSIGNED) && (int32_t)ct->size < 0)
 	setnumV(tv, (lua_Number)(uint32_t)ct->size);
       else
-	setnumV(tv, (lua_Number)(int32_t)ct->size);
+	setintV(tv, (int32_t)ct->size);
     } else {
       const char *sym = clib_extsym(cts, ct, name);
       void *p = clib_getsym(cl, sym);

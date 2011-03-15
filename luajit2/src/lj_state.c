@@ -181,7 +181,7 @@ lua_State *lj_state_newstate(lua_Alloc f, void *ud)
 LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
 #endif
 {
-  GG_State *GG = cast(GG_State *, f(ud, NULL, 0, sizeof(GG_State)));
+  GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
   lua_State *L = &GG->L;
   global_State *g = &GG->g;
   if (GG == NULL || !checkptr32(GG)) return NULL;
@@ -225,7 +225,8 @@ static TValue *cpfinalize(lua_State *L, lua_CFunction dummy, void *ud)
 {
   UNUSED(dummy);
   UNUSED(ud);
-  lj_gc_finalizeudata(L);
+  lj_gc_finalize_udata(L);
+  lj_gc_finalize_cdata(L);
   /* Frame pop omitted. */
   return NULL;
 }
