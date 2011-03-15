@@ -1,13 +1,8 @@
-local sin, cos, exp = math.sin, math.cos, math.exp
-local pi = math.pi
 
-local hahn1_N = 236
-local hahn1_P = 7
+local x0   = gsl.vector { 10, -1, 0.05, -0.00001, -0.05, 0.001, -0.000001 }
+local x0_2 = gsl.vector { 1, -0.1, 0.005, -0.000001, -0.005, 0.0001, -0.0000001 }
 
-local hahn1_x0   = gsl.vector { 10, -1, 0.05, -0.00001, -0.05, 0.001, -0.000001 }
-local hahn1_x0_2 = gsl.vector { 1, -0.1, 0.005, -0.000001, -0.005, 0.0001, -0.0000001 }
-
-local hahn1_x = gsl.vector {
+local x = gsl.vector {
        1.0776351733E+00,
       -1.2269296921E-01,
        4.0863750610E-03,
@@ -16,9 +11,9 @@ local hahn1_x = gsl.vector {
        2.4053735503E-04,
       -1.2314450199E-07 }
 
-local hahn1_sumsq = 1.5324382854E+00
+local sumsq = 1.5324382854E+00
 
-local hahn1_sigma = gsl.vector {
+local sigma = gsl.vector {
    1.7070154742E-01,
   -1.2269296921E-01,
    4.0863750610E-03,
@@ -27,7 +22,7 @@ local hahn1_sigma = gsl.vector {
    2.4053735503E-04,
   -1.2314450199E-07 }
 
-local hahn1_data = gsl.matrix {
+local data = gsl.matrix {
   {0.591, 24.41},
   {1.547, 34.82},
   {2.902, 44.09},
@@ -266,57 +261,20 @@ local hahn1_data = gsl.matrix {
   {20.935, 848.23}}
 
 
-local hahn1_F = hahn1_data:col(1)
-local hahn1_t = hahn1_data:col(2)
-
-local function hahn1_fdf (x, f, J)
-   local b0, b1, b2, b3 = x[1], x[2], x[3], x[4]
-   local b4, b5, b6 = x[5], x[6], x[7]
-
-   for i = 1, hahn1_N do
-      local t = hahn1_t[i]
-      local num = (b0 + b1*t + b2*t^2 + b3*t^3)
-      local den = (1 + b4*t + b5*t^2 + b6*t^3)
-
-      if f then
-	 local y = num / den
-	 f[i] = y - hahn1_F[i]
-      end
-
-      if J then
-	 J:set(i, 1, 1   / den)
-	 J:set(i, 2, t   / den)
-	 J:set(i, 3, t^2 / den)
-	 J:set(i, 4, t^3 / den)
-	 J:set(i, 5, -t   * num/den^2)
-	 J:set(i, 6, -t^2 * num/den^2)
-	 J:set(i, 7, -t^3 * num/den^2)
-      end
-   end
+local function iter()
+   local i, n = 0, #data
+   return function()
+	     i = i + 1
+	     if i <= n then
+		return data:get(i,2), data:get(i,1)
+	     end
+	  end
 end
 
-local function hahn1_model_f(x, t)
-   local num = (x[1] + x[2]*t + x[3]*t^2 + x[4]*t^3)
-   local den = (1 + x[5]*t + x[6]*t^2 + x[7]*t^3)
-   return num / den
-end
+local F = data:col(1)
 
-local s = gsl.nlinfit {n= hahn1_N, p= hahn1_P}
-
-s:set(hahn1_fdf, hahn1_x0_2)
-
-print(gsl.tr(s.x), s.chisq)
-
-for i=1, 200 do
-   s:iterate()
-   print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
-   if s:test(0, 1e-7) then print('solution found'); break end
-end
-
-p = graph.plot()
-pts = graph.ipath(gsl.sequence(function(i) return hahn1_t[i], hahn1_F[i] end, hahn1_N))
-fitln = graph.fxline(function(t) return hahn1_model_f(s.x, t) end, 14, 860, 512)
-p:addline(pts, 'blue', {{'marker', size=4}})
-p:addline(fitln)
-p.title = 'Thurber non-linear fit NIST test'
-p:show()
+return {title = 'Hahn1 non-linear fit NIST test',
+	iter= iter,
+        N= 236, P= 7,
+	x0= x0, xref= x, F= data:col(1), t= data:col(2),
+	t0= 14, t1= 860}

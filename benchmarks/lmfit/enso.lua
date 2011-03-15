@@ -1,12 +1,7 @@
-local sin, cos, exp = math.sin, math.cos, math.exp
-local pi = math.pi
 
-local enso_N = 168
-local enso_P = 9
+local x0 = gsl.vector { 10.0, 3.0, 0.5, 44.0, -1.5, 0.5, 26.0, 0.1, 1.5 }
 
-local enso_x0 = gsl.vector { 10.0, 3.0, 0.5, 44.0, -1.5, 0.5, 26.0, 0.1, 1.5 }
-
-local enso_x = gsl.vector {
+local x = gsl.vector {
   1.0510749193E+01, 
   3.0762128085E+00,
   5.3280138227E-01,
@@ -17,9 +12,9 @@ local enso_x = gsl.vector {
   2.1232288488E-01,
   1.4966870418E+00 }
 
-local enso_sumsq = 7.8853978668E+02
+local sumsq = 7.8853978668E+02
 
-local enso_sigma = gsl.vector {
+local sigma = gsl.vector {
  1.7488832467E-01,
  2.4310052139E-01,
  2.4354686618E-01,
@@ -30,7 +25,7 @@ local enso_sigma = gsl.vector {
  5.1460022911E-01,
  2.5434468893E-01 }
 
-local enso_F = gsl.vector {
+local F = gsl.vector {
     12.90000, 
     11.30000, 
     10.60000, 
@@ -200,78 +195,19 @@ local enso_F = gsl.vector {
     13.40000, 
     14.80000 }
 
-local function enso_fdf (x, f, J)
-   local b0 = x[1]
-   local b1 = x[2]
-   local b2 = x[3]
-   local b3 = x[4]
-   local b4 = x[5]
-   local b5 = x[6]
-   local b6 = x[7]
-   local b7 = x[8]
-   local b8 = x[9]
-
-   if f then
-      for i = 1, enso_N do
-	 local t = i
-	 local y = b0
-
-	 y = y + b1 * cos(2*pi*t/12)
-	 y = y + b2 * sin(2*pi*t/12)
-	 y = y + b4 * cos(2*pi*t/b3)
-	 y = y + b5 * sin(2*pi*t/b3)
-	 y = y + b7 * cos(2*pi*t/b6)
-	 y = y + b8 * sin(2*pi*t/b6)
-
-	 f[i] = enso_F[i] - y
-      end
-   end
-
-   if J then
-      for i = 1, enso_N do
-	 local t = i
-	 J:set(i, 1, -1)
-	 J:set(i, 2, -cos(2*pi*t/12))
-	 J:set(i, 3, -sin(2*pi*t/12))
-	 J:set(i, 4, -b4*(2*pi*t/(b3*b3))*sin(2*pi*t/b3) +
-			                b5*(2*pi*t/(b3*b3))*cos(2*pi*t/b3))
-	 J:set(i, 5, -cos(2*pi*t/b3))
-	 J:set(i, 6, -sin(2*pi*t/b3))
-	 J:set(i, 7, -b7 * (2*pi*t/(b6*b6)) * sin(2*pi*t/b6) +
-		                        b8 * (2*pi*t/(b6*b6)) * cos(2*pi*t/b6))
-	 J:set(i, 8, -cos(2*pi*t/b6))
-	 J:set(i, 9, -sin(2*pi*t/b6))
-      end
-   end
+local function iter()
+   local i, n = 0, #F
+   return function()
+	     i = i + 1
+	     if i <= n then
+		return i, F[i]
+	     end
+	  end
 end
 
-local function enso_model_f(x, t)
-   local y = x[1]
-   y = y + x[2] * cos(2*pi*t/12)
-   y = y + x[3] * sin(2*pi*t/12)
-   y = y + x[5] * cos(2*pi*t/x[4])
-   y = y + x[6] * sin(2*pi*t/x[4])
-   y = y + x[8] * cos(2*pi*t/x[7])
-   y = y + x[9] * sin(2*pi*t/x[7])
-   return y
-end
-
-local s = gsl.nlinfit {n= enso_N, p= enso_P}
-
-s:set(enso_fdf, enso_x0)
-
-print(gsl.tr(s.x))
-
-for i=1, 80 do
-   s:iterate()
-   print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
-   if s:test(0, 1e-7) then print('solution found'); break end
-end
-
-p = graph.plot()
-pts = graph.ipath(gsl.sequence(function(i) return i, enso_F[i] end, enso_N))
-fitln = graph.fxline(function(t) return enso_model_f(s.x, t) end, 0, 168, 512)
-p:addline(pts, 'blue', {{'marker', size=4}})
-p:addline(fitln)
-p.title = 'ENSO non-linear fit NIST test'
-p:show()
+return {title='ENSO dataset from NIST',
+	iter= iter,
+	N=168, P= 9,
+	F= F,
+	xref= x, x0= x0,
+	t0= 1, t1= 168}
