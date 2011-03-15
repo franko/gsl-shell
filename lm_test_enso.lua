@@ -1,17 +1,14 @@
 local template = require 'template'
 
-local ffi = require 'ffi'
-local cgsl = ffi.C
-
 local sin, cos, exp = math.sin, math.cos, math.exp
 local pi = math.pi
 
 local enso_N = 168
 local enso_P = 9
 
-local enso_x0 = ffi.new('double[9]', { 10.0, 3.0, 0.5, 44.0, -1.5, 0.5, 26.0, 0.1, 1.5 })
+local enso_x0 = gsl.vector { 10.0, 3.0, 0.5, 44.0, -1.5, 0.5, 26.0, 0.1, 1.5 }
 
-local enso_x = ffi.new('double[9]', {
+local enso_x = gsl.vector {
   1.0510749193E+01, 
   3.0762128085E+00,
   5.3280138227E-01,
@@ -20,11 +17,11 @@ local enso_x = ffi.new('double[9]', {
   5.2554493756E-01,
   2.6887614440E+01,
   2.1232288488E-01,
-  1.4966870418E+00 })
+  1.4966870418E+00 }
 
 local enso_sumsq = 7.8853978668E+02
 
-local enso_sigma = ffi.new('double[9]', {
+local enso_sigma = gsl.vector {
  1.7488832467E-01,
  2.4310052139E-01,
  2.4354686618E-01,
@@ -33,9 +30,9 @@ local enso_sigma = ffi.new('double[9]', {
  4.8073701119E-01,
  4.1612939130E-01,
  5.1460022911E-01,
- 2.5434468893E-01 })
+ 2.5434468893E-01 }
 
-local enso_F = ffi.new('double[168]', {
+local enso_F = gsl.vector {
     12.90000, 
     11.30000, 
     10.60000, 
@@ -203,22 +200,22 @@ local enso_F = ffi.new('double[168]', {
     13.20000, 
     14.00000, 
     13.40000, 
-			  14.80000 })
+    14.80000 }
 
 local function enso_fdf (x, f, J)
-   local b0 = cgsl.gsl_vector_get(x, 0)
-   local b1 = cgsl.gsl_vector_get(x, 1)
-   local b2 = cgsl.gsl_vector_get(x, 2)
-   local b3 = cgsl.gsl_vector_get(x, 3)
-   local b4 = cgsl.gsl_vector_get(x, 4)
-   local b5 = cgsl.gsl_vector_get(x, 5)
-   local b6 = cgsl.gsl_vector_get(x, 6)
-   local b7 = cgsl.gsl_vector_get(x, 7)
-   local b8 = cgsl.gsl_vector_get(x, 8)
+   local b0 = x[1]
+   local b1 = x[2]
+   local b2 = x[3]
+   local b3 = x[4]
+   local b4 = x[5]
+   local b5 = x[6]
+   local b6 = x[7]
+   local b7 = x[8]
+   local b8 = x[9]
 
    if f then
-      for i = 0, enso_N-1 do
-	 local t = (i + 1)
+      for i = 1, enso_N do
+	 local t = i
 	 local y = b0
 
 	 y = y + b1 * cos(2*pi*t/12)
@@ -228,61 +225,54 @@ local function enso_fdf (x, f, J)
 	 y = y + b7 * cos(2*pi*t/b6)
 	 y = y + b8 * sin(2*pi*t/b6)
 
-	 cgsl.gsl_vector_set (f, i, enso_F[i] - y)
+	 f[i] = enso_F[i] - y
       end
    end
 
    if J then
-      for i = 0, enso_N-1 do
-	 local t = (i + 1)
-	 cgsl.gsl_matrix_set (J, i, 0, -1)
-	 cgsl.gsl_matrix_set (J, i, 1, -cos(2*pi*t/12))
-	 cgsl.gsl_matrix_set (J, i, 2, -sin(2*pi*t/12))
-	 cgsl.gsl_matrix_set (J, i, 3, -b4*(2*pi*t/(b3*b3))*sin(2*pi*t/b3) +
+      for i = 1, enso_N do
+	 local t = i
+	 J:set(i, 1, -1)
+	 J:set(i, 2, -cos(2*pi*t/12))
+	 J:set(i, 3, -sin(2*pi*t/12))
+	 J:set(i, 4, -b4*(2*pi*t/(b3*b3))*sin(2*pi*t/b3) +
 			                b5*(2*pi*t/(b3*b3))*cos(2*pi*t/b3))
-	 cgsl.gsl_matrix_set (J, i, 4, -cos(2*pi*t/b3))
-	 cgsl.gsl_matrix_set (J, i, 5, -sin(2*pi*t/b3))
-	 cgsl.gsl_matrix_set (J, i, 6, -b7 * (2*pi*t/(b6*b6)) * sin(2*pi*t/b6) +
+	 J:set(i, 5, -cos(2*pi*t/b3))
+	 J:set(i, 6, -sin(2*pi*t/b3))
+	 J:set(i, 7, -b7 * (2*pi*t/(b6*b6)) * sin(2*pi*t/b6) +
 		                        b8 * (2*pi*t/(b6*b6)) * cos(2*pi*t/b6))
-	 cgsl.gsl_matrix_set (J, i, 7, -cos(2*pi*t/b6))
-	 cgsl.gsl_matrix_set (J, i, 8, -sin(2*pi*t/b6))
+	 J:set(i, 8, -cos(2*pi*t/b6))
+	 J:set(i, 9, -sin(2*pi*t/b6))
       end
    end
 end
 
 local function enso_model_f(x, t)
-   local y = x[0]
-   y = y + x[1] * cos(2*pi*t/12)
-   y = y + x[2] * sin(2*pi*t/12)
-   y = y + x[4] * cos(2*pi*t/x[3])
-   y = y + x[5] * sin(2*pi*t/x[3])
-   y = y + x[7] * cos(2*pi*t/x[6])
-   y = y + x[8] * sin(2*pi*t/x[6])
+   local y = x[1]
+   y = y + x[2] * cos(2*pi*t/12)
+   y = y + x[3] * sin(2*pi*t/12)
+   y = y + x[5] * cos(2*pi*t/x[4])
+   y = y + x[6] * sin(2*pi*t/x[4])
+   y = y + x[8] * cos(2*pi*t/x[7])
+   y = y + x[9] * sin(2*pi*t/x[7])
    return y
 end
 
 lm = template.load('num/lmfit.lua.in', {N= enso_N, P= enso_P, DEBUG= 'false'})
 
-xe = cgsl.gsl_vector_alloc(enso_P)
-fe = cgsl.gsl_vector_alloc(enso_N)
-Je = cgsl.gsl_matrix_alloc(enso_N, enso_P)
-dx = cgsl.gsl_vector_alloc(enso_P)
+lm.set(enso_fdf, enso_x0)
 
-for i=0, enso_P do xe.data[i] = enso_x0[i] end
-
-lm.set(enso_fdf, xe, fe, Je, dx, true)
-for j=0, enso_P-1 do io.write(xe.data[j]); io.write(j < 2 and ', ' or '\n') end
+print(gsl.tr(lm.x))
 
 for i=1, 80 do
-   lm.iterate(enso_fdf, xe, fe, Je, dx, true)
-   io.write('ITER=', i, ': ')
-   for j=0, enso_P-1 do io.write(xe.data[j]); io.write(j < 2 and ', ' or '\n') end
-   if lm.test(dx, xe, 0, 1e-7) then print('solution found'); break end
+   lm.iterate()
+   print('ITER=', i, ': ', gsl.tr(lm.x))
+   if lm.test(0, 1e-7) then print('solution found'); break end
 end
 
 p = graph.plot()
-pts = graph.ipath(gsl.sequence(function(i) return i, enso_F[i-1] end, enso_N))
-fitln = graph.fxline(function(x) return enso_model_f(xe.data, x) end, 0, 168, 512)
+pts = graph.ipath(gsl.sequence(function(i) return i, enso_F[i] end, enso_N))
+fitln = graph.fxline(function(t) return enso_model_f(lm.x, t) end, 0, 168, 512)
 p:addline(pts, 'blue', {{'marker', size=4}})
 p:addline(fitln)
 p.title = 'ENSO non-linear fit NIST test'

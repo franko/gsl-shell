@@ -13,7 +13,8 @@ local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
 local ffi = require 'gslffi'
 local cgsl = ffi.C
 
-local globals = {io= io, string=string, print= print, setmetatable= setmetatable}
+local globals = {io= io, string=string, gsl= gsl, print= print}
+
 setmetatable(globals, globals_report)
 setfenv(1, globals)
 
@@ -634,33 +635,84 @@ local function lmpar (r, perm, qtf, diag, delta, par, newton, gradient, sdiag, x
 end
 
 
+local M = { _data = {} }
 
+local function store(obj, cdata)
+   local t = M._data
+   t[cdata] = obj
+   return cdata
+end
 
+local function object(cdata)
+   local t = M._data
+   return t[cdata]
+end
 
+local function get_matrix(n1, n2)
+   local m = gsl.new(n1, n2)
+   local s = cgsl.gsl_matrix_submatrix (m, 0, 0, n1, n2)
+   return store(m, s.matrix)
+end
+
+local function get_vector(nr)
+   local m = gsl.new(nr, 1)
+   local v = cgsl.gsl_matrix_column (m, 0)
+   return store(m, v.vector)
+end
+
+local function get_permutation(nr)
+   local p = cgsl.gsl_permutation_calloc (nr)
+   ffi.gc(p, cgsl.gsl_permutation_free)
+   return p
+end
+
+local function call_f(fdf, xc, fc)
+   local x, f = object(xc), object(fc)
+   return fdf(x, f, nil)
+end
+
+local function call_df(fdf, xc, Jc)
+   local x, J = object(xc), object(Jc)
+   return fdf(x, nil, J)
+end
+
+local function call_fdf(fdf, xc, fc, Jc)
+   local x, f, J = object(xc), object(fc), object(Jc)
+   return fdf(x, f, J)
+end
 
 local state_iter
 local xnorm, fnorm
 local delta, par
 
-local r        = cgsl.gsl_matrix_calloc ($(N), $(P))
-local tau      = cgsl.gsl_vector_calloc (min($(N), $(P)))
-local diag     = cgsl.gsl_vector_calloc ($(P))
-local qtf      = cgsl.gsl_vector_calloc ($(N))
-local newton   = cgsl.gsl_vector_calloc ($(P))
-local gradient = cgsl.gsl_vector_calloc ($(P))
-local x_trial  = cgsl.gsl_vector_calloc ($(P))
-local f_trial  = cgsl.gsl_vector_calloc ($(N))
-local df       = cgsl.gsl_vector_calloc ($(N))
-local sdiag    = cgsl.gsl_vector_calloc ($(P))
-local rptdx    = cgsl.gsl_vector_calloc ($(N))
-local w        = cgsl.gsl_vector_calloc ($(N))
-local work1    = cgsl.gsl_vector_calloc ($(P))
-local perm     = cgsl.gsl_permutation_calloc($(P))
+# MINNP = (N < P and N or P)
+
+local r        = get_matrix($(N), $(P))
+local tau      = get_vector($(MINNP))
+local diag     = get_vector($(P))
+local qtf      = get_vector($(N))
+local newton   = get_vector($(P))
+local gradient = get_vector($(P))
+local x_trial  = get_vector($(P))
+local f_trial  = get_vector($(N))
+local df       = get_vector($(N))
+local sdiag    = get_vector($(P))
+local rptdx    = get_vector($(N))
+local w        = get_vector($(N))
+local work1    = get_vector($(P))
+local perm     = get_permutation($(P))
+
+local state_x  = get_vector($(P))
+local state_f  = get_vector($(N))
+local state_J  = get_matrix($(N), $(P))
+local state_dx = get_vector($(P))
+
+local system_fdf
 
 local function lm_set (fdf, x, f, J, dx, scale)
    -- Evaluate function at x
    -- return immediately if evaluation raised error */
-   fdf (x, f, J)
+   call_fdf (fdf, x, f, J)
 
    -- DEBUG DEBUG
    if $(DEBUG) then
@@ -779,7 +831,7 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
 
       -- Evaluate function at x + p 
       -- return immediately if evaluation raised error 
-      fdf(x_trial, f_trial)
+      call_f (fdf, x_trial, f_trial)
 
       fnorm1 = cgsl.gsl_blas_dnrm2 (f_trial)
 
@@ -833,7 +885,7 @@ local function lm_iterate(fdf, x, f, J, dx, scale)
 	 cgsl.gsl_vector_memcpy (f, f_trial)
 
 	 -- return immediately if evaluation raised error 
-	 fdf(x_trial, nil, J)
+	 call_df (fdf, x_trial, J)
 
 	 -- wa2_j  = diag_j * x_j
 	 xnorm = scaled_enorm(diag, x)
@@ -889,4 +941,20 @@ local function test_delta (dx, x, epsabs, epsrel)
    return true
 end
 
-return {set = lm_set, iterate= lm_iterate, test= test_delta}
+M.set = function(fdf, x0)
+	   system_fdf = fdf
+	   gsl.set(object(state_x), x0)
+	   lm_set (fdf, state_x, state_f, state_J, state_dx, true)
+	end
+
+M.iterate = function()
+	       return lm_iterate (system_fdf, state_x, state_f, state_J, state_dx, true)
+	    end
+
+M.test    = function(epsabs, epsrel)
+	       return test_delta(state_dx, state_x, epsabs, epsrel)
+	    end
+
+M.x, M.f = object(state_x), object(state_f)
+
+return M
