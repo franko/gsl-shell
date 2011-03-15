@@ -1,5 +1,3 @@
-local template = require 'template'
-
 local sin, cos, exp = math.sin, math.cos, math.exp
 local pi = math.pi
 
@@ -127,21 +125,21 @@ local function thurber_model_f(x, t)
    return num / den
 end
 
-lm = template.load('num/lmfit.lua.in', {N= thurber_N, P= thurber_P})
+local s = gsl.nlinfit {n= thurber_N, p= thurber_P}
 
-lm.set(thurber_fdf, thurber_x0)
+s:set(thurber_fdf, thurber_x0)
 
-print(gsl.tr(lm.x))
+print(gsl.tr(s.x), s.chisq)
 
 for i=1, 200 do
-   lm.iterate()
-   print('ITER=', i, ': ', gsl.tr(lm.x))
-   if lm.test(0, 1e-7) then print('solution found'); break end
+   s:iterate()
+   print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
+   if s:test(0, 1e-7) then print('solution found'); break end
 end
 
 p = graph.plot()
 pts = graph.ipath(gsl.sequence(function(i) return thurber_t[i], thurber_F[i] end, thurber_N))
-fitln = graph.fxline(function(t) return thurber_model_f(lm.x, t) end, -3.1, 2.2, 512)
+fitln = graph.fxline(function(t) return thurber_model_f(s.x, t) end, -3.1, 2.2, 512)
 p:addline(pts, 'blue', {{'marker', size=4}})
 p:addline(fitln)
 p.title = 'Thurber non-linear fit NIST test'

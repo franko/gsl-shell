@@ -2,5 +2,6 @@
 
 require('base')
 require('matrix')
+require('misc')
 require('integ')
 require('draw')

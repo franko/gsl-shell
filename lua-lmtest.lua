@@ -26,13 +26,12 @@ r:set(0)
 yrf = gsl.new(n, 1, function(i) return A * exp(-lambda*(i-1)) + b + gsl.rnd.gaussian(r, 0.1) end)
 sigrf = gsl.new(n, 1, function() return 0.1 end)
 
-local template = require 'template'
-lm = template.load('num/lmfit.lua.in', {N= n, P= 3})
+local s = gsl.nlinfit {n= n, p= 3}
 
-lm.set(fdf, gsl.vector {1, 0, 0})
-print(gsl.tr(lm.x), gsl.prod(lm.f, lm.f))
+s:set(fdf, gsl.vector {1, 0, 0})
+print(gsl.tr(s.x), s.chisq)
 
 for i=1, 10 do
-   lm.iterate()
-   print('ITER=', i, ': ', gsl.tr(lm.x), sqrt(gsl.prod(lm.f, lm.f)[1]))
+   s:iterate()
+   print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
 end

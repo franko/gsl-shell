@@ -1,5 +1,3 @@
-local template = require 'template'
-
 local sin, cos, exp = math.sin, math.cos, math.exp
 local pi = math.pi
 
@@ -258,21 +256,21 @@ local function enso_model_f(x, t)
    return y
 end
 
-lm = template.load('num/lmfit.lua.in', {N= enso_N, P= enso_P})
+local s = gsl.nlinfit {n= enso_N, p= enso_P}
 
-lm.set(enso_fdf, enso_x0)
+s:set(enso_fdf, enso_x0)
 
-print(gsl.tr(lm.x))
+print(gsl.tr(s.x))
 
 for i=1, 80 do
-   lm.iterate()
-   print('ITER=', i, ': ', gsl.tr(lm.x))
-   if lm.test(0, 1e-7) then print('solution found'); break end
+   s:iterate()
+   print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
+   if s:test(0, 1e-7) then print('solution found'); break end
 end
 
 p = graph.plot()
 pts = graph.ipath(gsl.sequence(function(i) return i, enso_F[i] end, enso_N))
-fitln = graph.fxline(function(t) return enso_model_f(lm.x, t) end, 0, 168, 512)
+fitln = graph.fxline(function(t) return enso_model_f(s.x, t) end, 0, 168, 512)
 p:addline(pts, 'blue', {{'marker', size=4}})
 p:addline(fitln)
 p.title = 'ENSO non-linear fit NIST test'
