@@ -586,8 +586,11 @@ local function get_vector(nr)
 end
 
 local function get_permutation(nr)
-   local p = cgsl.gsl_permutation_calloc (nr)
-   ffi.gc(p, cgsl.gsl_permutation_free)
+   local p = ffi.new('gsl_permutation[1]')
+   p[0].size = nr
+   p[0].data = ffi.new(string.format('size_t[%i]', nr))
+   cgsl.gsl_permutation_init(p)
+   store(p, p[0].data)
    return p
 end
 
