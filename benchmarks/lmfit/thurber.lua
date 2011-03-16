@@ -101,5 +101,5 @@ end
 return {title = 'Thurber dataset',
 	iter= iter,
 	N= 37, P= 7,
-        t= t, F= F, x0= x, xref= x,
+        t= t, F= F, x0= x0, xref= x,
         t0= -3.1, t1= 2.2 }
