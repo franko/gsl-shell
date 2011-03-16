@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 local function set_contour(a)
    a:move_to(28.47, 6.45)
    a:curve3(21.58, 1.12, 19.82, 0.29)

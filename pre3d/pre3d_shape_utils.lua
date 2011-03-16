@@ -26,6 +26,8 @@
 -- The procedural operations were inspired from the demoscene.  A lot of the
 -- ideas are based on similar concepts in Farbrausch's werkkzeug1.
 
+use 'math'
+
 local Pre3d = require 'pre3d/pre3d'
 
 -- TODO(deanm): Having to import all the math like this is a bummer.

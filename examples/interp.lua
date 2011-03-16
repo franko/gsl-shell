@@ -1,3 +1,5 @@
+use 'stdlib'
+
 function demo1()
 
    local w = window('v..')

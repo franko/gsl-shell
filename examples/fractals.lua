@@ -1,4 +1,5 @@
-require 'draw'
+
+use 'stdlib'
 
 local function c_generator(n, n_angle, len_frac, g)
    local I, exp, real, imag = complex.I, complex.exp, complex.real, complex.imag

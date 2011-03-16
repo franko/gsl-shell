@@ -1,6 +1,5 @@
 
-local sin, cos, exp, sqrt = math.sin, math.cos, math.exp, math.sqrt
-local pi = math.pi
+use 'math'
 
 function demo1()
    local n = 40

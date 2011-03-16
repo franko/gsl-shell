@@ -17,12 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
-local gsl = gsl or _G
-local math = math or _G
 
-local insert, sqrt, abs, divmod = table.insert, math.sqrt, math.abs, gsl.divmod
+use 'stdlib'
 
-local default_color_map = gsl.color_function('redyellow', 0.9)
+local insert = table.insert
+
+local default_color_map = graph.color_function('redyellow', 0.9)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -674,7 +674,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function domain_draw_path(domid)
-      local ln = gsl.path()
+      local ln = graph.path()
       local n0, n1
       for _, join in ipairs(domains[domid]) do
 	 local na, nb = curve_extrema(curves[join.id], join.direction)
@@ -711,7 +711,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function curve_draw(pl, id)
-      local ln = gsl.path()
+      local ln = graph.path()
       curve_add_path(ln, id, 'acw')
       local tree = order_tree[id]
       if tree then
@@ -740,7 +740,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function grid_draw_lines(pl, col)
-      local ln = gsl.path()
+      local ln = graph.path()
       for id = 1, #curves do
 	 curve_add_path(ln, id, 'cw')
       end
@@ -768,7 +768,7 @@ local function opt_gener(options, defaults)
 	  end
 end
 
-function gsl.contour(f, x1, y1, x2, y2, options)
+function graph.contour(f, x1, y1, x2, y2, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
 				   colormap= default_color_map, 
 				   lines= true, show= true})
@@ -778,7 +778,7 @@ function gsl.contour(f, x1, y1, x2, y2, options)
 
    g.find_curves()
 
-   local p = gsl.plot()
+   local p = graph.plot()
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
    if opt 'show' then p:show() end
@@ -786,7 +786,7 @@ function gsl.contour(f, x1, y1, x2, y2, options)
    return p
 end
 
-function gsl.polar_contour(f, R, options)
+function graph.polar_contour(f, R, options)
    local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
 				   colormap= default_color_map, 
 				   lines= true, show= true})
@@ -796,7 +796,7 @@ function gsl.polar_contour(f, R, options)
 
    g.find_curves()
 
-   local p = gsl.plot()
+   local p = graph.plot()
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
    if opt 'show' then p:show() end

@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 require 'contour'
 
 function demo1()

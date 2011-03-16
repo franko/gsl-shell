@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 local Pre3d = require 'pre3d/pre3d'
 local ShapeUtils = require 'pre3d/pre3d_shape_utils'
 

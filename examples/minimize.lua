@@ -1,3 +1,6 @@
+
+use 'stdlib'
+
 require 'contour'
 
 f = function(x, g)
@@ -96,8 +99,6 @@ function demo3()
    return p
 end
 
-print ("demo1() - minimization of Rosenbrock function with different algorithms")
-print ("demo2() - minimization of quadratic function without derivates")
-print ("demo3() - function minimization using BFGS solver")
-
-
+echo "demo1() - minimization of Rosenbrock function with different algorithms"
+echo "demo2() - minimization of quadratic function without derivates"
+echo "demo3() - function minimization using BFGS solver"

@@ -89,6 +89,8 @@
 -- object creations, there are some "IP" versions of these functions.  This
 -- stands for "in place", and they write the result to one of the arguments.
 
+use 'stdlib'
+
 local function crossProduct(a, b)
    -- a1b2 - a2b1, a2b0 - a0b2, a0b1 - a1b0
    return {
