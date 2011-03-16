@@ -1,8 +1,9 @@
+use 'math'
+
 local template = require 'template'
 local qag = template.load('num/qag.lua.in', {limit=64, order=21})
 local qng = template.load('num/qng.lua.in', {})
 
-local sin, cos, pi = math.sin, math.cos, math.pi
 local epsabs, epsrel = 1e-6, 0.01
 
 function bessel_gen(n, q)

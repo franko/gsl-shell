@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
    return fxplot(f, 0, 15, 'red')

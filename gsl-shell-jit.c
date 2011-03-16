@@ -61,17 +61,6 @@ pthread_mutex_t gsl_shell_mutex[1];
 
 static void gsl_shell_openlibs(lua_State *L)
 {
-#ifndef LUA_STRICT
-  lua_getglobal (L, "math");
-  lua_pushnil (L);  /* first key */
-  while (lua_next (L, -2) != 0)
-    {
-      lua_pushvalue (L, -2);
-      lua_insert (L, -2);
-      lua_settable(L, LUA_GLOBALSINDEX);
-    }
-  lua_pop (L, 1);
-#endif
   luaopen_gsl (L);
 }
 

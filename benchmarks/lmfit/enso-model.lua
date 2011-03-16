@@ -1,6 +1,5 @@
 
-local sin, cos, exp = math.sin, math.cos, math.exp
-local pi = math.pi
+use 'math'
 
 local function fdf_generate(dataset)
    local Y = dataset.F

@@ -1,5 +1,4 @@
-local sin, cos, exp = math.sin, math.cos, math.exp
-local pi = math.pi
+use 'math'
 
 local function nist_test(data_name, model_name)
 

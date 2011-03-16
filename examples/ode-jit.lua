@@ -18,10 +18,7 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local echo = gsl and gsl.echo or echo
-local graph = graph or _G
-
-local sin, cos, exp = math.sin, math.cos, math.exp
+use 'math'
 
 local template = require 'template'
 

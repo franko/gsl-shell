@@ -18,14 +18,9 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local gsl = gsl or _G
-local math = math or _G
-
 local cat, insert, fmt = table.concat, table.insert, string.format
 
 local sqrt, abs, tostring_eps = math.sqrt, math.abs, complex.tostring_eps
-
-local template = require 'template'
 
 local function matrix_f_set(m, f)
    local r, c = gsl.dim(m)

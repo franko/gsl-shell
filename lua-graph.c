@@ -28,20 +28,14 @@
 #include "window.h"
 #include "lua-plot.h"
 
-#ifdef LUA_STRICT
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
-#endif
 
 int
 luaopen_graph (lua_State *L)
 {
   window_registry_prepare (L);
 
-#ifdef LUA_STRICT
   luaL_register (L, MLUA_GRAPHLIBNAME, methods_dummy);
-#else
-  lua_pushvalue (L, LUA_GLOBALSINDEX);
-#endif
 
   draw_register (L);
   text_register (L);

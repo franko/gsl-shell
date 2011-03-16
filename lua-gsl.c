@@ -53,19 +53,16 @@
 #include "lua-graph.h"
 #endif
 
-#ifdef LUA_STRICT
-static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
+#ifdef GSL_SHELL_DEBUG
+static int gsl_shell_lua_registry (lua_State *L);
 #endif
 
+static const struct luaL_Reg gsl_shell_functions[] = {
 #ifdef GSL_SHELL_DEBUG
-
-static int gsl_shell_lua_registry (lua_State *L);
-
-static const struct luaL_Reg gsl_shell_debug_functions[] = {
   {"registry", gsl_shell_lua_registry},
+#endif
   {NULL, NULL}
 };
-#endif
 
 int
 luaopen_gsl (lua_State *L)
@@ -80,11 +77,7 @@ luaopen_gsl (lua_State *L)
   luaopen_lcomplex (L);
   lua_pop (L, 1);
 
-#ifdef LUA_STRICT
-  luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
-#else
-  lua_pushvalue (L, LUA_GLOBALSINDEX);
-#endif
+  luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
 
   luaL_register (L, NULL, gs_type_functions);
 

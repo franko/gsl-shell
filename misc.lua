@@ -1,4 +1,3 @@
-local gsl = gsl or _G
 
 local template = require 'template'
 

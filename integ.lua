@@ -1,7 +1,5 @@
 -- integr module follows
 
-local gsl = gsl or _G
-
 local function get_spec(spec, key, mtype)
    local defaults = {eps_abs= 1e-6, eps_rel= 1e-6, limit= 512,
 		     rule= 'SINGULAR'}

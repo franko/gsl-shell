@@ -1,6 +1,4 @@
 
-local gsl, graph = gsl or _G, graph or _G
-
 local floor = math.floor
 
 function graph.ipath(f)

@@ -18,8 +18,6 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local gsl = gsl or _G
-
 local cat, insert = table.concat, table.insert
 local fmt = string.format
 
@@ -81,8 +79,8 @@ local function myprint(...)
    io.write('\n')
 end
 
-gsl.echo = print
-gsl.print = myprint
+echo = print
+print = myprint
 
 function gsl.sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)

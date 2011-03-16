@@ -53,4 +53,4 @@ function demo1()
    p:show()
 end
 
-gsl.echo 'demo1() - Simple non-linear fit example'
+echo 'demo1() - Simple non-linear fit example'
