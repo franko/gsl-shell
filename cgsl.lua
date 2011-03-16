@@ -1209,4 +1209,6 @@ int  gsl_blas_zher2k (CBLAS_UPLO_t Uplo,
 
 ]]
 
-return ffi
+local cgsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
+
+return cgsl
