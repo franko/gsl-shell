@@ -60,19 +60,11 @@ ffi.cdef[[
 	int owner;
      } gsl_matrix_complex;
 
-     typedef struct
-     {
-	gsl_vector vector;
-     } gsl_vector_view;
+     typedef gsl_vector gsl_vector_view;
+     typedef gsl_vector gsl_vector_const_view;
 
-     typedef gsl_vector_view gsl_vector_const_view;
-
-     typedef struct
-     {
-	gsl_matrix matrix;
-     } gsl_matrix_view;
-
-     typedef gsl_matrix_view gsl_matrix_const_view;
+     typedef gsl_matrix gsl_matrix_view;
+     typedef gsl_matrix gsl_matrix_const_view;
 
      typedef struct
      {
