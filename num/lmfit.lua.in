@@ -562,11 +562,10 @@ end
 
 local M = { _data = {} }
 
-local function store(obj, ckey, cdata)
+local function store(obj, cdata)
    local t = M._data
-   t[ckey] = obj
-   t[#t+1] = cdata
-   return ckey
+   t[cdata] = obj
+   return cdata
 end
 
 local function object(cdata)
@@ -577,13 +576,13 @@ end
 local function get_matrix(n1, n2)
    local m = gsl.new(n1, n2)
    local s = cgsl.gsl_matrix_submatrix (m, 0, 0, n1, n2)
-   return store(m, s.matrix, s)
+   return store(m, s)
 end
 
 local function get_vector(nr)
    local m = gsl.new(nr, 1)
-   local v = cgsl.gsl_matrix_column (m, 0)
-   return store(m, v.vector, v)
+   local s = cgsl.gsl_matrix_column (m, 0)
+   return store(m, s)
 end
 
 local function get_permutation(nr)
