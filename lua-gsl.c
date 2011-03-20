@@ -105,10 +105,6 @@ luaopen_gsl (lua_State *L)
   ode_complex_register (L);
   solver_complex_register (L);
 
-#ifdef GSL_SHELL_DEBUG
-  luaL_register (L, NULL, gsl_shell_debug_functions);
-#endif
-
   lua_pop (L, 1);
 
   return 1;
