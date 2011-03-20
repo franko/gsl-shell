@@ -180,6 +180,34 @@ Complex lua_tocomplex (lua_State *L, int i)
 
 #define RF(f)  RFIMP(f,f,c##f)
 
+int
+Lsqrt(lua_State *L)
+{
+  Complex z;
+
+  switch (lua_type(L, 1))
+    {
+    case LUA_TNUMBER:
+    case LUA_TSTRING:
+      {
+	double x = luaL_checknumber(L, 1);
+	if (x >= 0)
+	  {
+	    lua_pushnumber (L, sqrt(x));
+	    return 1;
+	  }
+
+	z = x;
+	break;
+      }
+    default:
+      z = *((Complex*) gs_check_userdata (L, 1, GS_COMPLEX));
+    }
+
+  lua_pushcomplex (L, csqrt(z));
+  return 1;
+}
+
 A(new,O(1)+O(2)*I)	/** new(x,y) */
 F(neg)			/** __unm(z) */
 G(abs)			/** abs(z) */
@@ -201,7 +229,6 @@ F(proj)			/** proj(z) */
 G(real)			/** real(z) */
 RF(sin)			/** sin(z) */
 RF(sinh)			/** sinh(z) */
-RF(sqrt)			/** sqrt(z) */
 RF(tan)			/** tan(z) */
 RF(tanh)			/** tanh(z) */
 
