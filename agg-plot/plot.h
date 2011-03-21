@@ -327,6 +327,8 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
 {
   typedef typename plot<VS,RM>::iterator iter_type;
 
+  before_draw();
+
   iter_type *c0 = m_drawing_queue;
   for (iter_type *c = c0; c != 0; c = c->next())
     {
@@ -335,10 +337,10 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
       draw_element(d, canvas, m);
 
       agg::rect_base<double> ebb;
-      agg::bounding_rect_single(d.vertex_source(), 0, 
-				&ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
+      bool not_empty = agg::bounding_rect_single(d.vertex_source(), 0, &ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
 
-      bb.add<rect_union>(ebb);
+      if (not_empty)
+	bb.add<rect_union>(ebb);
     }
 }
 
@@ -364,7 +366,8 @@ void plot<VS,RM>::compute_user_trans()
       r = m_rect.is_defined() ? m_rect.rect() : agg::rect_base<double>(0.0, 0.0, 1.0, 1.0);
     }
 
-  double fx = 1/(r.x2 - r.x1), fy = 1/(r.y2 - r.y1);
+  double dx = r.x2 - r.x1, dy = r.y2 - r.y1;
+  double fx = (dx == 0 ? 1.0 : 1/dx), fy = (dy == 0 ? 1.0 : 1/dy);
   this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -r.x1 * fx, -r.y1 * fy);
 }
 
@@ -395,17 +398,24 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
       agg::conv_stroke<dash_type> lns(lndash);
 
       const agg::rect_base<double>& rect = m_rect.rect();
-      double yeps = (rect.y2 - rect.y1) / 1.0e+3;
-      double xeps = (rect.x2 - rect.x1) / 1.0e+3;
+
+      double x1 = rect.x1, x2 = rect.x2;
+      double y1 = rect.y1, y2 = rect.y2;
+
+      if (x2 <= x1) x2 = x1 + 1.0;
+      if (y2 <= y1) y2 = y1 + 1.0;
+
+      double yeps = (y2 - y1) / 1.0e+3;
+      double xeps = (x2 - x1) / 1.0e+3;
 
       {
 	int jinf = m_uy.begin(), jsup = m_uy.end();
 	for (int j = jinf; j <= jsup; j++)
 	  {
-	    double yl = m_uy.mark_value(j);
-	    if (yl >= rect.y1 - yeps && yl <= rect.y2 + yeps)
+	    double ym = m_uy.mark_value(j);
+	    if (ym >= y1 - yeps && ym <= y2 + yeps)
 	      {
-		double y = (yl - rect.y1) / (rect.y2 - rect.y1);
+		double y = (ym - y1) / (y2 - y1);
 		agg::gsv_text lab;
 		agg::conv_stroke<agg::gsv_text> labs(lab);
 		char lab_text[32];
@@ -440,10 +450,10 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	int jinf = m_ux.begin(), jsup = m_ux.end();
 	for (int j = jinf; j <= jsup; j++)
 	  {
-	    double xl = m_ux.mark_value(j);
-	    if (xl >= rect.x1 - xeps && xl <= rect.x2 + xeps)
+	    double xm = m_ux.mark_value(j);
+	    if (xm >= x1 - xeps && xm <= x2 + xeps)
 	      {
-		double x = (xl - rect.x1) / (rect.x2 - rect.x1);
+		double x = (xm - x1) / (x2 - x1);
 		agg::gsv_text lab;
 		agg::conv_stroke<agg::gsv_text> labs(lab);
 		char lab_text[32];
