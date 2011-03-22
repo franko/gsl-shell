@@ -1,0 +1,4 @@
+- introduire une fonction dot(x, y) = prod(x, y)[1]
+- rename echo & print to print & show to make print behave like
+  in standard Lua
+
