@@ -15,7 +15,7 @@ x1 = -16
 x2 =  16
 
 v1 = 0
-v2 = 40
+v2 = 30
 
 function ks(e)
    return sqrt(2*(e-v1)), sqrt(2*(e-v2))
@@ -147,29 +147,24 @@ end
 
 function As_mat_compute(roots)
    local n = #roots
-   local m = cgsl.gsl_matrix_complex_calloc (n, 4)
-   local cxx = ffi.new('gsl_complex')
+   local m = cgsl.gsl_matrix_alloc (n, 8)
    for i=1, n do
       local e = roots[i]
       A2submat(e)
       local As = gsl.solve(smat, bmat)
       local nc = rsqrt(1 / phi_norm(e))
 
-      cxx.dat[0] = nc * real(As[1])
-      cxx.dat[1] = nc * imag(As[1])
-      cgsl.gsl_matrix_complex_set(m, i-1, 0, cxx)
+      cgsl.gsl_matrix_set(m, i-1, 2*0    , nc * real(As[1]))
+      cgsl.gsl_matrix_set(m, i-1, 2*0 + 1, nc * imag(As[1]))
 
-      cxx.dat[0] = nc
-      cxx.dat[1] = 0
-      cgsl.gsl_matrix_complex_set(m, i-1, 1, cxx)
+      cgsl.gsl_matrix_set(m, i-1, 2*1    , nc)
+      cgsl.gsl_matrix_set(m, i-1, 2*1 + 1, 0)
 
-      cxx.dat[0] = nc * real(As[2])
-      cxx.dat[1] = nc * imag(As[2])
-      cgsl.gsl_matrix_complex_set(m, i-1, 2, cxx)
+      cgsl.gsl_matrix_set(m, i-1, 2*2    , nc * real(As[2]))
+      cgsl.gsl_matrix_set(m, i-1, 2*2 + 1, nc * imag(As[2]))
 
-      cxx.dat[0] = nc * real(As[3])
-      cxx.dat[1] = nc * imag(As[3])
-      cgsl.gsl_matrix_complex_set(m, i-1, 3, cxx)
+      cgsl.gsl_matrix_set(m, i-1, 2*3    , nc * real(As[3]))
+      cgsl.gsl_matrix_set(m, i-1, 2*3 + 1, nc * imag(As[3]))
    end
 
    return m
@@ -177,10 +172,10 @@ end
 
 local As_mat = As_mat_compute(roots)
 
-local cxx = ffi.new('gsl_complex')
 local function As_coeff(i, j)
-   cxx = cgsl.gsl_matrix_complex_get(As_mat, i, j)
-   return cxx.dat[0], cxx.dat[1]
+   local ar = cgsl.gsl_matrix_get(As_mat, i, 2*j  )
+   local ai = cgsl.gsl_matrix_get(As_mat, i, 2*j+1)
+   return ar, ai
 end
 
 function feval_ri(i, x)
@@ -227,8 +222,9 @@ function coherent_state(x0, p0, sig)
 	  end
 end
 
-fcs = coherent_state(-4, 8, 0.4)
+fcs = coherent_state(-8, 8, 0.8)
 pcs = graph.fxplot(|x| rsqrt(csqrn(fcs(x))), x1, x2)
+pcs:limits(x1, 0, x2, 2)
 
 function plot_roots()
    local ps = graph.fxplot(edet, v2, roots[#roots])
@@ -245,29 +241,6 @@ end
 
 -- plot_roots()
 
-function state_plot()
-   local px = graph.plot('Eigenstates Waveforms')
-   px:show()
-   for i=1, #roots do
-      local e = roots[i]
-      fz = feigenv(e)
-      px:clear()
-      local lnr = graph.fxline(|x| real(fz(x)), x1, x2)
-      local lni = graph.fxline(|x| imag(fz(x)), x1, x2)
-
-      local nn = phi_norm(e)
-      local nv = qag(|x| csqrn(fz(x)), x1, x2, 1e-8, 1e-8)
-      print('NORM', nn, nv)
-      print('Energy:', e)
-
-      px:addline(lnr, 'red')
-      px:addline(lni, 'blue')
-      io.read '*l'
-   end
-end
-
--- state_plot()
-
 function coeff(f, e)
    local fc = feigenv(e)
    local cr = qag(|x| real(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
@@ -276,13 +249,12 @@ function coeff(f, e)
 end
 
 
-coeffs = gsl.cnew(#roots, 1)
--- ex = roots[12]
--- local ncx = phi_norm(ex)
--- fev12 = |x| rsqrt(1 / ncx) * feval(ex, x)
+coeffs = cgsl.gsl_vector_alloc (2 * #roots)
 for i = 1, #roots do
    local e = roots[i]
-   coeffs[i] = coeff(fcs, e)
+   local c = coeff(fcs, e)
+   cgsl.gsl_vector_set (coeffs, 2*(i-1)  , real(c))
+   cgsl.gsl_vector_set (coeffs, 2*(i-1)+1, imag(c))
 end
 
 print(coeffs)
@@ -290,7 +262,7 @@ print(coeffs)
 function plot_coeffs()
    --graph.fiplot(|i| csqrn(coeffs[i]), 1, #coeffs)
    local p = graph.plot()
-   ln = graph.ipath(gsl.sequence(function(i) return roots[i], csqrn(coeffs[i]) end, 1, #roots))
+   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], (coeffs.data[2*i]^2+coeffs.data[2*i+1]^2) end, 0, #roots-1))
    p = graph.plot()
    p:addline(ln)
    p:show()
@@ -300,57 +272,89 @@ plot_coeffs()
 
 -- state_plot()
 
-local csexp = cgsl.gsl_vector_complex_alloc (#roots)
-function coeff_inv(cs, t)
+local csexp = cgsl.gsl_vector_alloc (2 * #roots)
+function coeff_inv(cs, fxv, y, t)
    local n = #roots
 
    for i=0, n-1 do
       local e = cgsl.gsl_matrix_get (roots, i, 0)
 
-      local gslc = cgsl.gsl_matrix_complex_get (cs, i, 0)
-      local cr, ci = gslc.dat[0], gslc.dat[1]
+      local cr = cgsl.gsl_vector_get (cs, 2*i  )
+      local ci = cgsl.gsl_vector_get (cs, 2*i+1)
 
       local exr, exi = rcos(-e*t), rsin(-e*t)
 
-      gslc.dat[0] = cr*exr - ci*exi
-      gslc.dat[1] = cr*exi + ci*exr
-
-      cgsl.gsl_vector_complex_set (csexp, i, gslc)
+      csexp.data[2*i  ] = cr*exr - ci*exi
+      csexp.data[2*i+1] = cr*exi + ci*exr
    end
 
-   local function eval(x)
+   local p = y.size / 2
+
+   for k=0, p-1 do
       local sr, si = 0, 0
       for i=0, n-1 do
-	 local e = cgsl.gsl_matrix_get (roots, i, 0)
-
-	 local gslc = cgsl.gsl_vector_complex_get (csexp, i)
-	 local cr, ci = gslc.dat[0], gslc.dat[1]
-
-	 local fr, fi = feval_ri(i, x)
+	 local cr, ci = csexp.data[2*i], csexp.data[2*i+1]
+	 local fr, fi = fxv.data[2*n*k + 2*i], fxv.data[2*n*k + 2*i + 1]
 
 	 sr = sr + (cr*fr - ci*fi)
 	 si = si + (cr*fi + ci*fr)
       end
-      return sr, si
+
+      y.data[2*k  ] = sr
+      y.data[2*k+1] = si
    end
-
-   return eval
 end
 
-local function coeff_inv_csqr(cs, t)
-   local eval = coeff_inv(cs, t)
-   return function(x)
-	     local r, i = eval(x)
-	     return r*r + i*i
-	  end
+local n = #roots
+local p = 512
+local fxv = cgsl.gsl_vector_alloc (2 * n * p)
+local y = cgsl.gsl_vector_alloc (2 * p)
+
+local xsmp = |k| (x2-x1)*k/(p-1) + x1
+
+for k= 0, p-1 do
+   local x = xsmp(k)
+   for i= 0, n-1 do
+      local fr, fi = feval_ri(i, x)
+      fxv.data[2*n*k + 2*i    ] = fr
+      fxv.data[2*n*k + 2*i + 1] = fi
+   end
 end
+
+function state_plot()
+   local px = graph.plot('Eigenstates Waveforms')
+   px.sync = false
+   px:show()
+
+   px:pushlayer()
+   for i=0, n-1 do
+      local e = roots[i+1]
+
+      local sqr = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i] end, 0, p-1)
+      local sqi = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i+1] end, 0, p-1)
+
+      print('Energy:', e)
+
+      px:clear()
+      px:addline(graph.ipath(sqr), 'red')
+      px:addline(graph.ipath(sqi), 'blue')
+      px:flush()
+      io.read '*l'
+   end
+end
+
+--state_plot()
+
+echo 'READY: press enter'
+io.read '*l'
 
 pcs.sync = false
 pcs:pushlayer()
-for t= 0, 8, 0.125/2 do
-   print('calculating', t)
-   frec = coeff_inv_csqr(coeffs, t)
+for t= 0, 16, 0.125/8 do
+   --   print('calculating', t)
+   coeff_inv(coeffs, fxv, y, t)
    pcs:clear()
-   pcs:addline(graph.fxline(frec, x1, x2), 'green')
+   local ln = graph.ipath(gsl.sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
+   pcs:addline(ln, 'green')
    pcs:flush()
 end
