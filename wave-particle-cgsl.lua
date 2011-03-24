@@ -4,15 +4,15 @@ local cgsl = require 'cgsl'
 local template = require 'template'
 local qag = template.load('num/qag.lua.in', {limit=64, order=21})
 
+local root = dofile('root.lua')
+
 use 'complex'
 
 local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
 local atan2, pi = math.atan2, math.pi
 
-local root = dofile('root.lua')
-
-x1 = -16
-x2 =  16
+x1 = -24
+x2 =  24
 
 v1 = 0
 v2 = 30
@@ -21,28 +21,29 @@ function ks(e)
    return sqrt(2*(e-v1)), sqrt(2*(e-v2))
 end
 
-smat = gsl.cnew(3, 3)
-bmat = gsl.cnew(3, 1)
+local smat = gsl.cnew(4, 4)
+local bmat = gsl.vector {0,0,0,1}
 
-function A2submat(e)
-   local k1, k2 = ks(e)
+function Asget(k1, k2, e)
    local a1, a2 = exp(I*k1*x1), exp(I*k2*x2)
 
    smat:set(1,1, 1/a1)
-   smat:set(2,2, 1/a2)
-   smat:set(2,3, a2)
+   smat:set(1,2, a1)
+   smat:set(2,3, 1/a2)
+   smat:set(2,4, a2)
    smat:set(3,1,  1)
-   smat:set(3,2, -1)
+   smat:set(3,2,  1)
    smat:set(3,3, -1)
+   smat:set(3,4, -1)
+   smat:set(4,2, 1)
 
-   bmat[1] = -a1
-   bmat[2] =  0
-   bmat[3] = -1
+   local x = gsl.solve(smat, bmat)
+   return x[1], x[2], x[3], x[4]
 end
 
-function phi_A2x(A2, As, e)
-   local A1, B1, B2 = As[1], As[2], As[3]
+function feigenv(e)
    local k1, k2 = ks(e)
+   local A1, A2, B1, B2 = Asget(k1, k2, e)
    return function(x)
 	     if x <= 0 then
 		return A1 * exp(-I*k1*x) + A2 * exp(I*k1*x)
@@ -50,24 +51,6 @@ function phi_A2x(A2, As, e)
 		return B1 * exp(-I*k2*x) + B2 * exp(I*k2*x)
 	     end
 	  end
-end
-
-function feigenv(e)
-   A2submat(e)
-   local As = gsl.solve(smat, bmat)
-   return phi_A2x(1, As, e)
-end
-
-function feval(e, x)
-   A2submat(e)
-   local As = gsl.solve(smat, bmat)
-   local A1, A2, B1, B2 = As[1], 1, As[2], As[3]
-   local k1, k2 = ks(e)
-   if x <= 0 then
-      return A1 * exp(-I*k1*x) + A2 * exp(I*k1*x)
-   else
-      return B1 * exp(-I*k2*x) + B2 * exp(I*k2*x)
-   end
 end
 
 function edet(e)
@@ -120,9 +103,7 @@ end
 
 function phi_norm(e)
    local k1, k2 = ks(e)
-   A2submat(e)
-   local As = gsl.solve(smat, bmat)
-   local A1, A2, B1, B2 = As[1], 1, As[2], As[3]
+   local A1, A2, B1, B2 = Asget(k1, k2, e)
    local phi1, phi2, dphi
 
    local A1s, A2s = csqrn(A1), csqrn(A2)
@@ -150,21 +131,21 @@ function As_mat_compute(roots)
    local m = cgsl.gsl_matrix_alloc (n, 8)
    for i=1, n do
       local e = roots[i]
-      A2submat(e)
-      local As = gsl.solve(smat, bmat)
+      local k1, k2 = ks(e)
+      local A1, A2, B1, B2 = Asget(k1, k2, e)
       local nc = rsqrt(1 / phi_norm(e))
 
-      cgsl.gsl_matrix_set(m, i-1, 2*0    , nc * real(As[1]))
-      cgsl.gsl_matrix_set(m, i-1, 2*0 + 1, nc * imag(As[1]))
+      cgsl.gsl_matrix_set(m, i-1, 2*0    , nc * real(A1))
+      cgsl.gsl_matrix_set(m, i-1, 2*0 + 1, nc * imag(A1))
 
-      cgsl.gsl_matrix_set(m, i-1, 2*1    , nc)
-      cgsl.gsl_matrix_set(m, i-1, 2*1 + 1, 0)
+      cgsl.gsl_matrix_set(m, i-1, 2*1    , nc * real(A2))
+      cgsl.gsl_matrix_set(m, i-1, 2*1 + 1, nc * imag(A2))
 
-      cgsl.gsl_matrix_set(m, i-1, 2*2    , nc * real(As[2]))
-      cgsl.gsl_matrix_set(m, i-1, 2*2 + 1, nc * imag(As[2]))
+      cgsl.gsl_matrix_set(m, i-1, 2*2    , nc * real(B1))
+      cgsl.gsl_matrix_set(m, i-1, 2*2 + 1, nc * imag(B1))
 
-      cgsl.gsl_matrix_set(m, i-1, 2*3    , nc * real(As[3]))
-      cgsl.gsl_matrix_set(m, i-1, 2*3 + 1, nc * imag(As[3]))
+      cgsl.gsl_matrix_set(m, i-1, 2*3    , nc * real(B2))
+      cgsl.gsl_matrix_set(m, i-1, 2*3 + 1, nc * imag(B2))
    end
 
    return m
@@ -178,7 +159,7 @@ local function As_coeff(i, j)
    return ar, ai
 end
 
-function feval_ri(i, x)
+function feval(i, x)
    local e = cgsl.gsl_matrix_get (roots, i, 0)
    if e > v2 then
       if x < 0 then
@@ -315,7 +296,7 @@ local xsmp = |k| (x2-x1)*k/(p-1) + x1
 for k= 0, p-1 do
    local x = xsmp(k)
    for i= 0, n-1 do
-      local fr, fi = feval_ri(i, x)
+      local fr, fi = feval(i, x)
       fxv.data[2*n*k + 2*i    ] = fr
       fxv.data[2*n*k + 2*i + 1] = fi
    end
@@ -350,11 +331,15 @@ io.read '*l'
 
 pcs.sync = false
 pcs:pushlayer()
-for t= 0, 16, 0.125/8 do
-   --   print('calculating', t)
-   coeff_inv(coeffs, fxv, y, t)
-   pcs:clear()
-   local ln = graph.ipath(gsl.sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
-   pcs:addline(ln, 'green')
-   pcs:flush()
+
+function anim()
+   for t= 0, 16, 0.125/8 do
+      coeff_inv(coeffs, fxv, y, t)
+      pcs:clear()
+      local ln = graph.ipath(gsl.sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
+      pcs:addline(ln, 'green')
+      pcs:flush()
+   end
 end
+
+anim()
