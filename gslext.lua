@@ -1,8 +1,8 @@
 -- load initialization files for GSL Shell
 
 require('base')
-require('matrix')
+require('matrix-init')
 require('misc')
 require('integ')
-require('draw')
+require('graph-init')
 require('import')

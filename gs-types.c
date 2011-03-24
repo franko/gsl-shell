@@ -87,7 +87,7 @@ const struct gs_type gs_type_table[] = {
 #undef MY_EXPAND_DER
 
 const struct luaL_Reg gs_type_functions[] = {
-  {"gsltype",        gs_type_string},
+  {"type",        gs_type_string},
   {NULL, NULL}
 };  
 

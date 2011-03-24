@@ -21,7 +21,7 @@
 local cat, insert = table.concat, table.insert
 local fmt = string.format
 
-function gsl.divmod(n, p)
+function math.divmod(n, p)
    local r = n % p
    return (n-r)/p, r
 end
@@ -59,8 +59,8 @@ tos = function (t, maxdepth)
    elseif tp == 'userdata' then
       local ftostr = getmetatable(t).__tostring
       if ftostr then return ftostr(t) else
-	 if gsl.gsltype then
-	    return fmt('<%s: %p>', gsl.gsltype(t), t)
+	 if gsl.type then
+	    return fmt('<%s: %p>', gsl.type(t), t)
 	 else
 	    return fmt('<userdata: %p>', t)
 	 end

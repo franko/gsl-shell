@@ -1,7 +1,7 @@
 
 local _G, rawget, rawset = _G, rawget, rawset
 
-local stdlibs = {'math', 'gsl', 'graph'}
+local stdlibs = {'math', 'matrix', 'gsl', 'graph'}
 
 local function new_env() 
    local lookup_modules = {}
