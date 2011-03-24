@@ -21,8 +21,8 @@ function ks(e)
    return sqrt(2*(e-v1)), sqrt(2*(e-v2))
 end
 
-local smat = gsl.cnew(4, 4)
-local bmat = gsl.vector {0,0,0,1}
+local smat = matrix.cnew(4, 4)
+local bmat = matrix.vec {0,0,0,1 + 0 * complex.I}
 
 function Asget(k1, k2, e)
    local a1, a2 = exp(I*k1*x1), exp(I*k2*x2)
@@ -37,7 +37,7 @@ function Asget(k1, k2, e)
    smat:set(3,4, -1)
    smat:set(4,2, 1)
 
-   local x = gsl.solve(smat, bmat)
+   local x = matrix.solve(smat, bmat)
    return x[1], x[2], x[3], x[4]
 end
 
@@ -91,7 +91,7 @@ function root_grid_search(emax)
       end
    end
 
-   return gsl.vector(roots)
+   return matrix.vec(roots)
 end
 
 roots = root_grid_search(120)

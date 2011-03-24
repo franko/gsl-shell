@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 local function star(r)
    local a, ae = 54*pi/180, 72*pi/180
    local li, hi = r*cos(a), r*sin(a)
