@@ -1,9 +1,6 @@
 local ffi = require 'ffi'
 local cgsl = require 'cgsl'
 
-local template = require 'template'
-local qag = template.load('num/qag.lua.in', {limit=64, order=21})
-
 local root = dofile('root.lua')
 
 use 'complex'
@@ -224,8 +221,8 @@ end
 
 function coeff(f, e)
    local fc = feigenv(e)
-   local cr = qag(|x| real(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
-   local ci = qag(|x| imag(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
+   local cr = gsl.integ(|x| real(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
+   local ci = gsl.integ(|x| imag(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
    return rsqrt(1 / phi_norm(e)) * (cr + I * ci)
 end
 
