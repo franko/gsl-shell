@@ -64,6 +64,10 @@ static const struct luaL_Reg gsl_shell_functions[] = {
   {NULL, NULL}
 };
 
+static const struct luaL_Reg matrix_functions[] = {
+  {NULL, NULL}
+};
+
 int
 luaopen_gsl (lua_State *L)
 {
@@ -77,14 +81,20 @@ luaopen_gsl (lua_State *L)
   luaopen_lcomplex (L);
   lua_pop (L, 1);
 
+  luaL_register (L, MLUA_MATRIXLIBNAME, matrix_functions);
+  matrix_register (L);
+  matrix_complex_register (L);
+  matrix_arith_register (L);
+  linalg_register (L);
+  lu_decomp_register (L);
+  qr_decomp_register (L);
+  lua_pop (L, 1);
+
   luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
 
   luaL_register (L, NULL, gs_type_functions);
 
   solver_register (L);
-  matrix_register (L);
-  matrix_arith_register (L);
-  linalg_register (L);
   integ_register (L);
   ode_register (L);
   random_register (L);
@@ -97,11 +107,8 @@ luaopen_gsl (lua_State *L)
   mlinear_register (L);
   bspline_register (L);
   interp_register (L);
-  lu_decomp_register (L);
-  qr_decomp_register (L);
 
   fft_register (L);
-  matrix_complex_register (L);
   ode_complex_register (L);
   solver_complex_register (L);
 

@@ -574,13 +574,13 @@ local function object(cdata)
 end
 
 local function get_matrix(n1, n2)
-   local m = gsl.new(n1, n2)
+   local m = matrix.new(n1, n2)
    local s = cgsl.gsl_matrix_submatrix (m, 0, 0, n1, n2)
    return store(m, s)
 end
 
 local function get_vector(nr)
-   local m = gsl.new(nr, 1)
+   local m = matrix.new(nr, 1)
    local s = cgsl.gsl_matrix_column (m, 0)
    return store(m, s)
 end
@@ -813,7 +813,7 @@ end
 
 M.set = function(fdf, x0)
 	   system_fdf = fdf
-	   gsl.set(object(state_x), x0)
+	   matrix.set(object(state_x), x0)
 	   lm_set (fdf, state_x, state_f, state_J, state_dx, true)
 	end
 

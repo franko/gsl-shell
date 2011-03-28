@@ -25,22 +25,22 @@ function demo1()
 		    return A * exp(- lambda * t) + b
 		 end
 
-   local xref = gsl.vector {5, 0.1, 1}
+   local xref = matrix.vec {5, 0.1, 1}
 
    local r = gsl.rng('mt19937')
    r:set(0)
 
-   yrf = gsl.new(n, 1, function(i) return model(xref, i-1) + gsl.rnd.gaussian(r, 0.1) end)
-   sigrf = gsl.new(n, 1, function() return 0.1 end)
+   yrf = matrix.new(n, 1, function(i) return model(xref, i-1) + gsl.rnd.gaussian(r, 0.1) end)
+   sigrf = matrix.new(n, 1, function() return 0.1 end)
 
    local s = gsl.nlinfit {n= n, p= 3}
 
-   s:set(fdf, gsl.vector {1, 0, 0})
-   print(gsl.tr(s.x), s.chisq)
+   s:set(fdf, matrix.vec {1, 0, 0})
+   print(matrix.tr(s.x), s.chisq)
 
    for i=1, 10 do
       s:iterate()
-      print('ITER=', i, ': ', gsl.tr(s.x), s.chisq)
+      print('ITER=', i, ': ', matrix.tr(s.x), s.chisq)
       if s:test(0, 1e-8) then break end
    end
 

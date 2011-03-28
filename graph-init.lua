@@ -37,7 +37,7 @@ function graph.filine(f, a, b)
 end
 
 function graph.xyline(x, y)
-   local n = gsl.dim(x)
+   local n = matrix.dim(x)
    local ln = graph.path(x[1], y[1])
    for i=2, n do ln:line_to(x[i], y[i]) end
    return ln

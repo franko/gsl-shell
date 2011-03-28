@@ -23,7 +23,7 @@ local cat, insert, fmt = table.concat, table.insert, string.format
 local sqrt, abs, tostring_eps = math.sqrt, math.abs, complex.tostring_eps
 
 local function matrix_f_set(m, f)
-   local r, c = gsl.dim(m)
+   local r, c = matrix.dim(m)
    local mset = m.set
    for i = 1, r do
       for j = 1, c do
@@ -34,8 +34,8 @@ local function matrix_f_set(m, f)
    return m
 end
 
-function gsl.matrix_reduce(m, f, accu)
-   local r, c = gsl.dim(m)
+function matrix.matrix_reduce(m, f, accu)
+   local r, c = matrix.dim(m)
    local mget = m.get
    for i = 1, r do
       for j = 1, c do
@@ -45,32 +45,47 @@ function gsl.matrix_reduce(m, f, accu)
    return accu
 end
 
-local function matrix_from_table(ctor, t)
+local ctor_table = {['number'] = matrix.new, ['complex number'] = matrix.cnew}
+
+local function number_type(a, t)
+   if gsl.type(t) == 'number' then
+      if a ~= 'complex number' then a = 'number' end
+   elseif gsl.type(t) == 'complex number' then
+      a = 'complex number'
+   else
+      error('expecting real or complex number, got :' .. t)
+   end
+   return a
+ end
+
+local function matrix_from_table(t)
+   local tp
+   for i, ts in ipairs(t) do 
+      if type(ts) ~= 'table' then error 'invalid matrix definition' end
+      for j, v in ipairs(ts) do
+	 tp = number_type(tp, v)
+      end
+   end
+   local ctor = ctor_table[tp]
+   if not ctor then error 'empty list for matrix definition' end
+
    local r, c = #t, #t[1]
    return matrix_f_set(ctor(r, c), function(i,j) return t[i][j] end)
 end
 
-local function vector_from_table(ctor, t)
+local function vector_from_table(t)
+   local tp
+   for i, v in ipairs(t) do tp = number_type(tp, v) end
+   local ctor = ctor_table[tp]
+   if not ctor then error 'empty list for vector definition' end
+
    local v = ctor (#t, 1)
    for i, x in ipairs(t) do v:set(i,1, x) end
    return v
 end
 
-function gsl.vector(t)
-   return vector_from_table(gsl.new, t)
-end
-
-function gsl.cvector(t)
-   return vector_from_table(gsl.cnew, t)
-end
-
-function gsl.matrix(t)
-   return matrix_from_table(gsl.new, t)
-end
-
-function gsl.cmatrix(t)
-   return matrix_from_table(gsl.cnew, t)
-end
+matrix.vec = vector_from_table
+matrix.def = matrix_from_table
 
 local function padstr(s, w)
    return fmt('%s%s', string.rep(' ', w - #s), s)
@@ -82,8 +97,8 @@ local function matrix_to_string(m)
 		     local ln = # tostring_eps(val, eps)
 		     return (ln > w and ln or w)
 		  end
-   local width = gsl.matrix_reduce(m, fwidth, 0)
-   local r, c = gsl.dim(m)
+   local width = matrix.matrix_reduce(m, fwidth, 0)
+   local r, c = matrix.dim(m)
    local lines = {}
    for i=1,r do
       local ln = {}
@@ -100,27 +115,27 @@ local function csqr(z)
    return r*r + i*i
 end
 
-function gsl.tr(m)
-   local r, c = gsl.dim(m)
-   return gsl.new(c, r, function(i,j) return m:get(j,i) end)
+function matrix.tr(m)
+   local r, c = matrix.dim(m)
+   return matrix.new(c, r, function(i,j) return m:get(j,i) end)
 end
 
-function gsl.hc(m)
-   local r, c = gsl.dim(m)
-   return gsl.cnew(c, r, function(i,j) return complex.conj(m:get(j,i)) end)
+function matrix.hc(m)
+   local r, c = matrix.dim(m)
+   return matrix.cnew(c, r, function(i,j) return complex.conj(m:get(j,i)) end)
 end
 
-function gsl.diag(v)
-   local n = gsl.dim(v)
-   return gsl.new(n, n, function(i,j) return i == j and v:get(i,1) or 0 end)
+function matrix.diag(v)
+   local n = matrix.dim(v)
+   return matrix.new(n, n, function(i,j) return i == j and v:get(i,1) or 0 end)
 end
 
-function gsl.unit(n)
-   return gsl.new(n, n, function(i,j) return i == j and 1 or 0 end)
+function matrix.unit(n)
+   return matrix.new(n, n, function(i,j) return i == j and 1 or 0 end)
 end
 
 local function matrix_norm(m)
-   local r, c = gsl.dim(m)
+   local r, c = matrix.dim(m)
    local s = 0
    for i=1, r do
       for j=1, c do
@@ -131,22 +146,22 @@ local function matrix_norm(m)
 end
 
 local function matrix_column (m, c)
-   local r = gsl.dim(m)
+   local r = matrix.dim(m)
    return m:slice(1, c, r, 1)
 end
 
 local function matrix_row (m, r)
-   local _, c = gsl.dim(m)
+   local _, c = matrix.dim(m)
    return m:slice(r, 1, 1, c)
 end
 
 local function matrix_rows(m)
-   local r, c = gsl.dim(m)
-   return gsl.sequence(function(i) m:slice(i, 1, 1, c) end, r)
+   local r, c = matrix.dim(m)
+   return matrix.sequence(function(i) m:slice(i, 1, 1, c) end, r)
 end
 
-function gsl.null(m)
-   local r, c = gsl.dim(m)
+function matrix.null(m)
+   local r, c = matrix.dim(m)
    local mset = m.set
    for i=1, r do
       for j=1, c do
@@ -155,51 +170,22 @@ function gsl.null(m)
    end
 end
 
-function gsl.fset(m, f)
+function matrix.fset(m, f)
    matrix_f_set(m, f)
 end
 
 local function add_matrix_method(s, m)
-   gsl.Matrix[s] = m
-   gsl.cMatrix[s] = m
+   matrix.Matrix[s] = m
+   matrix.cMatrix[s] = m
 end
-
-function gsl.ode_iter(s, t0, y0, t1, h, tstep)
-   s:set(t0, y0, h)
-   return function()
-	     local t, y = s.t, s.y
-	     if t < t1 then
-		s:evolve(t1, tstep)
-		return t, y
-	     end
-	  end
-end
-
-local function hc_reduce(hc, f, accu)
-   local n = hc.length
-   for i=0, n do accu = f(accu, hc:get(i)) end
-   return accu
-end
-
-local function hc_print(hc)
-   local eps = 1e-8 * hc_reduce(hc, function(p,z) return p + csqr(z) end, 0)
-   local f = function(p, z)
-		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
-		return p
-	     end
-   return cat(hc_reduce(hc, f, {}), '\n')
-end
-
-gsl.FFT_hc_mixed_radix.__tostring = hc_print
-gsl.FFT_hc_radix2.__tostring = hc_print
 
 local function add_matrix_meta_method(key, method)
    local m, mt
-   m = gsl.new(1,1)
+   m = matrix.new(1,1)
    mt = getmetatable(m)
    mt[key] = method
 
-   m = gsl.cnew(1,1)
+   m = matrix.cnew(1,1)
    mt = getmetatable(m)
    mt[key] = method
 end
@@ -210,23 +196,3 @@ add_matrix_method('norm',       matrix_norm)
 add_matrix_method('col',        matrix_column)
 add_matrix_method('row',        matrix_row)
 add_matrix_method('rows',       matrix_rows)
-
-function gsl.linmodel(f, x)
-   local p, n = #f(x[1]), gsl.dim(x)
-   local A = gsl.new(n, p)
-   for k=1,n do
-      local y = f(x[k])
-      for j=1,p do A:set(k, j, y[j]) end
-   end
-   return A
-end
-
-function gsl.linfit(gener, x, y, w)
-   local X = gsl.linmodel(gener, x)
-   local c, cov = gsl.mlinear(X, y, w)
-   local f = function(xe)
-		local xs = gsl.vector(gener(xe))
-		return gsl.prod(xs, c)[1]
-	     end
-   return f, c
-end

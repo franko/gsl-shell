@@ -47,7 +47,7 @@ function gsl.ode(spec)
 			 end}
 
    local dim = spec.N
-   local solver = {_state = ode.new(), dim= dim, _y = gsl.new(dim,1)}
+   local solver = {_state = ode.new(), dim= dim, _y = matrix.new(dim,1)}
    setmetatable(solver, ODE)
 
    return solver
@@ -57,7 +57,7 @@ local NLINFIT = {
    __index = function(t, k)
 		if k == 'chisq' then
 		   local f = t.lm.f
-		   return gsl.prod(f, f)[1]
+		   return matrix.prod(f, f)[1]
 		else
 		   if t.lm[k] then return t.lm[k] end
 		end
@@ -82,4 +82,53 @@ function gsl.nlinfit(spec)
    setmetatable(s, NLINFIT)
 
    return s
+end
+
+function gsl.ode_iter(s, t0, y0, t1, h, tstep)
+   s:set(t0, y0, h)
+   return function()
+	     local t, y = s.t, s.y
+	     if t < t1 then
+		s:evolve(t1, tstep)
+		return t, y
+	     end
+	  end
+end
+
+local function hc_reduce(hc, f, accu)
+   local n = hc.length
+   for i=0, n do accu = f(accu, hc:get(i)) end
+   return accu
+end
+
+local function hc_print(hc)
+   local eps = 1e-8 * hc_reduce(hc, function(p,z) return p + csqr(z) end, 0)
+   local f = function(p, z)
+		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
+		return p
+	     end
+   return cat(hc_reduce(hc, f, {}), '\n')
+end
+
+gsl.FFT_hc_mixed_radix.__tostring = hc_print
+gsl.FFT_hc_radix2.__tostring = hc_print
+
+function gsl.linmodel(f, x)
+   local p, n = #f(x[1]), matrix.dim(x)
+   local A = matrix.new(n, p)
+   for k=1,n do
+      local y = f(x[k])
+      for j=1,p do A:set(k, j, y[j]) end
+   end
+   return A
+end
+
+function gsl.linfit(gener, x, y, w)
+   local X = gsl.linmodel(gener, x)
+   local c, cov = gsl.mlinear(X, y, w)
+   local f = function(xe)
+		local xs = matrix.vec(gener(xe))
+		return matrix.prod(xs, c)[1]
+	     end
+   return f, c
 end
