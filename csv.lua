@@ -1,5 +1,5 @@
 
-csv = {}
+local csv = {}
 
 local function add_number(t, n)
    local v = tonumber(n)
@@ -41,3 +41,5 @@ function csv.read(filename)
    end
    return t
 end
+
+return csv
