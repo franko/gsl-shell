@@ -46,6 +46,7 @@ static int matrix_solve (lua_State *L);
 static int matrix_dim   (lua_State *L);
 static int matrix_copy  (lua_State *L);
 static int matrix_prod  (lua_State *L);
+static int matrix_dot   (lua_State *L);
 static int matrix_set   (lua_State *L);
 
 static const struct luaL_Reg matrix_arith_functions[] = {
@@ -53,7 +54,8 @@ static const struct luaL_Reg matrix_arith_functions[] = {
   {"copy",          matrix_copy},
   {"solve",         matrix_solve},
   {"inv",           matrix_inv},
-  {"prod",          matrix_prod},
+  {"prod",          matrix_prod}, 
+  {"dot",           matrix_dot},
   {"set",           matrix_set},
   {NULL, NULL}
 };
@@ -403,6 +405,63 @@ matrix_prod (lua_State *L)
     }
 
   return 1;
+}
+
+int
+matrix_dot (lua_State *L)
+{
+  struct pmatrix a, b, r;
+  size_t sz;
+
+  check_matrix_type (L, 1, &a);
+  check_matrix_type (L, 2, &b);
+
+  sz = (a.tp == GS_MATRIX ? a.m.real->size2 : a.m.cmpl->size2);
+  if (sz != 1)
+    return gs_type_error (L, 1, "column matrix");
+
+  sz = (b.tp == GS_MATRIX ? b.m.real->size2 : b.m.cmpl->size2);
+  if (sz != 1)
+    return gs_type_error (L, 2, "column matrix");
+  
+  check_matrix_mul_dim (L, &a, &b, true, false);
+
+  r.tp = (a.tp == GS_MATRIX && b.tp == GS_MATRIX ? GS_MATRIX : GS_CMATRIX);
+
+  if (a.tp != r.tp)
+    matrix_complex_promote (L, 1, &a);
+
+  if (b.tp != r.tp)
+    matrix_complex_promote (L, 2, &b);
+
+  switch (r.tp)
+    {
+    case GS_MATRIX:
+      {
+	double result;
+	gsl_vector_view av = gsl_matrix_column (a.m.real, 0);
+	gsl_vector_view bv = gsl_matrix_column (b.m.real, 0);
+	gsl_blas_ddot (&av.vector, &bv.vector, &result);
+	lua_pushnumber (L, result);
+	return 1;
+      }
+    case GS_CMATRIX:
+      {
+	gsl_complex result;
+	gsl_vector_complex_view av = gsl_matrix_complex_column (a.m.cmpl, 0);
+	gsl_vector_complex_view bv = gsl_matrix_complex_column (b.m.cmpl, 0);
+	Complex z;
+
+	gsl_blas_zdotc (&av.vector, &bv.vector, &result);
+	z = result.dat[0] + _Complex_I * result.dat[1];
+	lua_pushcomplex (L, z);
+	return 1;
+      }
+    default:
+      /* */;
+    }
+
+  return 0;
 }
 
 int
