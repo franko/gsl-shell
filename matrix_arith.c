@@ -41,13 +41,14 @@ struct pmatrix {
   } m;
 };
 
-static int matrix_inv   (lua_State *L);
-static int matrix_solve (lua_State *L);
-static int matrix_dim   (lua_State *L);
-static int matrix_copy  (lua_State *L);
-static int matrix_prod  (lua_State *L);
-static int matrix_dot   (lua_State *L);
-static int matrix_set   (lua_State *L);
+static int matrix_inv      (lua_State *L);
+static int matrix_solve    (lua_State *L);
+static int matrix_dim      (lua_State *L);
+static int matrix_copy     (lua_State *L);
+static int matrix_prod     (lua_State *L);
+static int matrix_dot      (lua_State *L);
+static int matrix_set      (lua_State *L);
+static int matrix_newindex (lua_State *L);
 
 static const struct luaL_Reg matrix_arith_functions[] = {
   {"dim",           matrix_dim},
@@ -506,8 +507,170 @@ matrix_set (lua_State *L)
   return 0;
 }
 
+static void
+matrix_set_row_matrix (lua_State *L,
+		       struct pmatrix *lhs, int index,
+		       struct pmatrix *rhs)
+{
+  if (rhs->tp == GS_CMATRIX && lhs->tp == GS_MATRIX)
+    gs_type_error (L, 3, "real matrix");
+
+  if (lhs->tp == GS_CMATRIX && rhs->tp == GS_MATRIX)
+    matrix_complex_promote (L, 3, rhs);
+
+  if (lhs->tp == GS_MATRIX)
+    {
+      gsl_matrix *a = lhs->m.real, *b = rhs->m.real;
+      size_t ncol = a->size2;
+
+      if (index >= a->size1 || index < 0)
+	{
+	  luaL_error (L, INVALID_INDEX_MSG);
+	}
+      else
+	{
+	  gsl_matrix_view ar = gsl_matrix_submatrix (a, index, 0, 1, ncol);
+
+	  if (b->size1 != 1 || a->size2 != b->size2)
+	    luaL_error (L, "matrix dimensions does not match");
+
+	  gsl_matrix_memcpy (&ar.matrix, b);
+	}
+    }
+  else
+    {
+      gsl_matrix_complex *a = lhs->m.cmpl, *b = rhs->m.cmpl;
+      size_t ncol = a->size2;
+
+      if (index >= a->size1 || index < 0)
+	{
+	  luaL_error (L, INVALID_INDEX_MSG);
+	}
+      else
+	{
+	  gsl_matrix_complex_view ar = gsl_matrix_complex_submatrix (a, index, 0, 1, ncol);
+
+	  if (b->size1 != 1 || a->size2 != b->size2)
+	    luaL_error (L, "matrix dimensions does not match");
+
+	  gsl_matrix_complex_memcpy (&ar.matrix, b);
+	}
+    }
+}
+
+static void
+matrix_set_element (lua_State *L, struct pmatrix *lhs, int index, bool vdir1)
+{
+  size_t i1 = (vdir1 ? index : 0);
+  size_t i2 = (vdir1 ? 0 : index);
+
+  if (lhs->tp == GS_MATRIX)
+    {
+      gsl_matrix *m = lhs->m.real;
+      size_t n = (vdir1 ? m->size1 : m->size2);
+
+      if (index >= n || index < 0)
+	luaL_error (L, INVALID_INDEX_MSG);
+
+      if (lua_isnumber (L, 3))
+	{
+	  double val = lua_tonumber (L, 3);
+	  gsl_matrix_set (m, i1, i2, val);
+	}
+      else
+	{
+	  gs_type_error (L, 3, "real number");
+	}
+    }
+  else
+    {
+      gsl_matrix_complex *m = lhs->m.cmpl;
+      size_t n = (vdir1 ? m->size1 : m->size2);
+
+      if (index >= n || index < 0)
+	luaL_error (L, INVALID_INDEX_MSG);
+
+      if (lua_iscomplex (L, 3))
+	{
+	  Complex z = lua_tocomplex (L, 3);
+	  gsl_complex gslz;
+	  GSL_SET_COMPLEX(&gslz, creal(z), cimag(z));
+	  gsl_matrix_complex_set (m, i1, i2, gslz);
+	}
+      else
+	{
+	  gs_type_error (L, 3, "complex number");
+	}
+    }
+}
+
+static int
+matrix_set_row (lua_State *L, struct pmatrix *lhs, int index)
+{
+  bool vdir1, vdir2;
+
+#ifdef LUA_INDEX_CONVENTION
+  index -= 1;
+#endif
+
+  if (lhs->tp == GS_MATRIX)
+    {
+      gsl_matrix *m = lhs->m.real;
+      vdir1 = (m->size2 == 1);
+      vdir2 = (m->size1 == 1);
+    }
+  else
+    {
+      gsl_matrix_complex *m = lhs->m.cmpl;
+      vdir1 = (m->size2 == 1);
+      vdir2 = (m->size1 == 1);
+    }
+
+  if (!vdir1 && !vdir2)
+    {
+      struct pmatrix rhs;
+      check_matrix_type (L, 3, &rhs);
+      matrix_set_row_matrix (L, lhs, index, &rhs);
+    }
+  else
+    {
+      matrix_set_element (L, lhs, index, vdir1);
+    }
+
+  return 0;
+}
+
+int
+matrix_newindex (lua_State *L)
+{
+  struct pmatrix lhs;
+
+  check_matrix_type (L, 1, &lhs);
+
+  if (lua_isnumber (L, 2))
+    {
+      int index = lua_tointeger (L, 2);
+      matrix_set_row (L, &lhs, index);
+      return 0;
+    }
+
+  return luaL_error (L, "attempt to index matrix with non-integer value");
+}
+
 void
 matrix_arith_register (lua_State *L)
 {
+  luaL_getmetatable (L, GS_METATABLE(GS_MATRIX));
+  lua_getfield (L, -2, "Matrix");
+  lua_pushcclosure (L, matrix_newindex, 1);
+  lua_setfield (L, -2, "__newindex");
+  lua_pop (L, 1);
+
+  luaL_getmetatable (L, GS_METATABLE(GS_CMATRIX));
+  lua_getfield (L, -2, "cMatrix");
+  lua_pushcclosure (L, matrix_newindex, 1);
+  lua_setfield (L, -2, "__newindex");
+  lua_pop (L, 1);
+
   luaL_register (L, NULL, matrix_arith_functions);
 }

@@ -21,7 +21,6 @@
 #define NLINFIT_MAX_ITER 30
 
 static int  FUNCTION (matrix, index)             (lua_State *L);
-static int  FUNCTION (matrix, newindex)          (lua_State *L);
 static int  FUNCTION (matrix, len)               (lua_State *L);
 static int  FUNCTION (matrix, get_elem)          (lua_State *L);
 static int  FUNCTION (matrix, set_elem)          (lua_State *L);

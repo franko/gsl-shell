@@ -330,48 +330,6 @@ FUNCTION(matrix, len) (lua_State *L)
 }
 
 int
-FUNCTION(matrix, newindex) (lua_State *L)
-{
-  TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
-
-  if (lua_isnumber (L, 2))
-    {
-      int index = lua_tointeger (L, 2);
-
-#ifdef LUA_INDEX_CONVENTION
-      index -= 1;
-#endif
-
-      if (m->size2 != 1)
-	gs_type_error (L, 1, "vector");
-
-      if (index >= m->size1 || index < 0)
-	luaL_error (L, INVALID_INDEX_MSG);
-
-      if (LUA_FUNCTION(is) (L, 3))
-	{
-	  BASE gslval;
-	  LUA_TYPE v = LUA_FUNCTION(to) (L, 3);
-
-	  gslval = TYPE (value_assign) (v);
-	  FUNCTION (gsl_matrix, set) (m, (size_t) index, 0, gslval);
-
-	  return 0;
-	}
-      else
-	{
-	  return gs_type_error (L, 3, "number");
-	}
-    }
-  
-  lua_pushvalue (L, lua_upvalueindex(1));
-  lua_replace (L, 1);
-  lua_rawset (L, 1);
-
-  return 1;
-}
-
-int
 FUNCTION(matrix, index) (lua_State *L)
 {
   TYPE (gsl_matrix) *m = FUNCTION (matrix, check) (L, 1);
@@ -379,23 +337,44 @@ FUNCTION(matrix, index) (lua_State *L)
   if (lua_isnumber (L, 2))
     {
       int index = lua_tointeger (L, 2);
-      BASE gslval;
-      LUA_TYPE v;
+      bool vdir1, vdir2;
 
 #ifdef LUA_INDEX_CONVENTION
       index -= 1;
 #endif
 
-      if (m->size2 != 1)
-	gs_type_error (L, 1, "vector");
+      vdir1 = (m->size2 == 1);
+      vdir2 = (m->size1 == 1);
 
-      if (index >= m->size1 || index < 0)
-	luaL_error (L, INVALID_INDEX_MSG);
+      if (!vdir1 && !vdir2)
+	{
+	  VIEW (gsl_matrix) view;
 
-      gslval = FUNCTION (gsl_matrix, get) (m, (size_t) index, 0);
-      v = TYPE (value_retrieve) (gslval);
+	  if (index >= m->size1 || index < 0)
+	    return luaL_error (L, INVALID_INDEX_MSG);
+	    
+	  view = FUNCTION (gsl_matrix, submatrix) (m, index, 0, 1, m->size2);
+	  FUNCTION (matrix, push_view) (L, &view.matrix);
+	  FUNCTION (matrix, set_ref) (L, 1);
+	}
+      else
+	{
+	  int n = (vdir1 ? m->size1 : m->size2);
+	  BASE gslval;
+	  LUA_TYPE v;
 
-      LUA_FUNCTION (push) (L, v);
+	  if (index >= n || index < 0)
+	    return luaL_error (L, INVALID_INDEX_MSG);
+
+	  if (vdir1)
+	    gslval = FUNCTION (gsl_matrix, get) (m, (size_t) index, 0);
+	  else
+	    gslval = FUNCTION (gsl_matrix, get) (m, 0, (size_t) index);
+
+	  v = TYPE (value_retrieve) (gslval);
+	  LUA_FUNCTION (push) (L, v);
+	}
+
       return 1;
     }
   
@@ -417,10 +396,6 @@ FUNCTION (matrix, register) (lua_State *L)
   lua_pushvalue (L, -1);
   lua_pushcclosure (L, FUNCTION (matrix, index), 1);
   lua_setfield (L, -3, "__index");
-
-  lua_pushvalue (L, -1);
-  lua_pushcclosure (L, FUNCTION (matrix, newindex), 1);
-  lua_setfield (L, -3, "__newindex");
 
   lua_insert (L, -2);
   luaL_register (L, NULL, FUNCTION (matrix, meta_methods));
