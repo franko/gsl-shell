@@ -10,5 +10,6 @@ gsl-shell
 .trash
 build
 doc/build
+doc/html
 www
 

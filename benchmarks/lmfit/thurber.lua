@@ -1,5 +1,5 @@
 
-local t = gsl.vector {
+local t = matrix.vec {
       -3.067E0,
       -2.981E0,
       -2.921E0,
@@ -38,7 +38,7 @@ local t = gsl.vector {
        2.047E0,
        2.200E0 }
 
-local F = gsl.vector {
+local F = matrix.vec {
       80.574,
       84.248,
       87.264,
@@ -77,9 +77,9 @@ local F = gsl.vector {
     1447.894,
     1457.628 }
 
-local x0 = gsl.vector { 1000, 1000, 400, 40, 0.7, 0.3, 0.03 }
+local x0 = matrix.vec { 1000, 1000, 400, 40, 0.7, 0.3, 0.03 }
 
-local x = gsl.vector {
+local x = matrix.vec {
 			  1.2881396800E+03,
 			  1.4910792535E+03,
 			  5.8323836877E+02,

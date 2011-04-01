@@ -1,4 +1,6 @@
 
+use 'stdlib'
+
 function demo1()
    local n, br = 200, 10
 

@@ -1,8 +1,8 @@
 
-local x0   = gsl.vector { 10, -1, 0.05, -0.00001, -0.05, 0.001, -0.000001 }
-local x0_2 = gsl.vector { 1, -0.1, 0.005, -0.000001, -0.005, 0.0001, -0.0000001 }
+local x0   = matrix.vec { 10, -1, 0.05, -0.00001, -0.05, 0.001, -0.000001 }
+local x0_2 = matrix.vec { 1, -0.1, 0.005, -0.000001, -0.005, 0.0001, -0.0000001 }
 
-local x = gsl.vector {
+local x = matrix.vec {
        1.0776351733E+00,
       -1.2269296921E-01,
        4.0863750610E-03,
@@ -13,7 +13,7 @@ local x = gsl.vector {
 
 local sumsq = 1.5324382854E+00
 
-local sigma = gsl.vector {
+local sigma = matrix.vec {
    1.7070154742E-01,
   -1.2269296921E-01,
    4.0863750610E-03,
@@ -22,7 +22,7 @@ local sigma = gsl.vector {
    2.4053735503E-04,
   -1.2314450199E-07 }
 
-local data = gsl.matrix {
+local data = matrix.def {
   {0.591, 24.41},
   {1.547, 34.82},
   {2.902, 44.09},
