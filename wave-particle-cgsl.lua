@@ -1,18 +1,25 @@
+use 'complex'
+
 local ffi = require 'ffi'
 local cgsl = require 'cgsl'
 
 local root = dofile('root.lua')
 
-use 'complex'
-
 local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
 local atan2, pi = math.atan2, math.pi
 
-x1 = -24
-x2 =  24
+local function info(msg)
+   io.write(msg)
+   io.flush()
+end
 
-v1 = 0
-v2 = 30
+local x1 = -24
+local x2 =  24
+
+local v1 = 0
+local v2 = 32
+
+energy_limit = 80
 
 function ks(e)
    return sqrt(2*(e-v1)), sqrt(2*(e-v2))
@@ -38,18 +45,6 @@ function Asget(k1, k2, e)
    return x[1], x[2], x[3], x[4]
 end
 
-function feigenv(e)
-   local k1, k2 = ks(e)
-   local A1, A2, B1, B2 = Asget(k1, k2, e)
-   return function(x)
-	     if x <= 0 then
-		return A1 * exp(-I*k1*x) + A2 * exp(I*k1*x)
-	     else
-		return B1 * exp(-I*k2*x) + B2 * exp(I*k2*x)
-	     end
-	  end
-end
-
 function edet(e)
    local k1, k2 = ks(e)
    return k1 * rsin(k2*x2) * rcos(k1*x1) - k2 * rsin(k1*x1) * rcos(k2*x2)
@@ -71,7 +66,7 @@ function root_grid_search(emax)
       fb = edet_sub(eb)
       if fa * fb < 0 then
 	 local r = root(edet_sub, ea, eb, 1e-8, 1e-8)
-	 print('found:', r, 'between', ea, eb)
+--	 print('found:', r, 'between', ea, eb)
 	 roots[#roots+1] = r
 	 ea, fa = eb, fb
       end
@@ -91,8 +86,10 @@ function root_grid_search(emax)
    return matrix.vec(roots)
 end
 
-roots = root_grid_search(120)
-print(roots)
+info 'Finding energy eigenvalues (roots)...'
+roots = root_grid_search(energy_limit)
+echo 'done'
+--print(roots)
 
 local function csqrn(z)
    return real(z) * real(z) + imag(z) * imag(z)
@@ -148,7 +145,9 @@ function As_mat_compute(roots)
    return m
 end
 
+info 'Calculating energy eigenstates...'
 local As_mat = As_mat_compute(roots)
+echo 'done'
 
 local function As_coeff(i, j)
    local ar = cgsl.gsl_matrix_get(As_mat, i, 2*j  )
@@ -189,20 +188,18 @@ function feval(i, x)
    end
 end
 
---norm_coeff = {}
---for i= 1, #roots do
---   norm_coeff[i] = rsqrt(1 / phi_norm(roots[i]))
---end
-
 function coherent_state(x0, p0, sig)
    return function(x)
 	     return exp(-(x-x0)^2/(4*sig^2) + I*p0*x)
 	  end
 end
 
-fcs = coherent_state(-8, 8, 0.8)
-pcs = graph.fxplot(|x| rsqrt(csqrn(fcs(x))), x1, x2)
-pcs:limits(x1, 0, x2, 2)
+local initstate = {x0= -14, p0= 8, sigma= 0.8}
+
+fcs = coherent_state(initstate.x0, initstate.p0, initstate.sigma)
+pcs = graph.fxplot(|x| (csqrn(fcs(x))), x1, x2)
+pcs:limits(x1, 0, x2, 1.4)
+pcs.title = 'Wave function density'
 
 function plot_roots()
    local ps = graph.fxplot(edet, v2, roots[#roots])
@@ -219,31 +216,46 @@ end
 
 -- plot_roots()
 
-function coeff(f, e)
-   local fc = feigenv(e)
-   local cr = gsl.integ(|x| real(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
-   local ci = gsl.integ(|x| imag(f(x) * conj(fc(x))), x1, x2, 1e-8, 1e-8)
-   return rsqrt(1 / phi_norm(e)) * (cr + I * ci)
+function coeff(i)
+   local p0, x0, sigma = initstate.p0, initstate.x0, initstate.sigma
+   local e = roots[i]
+   local k1 = rsqrt(2*(e-v1))
+   local A1r, A1i = As_coeff(i-1, 0)
+   local A2r, A2i = As_coeff(i-1, 1)
+   local pp, pm = p0 + k1, p0 - k1
+   local egp = rexp(- pp^2 * sigma^2)
+   local egm = rexp(- pm^2 * sigma^2)
+   local epr, epi = rcos(pp*x0), rsin(pp*x0)
+   local emr, emi = rcos(pm*x0), rsin(pm*x0)
+   local zr = egp * (A1r*epr + A1i*epi) + egm * (A2r*emr + A2i*emi)
+   local zi = egp * (A1r*epi - A1i*epr) + egm * (A2r*emi - A2i*emr)
+   local s = rsqrt(4*pi) * sigma
+   return s * zr, s * zi
 end
 
-
+info 'Calculating initial state coefficients...'
 coeffs = cgsl.gsl_vector_alloc (2 * #roots)
 for i = 1, #roots do
-   local e = roots[i]
-   local c = coeff(fcs, e)
-   cgsl.gsl_vector_set (coeffs, 2*(i-1)  , real(c))
-   cgsl.gsl_vector_set (coeffs, 2*(i-1)+1, imag(c))
+   local cr, ci = coeff(i)
+   cgsl.gsl_vector_set (coeffs, 2*(i-1)  , cr)
+   cgsl.gsl_vector_set (coeffs, 2*(i-1)+1, ci)
 end
-
-print(coeffs)
+echo 'done'
 
 function plot_coeffs()
-   --graph.fiplot(|i| csqrn(coeffs[i]), 1, #coeffs)
+   local w = graph.window 'v..'
+
    local p = graph.plot()
-   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], (coeffs.data[2*i]^2+coeffs.data[2*i+1]^2) end, 0, #roots-1))
+   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], coeffs.data[2*i] end, 0, #roots-1))
    p = graph.plot()
    p:addline(ln)
-   p:show()
+   w:attach(p, 2)
+
+   local p = graph.plot()
+   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], coeffs.data[2*i+1] end, 0, #roots-1))
+   p = graph.plot()
+   p:addline(ln)
+   w:attach(p, 1)
 end
 
 plot_coeffs()
@@ -290,6 +302,7 @@ local y = cgsl.gsl_vector_alloc (2 * p)
 
 local xsmp = |k| (x2-x1)*k/(p-1) + x1
 
+info 'Computing eigenstates x representation...'
 for k= 0, p-1 do
    local x = xsmp(k)
    for i= 0, n-1 do
@@ -298,6 +311,7 @@ for k= 0, p-1 do
       fxv.data[2*n*k + 2*i + 1] = fi
    end
 end
+echo 'done'
 
 function state_plot()
    local px = graph.plot('Eigenstates Waveforms')
@@ -330,11 +344,12 @@ pcs.sync = false
 pcs:pushlayer()
 
 function anim()
-   for t= 0, 16, 0.125/8 do
+   local col = graph.rgba(0, 0.7, 0, 0.9)
+   for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
       pcs:clear()
       local ln = graph.ipath(gsl.sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
-      pcs:addline(ln, 'green')
+      pcs:add(ln, col)
       pcs:flush()
    end
 end
