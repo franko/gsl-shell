@@ -3,6 +3,8 @@ local _G, rawget, rawset = _G, rawget, rawset
 
 local stdlibs = {'math', 'matrix', 'gsl', 'graph'}
 
+local loader
+
 local function new_env() 
    local lookup_modules = {}
    local lookup_n = 0
@@ -38,26 +40,40 @@ local function new_env()
    return lookup_env, load_module
 end
 
-local function library_env(...)
-   local n = select('#', ...)
-   local env, load_module = new_env()
-   for i=1, n do
-      local name = select(i, ...)
-      if name == 'stdlib' then
-	 for _, nm in ipairs(stdlibs) do load_module(nm) end
-      else
-	 load_module(name)
-      end
+local function import_module(modname, level)
+   local env, load_module
+
+   if loader then
+      load_module = loader
+   else
+      env, load_module = new_env()
    end
-   return env
+
+   if modname == 'stdlib' then
+      for _, nm in ipairs(stdlibs) do load_module(nm) end
+   else
+      load_module(modname)
+   end
+
+   if env then
+      loader = load_module
+      setfenv(level, env)
+   end
 end
 
-function use(...)
-   local env = library_env(...)
-   setfenv(2, env)
+local function restore_fenv()
+   loader = nil
+   setfenv(0, _G)
 end
 
-function import(...)
-   local env = library_env(...)
-   setfenv(0, env)
+function use(modname)
+   import_module(modname, 2)
+end
+
+function import(modname)
+   if modname == 'reset' then
+      restore_fenv()
+   else
+      import_module(modname, 0)
+   end
 end
