@@ -1,9 +1,7 @@
 
 local _G, rawget, rawset = _G, rawget, rawset
 
-local stdlibs = {'math', 'matrix', 'gsl', 'graph'}
-
-local loader
+local modules_alias = {stdlib= {'math', 'matrix', 'gsl', 'graph'}}
 
 local function new_env() 
    local lookup_modules = {}
@@ -33,47 +31,37 @@ local function new_env()
       end
    end
 
-   local lookup_env = {}
+   local function loader(modname)
+      if modules_alias[modname] then
+	 for i, name in ipairs(modules_alias[modname]) do
+	    load_module(name)
+	 end
+      else
+	 load_module(modname)
+      end
+   end
+
+   local lookup_env = {use= loader, import= loader}
 
    setmetatable(lookup_env, { __index= index, __newindex= newindex })
 
-   return lookup_env, load_module
+   return lookup_env
 end
 
-local function import_module(modname, level)
-   local env, load_module
-
-   if loader then
-      load_module = loader
-   else
-      env, load_module = new_env()
-   end
-
-   if modname == 'stdlib' then
-      for _, nm in ipairs(stdlibs) do load_module(nm) end
-   else
-      load_module(modname)
-   end
-
-   if env then
-      loader = load_module
-      setfenv(level, env)
-   end
+local function import_module(modname, global)
+   local env = new_env()
+   env.import(modname)
+   setfenv(global and 0 or 3, env)
 end
 
-local function restore_fenv()
-   loader = nil
+function restore_env()
    setfenv(0, _G)
 end
 
 function use(modname)
-   import_module(modname, 2)
+   import_module(modname)
 end
 
 function import(modname)
-   if modname == 'reset' then
-      restore_fenv()
-   else
-      import_module(modname, 0)
-   end
+   import_module(modname, true)
 end
