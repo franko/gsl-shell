@@ -30,7 +30,7 @@ nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
 
-INCLUDES += -I.
+INCLUDES += -I. $(GSL_INCLUDES)
 GSL_SHELL = gsl-shell$(EXE_EXT)
 LUA_CFLAGS = -I$(LUADIR)/src
 
@@ -93,7 +93,6 @@ DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
-GSL_LIBS = -lgsl -lgslcblas -lm
 LIBS += $(GSL_LIBS)
 
 all: $(SUBDIRS) $(TARGETS)

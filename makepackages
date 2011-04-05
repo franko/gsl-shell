@@ -14,10 +14,17 @@ ifeq ($(strip $(PLATFORM)), mingw)
   AGG_INCLUDES = -I$(AGG_HOME)/include
   AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32 -lsupc++
 
+  GSL_INCLUDE = -I/usr/include
+  GSL_LIBS = -L/usr/lib -lgsl -lgslcblas -lm
+
   PTHREADS_CFLAGS = -I$(PTHREADS_HOME)/include
   PTHREADS_LIBS = -L$(PTHREADS_HOME)/lib -lpthreadGCE2
 else
   AGG_INCLUDES = -I/usr/include/agg2
   AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
+
+  GSL_INCLUDES =
+  GSL_LIBS = -lgsl -lgslcblas -lm
+
   PTHREADS_LIBS = -lpthread
 endif
