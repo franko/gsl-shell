@@ -48,20 +48,18 @@ local function new_env()
    return lookup_env
 end
 
-local function import_module(modname, global)
-   local env = new_env()
-   env.import(modname)
-   setfenv(global and 0 or 3, env)
-end
-
 function restore_env()
    setfenv(0, _G)
 end
 
 function use(modname)
-   import_module(modname)
+   local env = new_env()
+   env.import(modname)
+   setfenv(2, env)
 end
 
 function import(modname)
-   import_module(modname, true)
+   local env = new_env()
+   env.import(modname)
+   setfenv(0, env)
 end
