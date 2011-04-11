@@ -18,7 +18,7 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local cat, insert = table.concat, table.insert
+local cat = table.concat
 local fmt = string.format
 
 function math.divmod(n, p)
@@ -44,11 +44,11 @@ tos = function (t, maxdepth)
       local skip = {}
       for i, v in ipairs(t) do 
 	 skip[i] = true
-	 insert(ls, tos(v, maxdepth-1))
+	 ls[i] = tos(v, maxdepth-1)
       end
       for k, v in pairs(t) do
 	 if not skip[k] then
-	    insert(ls, key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1))
+	    ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1)
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'
@@ -108,7 +108,11 @@ end
 
 function gsl.ilist(f, a, b)
    local ls = {}
-   for x in gsl.sequence(f, a, b) do insert(ls, x) end
+   local i = 1
+   for x in gsl.sequence(f, a, b) do 
+      ls[i] = x
+      i = i+1
+   end
    return ls
 end
 
