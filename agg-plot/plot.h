@@ -143,6 +143,8 @@ protected:
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
+  void clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx);
+
   void compute_user_trans();
 
   static void viewport_scale(agg::trans_affine& trans);
@@ -302,9 +304,21 @@ agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
+void plot<VS,RM>::clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx)
+{
+  agg::trans_affine mvp;
+  viewport_scale(mvp);
+  trans_affine_compose (mvp, canvas_mtx);
+  agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
+  canvas.clip_box(clip);
+}
+
+template<class VS, class RM>
 void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+
+  this->clip_plot_area(canvas, canvas_mtx);
 
   for (unsigned j = 0; j < m_root_layer.size(); j++)
     {
@@ -319,6 +333,8 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
 	  draw_element(layer[j], canvas, m);
 	}
     }
+
+  canvas.reset_clipping();
 }
 
 template<class VS, class RM>
@@ -328,6 +344,8 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
   typedef typename plot<VS,RM>::iterator iter_type;
 
   before_draw();
+
+  this->clip_plot_area(canvas, canvas_mtx);
 
   iter_type *c0 = m_drawing_queue;
   for (iter_type *c = c0; c != 0; c = c->next())
@@ -342,6 +360,8 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
       if (not_empty)
 	bb.add<rect_union>(ebb);
     }
+
+  canvas.reset_clipping();
 }
 
 template<class VS, class RM>
