@@ -86,7 +86,7 @@ function graph.segment(x1, y1, x2, y2)
    return p
 end
 
-function rect(x1, y1, x2, y2)
+function graph.rect(x1, y1, x2, y2)
    local p = graph.path()
    add_square(p, x1, y1, x2, y2)
    return p
