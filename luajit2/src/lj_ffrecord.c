@@ -414,9 +414,17 @@ static void LJ_FASTCALL recff_math_abs(jit_State *J, RecordFFData *rd)
 /* Record rounding functions math.floor and math.ceil. */
 static void LJ_FASTCALL recff_math_round(jit_State *J, RecordFFData *rd)
 {
-  if (!tref_isinteger(J->base[0]))  /* Pass through integers unmodified. */
-    J->base[0] = emitir(IRTN(IR_FPMATH), lj_ir_tonum(J, J->base[0]), rd->data);
-  /* Note: result is integral (or NaN/Inf), but may not fit into an integer. */
+  TRef tr = J->base[0];
+  if (!tref_isinteger(tr)) {  /* Pass through integers unmodified. */
+    tr = emitir(IRTN(IR_FPMATH), lj_ir_tonum(J, tr), rd->data);
+    /* Result is integral (or NaN/Inf), but may not fit an int32_t. */
+    if (LJ_DUALNUM) {  /* Try to narrow using a guarded conversion to int. */
+      lua_Number n = lj_vm_foldfpm(numberVnum(&rd->argv[0]), rd->data);
+      if (n == (lua_Number)lj_num2int(n))
+	tr = emitir(IRTGI(IR_CONV), tr, IRCONV_INT_NUM|IRCONV_CHECK);
+    }
+    J->base[0] = tr;
+  }
 }
 
 /* Record unary math.* functions, mapped to IR_FPMATH opcode. */
@@ -488,11 +496,19 @@ static void LJ_FASTCALL recff_math_pow(jit_State *J, RecordFFData *rd)
 
 static void LJ_FASTCALL recff_math_minmax(jit_State *J, RecordFFData *rd)
 {
-  TRef tr = lj_ir_tonum(J, J->base[0]);
+  TRef tr = lj_ir_tonumber(J, J->base[0]);
   uint32_t op = rd->data;
   BCReg i;
-  for (i = 1; J->base[i] != 0; i++)
-    tr = emitir(IRTN(op), tr, lj_ir_tonum(J, J->base[i]));
+  for (i = 1; J->base[i] != 0; i++) {
+    TRef tr2 = lj_ir_tonumber(J, J->base[i]);
+    IRType t = IRT_INT;
+    if (!(tref_isinteger(tr) && tref_isinteger(tr2))) {
+      if (tref_isinteger(tr)) tr = emitir(IRTN(IR_CONV), tr, IRCONV_NUM_INT);
+      if (tref_isinteger(tr2)) tr2 = emitir(IRTN(IR_CONV), tr2, IRCONV_NUM_INT);
+      t = IRT_NUM;
+    }
+    tr = emitir(IRT(op, t), tr, tr2);
+  }
   J->base[0] = tr;
 }
 

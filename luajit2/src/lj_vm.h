@@ -19,6 +19,9 @@ LJ_ASMF_NORET void LJ_FASTCALL lj_vm_unwind_c(void *cframe, int errcode);
 LJ_ASMF_NORET void LJ_FASTCALL lj_vm_unwind_ff(void *cframe);
 LJ_ASMF void lj_vm_unwind_c_eh(void);
 LJ_ASMF void lj_vm_unwind_ff_eh(void);
+#if LJ_TARGET_X86ORX64
+LJ_ASMF void lj_vm_unwind_rethrow(void);
+#endif
 
 /* Miscellaneous functions. */
 #if LJ_TARGET_X86ORX64
@@ -27,6 +30,9 @@ LJ_ASMF int lj_vm_cpuid(uint32_t f, uint32_t res[4]);
 LJ_ASMF double lj_vm_foldarith(double x, double y, int op);
 #if LJ_HASJIT
 LJ_ASMF double lj_vm_foldfpm(double x, int op);
+#endif
+#if !LJ_ARCH_HASFPU
+/* Declared in lj_obj.h: LJ_ASMF int32_t lj_vm_tobit(double x); */
 #endif
 
 /* Dispatch targets for recording and hooks. */

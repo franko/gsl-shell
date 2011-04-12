@@ -483,7 +483,7 @@ static LoopEvent rec_iterl(jit_State *J, const BCIns iterins)
 /* Record LOOP/JLOOP. Now, that was easy. */
 static LoopEvent rec_loop(jit_State *J, BCReg ra)
 {
-  J->maxslot = ra;
+  if (ra < J->maxslot) J->maxslot = ra;
   J->pc++;
   return LOOPEV_ENTER;
 }
@@ -1016,6 +1016,12 @@ static TRef rec_idx_key(jit_State *J, RecordIndex *ix)
   }
 
   /* Otherwise the key is located in the hash part. */
+  if (t->hmask == 0) {  /* Shortcut for empty hash part. */
+    /* Guard that the hash part stays empty. */
+    TRef tmp = emitir(IRTI(IR_FLOAD), ix->tab, IRFL_TAB_HMASK);
+    emitir(IRTGI(IR_EQ), tmp, lj_ir_kint(J, 0));
+    return lj_ir_kkptr(J, niltvg(J2G(J)));
+  }
   if (tref_isinteger(key))  /* Hash keys are based on numbers, not ints. */
     ix->key = key = emitir(IRTN(IR_CONV), key, IRCONV_NUM_INT);
   if (tref_isk(key)) {
@@ -1105,7 +1111,7 @@ TRef lj_record_idx(jit_State *J, RecordIndex *ix)
   xref = rec_idx_key(J, ix);
   xrefop = IR(tref_ref(xref))->o;
   loadop = xrefop == IR_AREF ? IR_ALOAD : IR_HLOAD;
-  /* NYI: workaround until lj_meta_tset() inconsistency is solved. */
+  /* The lj_meta_tset() inconsistency is gone, but better play safe. */
   oldv = xrefop == IR_KKPTR ? (cTValue *)ir_kptr(IR(tref_ref(xref))) : ix->oldv;
 
   if (ix->val == 0) {  /* Indexed load */
@@ -1655,7 +1661,7 @@ void lj_record_ins(jit_State *J)
       rc = lj_ir_call(J, IRCALL_lj_tab_len, rc);
     } else {
       ix.tab = rc;
-      copyTV(J->L, &ix.tabv, &ix.keyv);
+      copyTV(J->L, &ix.tabv, rcv);
       ix.key = TREF_NIL;
       setnilV(&ix.keyv);
       rc = rec_mm_arith(J, &ix, MM_len);
@@ -1666,20 +1672,20 @@ void lj_record_ins(jit_State *J)
 
   case BC_UNM:
     if (tref_isnumber_str(rc)) {
-      rc = lj_ir_tonum(J, rc);
-      rc = emitir(IRTN(IR_NEG), rc, lj_ir_knum_neg(J));
+      rc = lj_opt_narrow_unm(J, rc, rcv);
     } else {
       ix.tab = rc;
-      copyTV(J->L, &ix.tabv, &ix.keyv);
+      copyTV(J->L, &ix.tabv, rcv);
       rc = rec_mm_arith(J, &ix, MM_unm);
     }
     break;
 
   case BC_ADDNV: case BC_SUBNV: case BC_MULNV: case BC_DIVNV: case BC_MODNV:
+    /* Swap rb/rc and rbv/rcv. rav is temp. */
     ix.tab = rc; ix.key = rc = rb; rb = ix.tab;
-    copyTV(J->L, &ix.valv, &ix.tabv);
-    copyTV(J->L, &ix.tabv, &ix.keyv);
-    copyTV(J->L, &ix.keyv, &ix.valv);
+    copyTV(J->L, rav, rbv);
+    copyTV(J->L, rbv, rcv);
+    copyTV(J->L, rcv, rav);
     if (op == BC_MODNV)
       goto recmod;
     /* fallthrough */
@@ -1687,7 +1693,7 @@ void lj_record_ins(jit_State *J)
   case BC_ADDVV: case BC_SUBVV: case BC_MULVV: case BC_DIVVV: {
     MMS mm = bcmode_mm(op);
     if (tref_isnumber_str(rb) && tref_isnumber_str(rc))
-      rc = lj_opt_narrow_arith(J, rb, rc, &ix.tabv, &ix.keyv,
+      rc = lj_opt_narrow_arith(J, rb, rc, rbv, rcv,
 			       (int)mm - (int)MM_add + (int)IR_ADD);
     else
       rc = rec_mm_arith(J, &ix, mm);

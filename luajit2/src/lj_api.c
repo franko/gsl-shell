@@ -1104,12 +1104,16 @@ LUA_API int lua_yield(lua_State *L, int nresults)
       setcont(top+1, lj_cont_hook);
       setframe_pc(top+1, cframe_pc(cf)-1);
       setframe_gc(top+2, obj2gco(L));
-      top[2].fr.tp.ftsz = (int)((char *)(top+3)-(char *)L->base)+FRAME_CONT;
+      setframe_ftsz(top+2, (int)((char *)(top+3)-(char *)L->base)+FRAME_CONT);
       L->top = L->base = top+3;
     }
+#if LJ_TARGET_X64
+    lj_err_throw(L, LUA_YIELD);
+#else
     L->cframe = NULL;
     L->status = LUA_YIELD;
     lj_vm_unwind_c(cf, LUA_YIELD);
+#endif
   }
   lj_err_msg(L, LJ_ERR_CYIELD);
   return 0;  /* unreachable */

@@ -97,6 +97,7 @@ typedef struct ASMState {
 #define FUSE_DISABLED		(~(IRRef)0)
 #define mayfuse(as, ref)	((ref) > as->fuseref)
 #define neverfuse(as)		(as->fuseref == FUSE_DISABLED)
+#define canfuse(as, ir)		(!neverfuse(as) && !irt_isphi((ir)->t))
 #define opisfusableload(o) \
   ((o) == IR_ALOAD || (o) == IR_HLOAD || (o) == IR_ULOAD || \
    (o) == IR_FLOAD || (o) == IR_XLOAD || (o) == IR_SLOAD || (o) == IR_VLOAD)
@@ -1348,7 +1349,7 @@ static void asm_fusexref(ASMState *as, IRRef ref, RegSet allow)
     asm_fusestrref(as, ir, allow);
   } else {
     as->mrm.ofs = 0;
-    if (mayfuse(as, ref) && ir->o == IR_ADD && ra_noreg(ir->r)) {
+    if (canfuse(as, ir) && ir->o == IR_ADD && ra_noreg(ir->r)) {
       /* Gather (base+idx*sz)+ofs as emitted by cdata ptr/array indexing. */
       IRIns *irx;
       IRRef idx;
@@ -1356,7 +1357,7 @@ static void asm_fusexref(ASMState *as, IRRef ref, RegSet allow)
       if (asm_isk32(as, ir->op2, &as->mrm.ofs)) {  /* Recognize x+ofs. */
 	ref = ir->op1;
 	ir = IR(ref);
-	if (!(ir->o == IR_ADD && mayfuse(as, ref) && ra_noreg(ir->r)))
+	if (!(ir->o == IR_ADD && canfuse(as, ir) && ra_noreg(ir->r)))
 	  goto noadd;
       }
       as->mrm.scale = XM_SCALE1;
@@ -1368,7 +1369,7 @@ static void asm_fusexref(ASMState *as, IRRef ref, RegSet allow)
 	ref = ir->op1;
 	irx = IR(idx);
       }
-      if (mayfuse(as, idx) && ra_noreg(irx->r)) {
+      if (canfuse(as, irx) && ra_noreg(irx->r)) {
 	if (irx->o == IR_BSHL && irref_isk(irx->op2) && IR(irx->op2)->i <= 3) {
 	  /* Recognize idx<<b with b = 0-3, corresponding to sz = (1),2,4,8. */
 	  idx = irx->op1;
@@ -2557,6 +2558,7 @@ static void asm_cnew(ASMState *as, IRIns *ir)
 	      lj_ctype_size(cts, typeid) : (CTSize)IR(ir->op2)->i;
   const CCallInfo *ci = &lj_ir_callinfo[IRCALL_lj_mem_newgco];
   IRRef args[2];
+  int gcfin = 0;
   lua_assert(sz != CTSIZE_INVALID);
 
   args[0] = ASMREF_L;     /* lua_State *L */
@@ -2603,12 +2605,15 @@ static void asm_cnew(ASMState *as, IRIns *ir)
     } while (1);
 #endif
     lua_assert(sz == 4 || (sz == 8 && (LJ_64 || LJ_HASFFI)));
+  } else {
+    if (lj_ctype_meta(cts, typeid, MM_gc) != NULL)
+      gcfin = LJ_GC_CDATA_FIN;
   }
 
   /* Combine initialization of marked, gct and typeid. */
   emit_movtomro(as, RID_ECX, RID_RET, offsetof(GCcdata, marked));
   emit_gri(as, XG_ARITHi(XOg_OR), RID_ECX,
-	   (int32_t)((~LJ_TCDATA<<8)+(typeid<<16)));
+	   (int32_t)((~LJ_TCDATA<<8)+(typeid<<16)+gcfin));
   emit_gri(as, XG_ARITHi(XOg_AND), RID_ECX, LJ_GC_WHITES);
   emit_opgl(as, XO_MOVZXb, RID_ECX, gc.currentwhite);
 
@@ -3003,6 +3008,17 @@ static void asm_neg_not(ASMState *as, IRIns *ir, x86Group3 xg)
   Reg dest = ra_dest(as, ir, RSET_GPR);
   emit_rr(as, XO_GROUP3, REX_64IR(ir, xg), dest);
   ra_left(as, dest, ir->op1);
+}
+
+static void asm_min_max(ASMState *as, IRIns *ir, int cc)
+{
+  Reg right, dest = ra_dest(as, ir, RSET_GPR);
+  IRRef lref = ir->op1, rref = ir->op2;
+  if (irref_isk(rref)) { lref = rref; rref = ir->op1; }
+  right = ra_alloc1(as, rref, rset_exclude(RSET_GPR, dest));
+  emit_rr(as, XO_CMOV + (cc<<24), REX_64IR(ir, dest), right);
+  emit_rr(as, XO_CMP, REX_64IR(ir, dest), right);
+  ra_left(as, dest, lref);
 }
 
 static void asm_bitswap(ASMState *as, IRIns *ir)
@@ -3591,7 +3607,7 @@ static void asm_phi_fixup(ASMState *as)
 /* Setup right PHI reference. */
 static void asm_phi(ASMState *as, IRIns *ir)
 {
-  RegSet allow = (irt_isnum(ir->t) ? RSET_FPR : RSET_GPR) & ~as->phiset;
+  RegSet allow = (irt_isfp(ir->t) ? RSET_FPR : RSET_GPR) & ~as->phiset;
   RegSet afree = (as->freeset & allow);
   IRIns *irl = IR(ir->op1);
   IRIns *irr = IR(ir->op2);
@@ -4067,8 +4083,18 @@ static void asm_ir(ASMState *as, IRIns *ir)
     break;
   case IR_ABS: asm_fparith(as, ir, XO_ANDPS); break;
 
-  case IR_MIN: asm_fparith(as, ir, XO_MINSD); break;
-  case IR_MAX: asm_fparith(as, ir, XO_MAXSD); break;
+  case IR_MIN:
+    if (irt_isnum(ir->t))
+      asm_fparith(as, ir, XO_MINSD);
+    else
+      asm_min_max(as, ir, CC_G);
+    break;
+  case IR_MAX:
+    if (irt_isnum(ir->t))
+      asm_fparith(as, ir, XO_MAXSD);
+    else
+      asm_min_max(as, ir, CC_L);
+    break;
 
   case IR_FPMATH: case IR_ATAN2: case IR_LDEXP:
     asm_fpmath(as, ir);

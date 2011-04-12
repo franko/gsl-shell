@@ -33,7 +33,6 @@
 
 /* Macros to set GCobj colors and flags. */
 #define white2gray(x)		((x)->gch.marked &= (uint8_t)~LJ_GC_WHITES)
-#define black2gray(x)		((x)->gch.marked &= (uint8_t)~LJ_GC_BLACK)
 #define gray2black(x)		((x)->gch.marked |= LJ_GC_BLACK)
 #define makewhite(g, x) \
   ((x)->gch.marked = ((x)->gch.marked & (uint8_t)~LJ_GC_COLORS) | curwhite(g))
@@ -310,7 +309,7 @@ static size_t propagatemark(global_State *g)
   setgcrefr(g->gc.gray, o->gch.gclist);  /* Remove from gray list. */
   if (LJ_LIKELY(o->gch.gct == ~LJ_TTAB)) {
     GCtab *t = gco2tab(o);
-    if (gc_traverse_tab(g, t))
+    if (gc_traverse_tab(g, t) > 0)
       black2gray(o);  /* Keep weak tables gray. */
     return sizeof(GCtab) + sizeof(TValue) * t->asize +
 			   sizeof(Node) * (t->hmask + 1);
@@ -739,17 +738,6 @@ void lj_gc_fullgc(lua_State *L)
 }
 
 /* -- Write barriers ------------------------------------------------------ */
-
-/* Move the GC propagation frontier back for tables (make it gray again). */
-void lj_gc_barrierback(global_State *g, GCtab *t)
-{
-  GCobj *o = obj2gco(t);
-  lua_assert(isblack(o) && !isdead(g, o));
-  lua_assert(g->gc.state != GCSfinalize && g->gc.state != GCSpause);
-  black2gray(o);
-  setgcrefr(t->gclist, g->gc.grayagain);
-  setgcref(g->gc.grayagain, o);
-}
 
 /* Move the GC propagation frontier forward. */
 void lj_gc_barrierf(global_State *g, GCobj *o, GCobj *v)
