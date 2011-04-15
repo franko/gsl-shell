@@ -22,6 +22,10 @@ ffi.cdef[[
 
      typedef gsl_block gsl_block_complex;
 
+     gsl_block *gsl_block_alloc (const size_t n);
+     gsl_block *gsl_block_calloc (const size_t n);
+     void gsl_block_free (gsl_block * b);
+
      typedef struct
      {
        size_t size;
