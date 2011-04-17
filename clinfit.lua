@@ -28,6 +28,15 @@ ffi.cdef[[
 			   gsl_matrix * cov,
 			   double * chisq,
 			   gsl_multifit_linear_workspace * work);
+
+      int
+      gsl_multifit_wlinear (const gsl_matrix * X,
+			    const gsl_vector * w,
+			    const gsl_vector * y,
+			    gsl_vector * c,
+			    gsl_matrix * cov,
+			    double * chisq,
+			    gsl_multifit_linear_workspace * work);
 ]]
 
 local workspace
@@ -51,15 +60,20 @@ end
 
 local chisq = ffi.new('double[1]')
 
-local function linfit(X, y)
+local function linfit(X, y, w)
    local n, p = matrix.dim(X)
    local ws = get_workspace(n, p)
    local c = matrix.alloc(p, 1)
    local cov = matrix.alloc(p, p)
    local yv = cgsl.gsl_matrix_column (y, 0)
    local cv = cgsl.gsl_matrix_column (c, 0)
-
-   cgsl.gsl_multifit_linear (X, yv, cv, cov, chisq, ws)
+   
+   if w then
+      local wv = cgsl.gsl_matrix_column (w, 0)
+      cgsl.gsl_multifit_wlinear (X, wv, yv, cv, cov, chisq, ws)
+   else
+      cgsl.gsl_multifit_linear (X, yv, cv, cov, chisq, ws)
+   end
 
    return c, chisq[0], cov
 end

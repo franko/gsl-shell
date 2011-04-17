@@ -10,8 +10,8 @@ local gsl_matrix = ffi.typeof('gsl_matrix')
 local double_size = ffi.sizeof('double')
 
 function matrix.alloc(n1, n2)
-   local block = cgsl.gsl_block_alloc (n1 * n2)
-   local m = gsl_matrix {n1, n2, n2, block.data, block, 1}
+   local block = cgsl.gsl_block_alloc(n1 * n2)
+   local m = gsl_matrix(n1, n2, n2, block.data, block, 1)
    return m
 end
 
@@ -96,9 +96,55 @@ function matrix.row(m, i)
    return r
 end
 
+local signum = ffi.new('int[1]')
+
+function matrix.inv(m)
+   local n = m.size1
+   if n ~= m.size2 then error 'cannot invert a rectangular matrix' end
+   local lu = matrix.copy(m)
+   local p = cgsl.gsl_permutation_alloc(n)
+   cgsl.gsl_linalg_LU_decomp(lu, p, signum)
+   local mi = matrix.alloc(n, n)
+   cgsl.gsl_linalg_LU_invert(lu, p, mi)
+   cgsl.gsl_permutation_free(p)
+   return mi
+end
+
+function matrix.solve(m, b)
+   local n = m.size1
+   if n ~= m.size2 then error 'cannot invert a rectangular matrix' end
+   local lu = matrix.copy(m)
+   local p = cgsl.gsl_permutation_alloc(n)
+   cgsl.gsl_linalg_LU_decomp(lu, p, signum)
+   local x = matrix.alloc(n, 1)
+   local xv = cgsl.gsl_matrix_column(x, 0)
+   local bv = cgsl.gsl_matrix_column(b, 0)
+   cgsl.gsl_linalg_LU_solve(lu, p, bv, xv)
+   cgsl.gsl_permutation_free(p)
+   return x
+end
+
+local function scalar_op(m, s, op)
+   local n1, n2 = m.size1, m.size2
+   local c = matrix.alloc(n1, n2)
+   for i=0, n1-1 do
+      for j=0, n2-1 do
+	 c.data[i*n2+j] = op(m.data[i*n2+j], s)
+      end
+   end
+   return c
+end
+
+local function opadd(a, b) return a + b end
+local function opsub(a, b) return a - b end
+local function opmul(a, b) return a * b end
+local function opdiv(a, b) return a / b end
+
 local matrix_methods = {
    col = matrix.col,
    row = matrix.row,
+   get = cgsl.gsl_matrix_get,
+   set = cgsl.gsl_matrix_set,
 }
 
 local mt = {
@@ -106,12 +152,10 @@ local mt = {
    __gc = function(m) if m.owner then cgsl.gsl_block_free(m.block) end end,
 
    __mul = function(a,b)
-	      if type(a) == 'number' then a, b = b, a end
 	      if type(b) == 'number' then
-		 local n1, n2 = a.size1, a.size2
-		 local c = matrix.copy(a)
-		 cgsl.gsl_matrix_scale(c, b)
-		 return c
+		 return scalar_op(a, b, opmul)
+	      elseif type(a) == 'number' then
+		 return scalar_op(b, a, opmul)
 	      else
 		 local n1, i2 = a.size1, a.size2
 		 local i1, n2 = b.size1, b.size2
@@ -123,12 +167,10 @@ local mt = {
 	   end,
 
    __add = function(a,b)
-	      if type(a) == 'number' then a, b = b, a end
 	      if type(b) == 'number' then
-		 local n1, n2 = a.size1, a.size2
-		 local c = matrix.copy(a)
-		 cgsl.gsl_matrix_add_constant(c, b)
-		 return c
+		 return scalar_op(a, b, opadd)
+	      elseif type(a) == 'number' then
+		 return scalar_op(b, a, opadd)
 	      else
 		 local n1, n2 = a.size1, a.size2
 		 if n1 ~= b.size1 or n2 ~= b.size2 then 
