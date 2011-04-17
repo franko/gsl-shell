@@ -9,6 +9,13 @@ local matrix = {}
 local gsl_matrix = ffi.typeof('gsl_matrix')
 local double_size = ffi.sizeof('double')
 
+local function gsl_check(status)
+   if status ~= 0 then
+      local msg = ffi.string(cgsl.gsl_strerror(status))
+      error(msg)
+   end
+end
+
 function matrix.alloc(n1, n2)
    local block = cgsl.gsl_block_alloc(n1 * n2)
    local m = gsl_matrix(n1, n2, n2, block.data, block, 1)
@@ -100,27 +107,23 @@ local signum = ffi.new('int[1]')
 
 function matrix.inv(m)
    local n = m.size1
-   if n ~= m.size2 then error 'cannot invert a rectangular matrix' end
    local lu = matrix.copy(m)
-   local p = cgsl.gsl_permutation_alloc(n)
-   cgsl.gsl_linalg_LU_decomp(lu, p, signum)
+   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
+   gsl_check(cgsl.gsl_linalg_LU_decomp(lu, p, signum))
    local mi = matrix.alloc(n, n)
-   cgsl.gsl_linalg_LU_invert(lu, p, mi)
-   cgsl.gsl_permutation_free(p)
+   gsl_check(cgsl.gsl_linalg_LU_invert(lu, p, mi))
    return mi
 end
 
 function matrix.solve(m, b)
    local n = m.size1
-   if n ~= m.size2 then error 'cannot invert a rectangular matrix' end
    local lu = matrix.copy(m)
-   local p = cgsl.gsl_permutation_alloc(n)
-   cgsl.gsl_linalg_LU_decomp(lu, p, signum)
+   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
+   gsl_check(cgsl.gsl_linalg_LU_decomp(lu, p, signum))
    local x = matrix.alloc(n, 1)
    local xv = cgsl.gsl_matrix_column(x, 0)
    local bv = cgsl.gsl_matrix_column(b, 0)
-   cgsl.gsl_linalg_LU_solve(lu, p, bv, xv)
-   cgsl.gsl_permutation_free(p)
+   gsl_check(cgsl.gsl_linalg_LU_solve(lu, p, bv, xv))
    return x
 end
 
@@ -157,11 +160,10 @@ local mt = {
 	      elseif type(a) == 'number' then
 		 return scalar_op(b, a, opmul)
 	      else
-		 local n1, i2 = a.size1, a.size2
-		 local i1, n2 = b.size1, b.size2
-		 if i1 ~= i2 then error 'matrix dimensions does not match' end
+		 local n1, n2 = a.size1, b.size2
 		 local c = matrix.new(n1, n2)
-		 cgsl.gsl_blas_dgemm(cgsl.CblasNoTrans, cgsl.CblasNoTrans, 1, a, b, 1, c)
+		 local NT = cgsl.CblasNoTrans
+		 gsl_check(cgsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
 		 return c
 	      end
 	   end,
@@ -172,12 +174,8 @@ local mt = {
 	      elseif type(a) == 'number' then
 		 return scalar_op(b, a, opadd)
 	      else
-		 local n1, n2 = a.size1, a.size2
-		 if n1 ~= b.size1 or n2 ~= b.size2 then 
-		    error 'matrix dimensions does not match'
-		 end
 		 local c = matrix.copy(a)
-		 cgsl.gsl_matrix_add(c, b)
+		 gsl_check(cgsl.gsl_matrix_add(c, b))
 		 return c
 	      end
 	   end,
