@@ -3,6 +3,9 @@ local ffi    = require 'ffi'
 local cgsl   = require 'cgsl'
 local matrix = require 'cmatrix'
 
+local gslerror = require 'gslerror'
+local gsl_check = gslerror.check_status
+
 ffi.cdef[[
       typedef struct 
       {
@@ -70,9 +73,9 @@ local function linfit(X, y, w)
    
    if w then
       local wv = cgsl.gsl_matrix_column (w, 0)
-      cgsl.gsl_multifit_wlinear (X, wv, yv, cv, cov, chisq, ws)
+      gsl_check(cgsl.gsl_multifit_wlinear (X, wv, yv, cv, cov, chisq, ws))
    else
-      cgsl.gsl_multifit_linear (X, yv, cv, cov, chisq, ws)
+      gsl_check(cgsl.gsl_multifit_linear (X, yv, cv, cov, chisq, ws))
    end
 
    return c, chisq[0], cov

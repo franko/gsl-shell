@@ -4,7 +4,7 @@ ffi.cdef[[
      struct _IO_FILE;
      typedef struct _IO_FILE FILE;
 
-      /* Standard streams.  */
+      
       extern struct _IO_FILE *stdin;
       extern struct _IO_FILE *stdout;
       extern struct _IO_FILE *stderr;
@@ -12,47 +12,44 @@ ffi.cdef[[
       enum { 
 	 GSL_SUCCESS  = 0, 
 	 GSL_FAILURE  = -1,
-	 GSL_CONTINUE = -2,  /* iteration has not converged */
-	 GSL_EDOM     = 1,   /* input domain error, e.g sqrt(-1) */
-	 GSL_ERANGE   = 2,   /* output range error, e.g. exp(1e100) */
-	 GSL_EFAULT   = 3,   /* invalid pointer */
-	 GSL_EINVAL   = 4,   /* invalid argument supplied by user */
-	 GSL_EFAILED  = 5,   /* generic failure */
-	 GSL_EFACTOR  = 6,   /* factorization failed */
-	 GSL_ESANITY  = 7,   /* sanity check failed - shouldn t happen */
-	 GSL_ENOMEM   = 8,   /* malloc failed */
-	 GSL_EBADFUNC = 9,   /* -- problem with user-supplied function */
-	 GSL_ERUNAWAY = 10,  /* iterative process is out of control */
-	 GSL_EMAXITER = 11,  /* exceeded max number of iterations */
-	 GSL_EZERODIV = 12,  /* tried to divide by zero */
-	 GSL_EBADTOL  = 13,  /* user specified an invalid tolerance */
-	 GSL_ETOL     = 14,  /* failed to reach the specified tolerance */
-	 GSL_EUNDRFLW = 15,  /* underflow */
-	 GSL_EOVRFLW  = 16,  /* overflow  */
-	 GSL_ELOSS    = 17,  /* loss of accuracy */
-	 GSL_EROUND   = 18,  /* failed because of roundoff error */
-	 GSL_EBADLEN  = 19,  /* matrix, vector lengths are not conformant */
-	 GSL_ENOTSQR  = 20,  /* matrix not square */
-	 GSL_ESING    = 21,  /* apparent singularity detected */
-	 GSL_EDIVERGE = 22,  /* integral or series is divergent */
-	 GSL_EUNSUP   = 23,  /* requested feature is not supported by the hardware */
-	 GSL_EUNIMPL  = 24,  /* requested feature not (yet) implemented */
-	 GSL_ECACHE   = 25,  /* cache limit exceeded */
-	 GSL_ETABLE   = 26,  /* table limit exceeded */
-	 GSL_ENOPROG  = 27,  /* iteration is not making progress towards solution */
-	 GSL_ENOPROGJ = 28,  /* jacobian evaluations are not improving the solution */
-	 GSL_ETOLF    = 29,  /* cannot reach the specified tolerance in F */
-	 GSL_ETOLX    = 30,  /* cannot reach the specified tolerance in X */
-	 GSL_ETOLG    = 31,  /* cannot reach the specified tolerance in gradient */
-	 GSL_EOF      = 32   /* end of file */
+	 GSL_CONTINUE = -2,  
+	 GSL_EDOM     = 1,   
+	 GSL_ERANGE   = 2,   
+	 GSL_EFAULT   = 3,   
+	 GSL_EINVAL   = 4,   
+	 GSL_EFAILED  = 5,   
+	 GSL_EFACTOR  = 6,   
+	 GSL_ESANITY  = 7,   
+	 GSL_ENOMEM   = 8,   
+	 GSL_EBADFUNC = 9,   
+	 GSL_ERUNAWAY = 10,  
+	 GSL_EMAXITER = 11,  
+	 GSL_EZERODIV = 12,  
+	 GSL_EBADTOL  = 13,  
+	 GSL_ETOL     = 14,  
+	 GSL_EUNDRFLW = 15,  
+	 GSL_EOVRFLW  = 16,  
+	 GSL_ELOSS    = 17,  
+	 GSL_EROUND   = 18,  
+	 GSL_EBADLEN  = 19,  
+	 GSL_ENOTSQR  = 20,  
+	 GSL_ESING    = 21,  
+	 GSL_EDIVERGE = 22,  
+	 GSL_EUNSUP   = 23,  
+	 GSL_EUNIMPL  = 24,  
+	 GSL_ECACHE   = 25,  
+	 GSL_ETABLE   = 26,  
+	 GSL_ENOPROG  = 27,  
+	 GSL_ENOPROGJ = 28,  
+	 GSL_ETOLF    = 29,  
+	 GSL_ETOLX    = 30,  
+	 GSL_ETOLG    = 31,  
+	 GSL_EOF      = 32   
    } ;
 
       const char * gsl_strerror (const int gsl_errno);
 
-      typedef struct
-      {
-       double dat[2];
-     } gsl_complex;
+      typedef complex gsl_complex;
 
      typedef struct
      {
@@ -65,6 +62,10 @@ ffi.cdef[[
      gsl_block *gsl_block_alloc (const size_t n);
      gsl_block *gsl_block_calloc (const size_t n);
      void gsl_block_free (gsl_block * b);
+
+     gsl_block_complex *gsl_block_complex_alloc (const size_t n);
+     gsl_block_complex *gsl_block_complex_calloc (const size_t n);
+     void gsl_block_complex_free (gsl_block_complex * b);
 
      typedef struct
      {
@@ -110,13 +111,102 @@ ffi.cdef[[
      typedef gsl_matrix gsl_matrix_view;
      typedef gsl_matrix gsl_matrix_const_view;
 
+     typedef gsl_vector_complex gsl_vector_complex_view;
+     typedef gsl_vector_complex gsl_vector_complex_const_view;
+
+     typedef gsl_matrix_complex gsl_matrix_complex_view;
+     typedef gsl_matrix_complex gsl_matrix_complex_const_view;
+
      typedef struct
      {
 	size_t size;
 	size_t *data;
      } gsl_permutation;
 
-/* Allocation */
+
+
+double gsl_complex_arg (gsl_complex z); 
+double gsl_complex_abs (gsl_complex z);   
+double gsl_complex_abs2 (gsl_complex z);  
+double gsl_complex_logabs (gsl_complex z); 
+
+
+
+gsl_complex gsl_complex_add (gsl_complex a, gsl_complex b);  
+gsl_complex gsl_complex_sub (gsl_complex a, gsl_complex b);  
+gsl_complex gsl_complex_mul (gsl_complex a, gsl_complex b);  
+gsl_complex gsl_complex_div (gsl_complex a, gsl_complex b);  
+                                                           
+gsl_complex gsl_complex_add_real (gsl_complex a, double x);  
+gsl_complex gsl_complex_sub_real (gsl_complex a, double x);  
+gsl_complex gsl_complex_mul_real (gsl_complex a, double x);  
+gsl_complex gsl_complex_div_real (gsl_complex a, double x);  
+
+gsl_complex gsl_complex_add_imag (gsl_complex a, double y);  
+gsl_complex gsl_complex_sub_imag (gsl_complex a, double y);  
+gsl_complex gsl_complex_mul_imag (gsl_complex a, double y);  
+gsl_complex gsl_complex_div_imag (gsl_complex a, double y);  
+
+gsl_complex gsl_complex_conjugate (gsl_complex z);  
+gsl_complex gsl_complex_inverse (gsl_complex a);    
+gsl_complex gsl_complex_negative (gsl_complex a);    
+
+
+
+gsl_complex gsl_complex_sqrt (gsl_complex z);  
+gsl_complex gsl_complex_sqrt_real (double x);  
+
+gsl_complex gsl_complex_pow (gsl_complex a, gsl_complex b);  
+gsl_complex gsl_complex_pow_real (gsl_complex a, double b);  
+
+gsl_complex gsl_complex_exp (gsl_complex a);    
+gsl_complex gsl_complex_log (gsl_complex a);    
+gsl_complex gsl_complex_log10 (gsl_complex a);  
+gsl_complex gsl_complex_log_b (gsl_complex a, gsl_complex b);   
+
+
+
+gsl_complex gsl_complex_sin (gsl_complex a);  
+gsl_complex gsl_complex_cos (gsl_complex a);  
+gsl_complex gsl_complex_sec (gsl_complex a);  
+gsl_complex gsl_complex_csc (gsl_complex a);  
+gsl_complex gsl_complex_tan (gsl_complex a);  
+gsl_complex gsl_complex_cot (gsl_complex a);  
+
+
+
+gsl_complex gsl_complex_arcsin (gsl_complex a);  
+gsl_complex gsl_complex_arcsin_real (double a);  
+gsl_complex gsl_complex_arccos (gsl_complex a);  
+gsl_complex gsl_complex_arccos_real (double a);  
+gsl_complex gsl_complex_arcsec (gsl_complex a);  
+gsl_complex gsl_complex_arcsec_real (double a);  
+gsl_complex gsl_complex_arccsc (gsl_complex a);  
+gsl_complex gsl_complex_arccsc_real (double a);  
+gsl_complex gsl_complex_arctan (gsl_complex a);  
+gsl_complex gsl_complex_arccot (gsl_complex a);  
+
+
+
+gsl_complex gsl_complex_sinh (gsl_complex a);  
+gsl_complex gsl_complex_cosh (gsl_complex a);  
+gsl_complex gsl_complex_sech (gsl_complex a);  
+gsl_complex gsl_complex_csch (gsl_complex a);  
+gsl_complex gsl_complex_tanh (gsl_complex a);  
+gsl_complex gsl_complex_coth (gsl_complex a);  
+
+
+
+gsl_complex gsl_complex_arcsinh (gsl_complex a);  
+gsl_complex gsl_complex_arccosh (gsl_complex a);  
+gsl_complex gsl_complex_arccosh_real (double a);  
+gsl_complex gsl_complex_arcsech (gsl_complex a);  
+gsl_complex gsl_complex_arccsch (gsl_complex a);  
+gsl_complex gsl_complex_arctanh (gsl_complex a);  
+gsl_complex gsl_complex_arctanh_real (double a);  
+gsl_complex gsl_complex_arccoth (gsl_complex a);  
+
+
 
 gsl_vector *gsl_vector_alloc (const size_t n);
 gsl_vector *gsl_vector_calloc (const size_t n);
@@ -213,7 +303,7 @@ void gsl_vector_set (gsl_vector * v, const size_t i, double x);
 double * gsl_vector_ptr (gsl_vector * v, const size_t i);
 const double * gsl_vector_const_ptr (const gsl_vector * v, const size_t i);
 
-/* Allocation */
+
 
 gsl_matrix * 
 gsl_matrix_alloc (const size_t n1, const size_t n2);
@@ -245,7 +335,7 @@ gsl_vector_alloc_col_from_matrix (gsl_matrix * m,
 
 void gsl_matrix_free (gsl_matrix * m);
 
-/* Views */
+
 
 gsl_matrix_view 
 gsl_matrix_submatrix (gsl_matrix * m, 
@@ -353,7 +443,7 @@ gsl_matrix_const_view_vector_with_tda (const gsl_vector * v,
                                              const size_t n2,
                                              const size_t tda);
 
-/* Operations */
+
 
 void gsl_matrix_set_zero (gsl_matrix * m);
 void gsl_matrix_set_identity (gsl_matrix * m);
@@ -400,6 +490,185 @@ void    gsl_matrix_set(gsl_matrix * m, const size_t i, const size_t j, const dou
 double * gsl_matrix_ptr(gsl_matrix * m, const size_t i, const size_t j);
 const double * gsl_matrix_const_ptr(const gsl_matrix * m, const size_t i, const size_t j);
 
+
+
+gsl_matrix_complex * 
+gsl_matrix_complex_alloc (const size_t n1, const size_t n2);
+
+gsl_matrix_complex * 
+gsl_matrix_complex_calloc (const size_t n1, const size_t n2);
+
+gsl_matrix_complex * 
+gsl_matrix_complex_alloc_from_block (gsl_block_complex * b, 
+                                           const size_t offset, 
+                                           const size_t n1, const size_t n2, const size_t d2);
+
+gsl_matrix_complex * 
+gsl_matrix_complex_alloc_from_matrix (gsl_matrix_complex * b,
+                                            const size_t k1, const size_t k2,
+                                            const size_t n1, const size_t n2);
+
+gsl_vector_complex * 
+gsl_vector_complex_alloc_row_from_matrix (gsl_matrix_complex * m,
+                                                const size_t i);
+
+gsl_vector_complex * 
+gsl_vector_complex_alloc_col_from_matrix (gsl_matrix_complex * m,
+                                                const size_t j);
+
+void gsl_matrix_complex_free (gsl_matrix_complex * m);
+
+
+
+gsl_matrix_complex_view 
+gsl_matrix_complex_submatrix (gsl_matrix_complex * m, 
+                            const size_t i, const size_t j, 
+                            const size_t n1, const size_t n2);
+
+gsl_vector_complex_view 
+gsl_matrix_complex_row (gsl_matrix_complex * m, const size_t i);
+
+gsl_vector_complex_view 
+gsl_matrix_complex_column (gsl_matrix_complex * m, const size_t j);
+
+gsl_vector_complex_view 
+gsl_matrix_complex_diagonal (gsl_matrix_complex * m);
+
+gsl_vector_complex_view 
+gsl_matrix_complex_subdiagonal (gsl_matrix_complex * m, const size_t k);
+
+gsl_vector_complex_view 
+gsl_matrix_complex_superdiagonal (gsl_matrix_complex * m, const size_t k);
+
+gsl_vector_complex_view
+gsl_matrix_complex_subrow (gsl_matrix_complex * m,
+                                 const size_t i, const size_t offset,
+                                 const size_t n);
+
+gsl_vector_complex_view
+gsl_matrix_complex_subcolumn (gsl_matrix_complex * m,
+                                    const size_t j, const size_t offset,
+                                    const size_t n);
+
+gsl_matrix_complex_view
+gsl_matrix_complex_view_array (double * base,
+                             const size_t n1, 
+                             const size_t n2);
+
+gsl_matrix_complex_view
+gsl_matrix_complex_view_array_with_tda (double * base, 
+                                      const size_t n1, 
+                                      const size_t n2,
+                                      const size_t tda);
+
+gsl_matrix_complex_view
+gsl_matrix_complex_view_vector (gsl_vector_complex * v,
+                              const size_t n1, 
+                              const size_t n2);
+
+gsl_matrix_complex_view
+gsl_matrix_complex_view_vector_with_tda (gsl_vector_complex * v,
+                                       const size_t n1, 
+                                       const size_t n2,
+                                       const size_t tda);
+
+
+gsl_matrix_complex_const_view 
+gsl_matrix_complex_const_submatrix (const gsl_matrix_complex * m, 
+                                  const size_t i, const size_t j, 
+                                  const size_t n1, const size_t n2);
+
+gsl_vector_complex_const_view 
+gsl_matrix_complex_const_row (const gsl_matrix_complex * m, 
+                            const size_t i);
+
+gsl_vector_complex_const_view 
+gsl_matrix_complex_const_column (const gsl_matrix_complex * m, 
+                               const size_t j);
+
+gsl_vector_complex_const_view
+gsl_matrix_complex_const_diagonal (const gsl_matrix_complex * m);
+
+gsl_vector_complex_const_view 
+gsl_matrix_complex_const_subdiagonal (const gsl_matrix_complex * m, 
+                                    const size_t k);
+
+gsl_vector_complex_const_view 
+gsl_matrix_complex_const_superdiagonal (const gsl_matrix_complex * m, 
+                                      const size_t k);
+
+gsl_vector_complex_const_view
+gsl_matrix_complex_const_subrow (const gsl_matrix_complex * m,
+                                       const size_t i, const size_t offset,
+                                       const size_t n);
+
+gsl_vector_complex_const_view
+gsl_matrix_complex_const_subcolumn (const gsl_matrix_complex * m,
+                                          const size_t j, const size_t offset,
+                                          const size_t n);
+
+gsl_matrix_complex_const_view
+gsl_matrix_complex_const_view_array (const double * base,
+                                   const size_t n1, 
+                                   const size_t n2);
+
+gsl_matrix_complex_const_view
+gsl_matrix_complex_const_view_array_with_tda (const double * base, 
+                                            const size_t n1, 
+                                            const size_t n2,
+                                            const size_t tda);
+
+gsl_matrix_complex_const_view
+gsl_matrix_complex_const_view_vector (const gsl_vector_complex * v,
+                                    const size_t n1, 
+                                    const size_t n2);
+
+gsl_matrix_complex_const_view
+gsl_matrix_complex_const_view_vector_with_tda (const gsl_vector_complex * v,
+                                             const size_t n1, 
+                                             const size_t n2,
+                                             const size_t tda);
+
+
+
+void gsl_matrix_complex_set_zero (gsl_matrix_complex * m);
+void gsl_matrix_complex_set_identity (gsl_matrix_complex * m);
+void gsl_matrix_complex_set_all (gsl_matrix_complex * m, gsl_complex x);
+
+int gsl_matrix_complex_fread (FILE * stream, gsl_matrix_complex * m) ;
+int gsl_matrix_complex_fwrite (FILE * stream, const gsl_matrix_complex * m) ;
+int gsl_matrix_complex_fscanf (FILE * stream, gsl_matrix_complex * m);
+int gsl_matrix_complex_fprintf (FILE * stream, const gsl_matrix_complex * m, const char * format);
+
+int gsl_matrix_complex_memcpy(gsl_matrix_complex * dest, const gsl_matrix_complex * src);
+int gsl_matrix_complex_swap(gsl_matrix_complex * m1, gsl_matrix_complex * m2);
+
+int gsl_matrix_complex_swap_rows(gsl_matrix_complex * m, const size_t i, const size_t j);
+int gsl_matrix_complex_swap_columns(gsl_matrix_complex * m, const size_t i, const size_t j);
+int gsl_matrix_complex_swap_rowcol(gsl_matrix_complex * m, const size_t i, const size_t j);
+
+int gsl_matrix_complex_transpose (gsl_matrix_complex * m);
+int gsl_matrix_complex_transpose_memcpy (gsl_matrix_complex * dest, const gsl_matrix_complex * src);
+
+int gsl_matrix_complex_isnull (const gsl_matrix_complex * m);
+int gsl_matrix_complex_ispos (const gsl_matrix_complex * m);
+int gsl_matrix_complex_isneg (const gsl_matrix_complex * m);
+int gsl_matrix_complex_isnonneg (const gsl_matrix_complex * m);
+
+int gsl_matrix_complex_add (gsl_matrix_complex * a, const gsl_matrix_complex * b);
+int gsl_matrix_complex_sub (gsl_matrix_complex * a, const gsl_matrix_complex * b);
+int gsl_matrix_complex_mul_elements (gsl_matrix_complex * a, const gsl_matrix_complex * b);
+int gsl_matrix_complex_div_elements (gsl_matrix_complex * a, const gsl_matrix_complex * b);
+int gsl_matrix_complex_scale (gsl_matrix_complex * a, const gsl_complex x);
+int gsl_matrix_complex_add_constant (gsl_matrix_complex * a, const gsl_complex x);
+int gsl_matrix_complex_add_diagonal (gsl_matrix_complex * a, const gsl_complex x);
+
+gsl_complex gsl_matrix_complex_get(const gsl_matrix_complex * m, const size_t i, const size_t j);
+void gsl_matrix_complex_set(gsl_matrix_complex * m, const size_t i, const size_t j, const gsl_complex x);
+
+gsl_complex * gsl_matrix_complex_ptr(gsl_matrix_complex * m, const size_t i, const size_t j);
+const gsl_complex * gsl_matrix_complex_const_ptr(const gsl_matrix_complex * m, const size_t i, const size_t j);
+
 gsl_permutation *gsl_permutation_alloc (const size_t n);
 gsl_permutation *gsl_permutation_calloc (const size_t n);
 void gsl_permutation_init (gsl_permutation * p);
@@ -435,7 +704,7 @@ size_t gsl_permutation_get (const gsl_permutation * p, const size_t i);
 int gsl_permute_vector (const gsl_permutation * p, gsl_vector * v);
 int gsl_permute_vector_inverse (const gsl_permutation * p, gsl_vector * v);
 
-/* Householder Transformations */
+
 
 double gsl_linalg_householder_transform (gsl_vector * v);
 gsl_complex gsl_linalg_complex_householder_transform (gsl_vector_complex * v);
@@ -467,7 +736,7 @@ int gsl_linalg_complex_householder_hv (gsl_complex tau,
                                        const gsl_vector_complex * v, 
                                        gsl_vector_complex * w);
 
-/* Hessenberg reduction */
+
 
 int gsl_linalg_hessenberg_decomp(gsl_matrix *A, gsl_vector *tau);
 int gsl_linalg_hessenberg_unpack(gsl_matrix * H, gsl_vector * tau,
@@ -478,11 +747,11 @@ int gsl_linalg_hessenberg_set_zero(gsl_matrix * H);
 int gsl_linalg_hessenberg_submatrix(gsl_matrix *M, gsl_matrix *A,
                                     size_t top, gsl_vector *tau);
 
-/* To support gsl-1.9 interface: DEPRECATED */
+
 int gsl_linalg_hessenberg(gsl_matrix *A, gsl_vector *tau);
 
 
-/* Hessenberg-Triangular reduction */
+
 
 int gsl_linalg_hesstri_decomp(gsl_matrix * A, gsl_matrix * B,
                               gsl_matrix * U, gsl_matrix * V,
@@ -547,7 +816,7 @@ double gsl_linalg_LU_det (gsl_matrix * LU, int signum);
 double gsl_linalg_LU_lndet (gsl_matrix * LU);
 int gsl_linalg_LU_sgndet (gsl_matrix * lu, int signum);
 
-/* Complex LU Decomposition */
+
 
 int gsl_linalg_complex_LU_decomp (gsl_matrix_complex * A, 
                                   gsl_permutation * p, 
@@ -581,7 +850,7 @@ double gsl_linalg_complex_LU_lndet (gsl_matrix_complex * LU);
 gsl_complex gsl_linalg_complex_LU_sgndet (gsl_matrix_complex * LU,
                                           int signum);
 
-/* QR decomposition */
+
 
 int gsl_linalg_QR_decomp (gsl_matrix * A,
                           gsl_vector * tau);
@@ -644,7 +913,7 @@ int gsl_linalg_R_svx (const gsl_matrix * R,
                       gsl_vector * x);
 
 
-/* Q R P^T decomposition */
+
 
 int gsl_linalg_QRPT_decomp (gsl_matrix * A,
                             gsl_vector * tau,
@@ -692,7 +961,7 @@ int gsl_linalg_QRPT_update (gsl_matrix * Q,
                             gsl_vector * u,
                             const gsl_vector * v);
 
-/* LQ decomposition */
+
 
 int gsl_linalg_LQ_decomp (gsl_matrix * A, gsl_vector * tau);
 
@@ -728,7 +997,7 @@ int gsl_linalg_LQ_update (gsl_matrix * Q, gsl_matrix * R,
 int gsl_linalg_LQ_LQsolve (gsl_matrix * Q, gsl_matrix * L, 
 			   const gsl_vector * b, gsl_vector * x);
 
-/* P^T L Q decomposition */
+
 
 int gsl_linalg_PTLQ_decomp (gsl_matrix * A, gsl_vector * tau, 
 			    gsl_permutation * p, int *signum, 
@@ -768,7 +1037,7 @@ int gsl_linalg_PTLQ_update (gsl_matrix * Q, gsl_matrix * L,
 			    const gsl_permutation * p,
 			    const gsl_vector * v, gsl_vector * w);
 
-/* Cholesky Decomposition */
+
 
 int gsl_linalg_cholesky_decomp (gsl_matrix * A);
 
@@ -789,7 +1058,7 @@ int gsl_linalg_cholesky_invert(gsl_matrix * cholesky);
  */
 int gsl_linalg_cholesky_decomp_unit(gsl_matrix * A, gsl_vector * D);
 
-/* Complex Cholesky Decomposition */
+
 
 int gsl_linalg_complex_cholesky_decomp (gsl_matrix_complex * A);
 
@@ -800,7 +1069,7 @@ int gsl_linalg_complex_cholesky_solve (const gsl_matrix_complex * cholesky,
 int gsl_linalg_complex_cholesky_svx (const gsl_matrix_complex * cholesky,
                                      gsl_vector_complex * x);
 
-/* Symmetric to symmetric tridiagonal decomposition */
+
 
 int gsl_linalg_symmtd_decomp (gsl_matrix * A, 
                               gsl_vector * tau);
@@ -815,7 +1084,7 @@ int gsl_linalg_symmtd_unpack_T (const gsl_matrix * A,
                                 gsl_vector * diag, 
                                 gsl_vector * subdiag);
 
-/* Hermitian to symmetric tridiagonal decomposition */
+
 
 int gsl_linalg_hermtd_decomp (gsl_matrix_complex * A, 
                               gsl_vector_complex * tau);
@@ -904,7 +1173,7 @@ int gsl_linalg_solve_cyc_tridiag (const gsl_vector * diag,
                                   gsl_vector * x);
 
 
-/* Bidiagonal decomposition */
+
 
 int gsl_linalg_bidiag_decomp (gsl_matrix * A, 
                               gsl_vector * tau_U, 
@@ -927,7 +1196,7 @@ int gsl_linalg_bidiag_unpack_B (const gsl_matrix * A,
                                 gsl_vector * diag, 
                                 gsl_vector * superdiag);
 
-/* Balancing */
+
 
 int gsl_linalg_balance_matrix (gsl_matrix * A, gsl_vector * D);
 int gsl_linalg_balance_accum (gsl_matrix * A, gsl_vector * D);
