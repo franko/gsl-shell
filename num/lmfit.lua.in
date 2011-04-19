@@ -3,6 +3,10 @@ local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
 
 local ffi = require 'ffi'
 local cgsl = require 'cgsl'
+local matrix = require 'cmatrix'
+
+local gslerror = require 'gslerror'
+local gsl_check = gslerror.check_status
 
 # GSL_DBL_EPSILON = 2.2204460492503131e-16
 # GSL_DBL_MIN     = 2.2250738585072014e-308
@@ -573,12 +577,6 @@ local function object(cdata)
    return t[cdata]
 end
 
-local function get_matrix(n1, n2)
-   local m = matrix.new(n1, n2)
-   local s = cgsl.gsl_matrix_submatrix (m, 0, 0, n1, n2)
-   return store(m, s)
-end
-
 local function get_vector(nr)
    local m = matrix.new(nr, 1)
    local s = cgsl.gsl_matrix_column (m, 0)
@@ -595,12 +593,12 @@ local function call_f(fdf, xc, fc)
 end
 
 local function call_df(fdf, xc, Jc)
-   local x, J = object(xc), object(Jc)
+   local x, J = object(xc), Jc
    return fdf(x, nil, J)
 end
 
 local function call_fdf(fdf, xc, fc, Jc)
-   local x, f, J = object(xc), object(fc), object(Jc)
+   local x, f, J = object(xc), object(fc), Jc
    return fdf(x, f, J)
 end
 
@@ -610,7 +608,7 @@ local delta, par
 
 # MINNP = (N < P and N or P)
 
-local r        = get_matrix($(N), $(P))
+local r        = matrix.new($(N), $(P))
 local tau      = get_vector($(MINNP))
 local diag     = get_vector($(P))
 local qtf      = get_vector($(N))
@@ -627,7 +625,7 @@ local perm     = get_permutation($(P))
 
 local state_x  = get_vector($(P))
 local state_f  = get_vector($(N))
-local state_J  = get_matrix($(N), $(P))
+local state_J  = matrix.new($(N), $(P))
 local state_dx = get_vector($(P))
 
 local system_fdf
@@ -813,7 +811,7 @@ end
 
 M.set = function(fdf, x0)
 	   system_fdf = fdf
-	   matrix.set(object(state_x), x0)
+	   gsl_check(cgsl.gsl_matrix_memcpy(object(state_x), x0))
 	   lm_set (fdf, state_x, state_f, state_J, state_dx, true)
 	end
 

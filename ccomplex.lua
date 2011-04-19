@@ -82,7 +82,13 @@ function complex.imag(z)
    if type(z) == 'number' then return 0 else return z[1] end
 end
 
-gsl_function_list = {'sqrt', 'exp', 'log', 'log10', 'sin', 'cos', 'sec', 'csc', 'tan', 'cot', 'arcsin', 'arccos', 'arcsec', 'arccsc', 'arctan', 'arccot', 'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth', 'arcsinh', 'arccosh', 'arcsech', 'arccsch', 'arctanh', 'arccoth'}
+gsl_function_list = {
+   'sqrt', 'exp', 'log', 'log10',
+   'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
+   'arcsin', 'arccos', 'arcsec', 'arccsc', 'arctan', 'arccot',
+   'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth',
+   'arcsinh', 'arccosh', 'arcsech', 'arccsch', 'arctanh', 'arccoth'
+}
 
 for _, name in ipairs(gsl_function_list) do
    complex[name] = cwrap(name)

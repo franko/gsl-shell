@@ -1,5 +1,6 @@
 
 local template = require 'template'
+local matrix = require 'cmatrix'
 
 function gsl.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}
@@ -57,7 +58,12 @@ local NLINFIT = {
    __index = function(t, k)
 		if k == 'chisq' then
 		   local f = t.lm.f
-		   return matrix.prod(f, f)[1]
+		   local csq = 0
+		   local n = matrix.dim(f)
+		   for i=0, n-1 do
+		      csq = csq + f[i]^2
+		   end
+		   return csq
 		else
 		   if t.lm[k] then return t.lm[k] end
 		end
