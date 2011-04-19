@@ -98,6 +98,10 @@ function matrix.row(m, i)
    return r
 end
 
+function matrix.vec(t) 
+   return matrix.new(#t, 1, |i| t[i+1])
+end
+
 local signum = ffi.new('int[1]')
 
 function matrix.inv(m)
@@ -143,6 +147,7 @@ local matrix_methods = {
    row = matrix.row,
    get = cgsl.gsl_matrix_get,
    set = cgsl.gsl_matrix_set,
+   vec = matrix.vec,
 }
 
 local mt = {
@@ -185,6 +190,20 @@ local mt = {
 		end
 		return matrix_methods[k]
 	     end,
+
+
+   __newindex = function(m, k, v)
+		   if type(k) == 'number' then
+		      if m.size2 == 1 then
+			 cgsl.gsl_matrix_set(m, k, 0, v)
+		      else
+			 local row = cgsl.gsl_matrix_submatrix(m, k, 0, 1, m.size2)
+			 gsl_check(cgsl.gsl_matrix_memcpy(row, v))
+		      end
+		   else
+		      error 'cannot set a matrix field'
+		   end
+		end,
 
    __tostring = matrix.tostring
 }
