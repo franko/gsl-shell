@@ -51,6 +51,18 @@ static GCcdata *argv2cdata(jit_State *J, TRef tr, cTValue *o)
   return cd;
 }
 
+/* Specialize to the CTypeID held by a cdata constructor. */
+static CTypeID crec_constructor(jit_State *J, GCcdata *cd, TRef tr)
+{
+  CTypeID id;
+  lua_assert(tref_iscdata(tr) && cd->typeid == CTID_CTYPEID);
+  id = *(CTypeID *)cdataptr(cd);
+  tr = emitir(IRT(IR_ADD, IRT_PTR), tr, lj_ir_kintp(J, sizeof(GCcdata)));
+  tr = emitir(IRT(IR_XLOAD, IRT_INT), tr, 0);
+  emitir(IRTG(IR_EQ, IRT_INT), tr, lj_ir_kint(J, (int32_t)id));
+  return id;
+}
+
 static CTypeID argv2ctype(jit_State *J, TRef tr, cTValue *o)
 {
   if (tref_isstr(tr)) {
@@ -70,7 +82,8 @@ static CTypeID argv2ctype(jit_State *J, TRef tr, cTValue *o)
     return cp.val.id;
   } else {
     GCcdata *cd = argv2cdata(J, tr, o);
-    return cd->typeid == CTID_CTYPEID ? *(CTypeID *)cdataptr(cd) : cd->typeid;
+    return cd->typeid == CTID_CTYPEID ? crec_constructor(J, cd, tr) :
+					cd->typeid;
   }
 }
 
@@ -427,18 +440,6 @@ doconv:
 
 /* -- C data metamethods -------------------------------------------------- */
 
-/* Specialize to the CTypeID held by a cdata constructor. */
-static CTypeID crec_constructor(jit_State *J, GCcdata *cd, TRef tr)
-{
-  CTypeID id;
-  lua_assert(tref_iscdata(tr) && cd->typeid == CTID_CTYPEID);
-  id = *(CTypeID *)cdataptr(cd);
-  tr = emitir(IRT(IR_ADD, IRT_PTR), tr, lj_ir_kintp(J, sizeof(GCcdata)));
-  tr = emitir(IRT(IR_XLOAD, IRT_INT), tr, 0);
-  emitir(IRTG(IR_EQ, IRT_INT), tr, lj_ir_kint(J, (int32_t)id));
-  return id;
-}
-
 /* This would be rather difficult in FOLD, so do it here:
 ** (base+k)+(idx*sz)+ofs ==> (base+idx*sz)+(ofs+k)
 ** (base+(idx+k)*sz)+ofs ==> (base+idx*sz)+(ofs+k*sz)
@@ -710,20 +711,20 @@ static void crec_alloc(jit_State *J, RecordFFData *rd, CTypeID id)
     /* Handle __gc metamethod. */
     fin = lj_ctype_meta(cts, id, MM_gc);
     if (fin) {
-      RecordIndex ix;
-      ix.idxchain = 0;
-      settabV(J->L, &ix.tabv, cts->finalizer);
-      ix.tab = lj_ir_ktab(J, cts->finalizer);
-      setboolV(&ix.keyv, 0);  /* The key is new. Dummy value is ok here. */
-      ix.key = trcd;
-      copyTV(J->L, &ix.valv, fin);
-      if (tvisfunc(fin))
-	ix.val = lj_ir_kfunc(J, funcV(fin));
-      else if (tviscdata(fin))
-	ix.val = lj_ir_kgc(J, obj2gco(cdataV(fin)), IRT_CDATA);
-      else
+      TRef trlo = lj_ir_call(J, IRCALL_lj_cdata_setfin, trcd);
+      TRef trhi = emitir(IRT(IR_ADD, IRT_P32), trlo, lj_ir_kint(J, 4));
+      if (LJ_BE) { TRef tmp = trlo; trlo = trhi; trhi = tmp; }
+      if (tvisfunc(fin)) {
+	emitir(IRT(IR_XSTORE, IRT_P32), trlo, lj_ir_kfunc(J, funcV(fin)));
+	emitir(IRTI(IR_XSTORE), trhi, lj_ir_kint(J, LJ_TFUNC));
+      } else if (tviscdata(fin)) {
+	emitir(IRT(IR_XSTORE, IRT_P32), trlo,
+	       lj_ir_kgc(J, obj2gco(cdataV(fin)), IRT_CDATA));
+	emitir(IRTI(IR_XSTORE), trhi, lj_ir_kint(J, LJ_TCDATA));
+      } else {
 	lj_trace_err(J, LJ_TRERR_BADTYPE);
-      lj_record_idx(J, &ix);
+      }
+      J->needsnap = 1;
     }
   }
 }
@@ -1098,6 +1099,18 @@ void LJ_FASTCALL recff_ffi_fill(jit_State *J, RecordFFData *rd)
     emitir(IRT(IR_XBAR, IRT_NIL), 0, 0);
     rd->nres = 0;
   }  /* else: interpreter will throw. */
+}
+
+void LJ_FASTCALL recff_ffi_istype(jit_State *J, RecordFFData *rd)
+{
+  argv2ctype(J, J->base[0], &rd->argv[0]);
+  if (tref_iscdata(J->base[1])) {
+    argv2ctype(J, J->base[1], &rd->argv[1]);
+    J->postproc = LJ_POST_FIXBOOL;
+    J->base[0] = TREF_TRUE;
+  } else {
+    J->base[0] = TREF_FALSE;
+  }
 }
 
 void LJ_FASTCALL recff_ffi_abi(jit_State *J, RecordFFData *rd)
