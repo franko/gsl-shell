@@ -1,10 +1,10 @@
 
+require 'cmatrix'
+
 local ffi    = require 'ffi'
 local cgsl   = require 'cgsl'
-local matrix = require 'cmatrix'
 
-local gslerror = require 'gslerror'
-local gsl_check = gslerror.check_status
+local gsl_check = require 'gsl-check'
 
 ffi.cdef[[
       typedef struct 

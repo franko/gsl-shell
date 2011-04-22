@@ -1,5 +1,5 @@
 
-local matrix = require 'cmatrix'
+require 'cmatrix'
 
 use 'math'
 

@@ -1,6 +1,7 @@
 
+require 'cmatrix'
+
 local template = require 'template'
-local matrix = require 'cmatrix'
 
 function gsl.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}

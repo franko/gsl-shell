@@ -1,7 +1,8 @@
 
 use 'gsl'
 
-local matrix = require 'cmatrix'
+require 'cmatrix'
+
 local linfit = require 'clinfit'
 
 local exp = math.exp

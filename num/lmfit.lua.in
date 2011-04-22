@@ -1,12 +1,12 @@
 
+require 'cmatrix'
+
 local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
 
 local ffi = require 'ffi'
 local cgsl = require 'cgsl'
-local matrix = require 'cmatrix'
 
-local gslerror = require 'gslerror'
-local gsl_check = gslerror.check_status
+local gsl_check = require 'gsl-check'
 
 # GSL_DBL_EPSILON = 2.2204460492503131e-16
 # GSL_DBL_MIN     = 2.2250738585072014e-308
