@@ -21,14 +21,6 @@ local function cartesian(x)
    end
 end
 
-local function coper(op)
-   return function(a, b)
-	     local ar, ai = cartesian(a)
-	     local br, bi = cartesian(b)
-	     return op(ar,ai,br,bi)
-	  end
-end
-
 local function complex_conj(a)
    local x, y = cartesian(z)
    return gsl_complex(x, -y)
@@ -162,6 +154,13 @@ local function matrix_copy(a)
    return b
 end
 
+local function matrix_complex_copy(a)
+   local n1, n2 = a.size1, a.size2
+   local b = matrix_calloc(n1, n2)
+   cgsl.gsl_matrix_complex_memcpy(b, a)
+   return b
+end
+
 local function matrix_col(m, j)
    local r = matrix_alloc(m.size1, 1)
    local tda = m.tda
@@ -185,7 +184,7 @@ local function matrix_vect_def(t)
 end
 
 local function get_typeid(a)
-   if     isreal(a)                         then return true,  true
+   if     isreal(a)                          then return true,  true
    elseif ffi.istype(gsl_complex, a)         then return false, true
    elseif ffi.istype(gsl_matrix, a)          then return true,  false
    elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
@@ -444,10 +443,44 @@ for _, name in ipairs(gsl_function_list) do
    complex[name] = cwrap(name)
 end
 
+local function matrix_def(t)
+   local r, c = #t, #t[1]
+   local real = true
+   for i, row in ipairs(t) do
+      for j, x in ipairs(row) do
+	 if not isreal(x) then
+	    real = false
+	    break
+	 end
+      end
+      if not real then break end
+   end
+   if real then
+      local m = matrix_alloc(r, c)
+      for i= 0, r-1 do
+	 local row = t[i+1]
+	 for j = 0, c-1 do
+	    m.data[i*c+j] = row[j+1]
+	 end
+      end
+      return m
+   else
+      local m = matrix_calloc(r, c)
+      for i= 0, r-1 do
+	 local row = t[i+1]
+	 for j = 0, c-1 do
+	    local x, y = cartesian(row[j+1])
+	    m.data[2*i*c+2*j  ] = x
+	    m.data[2*i*c+2*j+1] = y
+	 end
+      end
+      return m
+   end
+end
 
 local signum = ffi.new('int[1]')
 
-function matrix.inv(m)
+function matrix_inv(m)
    local n = m.size1
    local lu = matrix_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
@@ -457,7 +490,7 @@ function matrix.inv(m)
    return mi
 end
 
-function matrix.solve(m, b)
+function matrix_solve(m, b)
    local n = m.size1
    local lu = matrix_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
@@ -468,3 +501,47 @@ function matrix.solve(m, b)
    gsl_check(cgsl.gsl_linalg_LU_solve(lu, p, bv, xv))
    return x
 end
+
+function matrix_complex_inv(m)
+   local n = m.size1
+   local lu = matrix_complex_copy(m)
+   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
+   gsl_check(cgsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+   local mi = matrix_calloc(n, n)
+   gsl_check(cgsl.gsl_linalg_complex_LU_invert(lu, p, mi))
+   return mi
+end
+
+function matrix_complex_solve(m, b)
+   local n = m.size1
+   local lu = matrix_complex_copy(m)
+   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
+   gsl_check(cgsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+   local x = matrix_calloc(n, 1)
+   local xv = cgsl.gsl_matrix_complex_column(x, 0)
+   local bv = cgsl.gsl_matrix_complex_column(b, 0)
+   gsl_check(cgsl.gsl_linalg_complex_LU_solve(lu, p, bv, xv))
+   return x
+end
+
+matrix.inv = function(m)
+		if ffi.istype(gsl_matrix, m) then
+		   return matrix_inv(m)
+		else
+		   return matrix_complex_inv(m)
+		end
+	     end
+
+matrix.solve = function(m, b)
+		  local mr = ffi.istype(gsl_matrix, m)
+		  local br = ffi.istype(gsl_matrix, b)
+		  if mr and br then
+		     return matrix_solve(m, b)
+		  else
+		     if mr then m = mat_complex_of_real(m) end
+		     if br then b = mat_complex_of_real(b) end
+		     return matrix_complex_solve(m, b)
+		  end
+	       end
+
+matrix.def = matrix_def
