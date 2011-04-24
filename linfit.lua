@@ -4,42 +4,6 @@ local cgsl   = require 'cgsl'
 
 local gsl_check = require 'gsl-check'
 
-ffi.cdef[[
-      typedef struct 
-      {
-	 size_t n; /* number of observations */
-	 size_t p; /* number of parameters */
-	 gsl_matrix * A;
-	 gsl_matrix * Q;
-	 gsl_matrix * QSI;
-	 gsl_vector * S;
-	 gsl_vector * t;
-	 gsl_vector * xt;
-	 gsl_vector * D;
-      } gsl_multifit_linear_workspace;
-
-      gsl_multifit_linear_workspace * gsl_multifit_linear_alloc (size_t n, size_t p);
-
-      void gsl_multifit_linear_free (gsl_multifit_linear_workspace * work);
-
-      int
-      gsl_multifit_linear (const gsl_matrix * X,
-			   const gsl_vector * y,
-			   gsl_vector * c,
-			   gsl_matrix * cov,
-			   double * chisq,
-			   gsl_multifit_linear_workspace * work);
-
-      int
-      gsl_multifit_wlinear (const gsl_matrix * X,
-			    const gsl_vector * w,
-			    const gsl_vector * y,
-			    gsl_vector * c,
-			    gsl_matrix * cov,
-			    double * chisq,
-			    gsl_multifit_linear_workspace * work);
-]]
-
 local workspace
 local workspace_n
 local workspace_p

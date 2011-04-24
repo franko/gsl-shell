@@ -4,9 +4,7 @@ local cgsl = require 'cgsl'
 
 local gsl_check = require 'gsl-check'
 
-local bspline = {}
-
-function bspline.new(a, b, nbreak)
+local function bspline(a, b, nbreak)
    local breaks
    local brk
    if type(a) ~= 'number' then

@@ -6,3 +6,6 @@ require('misc')
 require('integ-init')
 require('graph-init')
 require('import')
+
+gsl.linfit  = require 'linfit'
+gsl.bspline = require 'bspline'

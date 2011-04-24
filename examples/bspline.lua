@@ -3,9 +3,6 @@ use 'math'
 use 'gsl'
 use 'graph'
 
-local bspline = require 'bspline'
-local linfit = require 'clinfit'
-
 function demo1()
    local n, br = 200, 10
 
@@ -24,7 +21,7 @@ function demo1()
       w[i] = 1/sigma^2
    end
 
-   local b = bspline.new(0, 15, br)
+   local b = bspline(0, 15, br)
    local X = b.model(x)
 
    local c, chisq, cov = linfit(X, y, w)
