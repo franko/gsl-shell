@@ -21,6 +21,10 @@
 local cat = table.concat
 local fmt = string.format
 
+config = {
+   lua_index_style = false,
+}
+
 function math.divmod(n, p)
    local r = n % p
    return (n-r)/p, r

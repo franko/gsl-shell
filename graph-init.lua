@@ -1,6 +1,8 @@
 
 local floor = math.floor
 
+local lua_index_style = config.lua_index_style
+
 function graph.ipath(f)
    local ln = graph.path(f())
    for x, y in f do
@@ -37,9 +39,10 @@ function graph.filine(f, a, b)
 end
 
 function graph.xyline(x, y)
+   local i0 = lua_index_style and 1 or 0
    local n = matrix.dim(x)
-   local ln = graph.path(x[1], y[1])
-   for i=2, n do ln:line_to(x[i], y[i]) end
+   local ln = graph.path(x[i0], y[i0])
+   for i=i0+1, i0+n-1 do ln:line_to(x[i], y[i]) end
    return ln
 end
 

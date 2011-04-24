@@ -5,7 +5,7 @@ local cgsl = require 'cgsl'
 local sqrt, abs = math.sqrt, math.abs
 local fmt = string.format
 
-local lua_index_style = false
+local lua_index_style = config.lua_index_style
 
 local gsl_matrix         = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
@@ -70,6 +70,10 @@ end
 
 local function matrix_dim(m)
    return m.size1, m.size2
+end
+
+local function matrix_len(m)
+   return m.size1
 end
 
 local function matrix_copy(a)
@@ -460,6 +464,8 @@ local matrix_mt = {
 		   end
 		end,
 
+   __len = matrix_len,
+
    __tostring = matrix_tostring_gen(mat_real_get),
 }
 
@@ -492,6 +498,8 @@ local matrix_complex_mt = {
 		end
 		return matrix_complex_methods[k]
 	     end,
+
+   __len = matrix_len,
 
    __tostring = matrix_tostring_gen(mat_complex_get),
 }
