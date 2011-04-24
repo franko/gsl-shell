@@ -25,7 +25,7 @@ include $(GSH_BASE_DIR)/makeflags
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
-LUADIR = $(GSH_BASE_DIR)/$(strip $(LUA_ENGINE))
+LUADIR = $(GSH_BASE_DIR)/luajit2
 
 ifeq ($(PLATFORM), none)
 nono:

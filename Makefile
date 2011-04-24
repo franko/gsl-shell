@@ -23,7 +23,7 @@ include makeflags
 include makepackages
 include makedefs
 
-LUADIR = $(strip $(LUA_ENGINE))
+LUADIR = luajit2
 
 ifeq ($(strip $(PLATFORM)), none)
 nono:
@@ -52,13 +52,8 @@ C_SRC_FILES = gs-types.c lua-utils.c random.c randist.c \
 LUA_BASE_DIRS = 
 LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
 
-ifeq ($(LUADIR), luajit2)
-  LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
-  C_SRC_FILES += gsl-shell-jit.c
-else
-  LUAGSL_LIBS = $(LUADIR)/src/liblua.a
-  C_SRC_FILES += gsl-shell.c
-endif
+LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
+C_SRC_FILES += gsl-shell-jit.c
 
 DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
