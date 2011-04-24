@@ -10,23 +10,7 @@
 
 static int gs_type_string (lua_State *L);
 
-#define GS_MATRIX_NAME_DEF      "GSL.matrix"
-#define GS_CMATRIX_NAME_DEF     "GSL.cmatrix"
-#define GS_COMPLEX_NAME_DEF     "GSL.cmpl"
 #define GS_RNG_NAME_DEF         "GSL.rng"
-#define GS_NLINFIT_NAME_DEF     "GSL.solver"
-#define GS_CNLINFIT_NAME_DEF    "GSL.csolver"
-#define GS_ODESOLV_NAME_DEF     "GSL.ode"
-#define GS_CODESOLV_NAME_DEF    "GSL.code"
-#define GS_HALFCMPL_R2_NAME_DEF "GSL.ffthcr2"
-#define GS_HALFCMPL_MR_NAME_DEF "GSL.ffthcmr"
-#define GS_FDFMULTIMIN_NAME_DEF "GSL.fdfmmin"
-#define GS_FMULTIMIN_NAME_DEF   "GSL.fmmin"
-#define GS_BSPLINE_NAME_DEF     "GSL.bspline"
-#define GS_INTERP_NAME_DEF      "GSL.interp"
-#define GS_LU_DECOMP_NAME_DEF   "GSL.LUdec"
-#define GS_CLU_DECOMP_NAME_DEF  "GSL.cLUdec"
-#define GS_QR_DECOMP_NAME_DEF   "GSL.QRdec"
 #ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
@@ -48,23 +32,7 @@ static int gs_type_string (lua_State *L);
 #define MY_EXPAND_DER(NM,DESCR,BASE) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, MYCAT2(GS,BASE)}
 
 const struct gs_type gs_type_table[] = {
-  MY_EXPAND(MATRIX, "real matrix"),
-  MY_EXPAND(CMATRIX, "complex matrix"),
-  MY_EXPAND(COMPLEX, "complex number"),
   MY_EXPAND(RNG, "random number generator"),
-  MY_EXPAND(NLINFIT, "real values non-linear solver"),
-  MY_EXPAND(CNLINFIT, "complex values non-linear solver"),
-  MY_EXPAND(ODESOLV, "real values ODE solver"),
-  MY_EXPAND(CODESOLV, "complex values ODE solver"),
-  MY_EXPAND(HALFCMPL_R2, "half complex array (radix2)"),
-  MY_EXPAND(HALFCMPL_MR, "half complex array (mixed radix)"),
-  MY_EXPAND(FDFMULTIMIN, "fdf multimin solver"), 
-  MY_EXPAND(FMULTIMIN, "f multimin solver"), 
-  MY_EXPAND(BSPLINE, "B-spline"), 
-  MY_EXPAND(INTERP, "Interpolation object"), 
-  MY_EXPAND(LU_DECOMP, "real matrix LU decomposition"), 
-  MY_EXPAND(CLU_DECOMP, "complex matrix LU decomposition"), 
-  MY_EXPAND(QR_DECOMP, "QR decomposition"), 
 #ifdef AGG_PLOT_ENABLED
   MY_EXPAND(DRAW_PLOT, "plot"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),

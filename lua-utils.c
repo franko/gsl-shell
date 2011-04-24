@@ -79,15 +79,6 @@ mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache)
   return rval;
 }
 
-void
-mlua_null_cache (lua_State *L, int index)
-{
-  lua_getfenv (L, index);
-  lua_pushnil (L);
-  lua_setfield (L, -2, CACHE_FIELD_NAME);
-  lua_pop (L, 1);
-}
-
 int
 mlua_index_with_properties (lua_State *L,
 			    const struct luaL_Reg *properties,
@@ -118,26 +109,6 @@ mlua_index_with_properties (lua_State *L,
 }
 
 int
-mlua_index_methods (lua_State *L, const struct luaL_Reg *methods)
-{
-  char const * key;
-  const struct luaL_Reg *reg;
-
-  key = lua_tostring (L, 2);
-  if (key == NULL)
-    return 0;
-
-  reg = mlua_find_method (methods, key);
-  if (reg)
-    {
-      lua_pushcfunction (L, reg->func);
-      return 1;
-    }
-
-  return 0;
-}
-
-int
 mlua_newindex_with_properties (lua_State *L, const struct luaL_Reg *properties)
 {
   char const * key;
@@ -155,22 +126,6 @@ mlua_newindex_with_properties (lua_State *L, const struct luaL_Reg *properties)
     }
 
   return luaL_error (L, "invalid property for %s object",  full_type_name (L, 1));
-}
-
-void
-mlua_check_field_type (lua_State *L, int index, const char *key, int type,
-		       const char *error_msg)
-{
-  lua_getfield (L, index, key);
-  if (lua_type (L, -1) != type)
-    {
-      if (error_msg)
-	luaL_error (L, "field \"%s\", ", key, error_msg);
-      else
-	luaL_error (L, "field \"%s\" should be an %s", key, 
-		    lua_typename (L, type));
-    }
-  lua_pop (L, 1);
 }
 
 lua_Number
@@ -217,21 +172,4 @@ mlua_named_string (lua_State *L, int index, const char *key)
   r = lua_tostring (L, -1);
   lua_pop (L, 1);
   return r;
-}
-
-void
-mlua_fenv_set (lua_State *L, int index, int fenv_index)
-{
-  lua_getfenv (L, index);
-  lua_insert (L, -2);
-  lua_rawseti (L, -2, fenv_index);
-  lua_pop (L, 1);
-}
-
-void
-mlua_fenv_get (lua_State *L, int index, int fenv_index)
-{
-  lua_getfenv (L, index);
-  lua_rawgeti (L, -1, fenv_index);
-  lua_remove (L, -2);
 }

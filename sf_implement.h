@@ -313,22 +313,6 @@ int GSH_LUA_NAME(hypergU) (lua_State *L)
   return push_gsl_result (L, &res);
 }
 
-int GSH_LUA_NAME(hyperg2F1conj) (lua_State *L)
-{
-  Complex a = luaL_checkcomplex(L, 1);
-  double c = luaL_checknumber(L, 2);
-  double x = luaL_checknumber (L, 3);
-  gsl_sf_result res;
-  int status;
-
-  status = gsl_sf_hyperg_2F1_conj_e (creal(a), cimag(a), c, x, &res);
-
-  if (status != GSL_SUCCESS)
-    return luaL_error (L, "hyperg2F1conj: %s", gsl_strerror (status));
-
-  return push_gsl_result (L, &res);
-}
-
 int GSH_LUA_NAME(laguerre) (lua_State *L)
 {
   int i = luaL_checkinteger (L, 1);
@@ -516,21 +500,4 @@ int GSH_LUA_NAME(legendreQ) (lua_State *L)
     return luaL_error (L, "legendreQ: %s", gsl_strerror (status));
 
   return push_gsl_result (L, &res);
-}
-
-int GSH_LUA_NAME(cdilog) (lua_State *L)
-{
-  Complex z = luaL_checkcomplex (L, 1);
-  gsl_sf_result rr, ri;
-  double zr = creal(z), zi = cimag(z);
-  double r = sqrt(zr*zr+zi*zi), th = atan2(cimag(z), creal(z));
-  int status;
-
-  status = gsl_sf_complex_dilog_e (r, th, &rr, &ri);
-
-  if (status != GSL_SUCCESS)
-    return luaL_error (L, "cdilog: %s", gsl_strerror (status));
-
-  lua_pushcomplex (L, rr.val + I * ri.val);
-  return 1;
 }

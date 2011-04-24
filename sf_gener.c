@@ -22,7 +22,6 @@ GSH_SF_CUSTOM(debye)
 GSH_SF_CUSTOM(fermi_dirac)
 
 GSH_SF(D, dilog)
-GSH_SF_CUSTOM(cdilog)
 
 GSH_SF(D, erf)
 
@@ -56,6 +55,5 @@ GSH_SF_COMP(DD, hyperg, 0F1)
 GSH_SF_CUSTOM(hyperg1F1)
 GSH_SF_CUSTOM(hypergU)
 GSH_SF_COMP(DDDD, hyperg, 2F1)
-GSH_SF_CUSTOM(hyperg2F1conj)
 
 GSH_SF_CUSTOM(zeta)

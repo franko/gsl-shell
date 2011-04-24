@@ -1,8 +1,6 @@
 
 use 'gsl'
 
-require 'cmatrix'
-
 local linfit = require 'clinfit'
 
 local exp = math.exp

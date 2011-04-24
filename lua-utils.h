@@ -36,15 +36,6 @@ mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache);
 extern const struct luaL_Reg *
 mlua_find_method (const struct luaL_Reg *p, const char *key);
 
-extern void
-mlua_null_cache (lua_State *L, int index);
-
-extern void
-mlua_check_field_type (lua_State *L, int index, const char *key, int type,
-		       const char *error_msg);
-
-extern int mlua_index_methods (lua_State *L, const struct luaL_Reg *methods);
-
 extern int
 mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
 			    const struct luaL_Reg *methods,
@@ -66,12 +57,6 @@ extern lua_Number   mlua_named_optnumber (lua_State *L, int index,
 
 extern lua_Number   mlua_named_number    (lua_State *L, int index, 
 					  const char *key);
-
-extern void         mlua_fenv_set        (lua_State *L, int index, int fenv_index);
-extern void         mlua_fenv_get        (lua_State *L, int index, int fenv_index);
-extern void         mlua_table_clear (lua_State *L, int index);
-
-extern void         mlua_set_fenv_ref    (lua_State *L, int refidx);
 
 __END_DECLS
 

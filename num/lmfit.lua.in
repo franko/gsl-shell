@@ -1,6 +1,4 @@
 
-require 'cmatrix'
-
 local abs, min, max, sqrt = math.abs, math.min, math.max, math.sqrt
 
 local ffi = require 'ffi'

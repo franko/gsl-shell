@@ -1,6 +1,4 @@
 
-require 'cmatrix'
-
 local template = require 'template'
 
 function gsl.ode(spec)
@@ -38,8 +36,8 @@ function gsl.ode(spec)
 			    if k == 't' then return s._state.t end
 			    if k == 'y' then
 			       if not s._sync then
-				  for k=1, s.dim do
-				     s._y[k] = s._state.y[k-1]
+				  for k=0, s.dim-1 do
+				     s._y[k] = s._state.y[k]
 				  end
 				  s._sync = true
 			       end
@@ -89,53 +87,4 @@ function gsl.nlinfit(spec)
    setmetatable(s, NLINFIT)
 
    return s
-end
-
-function gsl.ode_iter(s, t0, y0, t1, h, tstep)
-   s:set(t0, y0, h)
-   return function()
-	     local t, y = s.t, s.y
-	     if t < t1 then
-		s:evolve(t1, tstep)
-		return t, y
-	     end
-	  end
-end
-
-local function hc_reduce(hc, f, accu)
-   local n = hc.length
-   for i=0, n do accu = f(accu, hc:get(i)) end
-   return accu
-end
-
-local function hc_print(hc)
-   local eps = 1e-8 * hc_reduce(hc, function(p,z) return p + csqr(z) end, 0)
-   local f = function(p, z)
-		insert(p, fmt('%6i: %s', #p, tostring_eps(z, eps)))
-		return p
-	     end
-   return cat(hc_reduce(hc, f, {}), '\n')
-end
-
-gsl.FFT_hc_mixed_radix.__tostring = hc_print
-gsl.FFT_hc_radix2.__tostring = hc_print
-
-function gsl.linmodel(f, x)
-   local p, n = #f(x[1]), matrix.dim(x)
-   local A = matrix.new(n, p)
-   for k=1,n do
-      local y = f(x[k])
-      for j=1,p do A:set(k, j, y[j]) end
-   end
-   return A
-end
-
-function gsl.linfit(gener, x, y, w)
-   local X = gsl.linmodel(gener, x)
-   local c, cov = gsl.mlinear(X, y, w)
-   local f = function(xe)
-		local xs = matrix.vec(gener(xe))
-		return matrix.prod(xs, c)[1]
-	     end
-   return f, c
 end

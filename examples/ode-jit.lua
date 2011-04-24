@@ -36,7 +36,7 @@ local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
       while s.t < t do
 	 evol(s, f, t)
       end
-      ln:line_to(s.y[1], s.y[2])
+      ln:line_to(s.y[0], s.y[1])
    end
 
    local p = graph.plot('ODE integration example')
@@ -57,14 +57,14 @@ local function modeplot(s, f, t0, y0, t1, tsmp)
 	    evol(s, f, t)
 	 end
 	 for k=1, n do 
-	    t[k]:line_to(s.t, s.y[k])
+	    t[k]:line_to(s.t, s.y[k-1])
 	 end
       end
    else
       while s.t < t1 do
 	 evol(s, f, t1)
 	 for k=1, n do 
-	    t[k]:line_to(s.t, s.y[k])
+	    t[k]:line_to(s.t, s.y[k-1])
 	 end
       end
    end
@@ -115,7 +115,7 @@ function demo3()
       while s.t < t do
 	 s:evolve(f, t)
       end
-      ln:line_to(s.t, s.y[1])
+      ln:line_to(s.t, s.y[0])
    end
    local p = graph.plot()
    p:addline(ln)

@@ -1,6 +1,4 @@
 
-require 'cmatrix'
-
 local ffi    = require 'ffi'
 local cgsl   = require 'cgsl'
 

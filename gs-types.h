@@ -10,24 +10,7 @@ __BEGIN_DECLS
 
 enum gs_type_e {
   GS_NO_TYPE = -1,
-  GS_MATRIX = 0, /* needs to start from zero because it is used as a 
-		    table index */
-  GS_CMATRIX,
-  GS_COMPLEX,
-  GS_RNG,
-  GS_NLINFIT,
-  GS_CNLINFIT,
-  GS_ODESOLV,
-  GS_CODESOLV,
-  GS_HALFCMPL_R2,
-  GS_HALFCMPL_MR,
-  GS_FDFMULTIMIN,
-  GS_FMULTIMIN,
-  GS_BSPLINE,
-  GS_INTERP,
-  GS_LU_DECOMP,
-  GS_CLU_DECOMP,
-  GS_QR_DECOMP,
+  GS_RNG = 0,
 #ifdef AGG_PLOT_ENABLED
   GS_DRAW_PLOT,
   GS_DRAW_SCALABLE, /* derived types are declared only after their base class */

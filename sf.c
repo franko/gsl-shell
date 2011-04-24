@@ -26,7 +26,6 @@
 #include <lauxlib.h>
 
 #include "defs.h"
-#include "lcomplex.h"
 
 static gsl_mode_t
 gsl_mode_from_string (const char *s)

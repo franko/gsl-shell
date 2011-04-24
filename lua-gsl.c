@@ -24,30 +24,11 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "nlinfit.h"
-#include "cnlinfit.h"
-#include "matrix.h"
-#include "cmatrix.h"
-#include "lcomplex.h"
-#include "matrix_arith.h"
-#include "linalg.h"
-#include "integ.h"
-#include "fft.h"
-#include "ode_solver.h"
-#include "ode.h"
-#include "code.h"
 #include "random.h"
 #include "randist.h"
 #include "pdf.h"
 #include "cdf.h"
 #include "sf.h"
-#include "multimin.h"
-#include "eigen-systems.h"
-#include "mlinear.h"
-#include "bspline.h"
-#include "interp.h"
-#include "lu_decomp.h"
-#include "qr_decomp.h"
 
 #ifdef AGG_PLOT_ENABLED
 #include "lua-graph.h"
@@ -78,39 +59,15 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 #endif
 
-  luaopen_lcomplex (L);
-  lua_pop (L, 1);
-
-  luaL_register (L, MLUA_MATRIXLIBNAME, matrix_functions);
-  matrix_register (L);
-  matrix_complex_register (L);
-  matrix_arith_register (L);
-  linalg_register (L);
-  lu_decomp_register (L);
-  qr_decomp_register (L);
-  lua_pop (L, 1);
-
   luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
 
   luaL_register (L, NULL, gs_type_functions);
 
-  solver_register (L);
-  integ_register (L);
-  ode_register (L);
   random_register (L);
   randist_register (L);
   pdf_register (L);
   cdf_register (L);
   sf_register (L);
-  multimin_register (L);
-  eigen_register (L);
-  mlinear_register (L);
-  bspline_register (L);
-  interp_register (L);
-
-  fft_register (L);
-  ode_complex_register (L);
-  solver_complex_register (L);
 
   lua_pop (L, 1);
 
