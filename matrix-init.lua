@@ -5,6 +5,8 @@ local cgsl = require 'cgsl'
 local sqrt, abs = math.sqrt, math.abs
 local fmt = string.format
 
+local lua_index_style = false
+
 local gsl_matrix         = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
 local gsl_complex        = ffi.typeof('complex')
@@ -13,27 +15,11 @@ local gsl_check = require 'gsl-check'
 
 local function isreal(x) return type(x) == 'number' end
 
-local function cartesian(x)
-   if isreal(x) then
-      return x, 0 
-   else
-      return x[0], x[1]
-   end
-end
-
-local function complex_conj(a)
-   local x, y = cartesian(z)
-   return gsl_complex(x, -y)
-end
-
-local function complex_real(z)
-   local x = cartesian(z)
-   return x
-end
-
-local function complex_imag(z)
-   local x, y = cartesian(z)
-   return y
+local function get_typeid(a)
+   if     isreal(a)                          then return true,  true
+   elseif ffi.istype(gsl_complex, a)         then return false, true
+   elseif ffi.istype(gsl_matrix, a)          then return true,  false
+   elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
 end
 
 function matrix_alloc(n1, n2)
@@ -84,6 +70,87 @@ end
 
 local function matrix_dim(m)
    return m.size1, m.size2
+end
+
+local function matrix_copy(a)
+   local n1, n2 = a.size1, a.size2
+   local b = matrix_alloc(n1, n2)
+   cgsl.gsl_matrix_memcpy(b, a)
+   return b
+end
+
+local function matrix_complex_copy(a)
+   local n1, n2 = a.size1, a.size2
+   local b = matrix_calloc(n1, n2)
+   cgsl.gsl_matrix_complex_memcpy(b, a)
+   return b
+end
+
+local function check_indices(m, i, j)
+   if lua_index_style then i, j = i-1, j-1 end
+   if i < 0 or i >= m.size1 or j < 0 or j >= m.size2 then
+      error('matrix index out of bounds', 2)
+   end
+   return i, j
+end
+
+local function check_row_index(m, i)
+   if lua_index_style then i = i-1 end
+   if i < 0 or i >= m.size1 then
+      error('matrix index out of bounds', 2)
+   end
+   return i
+end
+
+local function check_col_index(m, j)
+   if lua_index_style then j = j-1 end
+   if j < 0 or j >= m.size2 then
+      error('matrix index out of bounds', 2)
+   end
+   return j
+end
+
+local function matrix_get(m, i, j)
+   i, j = check_indices(m, i, j)
+   return cgsl.gsl_matrix_get(m, i, j)
+end
+
+local function matrix_complex_get(m, i, j)
+   i, j = check_indices(m, i, j)
+   return cgsl.gsl_matrix_complex_get(m, i, j)
+end
+
+local function matrix_set(m, i, j, v)
+   i, j = check_indices(m, i, j)
+   return cgsl.gsl_matrix_set(m, i, j, v)
+end
+
+local function matrix_complex_set(m, i, j, v)
+   i, j = check_indices(m, i, j)
+   return cgsl.gsl_matrix_complex_set(m, i, j, v)
+end
+
+local function cartesian(x)
+   if isreal(x) then
+      return x, 0 
+   else
+      return x[0], x[1]
+   end
+end
+
+local function complex_conj(a)
+   local x, y = cartesian(z)
+   return gsl_complex(x, -y)
+end
+
+local function complex_real(z)
+   local x = cartesian(z)
+   return x
+end
+
+local function complex_imag(z)
+   local x, y = cartesian(z)
+   return y
 end
 
 local function itostr(im, signed)
@@ -147,21 +214,8 @@ local function matrix_tostring_gen(sel)
 	  end
 end
 
-local function matrix_copy(a)
-   local n1, n2 = a.size1, a.size2
-   local b = matrix_alloc(n1, n2)
-   cgsl.gsl_matrix_memcpy(b, a)
-   return b
-end
-
-local function matrix_complex_copy(a)
-   local n1, n2 = a.size1, a.size2
-   local b = matrix_calloc(n1, n2)
-   cgsl.gsl_matrix_complex_memcpy(b, a)
-   return b
-end
-
 local function matrix_col(m, j)
+   j = check_col_index (m, j)
    local r = matrix_alloc(m.size1, 1)
    local tda = m.tda
    for i = 0, m.size1 - 1 do
@@ -171,6 +225,7 @@ local function matrix_col(m, j)
 end
 
 local function matrix_row(m, i)
+   i = check_row_index (m, i)
    local r = matrix_alloc(1, m.size2)
    local tda = m.tda
    for j = 0, m.size2 - 1 do
@@ -179,15 +234,30 @@ local function matrix_row(m, i)
    return r
 end
 
-local function matrix_vect_def(t) 
-   return matrix_new(#t, 1, |i| t[i+1])
+local function matrix_complex_col(m, j)
+   j = check_col_index (m, j)
+   local r = matrix_calloc(m.size1, 1)
+   local tda = m.tda
+   for i = 0, m.size1 - 1 do
+      r.data[2*i  ] = m.data[2*i*tda+2*j  ]
+      r.data[2*i+1] = m.data[2*i*tda+2*j+1]
+   end
+   return r
 end
 
-local function get_typeid(a)
-   if     isreal(a)                          then return true,  true
-   elseif ffi.istype(gsl_complex, a)         then return false, true
-   elseif ffi.istype(gsl_matrix, a)          then return true,  false
-   elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
+local function matrix_complex_row(m, i)
+   i = check_row_index (m, i)
+   local r = matrix_calloc(1, m.size2)
+   local tda = m.tda
+   for j = 0, m.size2 - 1 do
+      r.data[2*j  ] = m.data[2*i*tda+2*j  ]
+      r.data[2*j+1] = m.data[2*i*tda+2*j+1]
+   end
+   return r
+end
+
+local function matrix_vect_def(t) 
+   return matrix_new(#t, 1, |i| t[i+1])
 end
 
 local function mat_op_gen(n1, n2, opa, a, opb, b, oper)
@@ -343,20 +413,17 @@ matrix = {
    cnew   = matrix_cnew,
    alloc  = matrix_alloc,
    calloc = matrix_calloc,
-   copy   = matrix_copy,
+   copy   = function(m) return m:copy() end,
    dim    = matrix_dim,
    vec    = matrix_vect_def,
-   col    = matrix_col,
-   row    = matrix_row,
-   get    = cgsl.gsl_matrix_get,
-   set    = cgsl.gsl_matrix_set,
 }
 
 local matrix_methods = {
-   col = matrix_col,
-   row = matrix_row,
-   get = cgsl.gsl_matrix_get,
-   set = cgsl.gsl_matrix_set,
+   col  = matrix_col,
+   row  = matrix_row,
+   get  = matrix_get,
+   set  = matrix_set,
+   copy = matrix_copy,
 }
 
 local matrix_mt = {
@@ -398,6 +465,14 @@ local matrix_mt = {
 
 ffi.metatype(gsl_matrix, matrix_mt)
 
+local matrix_complex_methods = {
+   col  = matrix_complex_col,
+   row  = matrix_complex_row,
+   get  = matrix_complex_get,
+   set  = matrix_complex_set,
+   copy = matrix_complex_copy,
+}
+
 local matrix_complex_mt = {
 
    __gc = function(m) if m.owner then cgsl.gsl_block_free(m.block) end end,
@@ -412,7 +487,7 @@ local matrix_complex_mt = {
 		   if m.size2 == 1 then
 		      return cgsl.gsl_matrix_complex_get(m, k, 0)
 		   else
-		      return matrix_row(m, k)
+		      return matrix_complex_row(m, k)
 		   end
 		end
 		return matrix_complex_methods[k]
