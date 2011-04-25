@@ -22,6 +22,14 @@ local function get_typeid(a)
    elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
 end
 
+local function cartesian(x)
+   if isreal(x) then
+      return x, 0 
+   else
+      return x[0], x[1]
+   end
+end
+
 function matrix_alloc(n1, n2)
    local block = cgsl.gsl_block_alloc(n1 * n2)
    local m = gsl_matrix(n1, n2, n2, block.data, block, 1)
@@ -56,9 +64,9 @@ function matrix_cnew(n1, n2, f)
       m = matrix_calloc(n1, n2)
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    local z = f(i, j)
-	    m.data[2*i*n2+2*j  ] = z[0]
-	    m.data[2*i*n2+2*j+1] = z[1]
+	    local x, y = cartesian(f(i, j))
+	    m.data[2*i*n2+2*j  ] = x
+	    m.data[2*i*n2+2*j+1] = y
 	 end
       end
    else
@@ -132,14 +140,6 @@ end
 local function matrix_complex_set(m, i, j, v)
    i, j = check_indices(m, i, j)
    return cgsl.gsl_matrix_complex_set(m, i, j, v)
-end
-
-local function cartesian(x)
-   if isreal(x) then
-      return x, 0 
-   else
-      return x[0], x[1]
-   end
 end
 
 local function complex_conj(a)
@@ -506,25 +506,38 @@ local matrix_complex_mt = {
 
 ffi.metatype(gsl_matrix_complex, matrix_complex_mt)
 
-local function cwrap(name)
-   local fc = cgsl['gsl_complex_' .. name]
-   local fr = math[name]
-   return function(x)
-	     return isreal(x) and fr(x) or fc(x)
-	  end
+local function c_function_lookup(name)
+   return cgsl['gsl_complex_' .. name]
+end
+
+local function c_invtrig_lookup(name)
+   return  cgsl['gsl_complex_arc' .. name]
+end
+
+local function csqrt(x)
+   return (isreal(x) and x >= 0) and sqrt(x) or cgsl.gsl_complex_sqrt(x)
 end
 
 gsl_function_list = {
-   'sqrt', 'exp', 'log', 'log10',
+   'exp', 'log', 'log10',
    'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
-   'arcsin', 'arccos', 'arcsec', 'arccsc', 'arctan', 'arccot',
    'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth',
-   'arcsinh', 'arccosh', 'arcsech', 'arccsch', 'arctanh', 'arccoth'
+}
+
+gsl_inverse_trig_list = {
+   'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
+   'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth'
 }
 
 for _, name in ipairs(gsl_function_list) do
-   complex[name] = cwrap(name)
+   complex[name] = c_function_lookup(name)
 end
+
+for _, name in ipairs(gsl_inverse_trig_list) do
+   complex['a' .. name] = c_invtrig_lookup(name)
+end
+
+complex.sqrt = csqrt
 
 local function matrix_def(t)
    local r, c = #t, #t[1]
