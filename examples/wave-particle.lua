@@ -7,6 +7,8 @@ local gsl_roots = require 'roots'
 local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
 local atan2, pi = math.atan2, math.pi
 
+local I = 1i
+
 local function info(msg)
    io.write(msg)
    io.flush()
@@ -25,23 +27,23 @@ function ks(e)
 end
 
 local smat = matrix.cnew(4, 4)
-local bmat = matrix.cnew(4, 1, |i| i == 4 and 1 or 0)
+local bmat = matrix.cnew(4, 1, |i| i+1 == 4 and 1 or 0)
 
 function Asget(k1, k2, e)
    local a1, a2 = exp(I*k1*x1), exp(I*k2*x2)
 
-   smat:set(1,1, 1/a1)
-   smat:set(1,2, a1)
-   smat:set(2,3, 1/a2)
-   smat:set(2,4, a2)
-   smat:set(3,1,  1)
-   smat:set(3,2,  1)
-   smat:set(3,3, -1)
-   smat:set(3,4, -1)
-   smat:set(4,2, 1)
+   smat:set(0,0, 1/a1)
+   smat:set(0,1, a1)
+   smat:set(1,2, 1/a2)
+   smat:set(1,3, a2)
+   smat:set(2,0,  1)
+   smat:set(2,1,  1)
+   smat:set(2,2, -1)
+   smat:set(2,3, -1)
+   smat:set(3,1, 1)
 
    local x = matrix.solve(smat, bmat)
-   return x[1], x[2], x[3], x[4]
+   return x[0], x[1], x[2], x[3]
 end
 
 function edet(e)
@@ -111,24 +113,22 @@ end
 
 function As_mat_compute(roots)
    local n = #roots
-   local m = cgsl.gsl_matrix_alloc (n, 8)
-   for i=1, n do
+   local m = matrix.alloc (n, 8)
+   local set = m.set
+   for i=0, n-1 do
       local e = roots[i]
       local k1, k2 = ks(e)
       local A1, A2, B1, B2 = Asget(k1, k2, e)
       local nc = rsqrt(1 / phi_norm(e))
-
-      cgsl.gsl_matrix_set(m, i-1, 2*0    , nc * real(A1))
-      cgsl.gsl_matrix_set(m, i-1, 2*0 + 1, nc * imag(A1))
-
-      cgsl.gsl_matrix_set(m, i-1, 2*1    , nc * real(A2))
-      cgsl.gsl_matrix_set(m, i-1, 2*1 + 1, nc * imag(A2))
-
-      cgsl.gsl_matrix_set(m, i-1, 2*2    , nc * real(B1))
-      cgsl.gsl_matrix_set(m, i-1, 2*2 + 1, nc * imag(B1))
-
-      cgsl.gsl_matrix_set(m, i-1, 2*3    , nc * real(B2))
-      cgsl.gsl_matrix_set(m, i-1, 2*3 + 1, nc * imag(B2))
+      
+      set(m, i, 2*0    , nc * real(A1))
+      set(m, i, 2*0 + 1, nc * imag(A1))
+      set(m, i, 2*1    , nc * real(A2))
+      set(m, i, 2*1 + 1, nc * imag(A2))
+      set(m, i, 2*2    , nc * real(B1))
+      set(m, i, 2*2 + 1, nc * imag(B1))
+      set(m, i, 2*3    , nc * real(B2))
+      set(m, i, 2*3 + 1, nc * imag(B2))
    end
 
    return m
@@ -139,13 +139,11 @@ local As_mat = As_mat_compute(roots)
 echo 'done'
 
 local function As_coeff(i, j)
-   local ar = cgsl.gsl_matrix_get(As_mat, i, 2*j  )
-   local ai = cgsl.gsl_matrix_get(As_mat, i, 2*j+1)
-   return ar, ai
+   return As_mat:get(i, 2*j), As_mat:get(i, 2*j+1)
 end
 
 function feval(i, x)
-   local e = cgsl.gsl_matrix_get (roots, i, 0)
+   local e = roots[i]
    if e > v2 then
       if x < 0 then
 	 local k1 = rsqrt(2*(e-v1))
@@ -191,26 +189,34 @@ pcs:limits(x1, 0, x2, 1.4)
 pcs.title = 'Wave function density'
 
 function plot_roots()
-   local ps = graph.fxplot(edet, v2, roots[#roots])
-   ps:addline(graph.fxline(edet_sub, v1, v2), 'magenta')
+--   local ell, erl = v1, roots[n-1]
+   local ell, erl = 25, 35
+   local n = #roots
+   local lno = graph.fxline(|x| edet(x)/edet_scale(x), v2, erl)
+   local lnd = graph.fxline(|x| edet_sub(x)/edet_sub_scale(x), ell, v2)
 
-   local rln = graph.path(roots[1], 0)
-   for i = 2, #roots do
+   local ps = graph.plot()
+   ps:addline(lno, 'red')
+   ps:addline(lnd, 'magenta')
+
+   local rln = graph.path(roots[0], 0)
+   for i = 1, n-1 do
       rln:line_to(roots[i], 0)
    end
 
    ps:addline(rln, 'blue', {{'marker', size=5}})
-   io.read '*l'
+   ps:show()
+   ps:limits(ell, -1, erl, 1)
 end
 
--- plot_roots()
+plot_roots()
 
 function coeff(i)
    local p0, x0, sigma = initstate.p0, initstate.x0, initstate.sigma
    local e = roots[i]
    local k1 = rsqrt(2*(e-v1))
-   local A1r, A1i = As_coeff(i-1, 0)
-   local A2r, A2i = As_coeff(i-1, 1)
+   local A1r, A1i = As_coeff(i, 0)
+   local A2r, A2i = As_coeff(i, 1)
    local pp, pm = p0 + k1, p0 - k1
    local egp = rexp(- pp^2 * sigma^2)
    local egm = rexp(- pm^2 * sigma^2)
@@ -223,11 +229,11 @@ function coeff(i)
 end
 
 info 'Calculating initial state coefficients...'
-coeffs = cgsl.gsl_vector_alloc (2 * #roots)
-for i = 1, #roots do
+coeffs = matrix.alloc(2 * #roots, 1)
+for i = 0, #roots - 1 do
    local cr, ci = coeff(i)
-   cgsl.gsl_vector_set (coeffs, 2*(i-1)  , cr)
-   cgsl.gsl_vector_set (coeffs, 2*(i-1)+1, ci)
+   coeffs.data[2*i  ] = cr
+   coeffs.data[2*i+1] = ci
 end
 echo 'done'
 
@@ -235,13 +241,13 @@ function plot_coeffs()
    local w = graph.window 'v..'
 
    local p = graph.plot()
-   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], coeffs.data[2*i] end, 0, #roots-1))
+   ln = graph.ipath(gsl.sequence(function(i) return roots[i], coeffs.data[2*i] end, 0, #roots-1))
    p = graph.plot()
    p:addline(ln)
    w:attach(p, 2)
 
    local p = graph.plot()
-   ln = graph.ipath(gsl.sequence(function(i) return roots[i+1], coeffs.data[2*i+1] end, 0, #roots-1))
+   ln = graph.ipath(gsl.sequence(function(i) return roots[i], coeffs.data[2*i+1] end, 0, #roots-1))
    p = graph.plot()
    p:addline(ln)
    w:attach(p, 1)
@@ -251,23 +257,19 @@ plot_coeffs()
 
 -- state_plot()
 
-local csexp = cgsl.gsl_vector_alloc (2 * #roots)
+local n = #roots
+local p = 512
+
+local csexp = matrix.alloc(2 * #roots, 1)
 function coeff_inv(cs, fxv, y, t)
-   local n = #roots
-
    for i=0, n-1 do
-      local e = cgsl.gsl_matrix_get (roots, i, 0)
-
-      local cr = cgsl.gsl_vector_get (cs, 2*i  )
-      local ci = cgsl.gsl_vector_get (cs, 2*i+1)
-
+      local e = roots.data[i]
+      local cr, ci = cs.data[2*i], cs.data[2*i+1]
       local exr, exi = rcos(-e*t), rsin(-e*t)
 
       csexp.data[2*i  ] = cr*exr - ci*exi
       csexp.data[2*i+1] = cr*exi + ci*exr
    end
-
-   local p = y.size / 2
 
    for k=0, p-1 do
       local sr, si = 0, 0
@@ -284,10 +286,8 @@ function coeff_inv(cs, fxv, y, t)
    end
 end
 
-local n = #roots
-local p = 512
-local fxv = cgsl.gsl_vector_alloc (2 * n * p)
-local y = cgsl.gsl_vector_alloc (2 * p)
+local fxv = matrix.alloc(2 * n * p, 1)
+local y = matrix.alloc(2 * p, 1)
 
 local xsmp = |k| (x2-x1)*k/(p-1) + x1
 
@@ -309,7 +309,7 @@ function state_plot()
 
    px:pushlayer()
    for i=0, n-1 do
-      local e = roots[i+1]
+      local e = roots[i]
 
       local sqr = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i] end, 0, p-1)
       local sqi = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i+1] end, 0, p-1)
