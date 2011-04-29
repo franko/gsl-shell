@@ -70,7 +70,7 @@ public:
 
   plot(bool use_units = true) : 
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
-    m_drawing_queue(0), 
+    m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title_buf(),
     m_sync_mode(true)
@@ -114,6 +114,9 @@ public:
   void clear_drawing_queue();
   void clear_current_layer();
   int current_layer_index();
+
+  bool clip_is_active() const { return m_clip_flag; };
+  void set_clip_mode(bool flag) { m_clip_flag = flag; };
 
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
@@ -161,6 +164,8 @@ protected:
 
   agg::trans_affine m_trans;
   pod_list<item> *m_drawing_queue;
+
+  bool m_clip_flag;
 
   bool m_need_redraw;
   opt_rect<double> m_rect;
@@ -306,11 +311,14 @@ agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 template<class VS, class RM>
 void plot<VS,RM>::clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx)
 {
-  agg::trans_affine mvp;
-  viewport_scale(mvp);
-  trans_affine_compose (mvp, canvas_mtx);
-  agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
-  canvas.clip_box(clip);
+  if (this->clip_is_active())
+    {
+      agg::trans_affine mvp;
+      viewport_scale(mvp);
+      trans_affine_compose (mvp, canvas_mtx);
+      agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
+      canvas.clip_box(clip);
+    }
 }
 
 template<class VS, class RM>

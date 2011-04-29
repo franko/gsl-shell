@@ -29,6 +29,7 @@ function demo1()
    local p = plot('B-splines curve approximation')
    p:addline(xyline(x, X * c))
    p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
+   p.clip = false
    p:show()
 
    return p

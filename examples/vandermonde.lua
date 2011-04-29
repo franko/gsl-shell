@@ -17,6 +17,7 @@ function demo1()
    p:addline(graph.xyline(x, y), 'blue', {{'marker', size=5}})
    p:addline(graph.fxline(|x| poly_eval(us, x), x[0], x[#x-1]))
    p.title = 'Polynomial interpolation'
+   p.clip = false
    p:show()
    return p
 end

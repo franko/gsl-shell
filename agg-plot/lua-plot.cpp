@@ -63,6 +63,8 @@ static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
 static int plot_pad_mode_get (lua_State *L);
 static int plot_pad_mode_set (lua_State *L);
+static int plot_clip_mode_get (lua_State *L);
+static int plot_clip_mode_set (lua_State *L);
 
 static int canvas_new      (lua_State *L);
 
@@ -101,6 +103,7 @@ static const struct luaL_Reg plot_properties_get[] = {
   {"units",        plot_units_get  },
   {"sync",         plot_sync_mode_get  },
   {"pad",          plot_pad_mode_get  },
+  {"clip",         plot_clip_mode_get },
   {NULL, NULL}
 };
 
@@ -109,6 +112,7 @@ static const struct luaL_Reg plot_properties_set[] = {
   {"units",        plot_units_set  },
   {"sync",         plot_sync_mode_set  },
   {"pad",          plot_pad_mode_set  },
+  {"clip",         plot_clip_mode_set },
   {NULL, NULL}
 };
 
@@ -433,6 +437,26 @@ static int plot_pad_mode_get (lua_State *L)
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
   AGG_LOCK();
   lua_pushboolean (L, p->pad_mode());
+  AGG_UNLOCK();
+  return 1;
+}
+
+static int plot_clip_mode_set (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  bool request = (bool) lua_toboolean (L, 2);
+  AGG_LOCK();
+  p->set_clip_mode(request);
+  AGG_UNLOCK();
+  plot_update_raw (L, p, 1);
+  return 0;
+}
+
+static int plot_clip_mode_get (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  lua_pushboolean (L, p->clip_is_active());
   AGG_UNLOCK();
   return 1;
 }

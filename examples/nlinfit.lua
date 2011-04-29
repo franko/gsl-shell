@@ -47,8 +47,10 @@ function demo1()
    local p = graph.plot('Non-linear fit example')
    local pts = graph.ipath(gsl.sequence(function(i) return i, yrf[i] end, 0, n-1))
    local fitln = graph.fxline(function(t) return model(s.x, t) end, 0, n-1)
-   p:addline(pts, 'blue', {{'marker', size=4}})
+   p:addline(pts, 'blue', {{'marker', size=5}})
    p:addline(fitln)
+   p.clip = false
+   p.pad  = true
    p:show()
 end
 
