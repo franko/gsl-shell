@@ -59,7 +59,8 @@ local function matrix_new(n1, n2, f)
    if f then
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    m.data[i*n2+j] = f(i, j)
+	    local z = lua_index_style and f(i+1, j+1) or f(i,j)
+	    m.data[i*n2+j] = z
 	 end
       end
    else
@@ -73,7 +74,8 @@ local function matrix_cnew(n1, n2, f)
    if f then
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    local x, y = cartesian(f(i, j))
+	    local z = lua_index_style and f(i+1, j+1) or f(i,j)
+	    local x, y = cartesian(z)
 	    m.data[2*i*n2+2*j  ] = x
 	    m.data[2*i*n2+2*j+1] = y
 	 end
@@ -448,20 +450,22 @@ local matrix_mt = {
    __mul = generic_mul,
    __div = generic_div,
 
-   __index = function(m, k)
-		if type(k) == 'number' then
+   __index = function(m, i)
+		if type(i) == 'number' then
 		   if m.size2 == 1 then
-		      return cgsl.gsl_matrix_get(m, k, 0)
+		      i = check_row_index (m, i)
+		      return cgsl.gsl_matrix_get(m, i, 0)
 		   else
-		      return matrix_row(m, k)
+		      return matrix_row(m, i)
 		   end
 		end
-		return matrix_methods[k]
+		return matrix_methods[i]
 	     end,
 
    __newindex = function(m, k, v)
 		   if type(k) == 'number' then
 		      local isr, iss = check_typeid(v)
+		      k = check_row_index (m, k)
 		      if not isr then error('cannot assign element to a complex value') end
 		      if m.size2 == 1 then
 			 if not iss then error('invalid assignment: expecting a scalar') end
@@ -503,6 +507,7 @@ local matrix_complex_mt = {
    __index = function(m, k)
 		if type(k) == 'number' then
 		   if m.size2 == 1 then
+		      k = check_row_index (m, k)
 		      return cgsl.gsl_matrix_complex_get(m, k, 0)
 		   else
 		      return matrix_complex_row(m, k)
@@ -514,6 +519,7 @@ local matrix_complex_mt = {
    __newindex = function(m, k, v)
 		   if type(k) == 'number' then
 		      local isr, iss = check_typeid(v)
+		      k = check_row_index (m, k)
 		      if m.size2 == 1 then
 			 if not iss then error('invalid assignment: expecting a scalar') end
 			 cgsl.gsl_matrix_complex_set(m, k, 0, v)

@@ -22,7 +22,7 @@ local cat = table.concat
 local fmt = string.format
 
 config = {
-   lua_index_style = false,
+   lua_index_style = true,
 }
 
 function math.divmod(n, p)
