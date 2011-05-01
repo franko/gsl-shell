@@ -22,6 +22,12 @@ local function get_typeid(a)
    elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
 end
 
+local function check_typeid(a)
+   local isr, iss = get_typeid(a)
+   if isr == nil then error('expected matrix of scalar', 2) end
+   return isr, iss
+end
+
 local function cartesian(x)
    if isreal(x) then
       return x, 0 
@@ -455,9 +461,13 @@ local matrix_mt = {
 
    __newindex = function(m, k, v)
 		   if type(k) == 'number' then
+		      local isr, iss = check_typeid(v)
+		      if not isr then error('cannot assign element to a complex value') end
 		      if m.size2 == 1 then
+			 if not iss then error('invalid assignment: expecting a scalar') end
 			 cgsl.gsl_matrix_set(m, k, 0, v)
 		      else
+			 if iss then error('invalid assignment: expecting a row matrix') end
 			 local row = cgsl.gsl_matrix_submatrix(m, k, 0, 1, m.size2)
 			 gsl_check(cgsl.gsl_matrix_memcpy(row, v))
 		      end
@@ -500,6 +510,23 @@ local matrix_complex_mt = {
 		end
 		return matrix_complex_methods[k]
 	     end,
+
+   __newindex = function(m, k, v)
+		   if type(k) == 'number' then
+		      local isr, iss = check_typeid(v)
+		      if m.size2 == 1 then
+			 if not iss then error('invalid assignment: expecting a scalar') end
+			 cgsl.gsl_matrix_complex_set(m, k, 0, v)
+		      else
+			 if iss then error('invalid assignment: expecting a row matrix') end
+			 if isr then v = mat_complex_of_real(v) end
+			 local row = cgsl.gsl_matrix_complex_submatrix(m, k, 0, 1, m.size2)
+			 gsl_check(cgsl.gsl_matrix_complex_memcpy(row, v))
+		      end
+		   else
+		      error 'cannot set a matrix field'
+		   end
+		end,
 
    __len = matrix_len,
 
