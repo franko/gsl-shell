@@ -30,38 +30,41 @@ local function cartesian(x)
    end
 end
 
-function matrix_alloc(n1, n2)
-   local block = cgsl.gsl_block_alloc(n1 * n2)
-   local m = gsl_matrix(n1, n2, n2, block.data, block, 1)
+local function matrix_alloc(n1, n2)
+   local n = n1 * n2
+   local b = ffi.C.malloc(ffi.sizeof('gsl_block'))
+   local data = ffi.C.malloc(n * ffi.sizeof('double'))
+   local m = gsl_matrix(n1, n2, n2, data, b, 1)
+   m.block.size, m.block.data, m.block.ref_count = n, data, 1
    return m
 end
 
-function matrix_calloc(n1, n2)
-   local block = cgsl.gsl_block_complex_alloc(n1 * n2)
-   local m = gsl_matrix_complex(n1, n2, n2, block.data, block, 1)
+local function matrix_calloc(n1, n2)
+   local n = n1 * n2
+   local b = ffi.C.malloc(ffi.sizeof('gsl_block_complex'))
+   local data = ffi.C.malloc(2 * n * ffi.sizeof('double'))
+   local m = gsl_matrix_complex(n1, n2, n2, data, b, 1)
+   m.block.size, m.block.data, m.block.ref_count = n, data, 1
    return m
 end
 
-function matrix_new(n1, n2, f)
-   local m
+local function matrix_new(n1, n2, f)
+   local m = matrix_alloc(n1, n2)
    if f then
-      m = matrix_alloc(n1, n2)
       for i=0, n1-1 do
 	 for j=0, n2-1 do
 	    m.data[i*n2+j] = f(i, j)
 	 end
       end
    else
-      local block = cgsl.gsl_block_calloc(n1 * n2)
-      m = gsl_matrix(n1, n2, n2, block.data, block, 1)
+      ffi.fill(m.data, n1 * n2 * ffi.sizeof('double'), 0)
    end
    return m
 end
 
-function matrix_cnew(n1, n2, f)
-   local m
+local function matrix_cnew(n1, n2, f)
+   local m = matrix_calloc(n1, n2)
    if f then
-      m = matrix_calloc(n1, n2)
       for i=0, n1-1 do
 	 for j=0, n2-1 do
 	    local x, y = cartesian(f(i, j))
@@ -70,10 +73,20 @@ function matrix_cnew(n1, n2, f)
 	 end
       end
    else
-      local block = cgsl.gsl_block_complex_calloc(n1 * n2)
-      m = gsl_matrix_complex(n1, n2, n2, block.data, block, 1)
+      ffi.fill(m.data, 2 * n1 * n2 * ffi.sizeof('double'), 0)
    end
    return m
+end
+
+local function matrix_free(m)
+   if m.owner then 
+      local b = m.block
+      b.ref_count = b.ref_count - 1
+      if b.ref_count == 0 then
+	 ffi.C.free(b.data)
+	 ffi.C.free(b)
+      end
+   end 
 end
 
 local function matrix_dim(m)
@@ -220,43 +233,33 @@ end
 
 local function matrix_col(m, j)
    j = check_col_index (m, j)
-   local r = matrix_alloc(m.size1, 1)
-   local tda = m.tda
-   for i = 0, m.size1 - 1 do
-      r.data[i] = m.data[i * tda + j]
-   end
+   local mb = m.block
+   local r = gsl_matrix(m.size1, 1, m.tda, m.data + j, mb, 1)
+   mb.ref_count = mb.ref_count + 1
    return r
 end
 
 local function matrix_row(m, i)
    i = check_row_index (m, i)
-   local r = matrix_alloc(1, m.size2)
-   local tda = m.tda
-   for j = 0, m.size2 - 1 do
-      r.data[j] = m.data[i * tda + j]
-   end
+   local mb = m.block
+   local r = gsl_matrix(1, m.size2, 1, m.data + i*m.tda, mb, 1)
+   mb.ref_count = mb.ref_count + 1
    return r
 end
 
 local function matrix_complex_col(m, j)
    j = check_col_index (m, j)
-   local r = matrix_calloc(m.size1, 1)
-   local tda = m.tda
-   for i = 0, m.size1 - 1 do
-      r.data[2*i  ] = m.data[2*i*tda+2*j  ]
-      r.data[2*i+1] = m.data[2*i*tda+2*j+1]
-   end
+   local mb = m.block
+   local r = gsl_matrix_complex(m.size1, 1, m.tda, m.data + 2*j, mb, 1)
+   mb.ref_count = mb.ref_count + 1
    return r
 end
 
 local function matrix_complex_row(m, i)
    i = check_row_index (m, i)
-   local r = matrix_calloc(1, m.size2)
-   local tda = m.tda
-   for j = 0, m.size2 - 1 do
-      r.data[2*j  ] = m.data[2*i*tda+2*j  ]
-      r.data[2*j+1] = m.data[2*i*tda+2*j+1]
-   end
+   local mb = m.block
+   local r = gsl_matrix_complex(1, m.size2, 1, m.data + 2*i*m.tda, mb, 1)
+   mb.ref_count = mb.ref_count + 1
    return r
 end
 
@@ -432,8 +435,8 @@ local matrix_methods = {
 
 local matrix_mt = {
 
-   __gc = function(m) if m.owner then cgsl.gsl_block_free(m.block) end end,
-
+   __gc = matrix_free,
+   
    __add = generic_add,
    __sub = generic_sub,
    __mul = generic_mul,
@@ -449,7 +452,6 @@ local matrix_mt = {
 		end
 		return matrix_methods[k]
 	     end,
-
 
    __newindex = function(m, k, v)
 		   if type(k) == 'number' then
@@ -481,7 +483,7 @@ local matrix_complex_methods = {
 
 local matrix_complex_mt = {
 
-   __gc = function(m) if m.owner then cgsl.gsl_block_free(m.block) end end,
+   __gc = matrix_free,
 
    __add = generic_add,
    __sub = generic_sub,
@@ -576,7 +578,7 @@ end
 
 local signum = ffi.new('int[1]')
 
-function matrix_inv(m)
+local function matrix_inv(m)
    local n = m.size1
    local lu = matrix_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
@@ -586,7 +588,7 @@ function matrix_inv(m)
    return mi
 end
 
-function matrix_solve(m, b)
+local function matrix_solve(m, b)
    local n = m.size1
    local lu = matrix_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
@@ -598,7 +600,7 @@ function matrix_solve(m, b)
    return x
 end
 
-function matrix_complex_inv(m)
+local function matrix_complex_inv(m)
    local n = m.size1
    local lu = matrix_complex_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
@@ -608,7 +610,7 @@ function matrix_complex_inv(m)
    return mi
 end
 
-function matrix_complex_solve(m, b)
+local function matrix_complex_solve(m, b)
    local n = m.size1
    local lu = matrix_complex_copy(m)
    local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)

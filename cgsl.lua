@@ -1,13 +1,15 @@
 local ffi = require 'ffi'
 
 ffi.cdef[[
-     struct _IO_FILE;
-     typedef struct _IO_FILE FILE;
+      struct _IO_FILE;
+      typedef struct _IO_FILE FILE;
 
-      
       extern struct _IO_FILE *stdin;
       extern struct _IO_FILE *stdout;
       extern struct _IO_FILE *stderr;
+
+      void * malloc(size_t n);
+      void free(void *p);
 
       enum { 
 	 GSL_SUCCESS  = 0, 
@@ -55,6 +57,7 @@ ffi.cdef[[
      {
        size_t size;
        double * data;
+       int ref_count;
      } gsl_block;
 
      typedef gsl_block gsl_block_complex;
