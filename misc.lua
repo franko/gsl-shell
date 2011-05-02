@@ -36,8 +36,8 @@ function gsl.ode(spec)
 			    if k == 't' then return s._state.t end
 			    if k == 'y' then
 			       if not s._sync then
-				  for k=0, s.dim-1 do
-				     s._y[k] = s._state.y[k]
+				  for k=1, s.dim do
+				     s._y[k] = s._state.y[k-1]
 				  end
 				  s._sync = true
 			       end
@@ -59,7 +59,7 @@ local NLINFIT = {
 		   local f = t.lm.f
 		   local csq = 0
 		   local n = matrix.dim(f)
-		   for i=0, n-1 do
+		   for i=1, n do
 		      csq = csq + f[i]^2
 		   end
 		   return csq
