@@ -122,7 +122,7 @@ end
 local function check_indices(m, i, j)
    if lua_index_style then i, j = i-1, j-1 end
    if i < 0 or i >= m.size1 or j < 0 or j >= m.size2 then
-      error('matrix index out of bounds', 2)
+      error('matrix index out of bounds', 3)
    end
    return i, j
 end
@@ -130,7 +130,7 @@ end
 local function check_row_index(m, i)
    if lua_index_style then i = i-1 end
    if i < 0 or i >= m.size1 then
-      error('matrix index out of bounds', 2)
+      error('matrix index out of bounds', 3)
    end
    return i
 end
@@ -138,7 +138,7 @@ end
 local function check_col_index(m, j)
    if lua_index_style then j = j-1 end
    if j < 0 or j >= m.size2 then
-      error('matrix index out of bounds', 2)
+      error('matrix index out of bounds', 3)
    end
    return j
 end
@@ -271,8 +271,31 @@ local function matrix_complex_row(m, i)
    return r
 end
 
-local function matrix_vect_def(t) 
-   return matrix_new(#t, 1, |i| t[i+1])
+local function matrix_vect_def(t)
+   local n = #t
+   local isr = true
+   for i=1,n do
+      if not isreal(t[i]) then
+	 isr = false
+	 break
+      end
+   end
+
+   if isr then
+      local m = matrix_alloc(n, 1)
+      for i=0, n-1 do
+	 m.data[i] = t[i+1]
+      end
+      return m
+   else
+      local m = matrix_calloc(n, 1)
+      for i=0, n-1 do
+	 local x, y = cartesian(t[i+1])
+	 m.data[2*i  ] = x
+	 m.data[2*i+1] = y
+      end
+      return m
+   end
 end
 
 local function mat_op_gen(n1, n2, opa, a, opb, b, oper)
