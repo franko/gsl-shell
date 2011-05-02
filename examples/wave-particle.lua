@@ -1,7 +1,5 @@
 use 'complex'
 
-local ffi = require 'ffi'
-local cgsl = require 'cgsl'
 local gsl_roots = require 'roots'
 
 local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
@@ -124,15 +122,16 @@ function As_mat_compute(roots)
       local k1, k2 = ks(e)
       local A1, A2, B1, B2 = Asget(k1, k2, e)
       local nc = rsqrt(1 / phi_norm(e))
-      
-      cgsl.gsl_matrix_set(m, i-1, 2*0    , nc * real(A1))
-      cgsl.gsl_matrix_set(m, i-1, 2*0 + 1, nc * imag(A1))
-      cgsl.gsl_matrix_set(m, i-1, 2*1    , nc * real(A2))
-      cgsl.gsl_matrix_set(m, i-1, 2*1 + 1, nc * imag(A2))
-      cgsl.gsl_matrix_set(m, i-1, 2*2    , nc * real(B1))
-      cgsl.gsl_matrix_set(m, i-1, 2*2 + 1, nc * imag(B1))
-      cgsl.gsl_matrix_set(m, i-1, 2*3    , nc * real(B2))
-      cgsl.gsl_matrix_set(m, i-1, 2*3 + 1, nc * imag(B2))
+
+      local is = (i-1)*8
+      m.data[is + 0] = nc * real(A1)
+      m.data[is + 1] = nc * imag(A1)
+      m.data[is + 2] = nc * real(A2)
+      m.data[is + 3] = nc * imag(A2)
+      m.data[is + 4] = nc * real(B1)
+      m.data[is + 5] = nc * imag(B1)
+      m.data[is + 6] = nc * real(B2)
+      m.data[is + 7] = nc * imag(B2)
    end
 
    return m
@@ -143,8 +142,8 @@ local As_mat = As_mat_compute(roots)
 echo 'done'
 
 local function As_coeff(i, j)
-   local ar = cgsl.gsl_matrix_get(As_mat, i, 2*j  )
-   local ai = cgsl.gsl_matrix_get(As_mat, i, 2*j+1)
+   local ar = As_mat.data[i*8+2*j  ]
+   local ai = As_mat.data[i*8+2*j+1]
    return ar, ai
 end
 
