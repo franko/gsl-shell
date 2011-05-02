@@ -94,7 +94,7 @@ push_rng (lua_State *L, const gsl_rng_type *T)
 int
 random_rng_new (lua_State *L)
 {
-  const char *reqname = luaL_optstring (L, 1, "taus2");
+  const char *reqname = luaL_optstring (L, 1, "mt19937");
   const gsl_rng_type **t, **t0;
 
   t0 = gsl_rng_types_setup ();

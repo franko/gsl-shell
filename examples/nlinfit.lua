@@ -28,7 +28,7 @@ function demo1()
 
    local xref = matrix.vec {5, 0.1, 1}
 
-   local r = gsl.rng('mt19937')
+   local r = gsl.rng()
    r:set(0)
 
    yrf = matrix.new(n, 1, |i| model(xref, i-1) + gsl.rnd.gaussian(r, 0.1))
