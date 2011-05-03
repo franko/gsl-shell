@@ -4,6 +4,7 @@ require('base')
 require('matrix-init')
 require('misc')
 require('integ-init')
+require('fft-init')
 require('graph-init')
 require('import')
 

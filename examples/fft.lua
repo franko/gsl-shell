@@ -17,24 +17,28 @@
  -- along with this program; if not, write to the Free Software
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+use 'math'
+use 'graph'
+use 'gsl'
+
 function demo1()
    local n, ncut = 256, 16
 
-   local sq = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
    local pt = plot('Original signal / reconstructed')
    local pf = plot('FFT Power Spectrum')
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
-   fft(sq)
+   local ft = fft(sq, true)
 
-   pf:add(ibars(isample(|k| complex.abs(sq:get(k)), 0, 60)), 'black')
+   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, 60)), 'black')
 
-   for k=ncut, n/2 do sq:set(k,0) end
-   fft_inv(sq)
+   for k=ncut, n/2 do ft:set(k,0) end
+   sqt = fftinv(ft, true)
 
-   pt:addline(filine(|i| sq[i], n), 'red')
+   pt:addline(filine(|i| sqt[i], n), 'red')
 
    pf:show()
    pt:show()
@@ -47,23 +51,23 @@ function demo2()
    local x1 = besselJzero(order, 14)
    local xsmp = |k| x1*(k-1)/(n-1)
 
-   local bess = new(n, 1, |i| besselJ(order, xsmp(i)))
+   local bess = matrix.new(n, 1, |i| besselJ(order, xsmp(i)))
 
    local p = plot('Original signal / reconstructed')
    p:addline(filine(|i| bess[i], n), 'black')
 
-   fft(bess)
+   local ft = fft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| complex.abs(bess:get(k)), 0, 60))
+   bars = ibars(isample(|k| complex.abs(ft:get(k)), 0, 60))
    fftplot:add(bars, 'darkgreen')
    fftplot:addline(bars, 'black')
    fftplot:show()
 
-   for k=ncut, n/2 do bess:set(k,0) end
-   fft_inv(bess)
+   for k=ncut, n/2 do ft:set(k,0) end
+   local bessr = fftinv(ft)
 
-   p:addline(filine(|i| bess[i], n), 'red', {{'dash', 7, 3}})
+   p:addline(filine(|i| bessr[i], n), 'red', {{'dash', 7, 3}})
    p:show()
 
    return p, fftplot
