@@ -36,21 +36,29 @@ local function cartesian(x)
    end
 end
 
-local function matrix_alloc(n1, n2)
-   local n = n1 * n2
-   local b = ffi.C.malloc(ffi.sizeof('gsl_block'))
+local function block_alloc(n)
+   local b = ffi.cast('gsl_block *', ffi.C.malloc(ffi.sizeof('gsl_block')))
    local data = ffi.C.malloc(n * ffi.sizeof('double'))
-   local m = gsl_matrix(n1, n2, n2, data, b, 1)
-   m.block.size, m.block.data, m.block.ref_count = n, data, 1
+   b.size, b.data, b.ref_count = n, data, 1
+   return b
+end
+
+local function block_calloc(n)
+   local b = ffi.cast('gsl_block_complex *', ffi.C.malloc(ffi.sizeof('gsl_block_complex')))
+   local data = ffi.C.malloc(2 * n * ffi.sizeof('double'))
+   b.size, b.data, b.ref_count = n, data, 1
+   return b
+end
+
+local function matrix_alloc(n1, n2)
+   local b = block_alloc(n1 * n2)
+   local m = gsl_matrix(n1, n2, n2, b.data, b, 1)
    return m
 end
 
 local function matrix_calloc(n1, n2)
-   local n = n1 * n2
-   local b = ffi.C.malloc(ffi.sizeof('gsl_block_complex'))
-   local data = ffi.C.malloc(2 * n * ffi.sizeof('double'))
-   local m = gsl_matrix_complex(n1, n2, n2, data, b, 1)
-   m.block.size, m.block.data, m.block.ref_count = n, data, 1
+   local b = block_calloc(n1 * n2)
+   local m = gsl_matrix_complex(n1, n2, n2, b.data, b, 1)
    return m
 end
 
@@ -176,6 +184,11 @@ end
 local function complex_imag(z)
    local x, y = cartesian(z)
    return y
+end
+
+local function complex_abs(z)
+   local x, y = cartesian(z)
+   return sqrt(x*x + y*y)
 end
 
 local function itostr(im, signed)
@@ -420,6 +433,8 @@ complex = {
    conj = complex_conj,
    real = complex_real,
    imag = complex_imag,
+   abs  = complex_abs,
+   rect = cartesian,
 }
 
 local generic_add = vector_op(opadd, true)
@@ -454,6 +469,7 @@ matrix = {
    copy   = function(m) return m:copy() end,
    dim    = matrix_dim,
    vec    = matrix_vect_def,
+   block  = block_alloc,
 }
 
 local matrix_methods = {
