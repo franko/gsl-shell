@@ -31,12 +31,13 @@ function demo1()
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
-   local ft = fft(sq, true)
+   local ft = fft(sq)
+   print(ft)
 
-   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, 60)), 'black')
+   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
 
-   for k=ncut, n/2 do ft:set(k,0) end
-   sqt = fftinv(ft, true)
+   for k=ncut, n - ncut do ft:set(k,0) end
+   sqt = fftinv(ft)
 
    pt:addline(filine(|i| sqt[i], n), 'red')
 
@@ -47,6 +48,33 @@ function demo1()
 end
 
 function demo2()
+   local hcget, hcset = gsl.halfcomplex_get, gsl.halfcomplex_set
+
+   local n, ncut = 256, 16
+
+   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+
+   local pt = plot('Original signal / reconstructed')
+   local pf = plot('FFT Power Spectrum')
+
+   pt:addline(filine(|i| sq[i], n), 'black')
+
+   fft_radix2(sq)
+
+   pf:add(ibars(isample(|k| complex.abs(hcget(sq, k)), 0, n/2)), 'black')
+
+   for k=ncut, n - ncut do hcset(sq, k, 0) end
+   fft_radix2_inverse(sq)
+
+   pt:addline(filine(|i| sq[i], n), 'red')
+
+   pf:show()
+   pt:show()
+
+   return pt, pf
+end
+
+function demo3()
    local n, ncut, order = 512, 11, 8
    local x1 = besselJzero(order, 14)
    local xsmp = |k| x1*(k-1)/(n-1)
@@ -74,4 +102,5 @@ function demo2()
 end
 
 echo 'demo1() - GSL example with square function and frequency cutoff'
-echo 'demo2() - frequency cutoff example on bessel function'
+echo 'demo2() - The same as before but the FFT transform is done in place'
+echo 'demo3() - frequency cutoff example on bessel function'
