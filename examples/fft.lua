@@ -22,7 +22,7 @@ use 'graph'
 use 'gsl'
 
 function demo1()
-   local n, ncut = 256, 16
+   local n, ncut = 8*3*5, 16
 
    local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
@@ -32,7 +32,6 @@ function demo1()
    pt:addline(filine(|i| sq[i], n), 'black')
 
    local ft = fft(sq)
-   print(ft)
 
    pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
 
@@ -48,7 +47,7 @@ function demo1()
 end
 
 function demo2()
-   local hcget, hcset = gsl.halfcomplex_get, gsl.halfcomplex_set
+   local hcget, hcset = gsl.halfcomplex_radix2_get, gsl.halfcomplex_radix2_set
 
    local n, ncut = 256, 16
 
