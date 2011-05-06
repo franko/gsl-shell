@@ -62,3 +62,11 @@ Contents:
    examples.rst
    why-donate.rst
    acknowledgments.rst
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
