@@ -39,10 +39,10 @@ Contents:
 
    news.rst
    intro.rst
+   general.rst
    matrices.rst
    lua-base.rst
    linalg.rst
-   eigen.rst
    random.rst
    randist.rst
    pdf.rst
@@ -55,7 +55,6 @@ Contents:
    ode.rst
    integ.rst
    sf.rst
-   minim.rst
    graphics.rst
    plot3d.rst
    contour.rst

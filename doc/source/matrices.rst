@@ -8,20 +8,23 @@ Matrices
 Overview
 --------
 
-GSL Shell main data types are *real* and *complex* matrices and many of the GSL routines works on this kind of data. GSL Shell does not have a separate type to rapresent a *vector* but we use column matrix for this purpose.
+GSL Shell main data types are *real* and *complex* matrices and many of the GSL routines works on this kind of data.
+GSL Shell does not have a separate type to rapresent a *vector* but we use column matrix for this purpose.
 
-With matrix you can do basic algebraic operation just by using the '+' and '*' operators to perform element by element operations with the matrix operands. In order to perform real matrix multiplication you can use the functions :func:`mul` and :func:`prod`. The first one take an arbitrary number of arguments and perform the matrix products of its arguments. The :func:`prod` function instead takes exactly two arguments and perform the matrix product of the transpose of the first with the second argument. So, for example, if ``x`` and ``y`` are two column matrices the expression ``prod(x, y)`` gives their scalar product.
+With matrix you can do basic arithmetic operations just by using the '+' and '*' operators.
+With the '*' operator the matrix multiplication will be performed. You can also mix freely scalar with matrix of either real or complex type, GSL Shell will perform the appropriate operation in each case.
+In general you can mix real and complex valued number or matrix in arithmetic operations and the result will be complex a complex matrix of number if at least one of the operand is complex.
 
-In order to create a new matrix you should use the :func:`new` function for a *real* matrix and :func:`cnew` for a *complex* matrix. The basic function and operations that operates on matrix can accept both real or complex matrix. If one of the operand is complex all the other operands are implicitly converted to a complex matrix and a complex matrix is returned.
+In order to create a new matrix you should use the :func:`matrix.new` function for a *real* matrix and :func:`matrix.cnew` for a *complex* matrix. In general most of the functions can operate on both real or complex matrices and return the appropriate result.
 
 The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialised to zero. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialise the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialise matrices. As an example, let us suppose that we want to define a matrix ``m`` of dimension :math:`n \times n` whose elements are given by :math:`m_{jk} = \textrm{exp} (2 \pi i j k / n)`.
 
 In GSL Shell we can define the matrix with the following command::
 
    -- we assume that n is a positive integer number
-   m = cnew(n, n, |j,k| exp(2i*pi*(j-1)*(k-1)/n))
+   m = matrix.cnew(n, n, |j,k| exp(2i*pi*(j-1)*(k-1)/n))
 
-where you have previously defined n to be a small integer number.
+where you have previously defined ``n`` to be a small integer number.
 
 Accessing Matrix Elements
 -------------------------
@@ -31,7 +34,7 @@ To access an element of a matrix placed at the i-th row and the j-th column you 
 In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in ``v[i]``. This syntax can be used also to assign a new value to the given element like we illustrate in the following example::
 
   -- we define a vector, it is just a matrix with one column
-  v = vector {0, 0.2, 0.4, 7.6, 0.8, 1.0}
+  v = matrix.vec {0, 0.2, 0.4, 7.6, 0.8, 1.0}
 
   -- we can obtain the value of the 4th element with the syntax
   v[4]
@@ -44,13 +47,13 @@ For the other side simple indexing will not work for matrix with more than one c
 Matrix Dimensions
 ~~~~~~~~~~~~~~~~~
 
-To obtain the dimension of a matrix you should use the :func:`dim` function that takes the matrix as argument and returns its number of rows and columns. Here an example::
+To obtain the dimension of a matrix you should use the :func:`matrix.dim` function that takes the matrix as argument and returns its number of rows and columns. Here an example::
 
    -- we define a matrix
-   m = matrix {{0.2, 4, -0.5}, {2, 0, 1.1}}
+   m = matrix.def {{0.2, 4, -0.5}, {2, 0, 1.1}}
 
    -- we obtain the number of rows and columns, r and c respectively
-   r, c = dim(m)
+   r, c = matrix.dim(m)
 
 .. note::
 
@@ -111,6 +114,8 @@ Matrix methods
 Matrix Functions
 ----------------
 
+.. module:: matrix
+
 All the functions described in this section have an equivalent function for complex valued matrix. The functions for complex matrix are obtained by adding the 'c' prefix to the name. So for example the function :func:`mul` has an equivalent for complex matrix whose name is :func:`cmul`.
 
 .. function:: new(r, c[, finit])
@@ -122,15 +127,20 @@ All the functions described in this section have an equivalent function for comp
    the column index. Then the value returned by the function is assigned
    to the matrix elements.
 
-.. function:: matrix(t)
+.. function:: cnew(r, c[, finit])
+
+   Returns a new complex matrix. The meaning of its arguments is the
+   same of the function :func:`new`.
+
+.. function:: def(t)
 
     Convert the table t into a matrix. The table should be in the form ``{{row1_v1, row1_v2, ...}, {row2_v1, row2_v2, ...}, ...}`` where each term is a number. You should also ensure that all the lines contains the same number of elements. Example::
 
       th = pi/6
       -- create a 2x2 rotation matrix using the angle th
-      m = matrix {{cos(th), sin(th)}, {-sin(th), cos(th)}}
+      m = matrix.def {{cos(th), sin(th)}, {-sin(th), cos(th)}}
 
-.. function:: vector(t)
+.. function:: vec(t)
 
     Convert the table t into a column matrix. In GSL Shell column matrices are considered vectors. The table should be in the form ``{v1, v2, v3, ...}``.
 
@@ -185,14 +195,3 @@ All the functions described in this section have an equivalent function for comp
 .. function:: null(a)
 
    Set each element of the matrix ``a`` to zero.
-
-.. function:: mul(a, b[, c, ...])
-
-   Perform the matrix multiplication of the given arguments in the given order.
-
-.. function:: prod(A, B)
-
-   Return the matrix product of the transpose of A time B. If A or B
-   are complex the hermitian conjugate are taken instead. This
-   function can be useful also to compute the scalar product of two
-   column vectors.
