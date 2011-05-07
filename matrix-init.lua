@@ -3,7 +3,7 @@ local ffi  = require 'ffi'
 local cgsl = require 'cgsl'
 
 local sqrt, abs = math.sqrt, math.abs
-local fmt = string.format
+local format = string.format
 
 local lua_index_style = config.lua_index_style
 
@@ -114,22 +114,23 @@ local function matrix_len(m)
 end
 
 local function matrix_copy(a)
-   local n1, n2 = a.size1, a.size2
+   local n1, n2 = matrix_dim(a)
    local b = matrix_alloc(n1, n2)
    cgsl.gsl_matrix_memcpy(b, a)
    return b
 end
 
 local function matrix_complex_copy(a)
-   local n1, n2 = a.size1, a.size2
+   local n1, n2 = matrix_dim(a)
    local b = matrix_calloc(n1, n2)
    cgsl.gsl_matrix_complex_memcpy(b, a)
    return b
 end
 
 local function check_indices(m, i, j)
+   local r, c = matrix_dim(m)
    if lua_index_style then i, j = i-1, j-1 end
-   if i < 0 or i >= m.size1 or j < 0 or j >= m.size2 then
+   if i < 0 or i >= r or j < 0 or j >= c then
       error('matrix index out of bounds', 3)
    end
    return i, j
@@ -137,7 +138,7 @@ end
 
 local function check_row_index(m, i)
    if lua_index_style then i = i-1 end
-   if i < 0 or i >= m.size1 then
+   if i < 0 or i >= matrix_len(m) then
       error('matrix index out of bounds', 3)
    end
    return i
@@ -191,20 +192,32 @@ local function complex_abs(z)
    return sqrt(x*x + y*y)
 end
 
-local function itostr(im, signed)
-   local sign = im < 0 and '-' or (signed and '+' or '')
-   if im == 0 then return '' else
-      return sign .. (abs(im) == 1 and 'i' or fmt('%gi', abs(im)))
+local function itostr(im, eps, fmt, signed)
+   local absim = abs(im)
+   local sign = im + eps < 0 and '-' or (signed and '+' or '')
+   if absim < eps then return (signed and '' or '0') else
+      return sign .. (abs(absim-1) < eps and 'i' or format(fmt..'i', absim))
    end
 end
 
 local function recttostr(x, y, eps)
-   if abs(x) < eps then x = 0 end
-   if abs(y) < eps then y = 0 end
-   if x ~= 0 then
-      return (y == 0 and fmt('%g', x) or fmt('%g%s', x, itostr(y, true)))
+   local x_sub, y_sub = abs(x) < eps, abs(y) < eps
+
+   local fmt = '%.8g'
+   if x_sub and y_sub then
+      fmt, x_sub, y_sub = '%.0f', x==0, y==0
+   end
+   
+   if not x_sub then
+      local sign = x+eps < 0 and '-' or ''
+      local ax = abs(x)
+      if y_sub then
+	 return format('%s'..fmt, sign, ax)
+      else 
+	 return format('%s'..fmt..'%s', sign, ax, itostr(y, eps, fmt, true))
+      end
    else
-      return (y == 0 and '0' or itostr(y))
+      return (y_sub and '0' or itostr(y, eps, fmt, false))
    end
 end
 
@@ -220,7 +233,7 @@ end
 
 local function matrix_tostring_gen(sel)
    return function(m)
-	     local n1, n2 = m.size1, m.size2
+	     local n1, n2 = matrix_dim(m)
 	     local sq = 0
 	     for i=0, n1-1 do
 		for j=0, n2-1 do
@@ -228,7 +241,7 @@ local function matrix_tostring_gen(sel)
 		   sq = sq + x*x + y*y
 		end
 	     end
-	     local eps = sqrt(sq) * 1e-10
+	     local eps = sqrt(sq) * 1e-8
 
 	     lsrow = {}
 	     local lmax = 0
@@ -355,7 +368,7 @@ local function selector(r, s)
 end
 
 local function mat_complex_of_real(m)
-   local n1, n2 = m.size1, m.size2
+   local n1, n2 = matrix_dim(m)
    local mc = matrix_calloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
@@ -428,6 +441,19 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 	  end
 end
 
+local function matrix_norm(m)
+   local r, c = matrix_dim(m)
+   local sel = selector(get_typeid(m))
+   local ssq = 0
+   for i = 0, r-1 do
+      for j = 0, c-1 do
+	 local x, y = sel(m,i,j)
+	 ssq = ssq + x*x + y*y
+      end
+   end
+   return sqrt(ssq)
+end
+
 complex = {
    new  = gsl_complex,
    conj = complex_conj,
@@ -478,6 +504,7 @@ local matrix_methods = {
    get  = matrix_get,
    set  = matrix_set,
    copy = matrix_copy,
+   norm = matrix_norm,
 }
 
 local matrix_mt = {
@@ -532,6 +559,7 @@ local matrix_complex_methods = {
    get  = matrix_complex_get,
    set  = matrix_complex_set,
    copy = matrix_complex_copy,
+   norm = matrix_norm,
 }
 
 local matrix_complex_mt = {
@@ -615,37 +643,30 @@ complex.sqrt = csqrt
 
 local function matrix_def(t)
    local r, c = #t, #t[1]
-   local real = true
-   for i, row in ipairs(t) do
-      for j, x in ipairs(row) do
-	 if not isreal(x) then
-	    real = false
-	    break
-	 end
+   local m = matrix_alloc(r, c)
+   for i= 0, r-1 do
+      local row = t[i+1]
+      for j = 0, c-1 do
+	 local x = row[j+1]
+	 if not isreal(x) then error('expected real number') end
+	 m.data[i*c+j] = x
       end
-      if not real then break end
    end
-   if real then
-      local m = matrix_alloc(r, c)
-      for i= 0, r-1 do
-	 local row = t[i+1]
-	 for j = 0, c-1 do
-	    m.data[i*c+j] = row[j+1]
-	 end
+   return m
+end
+
+local function matrix_cdef(t)
+   local r, c = #t, #t[1]
+   local m = matrix_calloc(r, c)
+   for i= 0, r-1 do
+      local row = t[i+1]
+      for j = 0, c-1 do
+	 local x, y = cartesian(row[j+1])
+	 m.data[2*i*c+2*j  ] = x
+	 m.data[2*i*c+2*j+1] = y
       end
-      return m
-   else
-      local m = matrix_calloc(r, c)
-      for i= 0, r-1 do
-	 local row = t[i+1]
-	 for j = 0, c-1 do
-	    local x, y = cartesian(row[j+1])
-	    m.data[2*i*c+2*j  ] = x
-	    m.data[2*i*c+2*j+1] = y
-	 end
-      end
-      return m
    end
+   return m
 end
 
 local signum = ffi.new('int[1]')
@@ -694,24 +715,25 @@ local function matrix_complex_solve(m, b)
    return x
 end
 
-matrix.inv = function(m)
-		if ffi.istype(gsl_matrix, m) then
-		   return matrix_inv(m)
-		else
-		   return matrix_complex_inv(m)
-		end
-	     end
+function matrix.inv(m)
+   if ffi.istype(gsl_matrix, m) then
+      return matrix_inv(m)
+   else
+      return matrix_complex_inv(m)
+   end
+end
 
-matrix.solve = function(m, b)
-		  local mr = ffi.istype(gsl_matrix, m)
-		  local br = ffi.istype(gsl_matrix, b)
-		  if mr and br then
-		     return matrix_solve(m, b)
-		  else
-		     if mr then m = mat_complex_of_real(m) end
-		     if br then b = mat_complex_of_real(b) end
-		     return matrix_complex_solve(m, b)
-		  end
-	       end
+function matrix.solve(m, b)
+   local mr = ffi.istype(gsl_matrix, m)
+   local br = ffi.istype(gsl_matrix, b)
+   if mr and br then
+      return matrix_solve(m, b)
+   else
+      if mr then m = mat_complex_of_real(m) end
+      if br then b = mat_complex_of_real(b) end
+      return matrix_complex_solve(m, b)
+   end
+end
 
-matrix.def = matrix_def
+matrix.def  = matrix_def
+matrix.cdef = matrix_cdef
