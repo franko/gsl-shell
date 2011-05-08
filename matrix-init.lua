@@ -281,6 +281,23 @@ local function matrix_row(m, i)
    return r
 end
 
+local function matrix_row_as_column(m, i)
+   i = check_row_index (m, i)
+   local mb = m.block
+   local r = gsl_matrix(m.size2, 1, 1, m.data + i*m.tda, mb, 1)
+   mb.ref_count = mb.ref_count + 1
+   return r
+end
+
+local function matrix_slice(m, i, j, ni, nj)
+   check_indices (m, i+ni-1, j+nj-1)
+   i, j = check_indices (m, i, j)
+   local mb = m.block
+   local r = gsl_matrix(ni, nj, m.tda, m.data + i*m.tda + j, mb, 1)
+   mb.ref_count = mb.ref_count + 1
+   return r
+end
+
 local function matrix_complex_col(m, j)
    j = check_col_index (m, j)
    local mb = m.block
@@ -293,6 +310,23 @@ local function matrix_complex_row(m, i)
    i = check_row_index (m, i)
    local mb = m.block
    local r = gsl_matrix_complex(1, m.size2, 1, m.data + 2*i*m.tda, mb, 1)
+   mb.ref_count = mb.ref_count + 1
+   return r
+end
+
+local function matrix_complex_row_as_column(m, i)
+   i = check_row_index (m, i)
+   local mb = m.block
+   local r = gsl_matrix_complex(m.size2, 1, 1, m.data + 2*i*m.tda, mb, 1)
+   mb.ref_count = mb.ref_count + 1
+   return r
+end
+
+local function matrix_complex_slice(m, i, j, ni, nj)
+   check_indices (m, i+ni-1, j+nj-1)
+   i, j = check_indices (m, i, j)
+   local mb = m.block
+   local r = gsl_matrix_complex(ni, nj, m.tda, m.data + 2*i*m.tda + 2*j, mb, 1)
    mb.ref_count = mb.ref_count + 1
    return r
 end
@@ -505,10 +539,45 @@ local matrix_methods = {
    set  = matrix_set,
    copy = matrix_copy,
    norm = matrix_norm,
+   slice = matrix_slice,
 }
 
-local matrix_mt = {
+local function matrix_index(m, i)
+   if type(i) == 'number' then
+      if m.size2 == 1 then
+	 i = check_row_index (m, i)
+	 return m.data[i * m.tda]
+      else
+	 return matrix_row_as_column(m, i)
+      end
+   end
+   return matrix_methods[i]
+end
 
+local function matrix_newindex(m, k, v)
+   if type(k) == 'number' then
+      local nr, nc = matrix_dim(m)
+      local isr, iss = check_typeid(v)
+      k = check_row_index (m, k)
+      if not isr then error('cannot assign element to a complex value') end
+      if nc == 1 then
+	 if not iss then error('invalid assignment: expecting a scalar') end
+	 m.data[k*m.tda] = v
+      else
+	 if iss then error('invalid assignment: expecting a row matrix') end
+	 if v.size1 ~= nc or v.size2 ~= 1 then
+	    error('incompatible matrix dimensions in assignment')
+	 end
+	 for j = 0, nc-1 do
+	    m.data[k*m.tda+j] = v.data[v.tda*j]
+	 end
+      end
+   else
+      error 'cannot set a matrix field'
+   end
+end
+
+local matrix_mt = {
    __gc = matrix_free,
    
    __add = generic_add,
@@ -516,37 +585,10 @@ local matrix_mt = {
    __mul = generic_mul,
    __div = generic_div,
 
-   __index = function(m, i)
-		if type(i) == 'number' then
-		   if m.size2 == 1 then
-		      i = check_row_index (m, i)
-		      return cgsl.gsl_matrix_get(m, i, 0)
-		   else
-		      return matrix_row(m, i)
-		   end
-		end
-		return matrix_methods[i]
-	     end,
-
-   __newindex = function(m, k, v)
-		   if type(k) == 'number' then
-		      local isr, iss = check_typeid(v)
-		      k = check_row_index (m, k)
-		      if not isr then error('cannot assign element to a complex value') end
-		      if m.size2 == 1 then
-			 if not iss then error('invalid assignment: expecting a scalar') end
-			 cgsl.gsl_matrix_set(m, k, 0, v)
-		      else
-			 if iss then error('invalid assignment: expecting a row matrix') end
-			 local row = cgsl.gsl_matrix_submatrix(m, k, 0, 1, m.size2)
-			 gsl_check(cgsl.gsl_matrix_memcpy(row, v))
-		      end
-		   else
-		      error 'cannot set a matrix field'
-		   end
-		end,
-
    __len = matrix_len,
+
+   __index    = matrix_index,
+   __newindex = matrix_newindex,
 
    __tostring = matrix_tostring_gen(mat_real_get),
 }
@@ -560,10 +602,49 @@ local matrix_complex_methods = {
    set  = matrix_complex_set,
    copy = matrix_complex_copy,
    norm = matrix_norm,
+   slice = matrix_complex_slice,
 }
 
-local matrix_complex_mt = {
+local function matrix_complex_index(m, i)
+   if type(i) == 'number' then
+      if m.size2 == 1 then
+	 i = check_row_index (m, i)
+	 return gsl_complex(m.data[2*i*m.tda], m.data[2*i*m.tda+1])
+      else
+	 return matrix_complex_row_as_column(m, i)
+      end
+   end
+   return matrix_complex_methods[i]
+end
 
+local function matrix_complex_newindex(m, k, v)
+   if type(k) == 'number' then
+      local nr, nc = matrix_dim(m)
+      local isr, iss = check_typeid(v)
+      k = check_row_index (m, k)
+      if nc == 1 then
+	 if not iss then error('invalid assignment: expecting a scalar') end
+	 local vx, vy = cartesian(v)
+	 m.data[2*k*m.tda  ] = vx
+	 m.data[2*k*m.tda+1] = vy
+      else
+	 if iss then error('invalid assignment: expecting a row matrix') end
+	 if v.size1 ~= nc or v.size2 ~= 1 then
+	    error('incompatible matrix dimensions in assignment')
+	 end
+	 local sel = selector(isr, iss)
+	 for j = 0, nc-1 do
+	    local vx, vy = sel(v, j, 0)
+	    m.data[2*k*m.tda+2*j  ] = vx
+	    m.data[2*k*m.tda+2*j+1] = vy
+	 end
+      end
+   else
+      error 'cannot set a matrix field'
+   end
+end
+
+local matrix_complex_mt = {
    __gc = matrix_free,
 
    __add = generic_add,
@@ -571,37 +652,10 @@ local matrix_complex_mt = {
    __mul = generic_mul,
    __div = generic_div,
 
-   __index = function(m, k)
-		if type(k) == 'number' then
-		   if m.size2 == 1 then
-		      k = check_row_index (m, k)
-		      return cgsl.gsl_matrix_complex_get(m, k, 0)
-		   else
-		      return matrix_complex_row(m, k)
-		   end
-		end
-		return matrix_complex_methods[k]
-	     end,
-
-   __newindex = function(m, k, v)
-		   if type(k) == 'number' then
-		      local isr, iss = check_typeid(v)
-		      k = check_row_index (m, k)
-		      if m.size2 == 1 then
-			 if not iss then error('invalid assignment: expecting a scalar') end
-			 cgsl.gsl_matrix_complex_set(m, k, 0, v)
-		      else
-			 if iss then error('invalid assignment: expecting a row matrix') end
-			 if isr then v = mat_complex_of_real(v) end
-			 local row = cgsl.gsl_matrix_complex_submatrix(m, k, 0, 1, m.size2)
-			 gsl_check(cgsl.gsl_matrix_complex_memcpy(row, v))
-		      end
-		   else
-		      error 'cannot set a matrix field'
-		   end
-		end,
-
    __len = matrix_len,
+
+   __index    = matrix_complex_index,
+   __newindex = matrix_complex_newindex,
 
    __tostring = matrix_tostring_gen(mat_complex_get),
 }
