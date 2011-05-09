@@ -15,6 +15,11 @@ local gsl_check = require 'gsl-check'
 
 local function isreal(x) return type(x) == 'number' end
 
+local function check_real(x)
+   if type(x) ~= 'number' then error('expected real number', 3) end
+   return x
+end
+
 local function get_typeid(a)
    if     isreal(a)                          then return true,  true
    elseif ffi.istype(gsl_complex, a)         then return false, true
@@ -67,8 +72,8 @@ local function matrix_new(n1, n2, f)
    if f then
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    local z = lua_index_style and f(i+1, j+1) or f(i,j)
-	    m.data[i*n2+j] = z
+	    local x = check_real(lua_index_style and f(i+1, j+1) or f(i,j))
+	    m.data[i*n2+j] = x
 	 end
       end
    else
