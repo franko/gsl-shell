@@ -91,6 +91,49 @@ An alternative compact writing could have been::
 
 where we have used again the short function notation and the Lua logical operators :keyword:`and` and :keyword:`or`.
 
+Matrix indexing
+~~~~~~~~~~~~~~~
+
+You can index the matrix but only one index is permitted so the syntax ``m[2]`` is ok but ``m[2,3]`` will not be accepted.
+This is limitation of GSL Shell that is related to the Lua programming language on which it is based.
+
+So when you write ``m[2]`` you will obtain the second row ofthe matrix ``m`` but in *column* form.
+So, if we use the matrix ``m`` defined above we could have:
+
+  >>> m[5]
+  [ 1 ]
+  [ 4 ]
+  [ 6 ]
+  [ 4 ]
+  [ 1 ]
+  [ 0 ]
+  [ 0 ]
+  [ 0 ]
+
+It may seems odd the the row is returned in column form but it is actually convenient because many function accept a column matrix in input.
+The idea is that in GSL Shell column matrices play the role of vectors.
+
+Following the same logic of above, if you index a column matrix you will just obtain its n-th element, to return a 1x1 matrix will be not very useful.
+So you can have for example:
+
+  >>> m[5][4]
+  4
+
+At this point it should be clear that, in general, you can access the elements of a matrix with the double indexing syntax ``m[i][j]``.
+
+Something that is important to know about the matrix indexing to obtain a row is that the column matrix refer to the same underlying data of the original matrix.
+As a consequence any change to the elements of the derived matrix will be effective also for the original matrix.
+
+The indexing method that we have explained above can be used not only for retrieving the matrix elements or an entire row but it can be equally used for assignment.
+This means that you can use double indexing to change an element of a matrix.
+If you use a simple indexing you can assign the content of a whole row all at once.
+
+Just a small not about efficiency. The double indexing method can be slow and should be probably avoided in the tight loop where the performance is important.
+In this case you should use the methods :meth:`~Matrix.get` and :meth:`~Matrix.set`.
+Another opportunity is to adress directly matrix data by using its ``data`` field but this requires a particular attention since this kind of operations are not safe and you could easily crash the application.
+
+You can find more details in the chapter about :ref:`Matrix Direct Access <matrix-direct-access>`.
+
 
 Functions
 ---------

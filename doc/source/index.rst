@@ -60,6 +60,7 @@ Contents:
    contour.rst
    csv.rst
    examples.rst
+   direct-matrix.rst
    why-donate.rst
    acknowledgments.rst
 
