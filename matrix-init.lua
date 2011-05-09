@@ -538,6 +538,7 @@ matrix = {
 }
 
 local matrix_methods = {
+   alloc = matrix_alloc,
    col  = matrix_col,
    row  = matrix_row,
    get  = matrix_get,
@@ -601,6 +602,7 @@ local matrix_mt = {
 ffi.metatype(gsl_matrix, matrix_mt)
 
 local matrix_complex_methods = {
+   alloc = matrix_calloc,
    col  = matrix_complex_col,
    row  = matrix_complex_row,
    get  = matrix_complex_get,
@@ -793,6 +795,56 @@ function matrix.solve(m, b)
       return matrix_complex_solve(m, b)
    end
 end
+
+local function matrix_sv_decomp(a, v, s, w)
+   local sv = cgsl.gsl_matrix_column(s, 0)
+   local w
+   if w then
+      wv = cgsl.gsl_matrix_column(w, 0)
+   else
+      local m, n = matrix_dim(a)
+      wv = ffi.gc(cgsl.gsl_vector_alloc(n), cgsl.gsl_vector_free)
+   end
+   gsl_check(cgsl.gsl_linalg_SV_decomp (a, v, sv, wv))
+end
+
+function matrix.svd(a)
+   local m, n = matrix_dim(a)
+   local u = matrix_copy(a)
+   local v = matrix_alloc(n, n)
+   local s = matrix_new(n, n)
+   local sv = cgsl.gsl_matrix_diagonal(s)
+   local wv = ffi.gc(cgsl.gsl_vector_alloc(n), cgsl.gsl_vector_free)
+   gsl_check(cgsl.gsl_linalg_SV_decomp (u, v, sv, wv))
+   return u, s, v
+end
+
+matrix.sv_decomp = matrix_sv_decomp
+
+matrix.diag = function(d)
+		 local n = #d
+		 local m = d.alloc(n, n)
+		 local mset, dget = m.set, d.get
+		 for i=1, n do
+		    for j= 1, n do
+		       local x = (i ~= j and 0 or dget(d, i, 1))
+		       mset(m, i, j, x)
+		    end
+		 end
+		 return m
+	      end
+
+matrix.tr = function(a)
+	       local m, n = matrix_dim(a)
+	       local b = a.alloc(n, m)
+	       local bset, aget = b.set, a.get
+		 for i=1, n do
+		    for j= 1, m do
+		       bset(b, i, j, aget(a, j, i))
+		    end
+		 end
+		 return b
+	      end
 
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
