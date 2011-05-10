@@ -2,11 +2,11 @@
 use 'stdlib'
 
 local function c_generator(n, n_angle, len_frac, g)
-   local I, exp, real, imag = complex.I, complex.exp, complex.real, complex.imag
+   local exp, real, imag = complex.exp, complex.real, complex.imag
    local w, r, k = ilist(|| 0, n+1), #g
 
    local s = len_frac^n
-   local sz = cnew(n_angle, 1, |k| s * exp(2*I*pi*(k-1)/n_angle))
+   local sz = cnew(n_angle, 1, |k| s * exp(2i*pi*(k-1)/n_angle))
 
    local sh = ilist(|k| g[k%r+1] - g[(k-1)%r+1], 0, r-1)
    local a = (g[1]*n) % n_angle
@@ -64,7 +64,6 @@ function demo1()
 
    pl.units = false
    pl:show()
-   return pl
 end
 
 demo2 = function(n) return levyc(n and n or 6) end 
@@ -94,8 +93,6 @@ function demo3()
    pl.units = false
    pitag_tree(pl, 0, 0, 0, 1, depth)
    pl:show()
-
-   return pl
 end
 
 function demo3bis(n)
@@ -122,7 +119,6 @@ function demo3bis(n)
    local cfgen = color_function('darkgreen', 1)
 
    local pl = plot()
-   -- pl.units = false
    pl:show()
 
    for d=n, 0, -1 do
@@ -138,8 +134,6 @@ function demo3bis(n)
 	 end
       end
    end
-
-   return pl
 end
 
 function demo3ter(n)
@@ -165,7 +159,6 @@ function demo3ter(n)
    pl.units = false
    pl:show()
    pitag_tree(pl, 0, 0, 0, 1, n)
-   return pl
 end
 
 function demo4(n)
@@ -193,6 +186,7 @@ function demo4(n)
 
    local pl = plot()
    pl.sync = false
+   pl.clip = false
    pl:show()
 
    for k=0, n do
@@ -200,8 +194,6 @@ function demo4(n)
       pitag_tree(pl, 0, 0, 0, 1, k)
       pl:flush()
    end
-
-   return pl
 end
 
 function demo3q()
@@ -234,11 +226,9 @@ function demo3q()
 
    cf = |k| cfgen(k/n)
    pitag_tree(pl, 0, 0, 0, 1, 0)
-   return pl
 end
 
-echo([[
-demo1() - Von Koch's curve
-demo2() - Levy's C curve
-demo3() - Pythagorean Tree (symmetric)
-demo4() - Pythagorean Tree (asymmetric)]])
+echo 'demo1() - Von Koch\'s curve'
+echo 'demo2() - Levy\'s C curve'
+echo 'demo3() - Pythagorean Tree (symmetric)'
+echo 'demo4() - Pythagorean Tree (asymmetric)'
