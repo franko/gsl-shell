@@ -1,7 +1,7 @@
 
 /* plot.h
  * 
- * Copyright (C) 2009, 2010 Francesco Abbate
+ * Copyright (C) 2009-2011 Francesco Abbate
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -414,112 +414,101 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
   canvas.clip_box(clip);
 
-  if (m_rect.is_defined())
-    {
-      agg::path_storage mark;
-      agg::conv_transform<path_type> mark_tr(mark, m);
-      agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+  agg::path_storage mark;
+  agg::conv_transform<path_type> mark_tr(mark, m);
+  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
 
-      agg::path_storage ln;
-      agg::conv_transform<path_type> lntr(ln, m);
-      dash_type lndash(lntr);
-      agg::conv_stroke<dash_type> lns(lndash);
+  agg::path_storage ln;
+  agg::conv_transform<path_type> lntr(ln, m);
+  dash_type lndash(lntr);
+  agg::conv_stroke<dash_type> lns(lndash);
 
-      const agg::rect_base<double>& rect = m_rect.rect();
+  const double yeps = 1.0e-3;
+  const double xeps = 1.0e-3;
 
-      double x1 = rect.x1, x2 = rect.x2;
-      double y1 = rect.y1, y2 = rect.y2;
-
-      if (x2 <= x1) x2 = x1 + 1.0;
-      if (y2 <= y1) y2 = y1 + 1.0;
-
-      double yeps = (y2 - y1) / 1.0e+3;
-      double xeps = (x2 - x1) / 1.0e+3;
-
+  {
+    int jinf = m_uy.begin(), jsup = m_uy.end();
+    for (int j = jinf; j <= jsup; j++)
       {
-	int jinf = m_uy.begin(), jsup = m_uy.end();
-	for (int j = jinf; j <= jsup; j++)
+	double x = 0.0, y = m_uy.mark_value(j);
+	this->m_trans.transform(&x, &y);
+	if (y >= - yeps && y <= 1.0 + yeps)
 	  {
-	    double ym = m_uy.mark_value(j);
-	    if (ym >= y1 - yeps && ym <= y2 + yeps)
+	    agg::gsv_text lab;
+	    agg::conv_stroke<agg::gsv_text> labs(lab);
+	    char lab_text[32];
+	    double xlab = 0, ylab = y;
+
+	    lab.size(12.0 * scale);
+	    m_uy.mark_label(lab_text, 32, j);
+	    lab.text(lab_text);
+	    labs.width(std_line_width(scale));
+
+	    m.transform(&xlab, &ylab);
+
+	    xlab += -lab.text_width() - 10.0 * scale;
+	    ylab += -5.0 * scale;
+
+	    lab.start_point(xlab, ylab);
+	    canvas.draw(labs, agg::rgba(0, 0, 0));
+
+	    mark.move_to(0.0, y);
+	    mark.line_to(-0.01, y);
+
+	    if (j > jinf && j < jsup)
 	      {
-		double y = (ym - y1) / (y2 - y1);
-		agg::gsv_text lab;
-		agg::conv_stroke<agg::gsv_text> labs(lab);
-		char lab_text[32];
-		double xlab = 0, ylab = y;
-
-		lab.size(12.0 * scale);
-		m_uy.mark_label(lab_text, 32, j);
-		lab.text(lab_text);
-		labs.width(std_line_width(scale));
-
-		m.transform(&xlab, &ylab);
-
-		xlab += -lab.text_width() - 10.0 * scale;
-		ylab += -5.0 * scale;
-
-		lab.start_point(xlab, ylab);
-		canvas.draw(labs, agg::rgba(0, 0, 0));
-
-		mark.move_to(0.0, y);
-		mark.line_to(-0.01, y);
-
-		if (j > jinf && j < jsup)
-		  {
-		    ln.move_to(0.0, y);
-		    ln.line_to(1.0, y);
-		  }
+		ln.move_to(0.0, y);
+		ln.line_to(1.0, y);
 	      }
 	  }
       }
+  }
 
+  {
+    int jinf = m_ux.begin(), jsup = m_ux.end();
+    for (int j = jinf; j <= jsup; j++)
       {
-	int jinf = m_ux.begin(), jsup = m_ux.end();
-	for (int j = jinf; j <= jsup; j++)
+	double x = m_ux.mark_value(j), y = m_uy.mark_value(j);
+	this->m_trans.transform(&x, &y);
+	if (x >= - xeps && x <= 1.0 + xeps)
 	  {
-	    double xm = m_ux.mark_value(j);
-	    if (xm >= x1 - xeps && xm <= x2 + xeps)
+	    agg::gsv_text lab;
+	    agg::conv_stroke<agg::gsv_text> labs(lab);
+	    char lab_text[32];
+	    double xlab = x, ylab = 0;
+
+	    lab.size(12.0 * scale);
+	    m_ux.mark_label(lab_text, 32, j);
+	    lab.text(lab_text);
+	    labs.width(std_line_width(scale));
+
+	    m.transform(&xlab, &ylab);
+
+	    xlab += -lab.text_width()/2.0;
+	    ylab += -24.0 * scale;
+
+	    lab.start_point(xlab, ylab);
+	    canvas.draw(labs, agg::rgba(0, 0, 0));
+
+	    mark.move_to(x, 0.0);
+	    mark.line_to(x, -0.01);
+
+	    if (j > jinf && j < jsup)
 	      {
-		double x = (xm - x1) / (x2 - x1);
-		agg::gsv_text lab;
-		agg::conv_stroke<agg::gsv_text> labs(lab);
-		char lab_text[32];
-		double xlab = x, ylab = 0;
-
-		lab.size(12.0 * scale);
-		m_ux.mark_label(lab_text, 32, j);
-		lab.text(lab_text);
-		labs.width(std_line_width(scale));
-
-		m.transform(&xlab, &ylab);
-
-		xlab += -lab.text_width()/2.0;
-		ylab += -24.0 * scale;
-
-		lab.start_point(xlab, ylab);
-		canvas.draw(labs, agg::rgba(0, 0, 0));
-
-		mark.move_to(x, 0.0);
-		mark.line_to(x, -0.01);
-
-		if (j > jinf && j < jsup)
-		  {
-		    ln.move_to(x, 0.0);
-		    ln.line_to(x, 1.0);
-		  }
+		ln.move_to(x, 0.0);
+		ln.line_to(x, 1.0);
 	      }
 	  }
       }
+  }
 
-      lndash.add_dash(7.0, 3.0);
+  lndash.add_dash(7.0, 3.0);
 
-      lns.width(std_line_width(scale, 0.25));
-      canvas.draw(lns, colors::black);
+  lns.width(std_line_width(scale, 0.25));
+  canvas.draw(lns, colors::black);
 
-      mark_stroke.width(std_line_width(scale, 0.75));
-      canvas.draw(mark_stroke, colors::black);
-    }
+  mark_stroke.width(std_line_width(scale, 0.75));
+  canvas.draw(mark_stroke, colors::black);
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);
