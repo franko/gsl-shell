@@ -3,7 +3,7 @@ local _G, rawget, rawset = _G, rawget, rawset
 
 local modules_alias = {stdlib= {'math', 'matrix', 'gsl', 'graph'}}
 
-local function new_env() 
+local function new_env(self_hook) 
    local lookup_modules = {}
    local lookup_n = 0
 
@@ -41,7 +41,7 @@ local function new_env()
       end
    end
 
-   local lookup_env = {use= loader, import= loader}
+   local lookup_env = {[self_hook]= loader}
 
    setmetatable(lookup_env, { __index= index, __newindex= newindex })
 
@@ -53,13 +53,13 @@ function restore_env()
 end
 
 function use(modname)
-   local env = new_env()
-   env.import(modname)
+   local env = new_env('use')
+   env.use(modname)
    setfenv(2, env)
 end
 
 function import(modname)
-   local env = new_env()
+   local env = new_env('import')
    env.import(modname)
    setfenv(0, env)
 end

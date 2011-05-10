@@ -70,6 +70,20 @@ local function add_square(p, lx, by, rx, ty)
    p:close()
 end
 
+function graph.fibars(f, a, b, color)
+   if not b then a, b, color = 1, a, b end
+   local wf = 0.25
+   local p = graph.plot()
+   local sh = graph.path()
+   for k = a, b do
+      local y = f(k)
+      add_square(sh, k-wf, 0, k+wf, y)
+   end
+   p:add(sh, color or 'black')
+   p:show()
+   return p
+end
+
 function graph.ibars(f)
    local b = graph.path()
    local lx, ly = f()

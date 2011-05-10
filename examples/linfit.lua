@@ -1,4 +1,5 @@
-use 'stdlib'
+use 'math'
+use 'gsl'
 
 function demo1()
    local x0, x1, n = 0, 12.5, 32
@@ -6,64 +7,58 @@ function demo1()
    local xsmp = |i| (i-1)/(n-1) * x1
 
    local r = rng()
-   local x = new(n, 1, xsmp)
-   local y = new(n, 1, |i| a*xsmp(i) + b + rnd.gaussian(r, 0.4))
+   local x = matrix.new(n, 1, xsmp)
+   local y = matrix.new(n, 1, |i| a*xsmp(i) + b + rnd.gaussian(r, 0.4))
 
-   fit, c = linfit(|x| {1, x}, x, y)
+   X = matrix.new(n, 2, |i,j| j==1 and 1 or xsmp(i))
 
-   print('Linear fit coefficients: ', tr(c))
+   c, chisq, cov = linfit(X, y)
 
-   p = fxplot(fit, x0, x1)
-   p:add(xyline(x, y), 'blue', {{'stroke'}, {'marker', size=5}})
+   print('Linear fit coefficients: ')
+
+   fit = function(x) return c[1]+c[2]*x end
+
+   p = graph.fxplot(fit, x0, x1)
+   p:add(graph.xyline(x, y), 'blue', {{'stroke'}, {'marker', size=5}})
    p.title = 'Linear Fit'
+   p.clip = false
    
    return p
 end
 
 function demo2()
-   -- warning: this example may twist your brain and give headache :-)
-   local order, x0, x1, n = 3, 0.0, 24.0, 64
+   local order, x0, x1, n = 3, 0.0, 24.0, 96
    local bess = |x| besselJ(order, x)
-   local xsmp = |i| (i-1)/(n-1) * x1
+   local xsmp = |i| x0 + (i-1)/(n-1) * (x1 - x0)
 
-   local x = new(n, 1, xsmp)
-   local y = new(n, 1, |i| besselJ(order, xsmp(i)))
+   local x = matrix.new(n, 1, xsmp)
+   local y = matrix.new(n, 1, |i| besselJ(order, xsmp(i)))
 
-   local xn = |x| (2*x - x0 - x1) / (x1-x0)
-   local legmodel = |n| |x| ilist(|i| i == 0 and 1 or legendreP(i, xn(x)), 0, n)
+   local xnorm = |x| (2*x - x0 - x1) / (x1-x0)
 
-   fitleg = linfit(legmodel(14), x, y)
-   p = fxplot(fitleg, x0, x1)
-   p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
+   model = function(k, x) return legendreP(k, xnorm(x)) end
+
+   legmodel_order = 18
+
+   X = matrix.new(n, legmodel_order+1, |i,j| model(j-1, xsmp(i)))
+
+   c, chisq = linfit(X, y)
+
+   pc = graph.fibars(|i| c[i], #c)
+   pc.title = 'Legendre polynomials fit coefficients'
+   pc.pad = true
+
+   fitleg = function(x)
+	       return isum(|k| c[k+1] * model(k, x), 0, legmodel_order)
+	    end
+
+   p = graph.fxplot(fitleg, x0, x1)
+   p:addline(graph.xyline(x, y), 'blue', {{'marker', size=5}})
    p.title = 'Legendre Polinomial fit of Bessel J3(x)'
-   
-   return p
-end
-
-function demo3()
-   -- the same as before done slightly differently
-   local order, x0, x1, n = 3, 0.0, 24.0, 64
-   local bess = |x| besselJ(order, x)
-   local xsmp = |i| (i-1)/(n-1) * x1
-
-   local x = new(n, 1, xsmp)
-   local y = new(n, 1, |i| besselJ(order, xsmp(i)))
-
-   local xn = |x| (2*x - x0 - x1) / (x1-x0)
-
-   local kfit = 14
-   local legmodel = |j, x| j == 0 and 1 or legendreP(j, xn(x))
-   local X = new(n, kfit+1, |i,j| legmodel(j-1, x[i]))
-   local c = mlinear(X, y)
-   local yfit = X * c
-   p = plot('Legendre Polinomial fit of Bessel J3(x)')
-   p:addline(xyline(x, yfit))
-   p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
-   p:show()
+   p.clip = false
    
    return p
 end
 
 echo 'demo1() - examples of linear regression of (x, y) data'
 echo 'demo2() - examples of linear regression based on legendre polynomials'
-echo 'demo3() - same of demo2 with slightly different procedure'

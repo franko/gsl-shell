@@ -123,3 +123,15 @@ end
 function gsl.isample(f, a, b)
    return gsl.sequence(function(i) return i, f(i) end, a, b)
 end
+
+function gsl.isum(f, a, b)
+   a, b = (b and a or 1), (b and b or a)
+   if not b or type(b) ~= 'number' then 
+      error 'argument #2 should be an integer number' 
+   end
+   local s = 0
+   for k = a, b do
+      s = s + f(k)
+   end
+   return s
+end
