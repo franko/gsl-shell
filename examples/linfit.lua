@@ -16,7 +16,7 @@ function demo1()
 
    print('Linear fit coefficients: ')
 
-   fit = function(x) return c[1]+c[2]*x end
+   local fit = function(x) return c[1]+c[2]*x end
 
    p = graph.fxplot(fit, x0, x1)
    p:add(graph.xyline(x, y), 'blue', {{'stroke'}, {'marker', size=5}})
