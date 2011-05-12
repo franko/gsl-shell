@@ -46,6 +46,8 @@ We give a complete example where a set of (x, y) observations are simulated and 
 	    print('Linear fit coefficients: ')
             print(c)
 
+            fit = function(x) return c[1]+c[2]*x end
+
 	    p = graph.fxplot(fit, x0, x1)
 	    p:addline(graph.xyline(x, y), 'blue', {{'marker', size=5}})
 	    p.title = 'Linear Fit'
