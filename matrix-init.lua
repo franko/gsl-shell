@@ -247,6 +247,7 @@ local function matrix_tostring_gen(sel)
 		end
 	     end
 	     local eps = sqrt(sq) * 1e-8
+	     eps = eps > 0 and eps or 1
 
 	     lsrow = {}
 	     local lmax = 0
