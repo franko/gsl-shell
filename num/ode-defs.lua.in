@@ -34,24 +34,16 @@
 #    return table.concat(sm, ' + ')
 # end
 
-local ffi = require 'ffi'
-
-ffi.cdef[[
-  typedef struct {
-    double t;
-    double h;
-    double y[$(N)];
-    double dydt[$(N)];
-  } ode_state;
-]]
+local ffi  = require 'ffi'
 
 local function ode_new()
-   return ffi.new('ode_state')
+   local n = $(N)
+   return {t = 0, h = 1, dim = n, y = matrix.new(n, 1), dydt = matrix.new(n, 1)}
 end
 
 local function ode_init(s, t0, h0, f, $(VL'y'))
-   $(AL's.y') = $(VL'y')
-   $(AL's.dydt') = f(t0, $(VL'y'))
+   $(AL's.y.data') = $(VL'y')
+   $(AL's.dydt.data') = f(t0, $(VL'y'))
    s.t = t0
    s.h = h0
 end
