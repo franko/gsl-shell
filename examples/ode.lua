@@ -1,5 +1,5 @@
 
- -- ODE examples, examples/ode.lua
+ -- ODE examples, examples/ode-jit.lua
  -- 
  -- Copyright (C) 2009 Francesco Abbate
  -- 
@@ -18,196 +18,112 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
-local real, imag = complex.real, complex.imag
+use 'math'
 
-function demo1()
-   local odef = function(t, y, f)
-		   f:set(1,1, -y[2]-y[1]^2)
-		   f:set(2,1, 2*y[1] - y[2]^3)
-		end
+local template = require 'template'
 
-   local s = ode {f = odef, n= 2, eps_abs= 1e-6}
+function f_vanderpol_gen(mu)
+   return function(t, x, y) return y, -x + mu * y * (1-x^2) end
+end
 
-   local t0, t1, h, tstep = 0, 30, 1e-3, 0.04
-   local y0 = vector {1,1}
-
-   local ln = path(y0[1], y0[2])
-   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
-      ln:line_to(y[1], y[2])
+local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
+   local s = gsl.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
+   local evol = s.evolve
+   local ln = graph.path(x0, y0)
+   s:init(t0, h0, f, x0, y0)
+   local tsmp = 0.04
+   for t = tsmp, t1, tsmp do
+      while s.t < t do
+	 evol(s, f, t)
+      end
+      ln:line_to(s.y[1], s.y[2])
    end
 
-   local p = plot('ODE integration example')
+   local p = graph.plot('ODE integration example')
    p:addline(ln)
---   p:add(ln, 'black', {{'marker', size=3}})
    p:show()
    return p
+end
+
+local function modeplot(s, f, t0, y0, t1, tsmp)
+   local n = #y0
+   local t = {}
+   for k=1, n do t[k] = graph.path(t0, y0[k]) end
+   local evol = s.evolve
+
+   if tsmp then
+      for t = tsmp, t1, tsmp do
+	 while s.t < t do
+	    evol(s, f, t)
+	 end
+	 for k=1, n do 
+	    t[k]:line_to(s.t, s.y[k])
+	 end
+      end
+   else
+      while s.t < t1 do
+	 evol(s, f, t1)
+	 for k=1, n do 
+	    t[k]:line_to(s.t, s.y[k])
+	 end
+      end
+   end
+
+   local p = graph.plot('ODE integration example')
+   for k=1, n do p:addline(t[k], graph.rainbow(k)) end
+   p:show()
+   return p
+end
+
+function demo1()
+   local odef = function(t, x, y)
+		   return -y-x^2, 2*x - y^3
+		end
+
+   local x, y = 1, 1
+
+   return xyodeplot(odef, 0, 30, x, y, 1e-3, 0.04)
 end
 
 function demo2()
-   local odef = function(t, y, f)
-		   f:set(1,1, -y[2]-y[1]^2)
-		   f:set(2,1, 2*y[1] - y[2]^3)
-		end
+   local f = f_vanderpol_gen(10.0)
 
-   local odedf = function(t, y, dfdy, dfdt)
-		    dfdy:set(1,1, -2*y[1])
-		    dfdy:set(1,2, -1)
-		    dfdy:set(2,1, 2)
-		    dfdy:set(2,2, -3*y[2]^2)
-		    null(dfdt)
-		 end
+   local t0, t1, h = 0, 50, 0.01
+   local y0 = {1, 0}
 
-   local s = ode {f= odef, df= odedf, n= 2, eps_abs= 1e-6, method= 'bsimp'}
+   local s = gsl.ode {N= 2, eps_abs= 1e-8}
+   s:init(t0, h, f, y0[1], y0[2])
 
-   local t0, t1, h, tstep = 0, 30, 1e-3, 0.04
-   local y0 = vector {1,1}
-
-   local ln = path(y0[1], y0[2])
-   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
-      ln:line_to(y[1], y[2])
-   end
-
-   local p = plot('ODE integration example')
-   p:addline(ln)
-   p:show()
-
-   ln = path(y0[1], y0[2])
-   for t, y in ode_iter(s, t0, y0, t1, h) do
-      ln:line_to(y[1], y[2])
-   end
-   p:add(ln, 'black', {{'marker', size=4}})
-
-   return p
+   return modeplot(s, f, t0, y0, t1)
 end
 
-function ode_lines(s, t0, y0, t1, h, tstep)
-   local r = dim(y0)
-   local p = {}
-   for k=1,r do p[k] = path(t0, y0[k]) end
-   for t, y in ode_iter(s, t0, y0, t1, h, tstep) do
-      for k=1,r do p[k]:line_to(t, y[k]) end
-   end
-   return p
+local function f_sincos_damp(damp_f)
+   return function (t, s, c)
+	     return c - damp_f * s, -s - damp_f * c
+	  end
 end
 
 function demo3()
-   local mu = 10
-
-   local odef = function(t, y, f)
-		   f:set(1,1, y[2])
-		   f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
-		end
-
-   local s = ode {f = odef, n= 2, eps_abs= 1e-6}
-
-   local t0, t1, h = 0, 50, 0.01
-   local y0 = vector {1,0}
-
-   local ln = ode_lines(s, t0, y0, t1, h)
-   return plot_lines(ln)
-end
-
-function demo4()
-   local mu = 10
-
-   local odef = function(t,y,f)
-		   f:set(1,1, y[2])
-		   f:set(2,1, -y[1] - mu*y[2]*(y[1]*y[1]-1))
-		end
-
-   local odedf = function(t,y,dfdy,dfdt)
-		    dfdy:set(1,1, 0)
-		    dfdy:set(1,2, 1)
-		    dfdy:set(2,1, -2*mu*y[1]*y[2] - 1)
-		    dfdy:set(2,2, -mu*(y[1]*y[1] - 1))
-		    null(dfdt)
-		 end
-
-   local s = ode {f = odef, df= odedf, n= 2, eps_abs= 1e-6, method='bsimp'}
-
-   local t0, t1, h = 0, 50, 0.01
-   local y0 = vector {1,0}
-
-   local ln = ode_lines(s, t0, y0, t1, h)
-   return plot_lines(ln)
-end
-
-function demo5()
-   local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local I = complex.I
-   local alpha = I - 0.08
-   local z0 = I
-
-   local odef = function(t, z, f)
-		   f:set(1,1, alpha * z[1])
-		end
-
-   local solver = code {f= odef, n= 1}
-
-   local ln = path(real(z0), imag(z0))
-   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h, tstep) do
-      ln:line_to(real(z[1]), imag(z[1]))
+   local damp_f = 0.04
+   local x, y = 1, 0
+   local s = gsl.ode {N= 2, eps_abs= 1e-8}
+   local f  = f_sincos_damp(damp_f)
+   local t0, t1, h0, hsamp = 0, 100, 1e-6, 0.5
+   s:init(t0, h0, f, x, y)
+   local ln = graph.path(t0, x)
+   for t= hsamp, t1, hsamp do
+      while s.t < t do
+	 s:evolve(f, t)
+      end
+      ln:line_to(s.t, s.y[1])
    end
-
-   local p = plot('Spiral by complex ODE integration')
+   local p = graph.plot()
    p:addline(ln)
+   p:addline(graph.fxline(function(t) return cos(t) * exp(- damp_f * t) end, 0, 100), 'blue', {{'dash', 7,3}})
    p:show()
    return p
-end
-
-function demo6()
-   local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local I = complex.I
-   local alpha = I - 0.08
-   local z0 = 1
-
-   local odef = function(t, z, f)
-		   f:set(1,1, alpha * z[1])
-		end
-
-   local odedf = function(t,y,dfdy,dfdt)
-		    dfdy:set(1,1, alpha)
-		    null(dfdt)
-		 end
-
-   local solver = code {f= odef, df= odedf, n= 1, method='bsimp'}
-
-   local ln = path(real(z0), imag(z0))
-   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h, tstep) do
-      ln:line_to(real(z[1]), imag(z[1]))
-   end
-
-   local p = plot('Spiral by complex ODE integration')
-   p:addline(ln)
-   p:show()
-
-   ln = path(real(z0), imag(z0))
-   for t, z in ode_iter(solver, t0, cvector {z0}, t1, h) do
-      ln:line_to(real(z[1]), imag(z[1]))
-   end
-   p:add(ln, 'black', {{'marker', size=5}})
-   return p
-end
-
-function demo7()
-   local odef = function(t, y, f)
-		   f:set(1,1, y[2])
-		   f:set(2,1, -sin(y[1])*y[1])
-		end
-
-   local s = ode {f = odef, n= 2, eps_abs= 1e-6}
-
-   local t0, t1, h, tstep = 0, 30, 1e-4, 0.1
-   local y0 = vector {1, 0}
-
-   local ln = ode_lines(s, t0, y0, t1, h, tstep)
-   return plot_lines(ln)
 end
 
 echo 'demo1() - ODE integration example'
-echo 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
-echo 'demo3() - GSL example of Var der Pol oscillator integration'
-echo 'demo4() - same as demo3 but using \'bsimp\' method'
-echo 'demo5() - spriral obtained by ODE integration'
-echo 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
-echo 'demo7() - another ODE integration example'
+echo 'demo2() - GSL example of Var der Pol oscillator integration'
+echo 'demo3() - Examples of damped harmonic oscillator'

@@ -10,7 +10,7 @@ Nonlinear Least Squares fit
 Overview
 --------
 
-GSL Shell provides support for nonlinear least squares fitting for user-defined data and functions. The data to fit can be either *real* or *complex* while the fitting parameters should be *real* numbers.
+GSL Shell provides support for nonlinear least squares fitting for user-defined data and functions.
 
 The problem of multidimensional nonlinear least-squares fitting requires
 the minimization of the squared residuals of n functions, f\ :sub:`i`, in p
@@ -51,7 +51,15 @@ With the definition above the Jacobian is
 Performing a non-linear fit
 ---------------------------
 
-To perform a non-linear fit with GSL Shell you should define before a function that, for a given set values of the parameters, calculates the values :math:`f_i` and the elements of the Jacobian :math:`J_{ij}`. The function is called with the following calling convention::
+To perform a non-linear fit with GSL Shell you should define before a function that computes the values :math:`f_i` and :math:`J_{ij}` for some given values of the parameters. The details about the function are given in the following section.
+
+.. _fdf-non-linear-descr:
+
+User defined function
+~~~~~~~~~~~~~~~~~~~~~
+
+The user supplied function for the non-linear fit should calculates the values :math:`f_i` and the elements of the Jacobian :math:`J_{ij}` for a given set values of the parameters.
+The function is called with the following calling convention::
 
    function fdf(x, f, J)
       -- user defined function
@@ -99,24 +107,24 @@ Here a complete example::
 
    sigrf = 0.1
  
-   fdf = function(x, f, J)
-		  for i=1, n do
-		     A, lambda, b = x[1], x[2], x[3]
-		     t, y, sig = i-1, yrf[i], sigrf
-		     e = exp(- lambda * t)
-		     if f then f[i] = (A*e+b - y)/sig end
-		     if J then
-			J:set(i, 1, e / sig)
-			J:set(i, 2, - t * A * e / sig)
-			J:set(i, 3, 1 / sig)
-		     end
-		  end
-	       end
-
-   model = function(x, t)
-              A, lambda, b = x[1], x[2], x[3]
-	      return A * exp(- lambda * t) + b
-	   end
+   function fdf(x, f, J)
+      for i=1, n do
+         A, lambda, b = x[1], x[2], x[3]
+         t, y, sig = i-1, yrf[i], sigrf
+         e = exp(- lambda * t)
+         if f then f[i] = (A*e+b - y)/sig end
+         if J then
+   	 J:set(i, 1, e / sig)
+   	 J:set(i, 2, - t * A * e / sig)
+   	 J:set(i, 3, 1 / sig)
+         end
+      end
+   end
+   
+   function model(x, t)
+      A, lambda, b = x[1], x[2], x[3]
+      return A * exp(- lambda * t) + b
+   end
 
    xref = matrix.vec {5, 0.1, 1}
 
@@ -162,6 +170,11 @@ Solver class definition
 .. class:: NLinFit
    
    Non-linear fit solver class.
+
+   .. method:: set(fdf, x0)
+
+      Associate the non-linear fit solver with the user-defined function ``fdf`` and set the initial condition for the fit parameters to ``x0``.
+      The definition of the function ``fdf`` is given in the section :ref:`above <fdf-non-linear-descr>`.
 
    .. method:: iterate()
       
