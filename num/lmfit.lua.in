@@ -821,6 +821,10 @@ M.test    = function(epsabs, epsrel)
 	       return test_delta(state_dx, state_x, epsabs, epsrel)
 	    end
 
+M.chisq = function()
+	     return cgsl.gsl_blas_dnrm2 (state_f)
+	  end
+
 M.x, M.f = object(state_x), object(state_f)
 
 return M

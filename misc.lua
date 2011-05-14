@@ -56,13 +56,7 @@ end
 local NLINFIT = {
    __index = function(t, k)
 		if k == 'chisq' then
-		   local f = t.lm.f
-		   local csq = 0
-		   local n = matrix.dim(f)
-		   for i=1, n do
-		      csq = csq + f[i]^2
-		   end
-		   return csq
+		   return t.lm.chisq()
 		else
 		   if t.lm[k] then return t.lm[k] end
 		end
