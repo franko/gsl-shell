@@ -273,7 +273,8 @@ Hypergeometric functions
 
    These routines compute the Gauss hypergeometric function 2F1(a,b,c,x) = F(a,b,c,x) for :math:`|x| < 1`.
 
-   If the arguments (a,b,c,x) are too close to a singularity then the function can return the error code `GSL_EMAXITER' when the series approximation converges too slowly.  This occurs in the region of x=1, c - a - b = m for integer m.
+   If the arguments (a,b,c,x) are too close to a singularity then the function can return the error code ``GSL_EMAXITER`` when the series approximation converges too slowly.
+   This occurs in the region of x=1, c - a - b = m for integer m.
 
 .. function:: hyperg2F1conj(a, c, x)
 
