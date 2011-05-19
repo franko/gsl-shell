@@ -89,8 +89,8 @@ local gsl_matrix    = ffi.typeof('gsl_matrix')
 
 local function is_two_power(n)
    if n > 0 then
-      local k = bit.tobit(n)
-      while bit.band(k, 1) == 0 do k = bit.rshift(k, 1) end
+      local k = tobit(n)
+      while band(k, 1) == 0 do k = rshift(k, 1) end
       return (k == 1)
    end
 end
@@ -98,15 +98,24 @@ end
 local cache_n = {}
 local cache_r = {}
 
-local function resource_allocators(name)
-   return cgsl['gsl_fft_' .. name .. '_alloc'], cgsl['gsl_fft_' .. name .. '_free']
+local function res_allocator(name)
+   local alloc = cgsl['gsl_fft_' .. name .. '_alloc']
+   local free  = cgsl['gsl_fft_' .. name .. '_free']
+   return function(n)
+	     return ffi.gc(alloc(n), free)
+	  end
 end
+
+local cache_allocator = {
+   real_wavetable        = res_allocator('real_wavetable'),
+   halfcomplex_wavetable = res_allocator('halfcomplex_wavetable'),
+   real_workspace        = res_allocator('real_workspace')
+}
 
 local function get_resource(name, n)
    local resource
    if cache_n[name] ~= n then
-      local alloc, free = resource_allocators(name)
-      resource = ffi.gc(alloc(n), free)
+      resource = cache_allocator[name](n)
       cache_n[name] = n
       cache_r[name] = resource
    else
