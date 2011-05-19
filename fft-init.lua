@@ -1,11 +1,14 @@
 
 local ffi  = require 'ffi'
 local cgsl = require 'cgsl'
+local bit  = require 'bit'
 
 local gsl_check = require 'gsl-check'
 
 local check     = require 'check'
 local is_integer = check.is_integer
+
+local tobit, band, rshift = bit.tobit, bit.band, bit.rshift
 
 ffi.cdef [[
    typedef struct
@@ -84,15 +87,12 @@ local fft_hc        = ffi.typeof('fft_hc')
 local fft_radix2_hc = ffi.typeof('fft_radix2_hc')
 local gsl_matrix    = ffi.typeof('gsl_matrix')
 
-local divmod = math.divmod
-
 local function is_two_power(n)
-   local k, r = n, 0
-   while k > 1 do
-      k, r = divmod(k, 2)
-      if r ~= 0 then return false end
+   if n > 0 then
+      local k = bit.tobit(n)
+      while bit.band(k, 1) == 0 do k = bit.rshift(k, 1) end
+      return (k == 1)
    end
-   return true
 end
 
 local cache_n = {}
@@ -115,11 +115,37 @@ local function get_resource(name, n)
    return resource
 end
 
-function gsl.fft(x)
+local function get_matrix_block(x, ip)
    local n = x.size1
-   local b = matrix.block(n)
-   local data, stride = b.data, 1
-   for i=0, n-1 do data[i] = x.data[x.tda * i] end
+   local b, data, stride
+   if ip then
+      b, data, stride = x.block, x.data, x.tda
+      b.ref_count = b.ref_count + 1
+   else
+      b = matrix.block(n)
+      data, stride = b.data, 1
+      for i=0, n-1 do data[i] = x.data[x.tda * i] end
+   end
+   return b, data, stride
+end
+
+local function get_hc_block(ft, ip)
+   local n = ft.size
+   local b, data, stride
+   if ip then
+      b, data, stride = ft.block, ft.data, ft.stride
+      b.ref_count = b.ref_count + 1
+   else
+      b = matrix.block(n)
+      data, stride = b.data, 1
+      for i=0, n-1 do data[i] = ft.data[ft.stride * i] end
+   end
+   return b, data, stride
+end
+
+function gsl.fft(x, ip)
+   local n = x.size1
+   local b, data, stride = get_matrix_block(x, ip)
    if is_two_power(n) then
       gsl_check(cgsl.gsl_fft_real_radix2_transform(data, stride, n))
       return fft_radix2_hc(n, stride, data, b)
@@ -131,11 +157,9 @@ function gsl.fft(x)
    end      
 end
 
-function gsl.fftinv(ft)
+function gsl.fftinv(ft, ip)
    local n = ft.size
-   local b = matrix.block(n)
-   local data, stride = b.data, 1
-   for i=0, n-1 do data[i] = ft.data[ft.stride * i] end
+   local b, data, stride = get_hc_block(ft, ip)
    if is_two_power(n) then
       gsl_check(cgsl.gsl_fft_halfcomplex_radix2_inverse(data, stride, n))
    else
@@ -188,53 +212,6 @@ local function halfcomplex_set(indexer, data, n, stride, k, z)
    if isign ~= 0 then
       data[stride*iidx] = isign * i
    end
-end
-
-function gsl.fft_radix2(x)
-   local data, stride, n = x.data, x.tda, x.size1
-   gsl_check(cgsl.gsl_fft_real_radix2_transform(data, stride, n))
-end
-
-function gsl.fft_radix2_inverse(x)
-   local data, stride, n = x.data, x.tda, x.size1
-   gsl_check(cgsl.gsl_fft_halfcomplex_radix2_inverse(data, stride, n))
-end
-
-function gsl.fft_real(x)
-   local n, stride, data = x.size1, x.tda, x.data
-   local wt = get_resource('real_wavetable', n)
-   local ws = get_resource('real_workspace', n)
-   gsl_check(cgsl.gsl_fft_real_transform(data, stride, n, wt, ws))
-end
-
-function gsl.fft_halfcomplex_transform(x)
-   local n, stride, data = x.size1, x.tda, x.data
-   local wt = get_resource('halfcomplex_wavetable', n)
-   local ws = get_resource('real_workspace', n)
-   gsl_check(cgsl.gsl_fft_halfcomplex_transform(data, stride, n, wt, ws))
-end
-
-function gsl.fft_halfcomplex_inverse(x)
-   local n, stride, data = x.size1, x.tda, x.data
-   local wt = get_resource('halfcomplex_wavetable', n)
-   local ws = get_resource('real_workspace', n)
-   gsl_check(cgsl.gsl_fft_halfcomplex_inverse(data, stride, n, wt, ws))
-end
-
-function gsl.halfcomplex_radix2_get(x, k)
-   return halfcomplex_get(halfcomplex_radix2_index, x.data, x.size1, x.tda, k)
-end
-
-function gsl.halfcomplex_radix2_set(x, k, z)
-   return halfcomplex_set(halfcomplex_radix2_index, x.data, x.size1, x.tda, k, z)
-end
-
-function gsl.halfcomplex_get(x, k)
-   return halfcomplex_get(halfcomplex_index, x.data, x.size1, x.tda, k)
-end
-
-function gsl.halfcomplex_set(x, k, z)
-   return halfcomplex_set(halfcomplex_index, x.data, x.size1, x.tda, k, z)
 end
 
 local function hc_length(ft)

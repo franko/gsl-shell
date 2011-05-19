@@ -45,8 +45,6 @@ function demo1()
 end
 
 function demo2()
-   local hcget, hcset = gsl.halfcomplex_radix2_get, gsl.halfcomplex_radix2_set
-
    local n, ncut = 256, 16
 
    local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
@@ -56,12 +54,12 @@ function demo2()
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
-   fft_radix2(sq)
+   ft = fft(sq, true)
 
-   pf:add(ibars(isample(|k| complex.abs(hcget(sq, k)), 0, n/2)), 'black')
+   pf:add(ibars(isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
 
-   for k=ncut, n - ncut do hcset(sq, k, 0) end
-   fft_radix2_inverse(sq)
+   for k=ncut, n - ncut do ft[k] = 0 end
+   fftinv(ft, true)
 
    pt:addline(filine(|i| sq[i], n), 'red')
 
