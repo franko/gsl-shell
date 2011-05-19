@@ -5,6 +5,9 @@ local cgsl = require 'cgsl'
 local sqrt, abs = math.sqrt, math.abs
 local format = string.format
 
+local check     = require 'check'
+local is_integer, is_real = check.is_integer, check.is_real
+
 local lua_index_style = config.lua_index_style
 
 local gsl_matrix         = ffi.typeof('gsl_matrix')
@@ -13,15 +16,13 @@ local gsl_complex        = ffi.typeof('complex')
 
 local gsl_check = require 'gsl-check'
 
-local function isreal(x) return type(x) == 'number' end
-
 local function check_real(x)
    if type(x) ~= 'number' then error('expected real number', 3) end
    return x
 end
 
 local function get_typeid(a)
-   if     isreal(a)                          then return true,  true
+   if     is_real(a)                          then return true,  true
    elseif ffi.istype(gsl_complex, a)         then return false, true
    elseif ffi.istype(gsl_matrix, a)          then return true,  false
    elseif ffi.istype(gsl_matrix_complex, a)  then return false, false end
@@ -34,7 +35,7 @@ local function check_typeid(a)
 end
 
 local function cartesian(x)
-   if isreal(x) then
+   if is_real(x) then
       return x, 0 
    else
       return x[0], x[1]
@@ -340,7 +341,7 @@ local function matrix_vect_def(t)
    local n = #t
    local isr = true
    for i=1,n do
-      if not isreal(t[i]) then
+      if not is_real(t[i]) then
 	 isr = false
 	 break
       end
@@ -515,10 +516,10 @@ local complex_mt = {
    __div = generic_div,
 
    __pow = function(z,n) 
-	      if isreal(n) then
+	      if is_real(n) then
 		 return cgsl.gsl_complex_pow_real (z, n)
 	      else
-		 if isreal(z) then z = gsl_complex(z,0) end
+		 if is_real(z) then z = gsl_complex(z,0) end
 		 return cgsl.gsl_complex_pow (z, n)
 	      end
 	   end,
@@ -549,7 +550,7 @@ local matrix_methods = {
 }
 
 local function matrix_index(m, i)
-   if type(i) == 'number' then
+   if is_integer(i) then
       if m.size2 == 1 then
 	 i = check_row_index (m, i)
 	 return m.data[i * m.tda]
@@ -561,7 +562,7 @@ local function matrix_index(m, i)
 end
 
 local function matrix_newindex(m, k, v)
-   if type(k) == 'number' then
+   if is_integer(k) then
       local nr, nc = matrix_dim(m)
       local isr, iss = check_typeid(v)
       k = check_row_index (m, k)
@@ -613,7 +614,7 @@ local matrix_complex_methods = {
 }
 
 local function matrix_complex_index(m, i)
-   if type(i) == 'number' then
+   if is_integer(i) then
       if m.size2 == 1 then
 	 i = check_row_index (m, i)
 	 return gsl_complex(m.data[2*i*m.tda], m.data[2*i*m.tda+1])
@@ -625,7 +626,7 @@ local function matrix_complex_index(m, i)
 end
 
 local function matrix_complex_newindex(m, k, v)
-   if type(k) == 'number' then
+   if is_integer(k) then
       local nr, nc = matrix_dim(m)
       local isr, iss = check_typeid(v)
       k = check_row_index (m, k)
@@ -678,7 +679,7 @@ local function c_invtrig_lookup(name)
 end
 
 local function csqrt(x)
-   return (isreal(x) and x >= 0) and sqrt(x) or cgsl.gsl_complex_sqrt(x)
+   return (is_real(x) and x >= 0) and sqrt(x) or cgsl.gsl_complex_sqrt(x)
 end
 
 gsl_function_list = {
@@ -709,7 +710,7 @@ local function matrix_def(t)
       local row = t[i+1]
       for j = 0, c-1 do
 	 local x = row[j+1]
-	 if not isreal(x) then error('expected real number') end
+	 if not is_real(x) then error('expected real number') end
 	 m.data[i*c+j] = x
       end
    end

@@ -27,20 +27,18 @@ function demo1()
    local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
    local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
    local ft = fft(sq)
 
-   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
+   local pf = fibars(|k| complex.abs(ft[k]), 0, n/2, 'black')
+   pf.title = 'FFT Power Spectrum'
 
-   for k=ncut, n - ncut do ft:set(k,0) end
+   for k=ncut, n - ncut do ft[k] = 0 end
    sqt = fftinv(ft)
 
    pt:addline(filine(|i| sqt[i], n), 'red')
-
-   pf:show()
    pt:show()
 
    return pt, pf
@@ -86,12 +84,11 @@ function demo3()
    local ft = fft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| complex.abs(ft:get(k)), 0, 60))
-   fftplot:add(bars, 'darkgreen')
-   fftplot:addline(bars, 'black')
+   bars = ibars(isample(|k| complex.abs(ft[k]), 0, 60))
+   fftplot:add(bars, 'black')
    fftplot:show()
 
-   for k=ncut, n/2 do ft:set(k,0) end
+   for k=ncut, n/2 do ft[k] = 0 end
    local bessr = fftinv(ft)
 
    p:addline(filine(|i| bessr[i], n), 'red', {{'dash', 7, 3}})

@@ -44,7 +44,7 @@ function demo2()
 
    c, chisq = linfit(X, y)
 
-   pc = graph.fibars(|i| c[i], #c)
+   pc = graph.fibars(|i| c[i], 1, #c)
    pc.title = 'Legendre polynomials fit coefficients'
    pc.pad = true
 

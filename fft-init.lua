@@ -4,6 +4,9 @@ local cgsl = require 'cgsl'
 
 local gsl_check = require 'gsl-check'
 
+local check     = require 'check'
+local is_integer = check.is_integer
+
 ffi.cdef [[
    typedef struct
    {
@@ -234,28 +237,40 @@ function gsl.halfcomplex_set(x, k, z)
    return halfcomplex_set(halfcomplex_index, x.data, x.size1, x.tda, k, z)
 end
 
-local hc_radix2_methods = {}
-
-function hc_radix2_methods.get(ft, k)
-   return halfcomplex_get(halfcomplex_radix2_index, ft.data, ft.size, ft.stride, k)
+local function hc_length(ft)
+   return ft.size
 end
 
-function hc_radix2_methods.set(ft, k, z)
-   return halfcomplex_set(halfcomplex_radix2_index, ft.data, ft.size, ft.stride, k, z)
+local function hc_radix2_index(ft, k)
+   if is_integer(k) then
+      local idx = halfcomplex_radix2_index
+      return halfcomplex_get(idx, ft.data, ft.size, ft.stride, k)
+   end
 end
 
-local hc_methods = {}
-
-function hc_methods.get(ft, k)
-   return halfcomplex_get(halfcomplex_index, ft.data, ft.size, ft.stride, k)
+local function hc_radix2_newindex(ft, k, z)
+   if is_integer(k) then
+      local idx = halfcomplex_radix2_index
+      return halfcomplex_set(idx, ft.data, ft.size, ft.stride, k, z)
+   end
 end
 
-function hc_methods.set(ft, k, z)
-   return halfcomplex_set(halfcomplex_index, ft.data, ft.size, ft.stride, k, z)
+local function hc_index(ft, k)
+   if is_integer(k) then
+      local idx = halfcomplex_index
+      return halfcomplex_get(idx, ft.data, ft.size, ft.stride, k)
+   end
+end
+
+local function hc_newindex(ft, k, z)
+   if is_integer(k) then
+      local idx = halfcomplex_index
+      return halfcomplex_set(idx, ft.data, ft.size, ft.stride, k, z)
+   end
 end
 
 local function halfcomplex_to_matrix(hc)
-   return matrix.cnew(hc.size, 1, |i| hc:get(i-1))
+   return matrix.cnew(hc.size, 1, |i| hc[i-1])
 end
 
 local function hc_tostring(hc)
@@ -273,14 +288,18 @@ end
 
 ffi.metatype(fft_hc, {
 		__gc       = hc_free,
-		__index    = hc_methods,
+		__index    = hc_index,
+		__newindex = hc_newindex,
+		__len      = hc_length,
 		__tostring = hc_tostring,
 	     }
 	  )
 
 ffi.metatype(fft_radix2_hc, {
 		__gc       = hc_free,
-		__index    = hc_radix2_methods,
+		__index    = hc_radix2_index,
+		__newindex = hc_radix2_newindex,
+		__len      = hc_length,
 		__tostring = hc_tostring,
 	     }
 	  )

@@ -70,9 +70,8 @@ local function add_square(p, lx, by, rx, ty)
    p:close()
 end
 
-function graph.fibars(f, a, b, color)
-   if not b then a, b, color = 1, a, b end
-   local wf = 0.25
+function graph.fibars(f, a, b, color, fill)
+   local wf = 0.5 * (fill or 1)
    local p = graph.plot()
    local sh = graph.path()
    for k = a, b do
