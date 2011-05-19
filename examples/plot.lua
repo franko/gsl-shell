@@ -89,10 +89,12 @@ function demo4()
 
    pt:addline(filine(|i| v[i], n), 'black')
 
-   fft(v)
-   pf:add(ibars(sample(|i| complex.abs(v:get(i)), 0, n/2, n/2-1)), 'black')
-   for k=ncut, n/2 do v:set(k,0) end
-   fft_inv(v)
+   local ft = fft(v, true)
+
+   pf:add(ibars(isample(|i| complex.abs(ft[i]), 0, n/2)), 'black')
+   for k=ncut, n/2 do ft[k] = 0 end
+
+   fftinv(ft, true)
 
    pt:addline(filine(|i| v[i], n), 'red')
 
