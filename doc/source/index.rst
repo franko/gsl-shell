@@ -50,7 +50,6 @@ Contents:
    linfit.rst
    nlinfit.rst
    bsplines.rst
-   interp.rst
    fft.rst
    ode.rst
    integ.rst

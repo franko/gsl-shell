@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. currentmodule:: gsl
+
 Fast Fourier Transform
 ==============================
 
@@ -22,138 +24,111 @@ All the FFT functions offer two types of transform: forwards and inverse, based 
 .. math::
      x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)
 
-and the definition of the inverse fourier transform, ``fft_inv(x)``, is,
+and the definition of the inverse fourier transform is,
 
 .. math::
      z_j = {1 \over n} \sum_{k=0}^{n-1} x_k \exp(2\pi i j k / n).
 
 The factor of 1/n makes this a true inverse.
 
-In general there are two possible choices for the sign of the
-exponential in the transform/ inverse-transform pair. GSL follows the
-same convention as fftpack, using a negative exponential for the
-forward transform. The advantage of this convention is that the
-inverse transform recreates the original function with simple fourier
-synthesis. Numerical Recipes uses the opposite convention, a positive
-exponential in the forward transform.
+In general there are two possible choices for the sign of the exponential in the transform/ inverse-transform pair.
+GSL follows the same convention as fftpack, using a negative exponential for the forward transform.
+The advantage of this convention is that the inverse transform recreates the original function with simple fourier synthesis.
+Numerical Recipes uses the opposite convention, a positive exponential in the forward transform.
 
 GSL Shell interface
 -------------------
 
-When you perform a Fourier transform different routines can be used depending on the size N of the sample. GSL features two kinds of routines, radix 2 and mixed radix. The radix 2 routine can be used if the size of the sample is a power of 2 while mixed radix can be used for any size of the input data but will be "fast" only if the size can be factorized into the product of small prime numbers.
+GSL Shell provide a simple interface to perform fourier transform of real data with the functions :func:`gsl.fft` and :func:`gsl.fftinv`.
+The first function perform the Fourier transform of a column matrix and the second is the inverse Fourier transform.
 
-GSL Shell will select automatically the appropriate routine for you in a transparent way. But you should nevertheless be aware that the calculation will be fast only if the size of data can be factorised in small primes. You should also know that the mixed radix algorithm requires additional memory spaces so if you need to minimise memory usage you should feed only data of power of two size.
+The function :func:`gsl.fft` returns an half-complex array.
+This latter is similar to a column matrix of complex numbers but it is actually a different object because the numbers are packed together following some specific rules related to the algorithm.
 
-GSL shell manage automatically the additional memory of precomputed trigonometric tables that may be required by the routine. The strategy used will be very efficient if you will perform many times the Fourier Transform of data always of the *same* size. If you perform many Fourier transform always with different size you will incur in a performance penality. Please not anyway that *no additional workspaces* are needed with radix two transformations.
+The idea is that you can access to the element of this vector for reading or writing by using a simple indexing.
+You can also obtain the size of the vector using the operator '#'.
+The valid indexes for an half complex object range from 0 to N-1 where N is the size if the vector.
+Each element of the vector correspond to the coefficient :math:`z_k` defined above.
+
+When performing fourier transform it is important to know that the computation speed can be greatly influenced by the size of the vector. In the size is a power of two then a very efficient algorithm can be used and we can talk in this case of Fast Fourier Transform (FFT). In addition the algorithm has the advantage that it does not require any additional workspace. When the size of the vector is not a power of two we can have two different cases:
+
+ * the size if a product of small prime numbers
+ * the size contain a big (> 7) prime number in its factorization
+
+This detail is important because when the size is a product of small prime numbers a fast algorithm is still available but it is still somewhat slower and it does require some additional workspace.
+In the worst case when the size cannot be factorized to small prime numbers the Fourier transform can still be computed but the calculation is slower especially for large array.
+
+GSL Shell hide all the details and take cares of choosing the appropriate algorithm based on the size of the vector.
+It does also provide transparently any additional workspace that may be needed for the algorithm.
+In order to avoid repeated allocation of workspace memory the workspace allocated is kept in memory and reused *if the size of the array does not change*.
+This mean that the approach of GSL Shell is quite optimal if you perform many times fourier transforms (direct or inverse) of the same size.
+
+Even if GSL Shell take cares of the details automatically you should be aware of these performance notice because it can make a big difference in real applications.
+From the practial point of view it is useful in most of the case to always provides samples whose size is a power of two.
+
+Another specificity of the functions :func:`gsl.fft` and :func:`gsl.fftinv` is that they can optionally perform the transformation *in place* by modifying the original data instead of creating a copy.
+When a trasformation *in place* is requested the routine still return a new vector (either a real matrix or an half-complex array) but this latter will point to the same underlying data of the original vector.
+The transformation *in place* can be useful in same cases to avoid unnecessary data compying and memory allocation.
+
 
 Fourier Transform of Real Data
 ------------------------------
 
-In principle the Fourier Transform of real data is exactly the same of the Fourier transform of complex data, we only make the difference between them because:
-
-- in GSL Shell real value matrix and complex value matrix are considered
-  different types
-- specialised routines exists to work efficiently in the case of real value
-  data
-
-Another important reason is *redundancy*, that is, because data are real the Fourier transform comes with a special symmetry:
+For real data the fourier coefficients satisfies the relation
 
 .. math::
      z_k = z_{N-k}^*
 
-so you don't need to store N complex values but only N/2.
+where N is the size of the vector and k is any integer number from 0 to N-1.
+Because of this relation the data is packed in a special type of object called an half-complex array.
 
-A sequence with this symmetry is called "conjugate-complex" or
-"half-complex". The results of a Fourier Transform of real data will be an half-complex array. In GSL Shell half-complex array are treated like special kind of arrays in order to be more efficient. To access element in half-complex array you can use the following functions:
+To access element in half-complex array you can use the indexing with an integer number between 0 and N-1, inclusive. So, for example::
 
-.. class:: HCArray
+   -- get a random number generator
+   r = gsl.rng()
 
-   Store the half-complex sequence resulting from a Fourier transform on real data.
+   -- create a vector with random numbers
+   x = matrix.new(256, 1, || gsl.rnd.gaussian(0))
 
-   .. method:: get(i)
+   -- take the fourier transform
+   ft = gsl.fft(x)
 
-      Returns the complex value of index ``i``. The index are used as follows:
-      
-      - 0, the value corresponding to zero frequency
-      - n, with n > 0, the values corresponding to the frequency n. If the input
-        is a temporal sequence of interval of index ``k`` then it corresponds
-        to the term exp(-2 i k n / N)
-      - -n, with n >0, the values of negative frequency -n. The resulting values
-        would be always the complex conjugate of the corresponding positive
-        frequency value
+   -- print all the coefficients of the fourier transform
+   for k=0, #ft-1 do print(ft[k]) end
 
-   .. method:: set(i, v)
+As shown in the example above you can use the Lua operator '#' to obtain the size of an half-complex array.
 
-      Set the complex element of index ``i`` to the value ``v``. The indexing
-      rules are the same that for the method :func:`get`.
+.. function:: fft(v[, in_place])
 
-   .. attribute:: length
- 
-      The index of the maximum frequency. If N is the size of the
-      real data it is always equal to N/2. It is useful since the domain of
-      possible frequencies are:
+   Perform the Fourier transform of the real valued column matrix ``x``.
+   If ``in_place`` is ``true`` then the original data is altered and the resulting vector will point to the same underlying data of the original vector.
 
-      .. math::      
-         -N/2, -N/2+1, \dots, -1, 0, 1, \dots, N/2-1, N/2
-
-.. function:: fft(v)
-
-   Perform the Fourier transform of a matrix column of *real*
-   numbers. The transformation will be done *in place* so your data
-   will be actually transformed in an half-complex array. The function
-   does not return any value.  If you need to preserve the original
-   data you should make a copy of your vector by doing something like::
-
-      local f = copy(v) -- we take a copy of the vector
-      fft(f) -- fourier transform is made in place
-
-   Please note that the value you obtain is not an ordinary matrix but
-   an half-complex array. You can use half-complex array only with the
-   methods :func:`get` and :func:`set`. If you want to have an
-   ordinary matrix you can easily build it with the following
-   instructions::
+   Please note that the value you obtain is not an ordinary matrix but an half-complex array.
+   You can access the element of such kind of array by indexing the vector.
+   If you want to have an ordinary matrix you can easily build it with the following instructions::
 
       -- we suppose that f is an half-complex array
-      m = cnew(f.length+1, 1, |i,j| f:get(i-1))
+      m = matrix.cnew(#f, 1, |i,j| f[i-1])
 
-.. function:: fft_inv(hc)
+.. function:: fftinv(hc[, in_place])
 
-   Perform the inverse Fourier transform of an half-complex array *in
-   place*. As a result the input is transformed in a real valued
-   column matrix. The factor resulting matrix does include the 1/N
-   factor to ensure that the use of :func:`fft` and :func:`fft_inv`
-   gives exactly the original data. Please note that some authors
-   use a factor of :math:`1/\sqrt{N}` for both forward and inverse
-   matrix.
+   Return a column matrix that contains then inverse Fourier transform of the half-complex vector ``hc``.
+   If ``in_place`` is ``true`` then the original data is altered and the resulting vector will point to the same underlying data of the original vector.
 
-   A tipical usage of :func:`fft_inv` is to revert the trasformation
-   made with :func:`fft` but by doing some transformations of the
-   way. So a typical usage path could be::
+   This trasformation is the inverse of the function :func:`gsl.fft` so that if you perform the two trasformations consecutively you will obtain a vector identical to the initial one.
+
+   A tipical usage of :func:`fft_inv` is to revert the trasformation made with :func:`fft` but by doing some transformations of the way.
+   So a typical usage path could be::
 
       -- we assume v is a column matrix with our data
-      fft(v) -- fourier transform
+      ft = fft(v) -- fourier transform
 
-      -- here we can manipulate the half-complex array with
+      -- here we can manipulate the half-complex array 'ft' with
       -- using the methods `get' and `set'
       some code here
 
-      fft_inv(v) -- we perform the inverse fourier transform
-      -- now v is again a column matrix of real numbers
-
-Fourier Transform of Complex Data
----------------------------------
-
-The Fourier transform of complex data is simpler then the one for real data because both the input and the output will be complex column matrix of the same size. The algorithm actually used will always be a mixed-radix algorithm and GSL Shell will take care of allocating the required resources. As for the real data the table allocation strategy is very efficient for the case when many fourier transforms are made always with the same size.
-
-The Fourier trasform is made using the function :func:`cfft` that provides both direct and inverse Fourier transform.
-
-.. function:: cfft(v[, sign])
-
-   Perform the Fourier transform of a given complex column vector *in
-   place*. The function does not return any value. If ``sign`` is
-   positive a direct transformation will be done, this is the defaut
-   case. If sign is negative the inverse transfrmations will be done
-   and a factor 1/N will be used to scale the results.
+      vt = fftinv(ft) -- we perform the inverse fourier transform
+      -- now vt is a vector of the same size of v
 
 FFT example
 -----------
@@ -166,14 +141,13 @@ So, first we define our square pulse in the time domain. Actually it will be a m
    n, ncut = 256, 16
 
    -- we create a pulse signal in the time domain
-   y = new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+   y = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
 Than we create two new plots, one for the Fourier transform and one for the signal itself::
 
-   pt = plot('Original signal / reconstructed')
-   pf = plot('FFT Power Spectrum')
+   pt = graph.plot('Original signal / reconstructed')
 
-   pt:addline(ipath(sample(|i| y[i], 1, n, n-1)), 'black')
+   pt:addline(graph.filine(|i| y[i], 1, n), 'black')
 
 Now we are ready to perform:
 
@@ -183,16 +157,16 @@ Now we are ready to perform:
 
 and plot the results::
 
-   fft(y)
+   ft = fft(y)
 
-   pf:add(ibars(sample(|k| abs(y:get(k)), 0, 60, 60)), 'black')
+   pf = graph.fibars(|k| complex.abs(ft[k]), 0, 60)
+   pf.title = 'FFT Power Spectrum'
 
-   for k=ncut, n/2 do y:set(k,0) end
-   fft_inv(y)
+   for k=ncut, n/2 do ft[k] = 0 end
+   ytr = fftinv(ft)
 
-   pt:addline(filine(|i| y[i], n), 'red')
+   pt:addline(graph.filine(|i| ytr[i], n), 'red')
 
-   pf:show()
    pt:show()
 
 .. figure:: fft-example-power-spectrum.png
