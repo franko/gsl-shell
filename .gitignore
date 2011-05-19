@@ -8,8 +8,7 @@ gsl-shell
 .deps
 .lib
 .trash
-build
-doc/build
-doc/html
+.build
+_build
 www
 
