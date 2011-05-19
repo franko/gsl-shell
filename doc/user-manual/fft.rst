@@ -88,7 +88,7 @@ To access element in half-complex array you can use the indexing with an integer
    r = gsl.rng()
 
    -- create a vector with random numbers
-   x = matrix.new(256, 1, || gsl.rnd.gaussian(0))
+   x = matrix.new(256, 1, || gsl.rnd.gaussian(r, 1))
 
    -- take the fourier transform
    ft = gsl.fft(x)
