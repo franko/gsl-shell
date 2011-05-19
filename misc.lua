@@ -21,48 +21,17 @@ function gsl.ode(spec)
 
    local ode = template.load(string.format('num/%s.lua.in', method), spec)
 
-   local ode_methods = {
-      evolve = function(s, f, t) 
-		  s._sync = false
-		  return ode.evolve(s._state, f, t)
-	       end,
-      init = function(s, t0, h0, f, ...)
-		s._sync = false
-		return ode.init(s._state, t0, h0, f, ...)
-	     end
+   local mt = {
+      __index = {evolve = ode.evolve, init = ode.init}
    }
-   
-   local ODE = {__index= function(s, k)
-			    if k == 't' then return s._state.t end
-			    if k == 'y' then
-			       if not s._sync then
-				  for k=1, s.dim do
-				     s._y[k] = s._state.y[k-1]
-				  end
-				  s._sync = true
-			       end
-			       return s._y
-			    end
-			    return ode_methods[k]
-			 end}
 
-   local dim = spec.N
-   local solver = {_state = ode.new(), dim= dim, _y = matrix.new(dim,1)}
-   setmetatable(solver, ODE)
-
-   return solver
+   return setmetatable(ode.new(), mt)
 end
 
 local NLINFIT = {
    __index = function(t, k)
 		if k == 'chisq' then
-		   local f = t.lm.f
-		   local csq = 0
-		   local n = matrix.dim(f)
-		   for i=1, n do
-		      csq = csq + f[i]^2
-		   end
-		   return csq
+		   return t.lm.chisq()
 		else
 		   if t.lm[k] then return t.lm[k] end
 		end
