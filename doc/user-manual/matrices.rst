@@ -81,6 +81,10 @@ Matrix methods
 
 .. class:: Matrix
 
+  .. method:: copy()
+
+     Return a copy of the matrix.
+
   .. method:: get(i, j)
      
      This function returns the (i,j)-th element of a matrix. As a
@@ -161,7 +165,7 @@ All the functions described in this section have an equivalent function for comp
 
    Returns a copy of the matrix.
 
-.. function:: tr(m)
+.. function:: transpose(m)
 
    Return the transpose of the matrix.
 
@@ -198,7 +202,3 @@ All the functions described in this section have an equivalent function for comp
    indexes of the matrix. Note that this function have the same
    semantic of the :func:`new` function with the difference that :func:`fset`
    operate on a matrix that already exists instead of creating a new one.
-
-.. function:: null(a)
-
-   Set each element of the matrix ``a`` to zero.
