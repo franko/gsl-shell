@@ -65,7 +65,7 @@ ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   LUAGSL_LIBS += agg-plot/libaggplot.a
-  LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
+  LIBS += $(PTHREADS_LIBS) $(AGG_LIBS) -lsupc++
 endif
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
