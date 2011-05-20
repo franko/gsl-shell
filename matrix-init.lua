@@ -178,7 +178,7 @@ local function matrix_complex_set(m, i, j, v)
    return cgsl.gsl_matrix_complex_set(m, i, j, v)
 end
 
-local function complex_conj(a)
+local function complex_conj(z)
    local x, y = cartesian(z)
    return gsl_complex(x, -y)
 end
@@ -484,13 +484,28 @@ end
 
 local function matrix_norm(m)
    local r, c = matrix_dim(m)
-   local sel = selector(get_typeid(m))
-   local ssq = 0
+   local tda = m.tda
+   local ssq, idx = 0, 0
    for i = 0, r-1 do
       for j = 0, c-1 do
-	 local x, y = sel(m,i,j)
+	 local x = m.data[idx + j]
+	 ssq = ssq + x*x
+      end
+      idx = idx + tda
+   end
+   return sqrt(ssq)
+end
+
+local function matrix_complex_norm(m)
+   local r, c = matrix_dim(m)
+   local tda = m.tda
+   local ssq, idx = 0, 0
+   for i = 0, r-1 do
+      for j = 0, c-1 do
+	 local x, y = m.data[idx+2*j], m.data[idx+2*j+1]
 	 ssq = ssq + x*x + y*y
       end
+      idx = idx + 2*tda
    end
    return sqrt(ssq)
 end
@@ -528,25 +543,92 @@ local complex_mt = {
 
 ffi.metatype(gsl_complex, complex_mt)
 
+local function matrix_new_unit(n)
+   local m = matrix_alloc(n, n)
+   for i=0, n-1 do
+      for j=0, n-1 do
+	 m.data[i*n+j] = (i == j and 1 or 0)
+      end
+   end
+   return m
+end
+
+local function matrix_fset(m, f)
+   local n1, n2 = matrix_dim(m)
+   for i=1, n1 do
+      for j=1, n2 do
+	 m:set(i, j, f(i,j))
+      end
+   end
+end
+
+local function matrix_set_equal(a, b)
+   local n1a, n2a = matrix_dim(a)
+   local n1b, n2b = matrix_dim(b)
+
+   if n1a ~= n1b or n2a ~= n2b then
+      error('matrix dimensions does not match', 2)
+   end
+
+   for i=1, n1b do
+      for j=1, n2b do
+	 a:set(i, j, b:get(i,j))
+      end
+   end
+end
+
+local function matrix_new_transpose(a)
+   local n1, n2 = matrix_dim(a)
+   local b = a.alloc(n2, n1)
+   for i=1, n2 do
+      for j=1, n1 do
+	 b:set(i, j, a:get(j,i))
+      end
+   end
+   return b
+end
+
+local function matrix_new_hc(a)
+   local n1, n2 = matrix_dim(a)
+   local b = a.alloc(n2, n1)
+   for i=1, n2 do
+      for j=1, n1 do
+	 b:set(i, j, complex.conj(a:get(j,i)))
+      end
+   end
+   return b
+end
+
+local function matrix_new_copy(m)
+   return m:copy()
+end
+
+
 matrix = {
    new    = matrix_new,
    cnew   = matrix_cnew,
    alloc  = matrix_alloc,
    calloc = matrix_calloc,
-   copy   = function(m) return m:copy() end,
+   copy   = matrix_new_copy,
+   unit   = matrix_new_unit,
    dim    = matrix_dim,
    vec    = matrix_vect_def,
+   set    = matrix_set_equal,
+   fset   = matrix_fset,
    block  = block_alloc,
+
+   transpose = matrix_new_transpose,
+   hc        = matrix_new_hc,
 }
 
 local matrix_methods = {
    alloc = matrix_alloc,
-   col  = matrix_col,
-   row  = matrix_row,
-   get  = matrix_get,
-   set  = matrix_set,
-   copy = matrix_copy,
-   norm = matrix_norm,
+   col   = matrix_col,
+   row   = matrix_row,
+   get   = matrix_get,
+   set   = matrix_set,
+   copy  = matrix_copy,
+   norm  = matrix_norm,
    slice = matrix_slice,
 }
 
@@ -605,12 +687,12 @@ ffi.metatype(gsl_matrix, matrix_mt)
 
 local matrix_complex_methods = {
    alloc = matrix_calloc,
-   col  = matrix_complex_col,
-   row  = matrix_complex_row,
-   get  = matrix_complex_get,
-   set  = matrix_complex_set,
-   copy = matrix_complex_copy,
-   norm = matrix_norm,
+   col   = matrix_complex_col,
+   row   = matrix_complex_row,
+   get   = matrix_complex_get,
+   set   = matrix_complex_set,
+   copy  = matrix_complex_copy,
+   norm  = matrix_complex_norm,
    slice = matrix_complex_slice,
 }
 
