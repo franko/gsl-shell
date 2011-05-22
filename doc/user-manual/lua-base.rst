@@ -1,5 +1,7 @@
 .. highlight:: lua
 
+.. currentmodule:: gsl
+
 .. _lua_base:
 
 GSL Shell standard functions
@@ -36,10 +38,17 @@ GSL Shell provides some simple functions to perform some tasks that are often us
    
    Return an iterators that gives the couple ``i, f(i)`` where ``i`` is an iteger going from ``a`` to ``b``. In the second form the sequence will start from one. If ``f`` returns multiple values only the first one is retained.
 
-.. function:: ilist(f, a, b)
+ .. function:: ilist(f, a, b)
               ilist(f, b)
 
-   Returns a list with the elements ``f(i)`` where ``i`` is an integer going from a to b. In the second form the sequence will start from one.
+   Returns a list with the elements ``f(i)`` where ``i`` is an integer going from a to b.
+   In the second form the sequence will start from one.
+
+.. function:: isum(f, a, b)
+              isum(f, b)
+
+   Returns the sum of ``f(i)`` for all integers ``i`` from a to b.
+   In the second form the sequence will start from one.
 
 
 

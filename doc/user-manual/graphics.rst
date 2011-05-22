@@ -135,11 +135,15 @@ To create many type of plots you don't really need to use always the graphics pr
 .. function:: ipath(f)
               ipathp(f)
 
-   This function takes an iterator function ``f`` and returns a :class:`Path` given by the points (x, y) returned by the iterator ``f``. The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
+   This function takes an iterator function ``f`` and returns a :class:`Path` given by the points (x, y) returned by the iterator ``f``.
+   The variant :func:`ipathp` is able to treat the case when the function ``f`` fails and it does continue by calling the iterator again.
 
    *Example*
-      In the following example we shows how to create a circle by using an iterator to generates the points. We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`. In this way we obtain an object of type :class:`Path` and we can add into a plot.::
+      In the following example we shows how to create a circle by using an iterator to generates the points.
+      We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`.
+      In this way we obtain an object of type :class:`Path` and we can add into a plot.::
 
+         import 'math'
 	 -- create a simple iterator that return n points uniformly spaced
          -- in a circle centerd in (x0, y0) with radius R
 	 circle = function(x0, y0, R, n)
@@ -154,9 +158,33 @@ To create many type of plots you don't really need to use always the graphics pr
                      end
                   end
 	 -- then we use ipath to create a path from the iterator
-	 line = ipath(circle(1, 1, 2.5, 256))
-	 p = plot('circle at (1,1) with R= 2.5')
-	 p:add(line, rgba(1,1,0,0.6))
+	 line = graph.ipath(circle(1, 1, 2.5, 256))
+	 p = graph.plot('circle at (1,1) with R= 2.5')
+	 p:add(line, graph.rgba(1,1,0,0.6))
+	 p:addline(line)
+	 p:show()
+ 
+      The example above show how to create the more generic iterator just using basic Lua constructs.
+      A generic iterator is very flexible because it can generate any sequence of values without restrictions of any kind.
+      You will probably find that in many cases you want to build iterators that generate values over a range on integer numbers like we was doing for the circle in the example.
+      In such cases it can be simpler to use the function :func:`gsl.sequence` that creates an iterators over a range of integer.
+      Here the same example of above but using the function :func:`gsl.sequence`::
+
+         import 'math'      
+	 -- create a simple iterator that return n points uniformly spaced
+         -- in a circle centerd in (x0, y0) with radius R
+	 circle = function(x0, y0, R, n)
+                     return function(k)
+         	               local th = 2*k*pi/n
+                               return x0 + R*cos(th), y0 + R*sin(th)
+                            end
+                  end
+	 -- then we use ipath to create a path from the iterator
+         n = 256
+         cs = gsl.sequence(circle(1, 1, 2.5, n), 0, n-1)
+	 line = graph.ipath(cs)
+	 p = graph.plot('circle at (1,1) with R= 2.5')
+	 p:add(line, graph.rgba(1,1,0,0.6))
 	 p:addline(line)
 	 p:show()
 

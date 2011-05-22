@@ -96,7 +96,7 @@ You can note in the definition above the we have chosen to store the three param
 
 Note also that the assignment to the elements of the vector ``f`` and the matrix ``J`` are done only if their respective variables ``f`` and ``J`` are not ``nil``.
 
-Once that the function is defined the most delicate work is done and you should crete a non-linear fit solver of the appropriate size N and P with the function :func:`gsl.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you shoud iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`
+Once that the function is defined the most delicate work is done and you should crete a non-linear fit solver of the appropriate size N and P with the function :func:`gsl.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you shoud iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`.
 
 Here a complete example::
 
