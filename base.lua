@@ -18,6 +18,8 @@
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  --
 
+local check = require 'check'
+
 local cat = table.concat
 local fmt = string.format
 
@@ -88,9 +90,7 @@ print = myprint
 
 function gsl.sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
-   if not b or type(b) ~= 'number' then 
-      error 'argument #2 should be an integer number' 
-   end
+   check.integer(b)
    local k = a
    return function()
 	     if k <= b then
@@ -126,9 +126,7 @@ end
 
 function gsl.isum(f, a, b)
    a, b = (b and a or 1), (b and b or a)
-   if not b or type(b) ~= 'number' then 
-      error 'argument #2 should be an integer number' 
-   end
+   check.integer(b)
    local s = 0
    for k = a, b do
       s = s + f(k)
