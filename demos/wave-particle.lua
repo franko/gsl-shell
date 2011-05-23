@@ -1,11 +1,11 @@
-use 'complex'
-
 require('strict').enable()
 
 local gsl_roots = require 'roots'
 
 local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
 local atan2, pi = math.atan2, math.pi
+local cexp, csqrt = complex.exp, complex.sqrt
+local real, imag = complex.real, complex.imag
 
 local I = 1i
 
@@ -23,14 +23,14 @@ local v2 = 32
 local energy_limit = 80
 
 local function ks(e)
-   return sqrt(2*(e-v1)), sqrt(2*(e-v2))
+   return csqrt(2*(e-v1)), csqrt(2*(e-v2))
 end
 
 local smat = matrix.cnew(4, 4)
 local bmat = matrix.cnew(4, 1, |i| i == 4 and 1 or 0)
 
 local function Asget(k1, k2, e)
-   local a1, a2 = exp(I*k1*x1), exp(I*k2*x2)
+   local a1, a2 = cexp(I*k1*x1), cexp(I*k2*x2)
 
    smat:set(1,1, 1/a1)
    smat:set(1,2, a1)
@@ -180,7 +180,7 @@ end
 
 local function coherent_state(x0, p0, sig)
    return function(x)
-	     return exp(-(x-x0)^2/(4*sig^2) + I*p0*x)
+	     return cexp(-(x-x0)^2/(4*sig^2) + I*p0*x)
 	  end
 end
 

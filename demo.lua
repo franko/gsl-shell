@@ -14,7 +14,7 @@ local function load_demo(name)
    end
 end
 
-local demo_files = {'fft', 'bspline', 'wave-particle'}
+local demo_files = {'fft', 'bspline', 'wave-particle', 'plot'}
 
 for i, name in ipairs(demo_files) do
    load_demo(name)
