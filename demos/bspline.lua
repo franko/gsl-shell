@@ -35,8 +35,9 @@ local function demo1()
    return p
 end
 
-return {
-   bspline1 = {
+return 'B-Splines', {
+   {
+      name = 'bspline1',
       f = demo1, 
       description = 'B-Spline approximation of noisy data'
    },

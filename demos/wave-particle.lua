@@ -185,7 +185,7 @@ local function coherent_state(x0, p0, sig)
 end
 
 local initstate
-local fcs, pcs
+local fcs
 
 local function plot_roots()
 --   local ell, erl = v1, roots[n-1]
@@ -301,7 +301,7 @@ end
 
 --state_plot()
 
-local function anim()
+local function anim(pcs)
    local col = graph.rgba(0, 0.7, 0, 0.9)
    for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
@@ -324,9 +324,6 @@ local function wave_demo()
    initstate = {x0= -14, p0= 8, sigma= 1.5}
 
    fcs = coherent_state(initstate.x0, initstate.p0, initstate.sigma)
-   pcs = graph.fxplot(|x| (csqrn(fcs(x))), x1, x2)
-   pcs:limits(x1, 0, x2, 1.4)
-   pcs.title = 'Wave function density'
 
    plot_roots()
 
@@ -360,17 +357,22 @@ local function wave_demo()
    end
    echo 'done'
 
-   echo 'READY: press enter'
-   io.read '*l'
+   local pcs = graph.fxplot(|x| (csqrn(fcs(x))), x1, x2)
+   pcs:limits(x1, 0, x2, 1.4)
+   pcs.title = 'Wave function density'
 
    pcs.sync = false
    pcs:pushlayer()
 
-   anim()
+   echo 'READY: press enter'
+   io.read '*l'
+
+   anim(pcs)
 end
 
-return {
-   wave = {
+return 'Wave Packet', {
+   {
+      name = 'wave',
       f = wave_demo, 
       description = 'Quantum Wave function for a particle in a step potential'
    },

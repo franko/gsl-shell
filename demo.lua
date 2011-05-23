@@ -2,8 +2,16 @@
 local demo_list = {}
 
 local function load_demo(name)
-   local t = dofile('demos/' .. name .. '.lua')
-   for k, v in pairs(t) do demo_list[k] = v end
+   local group, info = dofile('demos/' .. name .. '.lua')
+   local section = demo_list[group]
+   if not section then 
+      section = {}
+      demo_list[group] = section
+   end
+   local i = #section
+   for k, v in ipairs(info) do 
+      section[i+k] = v
+   end
 end
 
 local demo_files = {'fft', 'bspline', 'wave-particle'}
@@ -13,8 +21,12 @@ for i, name in ipairs(demo_files) do
 end
 
 local function print_demos()
-   for k, v in pairs(demo_list) do
-      echo(k .. ' - ' .. v.description)
+   for group, t in pairs(demo_list) do
+      echo('*** ', group)
+      for k, v in ipairs(t) do
+	 echo(v.name .. ' - ' .. v.description)
+      end
+      echo ''
    end
 end
 
@@ -22,19 +34,29 @@ function demo(name)
    if name == 'list' then
       print_demos()
    else
-      local entry = demo_list[name]
-      if not entry then
-	 error [[No such demo.
-	         Please type demo('list') for a list of all available demos
-	       ]]
+      for group, t in pairs(demo_list) do
+	 for k, entry in ipairs(t) do
+	    if entry.name == name then
+	       echo(entry.description)	    
+	       return entry.f()
+	    end
+	 end
       end
-      echo(entry.description)	    
-      return entry.f()
+      error [[
+  No such demo.
+  Please type demo('list') for a list of all available demos
+            ]]
    end
 end
 
 echo 'Available demos:'
 echo ''
 print_demos()
-echo ''
-echo 'Write demo \'name\' to execute any of them.'
+
+echo [[
+  Write :
+
+    > demo('name')
+
+  to execute any of them.
+]]
