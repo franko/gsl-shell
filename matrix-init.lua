@@ -765,13 +765,13 @@ local function csqrt(x)
    return (is_real(x) and x >= 0) and sqrt(x) or cgsl.gsl_complex_sqrt(x)
 end
 
-gsl_function_list = {
+local gsl_function_list = {
    'exp', 'log', 'log10',
    'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
    'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth',
 }
 
-gsl_inverse_trig_list = {
+local gsl_inverse_trig_list = {
    'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
    'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth'
 }
