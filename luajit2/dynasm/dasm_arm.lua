@@ -9,9 +9,9 @@
 local _info = {
   arch =	"arm",
   description =	"DynASM ARM module",
-  version =	"1.2.2",
-  vernum =	 10202,
-  release =	"2011-03-23",
+  version =	"1.3.0",
+  vernum =	 10300,
+  release =	"2011-05-05",
   author =	"Mike Pall",
   license =	"MIT",
 }
@@ -664,7 +664,6 @@ local function parse_load(params, nparams, n, op)
     end
   else
     local p1a, p2 = match(p1, "^([^,%s]*)%s*(.*)$")
-    local n = parse_gpr(p1a)
     op = op + parse_gpr(p1a) * 65536 + 0x01000000
     if p2 ~= "" then
       local imm = match(p2, "^,%s*#(.*)$")
