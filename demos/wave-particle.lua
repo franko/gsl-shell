@@ -357,11 +357,12 @@ local function wave_demo()
    end
    echo 'done'
 
-   local pcs = graph.fxplot(|x| (csqrn(fcs(x))), x1, x2)
+   local pcs = graph.canvas()
    pcs:limits(x1, 0, x2, 1.4)
+   pcs:addline(graph.fxline(|x| (csqrn(fcs(x))), x1, x2))
    pcs.title = 'Wave function density'
+   pcs:show()
 
-   pcs.sync = false
    pcs:pushlayer()
 
    echo 'READY: press enter'
