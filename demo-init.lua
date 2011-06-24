@@ -20,7 +20,7 @@ for i, name in ipairs(demo_files) do
    load_demo(name)
 end
 
-local function print_demos()
+local function print_demos_list()
    for group, t in pairs(demo_list) do
       echo('*** ', group)
       for k, v in ipairs(t) do
@@ -30,33 +30,17 @@ local function print_demos()
    end
 end
 
-function demo(name)
-   if name == 'list' then
-      print_demos()
-   else
-      for group, t in pairs(demo_list) do
-	 for k, entry in ipairs(t) do
-	    if entry.name == name then
-	       echo(entry.description)	    
-	       return entry.f()
-	    end
+local function load_demo(name)
+   for group, t in pairs(demo_list) do
+      for k, entry in ipairs(t) do
+	 if entry.name == name then
+	    return entry
 	 end
       end
-      error [[
-  No such demo.
-  Please type demo('list') for a list of all available demos
-            ]]
    end
 end
 
-echo 'Available demos:'
-echo ''
-print_demos()
-
-echo [[
-  Write :
-
-    > demo('name')
-
-  to execute any of them.
-]]
+return {
+   list = print_demos_list,
+   load = load_demo,
+}
