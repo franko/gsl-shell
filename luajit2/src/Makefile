@@ -259,17 +259,7 @@ endif
 # System detection.
 ##############################################################################
 
-ifneq (,$(findstring Windows,$(OS)))
-  HOST_SYS= Windows
-else
-  HOST_SYS:= $(shell uname -s)
-  ifneq (,$(findstring CYGWIN,$(TARGET_SYS)))
-    HOST_SYS= Windows
-  endif
-endif
-ifeq (Windows,$(HOST_SYS))
-  HOST_RM= rm -f
-endif
+include $(GSH_BASE_DIR)/make-system-detect
 
 TARGET_SYS= $(HOST_SYS)
 ifeq (Windows,$(TARGET_SYS))

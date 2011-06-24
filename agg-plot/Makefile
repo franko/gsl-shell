@@ -21,18 +21,14 @@
 GSH_BASE_DIR = ..
 
 include $(GSH_BASE_DIR)/makeconfig
+include $(GSH_BASE_DIR)/make-system-detect
 include $(GSH_BASE_DIR)/makeflags
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
-ifeq ($(PLATFORM), none)
-nono:
-	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
-endif
-
-ifeq ($(strip $(PLATFORM)), mingw)
+ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
@@ -65,6 +61,6 @@ include $(GSH_BASE_DIR)/makerules
 .PHONY: clean all
 
 clean:
-	$(RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+	$(HOST_RM) *.o *.lo *.la *.so *.dll $(TARGETS)
 
 -include $(DEP_FILES)

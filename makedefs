@@ -20,7 +20,7 @@ endif
 
 DEFS += $(CFG_FLAGS)
 
-ifeq ($(strip $(PLATFORM)), mingw)
+ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
 else

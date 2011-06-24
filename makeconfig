@@ -8,9 +8,6 @@ LUA_BUILD = no
 # set this to "yes" if you want to disable gamma correction
 DISABLE_GAMMA_CORR = no
 
-# PLATFORM should can be linux or mingw
-PLATFORM = none
-
 DEBUG = no
 
 PREFIX= /usr/local

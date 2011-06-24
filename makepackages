@@ -7,7 +7,7 @@
 # Copyright (C) 2009-2010 Francesco Abbate. See Copyright Notice in gsl-shell.c
 ##############################################################################
 
-ifeq ($(strip $(PLATFORM)), mingw)
+ifeq ($(HOST_SYS),Windows)
   AGG_HOME = c:/fra/src/agg-2.5
 
   AGG_INCLUDES = -I$(AGG_HOME)/include

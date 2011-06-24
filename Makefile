@@ -19,23 +19,18 @@
 #
 
 include makeconfig
+include make-system-detect
 include makeflags
 include makepackages
 include makedefs
 
 LUADIR = luajit2
 
-ifeq ($(strip $(PLATFORM)), none)
-nono:
-	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
-endif
-
 INCLUDES += -I. $(GSL_INCLUDES)
 GSL_SHELL = gsl-shell$(EXE_EXT)
 LUA_CFLAGS = -I$(LUADIR)/src
 
-ifeq ($(strip $(PLATFORM)), mingw)
-# Option for Windows Platform
+ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
   LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib
@@ -107,7 +102,7 @@ $(SUBDIRS):
 clean:
 	$(MAKE) -C agg-plot clean
 	$(MAKE) -C $(LUADIR) clean
-	$(RM) *.o $(TARGETS)
-	$(RM) -r ./.libs/
+	$(HOST_RM) *.o $(TARGETS)
+	$(HOST_RM) -r ./.libs/
 
 -include $(DEP_FILES)
