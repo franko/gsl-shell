@@ -191,7 +191,8 @@ static void asm_fuseahuref(ASMState *as, IRRef ref, RegSet allow)
       }
       break;
     default:
-      lua_assert(ir->o == IR_HREF || ir->o == IR_NEWREF || ir->o == IR_UREFO);
+      lua_assert(ir->o == IR_HREF || ir->o == IR_NEWREF || ir->o == IR_UREFO ||
+		 ir->o == IR_KKPTR);
       break;
     }
   }
@@ -1878,15 +1879,17 @@ static void asm_bitshift(ASMState *as, IRIns *ir, x86Shift xs)
     default: emit_shifti(as, REX_64IR(ir, xs), dest, shift); break;
     }
   } else {  /* Variable shifts implicitly use register cl (i.e. ecx). */
-    RegSet allow = rset_exclude(RSET_GPR, RID_ECX);
-    Reg right = irr->r;
-    if (ra_noreg(right)) {
-      right = ra_allocref(as, rref, RID2RSET(RID_ECX));
-    } else if (right != RID_ECX) {
-      rset_clear(allow, right);
-      ra_scratch(as, RID2RSET(RID_ECX));
+    Reg right;
+    dest = ra_dest(as, ir, rset_exclude(RSET_GPR, RID_ECX));
+    if (dest == RID_ECX) {
+      dest = ra_scratch(as, rset_exclude(RSET_GPR, RID_ECX));
+      emit_rr(as, XO_MOV, RID_ECX, dest);
     }
-    dest = ra_dest(as, ir, allow);
+    right = irr->r;
+    if (ra_noreg(right))
+      right = ra_allocref(as, rref, RID2RSET(RID_ECX));
+    else if (right != RID_ECX)
+      ra_scratch(as, RID2RSET(RID_ECX));
     emit_rr(as, XO_SHIFTcl, REX_64IR(ir, xs), dest);
     if (right != RID_ECX) {
       ra_noweak(as, right);
@@ -2037,6 +2040,8 @@ static void asm_comp(ASMState *as, IRIns *ir, uint32_t cc)
 	  left = asm_fuseload(as, lref, RSET_GPR);
 	  irl->t = origt;
 	  if (left == RID_MRM) {  /* Fusion succeeded? */
+	    if (irt_isu8(irl->t) || irt_isu16(irl->t))
+	      cc >>= 4;  /* Need unsigned compare. */
 	    asm_guardcc(as, cc);
 	    emit_i8(as, imm);
 	    emit_mrm(as, (irt_isi8(origt) || irt_isu8(origt)) ?
@@ -2413,8 +2418,7 @@ static void asm_tail_fixup(ASMState *as, TraceNo lnk)
     }
   }
   /* Patch exit branch. */
-  target = lnk == TRACE_INTERP ? (MCode *)lj_vm_exit_interp :
-				 traceref(as->J, lnk)->mcode;
+  target = lnk ? traceref(as->J, lnk)->mcode : (MCode *)lj_vm_exit_interp;
   *(int32_t *)(p-4) = jmprel(p, target);
   p[-5] = XI_JMP;
   /* Drop unused mcode tail. Fill with NOPs to make the prefetcher happy. */
