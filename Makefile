@@ -44,8 +44,11 @@ SUBDIRS = $(LUADIR)
 C_SRC_FILES = gs-types.c lua-utils.c random.c randist.c \
 		pdf.c cdf.c sf.c lua-graph.c lua-gsl.c
 
-LUA_BASE_DIRS = 
-LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
+LUA_BASE_FILES = base.lua matrix-init.lua misc.lua integ-init.lua fft-init.lua import.lua bspline.lua cgsl.lua check.lua csv.lua demo-init.lua gsl-check.lua gslext.lua linfit.lua roots.lua strict.lua template.lua time.lua
+
+DEMOS_LIST = bspline fft plot wave-particle
+
+LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 
 LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
 C_SRC_FILES += gsl-shell-jit.c
@@ -53,15 +56,11 @@ C_SRC_FILES += gsl-shell-jit.c
 DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
-ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-  LUA_BASE_DIRS += pre3d
-  LUA_BASE_FILES += draw.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua \
-		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
-  INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
-  SUBDIRS += agg-plot
-  LUAGSL_LIBS += agg-plot/libaggplot.a
-  LIBS += $(PTHREADS_LIBS) $(AGG_LIBS) -lsupc++
-endif
+LUA_BASE_FILES += graph-init.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
+INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
+SUBDIRS += agg-plot
+LUAGSL_LIBS += agg-plot/libaggplot.a
+LIBS += $(PTHREADS_LIBS) $(AGG_LIBS) -lsupc++
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
@@ -87,10 +86,7 @@ install: $(GSL_SHELL)
 	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
 	strip $(DESTDIR)$(PREFIX)/bin/gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
-	mkdir -p $(LUA_BASE_DIRS) 
 	cp --parents $(LUA_BASE_FILES) $(DESTDIR)$(PREFIX)/lib/gsl-shell
-	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
-	cp examples/*.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 
 .PHONY: clean all $(SUBDIRS)
 

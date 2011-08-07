@@ -1,6 +1,4 @@
 
-ENABLE_AGG_PLOT = yes
-
 # If you set to yes a Lua interpreter will be built and the GSL specific
 # functions will be loaded in a separate module 'gsl'
 LUA_BUILD = no
@@ -10,5 +8,5 @@ DISABLE_GAMMA_CORR = no
 
 DEBUG = no
 
-PREFIX= /usr/local
+PREFIX= /home/franko/apps
 DESTDIR= 

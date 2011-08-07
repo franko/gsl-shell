@@ -2,7 +2,8 @@
 local demo_list = {}
 
 local function load_demo(name)
-   local group, info = dofile('demos/' .. name .. '.lua')
+   local record = require('demos/' .. name)
+   local group, info = record[1], record[2]
    local section = demo_list[group]
    if not section then 
       section = {}

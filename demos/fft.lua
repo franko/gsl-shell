@@ -95,20 +95,20 @@ local function demo3()
    return p, fftplot
 end
 
-return 'FFT', {
-   {
-      name = 'fft1',
-      f = demo1, 
-      description = 'GSL example with square function and frequency cutoff'
-   },
-   {
-      name = 'fft2',
-      f = demo2,
-      description = 'The same as before but the FFT transform is done in place'
-   },
-   {
-      name = 'fft3',
-      f = demo3,
-      description = 'frequency cutoff example on bessel function'
-   },
-}
+return {'FFT', {
+  {
+     name = 'fft1',
+     f = demo1, 
+     description = 'GSL example with square function and frequency cutoff'
+  },
+  {
+     name = 'fft2',
+     f = demo2,
+     description = 'The same as before but the FFT transform is done in place'
+  },
+  {
+     name = 'fft3',
+     f = demo3,
+     description = 'frequency cutoff example on bessel function'
+  },
+}}

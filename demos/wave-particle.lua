@@ -371,10 +371,10 @@ local function wave_demo()
    anim(pcs)
 end
 
-return 'Wave Packet', {
-   {
-      name = 'wave',
-      f = wave_demo, 
-      description = 'Quantum Wave function for a particle in a step potential'
-   },
-}
+return {'Wave Packet', {
+  {
+     name = 'wave',
+     f = wave_demo, 
+     description = 'Quantum Wave function for a particle in a step potential'
+  },
+}}

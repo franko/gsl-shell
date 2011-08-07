@@ -111,10 +111,10 @@ local function demo_plot()
    demo4()
 end
 
-return 'Plotting', {
-   {
-      name= 'plot',
-      f = demo_plot,
-      description = 'Various kind of plots'
-   },
-}
+return {'Plotting', {
+  {
+     name= 'plot',
+     f = demo_plot,
+     description = 'Various kind of plots'
+  },
+}}
