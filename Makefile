@@ -46,7 +46,7 @@ C_SRC_FILES = gs-types.c lua-utils.c random.c randist.c \
 
 LUA_BASE_FILES = base.lua matrix-init.lua misc.lua integ-init.lua fft-init.lua import.lua bspline.lua cgsl.lua check.lua csv.lua demo-init.lua gsl-check.lua gslext.lua linfit.lua roots.lua strict.lua template.lua time.lua
 
-DEMOS_LIST = bspline fft plot wave-particle
+DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 
