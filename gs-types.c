@@ -11,7 +11,6 @@
 static int gs_type_string (lua_State *L);
 
 #define GS_RNG_NAME_DEF         "GSL.rng"
-#ifdef AGG_PLOT_ENABLED
 #define GS_DRAW_PLOT_NAME_DEF   "GSL.plot"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
@@ -21,7 +20,6 @@ static int gs_type_string (lua_State *L);
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
 #define GS_WINDOW_NAME_DEF  "GSL.window"
 #define GS_PLOT_NAME_DEF  "GSL.plot"
-#endif
 
 #define MYCAT2x(a,b) a ## _ ## b
 #define MYCAT2(a,b) MYCAT2x(a,b)
@@ -33,7 +31,6 @@ static int gs_type_string (lua_State *L);
 
 const struct gs_type gs_type_table[] = {
   MY_EXPAND(RNG, "random number generator"),
-#ifdef AGG_PLOT_ENABLED
   MY_EXPAND(DRAW_PLOT, "plot"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),
   MY_EXPAND_DER(DRAW_PATH, "geometric line", DRAW_SCALABLE),
@@ -43,7 +40,6 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND(RGBA_COLOR, "color"),
   MY_EXPAND(WINDOW, "graphical window"),
   MY_EXPAND(PLOT, "plot"),
-#endif
   {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}
 };
 

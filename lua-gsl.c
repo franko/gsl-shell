@@ -30,9 +30,7 @@
 #include "cdf.h"
 #include "sf.h"
 
-#ifdef AGG_PLOT_ENABLED
 #include "lua-graph.h"
-#endif
 
 #ifdef GSL_SHELL_DEBUG
 static int gsl_shell_lua_registry (lua_State *L);
@@ -54,10 +52,8 @@ luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
-#ifdef AGG_PLOT_ENABLED
   luaopen_graph (L);
   lua_pop (L, 1);
-#endif
 
   luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
 

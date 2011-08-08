@@ -32,11 +32,8 @@ ifeq ($(strip $(DEBUG)), yes)
   DEFS += -DGSL_SHELL_DEBUG
 endif
 
-ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-  DEFS += -DAGG_PLOT_ENABLED
-  ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
-    DEFS += -DDISABLE_GAMMA_CORR
-  endif
+ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
+  DEFS += -DDISABLE_GAMMA_CORR
 endif
 
 DEFS += -DLUA_ROOT="$(PREFIX)"

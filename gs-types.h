@@ -11,7 +11,6 @@ __BEGIN_DECLS
 enum gs_type_e {
   GS_NO_TYPE = -1,
   GS_RNG = 0,
-#ifdef AGG_PLOT_ENABLED
   GS_DRAW_PLOT,
   GS_DRAW_SCALABLE, /* derived types are declared only after their base class */
   GS_DRAW_PATH,
@@ -21,7 +20,6 @@ enum gs_type_e {
   GS_RGBA_COLOR,
   GS_WINDOW,
   GS_PLOT,
-#endif
   GS_INVALID_TYPE,
 };
 

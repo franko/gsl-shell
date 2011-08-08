@@ -56,6 +56,7 @@ C_SRC_FILES += gsl-shell-jit.c
 DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
+# files and flags related to the graphics modules
 LUA_BASE_FILES += graph-init.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
 SUBDIRS += agg-plot
