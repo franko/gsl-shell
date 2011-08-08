@@ -38,6 +38,7 @@ clean:
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	cp $(BUILDDIR)/html/objects.inv ../gsl-shell-index/manual.inv
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
