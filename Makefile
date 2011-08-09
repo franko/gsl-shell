@@ -60,7 +60,7 @@ TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
   LUA_BASE_DIRS += pre3d
-  LUA_BASE_FILES += draw.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua \
+  LUA_BASE_FILES += draw.lua contour.lua plot3d.lua \
 		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
