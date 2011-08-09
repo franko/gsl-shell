@@ -17,19 +17,21 @@ The Bessel's function J\ :sub:`n` for integer values of n can de defined with th
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
 
-We can use this definition to define our home-made Bessel function. To perform the integral we need to use the ``integ`` function and provide the function to integrate. This is easy like eating a piece of cake::
+We can use this definition to define our home-made Bessel function. To perform the integral we need to use the :func:`gsl.integ` function and provide the function to integrate. This is easy like eating a piece of cake::
 
-   function bessJ(x,n)
+   import 'math'
+
+   function bessJ(x, n)
+      local epsabs, epsrel = 1e-8, 1e-4
       local f = |t| cos(n*t - x*sin(t)) -- we define the function to integrate
-      return 1/pi * integ {f= f, points={0, pi}}
+      return 1/pi * gsl.integ(f, 0, pi, epsabs, epsrel)
    end
 
 The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
 
-   p = plot('Bessel Functions Jn, n=0 ... 5')
-   color = {'red', 'green', 'blue', 'cyan', 'magenta'}
+   p = graph.plot('Bessel Functions Jn, n=0 ... 5')
    for n=0, 5 do
-      p:addline(fxline(|x| bessJ(x,n), 0, 20), color[n+1])
+      p:addline(graph.fxline(|x| bessJ(x,n), 0, 20), graph.rainbow(n+1))
    end
    p:show()
 
@@ -39,7 +41,7 @@ to obtain the following result:
 
 Then we can also calculate a matrix with the tabulated values. For examples we can use the columns of the matrix to span different values of n. We write then::
 
-   m = new(200, 6, |k,n| bessJ((k-1)/10, n-1))
+   m = matrix.new(200, 6, |k,n| bessJ((k-1)/10, n-1))
 
 And we obtain the following matrix::
 
@@ -62,13 +64,15 @@ The Von-Koch curve
 The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the swedish mathematician Helge von Koch.
 
 Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
-
+ 
+   import 'math'
+ 
    function vonkoch(n)
       local sx = {2, 1, -1, -2, -1,  1}
       local sy = {0, 1,  1,  0, -1, -1}
       local sh = {1, -2, 1}
       local a, x, y = 0, 0, 0
-      local w = ilist(|| 0, n+1)
+      local w = gsl.ilist(|| 0, n+1)
    
       local s = 1 / (3^n)
       for k=1, 6 do
@@ -96,22 +100,22 @@ Here an example to plot it with GSL Shell. First we need a function to produce t
 
 Then we need to produce the plot. Since we want to make something cool we produce a closed Von Koch triangle by using always the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here the code::
 
-   p = plot()
+   p = graph.plot()
 
-   t = path()
+   t = graph.path()
    t:move_to(0,0)
    t:line_to(1,0)
    t:line_to(0.5,-sqrt(3)/2)
    t:close()
 
-   v = ipath(vonkoch(4))
-   c = rgba(0,0,0.7,0.2)
+   v = graph.ipath(vonkoch(4))
+   c = graph.rgba(0,0,0.7,0.2)
    p:add(v, c)
    p:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
    p:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
    p:add(t, c)
 
-   c = rgb(0,0,0.7)
+   c = graph.rgb(0,0,0.7)
 
    p:add(v, c, {{'stroke'}})
    p:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
@@ -134,7 +138,7 @@ In this example we show how to load some data stored in a file in CSV format and
 
 In order to load the data you need to charge the module :mod:`csv` and the to use the function :func:`~csv.read`. In this example we will use the data stored in the file ``examples/data/sige-sims-prof.csv`` this set of data contains just two columns, the first one is the x and the second column represent the y. Here the simple code to load the data::
 
-   require 'csv'
+   csv = require 'csv'
    t = csv.read('examples/data/sige-sims-prof.csv')
 
 we can then print the number of lines in the table:
@@ -144,14 +148,15 @@ we can then print the number of lines in the table:
 
 If you want to plot the data in the table there isn't actually any function that will do that right way but you can do it by using a few functions::
 
-  p = plot()
-  p:addline(ipath(sequence(function(i) return t[i][1], t[i][2] end, #t)))
+  p = graph.plot()
+  dget = function(i) return t[i][1], t[i][2] end
+  p:addline(graph.ipath(gsl.sequence(dget, #t)))
   p:show()
 
 the idea is that, in order to plot the curve we need to *build* the curve before. What we want is actually a line that connects the points ``(x[i], y[i])`` where ``x[i]`` and ``y[i]`` are taken from the rows of the table ``t``. The last resort to obtain that would be to create a :class:`Path` object and to give all the points in a procedural way like this::
 
   -- we create a path and gives it the starting point
-  ln = path(t[1][1], t[1][2])
+  ln = graph.path(t[1][1], t[1][2])
  
   for i=2, #t do
     ln:line_to(t[i][1], t[i][2])
@@ -161,13 +166,13 @@ but it can be more handy to use the :func:`ipath` function to build the curve. T
 
 So to make more clear the code given above we can separate the curve and the iterator instatiations like in the following example::
 
-  p = plot()
+  p = graph.plot()
 
   -- we define our iterator
-  it = sequence(function(i) return t[i][1], t[i][2] end, #t)
+  it = gsl.sequence(function(i) return t[i][1], t[i][2] end, #t)
 
   -- we create the curve using the iterator just defined
-  line = ipath(it)
+  line = graph.ipath(it)
 
   -- then we add it to the plot, we give a title and show the result
   p:addline(line)
@@ -215,6 +220,10 @@ Actually the meaning of the formula is that the factorial of a negative number i
 
 So here the code for the radial part::
 
+  import 'math'
+
+  fact = gsl.fact
+
   -- inverse factorial function definition
   invf = |n| n >= 0 and 1/fact(n) or 0
 
@@ -249,7 +258,7 @@ let us therefore define our sample function in term of x and y and use it to cal
   require 'contour'
   N, M = 8, -2
   f = |x,y| zernicke(N, M, sqrt(x^2+y^2), atan2(y,x))
-  p = polar_contour(f, 0.9, {gridx= 81, gridy= 81, levels= 10})
+  p = graph.polar_contour(f, 0.9, {gridx= 81, gridy= 81, levels= 10})
   p.title = string.format('Zernike polynomial (N=%i, M=%i)', N, M)
 
 We show a few screenshots of the contour plot for various N and M.
