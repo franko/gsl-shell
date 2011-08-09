@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. currentmodule:: graph
+
 3D Plotting
 ===========
 
@@ -45,9 +47,10 @@ The 3D Function Plot give you the possibility of making a 3D plot of a function 
 
 Here a simples example::
 
+   import 'math'
    require 'plot3d'
    f = |x, y| sin(x)*exp(-x^2-y^2)
-   plot3d(f, -3, -3, 3, 3, {title= '3d plot'})
+   graph.plot3d(f, -3, -3, 3, 3, {title= '3d plot'})
 
 and here the plot that you will obtain:
 
@@ -90,11 +93,14 @@ Here a simples example that plot the Moebius surface starting from a parametric:
 
 here the code to produce the plot::
 
+   import 'math'
+   require 'plot3d'
+
    x = |u,v| (1 + 1/2 * v *cos(u/2))*cos(u)
    y = |u,v| (1 + 1/2 * v *cos(u/2))*sin(u)
    z = |u,v| 1/2 * v * sin(u/2)
    
-   surfplot({x, y, z}, 0, -1, 2*pi, 1, {gridu= 60, gridv= 4, stroke= true})
+   graph.surfplot({x, y, z}, 0, -1, 2*pi, 1, {gridu= 60, gridv= 4, stroke= true})
 
 and here an image of the resulting plot:
 
