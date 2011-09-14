@@ -228,19 +228,19 @@ local function qrsolv(r, p, lambda, diag, qtb, x, sdiag, wa)
 		  gsl.gsl_matrix_set(r, k, k, new_rkk)
 		  gsl.gsl_vector_set(wa, k, new_wak)
 	       end
-	    end
 	       
-	    -- Accumulate the transformation in the row of s 
+	       -- Accumulate the transformation in the row of s 
 
-	    for i = k + 1, n-1 do
-	       local rik = gsl.gsl_matrix_get (r, i, k)
-	       local sdiagi = gsl.gsl_vector_get (sdiag, i)
+	       for i = k + 1, n-1 do
+		  local rik = gsl.gsl_matrix_get (r, i, k)
+		  local sdiagi = gsl.gsl_vector_get (sdiag, i)
               
-	       local new_rik = cosine * rik + sine * sdiagi
-	       local new_sdiagi = -sine * rik + cosine * sdiagi
+		  local new_rik = cosine * rik + sine * sdiagi
+		  local new_sdiagi = -sine * rik + cosine * sdiagi
               
-	       gsl.gsl_matrix_set(r, i, k, new_rik)
-	       gsl.gsl_vector_set(sdiag, i, new_sdiagi)
+		  gsl.gsl_matrix_set(r, i, k, new_rik)
+		  gsl.gsl_vector_set(sdiag, i, new_sdiagi)
+	       end
 	    end
 	 end
 
