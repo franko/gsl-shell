@@ -1,7 +1,7 @@
 
 local template = require 'template'
 
-function gsl.ode(spec)
+function num.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}
    local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
    local is_known = {rkf45= true, rk8pd= true}
@@ -38,7 +38,7 @@ local NLINFIT = {
 	     end
 }
 
-function gsl.nlinfit(spec)
+function num.nlinfit(spec)
    if not spec.n then error 'number of points "n" not specified' end
    if not spec.p then error 'number of parameters "p" not specified' end
 

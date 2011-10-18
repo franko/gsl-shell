@@ -19,7 +19,7 @@
 
 use 'math'
 use 'graph'
-use 'gsl'
+use 'num'
 
 local function demo1()
    local n, ncut = 8*3*5, 16

@@ -1,6 +1,6 @@
 
 use 'math'
-use 'gsl'
+use 'num'
 use 'graph'
 
 local function demo1()

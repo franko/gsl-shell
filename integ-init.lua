@@ -2,7 +2,7 @@
 local template = require 'template'
 local check = require 'check'
 
-function gsl.quad_prepare(options)
+function num.quad_prepare(options)
    local known_methods = {qng= true, qag= true}
 
    local method = options.method or 'qag'
@@ -25,7 +25,7 @@ end
 
 local q_default
 
-function gsl.integ(f, a, b, epsabs, epsrel)
+function num.integ(f, a, b, epsabs, epsrel)
    epsabs = epsabs or 1e-8
    epsrel = epsrel or 1e-8
 

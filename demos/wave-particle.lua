@@ -6,6 +6,7 @@ local rsin, rcos, rsqrt, rexp = math.sin, math.cos, math.sqrt, math.exp
 local atan2, pi = math.atan2, math.pi
 local cexp, csqrt = complex.exp, complex.sqrt
 local real, imag = complex.real, complex.imag
+local sequence = iter.sequence
 
 local I = 1i
 
@@ -230,12 +231,12 @@ local coeffs
 local function plot_coeffs()
    local w = graph.window 'v..'
 
-   local ln = graph.ipath(gsl.sequence(function(i) return get_root(i+1), coeffs.data[2*i] end, 0, #roots-1))
+   local ln = graph.ipath(sequence(function(i) return get_root(i+1), coeffs.data[2*i] end, 0, #roots-1))
    local p = graph.plot()
    p:addline(ln)
    w:attach(p, 2)
 
-   ln = graph.ipath(gsl.sequence(function(i) return get_root(i+1), coeffs.data[2*i+1] end, 0, #roots-1))
+   ln = graph.ipath(sequence(function(i) return get_root(i+1), coeffs.data[2*i+1] end, 0, #roots-1))
    local p = graph.plot()
    p:addline(ln)
    w:attach(p, 1)
@@ -286,8 +287,8 @@ local function state_plot()
    for i=0, n-1 do
       local e = get_root(i+1)
 
-      local sqr = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i] end, 0, p-1)
-      local sqi = gsl.sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i+1] end, 0, p-1)
+      local sqr = sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i] end, 0, p-1)
+      local sqi = sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i+1] end, 0, p-1)
 
       print('Energy:', e)
 
@@ -306,7 +307,7 @@ local function anim(pcs)
    for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
       pcs:clear()
-      local ln = graph.ipath(gsl.sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
+      local ln = graph.ipath(sequence(function(i) return xsmp(i), (y.data[2*i]^2 + y.data[2*i+1]^2) end, 0, p-1))
       pcs:add(ln, col)
       pcs:flush()
    end

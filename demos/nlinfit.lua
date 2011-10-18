@@ -28,12 +28,12 @@ local function demo1()
 
    local xref = matrix.vec {5, 0.1, 1}
 
-   local r = gsl.rng()
+   local r = num.rng()
    r:set(0)
 
-   yrf = matrix.new(n, 1, |i| model(xref, i-1) + gsl.rnd.gaussian(r, 0.1))
+   yrf = matrix.new(n, 1, |i| model(xref, i-1) + num.rnd.gaussian(r, 0.1))
 
-   local s = gsl.nlinfit {n= n, p= 3}
+   local s = num.nlinfit {n= n, p= 3}
 
    s:set(fdf, matrix.vec {1, 0, 0})
    print(s.x, s.chisq)
@@ -45,7 +45,7 @@ local function demo1()
    end
 
    local p = graph.plot('Non-linear fit example')
-   local pts = graph.ipath(gsl.sequence(function(i) return i-1, yrf[i] end, n))
+   local pts = graph.ipath(num.sequence(function(i) return i-1, yrf[i] end, n))
    local fitln = graph.fxline(function(t) return model(s.x, t) end, 0, n-1)
    p:addline(pts, 'blue', {{'marker', size=5}})
    p:addline(fitln)
@@ -59,7 +59,7 @@ local function demo2()
    local px = matrix.vec {1.55, -1.1, 12.5}
    local p0 = matrix.vec {2.5,  -1.5, 5.3}
    local xs = |i| (i-1)/n
-   local r = gsl.rng()
+   local r = num.rng()
 
    local fmodel = function(p, t, J)
 		     local e, s = exp(p[2] * t), sin(p[3] * t)
@@ -71,7 +71,7 @@ local function demo2()
 		     return p[1] * e * s
 		  end
 
-   local y = matrix.new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + gsl.rnd.gaussian(r, 0.1)))
+   local y = matrix.new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + num.rnd.gaussian(r, 0.1)))
    local x = matrix.new(n, 1, |i,j| xs(i))
 
    local function fdf(p, f, J)
@@ -84,7 +84,7 @@ local function demo2()
    local pl = graph.plot('Non-linear fit / A * exp(a t) sin(w t)') 
    pl:addline(graph.xyline(x, y), 'blue', {{'marker', size= 5, mark="triangle"}})
 
-   local s = gsl.nlinfit {n= n, p= #p0}
+   local s = num.nlinfit {n= n, p= #p0}
 
    s:set(fdf, p0)
    print(s.x, s.chisq)

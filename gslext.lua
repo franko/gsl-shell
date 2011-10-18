@@ -8,8 +8,8 @@ require('fft-init')
 require('graph-init')
 require('import')
 
-gsl.linfit  = require 'linfit'
-gsl.bspline = require 'bspline'
+num.linfit  = require 'linfit'
+num.bspline = require 'bspline'
 
 local demomod
 

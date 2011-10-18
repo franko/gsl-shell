@@ -1,5 +1,6 @@
 use 'math'
-use 'gsl'
+use 'iter'
+use 'num'
 
 function demo1()
    local x0, x1, n = 0, 12.5, 32

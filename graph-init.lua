@@ -31,11 +31,11 @@ end
 
 function graph.fxline(f, xi, xs, n)
    n = n and n or 512
-   return graph.ipath(gsl.sample(f, xi, xs, n))
+   return graph.ipath(iter.sample(f, xi, xs, n))
 end
 
 function graph.filine(f, a, b)
-   return graph.ipath(gsl.isample(f, a, b))
+   return graph.ipath(iter.isample(f, a, b))
 end
 
 function graph.xyline(x, y)
@@ -49,7 +49,7 @@ end
 function graph.fxplot(f, xi, xs, color, n)
    n = n and n or 512
    local p = graph.plot()
-   p:addline(graph.ipathp(gsl.sample(f, xi, xs, n)), color)
+   p:addline(graph.ipathp(iter.sample(f, xi, xs, n)), color)
    p:show()
    return p
 end
@@ -57,7 +57,7 @@ end
 function graph.fiplot(f, a, b, color)
    if not b then a, b, color = 1, a, b end
    local p = graph.plot()
-   p:addline(graph.ipathp(gsl.isample(f, a, b)), color)
+   p:addline(graph.ipathp(iter.isample(f, a, b)), color)
    p:show()
    return p
 end

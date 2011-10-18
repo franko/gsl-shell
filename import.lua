@@ -1,7 +1,7 @@
 
 local _G, rawget, rawset = _G, rawget, rawset
 
-local modules_alias = {stdlib= {'math', 'matrix', 'gsl', 'graph'}}
+local modules_alias = {stdlib= {'math', 'matrix', 'iter', 'num', 'graph'}}
 
 local function new_env(self_hook) 
    local lookup_modules = {}

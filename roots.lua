@@ -151,7 +151,7 @@ end
 local function solver_interval_solve(s, x0, x1, roots)
    local f = s.f
    s.roots = roots or {}
-   s.rng = s.rng or gsl.rng()
+   s.rng = s.rng or num.rng()
    interval_roots(s, x0, f(x0), x1, f(x1))
    if f(x1) == 0 then solver_add_root(s, x1) end
    return s.roots

@@ -1,6 +1,6 @@
 use 'math'
 
-local qag = gsl.quad_prepare({methdo='qag', limit=64, order=21})
+local qag = num.quad_prepare({methdo='qag', limit=64, order=21})
 
 local epsabs, epsrel = 1e-6, 0.01
 
@@ -15,7 +15,7 @@ end
 
 local function demo1()
    local J4i = bessel_gen(4, qag)
-   local J4r = |x| gsl.besselJ(4, x)
+   local J4r = |x| num.besselJ(4, x)
 
    local p = graph.plot('J4 Bessel function / numerical integration')
    p:addline(graph.fxline(J4i, 0, 30*pi), 'red')

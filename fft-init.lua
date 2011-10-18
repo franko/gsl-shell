@@ -152,7 +152,7 @@ local function get_hc_block(ft, ip)
    return b, data, stride
 end
 
-function gsl.fft(x, ip)
+function num.fft(x, ip)
    local n = x.size1
    local b, data, stride = get_matrix_block(x, ip)
    if is_two_power(n) then
@@ -166,7 +166,7 @@ function gsl.fft(x, ip)
    end      
 end
 
-function gsl.fftinv(ft, ip)
+function num.fftinv(ft, ip)
    local n = ft.size
    local b, data, stride = get_hc_block(ft, ip)
    if is_two_power(n) then

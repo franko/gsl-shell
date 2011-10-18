@@ -5,7 +5,7 @@ local cgsl = require 'cgsl'
 local sqrt, abs = math.sqrt, math.abs
 local format = string.format
 
-local check     = require 'check'
+local check = require 'check'
 local is_integer, is_real = check.is_integer, check.is_real
 
 local lua_index_style = config.lua_index_style
@@ -932,3 +932,5 @@ matrix.tr = function(a)
 
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
+
+package.loaded['matrix'] = matrix

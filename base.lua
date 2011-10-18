@@ -1,7 +1,7 @@
 
  -- base.lua
  -- 
- -- Copyright (C) 2009 Francesco Abbate
+ -- Copyright (C) 2009-2011 Francesco Abbate
  -- 
  -- This program is free software; you can redistribute it and/or modify
  -- it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 local cat = table.concat
 local fmt = string.format
+local gsl_type = num.type
 
 config = {
    lua_index_style = true,
@@ -63,8 +64,8 @@ tos = function (t, maxdepth)
    elseif tp == 'userdata' then
       local ftostr = getmetatable(t).__tostring
       if ftostr then return ftostr(t) else
-	 if gsl.type then
-	    return fmt('<%s: %p>', gsl.type(t), t)
+	 if gsl_type then
+	    return fmt('<%s: %p>', gsl_type(t), t)
 	 else
 	    return fmt('<userdata: %p>', t)
 	 end
@@ -86,11 +87,8 @@ end
 echo = print
 print = myprint
 
-function gsl.sequence(f, a, b)
+local function sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
-   if not b or type(b) ~= 'number' then 
-      error 'argument #2 should be an integer number' 
-   end
    local k = a
    return function()
 	     if k <= b then
@@ -102,36 +100,42 @@ end
 
 -- take the function f and return an iterator that gives the couple (x, f(x))
 -- for x going from 'xi' to 'xs' with n sampling points
-function gsl.sample(f, xi, xs, n)
+local function sample(f, xi, xs, n)
    local c = (xs-xi)/n
-   return gsl.sequence(function(k)
-			  local x = xi+k*c
-			  return x, f(x)
-		       end, 0, n)
+   local k = 0
+   return function()
+	     if k <= n then
+		local x = xi+k*c
+		k = k+1
+		return x, f(x)
+	     end
+	  end
 end
 
-function gsl.ilist(f, a, b)
+local function ilist(f, a, b)
+   a, b = (b and a or 1), (b and b or a)
    local ls = {}
-   local i = 1
-   for x in gsl.sequence(f, a, b) do 
-      ls[i] = x
-      i = i+1
-   end
+   for i = a, b do ls[i] = f(i) end
    return ls
 end
 
-function gsl.isample(f, a, b)
-   return gsl.sequence(function(i) return i, f(i) end, a, b)
+local function isample(f, a, b)
+   return sequence(function(i) return i, f(i) end, a, b)
 end
 
-function gsl.isum(f, a, b)
+local function isum(f, a, b)
    a, b = (b and a or 1), (b and b or a)
-   if not b or type(b) ~= 'number' then 
-      error 'argument #2 should be an integer number' 
-   end
    local s = 0
-   for k = a, b do
-      s = s + f(k)
-   end
+   for k = a, b do s = s + f(k) end
    return s
 end
+
+iter = {
+   sequence = sequence,
+   sample = sample,
+   ilist = ilist,
+   isample = isample,
+   isum = isum,
+}
+
+package.loaded['iter'] = iter

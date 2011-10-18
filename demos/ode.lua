@@ -27,7 +27,7 @@ function f_vanderpol_gen(mu)
 end
 
 local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
-   local s = gsl.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
+   local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
    local evol = s.evolve
    local ln = graph.path(x0, y0)
    s:init(t0, h0, f, x0, y0)
@@ -91,7 +91,7 @@ local function demo2()
    local t0, t1, h = 0, 50, 0.01
    local y0 = {1, 0}
 
-   local s = gsl.ode {N= 2, eps_abs= 1e-8}
+   local s = num.ode {N= 2, eps_abs= 1e-8}
    s:init(t0, h, f, y0[1], y0[2])
 
    return modeplot(s, f, t0, y0, t1)
@@ -106,7 +106,7 @@ end
 local function demo3()
    local damp_f = 0.04
    local x, y = 1, 0
-   local s = gsl.ode {N= 2, eps_abs= 1e-8}
+   local s = num.ode {N= 2, eps_abs= 1e-8}
    local f  = f_sincos_damp(damp_f)
    local t0, t1, h0, hsamp = 0, 100, 1e-6, 0.5
    s:init(t0, h0, f, x, y)
