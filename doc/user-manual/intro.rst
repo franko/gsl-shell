@@ -33,7 +33,7 @@ Integer numbers does not have a special rapresentation and are treated just like
 In order to define a matrix you have basically two options, you can enumerate all the values or you can provide a function that generate the terms of the matrix.
 In the first case you should use the :func:`matrix.def` like in the following example::
 
-  import 'math'
+  use 'math'
 
   th = pi/8 -- define the angle "th"
 
@@ -44,7 +44,8 @@ You can remark that we have used the :func:`matrix.def` function without parenth
 The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing paretheses.
 In this case we have therefore omitted the parantheses because :func:`matrix.def` has a single argument that is a literal table.
 
-Note that in our snippet of code we have used the function :func:`import` to make the function available in the module :mod:`math` available. If you don't use :func:`import` the function :func:`math.sin` and :func:`math.cos` should be accessed by specifying the explicitely the ``math`` namespace.
+Note that in our snippet of code we have used the function :func:`use` to make the function available in the module :mod:`math` available.
+If you don't use :func:`use` the function :func:`math.sin` and :func:`math.cos` should be accessed by specifying the explicitely the ``math`` namespace.
 
 You can define also a column matrix using the function :func:`matrix.vec` like follows::
 

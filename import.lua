@@ -53,13 +53,8 @@ function restore_env()
 end
 
 function use(modname)
+   local level = debug.getinfo(3, "") and 2 or 0
    local env = new_env('use')
    env.use(modname)
-   setfenv(2, env)
-end
-
-function import(modname)
-   local env = new_env('import')
-   env.import(modname)
-   setfenv(0, env)
+   setfenv(level, env)
 end
