@@ -1,7 +1,7 @@
 
-local ffi  = require 'ffi'
-local cgsl = require 'cgsl'
-local bit  = require 'bit'
+local ffi = require 'ffi'
+local bit = require 'bit'
+local gsl = require 'gsl'
 
 local gsl_check = require 'gsl-check'
 
@@ -99,8 +99,8 @@ local cache_n = {}
 local cache_r = {}
 
 local function res_allocator(name)
-   local alloc = cgsl['gsl_fft_' .. name .. '_alloc']
-   local free  = cgsl['gsl_fft_' .. name .. '_free']
+   local alloc = gsl['gsl_fft_' .. name .. '_alloc']
+   local free  = gsl['gsl_fft_' .. name .. '_free']
    return function(n)
 	     return ffi.gc(alloc(n), free)
 	  end
@@ -156,12 +156,12 @@ function num.fft(x, ip)
    local n = x.size1
    local b, data, stride = get_matrix_block(x, ip)
    if is_two_power(n) then
-      gsl_check(cgsl.gsl_fft_real_radix2_transform(data, stride, n))
+      gsl_check(gsl.gsl_fft_real_radix2_transform(data, stride, n))
       return fft_radix2_hc(n, stride, data, b)
    else
       local wt = get_resource('real_wavetable', n)
       local ws = get_resource('real_workspace', n)
-      gsl_check(cgsl.gsl_fft_real_transform(data, stride, n, wt, ws))
+      gsl_check(gsl.gsl_fft_real_transform(data, stride, n, wt, ws))
       return fft_hc(n, stride, data, b)
    end      
 end
@@ -170,11 +170,11 @@ function num.fftinv(ft, ip)
    local n = ft.size
    local b, data, stride = get_hc_block(ft, ip)
    if is_two_power(n) then
-      gsl_check(cgsl.gsl_fft_halfcomplex_radix2_inverse(data, stride, n))
+      gsl_check(gsl.gsl_fft_halfcomplex_radix2_inverse(data, stride, n))
    else
       local wt = get_resource('halfcomplex_wavetable', n)
       local ws = get_resource('real_workspace', n)
-      gsl_check(cgsl.gsl_fft_halfcomplex_inverse(data, stride, n, wt, ws))
+      gsl_check(gsl.gsl_fft_halfcomplex_inverse(data, stride, n, wt, ws))
    end
    return gsl_matrix(n, 1, stride, data, b, 1)
 end

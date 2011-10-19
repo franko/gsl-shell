@@ -56,7 +56,7 @@ local function demo2()
 
    ft = fft(sq, true)
 
-   pf:add(ibars(isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
+   pf:add(ibars(iter.isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
 
    for k=ncut, n - ncut do ft[k] = 0 end
    fftinv(ft, true)
@@ -82,7 +82,7 @@ local function demo3()
    local ft = fft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| complex.abs(ft[k]), 0, 60))
+   bars = ibars(iter.isample(|k| complex.abs(ft[k]), 0, 60))
    fftplot:add(bars, 'black')
    fftplot:show()
 

@@ -1622,6 +1622,6 @@ ffi.cdef[[
 			    gsl_multifit_linear_workspace * work);
 ]]
 
-local cgsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
+local gsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
 
-return cgsl
+return gsl

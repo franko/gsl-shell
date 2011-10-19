@@ -1,6 +1,6 @@
 
 local ffi  = require 'ffi'
-local cgsl = require 'cgsl'
+local gsl = require 'gsl'
 
 local sqrt, abs = math.sqrt, math.abs
 local format = string.format
@@ -122,14 +122,14 @@ end
 local function matrix_copy(a)
    local n1, n2 = matrix_dim(a)
    local b = matrix_alloc(n1, n2)
-   cgsl.gsl_matrix_memcpy(b, a)
+   gsl.gsl_matrix_memcpy(b, a)
    return b
 end
 
 local function matrix_complex_copy(a)
    local n1, n2 = matrix_dim(a)
    local b = matrix_calloc(n1, n2)
-   cgsl.gsl_matrix_complex_memcpy(b, a)
+   gsl.gsl_matrix_complex_memcpy(b, a)
    return b
 end
 
@@ -160,22 +160,22 @@ end
 
 local function matrix_get(m, i, j)
    i, j = check_indices(m, i, j)
-   return cgsl.gsl_matrix_get(m, i, j)
+   return gsl.gsl_matrix_get(m, i, j)
 end
 
 local function matrix_complex_get(m, i, j)
    i, j = check_indices(m, i, j)
-   return cgsl.gsl_matrix_complex_get(m, i, j)
+   return gsl.gsl_matrix_complex_get(m, i, j)
 end
 
 local function matrix_set(m, i, j, v)
    i, j = check_indices(m, i, j)
-   return cgsl.gsl_matrix_set(m, i, j, v)
+   return gsl.gsl_matrix_set(m, i, j, v)
 end
 
 local function matrix_complex_set(m, i, j, v)
    i, j = check_indices(m, i, j)
-   return cgsl.gsl_matrix_complex_set(m, i, j, v)
+   return gsl.gsl_matrix_complex_set(m, i, j, v)
 end
 
 local function complex_conj(z)
@@ -466,16 +466,16 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 		if ra and rb then
 		   local n1, n2 = a.size1, b.size2
 		   local c = matrix_new(n1, n2)
-		   local NT = cgsl.CblasNoTrans
-		   gsl_check(cgsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
+		   local NT = gsl.CblasNoTrans
+		   gsl_check(gsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
 		   return c
 		else
 		   if ra then a = mat_complex_of_real(a) end
 		   if rb then b = mat_complex_of_real(b) end
 		   local n1, n2 = a.size1, b.size2
 		   local c = matrix_cnew(n1, n2)
-		   local NT = cgsl.CblasNoTrans
-		   gsl_check(cgsl.gsl_blas_zgemm(NT, NT, 1, a, b, 1, c))
+		   local NT = gsl.CblasNoTrans
+		   gsl_check(gsl.gsl_blas_zgemm(NT, NT, 1, a, b, 1, c))
 		   return c
 		end
 	     end
@@ -533,10 +533,10 @@ local complex_mt = {
 
    __pow = function(z,n) 
 	      if is_real(n) then
-		 return cgsl.gsl_complex_pow_real (z, n)
+		 return gsl.gsl_complex_pow_real (z, n)
 	      else
 		 if is_real(z) then z = gsl_complex(z,0) end
-		 return cgsl.gsl_complex_pow (z, n)
+		 return gsl.gsl_complex_pow (z, n)
 	      end
 	   end,
 }
@@ -754,15 +754,15 @@ local matrix_complex_mt = {
 ffi.metatype(gsl_matrix_complex, matrix_complex_mt)
 
 local function c_function_lookup(name)
-   return cgsl['gsl_complex_' .. name]
+   return gsl['gsl_complex_' .. name]
 end
 
 local function c_invtrig_lookup(name)
-   return  cgsl['gsl_complex_arc' .. name]
+   return  gsl['gsl_complex_arc' .. name]
 end
 
 local function csqrt(x)
-   return (is_real(x) and x >= 0) and sqrt(x) or cgsl.gsl_complex_sqrt(x)
+   return (is_real(x) and x >= 0) and sqrt(x) or gsl.gsl_complex_sqrt(x)
 end
 
 local gsl_function_list = {
@@ -819,44 +819,44 @@ local signum = ffi.new('int[1]')
 local function matrix_inv(m)
    local n = m.size1
    local lu = matrix_copy(m)
-   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
-   gsl_check(cgsl.gsl_linalg_LU_decomp(lu, p, signum))
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
    local mi = matrix_alloc(n, n)
-   gsl_check(cgsl.gsl_linalg_LU_invert(lu, p, mi))
+   gsl_check(gsl.gsl_linalg_LU_invert(lu, p, mi))
    return mi
 end
 
 local function matrix_solve(m, b)
    local n = m.size1
    local lu = matrix_copy(m)
-   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
-   gsl_check(cgsl.gsl_linalg_LU_decomp(lu, p, signum))
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
    local x = matrix_alloc(n, 1)
-   local xv = cgsl.gsl_matrix_column(x, 0)
-   local bv = cgsl.gsl_matrix_column(b, 0)
-   gsl_check(cgsl.gsl_linalg_LU_solve(lu, p, bv, xv))
+   local xv = gsl.gsl_matrix_column(x, 0)
+   local bv = gsl.gsl_matrix_column(b, 0)
+   gsl_check(gsl.gsl_linalg_LU_solve(lu, p, bv, xv))
    return x
 end
 
 local function matrix_complex_inv(m)
    local n = m.size1
    local lu = matrix_complex_copy(m)
-   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
-   gsl_check(cgsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
    local mi = matrix_calloc(n, n)
-   gsl_check(cgsl.gsl_linalg_complex_LU_invert(lu, p, mi))
+   gsl_check(gsl.gsl_linalg_complex_LU_invert(lu, p, mi))
    return mi
 end
 
 local function matrix_complex_solve(m, b)
    local n = m.size1
    local lu = matrix_complex_copy(m)
-   local p = ffi.gc(cgsl.gsl_permutation_alloc(n), cgsl.gsl_permutation_free)
-   gsl_check(cgsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
    local x = matrix_calloc(n, 1)
-   local xv = cgsl.gsl_matrix_complex_column(x, 0)
-   local bv = cgsl.gsl_matrix_complex_column(b, 0)
-   gsl_check(cgsl.gsl_linalg_complex_LU_solve(lu, p, bv, xv))
+   local xv = gsl.gsl_matrix_complex_column(x, 0)
+   local bv = gsl.gsl_matrix_complex_column(b, 0)
+   gsl_check(gsl.gsl_linalg_complex_LU_solve(lu, p, bv, xv))
    return x
 end
 
@@ -881,15 +881,15 @@ function matrix.solve(m, b)
 end
 
 local function matrix_sv_decomp(a, v, s, w)
-   local sv = cgsl.gsl_matrix_column(s, 0)
+   local sv = gsl.gsl_matrix_column(s, 0)
    local w
    if w then
-      wv = cgsl.gsl_matrix_column(w, 0)
+      wv = gsl.gsl_matrix_column(w, 0)
    else
       local m, n = matrix_dim(a)
-      wv = ffi.gc(cgsl.gsl_vector_alloc(n), cgsl.gsl_vector_free)
+      wv = ffi.gc(gsl.gsl_vector_alloc(n), gsl.gsl_vector_free)
    end
-   gsl_check(cgsl.gsl_linalg_SV_decomp (a, v, sv, wv))
+   gsl_check(gsl.gsl_linalg_SV_decomp (a, v, sv, wv))
 end
 
 function matrix.svd(a)
@@ -897,9 +897,9 @@ function matrix.svd(a)
    local u = matrix_copy(a)
    local v = matrix_alloc(n, n)
    local s = matrix_new(n, n)
-   local sv = cgsl.gsl_matrix_diagonal(s)
-   local wv = ffi.gc(cgsl.gsl_vector_alloc(n), cgsl.gsl_vector_free)
-   gsl_check(cgsl.gsl_linalg_SV_decomp (u, v, sv, wv))
+   local sv = gsl.gsl_matrix_diagonal(s)
+   local wv = ffi.gc(gsl.gsl_vector_alloc(n), gsl.gsl_vector_free)
+   gsl_check(gsl.gsl_linalg_SV_decomp (u, v, sv, wv))
    return u, s, v
 end
 
