@@ -59,7 +59,6 @@ luaopen_gsl (lua_State *L)
 
   luaL_register (L, NULL, gs_type_functions);
 
-  randist_register (L);
   pdf_register (L);
   cdf_register (L);
   sf_register (L);
@@ -67,6 +66,7 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 
   rng_register (L);
+  randist_register (L);
 
   return 1;
 }

@@ -150,7 +150,5 @@ randist_poisson (lua_State *L)
 void
 randist_register (lua_State *L)
 {
-  lua_newtable (L);
-  luaL_register (L, NULL, randist_functions);
-  lua_setfield (L, -2, "rnd");
+  luaL_register (L, "rnd", randist_functions);
 }
