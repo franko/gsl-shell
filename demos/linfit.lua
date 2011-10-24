@@ -2,7 +2,7 @@ use 'math'
 use 'iter'
 use 'num'
 
-function demo1()
+local function demo1()
    local x0, x1, n = 0, 12.5, 32
    local a, b = 0.55, -2.4
    local xsmp = |i| (i-1)/(n-1) * x1
@@ -27,7 +27,7 @@ function demo1()
    return p
 end
 
-function demo2()
+local function demo2()
    local order, x0, x1, n = 3, 0.0, 24.0, 96
    local bess = |x| besselJ(order, x)
    local xsmp = |i| x0 + (i-1)/(n-1) * (x1 - x0)
@@ -61,5 +61,15 @@ function demo2()
    return p
 end
 
-echo 'demo1() - examples of linear regression of (x, y) data'
-echo 'demo2() - examples of linear regression based on legendre polynomials'
+return {'Linear Fit', {
+  {
+     name= 'linfit1',
+     f = demo1,
+     description = 'Simple linear regression example'
+  },
+  {
+     name= 'linfit2',
+     f = demo2,
+     description = 'Complex example of a linear fit based on legendre polynomials'
+  },
+}}
