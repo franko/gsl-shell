@@ -7,7 +7,11 @@
 GSL Shell standard functions
 ============================
 
-GSL Shell provides some simple functions to perform some tasks that are often useful. The utilisation of these functions allows to write more simple and compact code and to improve the readability.
+GSL Shell provides some simple functions to perform some common tasks related to iterators.
+The utilisation of these functions allows to write more simple and compact code and to improve the readability.
+The functions describes below are available in the module :mod:`iter`.
+
+.. module:: iter
 
 .. function:: sequence(f, a, b)
               sequence(f, b)

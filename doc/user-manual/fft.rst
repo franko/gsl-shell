@@ -2,7 +2,7 @@
 
 .. include:: <isogrk1.txt>
 
-.. currentmodule:: gsl
+.. currentmodule:: num
 
 Fast Fourier Transform
 ==============================
