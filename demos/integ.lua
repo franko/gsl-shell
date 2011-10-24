@@ -15,7 +15,7 @@ end
 
 local function demo1()
    local J4i = bessel_gen(4, qag)
-   local J4r = |x| num.besselJ(4, x)
+   local J4r = |x| sf.besselJ(4, x)
 
    local p = graph.plot('J4 Bessel function / numerical integration')
    p:addline(graph.fxline(J4i, 0, 30*pi), 'red')

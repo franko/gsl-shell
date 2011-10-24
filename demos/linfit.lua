@@ -29,15 +29,15 @@ end
 
 local function demo2()
    local order, x0, x1, n = 3, 0.0, 24.0, 96
-   local bess = |x| besselJ(order, x)
+   local bess = |x| sf.besselJ(order, x)
    local xsmp = |i| x0 + (i-1)/(n-1) * (x1 - x0)
 
    local x = matrix.new(n, 1, xsmp)
-   local y = matrix.new(n, 1, |i| besselJ(order, xsmp(i)))
+   local y = matrix.new(n, 1, |i| sf.besselJ(order, xsmp(i)))
 
    local xnorm = |x| (2*x - x0 - x1) / (x1-x0)
 
-   model = function(k, x) return legendreP(k, xnorm(x)) end
+   model = function(k, x) return sf.legendreP(k, xnorm(x)) end
 
    legmodel_order = 18
 
