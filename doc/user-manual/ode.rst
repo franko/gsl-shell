@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. currentmodule:: num
+
 Ordinary Differential Equations
 ===============================
 

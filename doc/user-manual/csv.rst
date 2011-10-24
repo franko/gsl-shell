@@ -15,18 +15,18 @@ The module ``csv`` offer a few useful functions to read data files in 'csv' form
 
    Here an example of utilisation::
 
-      require 'csv'
+      csv = require 'csv'
 
       -- load some data and save the results is a table
       t = csv.read('examples/data/sige-sims-prof.csv')
 
       -- if the data contains only numbers it can be easily converted
       -- intro matrix form
-      m = matrix(t)
+      m = matrix.def(t)
 
       -- using the matrix m is very easy to plot the data
-      p = plot("SiGe SIMS profile")
-      p:addline(xyline(m:col(1), m:col(2)), 'blue')
+      p = graph.plot("SiGe SIMS profile")
+      p:addline(graph.xyline(m:col(1), m:col(2)), 'blue')
       p:show()
 
    Please note the function returns a table, not a matrix. If the table is in rectangular form and it does contains only number it can be easily converted into a matrix using the function :func:`matrix` as shown in the example above.

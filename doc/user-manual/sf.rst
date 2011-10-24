@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. currentmodule:: gsl
+
 .. _special-functions:
 
 Special functions

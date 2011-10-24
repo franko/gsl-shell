@@ -17,18 +17,34 @@ By using and combining together these software components GSL Shell gives the op
 First steps
 -----------
 
-The most basic usage of GSL Shell is just like a calculator: you can type any expression and GSL Shell will print the results. GSL Shell works with few fundamentals types:
+The most basic usage of GSL Shell is just like a calculator: you can type any expression and GSL Shell will print the results.
+GSL Shell is designed to work mainly with floating point numbers stored internally in double precision.
+Sometimes we will refer to these kind of number as *real* number in opposition to *complex* number.
 
-- real and complex numbers
-- real and complex matrices
-- tables
+For integer numbers GSL Shell differs from many other programming environment because it does not have a distinct type to represent them.
+In other words integer numbers are treated just like *real* number with all the implications that follows.
 
-The tables are native Lua objects and are very useful for general purpose programming because they can store any kind of data or structures.
-For the other side the matrix data type can store only real or complex numbers and are useful for mathematical computations.
-In general all the GSL functions operate on real or complex matrix because of the nature of the GSL library itself.
+When you need to define a complex number you can use a native syntax like in the following example::
 
-Talking about number instead it is important to know that they are always represented as double precision real or complex numbers.
-Integer numbers does not have a special rapresentation and are treated just like real numbers.
+   x = 3 + 4i
+
+The rule is that when you write a number followed by an 'i' it will be considered as a pure imaginary number.
+The imaginary number will be accepted only if the 'i' follows immediately the number without any interleving spaces.
+Note also that if you write 'i' alone this will be not interpreted as the imaginary unit but as the variable 'i'.
+The imaginary unit can be declared by writing '1i' because the '1' at the beginning force the intepreter to consider it like a number.
+
+All the functions in the :mod:`math` like exp, sin, cos etc. works on *real* numbers.
+If you want to have operations that operates on complex numbers you should use the functions defined in the :mod:`complex` module.
+
+The other important mathematical types in GSL Shell are matrices, either of complex or real numbers.
+In addition Lua offers a native type called "table".
+This latter is very useful for general purpose programming because  because it can store any kind of data or structures but you should be careful to not confuse Lua tables with matrices.
+You can work with both types as far as you understand the difference and use the appropriate functions to operate on them.
+
+Most of the GSL functions operate on real or complex matrix because of the nature of the GSL library itself.
+
+Working with matrices
+~~~~~~~~~~~~~~~~~~~~~
 
 In order to define a matrix you have basically two options, you can enumerate all the values or you can provide a function that generate the terms of the matrix.
 In the first case you should use the :func:`matrix.def` like in the following example::
@@ -90,7 +106,7 @@ An alternative compact writing could have been::
 
   m = matrix.new(8, 8, |n,k| k <= n and gsl.choose(n-1, k-1) or 0)
 
-where we have used again the short function notation and the Lua logical operators :keyword:`and` and :keyword:`or`.
+where we have used again the short function notation and the Lua logical operators ``and`` and ``or``.
 
 Matrix indexing
 ~~~~~~~~~~~~~~~
@@ -129,11 +145,52 @@ The indexing method that we have explained above can be used not only for retrie
 This means that you can use double indexing to change an element of a matrix.
 If you use a simple indexing you can assign the content of a whole row all at once.
 
-Just a small not about efficiency. The double indexing method can be slow and should be probably avoided in the tight loop where the performance is important.
+Just a small note about efficiency.
+The double indexing method can be slow and should be probably avoided in the tight loop where the performance is important.
 In this case you should use the methods :meth:`~Matrix.get` and :meth:`~Matrix.set`.
 Another opportunity is to adress directly matrix data by using its ``data`` field but this requires a particular attention since this kind of operations are not safe and you could easily crash the application.
 
 You can find more details in the chapter about :ref:`Matrix Direct Access <matrix-direct-access>`.
+
+Plotting functions
+~~~~~~~~~~~~~~~~~~
+
+The plotting functions lives in the ``graph`` module. The more common and useful functions are probably :func:`graph.fxplot` and :func:`graph.fxline`.
+The first one can used to create a plot while the second one just create a graphical object of type line.
+A graphical object is visible only when it is added into a plot.
+The idea is that you can create the objects as needed and add them of the plot as it is more appropriate.
+
+Here a simple example to plot some simple functions::
+
+  import 'math'
+
+  -- we create a plot of a simple function
+  p = graph.fxplot(|x| exp(-0.1*x) * sin(x), 0, 8*pi)
+
+  -- we create a graphical object that describe second function
+  -- and we add it to the previous plot
+  ln = graph.fxline(|x| exp(-0.1*x) * cos(x), 0, 8*pi)
+  p:addline(ln, 'blue')
+
+  p.title = 'Damped sine and cosine'
+
+Let us explain the example step by step.
+To use the function :func:`graph.fxplot` we pass three arguments: the function that we want to plot and the minimum and maximum value of the abscissa.
+The function will therefore produce a plot of the function y=f(x) for x that span the given interval.
+There is actually some magic that we have used to define the function on the fly.
+We have used the :ref:`short function syntax <short-func-notation>` that let us define a function using the syntax ``|x| f(x)`` or in the case of multiple variable ``|x,y| f(x,y)``.
+The short function syntax is very convenient to express simple function with a compact syntax.
+
+The second function :func:`graph.fxline` operates in a similar way but it does create a graphical object instead of a plot.
+Then in the following instruction we add the second line in the plot by using the :meth:`~Plot.addline` method.
+
+We can also set the title of the plot by using the :attr:`~Plot.title` property of the plot.
+
+Here the plot that we obtain with the snippet given above:
+
+.. figure:: plot-intro-example.png
+
+You can refer to the :ref:`Graphics chapter <graphics-chapter>` for more details about the plotting functions.
 
 
 Functions
@@ -154,7 +211,7 @@ Please note that we have used a "local" variable, ``n`` that is visible only wit
 This is very convenient because in this way the variable ``n`` will not interfere with the global variables.
 
 GSL Shell also support *closures* like many other advanced programming languages like Lisp, Scheme or ML languages.
-A closure is a function that use some variables that lives in the scope of an enclosing function and can be used outside of the scope of these variables.
+A closure is a function that refers to some local variables that lives in the scope of the calling function.
 
 Here an examples of a closure the define a "counter"::
 

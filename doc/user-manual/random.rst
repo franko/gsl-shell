@@ -2,6 +2,8 @@
 
 .. include:: <isogrk1.txt>
 
+.. currentmodule:: num
+
 Random Numbers
 ==============
 

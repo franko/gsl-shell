@@ -1,11 +1,17 @@
 .. highlight:: lua
 
+.. currentmodule:: gsl
+
 .. _lua_base:
 
 GSL Shell standard functions
 ============================
 
-GSL Shell provides some simple functions to perform some tasks that are often useful. The utilisation of these functions allows to write more simple and compact code and to improve the readability.
+GSL Shell provides some simple functions to perform some common tasks related to iterators.
+The utilisation of these functions allows to write more simple and compact code and to improve the readability.
+The functions describes below are available in the module :mod:`iter`.
+
+.. module:: iter
 
 .. function:: sequence(f, a, b)
               sequence(f, b)
@@ -39,7 +45,14 @@ GSL Shell provides some simple functions to perform some tasks that are often us
 .. function:: ilist(f, a, b)
               ilist(f, b)
 
-   Returns a list with the elements ``f(i)`` where ``i`` is an integer going from a to b. In the second form the sequence will start from one.
+   Returns a list with the elements ``f(i)`` where ``i`` is an integer going from a to b.
+   In the second form the sequence will start from one.
+
+.. function:: isum(f, a, b)
+              isum(f, b)
+
+   Returns the sum of ``f(i)`` for all integers ``i`` from a to b.
+   In the second form the sequence will start from one.
 
 
 

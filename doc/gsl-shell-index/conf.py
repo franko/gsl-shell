@@ -217,4 +217,5 @@ man_pages = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'file:///home/franko/sviluppo/gsl-shell/doc/user-manual/_build/html/': None}
+intersphinx_mapping = {'gslshell': ('http://www.nongnu.org/gsl-shell', 'manual.inv')}
+

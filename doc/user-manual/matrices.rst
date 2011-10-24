@@ -38,28 +38,66 @@ where you have previously defined ``n`` to be a small integer number.
 Accessing Matrix Elements
 -------------------------
 
-To access an element of a matrix placed at the i-th row and the j-th column you can use the syntax ``m:get(i, j)`` where ``m`` is the matrix. You can also change the value with the following syntax ``m:set(i, j, x)`` to set the element to the value ``x``.
+To access an element of a matrix placed at the i-th row and the j-th column you can use the syntax ``m:get(i, j)`` where ``m`` is the matrix.
+You can also change the value with the following syntax ``m:set(i, j, x)`` to set the element to the value ``x``.
 
-In the GSL Shell's indexing convention the first row or column of a matrix in identified by the number one. This is the same indexing convention used in fortran and also in standard mathematical notation and is also coherent with the Lua indexing of a table.
+In the GSL Shell's indexing convention the first row or column of a matrix in identified by the number one.
+This is the same indexing convention used in fortran and also in standard mathematical notation and is also coherent with the Lua indexing of a table.
 
 In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in ``v[i]``.
-If the matrix has more than one column then th expression ``v[i]`` will return the row matrix that correspond to its i-th row.
-This syntax can be used also to assign a new value to the given element like we illustrate in the following example::
+You can therefore read or set a specific element of a vector using 
+simple indexing like we illustrate in the following example::
 
-  -- we define a vector, it is just a matrix with one column
-  v = matrix.vec {0, 0.2, 0.4, 7.6, 0.8, 1.0}
+  >>> -- we define a vector, it is just a matrix with one column
+  >>> v = matrix.vec {0, 0.2, 0.4, 7.6, 0.8, 1.0}
 
-  -- we can obtain the value of the 4th element with the syntax
-  v[4]
+  >>> v
+  [ 0   ]
+  [ 0.2 ]
+  [ 0.4 ]
+  [ 7.6 ]
+  [ 0.8 ]
+  [ 1   ]
 
-  -- but we can change also its value
-  v[4] = 0.6
+  >>> v[4]
+  7.6
 
-In the case you index a matrix with more then one column the row matrix that you will obtain will refer to the same underlying data of the original matrix.
+  >>> v[4] = 0
+
+  >>> v[4]
+  0
+
+In the case you index a matrix with more then one column you will obtain a row of the matrix but in column form.
+The resulting column matrix will refer to the same underlying data of the original matrix.
 Since the two matrices refer to the same data any change to the content of one matrix will affect both of them.
+
+Here some simple examples of matrix manipulations::
+
+   >>> m = matrix.def {{0.2, 4, -0.5}, {2, 0, 1.1}}
+
+   >>> m
+   [  0.2    4 -0.5 ]
+   [    2    0  1.1 ]
+
+   >>> m[1]
+   [  0.2 ]
+   [    4 ]
+   [ -0.5 ]
+
+   >>> -- we change one of the matrix element
+   >>> m[1][2] = -0.7
+
+   >>> m
+   [  0.2 -0.7 -0.5 ]
+   [    2    0  1.1 ]
+
 
 In general the aliasing between matrices can be useful in many circumstances to refer to an original matrix by using a submatrix.
 In case you really need a submatrix which is an independent copy of its parent matrix you can just use the :func:`matrix.copy` function to obtain a copy.
+
+You should have noticed that when you index a matrix with many column you obtain the row identifyied by the index but in column form.
+If you want to obtain a row in the form of a row matrix you can use the :meth:`~Matrix.row` method.
+In alternative you can also use the :meth:`~Matrix.slice` method that let you extract any submatrix of contiguous rows and columns.
 
 Matrix Dimensions
 ~~~~~~~~~~~~~~~~~
@@ -80,6 +118,10 @@ Matrix methods
 --------------
 
 .. class:: Matrix
+
+  .. method:: copy()
+
+     Return a copy of the matrix.
 
   .. method:: get(i, j)
      
@@ -161,7 +203,7 @@ All the functions described in this section have an equivalent function for comp
 
    Returns a copy of the matrix.
 
-.. function:: tr(m)
+.. function:: transpose(m)
 
    Return the transpose of the matrix.
 
@@ -198,7 +240,3 @@ All the functions described in this section have an equivalent function for comp
    indexes of the matrix. Note that this function have the same
    semantic of the :func:`new` function with the difference that :func:`fset`
    operate on a matrix that already exists instead of creating a new one.
-
-.. function:: null(a)
-
-   Set each element of the matrix ``a`` to zero.
