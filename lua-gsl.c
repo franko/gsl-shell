@@ -24,7 +24,7 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "random.h"
+#include "lua-rng.h"
 #include "randist.h"
 #include "pdf.h"
 #include "cdf.h"
@@ -59,13 +59,14 @@ luaopen_gsl (lua_State *L)
 
   luaL_register (L, NULL, gs_type_functions);
 
-  random_register (L);
   randist_register (L);
   pdf_register (L);
   cdf_register (L);
   sf_register (L);
 
   lua_pop (L, 1);
+
+  rng_register (L);
 
   return 1;
 }

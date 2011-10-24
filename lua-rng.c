@@ -25,40 +25,42 @@
 #include <gsl/gsl_rng.h>
 
 #include "gs-types.h"
-#include "random.h"
+#include "lua-rng.h"
 
-static int random_rng_free      (lua_State *L);
-static int random_rng_new       (lua_State *L);
-static int random_rng_type_list (lua_State *L);
+static int rng_free      (lua_State *L);
+static int rng_new       (lua_State *L);
+static int rng_type_list (lua_State *L);
 
-static int random_rng_get    (lua_State *L);
-static int random_rng_getint (lua_State *L);
-static int random_rng_set    (lua_State *L);
+static int rng_get    (lua_State *L);
+static int rng_getint (lua_State *L);
+static int rng_set    (lua_State *L);
 
-static const struct luaL_Reg random_functions[] = {
-  {"rng",      random_rng_new},
-  {"rng_list", random_rng_type_list},
+static gsl_rng *push_rng (lua_State *L, const gsl_rng_type *T);
+
+static const struct luaL_Reg rng_functions[] = {
+  {"new",      rng_new},
+  {"list",     rng_type_list},
   {NULL, NULL}
 };
 
 static const struct luaL_Reg rng_methods[] = {
-  {"get",       random_rng_get},
-  {"getint",    random_rng_getint},
-  {"set",       random_rng_set},
-  {"__gc",      random_rng_free},
+  {"get",       rng_get},
+  {"getint",    rng_getint},
+  {"set",       rng_set},
+  {"__gc",      rng_free},
   {NULL, NULL}
 };
 
 int
-random_rng_free (lua_State *L)
+rng_free (lua_State *L)
 {
-  struct boxed_rng *rng_udata = gs_check_userdata (L, 1, GS_RNG);
+  struct lua_rng *rng_udata = gs_check_userdata (L, 1, GS_RNG);
   gsl_rng_free (rng_udata->rng);
   return 0;
 }
 
 int
-random_rng_type_list (lua_State *L)
+rng_type_list (lua_State *L)
 {
   const gsl_rng_type **t, **t0;
   size_t k;
@@ -78,9 +80,9 @@ random_rng_type_list (lua_State *L)
 gsl_rng *
 push_rng (lua_State *L, const gsl_rng_type *T)
 {
-  struct boxed_rng *r;
+  struct lua_rng *r;
 
-  r = lua_newuserdata (L, sizeof(struct boxed_rng));
+  r = lua_newuserdata (L, sizeof(struct lua_rng));
   r->rng = gsl_rng_alloc (T);
 
   r->min = gsl_rng_min (r->rng);
@@ -92,7 +94,7 @@ push_rng (lua_State *L, const gsl_rng_type *T)
 }
 
 int
-random_rng_new (lua_State *L)
+rng_new (lua_State *L)
 {
   const char *reqname = luaL_optstring (L, 1, "mt19937");
   const gsl_rng_type **t, **t0;
@@ -114,27 +116,27 @@ random_rng_new (lua_State *L)
 }
 
 int
-random_rng_get (lua_State *L)
+rng_get (lua_State *L)
 {
-  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
+  struct lua_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   double v = gsl_rng_uniform (udata->rng);
   lua_pushnumber (L, v);
   return 1;
 }
 
 int
-random_rng_set (lua_State *L)
+rng_set (lua_State *L)
 {
-  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
+  struct lua_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   unsigned long int seed = luaL_checkinteger (L, 2);
   gsl_rng_set (udata->rng, seed);
   return 0;
 }
 
 int
-random_rng_getint (lua_State *L)
+rng_getint (lua_State *L)
 {
-  struct boxed_rng *udata = gs_check_userdata (L, 1, GS_RNG);
+  struct lua_rng *udata = gs_check_userdata (L, 1, GS_RNG);
   unsigned long int lmt = luaL_checkinteger (L, 2);
   unsigned long int genlmt = udata->max - udata->min;
   unsigned long int j;
@@ -153,7 +155,7 @@ random_rng_getint (lua_State *L)
 }
 
 void
-random_register (lua_State *L)
+rng_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_RNG));
   lua_pushvalue (L, -1);
@@ -162,5 +164,5 @@ random_register (lua_State *L)
   lua_pop (L, 1);
 
   /* gsl module registration */
-  luaL_register (L, NULL, random_functions);
+  luaL_register (L, "rng", rng_functions);
 }

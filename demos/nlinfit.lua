@@ -28,7 +28,7 @@ local function demo1()
 
    local xref = matrix.vec {5, 0.1, 1}
 
-   local r = num.rng()
+   local r = rng.new()
    r:set(0)
 
    yrf = matrix.new(n, 1, |i| model(xref, i-1) + num.rnd.gaussian(r, 0.1))
@@ -59,7 +59,7 @@ local function demo2()
    local px = matrix.vec {1.55, -1.1, 12.5}
    local p0 = matrix.vec {2.5,  -1.5, 5.3}
    local xs = |i| (i-1)/n
-   local r = num.rng()
+   local r = rng.new()
 
    local fmodel = function(p, t, J)
 		     local e, s = exp(p[2] * t), sin(p[3] * t)

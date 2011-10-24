@@ -27,7 +27,7 @@
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_sf_erf.h>
 
-#include "random.h"
+#include "lua-rng.h"
 #include "cdf.h"
 
 #define CONCAT2x(a,b) a ## _ ## b 

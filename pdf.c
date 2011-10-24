@@ -25,7 +25,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 
-#include "random.h"
+#include "lua-rng.h"
 #include "pdf.h"
 
 #define CONCAT2x(a,b) a ## _ ## b 

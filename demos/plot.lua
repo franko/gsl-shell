@@ -8,7 +8,7 @@ end
 
 local function demo2()
    local N = 800
-   local r = rng()
+   local r = rng.new()
    local f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
    local p = plot('Simulated Gaussian Distribution')
    local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))

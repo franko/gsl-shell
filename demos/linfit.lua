@@ -7,7 +7,7 @@ local function demo1()
    local a, b = 0.55, -2.4
    local xsmp = |i| (i-1)/(n-1) * x1
 
-   local r = rng()
+   local r = rng.new()
    local x = matrix.new(n, 1, xsmp)
    local y = matrix.new(n, 1, |i| a*xsmp(i) + b + rnd.gaussian(r, 0.4))
 

@@ -24,7 +24,7 @@ local function demo1()
    plt:show()
    local a = 15.0
    plt:limits(-a, -a, a, a)
-   local r = rng()
+   local r = rng.new()
    for k = 1, 50 do
       local x, y = (2*r:get()-1)*a, (2*r:get()-1)*a
       local d = rnd.gaussian(r, 0.015*a) + 0.03*a
@@ -68,7 +68,7 @@ end
 
 local function demo3()
    local p = plot 'box plot'
-   local r = rng()
+   local r = rng.new()
    r:set(os.time())
    p:addline(rect(-10, -10, 10, 10), 'blue', {{'dash', 7, 3}})
    p.sync = false
