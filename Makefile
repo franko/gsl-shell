@@ -41,8 +41,8 @@ endif
 
 SUBDIRS = $(LUADIR)
 
-C_SRC_FILES = gs-types.c lua-utils.c lua-rng.c randist.c \
-		pdf.c cdf.c sf.c lua-graph.c lua-gsl.c
+C_SRC_FILES = gs-types.c lua-utils.c lua-rng.c randist.c sf.c lua-graph.c \
+		lua-gsl.c
 
 LUA_BASE_FILES = base.lua matrix-init.lua misc.lua integ-init.lua fft-init.lua import.lua bspline.lua cgsl.lua check.lua csv.lua demo-init.lua gsl-check.lua gslext.lua linfit.lua roots.lua strict.lua template.lua time.lua
 

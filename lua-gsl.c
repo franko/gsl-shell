@@ -26,8 +26,6 @@
 #include "lua-utils.h"
 #include "lua-rng.h"
 #include "randist.h"
-#include "pdf.h"
-#include "cdf.h"
 #include "sf.h"
 
 #include "lua-graph.h"
@@ -56,11 +54,7 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 
   luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
-
   luaL_register (L, NULL, gs_type_functions);
-
-  pdf_register (L);
-  cdf_register (L);
 
   lua_pop (L, 1);
 

@@ -6,6 +6,7 @@ require('misc')
 require('integ-init')
 require('fft-init')
 require('graph-init')
+require('randist-init')
 require('import')
 
 num.linfit  = require 'linfit'
