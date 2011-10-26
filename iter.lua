@@ -20,11 +20,9 @@
 
 local cat = table.concat
 local fmt = string.format
-local gsl_type = num.type
+local gsl_type = gslsh.type
 
-config = {
-   lua_index_style = true,
-}
+gslsh.lua_index_style = true
 
 function math.divmod(n, p)
    local r = n % p
@@ -62,7 +60,8 @@ tos = function (t, maxdepth)
    elseif tp == 'string' then
       return fmt('%q', t)
    elseif tp == 'userdata' then
-      local ftostr = getmetatable(t).__tostring
+      local mt = getmetatable(t)
+      local ftostr = mt and mt.__tostring
       if ftostr then return ftostr(t) else
 	 if gsl_type then
 	    return fmt('<%s: %p>', gsl_type(t), t)
@@ -138,4 +137,4 @@ iter = {
    isum = isum,
 }
 
-package.loaded['iter'] = iter
+return iter

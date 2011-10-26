@@ -86,4 +86,5 @@ void
 sf_register (lua_State *L)
 {
   luaL_register (L, "sf", sf_functions);
+  lua_pop(L, 1);
 }

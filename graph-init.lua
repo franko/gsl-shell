@@ -1,7 +1,7 @@
 
 local floor = math.floor
 
-local lua_index_style = config.lua_index_style
+local lua_index_style = gslsh.lua_index_style
 
 function graph.ipath(f)
    local ln = graph.path(f())

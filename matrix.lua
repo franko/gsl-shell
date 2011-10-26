@@ -1,5 +1,5 @@
 
-local ffi  = require 'ffi'
+local ffi = require 'ffi'
 local gsl = require 'gsl'
 
 local sqrt, abs = math.sqrt, math.abs
@@ -8,7 +8,7 @@ local format = string.format
 local check = require 'check'
 local is_integer, is_real = check.is_integer, check.is_real
 
-local lua_index_style = config.lua_index_style
+local lua_index_style = gslsh.lua_index_style
 
 local gsl_matrix         = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
@@ -603,7 +603,6 @@ local function matrix_new_copy(m)
    return m:copy()
 end
 
-
 matrix = {
    new    = matrix_new,
    cnew   = matrix_cnew,
@@ -933,4 +932,4 @@ matrix.tr = function(a)
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
 
-package.loaded['matrix'] = matrix
+return matrix

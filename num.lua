@@ -1,6 +1,8 @@
 
 local template = require 'template'
 
+num = {}
+
 function num.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}
    local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
@@ -57,3 +59,5 @@ function num.nlinfit(spec)
 
    return s
 end
+
+return num

@@ -165,4 +165,5 @@ rng_register (lua_State *L)
 
   /* gsl module registration */
   luaL_register (L, "rng", rng_functions);
+  lua_pop(L, 1);
 }

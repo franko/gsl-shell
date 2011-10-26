@@ -30,8 +30,8 @@
 
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
-int
-luaopen_graph (lua_State *L)
+void
+register_graph (lua_State *L)
 {
   window_registry_prepare (L);
 
@@ -42,5 +42,5 @@ luaopen_graph (lua_State *L)
   window_register (L);
   plot_register (L);
 
-  return 1;
+  lua_pop(L, 1);
 }

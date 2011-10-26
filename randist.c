@@ -151,4 +151,5 @@ void
 randist_register (lua_State *L)
 {
   luaL_register (L, "rnd", randist_functions);
+  lua_pop(L, 1);
 }
