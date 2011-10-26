@@ -49,7 +49,7 @@ function demo4()
 		   end
 
    local function add_box_title(p, x1, x2, y1, y2, title)
-      local box = xyline(vector {x1, x2, x2, x1}, vector {y1, y1, y2, y2})
+      local box = xyline(matrix.vec {x1, x2, x2, x1}, matrix.vec {y1, y1, y2, y2})
       box:close() 
       p:addline(box, 'black')
       p.units = false
