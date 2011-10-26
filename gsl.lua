@@ -760,11 +760,6 @@ int gsl_linalg_hesstri_decomp(gsl_matrix * A, gsl_matrix * B,
                               gsl_matrix * U, gsl_matrix * V,
                               gsl_vector * work);
 
-/* Singular Value Decomposition
-
- * exceptions: 
- */
-
 int
 gsl_linalg_SV_decomp (gsl_matrix * A,
                       gsl_matrix * V,
@@ -788,10 +783,6 @@ gsl_linalg_SV_solve (const gsl_matrix * U,
                      const gsl_vector * S,
                      const gsl_vector * b,
                      gsl_vector * x);
-
-
-/* LU Decomposition, Gaussian elimination with partial pivoting
- */
 
 int gsl_linalg_LU_decomp (gsl_matrix * A, gsl_permutation * p, int *signum);
 
@@ -1053,12 +1044,6 @@ int gsl_linalg_cholesky_svx (const gsl_matrix * cholesky,
 
 int gsl_linalg_cholesky_invert(gsl_matrix * cholesky);
 
-/* Cholesky decomposition with unit-diagonal triangular parts.
- *   A = L D L^T, where diag(L) = (1,1,...,1).
- *   Upon exit, A contains L and L^T as for Cholesky, and
- *   the diagonal of A is (1,1,...,1). The vector Dis set
- *   to the diagonal elements of the diagonal matrix D.
- */
 int gsl_linalg_cholesky_decomp_unit(gsl_matrix * A, gsl_vector * D);
 
 
@@ -1102,39 +1087,14 @@ int gsl_linalg_hermtd_unpack_T (const gsl_matrix_complex * A,
                                 gsl_vector * diag, 
                                 gsl_vector * subdiag);
 
-/* Linear Solve Using Householder Transformations
-
- * exceptions: 
- */
-
 int gsl_linalg_HH_solve (gsl_matrix * A, const gsl_vector * b, gsl_vector * x);
 int gsl_linalg_HH_svx (gsl_matrix * A, gsl_vector * x);
 
-/* Linear solve for a symmetric tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *     diag[0]  offdiag[0]             0    ...
- *  offdiag[0]     diag[1]    offdiag[1]    ...
- *           0  offdiag[1]       diag[2]    ...
- *           0           0    offdiag[2]    ...
- *         ...         ...           ...    ...
- */
 int gsl_linalg_solve_symm_tridiag (const gsl_vector * diag,
                                    const gsl_vector * offdiag,
                                    const gsl_vector * b,
                                    gsl_vector * x);
 
-/* Linear solve for a nonsymmetric tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *       diag[0]  abovediag[0]              0    ...
- *  belowdiag[0]       diag[1]   abovediag[1]    ...
- *             0  belowdiag[1]        diag[2]    ...
- *             0             0   belowdiag[2]    ...
- *           ...           ...            ...    ...
- */
 int gsl_linalg_solve_tridiag (const gsl_vector * diag,
                                    const gsl_vector * abovediag,
                                    const gsl_vector * belowdiag,
@@ -1142,33 +1102,11 @@ int gsl_linalg_solve_tridiag (const gsl_vector * diag,
                                    gsl_vector * x);
 
 
-/* Linear solve for a symmetric cyclic tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *      diag[0]  offdiag[0]             0   .....  offdiag[N-1]
- *   offdiag[0]     diag[1]    offdiag[1]   .....
- *            0  offdiag[1]       diag[2]   .....
- *            0           0    offdiag[2]   .....
- *          ...         ...
- * offdiag[N-1]         ...
- */
 int gsl_linalg_solve_symm_cyc_tridiag (const gsl_vector * diag,
                                        const gsl_vector * offdiag,
                                        const gsl_vector * b,
                                        gsl_vector * x);
 
-/* Linear solve for a nonsymmetric cyclic tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *        diag[0]  abovediag[0]             0   .....  belowdiag[N-1]
- *   belowdiag[0]       diag[1]  abovediag[1]   .....
- *              0  belowdiag[1]       diag[2]
- *              0             0  belowdiag[2]   .....
- *            ...           ...
- * abovediag[N-1]           ...
- */
 int gsl_linalg_solve_cyc_tridiag (const gsl_vector * diag,
                                   const gsl_vector * abovediag,
                                   const gsl_vector * belowdiag,
@@ -1204,11 +1142,6 @@ int gsl_linalg_bidiag_unpack_B (const gsl_matrix * A,
 int gsl_linalg_balance_matrix (gsl_matrix * A, gsl_vector * D);
 int gsl_linalg_balance_accum (gsl_matrix * A, gsl_vector * D);
 int gsl_linalg_balance_columns (gsl_matrix * A, gsl_vector * D);
-
-/* ========================================================================
- * Level 1
- * ========================================================================
- */
 
 enum CBLAS_ORDER {CblasRowMajor=101, CblasColMajor=102};
 enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
@@ -1284,16 +1217,6 @@ void gsl_blas_dscal  (double alpha, gsl_vector * X);
 void gsl_blas_zscal  (const gsl_complex alpha, gsl_vector_complex * X);
 void gsl_blas_zdscal (double alpha, gsl_vector_complex * X);
 
-
-/* ===========================================================================
- * Level 2
- * ===========================================================================
- */
-
-/*
- * Routines with standard 4 prefixes (S, D, C, Z)
- */
-
 int  gsl_blas_dgemv (CBLAS_TRANSPOSE_t TransA,
                      double alpha,
                      const gsl_matrix * A,
@@ -1328,10 +1251,6 @@ int  gsl_blas_ztrsv (CBLAS_UPLO_t Uplo,
                      const gsl_matrix_complex * A,
                      gsl_vector_complex *X);
 
-/*
- * Routines with S and D prefixes only
- */
-
 int  gsl_blas_dsymv (CBLAS_UPLO_t Uplo,
                      double alpha,
                      const gsl_matrix * A,
@@ -1353,10 +1272,6 @@ int  gsl_blas_dsyr2 (CBLAS_UPLO_t Uplo,
                      const gsl_vector * X,
                      const gsl_vector * Y,
                      gsl_matrix * A);
-
-/*
- * Routines with C and Z prefixes only
- */
 
 
 int  gsl_blas_zhemv (CBLAS_UPLO_t Uplo,
@@ -1386,16 +1301,6 @@ int  gsl_blas_zher2 (CBLAS_UPLO_t Uplo,
                      const gsl_vector_complex * X,
                      const gsl_vector_complex * Y,
                      gsl_matrix_complex * A);
-
-/*
- * ===========================================================================
- * Prototypes for level 3 BLAS
- * ===========================================================================
- */
-
-/*
- * Routines with standard 4 prefixes (S, D, C, Z)
- */
 
 int  gsl_blas_dgemm (CBLAS_TRANSPOSE_t TransA,
                      CBLAS_TRANSPOSE_t TransB,
@@ -1487,10 +1392,6 @@ int  gsl_blas_ztrsm (CBLAS_SIDE_t Side,
                      const gsl_complex alpha,
                      const gsl_matrix_complex * A,
                      gsl_matrix_complex * B);
-
-/*
- * Routines with prefixes C and Z only
- */
 
 int  gsl_blas_zhemm (CBLAS_SIDE_t Side,
                      CBLAS_UPLO_t Uplo,
