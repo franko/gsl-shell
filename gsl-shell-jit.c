@@ -262,6 +262,24 @@ static int pushline (lua_State *L, int firstline) {
   return 1;
 }
 
+static int yield_expr(lua_State* L, int index)
+{
+  const char *line = lua_tostring(L, index);
+  int status;
+
+  lua_pushfstring(L, "return %s", line);
+  status = luaL_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
+  if (status == 0)
+    {
+      lua_saveline(L, index);
+      lua_remove(L, -2);
+      lua_remove(L, index);
+      return 0;
+    }
+  lua_pop(L, 2);
+  return 1;
+}
+
 static int loadline(lua_State *L)
 {
   int status;
@@ -272,16 +290,8 @@ static int loadline(lua_State *L)
   if (strcmp (lua_tostring(L, 1), "exit") == 0)
     return -1;
 
-  lua_pushfstring(L, "return %s", lua_tostring(L, 1));
-  status = luaL_loadbuffer(L, lua_tostring(L, 2), lua_strlen(L, 2), "=stdin");
-  if (status == 0)
-    {
-      lua_saveline(L, 1);
-      lua_replace (L, 1);
-      lua_settop (L, 1);
-      return 0;
-    }
-  lua_settop(L, 1);
+  if (yield_expr(L, 1) == 0)
+    return 0;
 
   for (;;) {  /* repeat until gets a complete line */
     status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
@@ -292,6 +302,14 @@ static int loadline(lua_State *L)
     lua_insert(L, -2);  /* ...between the two lines */
     lua_concat(L, 3);  /* join them */
   }
+
+  if (yield_expr(L, 1) == 0)
+    {
+      /* remove old eval function */
+      lua_remove(L, 1);
+      return 0;
+    }
+
   lua_saveline(L, 1);
   lua_remove(L, 1);  /* remove line */
   return status;
@@ -307,6 +325,9 @@ static void dotty(lua_State *L)
     if (status == 0) status = docall(L, 0, 0);
     report(L, status);
     if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
+      lua_pushvalue(L, -1);
+      lua_setfield(L, LUA_GLOBALSINDEX, "_");
+
       lua_getglobal(L, "print");
       lua_insert(L, 1);
       if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
