@@ -31,7 +31,7 @@ local function demo1()
    local r = rng.new()
    r:set(0)
 
-   yrf = matrix.new(n, 1, |i| model(xref, i-1) + num.rnd.gaussian(r, 0.1))
+   yrf = matrix.new(n, 1, |i| model(xref, i-1) + rnd.gaussian(r, 0.1))
 
    local s = num.nlinfit {n= n, p= 3}
 
@@ -45,7 +45,7 @@ local function demo1()
    end
 
    local p = graph.plot('Non-linear fit example')
-   local pts = graph.ipath(num.sequence(function(i) return i-1, yrf[i] end, n))
+   local pts = graph.ipath(iter.sequence(function(i) return i-1, yrf[i] end, n))
    local fitln = graph.fxline(function(t) return model(s.x, t) end, 0, n-1)
    p:addline(pts, 'blue', {{'marker', size=5}})
    p:addline(fitln)
@@ -71,7 +71,7 @@ local function demo2()
 		     return p[1] * e * s
 		  end
 
-   local y = matrix.new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + num.rnd.gaussian(r, 0.1)))
+   local y = matrix.new(n, 1, |i,j| fmodel(px, xs(i)) * (1 + rnd.gaussian(r, 0.1)))
    local x = matrix.new(n, 1, |i,j| xs(i))
 
    local function fdf(p, f, J)
