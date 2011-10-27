@@ -262,6 +262,10 @@ static int pushline (lua_State *L, int firstline) {
   return 1;
 }
 
+/* If the input is an expression we load it preceded by "return" so
+   that the value is returned as a result of the evaluation.
+   If the value is not an expression leave the stack as before and
+   returns a non zero value. */
 static int yield_expr(lua_State* L, int index)
 {
   const char *line = lua_tostring(L, index);
@@ -272,11 +276,11 @@ static int yield_expr(lua_State* L, int index)
   if (status == 0)
     {
       lua_saveline(L, index);
-      lua_remove(L, -2);
-      lua_remove(L, index);
+      lua_remove(L, -2); /* remove the modified string */
+      lua_remove(L, index); /* remove the original string */
       return 0;
     }
-  lua_pop(L, 2);
+  lua_pop(L, 2); /* we pop both the error msg and the modified string */
   return 1;
 }
 
@@ -290,6 +294,7 @@ static int loadline(lua_State *L)
   if (strcmp (lua_tostring(L, 1), "exit") == 0)
     return -1;
 
+  /* try to load the string as an expression */
   if (yield_expr(L, 1) == 0)
     return 0;
 
@@ -303,6 +308,8 @@ static int loadline(lua_State *L)
     lua_concat(L, 3);  /* join them */
   }
 
+  /* even if previous "load" was successfull we try to load the string as
+     an expression */
   if (yield_expr(L, 1) == 0)
     {
       /* remove old eval function */
