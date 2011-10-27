@@ -2,8 +2,6 @@
 
 .. include:: <isogrk1.txt>
 
-.. currentmodule:: gsl
-
 Numerical Integration
 =====================
 
@@ -52,6 +50,8 @@ return the best approximation obtained up to that stage.
 Functions
 ---------
 
+.. module:: num
+
 .. function:: integ(f, a, b, epsabs, epsrel)
 
    Compute the definite integral of the function ``f`` in the interval specified by ``a`` and ``b`` within the requested precision given by ``epsabs`` and ``epsrel``.
@@ -82,10 +82,10 @@ Here a simple example that shows how to plot the Bessel function using its integ
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
 
-The function :func:`gsl.quad_prepare` is used to prepare the quadrature function.
+The function :func:`num.quad_prepare` is used to prepare the quadrature function.
 The function returned is then called many times to obtain :math:`J_n(x)`::
 
-   import 'math'
+   use 'math'
 
    epsabs, epsrel = 1e-6, 0.01
 
@@ -99,7 +99,7 @@ The function returned is then called many times to obtain :math:`J_n(x)`::
    end
 
    -- we get the 'qag' integration rule with default options
-   q = gsl.quad_prepare {method= 'qag'}
+   q = num.quad_prepare {method= 'qag'}
 
    J7 = bessel_gen(7, q)
 

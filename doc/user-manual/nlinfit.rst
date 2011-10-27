@@ -77,6 +77,8 @@ For example let us suppose that we want to fit the function
 
 where A, |lgr| and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t\ :sub:`1`, ..., t\ :sub:`i`, ..., t\ :sub:`N`. If this case the vector ``x`` will have size P, ``f`` size N and ``J`` size N x P. The function for the non-lineat fit can be therefore defined as follows::
 
+   use 'math'
+
    function fdf(x, f, J)
       for i=1, n do
          local A, lambda, b = x[1], x[2], x[3]
@@ -96,12 +98,12 @@ You can note in the definition above the we have chosen to store the three param
 
 Note also that the assignment to the elements of the vector ``f`` and the matrix ``J`` are done only if their respective variables ``f`` and ``J`` are not ``nil``.
 
-Once that the function is defined the most delicate work is done and you should crete a non-linear fit solver of the appropriate size N and P with the function :func:`gsl.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you shoud iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`.
+Once that the function is defined the most delicate work is done and you should crete a non-linear fit solver of the appropriate size N and P with the function :func:`num.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you shoud iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`.
 
 Here a complete example::
 
-   import 'math'
-   import 'graph'
+   use 'math'
+   use 'graph'
 
    n = 40
 
@@ -128,11 +130,11 @@ Here a complete example::
 
    xref = matrix.vec {5, 0.1, 1}
 
-   r = gsl.rng()
+   r = rng.new()
 
-   yrf = matrix.new(n, 1, |i| model(xref, i-1) + gsl.rnd.gaussian(r, 0.1))
+   yrf = matrix.new(n, 1, |i| model(xref, i-1) + rnd.gaussian(r, 0.1))
 
-   s = gsl.nlinfit {n= n, p= 3}
+   s = num.nlinfit {n= n, p= 3}
 
    s:set(fdf, matrix.vec {1, 0, 0})
    print(s.x, s.chisq)
@@ -144,7 +146,7 @@ Here a complete example::
    end
 
    p = plot('Non-linear fit example')
-   pts = ipath(gsl.sequence(function(i) return i-1, yrf[i] end, n))
+   pts = ipath(iter.sequence(function(i) return i-1, yrf[i] end, n))
    fitln = fxline(function(t) return model(s.x, t) end, 0, n-1)
    p:addline(pts, 'blue', {{'marker', size=5}})
    p:addline(fitln)

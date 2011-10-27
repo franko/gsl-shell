@@ -10,9 +10,15 @@ With GSL Shell you can access very easily the functions provided by the GSL libr
 In addition the power and expressivity of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines.
 You will be also able to create plot in real-time by using the powerful builtin graphical module.
 
-GSL Shell is still a young project and it is currently not widely used.
-It still lacks some important features but we believe that it is very promising because it is built on top of three outstanding free software libraries: the GSL library, Lua and the AGG library.
-By using and combining together these software components GSL Shell gives the opportunity of doing advanced numerical calculations and produce beautiful plot of the data or mathematical functions.
+.. note::
+  GSL Shell is still a young project and it is currently not widely used.
+  It still lacks some important features but the author believe that it is very promising because it is built on top of three outstanding free software projects: the GSL library, LuaJIT2 and the AGG library.
+
+  By using and combining together these software components GSL Shell provides the possibility of doing advanced numerical calculations and produce beautiful plot of the data or mathematical functions.
+
+  The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
+  In addition the LuaJIT2 implementation provides excellent execution speed that can be very close to C compiled code.
+  
 
 First steps
 -----------
@@ -47,7 +53,7 @@ An useful trick
 ~~~~~~~~~~~~~~~
 
 When you are working in a interactive session GSL Shell will always remember the last result evaluated.
-You can access to its value using the global variable "_".
+You can access its value using the global variable "_".
 When the you evaluate a statement or an expression that returns no values the variable "_" is not modified.
 
 Working with matrices
@@ -88,7 +94,7 @@ Of course you are not forced to define the function in the same line, you can de
   -- define the binomial function
   function binomial(n, k)
     if k <= n then
-      return gsl.choose(n-1, k-1)
+      return sf.choose(n-1, k-1)
     else
       return 0
     end
@@ -111,7 +117,7 @@ and here the result:
 
 An alternative compact writing could have been::
 
-  m = matrix.new(8, 8, |n,k| k <= n and gsl.choose(n-1, k-1) or 0)
+  m = matrix.new(8, 8, |n,k| k <= n and sf.choose(n-1, k-1) or 0)
 
 where we have used again the short function notation and the Lua logical operators ``and`` and ``or``.
 
@@ -169,7 +175,7 @@ The idea is that you can create the objects as needed and add them of the plot a
 
 Here a simple example to plot some simple functions::
 
-  import 'math'
+  use 'math'
 
   -- we create a plot of a simple function
   p = graph.fxplot(|x| exp(-0.1*x) * sin(x), 0, 8*pi)
@@ -247,7 +253,7 @@ and here an examples of its utilisation:
 The function ``make_counter`` is not a closure because does not refer to any variable of any enclosing function but the function that it does returns *is* a closure because the returned function refer to the variable ``i`` which is local to the scope of the enclosing function ``make_counter``.
 
 This kind of function is ofter called an "iterator".
-In GSL Shell you can very easily define an iterator over some integer range by using the function :func:`sequence`.
+In GSL Shell you can very easily define an iterator over some integer range by using the function :func:`iter.sequence`.
 
 .. _short-func-notation:
 
@@ -272,6 +278,6 @@ this is exactly equivalent to the following syntax::
       return x^2+1
    end
 
-or, alternatively,::
+or, alternatively::
 
    f = function(x) return x^2+1 end

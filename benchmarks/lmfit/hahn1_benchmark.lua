@@ -1,6 +1,4 @@
 
-use 'stdlib'
-
 local time = require 'time'
 
 use_cgsl = true
@@ -16,7 +14,7 @@ local function nist_test(data_name, model_name)
 
    local n, p = dataset.N, dataset.P
 
-   local s = gsl.nlinfit {n= n, p= p}
+   local s = num.nlinfit {n= n, p= p}
 
    s:set(model.fdf, dataset.x0)
 

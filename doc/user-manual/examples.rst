@@ -17,14 +17,16 @@ The Bessel's function J\ :sub:`n` for integer values of n can de defined with th
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
 
-We can use this definition to define our home-made Bessel function. To perform the integral we need to use the :func:`gsl.integ` function and provide the function to integrate. This is easy like eating a piece of cake::
+We can use this definition to define our home-made Bessel function.
+To perform the integral we need to use the :func:`num.integ` function and provide the function to integrate.
+This is easy like eating a piece of cake::
 
-   import 'math'
+   use 'math'
 
    function bessJ(x, n)
       local epsabs, epsrel = 1e-8, 1e-4
       local f = |t| cos(n*t - x*sin(t)) -- we define the function to integrate
-      return 1/pi * gsl.integ(f, 0, pi, epsabs, epsrel)
+      return 1/pi * num.integ(f, 0, pi, epsabs, epsrel)
    end
 
 The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
@@ -65,14 +67,14 @@ The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple 
 
 Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
  
-   import 'math'
+   use 'math'
  
    function vonkoch(n)
       local sx = {2, 1, -1, -2, -1,  1}
       local sy = {0, 1,  1,  0, -1, -1}
       local sh = {1, -2, 1}
       local a, x, y = 0, 0, 0
-      local w = gsl.ilist(|| 0, n+1)
+      local w = iter.ilist(|| 0, n+1)
    
       local s = 1 / (3^n)
       for k=1, 6 do
@@ -127,7 +129,7 @@ And here the result:
 
 .. figure:: examples-von-koch-complete.png
 
-With a similar procedure, the code is in ``examples/fractals.lua`` we can produce  beautiful Levy C curve:
+With a similar procedure, the code is in ``demos/fractals.lua`` we can produce  beautiful Levy C curve:
 
 .. figure:: examples-levy-c-curve-1.png
 
@@ -150,10 +152,12 @@ If you want to plot the data in the table there isn't actually any function that
 
   p = graph.plot()
   dget = function(i) return t[i][1], t[i][2] end
-  p:addline(graph.ipath(gsl.sequence(dget, #t)))
+  p:addline(graph.ipath(iter.sequence(dget, #t)))
   p:show()
 
-the idea is that, in order to plot the curve we need to *build* the curve before. What we want is actually a line that connects the points ``(x[i], y[i])`` where ``x[i]`` and ``y[i]`` are taken from the rows of the table ``t``. The last resort to obtain that would be to create a :class:`Path` object and to give all the points in a procedural way like this::
+the idea is that, in order to plot the curve we need to *build* the curve before.
+What we want is actually a line that connects the points ``(x[i], y[i])`` where ``x[i]`` and ``y[i]`` are taken from the rows of the table ``t``.
+The last resort to obtain that would be to create a :class:`Path` object and to give all the points in a procedural way like this::
 
   -- we create a path and gives it the starting point
   ln = graph.path(t[1][1], t[1][2])
@@ -169,7 +173,7 @@ So to make more clear the code given above we can separate the curve and the ite
   p = graph.plot()
 
   -- we define our iterator
-  it = gsl.sequence(function(i) return t[i][1], t[i][2] end, #t)
+  it = iter.sequence(function(i) return t[i][1], t[i][2] end, #t)
 
   -- we create the curve using the iterator just defined
   line = graph.ipath(it)
@@ -220,9 +224,9 @@ Actually the meaning of the formula is that the factorial of a negative number i
 
 So here the code for the radial part::
 
-  import 'math'
+  use 'math'
 
-  fact = gsl.fact
+  fact = sf.fact
 
   -- inverse factorial function definition
   invf = |n| n >= 0 and 1/fact(n) or 0

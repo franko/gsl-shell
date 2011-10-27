@@ -2,27 +2,19 @@
 
 .. include:: <isogrk1.txt>
 
-.. currentmodule:: gsl
-
 .. _special-functions:
 
 Special functions
 =================
 
-The library includes routines for calculating the values of Airy
-functions, Bessel functions, Clausen functions, Coulomb wave
-functions, Coupling coefficients, the Dawson function, Debye
-functions, Dilogarithms, Elliptic integrals, Jacobi elliptic
-functions, Error functions, Exponential integrals, Fermi-Dirac
-functions, Gamma functions, Gegenbauer functions, Hypergeometric
-functions, Laguerre functions, Legendre functions and Spherical
-Harmonics, the Psi (Digamma) Function, Synchrotron functions,
-Transport functions, Trigonometric functions and Zeta functions.
+The library includes routines for calculating the values of Airy functions, Bessel functions, Clausen functions, Coulomb wave functions, Coupling coefficients, the Dawson function, Debye functions, Dilogarithms, Elliptic integrals, Jacobi elliptic functions, Error functions, Exponential integrals, Fermi-Dirac functions, Gamma functions, Gegenbauer functions, Hypergeometric functions, Laguerre functions, Legendre functions and Spherical Harmonics, the Psi (Digamma) Function, Synchrotron functions, Transport functions, Trigonometric functions and Zeta functions.
 
 Functions
 ---------
 
 .. _sf_airy:
+
+.. module:: sf
 
 .. function:: airyAi(x)
 

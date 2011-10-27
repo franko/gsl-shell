@@ -20,6 +20,8 @@ GSL shell offer a graphics interface with few but powerful functions that, if ap
 A First Example
 ---------------
 
+.. module:: graph
+
 Let's start with a simple example, let us suppose that we want to plot the function:
 
 .. math::
@@ -30,13 +32,15 @@ where |agr| and |ohgr| are constants and t vary from 0 to t1.
 Before starting we need to note a couple of things.
 
 The mathematical functions like exp, sin, cos are contained in the 'math' module.
-You can use ``import 'math'`` to make them directely available.
-The graphical functions are in the module 'graph'. In order to access them you can use the :func:`import` function or just prefix all the functions with the module name like, for example, ``graph.plot``. Choose whatever option you prefer, it is just a matter of taste.
+You can use ``use 'math'`` to make them directely available.
+The graphical functions are in the module 'graph'.
+In order to access them you can use the :func:`use` function or just prefix all the functions with the module name like, for example, ``graph.plot``.
+Choose whatever option you prefer, it is just a matter of taste.
 
 So now we can came back to our mathematical functions.
 We can plot this function with GSL Shell using the following instructions::
 
-  import 'math'
+  use 'math'
 
   function myplot(alpha, omega, t1)
      -- create a new plot, it is not shown for the moment
@@ -75,8 +79,6 @@ You may whish to add a title to the plot by using the :attr:`~Plot.title` attrib
 Graphics Functions
 ------------------
 
-.. module:: graph
-
 To create many type of plots you don't really need to use always the graphics primitives but you can use the higher level plotting functions.
 We give in this section the description of all the higher level plotting functions.
 
@@ -96,7 +98,7 @@ We give in this section the description of all the higher level plotting functio
    *Example*::
    
       -- plot the 'choose' function for some integer values
-      graph.fiplot(|i| gsl.choose(12, i), 12)
+      graph.fiplot(|i| sf.choose(12, i), 12)
 
       -- plot of a geometric series
       graph.fiplot(|n| 0.9^n, 0, 36)
@@ -109,7 +111,7 @@ We give in this section the description of all the higher level plotting functio
 
    *Example*::
 
-      binom = function(n) return |i| gsl.choose(n, i)/2^n end
+      binom = function(n) return |i| sf.choose(n, i)/2^n end
       graph.fibars(binom(12), 0, 12, 'darkgreen', 0.8)
 
 .. function:: fxline(f, xi, xs[, n])
@@ -118,7 +120,7 @@ We give in this section the description of all the higher level plotting functio
 
    *Example*::
 
-      import 'math'
+      use 'math'
 
       -- we create a 'path' for the function f(x) = sin(x)*exp(-0.1*x)
       -- and plot it
@@ -131,7 +133,7 @@ We give in this section the description of all the higher level plotting functio
    *Example*:
       You can produce very easily a nice illustration of the "area below a curve" with the following commands::
 
-         import 'math'
+         use 'math'
 
          p = graph.plot('Example')
          line = graph.fxline(|x| sin(x)*exp(-0.1*x), 0, 10*pi)
@@ -156,7 +158,7 @@ We give in this section the description of all the higher level plotting functio
 
    *Example*::
 
-      import 'math'
+      use 'math'
 
       N = 256
       sio2n = |w| sqrt(1.4923 + 0.61497*w^2/(w^2 - 0.115^2)-0.01059*w^2)
@@ -181,7 +183,7 @@ We give in this section the description of all the higher level plotting functio
       We define first an iterator that use a counter to generate the points and then we pass the iterators to the function :func:`ipath`.
       In this way we obtain an object of type :class:`Path` and we can add into a plot.::
 
-         import 'math'
+         use 'math'
 	 -- create a simple iterator that return n points uniformly spaced
          -- in a circle centerd in (x0, y0) with radius R
 	 circle = function(x0, y0, R, n)
@@ -205,10 +207,10 @@ We give in this section the description of all the higher level plotting functio
       The example above show how to create the more generic iterator just using basic Lua constructs.
       A generic iterator is very flexible because it can generate any sequence of values without restrictions of any kind.
       You will probably find that in many cases you want to build iterators that generate values over a range on integer numbers like we was doing for the circle in the example.
-      In such cases it can be simpler to use the function :func:`gsl.sequence` that creates an iterators over a range of integer.
-      Here the same example of above but using the function :func:`gsl.sequence`::
+      In such cases it can be simpler to use the function :func:`iter.sequence` that creates an iterators over a range of integer.
+      Here the same example of above but using the function :func:`iter.sequence`::
 
-         import 'math'      
+         use 'math'      
 	 -- create a simple iterator that return n points uniformly spaced
          -- in a circle centerd in (x0, y0) with radius R
 	 circle = function(x0, y0, R, n)
@@ -219,7 +221,7 @@ We give in this section the description of all the higher level plotting functio
                   end
 	 -- then we use ipath to create a path from the iterator
          n = 256
-         cs = gsl.sequence(circle(1, 1, 2.5, n), 0, n-1)
+         cs = iter.sequence(circle(1, 1, 2.5, n), 0, n-1)
 	 line = graph.ipath(cs)
 	 p = graph.plot('circle at (1,1) with R= 2.5')
 	 p:add(line, graph.rgba(1,1,0,0.6))
@@ -233,12 +235,11 @@ We give in this section the description of all the higher level plotting functio
 
    *Example*::
 
-      import 'math'
-      import 'gsl'
+      use 'math'
 
       -- draws the histogram of a simulated gaussian distribution
       N = 800
-      r = rng()
+      r = rng.new()
       f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
       p = graph.plot('Simulated Gaussian Distribution')
       b = graph.ibars(sample(|x| rnd.poisson(r, f(x)*N) / N, -3, 3, 25))
@@ -271,7 +272,7 @@ In this code snippet you can see the method :meth:`~Window.attach` at work. It i
 
 Let as see this at work with a second example::
 
-   import 'math'
+   use 'math'
 
    -- create a window divided in two subwindows (vertical tiling)
    w = graph.window('v..')

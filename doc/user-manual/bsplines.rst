@@ -64,8 +64,8 @@ B-splines Example
 
 The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve :math:`y(x) = \cos(x) \exp(-x/10)` on the interval [0,15] with gaussian noise added::
 
-     import 'math'
-     import 'graph'
+     use 'math'
+     use 'graph'
 
      -- number of points and breakpoints
      n, br = 200, 10
@@ -77,20 +77,20 @@ The following example computes a linear least squares fit to data using cubic B-
      x, y = matrix.new(n, 1, xsmp), matrix.new(n, 1, |i| f(xsmp(i)))
     
      -- we add a gaussian noise and calculate weights
-     r = gsl.rng()
+     r = rng.new()
      w = matrix.new(n, 1)
      for i=1,n do 
          local sigma = 0.1 * y[i]
-        y:set(i,1, y[i] + gsl.rnd.gaussian(r, sigma))
+        y:set(i,1, y[i] + rnd.gaussian(r, sigma))
         w:set(i,1, 1/sigma^2)
      end
      
      -- we create a bspline object and we calculate the model matrix X
-     b = gsl.bspline(0, 15, br)
+     b = num.bspline(0, 15, br)
      X = b:model(x)
      
      -- linear least-squares fit
-     c, cov = gsl.linfit(X, y, w)
+     c, cov = num.linfit(X, y, w)
      
      -- plot
      p = plot('B-splines curve approximation')

@@ -2,8 +2,8 @@
 
 .. _csv-section:
 
-:mod:`csv` -- Comma Separated Values Parsing Utilities
-======================================================
+Comma Separated Values Parsing Utilities
+========================================
 
 .. module:: csv
 

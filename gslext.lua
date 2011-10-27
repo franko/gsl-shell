@@ -8,6 +8,7 @@ require('fft-init')
 require('graph-init')
 require('randist-init')
 require('import')
+require('contour')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'

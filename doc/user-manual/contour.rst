@@ -14,15 +14,15 @@ GSL shell offer a contour plot function to draw contour curve of bidimensional f
 
 Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^2`::
 
-   require 'contour'
-
-   graph.contour(|x,y| x^2 - y^2, -8, -8, 8, 8)
+   contour.plot(|x,y| x^2 - y^2, -8, -8, 8, 8)
 
 .. figure:: contour-plot-hyper.png
 
-.. function:: contour(f, xmin, ymin, xmax, ymax[, options])
+.. module:: contour
 
-   Plot a contour plot of the function ``f``. ``contours`` can be the number of levels or a list containing all the values that should be used to draw the contours.
+.. function:: plot(f, xmin, ymin, xmax, ymax[, options])
+
+   Plot a contour plot of the function ``f`` in the rectangle delimited by (xmin, ymin), (xmax, ymax) and return the plot itself.
 
    The ``options`` argument is an optional table that can contain the following field:
  
@@ -32,16 +32,15 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
    * ``colormap`` a function that return a color for the contour region. The argument of the function will be a number between 0 and 1.
    * ``show``, specify if the plot should be shown. By default it is ``true``.
 
-.. function:: polar_contour(f, R[, options]])
+.. function:: polar_plot(f, R[, options]])
 
    Plot a contour plot of the function ``f(x, y)`` over the circular domain or radius ``R`` and centered at the origin. The ``options`` table accept the same field of the function :func:`contour`.
 
    Example::
 
-     import 'math'
-     require 'contour'
+     use 'math'
 
-     p = graph.polar_contour(|x,y| cos(x)+cos(y)+0.1*x+0.3*y, 8)
+     p = contour.polar_plot(|x,y| cos(x)+cos(y)+0.1*x+0.3*y, 8)
      p.title = 'cos(x) + cos(y) + 0.1*x + 0.3*y'
    
    .. figure:: polar-contour-example-cos-cos.png

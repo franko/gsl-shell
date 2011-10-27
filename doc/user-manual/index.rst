@@ -30,7 +30,6 @@ Contents:
    random.rst
    randist.rst
    pdf.rst
-   cdf.rst
    linfit.rst
    nlinfit.rst
    bsplines.rst
@@ -43,4 +42,4 @@ Contents:
    contour.rst
    csv.rst
    examples.rst
-   direct-matrix.rst
+   gsl-ffi.rst

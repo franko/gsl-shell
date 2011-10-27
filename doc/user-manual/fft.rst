@@ -39,10 +39,10 @@ Numerical Recipes uses the opposite convention, a positive exponential in the fo
 GSL Shell interface
 -------------------
 
-GSL Shell provide a simple interface to perform fourier transform of real data with the functions :func:`gsl.fft` and :func:`gsl.fftinv`.
+GSL Shell provide a simple interface to perform fourier transform of real data with the functions :func:`num.fft` and :func:`num.fftinv`.
 The first function perform the Fourier transform of a column matrix and the second is the inverse Fourier transform.
 
-The function :func:`gsl.fft` returns an half-complex array.
+The function :func:`num.fft` returns an half-complex array.
 This latter is similar to a column matrix of complex numbers but it is actually a different object because the numbers are packed together following some specific rules related to the algorithm.
 
 The idea is that you can access to the element of this vector for reading or writing by using a simple indexing.
@@ -66,7 +66,7 @@ This mean that the approach of GSL Shell is quite optimal if you perform many ti
 Even if GSL Shell take cares of the details automatically you should be aware of these performance notice because it can make a big difference in real applications.
 From the practial point of view it is useful in most of the case to always provides samples whose size is a power of two.
 
-Another specificity of the functions :func:`gsl.fft` and :func:`gsl.fftinv` is that they can optionally perform the transformation *in place* by modifying the original data instead of creating a copy.
+Another specificity of the functions :func:`num.fft` and :func:`num.fftinv` is that they can optionally perform the transformation *in place* by modifying the original data instead of creating a copy.
 When a trasformation *in place* is requested the routine still return a new vector (either a real matrix or an half-complex array) but this latter will point to the same underlying data of the original vector.
 The transformation *in place* can be useful in same cases to avoid unnecessary data compying and memory allocation.
 
@@ -85,13 +85,13 @@ Because of this relation the data is packed in a special type of object called a
 To access element in half-complex array you can use the indexing with an integer number between 0 and N-1, inclusive. So, for example::
 
    -- get a random number generator
-   r = gsl.rng()
+   r = rng.new()
 
    -- create a vector with random numbers
-   x = matrix.new(256, 1, || gsl.rnd.gaussian(r, 1))
+   x = matrix.new(256, 1, || rnd.gaussian(r, 1))
 
    -- take the fourier transform
-   ft = gsl.fft(x)
+   ft = num.fft(x)
 
    -- print all the coefficients of the fourier transform
    for k=0, #ft-1 do print(ft[k]) end
@@ -115,19 +115,19 @@ As shown in the example above you can use the Lua operator '#' to obtain the siz
    Return a column matrix that contains then inverse Fourier transform of the half-complex vector ``hc``.
    If ``in_place`` is ``true`` then the original data is altered and the resulting vector will point to the same underlying data of the original vector.
 
-   This trasformation is the inverse of the function :func:`gsl.fft` so that if you perform the two trasformations consecutively you will obtain a vector identical to the initial one.
+   This trasformation is the inverse of the function :func:`num.fft` so that if you perform the two trasformations consecutively you will obtain a vector identical to the initial one.
 
    A tipical usage of :func:`fft_inv` is to revert the trasformation made with :func:`fft` but by doing some transformations of the way.
    So a typical usage path could be::
 
       -- we assume v is a column matrix with our data
-      ft = fft(v) -- fourier transform
+      ft = num.fft(v) -- fourier transform
 
       -- here we can manipulate the half-complex array 'ft' with
       -- using the methods `get' and `set'
       some code here
 
-      vt = fftinv(ft) -- we perform the inverse fourier transform
+      vt = num.fftinv(ft) -- we perform the inverse fourier transform
       -- now vt is a vector of the same size of v
 
 FFT example
@@ -157,13 +157,13 @@ Now we are ready to perform:
 
 and plot the results::
 
-   ft = fft(y)
+   ft = num.fft(y)
 
    pf = graph.fibars(|k| complex.abs(ft[k]), 0, 60)
    pf.title = 'FFT Power Spectrum'
 
    for k=ncut, n/2 do ft[k] = 0 end
-   ytr = fftinv(ft)
+   ytr = num.fftinv(ft)
 
    pt:addline(graph.filine(|i| ytr[i], n), 'red')
 

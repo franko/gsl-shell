@@ -3,8 +3,8 @@
 .. include:: <isogrk1.txt>
 .. include:: <isotech.txt>
 
-:mod:`rnd` -- Random Number Distributions
-=========================================
+Random Number Distributions
+===========================
 
 .. module:: rnd
 

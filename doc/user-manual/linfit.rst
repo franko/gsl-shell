@@ -30,13 +30,11 @@ Complete Example
 
 We give a complete example where a set of (x, y) observations are simulated and a linear fit is done::
 
-            import 'gsl'
-
             x0, x1, n = 0, 12.5, 32
             a, b = 0.55, -2.4
             xsmp = |i| (i-1)/(n-1) * x1
 
-	    r = rng()
+	    r = rng.new()
 	    x = matrix.new(n, 1, xsmp)
 	    y = matrix.new(n, 1, |i| a*xsmp(i) + b + rnd.gaussian(r, 0.4))
 
@@ -44,6 +42,7 @@ We give a complete example where a set of (x, y) observations are simulated and 
             X = matrix.new(n, 2, |i,j| j == 1 and 1 or x[i])
 
 	    print('Linear fit coefficients: ')
+            c, chisq, cov = num.linfit(X, y)
             print(c)
 
             fit = function(x) return c[1]+c[2]*x end

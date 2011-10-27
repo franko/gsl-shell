@@ -10,15 +10,16 @@ Ordinary Differential Equations
 Overview
 --------
 
-This chapter describes functions for solving ordinary differential
-equation (ODE) initial value problems. 
-The ODE integration routines in GSL Shell are not based on GSL routines they provides similar functionalities.
-Only a few integration methods are actually available for the moment such as Runge-Kutta-Fehlberg and Price-Dormand methods.
+This chapter describes functions for solving ordinary differential equation (ODE) initial value problems. 
 
-In GSL Shell an ODE system is integrated by using an ``ode`` solver
-object. This kind of objects store internally the state of the solver
-and you can advance the solution step-by-step until, eventually, the
-desired value of ``t`` is reached.
+.. note::
+  The ODE integration routines in GSL Shell are based on GSL routines but they are completely rewritten in Lua.
+  Only a few integration methods are actually available for the moment such as Runge-Kutta-Fehlberg and Price-Dormand methods.
+
+  The actual interface is also likely to be changed in the near future to handle ODE systems in array form.
+
+In GSL Shell an ODE system is integrated by using an ODE solver object.
+The ODE solver store internally the state of the solver and you can advance the solution step-by-step until, eventually, the desired value of t is reached.
 
 Creating a ODE system solver
 ----------------------------
@@ -37,6 +38,11 @@ The stepping functions rely on the vector of derivatives :math:`f_i` and, for so
    J_{ij} = \frac{\partial f_i}{\partial y_j}\left(t,y(t)\right)
 
 For the moment all the methods implemented in GSL Shell does not use the Jacobian matrix.
+
+.. note::
+   The current implementation is limited to systems with a few number of variables.
+   Probably you should avoid to use it if you have more than 20 variables.
+   An implementation for ODE systems in array form should be available in the near future.
 
 ODE solver usage example
 ------------------------
@@ -57,7 +63,7 @@ and here the code that we can write to implement it::
    end
 
    -- create the ODE solver
-   s = gsl.ode {N= 2, eps_abs= 1e-8}
+   s = num.ode {N= 2, eps_abs= 1e-8}
 
    -- we define initial values
    t0, t1, h0 = 0, 30, 0.04
@@ -94,7 +100,7 @@ And here the plot that you will obtain:
 ODE Solver Class Definition
 ---------------------------
 
-.. class:: ode
+.. class:: ODE
    
    Solver of ODE system.
 

@@ -26,7 +26,7 @@ The :func:`new` function takes two mandatory arguments, the number of rows and o
 
 In GSL Shell we can define the matrix with the following command::
 
-   import 'math'
+   use 'math'
 
    n = 4
 
