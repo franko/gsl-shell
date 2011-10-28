@@ -21,7 +21,7 @@ function num.ode(spec)
    if not is_known[method] then error('unknown ode method: ' .. method) end
    spec.method = nil
 
-   local ode = template.load(string.format('num/%s.lua.in', method), spec)
+   local ode = template.load(method, spec)
 
    local mt = {
       __index = {evolve = ode.evolve, init = ode.init}
@@ -49,7 +49,7 @@ function num.nlinfit(spec)
    end
 
    local n, p = spec.n, spec.p
-   local s = { lm = template.load('num/lmfit.lua.in', {N= n, P= p}) }
+   local s = { lm = template.load('lmfit', {N= n, P= p}) }
 
    s.set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end
    s.iterate = function(ss) return ss.lm.iterate() end

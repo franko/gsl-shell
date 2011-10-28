@@ -4,7 +4,7 @@ local template = require 'template'
 local ffi = require "ffi"
 
 local ode_spec = {N = 2, eps_abs = 1e-6, eps_rel = 0, a_y = 1, a_dydt = 0}
-local ode = template.load('num/rkf45vec.lua.in', ode_spec)
+local ode = template.load('rkf45vec', ode_spec)
 
 function f_vanderpol_gen(mu)
    return function(t, y, f) 

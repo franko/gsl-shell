@@ -17,8 +17,7 @@ function num.quad_prepare(options)
 
    if limit < 8 then limit = 8 end
    
-   local temp_name = string.format('num/%s.lua.in', method)
-   local q = template.load(temp_name, {limit= limit, order= order})
+   local q = template.load(method, {limit= limit, order= order})
 
    return q
 end
@@ -33,7 +32,7 @@ function num.integ(f, a, b, epsabs, epsrel)
    check.number(b)
    
    if not q_default then
-      q_default = template.load('num/qag.lua.in', {limit= 64, order= 21})
+      q_default = template.load('qag', {limit= 64, order= 21})
    end
 
    local result = q_default (f, a, b, epsabs, epsrel)

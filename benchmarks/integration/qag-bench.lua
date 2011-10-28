@@ -1,5 +1,5 @@
 local template = require 'template'
-local q = template.load('num/qag.lua.in', {limit=1000, order=21})
+local q = template.load('qag', {limit=1000, order=21})
 
 local sin, cos, pi = math.sin, math.cos, math.pi
 local epsabs, epsrel = 1e-6, 0.01

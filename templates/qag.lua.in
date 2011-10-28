@@ -32,7 +32,7 @@ local abs, min, max, pow = math.abs, math.min, math.max, math.pow
 
 local ffi = require "ffi"
 
-$(include 'num/gauss-kronrod-x-wgs.lua.in')
+$(include 'gauss-kronrod-x-wgs')
 
 local ws_size = 0
 local ws_nrmax

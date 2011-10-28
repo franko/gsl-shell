@@ -33,7 +33,7 @@ local abs, max, min = math.abs, math.max, math.min
 
 # order = 8
 
-$(include 'num/ode-defs.lua.in')
+$(include 'ode-defs')
 
 # Abar = { '14005451/335480064',
 #	   '0',
