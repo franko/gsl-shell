@@ -12,8 +12,6 @@ local function c_generator(n, n_angle, len_frac, g)
    local sh = ilist(|k| g[(k-1)%r+1] - g[(k-2)%r+1], r)
    local a = (g[1]*n) % n_angle
 
-   print('sh', sh)
-
    local z = 0
    return function()
 	     if w[n+1] == 0 then
@@ -21,7 +19,6 @@ local function c_generator(n, n_angle, len_frac, g)
 		z = z + sz[a+1]
 		for j=1,n+1 do
 		   w[j] = (w[j] + 1) % r
-		   print(j, w[j], sh[w[j]+1], a)
 		   a = (a + sh[w[j]+1]) % n_angle
 		   if w[j] ~= 0 then
 		      break

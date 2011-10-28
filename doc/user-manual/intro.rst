@@ -163,7 +163,7 @@ The double indexing method can be slow and should be probably avoided in the tig
 In this case you should use the methods :meth:`~Matrix.get` and :meth:`~Matrix.set`.
 Another opportunity is to adress directly matrix data by using its ``data`` field but this requires a particular attention since this kind of operations are not safe and you could easily crash the application.
 
-You can find more details in the chapter about :ref:`Matrix Direct Access <matrix-direct-access>`.
+You can find more details in the chapter about :ref:`GSL FFI interface <gsl-ffi-interface>`.
 
 Plotting functions
 ~~~~~~~~~~~~~~~~~~

@@ -27,7 +27,7 @@ The library also provides cumulative distribution functions and
 inverse cumulative distribution functions, sometimes referred to as
 quantile functions.  The cumulative distribution functions and their
 inverses are computed separately for the upper and lower tails of the
-distribution, allowing full accuracy to be retained for small results. See the chapter :ref:`cdf-section` for more details.
+distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_gaussian:
 

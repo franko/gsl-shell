@@ -26,8 +26,6 @@ If you donate you can also choose which feature should be implemented in GSL she
 
 * development of a full featured, openGL based, 3D graphics module
 * develoment of a Graphical User Interface module to generate easily user interface to interact with plots by using GSL Shell/Lua functions
-* development of a Just In Time compiler to compile mathematical expression of the fly for optimal speed on repeated expression evaluations.
-  **Note**: this feature is already under development by using the LLVM compiler infrastructure
 * developement of a most versatile plot class that allows to create customized axes labels and legends.
 * development of a postscript backend to generate image in PostScript or EPS format
 

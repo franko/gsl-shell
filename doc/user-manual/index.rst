@@ -1,5 +1,3 @@
-.. _gsl-shell-manual-index:
-
 ##################################
 Welcome to GSL shell documentation
 ##################################

@@ -1,7 +1,7 @@
 .. highlight:: lua
 
-News
-====
+Older News
+==========
 
 **January 2011**
   Release of GSL Shell 1.1
@@ -74,9 +74,9 @@ News
 
     - in version 0.9.6 we have also introduced the support for alpha blending.
 
-  * many :ref:`special functions <special-functions>` defined in the GSL library are now available from GSL shell.
+  * many special functions defined in the GSL library are now available from GSL shell.
 
-  * the chapter with the :ref:`examples <gsl-shell-examples>` have been updated with some examples to produce beautiful fractals curves.
+  * the chapter with the GSL Shell examples have been updated with some examples to produce beautiful fractals curves.
 
 **16 October 2009**
   GSL Shell version alpha 0.6 released.
