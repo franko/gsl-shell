@@ -162,9 +162,7 @@
 #define LJ_TARGET_MASKSHIFT	0
 #define LJ_TARGET_MASKROT	1
 #define LJ_TARGET_UNIFYROT	1	/* Want only IR_BROL. */
-#define LJ_ARCH_NUMMODE		LJ_NUMMODE_SINGLE	/* NYI: dual-num. */
-#define LJ_ARCH_NOFFI		1	/* NYI: comparisons, calls. */
-#define LJ_ARCH_NOJIT		1
+#define LJ_ARCH_NUMMODE		LJ_NUMMODE_DUAL_SINGLE
 
 #elif LUAJIT_TARGET == LUAJIT_ARCH_PPCSPE
 
@@ -236,6 +234,10 @@
 #endif
 
 /* Enable or disable the dual-number mode for the VM. */
+#if (LJ_ARCH_NUMMODE == LJ_NUMMODE_SINGLE && LUAJIT_NUMMODE == 2) || \
+    (LJ_ARCH_NUMMODE == LJ_NUMMODE_DUAL && LUAJIT_NUMMODE == 1)
+#error "No support for this number mode on this architecture"
+#endif
 #if LJ_ARCH_NUMMODE == LJ_NUMMODE_DUAL || \
     (LJ_ARCH_NUMMODE == LJ_NUMMODE_DUAL_SINGLE && LUAJIT_NUMMODE != 1) || \
     (LJ_ARCH_NUMMODE == LJ_NUMMODE_SINGLE_DUAL && LUAJIT_NUMMODE == 2)
@@ -278,6 +280,18 @@
 #else
 #define LJ_32			0
 #define LJ_64			1
+#endif
+
+/* Various workarounds for embedded operating systems. */
+#if defined(__ANDROID__) || defined(__symbian__)
+#define LUAJIT_NO_LOG2
+#endif
+#if defined(__symbian__)
+#define LUAJIT_NO_EXP2
+#endif
+
+#if defined(__symbian__) || (LJ_TARGET_ARM && LJ_TARGET_OSX)
+#define LUAJIT_NO_UNWIND
 #endif
 
 #endif

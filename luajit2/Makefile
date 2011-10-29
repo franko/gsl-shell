@@ -77,7 +77,7 @@ FILE_MAN= luajit.1
 FILE_PC= luajit.pc
 FILES_INC= lua.h lualib.h lauxlib.h luaconf.h lua.hpp luajit.h
 FILES_JITLIB= bc.lua v.lua dump.lua dis_x86.lua dis_x64.lua dis_arm.lua \
-	      bcsave.lua vmdef.lua
+	      dis_ppc.lua bcsave.lua vmdef.lua
 
 ifeq (,$(findstring Windows,$(OS)))
   ifeq (Darwin,$(shell uname -s))
@@ -104,7 +104,7 @@ install: $(INSTALL_DEP)
 	cd src && test -f $(FILE_A) && $(INSTALL_F) $(FILE_A) $(INSTALL_STATIC) || :
 	$(RM) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2)
 	cd src && test -f $(FILE_SO) && \
-	  $(INSTALL_F) $(FILE_SO) $(INSTALL_DYN) && \
+	  $(INSTALL_X) $(FILE_SO) $(INSTALL_DYN) && \
 	  $(LDCONFIG) $(INSTALL_LIB) && \
 	  $(SYMLINK) $(INSTALL_SONAME) $(INSTALL_SHORT1) && \
 	  $(SYMLINK) $(INSTALL_SONAME) $(INSTALL_SHORT2) || :

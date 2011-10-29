@@ -161,6 +161,8 @@ IRFLDEF(FLOFS)
 #include "lj_emit_x86.h"
 #elif LJ_TARGET_ARM
 #include "lj_emit_arm.h"
+#elif LJ_TARGET_PPC
+#include "lj_emit_ppc.h"
 #else
 #error "Missing instruction emitter for target CPU"
 #endif
@@ -460,7 +462,20 @@ static void ra_evictset(ASMState *as, RegSet drop)
 /* Evict (rematerialize) all registers allocated to constants. */
 static void ra_evictk(ASMState *as)
 {
-  RegSet work = ~as->freeset & RSET_ALL;
+  RegSet work;
+#if !LJ_SOFTFP
+  work = ~as->freeset & RSET_FPR;
+  while (work) {
+    Reg r = rset_pickbot(work);
+    IRRef ref = regcost_ref(as->cost[r]);
+    if (emit_canremat(ref) && irref_isk(ref)) {
+      ra_rematk(as, ref);
+      checkmclim(as);
+    }
+    rset_clear(work, r);
+  }
+#endif
+  work = ~as->freeset & RSET_GPR;
   while (work) {
     Reg r = rset_pickbot(work);
     IRRef ref = regcost_ref(as->cost[r]);
@@ -483,7 +498,7 @@ static Reg ra_allock(ASMState *as, int32_t k, RegSet allow)
     IRRef ref;
     r = rset_pickbot(work);
     ref = regcost_ref(as->cost[r]);
-    if (emit_canremat(ref) &&
+    if (ref < ASMREF_L &&
 	k == (ra_iskref(ref) ? ra_krefk(as, ref) : IR(ref)->i))
       return r;
     rset_clear(work, r);
@@ -678,6 +693,76 @@ static void ra_left(ASMState *as, Reg dest, IRRef lref)
     }
   }
 }
+#else
+/* Similar to ra_left, except we override any hints. */
+static void ra_leftov(ASMState *as, Reg dest, IRRef lref)
+{
+  IRIns *ir = IR(lref);
+  Reg left = ir->r;
+  if (ra_noreg(left)) {
+    ra_sethint(ir->r, dest);  /* Propagate register hint. */
+    left = ra_allocref(as, lref,
+		       (LJ_SOFTFP || dest < RID_MAX_GPR) ? RSET_GPR : RSET_FPR);
+  }
+  ra_noweak(as, left);
+  if (dest != left) {
+    /* Use register renaming if dest is the PHI reg. */
+    if (irt_isphi(ir->t) && as->phireg[dest] == lref) {
+      ra_modified(as, left);
+      ra_rename(as, left, dest);
+    } else {
+      emit_movrr(as, ir, dest, left);
+    }
+  }
+}
+#endif
+
+#if !LJ_TARGET_X86ORX64
+/* Force a RID_RETLO/RID_RETHI destination register pair (marked as free). */
+static void ra_destpair(ASMState *as, IRIns *ir)
+{
+  Reg destlo = ir->r, desthi = (ir+1)->r;
+  /* First spill unrelated refs blocking the destination registers. */
+  if (!rset_test(as->freeset, RID_RETLO) &&
+      destlo != RID_RETLO && desthi != RID_RETLO)
+    ra_restore(as, regcost_ref(as->cost[RID_RETLO]));
+  if (!rset_test(as->freeset, RID_RETHI) &&
+      destlo != RID_RETHI && desthi != RID_RETHI)
+    ra_restore(as, regcost_ref(as->cost[RID_RETHI]));
+  /* Next free the destination registers (if any). */
+  if (ra_hasreg(destlo)) {
+    ra_free(as, destlo);
+    ra_modified(as, destlo);
+  } else {
+    destlo = RID_RETLO;
+  }
+  if (ra_hasreg(desthi)) {
+    ra_free(as, desthi);
+    ra_modified(as, desthi);
+  } else {
+    desthi = RID_RETHI;
+  }
+  /* Check for conflicts and shuffle the registers as needed. */
+  if (destlo == RID_RETHI) {
+    if (desthi == RID_RETLO) {
+      emit_movrr(as, ir, RID_RETHI, RID_TMP);
+      emit_movrr(as, ir, RID_RETLO, RID_RETHI);
+      emit_movrr(as, ir, RID_TMP, RID_RETLO);
+    } else {
+      emit_movrr(as, ir, RID_RETHI, RID_RETLO);
+      if (desthi != RID_RETHI) emit_movrr(as, ir, desthi, RID_RETHI);
+    }
+  } else if (desthi == RID_RETLO) {
+    emit_movrr(as, ir, RID_RETLO, RID_RETHI);
+    if (destlo != RID_RETLO) emit_movrr(as, ir, destlo, RID_RETLO);
+  } else {
+    if (desthi != RID_RETHI) emit_movrr(as, ir, desthi, RID_RETHI);
+    if (destlo != RID_RETLO) emit_movrr(as, ir, destlo, RID_RETLO);
+  }
+  /* Restore spill slots (if any). */
+  if (ra_hasspill((ir+1)->s)) ra_save(as, ir+1, RID_RETHI);
+  if (ra_hasspill(ir->s)) ra_save(as, ir, RID_RETLO);
+}
 #endif
 
 /* -- Snapshot handling --------- ----------------------------------------- */
@@ -803,7 +888,16 @@ static uint32_t asm_callx_flags(ASMState *as, IRIns *ir)
     nargs++;
     while (ira->o == IR_CARG) { nargs++; ira = IR(ira->op1); }
   }
-  /* NYI: fastcall etc. */
+#if LJ_HASFFI
+  if (IR(ir->op2)->o == IR_CARG) {  /* Copy calling convention info. */
+    CTypeID id = (CTypeID)IR(IR(ir->op2)->op2)->i;
+    CType *ct = ctype_get(ctype_ctsG(J2G(as->J)), id);
+    nargs |= ((ct->info & CTF_VARARG) ? CCI_VARARG : 0);
+#if LJ_TARGET_X86
+    nargs |= (ctype_cconv(ct->info) << CCI_CC_SHIFT);
+#endif
+  }
+#endif
   return (nargs | (ir->t.irt << CCI_OTSHIFT));
 }
 
@@ -863,6 +957,15 @@ static uint32_t ir_khash(IRIns *ir)
 void sys_icache_invalidate(void *start, size_t len);
 #endif
 
+#if LJ_TARGET_LINUX && LJ_TARGET_PPC
+#include <dlfcn.h>
+static void (*asm_ppc_cache_flush)(MCode *start, MCode *end);
+static void asm_dummy_cache_flush(MCode *start, MCode *end)
+{
+  UNUSED(start); UNUSED(end);
+}
+#endif
+
 /* Flush instruction cache. */
 static void asm_cache_flush(MCode *start, MCode *end)
 {
@@ -871,7 +974,14 @@ static void asm_cache_flush(MCode *start, MCode *end)
   UNUSED(start); UNUSED(end);
 #elif LJ_TARGET_OSX
   sys_icache_invalidate(start, end-start);
-#elif defined(__GNUC__)
+#elif LJ_TARGET_LINUX && LJ_TARGET_PPC
+  if (!asm_ppc_cache_flush) {
+    void *vdso = dlopen("linux-vdso32.so.1", RTLD_LAZY);
+    if (!vdso || !(asm_ppc_cache_flush = dlsym(vdso, "__kernel_sync_dicache")))
+      asm_ppc_cache_flush = asm_dummy_cache_flush;
+  }
+  asm_ppc_cache_flush(start, end);
+#elif defined(__GNUC__) && !LJ_TARGET_PPC
   __clear_cache(start, end);
 #else
 #error "Missing builtin to flush instruction cache"
@@ -1106,8 +1216,10 @@ static void asm_loop(ASMState *as)
 #include "lj_asm_x86.h"
 #elif LJ_TARGET_ARM
 #include "lj_asm_arm.h"
+#elif LJ_TARGET_PPC
+#include "lj_asm_ppc.h"
 #else
-#error "Missing instruction emitter for target CPU"
+#error "Missing assembler for target CPU"
 #endif
 
 /* -- Head of trace ------------------------------------------------------- */
@@ -1287,9 +1399,15 @@ static void asm_head_side(ASMState *as)
   /* Inherit top stack slot already checked by parent trace. */
   as->T->topslot = as->parent->topslot;
   if (as->topslot > as->T->topslot) {  /* Need to check for higher slot? */
-    as->T->topslot = (uint8_t)as->topslot;  /* Remember for child traces. */
+#ifdef EXITSTATE_CHECKEXIT
+    /* Highest exit + 1 indicates stack check. */
+    ExitNo exitno = as->T->nsnap;
+#else
     /* Reuse the parent exit in the context of the parent trace. */
-    asm_stack_check(as, as->topslot, irp, allow & RSET_GPR, as->J->exitno);
+    ExitNo exitno = as->J->exitno;
+#endif
+    as->T->topslot = (uint8_t)as->topslot;  /* Remember for child traces. */
+    asm_stack_check(as, as->topslot, irp, allow & RSET_GPR, exitno);
   }
 }
 
@@ -1446,9 +1564,20 @@ static void asm_setup_regsp(ASMState *as)
 #endif
 	break;
 #endif
+#if LJ_NEED_FP64
+      case IR_CONV:
+	if (irt_isfp((ir-1)->t)) {
+	  ir->prev = REGSP_HINT(RID_FPRET);
+	  continue;
+	}
+	/* fallthrough */
+#endif
       case IR_CALLN: case IR_CALLXS:
 #if LJ_SOFTFP
       case IR_MIN: case IR_MAX:
+#endif
+#if LJ_BE
+	(ir-1)->prev = REGSP_HINT(RID_RETLO);
 #endif
 	ir->prev = REGSP_HINT(RID_RETHI);
 	continue;
@@ -1475,6 +1604,9 @@ static void asm_setup_regsp(ASMState *as)
       if (inloop)
 	as->modset = RSET_SCRATCH;
       break;
+#if !LJ_TARGET_X86ORX64 && !LJ_SOFTFP
+    case IR_ATAN2: case IR_LDEXP:
+#endif
     case IR_POW:
       if (!LJ_SOFTFP && irt_isnum(ir->t)) {
 #if LJ_TARGET_X86ORX64
@@ -1490,14 +1622,12 @@ static void asm_setup_regsp(ASMState *as)
       }
       /* fallthrough for integer POW */
     case IR_DIV: case IR_MOD:
-#if LJ_64 && LJ_HASFFI
       if (!irt_isnum(ir->t)) {
 	ir->prev = REGSP_HINT(RID_RET);
 	if (inloop)
 	  as->modset |= (RSET_SCRATCH & RSET_GPR);
 	continue;
       }
-#endif
       break;
     case IR_FPMATH:
 #if LJ_TARGET_X86ORX64
@@ -1564,6 +1694,7 @@ void lj_asm_trace(jit_State *J, GCtrace *T)
 {
   ASMState as_;
   ASMState *as = &as_;
+  MCode *origtop;
 
   /* Ensure an initialized instruction beyond the last one for HIOP checks. */
   J->cur.nins = lj_ir_nextins(J);
@@ -1586,7 +1717,8 @@ void lj_asm_trace(jit_State *J, GCtrace *T)
   } else {
     as->parent = NULL;
   }
-  as->mctop = lj_mcode_reserve(J, &as->mcbot);  /* Reserve MCode memory. */
+  /* Reserve MCode memory. */
+  as->mctop = origtop = lj_mcode_reserve(J, &as->mcbot);
   as->mcp = as->mctop;
   as->mclim = as->mcbot + MCLIM_REDZONE;
   asm_setup_target(as);
@@ -1649,7 +1781,7 @@ void lj_asm_trace(jit_State *J, GCtrace *T)
   if (!as->loopref)
     asm_tail_fixup(as, T->link);  /* Note: this may change as->mctop! */
   T->szmcode = (MSize)((char *)as->mctop - (char *)as->mcp);
-  asm_cache_flush(T->mcode, as->mctop);
+  asm_cache_flush(T->mcode, origtop);
 }
 
 #undef IR
