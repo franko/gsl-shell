@@ -28,7 +28,7 @@
 #ifndef LUA_STRICT 
   #define STDLIB_NAME "gsl-shell"
 #else
-  #define STDLIB_NAME "lua/5.1"
+  #define STDLIB_NAME "lua"
 #endif
 #ifdef LUA_USE_WIN
 /*
@@ -38,15 +38,17 @@
 #define LUA_LDIR	"!\\" STDLIB_NAME "\\"
 #define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT \
-  ".\\?.lua;" LUA_CDIR"?.lua;" LUA_CDIR"?\\init.lua;" LUA_CDIR"templates\\?.lua.in"
+  ".\\?.lua;" ".\\templates\\?.lua.in;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;" LUA_CDIR"templates\\?.lua.in"
 #define LUA_CPATH_DEFAULT \
   ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
 #define LUA_ROOT_Q      QUOTEME(LUA_ROOT) "/"
 #define LUA_LDIR	LUA_ROOT_Q "share/" STDLIB_NAME "/"
 #define LUA_CDIR	LUA_ROOT_Q "lib/" STDLIB_NAME  "/"
-#define LUA_PATH_DEFAULT "./?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua" \
-                                ";" LUA_CDIR"?.lua;" LUA_CDIR"?/init.lua"
+#define LUA_PATH_DEFAULT "./?.lua;" "./templates/?.lua.in;" \
+                         LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua;" \
+                         LUA_CDIR"?.lua;" LUA_CDIR"?/init.lua;" \
+                         LUA_CDIR"templates/?.lua.in"
 #define LUA_CPATH_DEFAULT "./?.so;" LUA_CDIR"?.so;" LUA_CDIR"loadall.so"
 #endif
 

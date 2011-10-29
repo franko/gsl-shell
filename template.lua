@@ -95,13 +95,6 @@ local function template_error(code, filename, err)
    error('error loading ' .. filename .. ':' .. err)
 end
 
-local function require(filename)
-   local code = process(filename, {})
-   local f, err = loadstring(code, filename)
-   if not f then template_error(code, filename, err) end
-   return f()
-end
-
 local function load(filename, defs)
    local code = process(filename, defs)
    local f, err = loadstring(code, filename)
@@ -110,7 +103,7 @@ local function load(filename, defs)
 end
 
 M.process = process
-M.require = require
-M.load    = load
+M.load = load
 
 return M
+

@@ -44,11 +44,13 @@ SUBDIRS = $(LUADIR)
 C_SRC_FILES = gs-types.c lua-utils.c lua-rng.c randist.c sf.c lua-graph.c \
 		lua-gsl.c
 
-LUA_BASE_FILES = base.lua matrix-init.lua misc.lua integ-init.lua fft-init.lua import.lua bspline.lua cgsl.lua check.lua csv.lua demo-init.lua gsl-check.lua gslext.lua linfit.lua roots.lua strict.lua template.lua time.lua
+LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua randist-init.lua template.lua check.lua graph-init.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua strict.lua csv.lua gslext.lua num.lua demo-init.lua import.lua plot3d.lua
 
-DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim
+DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour
+LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
+LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
 
 LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
 C_SRC_FILES += gsl-shell-jit.c
@@ -56,8 +58,8 @@ C_SRC_FILES += gsl-shell-jit.c
 DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
-# files and flags related to the graphics modules
-LUA_BASE_FILES += graph-init.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
+# files and flags related to the pre3d modules
+LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
 SUBDIRS += agg-plot
 LUAGSL_LIBS += agg-plot/libaggplot.a
@@ -84,8 +86,8 @@ $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 
 install: $(GSL_SHELL)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
-	strip $(DESTDIR)$(PREFIX)/bin/gsl-shell
+	cp $(GSL_SHELL) $(DESTDIR)$(PREFIX)/bin
+	strip $(DESTDIR)$(PREFIX)/bin/$(GSL_SHELL)
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
 	cp --parents $(LUA_BASE_FILES) $(DESTDIR)$(PREFIX)/lib/gsl-shell
 

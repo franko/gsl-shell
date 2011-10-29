@@ -8,5 +8,5 @@ DISABLE_GAMMA_CORR = no
 
 DEBUG = no
 
-PREFIX= /home/franko/apps
-DESTDIR= 
+PREFIX= /usr/local
+DESTDIR=
