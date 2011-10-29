@@ -230,13 +230,12 @@ double
 gs_check_number (lua_State *L, int index, int check_normal)
 {
   double v;
-  int fpclass;
   if (!lua_isnumber (L, index))
     return gs_type_error (L, index, "real number");
   v = lua_tonumber (L, index);
   if (check_normal)
     {
-      if (isinf(v) || isnan(fpclass))
+      if (isinf(v) || fpclassify(v) == FP_NAN)
 	return luaL_error (L, "invalid 'nan' or 'inf' number", index);
     }
   return v;
