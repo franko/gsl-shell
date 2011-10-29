@@ -1,6 +1,7 @@
 
-# If you set to yes a Lua interpreter will be built and the GSL specific
-# functions will be loaded in a separate module 'gsl'
+# If you set to yes a pure Lua interpreter will be built.
+# It is meant to be compatible with standard Lua and short function syntax
+# will be disabled.
 LUA_BUILD = no
 
 # set this to "yes" if you want to disable gamma correction

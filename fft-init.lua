@@ -256,7 +256,7 @@ local function hc_newindex(ft, k, z)
 end
 
 local function halfcomplex_to_matrix(hc)
-   return matrix.cnew(hc.size, 1, |i| hc[i-1])
+   return matrix.cnew(hc.size, 1, function(i) return hc[i-1] end)
 end
 
 local function hc_tostring(hc)
