@@ -11,4 +11,5 @@ gsl-shell
 .build
 _build
 www
+doc/html
 
