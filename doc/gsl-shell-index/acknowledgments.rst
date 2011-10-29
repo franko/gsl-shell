@@ -3,10 +3,14 @@ Acknowldgemets
 
 If GSL Shell exists is thanks to the many high quality free software projects on which it is based.
 
-The GSL team have made a great works over the years to bring an excellent, well thought, library for C programmers.
-Their work is even more remarkable thanks to the complete and accurate documentation.
-The GSL library deserves the merit of having opened the way to access high quality numerical routines for the non specialists of FORTRAN.
+The GSL library is an highly valuable library with a well designed API, good C coding and a complete and accurate documentation.
+It is the merit of the GSL library if many numerical algorithms are easily available for non-specialist FORTRAN programmers.
 
-Many thanks also to the Lua community for publishing their work under a free software license and to Maxim Shemarev for his great AGG library.
+The AGG library is another outstanding free software library that does leverange the C++ template systems to achieve graphical results of excellent quality with very good execution performances.
 
-Finally I would like to thanks to my wife, Gosia, for her patience and her support.
+Last, but not least, the LuaJIT2 made a really big difference with its outstanding JIT code generator.
+Thanks to LuaJIT2 it is possible to easily write code in Lua and achieve performaces close to optimized C code.
+
+Finally I would like to thanks the Lua mailing list, Mike Pall and the Lua authors for their advices and helps.
+
+Many tanks also to my wife, Gosia, for her patience and her support.

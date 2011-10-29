@@ -65,5 +65,5 @@ Contents:
    :maxdepth: 2
 
    why-donate.rst
-   acknowledgments.rst
    older-news.rst
+   acknowledgments.rst
