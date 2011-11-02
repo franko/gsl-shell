@@ -1,47 +1,52 @@
 
-GSL shell is still in early developement and it is released for the
-people interested in its development.
+GSL Shell 2.0
 
 ** BUILD INSTRUCTION
 
-To build GSL shell you need LUA 5.1.4 with the LNUM patch. Both of
-them are free software and can be found at the following URLs:
+GSL Shell needs the following external libraries:
 
-- http://www.lua.org
-- http://luaforge.net/projects/lnum/
+- AGG library, version 2.5
+- GSL Library, version 1.14 or 1.15
+- GNU readline library (on Linux only)
 
-Further, the LNUM patch should be configured to use 'double' for
-floating point numbers (this is the default behaviour) and to use
-complex numbers.
+Please note that the Lua implementation used in GSL Shell is included with
+the source code so that you don't need any external Lua library or
+executable.
 
-In order to simplify the build process of 'GSL shell' we provide LUA
-5.1.4 with the LNUM patch already configured in the distribution of
-the source code.
+Once you are sure that the AGG and GSL libraries are properly installed
+edit the file "makepackages". For the Linux platform locate the part
+between the "else" and "endif" keyword and modify the following variables:
 
-So, in order to build GSL shell, you should do :
-- edit the file makeconfig
-  - use BUILD_LUA_DLL if you want only a shared library to load in Lua
-  - use ENABLE_COMPLEX if you want support for complex number
-    (recommended)
-  - use ENABLE_AGG_PLOT to activate or disactivate the AGG graphical
-    module
-- in the GSL shell root folder type 'make' to build everything
+AGG_INCLUDES
+AGG_LIBS
+GSL_INCLUDES
+GSL_LIBS
 
-In order to customize the build options you can edit the files
-Makefile and makeconfig in the GSL shell root directory.
+so that the AGG and GSL libraries can be located. Please note that if the
+libraries are installed in the standard locations you can leave empty the
+variables AGG_INCLUDES and GSL_INCLUDES.
 
-** LIBRARIES DEPENDENCIES
+Once you have modified the file "makepackage" you can just give
 
-GSL shell does depend on GSL, of course, and it is known to work with
-GSL from 1.11 to 1.13 .
+> make
 
-- http://www.gnu.org/software/gsl/
+to build the software and
 
-LUA 5.1 is required. We currently use LUA 5.1.4 with the LNUM patch for complex
-numbers.
+> make install
 
-- http://www.lua.org
-- http://luaforge.net/projects/lnum/
+to install it.
 
-You will need also the AGG library:
-- http://www.antigrain.com/
+** EXTERNAL REFERENCIES
+
+The GSL Library:
+
+  http://www.gnu.org/software/gsl/
+
+The LuaJIT project:
+
+  http://luajit.org
+
+The AGG library:
+
+  http://www.antigrain.com/
+

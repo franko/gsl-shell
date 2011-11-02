@@ -1,25 +1,19 @@
 
-* GSL shell 
-* Copyright (C) 2009 Francesco Abbate
+* GSL shell 2.0
+* Copyright (C) 2009-2011 Francesco Abbate
 * Author: Francesco Abbate
 * Published under GNU GENERAL PUBLIC LICENSE, version 3
 
 GSL shell offers an interactive command-line interface that gives
 access to GSL collection of mathematical functions. GSL shell is based
-on the powerful and elegant scripting language LUA.
+on the powerful and elegant scripting language Lua.
 
 GSL shell is not just a wrapper over the C API of GSL but does offer
 much more simple and expressive way to use GSL. The objective of GSL
 shell is to give the user the power of easily access GSL functions
 without having to write a complete C application.
 
-GSL Shell is based on LUA, Copyright (C) 1994-2008 Lua.org, PUC-Rio.
-All rights reserved.  The Lua language is entirely designed,
-implemented, and maintained by a team at PUC-Rio in Brazil. The
-implementation is not derived from licensed software.  LUA is free
-software and the 5.1 version is published under the MIT license.  You
-can find it at the following address: http://www.lua.org
-
-GSL shell also uses the LNUM patch, Copyright (c) 2006-08, Asko
-Kauppi. You can find it at the address
-http://luaforge.net/projects/lnum/.
+GSL Shell is based on LuaJIT2.
+LuaJIT is Copyright © 2005-2011 Mike Pall.
+LuaJIT is open source software, released under the MIT license.
+More informations on the LuaJIT webpage http://luajit.org.
