@@ -112,11 +112,11 @@ local function matrix_free(m)
 end
 
 local function matrix_dim(m)
-   return m.size1, m.size2
+   return tonumber(m.size1), tonumber(m.size2)
 end
 
 local function matrix_len(m)
-   return m.size1
+   return tonumber(m.size1)
 end
 
 local function matrix_copy(a)
@@ -152,7 +152,7 @@ end
 
 local function check_col_index(m, j)
    if lua_index_style then j = j-1 end
-   if j < 0 or j >= m.size2 then
+   if j < 0 or j >= tonumber(m.size2) then
       error('matrix index out of bounds', 3)
    end
    return j
@@ -455,8 +455,8 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 		return gsl_complex(zr, zi)
 	     elseif element_wise or sa or sb then
 		local sela, selb = selector(ra, sa), selector(rb, sb)
-		local n1 = (sa and b.size1 or a.size1)
-		local n2 = (sa and b.size2 or a.size2)
+		local n1 = (sa and tonumber(b.size1) or tonumber(a.size1))
+		local n2 = (sa and tonumber(b.size2) or tonumber(a.size2))
 		if ra and rb then
 		   return mat_op_gen(n1, n2, sela, a, selb, b, scalar_op)
 		else
@@ -464,7 +464,7 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 		end
 	     else
 		if ra and rb then
-		   local n1, n2 = a.size1, b.size2
+		   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
 		   local c = matrix_new(n1, n2)
 		   local NT = gsl.CblasNoTrans
 		   gsl_check(gsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
@@ -472,7 +472,7 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 		else
 		   if ra then a = mat_complex_of_real(a) end
 		   if rb then b = mat_complex_of_real(b) end
-		   local n1, n2 = a.size1, b.size2
+		   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
 		   local c = matrix_cnew(n1, n2)
 		   local NT = gsl.CblasNoTrans
 		   gsl_check(gsl.gsl_blas_zgemm(NT, NT, 1, a, b, 1, c))
