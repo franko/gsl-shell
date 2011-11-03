@@ -1764,6 +1764,10 @@ double gsl_cdf_hypergeometric_Q (const unsigned int k, const unsigned int n1,
                                  const unsigned int n2, const unsigned int t);
 ]]
 
-local gsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
-
-return gsl
+if jit.os == 'Linux' then
+	return ffi.C
+elseif jit.os == 'OSX' then
+	return ffi.load('libgsl.0.dylib')
+else
+	return ffi.load('libgsl-0')
+end

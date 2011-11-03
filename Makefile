@@ -34,8 +34,13 @@ ifeq ($(HOST_SYS),Windows)
   LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib
 else
-  LDFLAGS += -Wl,-E
-  LIBS += -ldl -lreadline -lhistory -lncurses
+  ifeq ($(HOST_SYS),Darwin)
+    LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
+    LIBS += -ldl -lreadline -lncurses
+  else
+    LDFLAGS += -Wl,-E
+    LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
+  endif
 endif
 
 SUBDIRS = $(LUADIR)
@@ -61,12 +66,15 @@ LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
 SUBDIRS += agg-plot
 LUAGSL_LIBS += agg-plot/libaggplot.a
-LIBS += $(PTHREADS_LIBS) $(AGG_LIBS) -lsupc++
+LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
-LINK_EXE = $(CC) $(LDFLAGS)
-
+ifeq ($(HOST_SYS),Darwin)
+  LINK_EXE = $(CXX) $(LDFLAGS)
+else
+  LINK_EXE = $(CC) $(LDFLAGS)
+endif
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 
 DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
