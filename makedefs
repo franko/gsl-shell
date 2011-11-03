@@ -12,19 +12,26 @@
 AR= ar rcu
 RANLIB= ranlib
 
-ifeq ($(strip $(LUA_BUILD)), yes)
-  CFG_FLAGS = -DLUA_STRICT
+CC = gcc
+CXX = g++
+
+ifeq ($(strip $(DEBUG)), yes)
+  CFLAGS = -g -Wall
+  CXXFLAGS = -g -Wall
 else
-  CFG_FLAGS = -DGSH_SHORT_FSYNTAX
+  # on windows do not use -fomit-frame-pointer
+  CFLAGS = -O3 -fno-stack-protector -fomit-frame-pointer -ffast-math -Wall
+  CXXFLAGS = -Os -fno-stack-protector -ffast-math -fno-rtti -Wall
 endif
 
-DEFS += $(CFG_FLAGS)
+ifeq ($(strip $(LUA_BUILD)), no)
+  DEFS += -DGSH_SHORT_FSYNTAX
+endif
 
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
 else
-  DEFS += -DLUA_USE_LINUX
   EXE_EXT = 
 endif
 
@@ -36,5 +43,8 @@ ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
   DEFS += -DDISABLE_GAMMA_CORR
 endif
 
-DEFS += -DLUA_ROOT="$(PREFIX)"
-
+ifeq ($(strip $(USE_READLINE)), yes)
+  ifneq ($(HOST_SYS),Windows)
+    DEFS += -DUSE_READLINE
+  endif
+endif

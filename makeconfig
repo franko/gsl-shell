@@ -9,5 +9,7 @@ DISABLE_GAMMA_CORR = no
 
 DEBUG = no
 
+USE_READLINE = yes
+
 PREFIX= /usr/local
 DESTDIR=

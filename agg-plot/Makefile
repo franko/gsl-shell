@@ -22,7 +22,6 @@ GSH_BASE_DIR = ..
 
 include $(GSH_BASE_DIR)/makeconfig
 include $(GSH_BASE_DIR)/make-system-detect
-include $(GSH_BASE_DIR)/makeflags
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 

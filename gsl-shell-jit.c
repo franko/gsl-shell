@@ -40,6 +40,12 @@
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 
+#if defined(USE_READLINE)
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
+
 #if defined(LUA_USE_POSIX)
 #include <unistd.h>
 #define lua_stdin_is_tty()	isatty(0)
@@ -52,6 +58,41 @@
 #endif
 #else
 #define lua_stdin_is_tty()	1
+#endif
+
+#if defined(USE_READLINE)
+static char *
+my_readline (lua_State *L, char *b, const char *p)
+{
+  return readline (p);
+}
+
+static void
+my_saveline (lua_State *L, int idx)
+{
+  if (lua_strlen (L, idx) > 0)  /* non-empty line? */
+    add_history(lua_tostring(L, idx));  /* add it to history */
+}
+
+static void
+my_freeline (lua_State *L, char *b)
+{
+  free (b);
+}
+
+#else
+
+static char *
+my_readline (lua_State *L, char *b, const char *p)
+{
+  fputs(p, stdout);
+  fflush(stdout);  /* show prompt */
+  return fgets(b, LUA_MAXINPUT, stdin);  /* get line */
+}
+
+static void my_saveline (lua_State *L, int idx) { }
+static void my_freeline (lua_State *L, char *b) { }
+
 #endif
 
 static lua_State *globalL = NULL;
@@ -240,25 +281,22 @@ static int incomplete(lua_State *L, int status)
 
 static int pushline (lua_State *L, int firstline) {
   char buffer[LUA_MAXINPUT];
-  char *b = buffer;
+  char *b;
   size_t l;
   const char *prmt = get_prompt(L, firstline);
-  int ok;
 
   GSL_SHELL_UNLOCK();
-  ok = lua_readline(L, b, prmt);
+  b = my_readline(L, buffer, prmt);
   GSL_SHELL_LOCK();
 
-  if (ok == 0)
-    {
-      return 0;  /* no input */
-    }
+  if (b == NULL)
+    return 0;  /* no input */
 
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
     b[l-1] = '\0';  /* remove it */
   lua_pushstring(L, b);
-  lua_freeline(L, b);
+  my_freeline(L, b);
   return 1;
 }
 
@@ -275,7 +313,7 @@ static int yield_expr(lua_State* L, int index)
   status = luaL_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
   if (status == 0)
     {
-      lua_saveline(L, index);
+      my_saveline(L, index);
       lua_remove(L, -2); /* remove the modified string */
       lua_remove(L, index); /* remove the original string */
       return 0;
@@ -317,7 +355,7 @@ static int loadline(lua_State *L)
       return 0;
     }
 
-  lua_saveline(L, 1);
+  my_saveline(L, 1);
   lua_remove(L, 1);  /* remove line */
   return status;
 }

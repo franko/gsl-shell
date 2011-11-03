@@ -20,7 +20,6 @@
 
 include makeconfig
 include make-system-detect
-include makeflags
 include makepackages
 include makedefs
 
@@ -55,7 +54,6 @@ LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
 LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
 C_SRC_FILES += gsl-shell-jit.c
 
-DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
 TARGETS = $(GSL_SHELL)
 
 # files and flags related to the pre3d modules
