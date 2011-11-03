@@ -9,27 +9,31 @@
 #include <limits.h>
 #include <stddef.h>
 
+#define QUOTE_(x) #x
+#define QUOTE(x) QUOTE_(x)
+
 /* Default path for loading Lua and C modules with require(). */
 #if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-#define LUA_LDIR	"!\\lua\\"
+#define LUA_LDIR	"!\\" QUOTE(PACKAGE_NAME) "\\"
 #define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT \
   ".\\?.lua;" ".\\templates\\?.lua.in;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;" LUA_LDIR"templates\\?.lua.in"
 #define LUA_CPATH_DEFAULT \
   ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
-#define LUA_ROOT	"/usr/local/"
-#define LUA_LDIR	LUA_ROOT "share/lua/5.1/"
-#define LUA_CDIR	LUA_ROOT "lib/lua/5.1/"
+#define LUA_ROOT	QUOTE(SYSTEM_DIR) "/"
+#define LUA_VERSION_DIR QUOTE(PACKAGE_NAME) "/" QUOTE(PACKAGE_VERSION)
+#define LUA_LDIR	LUA_ROOT "share/" LUA_VERSION_DIR "/"
+#define LUA_CDIR	LUA_ROOT "lib/" LUA_VERSION_DIR "/"
 #ifdef LUA_XROOT
 #define LUA_JDIR	LUA_XROOT "share/luajit-2.0.0-beta8/"
 #define LUA_XPATH \
-  ";" LUA_XROOT "share/lua/5.1/?.lua;" LUA_XROOT "share/lua/5.1/?/init.lua"
-#define LUA_XCPATH	LUA_XROOT "lib/lua/5.1/?.so;"
+  ";" LUA_XROOT "share/" LUA_VERSION_DIR "/?.lua;" LUA_XROOT "share/" LUA_VERSION_DIR "/?/init.lua"
+#define LUA_XCPATH	LUA_XROOT "lib/" LUA_VERSION_DIR "/?.so;"
 #else
 #define LUA_JDIR	LUA_ROOT "share/luajit-2.0.0-beta8/"
 #define LUA_XPATH

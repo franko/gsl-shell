@@ -88,7 +88,7 @@ BUILDMODE= static
 ##############################################################################
 # Enable/disable these features as needed, but make sure you force a full
 # recompile with "make clean", followed by "make".
-XCFLAGS= -DGSH_SHORT_FSYNTAX
+XCFLAGS=
 #
 # Permanently disable the FFI extension to reduce the size of the LuaJIT
 # executable. But please consider that the FFI library is compiled-in,
@@ -159,6 +159,16 @@ XCFLAGS= -DGSH_SHORT_FSYNTAX
 ##############################################################################
 # You probably don't need to change anything below this line!
 ##############################################################################
+
+include ../../makeconfig
+
+ifeq ($(strip $(LUA_BUILD)), no)
+  XCFLAGS += -DGSH_SHORT_FSYNTAX -DGSL_SHELL -DPACKAGE_NAME=gsl-shell -DPACKAGE_VERSION=2.0
+else
+  XCFLAGS += -DPACKAGE_NAME=lua -DPACKAGE_VERSION=5.1
+endif
+
+XCFLAGS += -DSYSTEM_DIR=$(PREFIX)
 
 ##############################################################################
 # Flags and options for host and target.
