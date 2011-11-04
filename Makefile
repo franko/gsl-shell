@@ -32,7 +32,7 @@ LUA_CFLAGS = -I$(LUADIR)/src
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
   LDFLAGS += -Wl,--enable-auto-import
-  LIBS += -L/usr/lib
+  LIBS += -L/usr/lib -lsupc++
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
@@ -70,11 +70,13 @@ LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
+
 ifeq ($(HOST_SYS),Darwin)
   LINK_EXE = $(CXX) $(LDFLAGS)
 else
   LINK_EXE = $(CC) $(LDFLAGS)
 endif
+
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 
 DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
