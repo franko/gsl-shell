@@ -235,7 +235,7 @@ gs_check_number (lua_State *L, int index, int check_normal)
   v = lua_tonumber (L, index);
   if (check_normal)
     {
-      if (isinf(v) || fpclassify(v) == FP_NAN)
+      if (isinf(v) || isnan(v))
 	return luaL_error (L, "invalid 'nan' or 'inf' number", index);
     }
   return v;

@@ -125,7 +125,7 @@ local function get_resource(name, n)
 end
 
 local function get_matrix_block(x, ip)
-   local n = x.size1
+   local n = tonumber(x.size1)
    local b, data, stride
    if ip then
       b, data, stride = x.block, x.data, x.tda
@@ -139,7 +139,7 @@ local function get_matrix_block(x, ip)
 end
 
 local function get_hc_block(ft, ip)
-   local n = ft.size
+   local n = tonumber(ft.size)
    local b, data, stride
    if ip then
       b, data, stride = ft.block, ft.data, ft.stride
@@ -153,7 +153,7 @@ local function get_hc_block(ft, ip)
 end
 
 function num.fft(x, ip)
-   local n = x.size1
+   local n = tonumber(x.size1)
    local b, data, stride = get_matrix_block(x, ip)
    if is_two_power(n) then
       gsl_check(gsl.gsl_fft_real_radix2_transform(data, stride, n))
@@ -167,7 +167,7 @@ function num.fft(x, ip)
 end
 
 function num.fftinv(ft, ip)
-   local n = ft.size
+   local n = tonumber(ft.size)
    local b, data, stride = get_hc_block(ft, ip)
    if is_two_power(n) then
       gsl_check(gsl.gsl_fft_halfcomplex_radix2_inverse(data, stride, n))
