@@ -19,7 +19,7 @@ ifeq ($(HOST_SYS),Windows)
   PTHREADS_LIBS = -lpthreadGCE2
 else
   AGG_INCLUDES = -I/usr/include/agg2
-  AGG_LIBS = -lagg -lX11 -lpthread -lsupc++
+  AGG_LIBS = -lagg -lX11
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm

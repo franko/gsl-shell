@@ -66,7 +66,7 @@ LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
 SUBDIRS += agg-plot
 LUAGSL_LIBS += agg-plot/libaggplot.a
-LIBS += $(PTHREADS_LIBS) $(AGG_LIBS)
+LIBS += $(AGG_LIBS) $(PTHREADS_LIBS)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
