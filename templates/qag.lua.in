@@ -44,14 +44,11 @@ local ws_blist = ffi.new('double[$(limit)]')
 local ws_rlist = ffi.new('double[$(limit)]')
 local ws_elist = ffi.new('double[$(limit)]')
 
-local ws_order = ffi.new('size_t[$(limit)]')
-local ws_level = ffi.new('size_t[$(limit)]')
+local ws_order = ffi.new('unsigned int[$(limit)]')
+local ws_level = ffi.new('unsigned int[$(limit)]')
 
-local ws_level = ffi.new('size_t[$(limit)]')
-local ws_level = ffi.new('size_t[$(limit)]')
-
-local fv1 = ffi.new('size_t[$(half_order+1)]')
-local fv2 = ffi.new('size_t[$(half_order+1)]')
+local fv1 = ffi.new('unsigned int[$(half_order+1)]')
+local fv2 = ffi.new('unsigned int[$(half_order+1)]')
 
 local function rescale_error (err, result_abs, result_asc)
    err = abs(err)
