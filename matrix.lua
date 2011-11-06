@@ -765,7 +765,7 @@ local function csqrt(x)
 end
 
 local gsl_function_list = {
-   'exp', 'log', 'log10',
+   'exp', 'pow', 'log', 'log10',
    'sin', 'cos', 'sec', 'csc', 'tan', 'cot',
    'sinh', 'cosh', 'sech', 'csch', 'tanh', 'coth',
 }

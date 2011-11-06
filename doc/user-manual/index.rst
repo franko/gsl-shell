@@ -24,6 +24,7 @@ Contents:
 
    intro.rst
    general.rst
+   complex.rst
    matrices.rst
    lua-base.rst
    linalg.rst

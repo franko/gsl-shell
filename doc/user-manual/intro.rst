@@ -30,6 +30,9 @@ Sometimes we will refer to these kind of number as *real* number in opposition t
 For integer numbers GSL Shell differs from many other programming environment because it does not have a distinct type to represent them.
 In other words integer numbers are treated just like *real* number with all the implications that follows.
 
+Complex numbers
+~~~~~~~~~~~~~~~
+
 When you need to define a complex number you can use a native syntax like in the following example::
 
    x = 3 + 4i

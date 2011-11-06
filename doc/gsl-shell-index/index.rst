@@ -64,6 +64,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   download.rst
    why-donate.rst
    older-news.rst
    acknowledgments.rst
