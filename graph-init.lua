@@ -1,5 +1,9 @@
 
+local bit = require 'bit'
+
 local floor = math.floor
+
+local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
 local lua_index_style = gslsh.lua_index_style
 
@@ -30,7 +34,7 @@ function graph.ipathp(f)
 end   
 
 function graph.fxline(f, xi, xs, n)
-   n = n and n or 512
+   n = n and math.min(n, 8192) or 512
    return graph.ipath(iter.sample(f, xi, xs, n))
 end
 
@@ -108,13 +112,55 @@ function graph.rect(x1, y1, x2, y2)
    return p
 end
 
+local function rgba(r, g, b, a)
+   local rb = band(lshift(r*255, 24), 0xff000000)
+   local gb = band(lshift(g*255, 16), 0xff0000  )
+   local bb = band(lshift(b*255, 8 ), 0xff00    )
+   return bor(rb, gb, bb, a and band(a*255, 0xff) or 0xff)
+end
+
+local function rgba_decode(col)
+   local r = rshift(band(col, 0xff000000), 24) / 255
+   local g = rshift(band(col, 0xff0000), 16) / 255
+   local b = rshift(band(col, 0xff00), 8) / 255
+   local a = band(col, 0xff) / 255
+   return r, g, b, a
+end
+
+graph.rgba = rgba
+graph.rgb = function(r, g, b) return rgba(r, g, b, 1) end
+
+local lum_std = 0.75
+
+graph.color = {
+   red     = rgba(lum_std, 0, 0),
+   green   = rgba(0, lum_std, 0),
+   blue    = rgba(0, 0, lum_std),
+   magenta = rgba(lum_std, 0, lum_std),
+   cyan    = rgba(0, lum_std, lum_std),
+   yellow  = rgba(lum_std, lum_std, 0),
+
+   black   = rgba(0, 0, 0),
+   white   = rgba(1, 1, 1),
+
+   decode = rgba_decode,
+
+   combine = function(f1, c1, f2, c2)
+		local r1, g1, b1 = rgba_decode(c1)
+		if f2 and c2 then
+		   local r2, g2, b2 = rgba_decode(c2)
+		   return rgba(f1*r1+f2*r2, f1*g1+f2*g2, f1*b1+f2*b2)
+		else
+		   return rgba(f1*r1, f1*g1, f1*b1)
+		end
+	     end
+}
+
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
-local mcolors = {'', 'dark', 'light'}
 
 function graph.rainbow(n)
    local p = #bcolors
-   local q = floor((n-1)/p) % #mcolors
-   return mcolors[q+1] .. bcolors[(n-1) % p + 1]
+   return graph.color[bcolors[(n-1) % p + 1]]
 end
 
 local color_schema = {

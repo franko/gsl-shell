@@ -4,7 +4,7 @@
 #include "lua-cpp-utils.h"
 #include "colors.h"
 
-agg::rgba8
+static agg::rgba8
 rgba8_lookup (lua_State *L, const char *color_str)
 {
   const char *p = color_str;
@@ -49,17 +49,25 @@ agg::rgba8
 color_arg_lookup (lua_State *L, int index)
 {
   if (lua_isnoneornil (L, index))
+    return colors::cdefault;
+  
+  if (lua_isnumber(L, index))
     {
-      return colors::cdefault;
-    }
-  else if (lua_isstring (L, index))
-    {
-      const char *cstr = lua_tostring (L, index);
-      return rgba8_lookup (L, cstr);
+      unsigned int col = (unsigned int) lua_tointeger (L, index);
+      agg::int8u r = (col & 0xff000000) >> 24;
+      agg::int8u g = (col & 0x00ff0000) >> 16;
+      agg::int8u b = (col & 0x0000ff00) >> 8;
+      agg::int8u a = (col & 0x000000ff);
+
+      return agg::rgba8(r, g, b, a);
     }
 
-  agg::rgba8 *pc = object_check<agg::rgba8> (L, index, GS_RGBA_COLOR);
-  return *pc;
+  const char *cstr = lua_tostring (L, index);
+
+  if (!cstr)
+    luaL_error (L, "invalid color specification");
+
+  return rgba8_lookup (L, cstr);
 }
 
 agg::rgba colors::white(1, 1, 1);

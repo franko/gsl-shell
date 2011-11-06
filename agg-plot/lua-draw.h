@@ -19,11 +19,8 @@ __END_DECLS
 
 extern int agg_text_new       (lua_State *L);
 extern int agg_path_new       (lua_State *L);
-extern int agg_rgb_new        (lua_State *L);
-extern int agg_rgba_new       (lua_State *L);
 
 extern draw::path*     check_agg_path  (lua_State *L, int index);
-extern agg::rgba8*     check_agg_rgba8 (lua_State *L, int index);
 
 #endif
 

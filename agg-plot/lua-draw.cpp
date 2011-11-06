@@ -62,11 +62,6 @@ static int agg_ellipse_new    (lua_State *L);
 static int agg_circle_new     (lua_State *L);
 static int agg_ellipse_free   (lua_State *L);
 
-
-static int agg_rgba_add       (lua_State *L);
-static int agg_rgba_mul       (lua_State *L);
-static int agg_rgba_set_alpha (lua_State *L);
-
 static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
@@ -83,8 +78,6 @@ static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
   {"ellipse",  agg_ellipse_new},
   {"circle",   agg_circle_new},
-  {"rgba",     agg_rgba_new},
-  {"rgb",      agg_rgb_new},
   {NULL, NULL}
 };
 
@@ -97,14 +90,6 @@ static const struct luaL_Reg agg_path_methods[] = {
 
 static const struct luaL_Reg agg_ellipse_methods[] = {
   {"__gc",        agg_ellipse_free},
-  {NULL, NULL}
-};
-
-// no finalizer is needed because rgba does not allocate memory
-static const struct luaL_Reg rgba_methods[] = {
-  {"__add",       agg_rgba_add },
-  {"__mul",       agg_rgba_mul },
-  {"alpha",       agg_rgba_set_alpha },
   {NULL, NULL}
 };
 
@@ -267,89 +252,6 @@ agg_ellipse_free (lua_State *L)
   return object_free<draw::ellipse>(L, 1, GS_DRAW_ELLIPSE);
 }
 
-static unsigned int double2uint8 (double x)
-{
-  int u = x * 255.0;
-  if (u > 255)
-    u = 255;
-  else if (u < 0)
-    u = 0;
-  return (unsigned int) u;
-}
-
-agg::rgba8 *
-check_agg_rgba8 (lua_State *L, int index)
-{
-  return (agg::rgba8 *) gs_check_userdata (L, index, GS_RGBA_COLOR);
-}
-
-int
-agg_rgba_new (lua_State *L)
-{
-  unsigned int r = double2uint8 (luaL_checknumber (L, 1));
-  unsigned int g = double2uint8 (luaL_checknumber (L, 2));
-  unsigned int b = double2uint8 (luaL_checknumber (L, 3));
-  unsigned int a = double2uint8 (luaL_checknumber (L, 4));
-
-  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b, a);
-  return 1;
-}
-
-int
-agg_rgb_new (lua_State *L)
-{
-  unsigned int r = double2uint8 (luaL_checknumber (L, 1));
-  unsigned int g = double2uint8 (luaL_checknumber (L, 2));
-  unsigned int b = double2uint8 (luaL_checknumber (L, 3));
-
-  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b, 255);
-  return 1;
-}
-
-int
-agg_rgba_set_alpha (lua_State *L)
-{
-  agg::rgba8 *c = object_check<agg::rgba8> (L, 1, GS_RGBA_COLOR);
-  double a = luaL_checknumber (L, 2);
-  c->a = agg::rgba8::base_mask * a;
-  return 0;
-}
-
-int
-agg_rgba_add (lua_State *L)
-{
-  agg::rgba8 *c1 = object_check<agg::rgba8> (L, 1, GS_RGBA_COLOR);
-  agg::rgba8 *c2 = object_check<agg::rgba8> (L, 2, GS_RGBA_COLOR);
-
-  unsigned int r = c1->r + c2->r;
-  unsigned int g = c1->g + c2->g;
-  unsigned int b = c1->b + c2->b;
-
-  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b);
-
-  return 1;
-}
-
-int
-agg_rgba_mul (lua_State *L)
-{
-  int is = 1, ic = 2;
-
-  if (gs_is_userdata (L, 1, GS_RGBA_COLOR))
-    {
-      ic = 1;
-      is = 2;
-    }
-
-  double f = luaL_checknumber (L, is);
-  agg::rgba8 *c = object_check<agg::rgba8> (L, ic, GS_RGBA_COLOR);
-
-  unsigned int r = f * c->r, g = f * c->g, b = f * c->b;
-
-  new(L, GS_RGBA_COLOR) agg::rgba8(r, g, b);
-  return 1;
-}
-
 void
 draw_register (lua_State *L)
 {
@@ -361,12 +263,6 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_ELLIPSE));
   luaL_register (L, NULL, agg_ellipse_methods);
-  lua_pop (L, 1);
-
-  luaL_newmetatable (L, GS_METATABLE(GS_RGBA_COLOR));
-  lua_pushvalue (L, -1);
-  lua_setfield (L, -2, "__index");
-  luaL_register (L, NULL, rgba_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */

@@ -773,7 +773,7 @@ function RendererMT.bufferShape(this, shape)
 	       if this.set_light_intensity then
 		  local r1 = 0.2
 		  local ci = intensity * (1-r1)
-		  fill_rgba = r1 * fill_rgba + ci * fill_rgba
+		  fill_rgba = color.combine(r1, fill_rgba, ci, fill_rgba)
 	       end
 
 	       if this.fill_rgba_alpha then
