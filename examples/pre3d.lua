@@ -50,13 +50,15 @@ function demo1()
    local plt = canvas('Pre3D')
    local a = 0.6
    plt:limits(-a, -a, a, a)
-   local r = rng()
+   local r = rng.new()
+   local darkgray = graph.rgb(0.9, 0.9, 0.9)
+   local lightgray = graph.rgb(0.6, 0.6, 0.6)
    for k = 1, 50 do
       local x, y = (2*r:get()-1)*a*0.8, (2*r:get()-1)*a*0.8
       local d = rnd.gaussian(r, 0.015*a) + 0.03*a
       local s = star(d)
-      plt:add(s, rgb(0.9, 0.9, 0.9), {}, {{'translate', x=x, y=y}})
-      plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
+      plt:add(s, darkgray, {}, {{'translate', x=x, y=y}})
+      plt:addline(s, lightgray, {}, {{'translate', x=x, y=y}})
    end
    plt.units = false
    plt.sync = false
