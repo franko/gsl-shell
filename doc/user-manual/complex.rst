@@ -1,15 +1,13 @@
 .. highlight:: lua
 
-.. _introduction:
-
 Complex Numbers
 ===============
 
 The functions described in this chapter provide support for complex numbers.
 The algorithms take care to avoid unnecessary intermediate underflows and overflows, allowing the functions to be evaluated over as much of the complex plane as possible.
 
-For multiple-valued functions the branch cuts have been chosen to follow the conventions of Abramowitz and Stegun in the `Handbook of Mathematical Functions'.
-The functions return principal values which are the same as those in GNU Calc, which in turn are the same as those in `Common Lisp, The Language (Second Edition)' and the HP-28/48 series of calculators.
+For multiple-valued functions the branch cuts have been chosen to follow the conventions of Abramowitz and Stegun in the 'Handbook of Mathematical Functions'.
+The functions return principal values which are the same as those in GNU Calc, which in turn are the same as those in 'Common Lisp, The Language (Second Edition)' and the HP-28/48 series of calculators.
 
 Complex Functions
 -----------------
