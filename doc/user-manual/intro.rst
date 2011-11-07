@@ -124,6 +124,110 @@ An alternative compact writing could have been::
 
 where we have used again the short function notation and the Lua logical operators ``and`` and ``or``.
 
+Matrix operations
+~~~~~~~~~~~~~~~~~
+
+If we want to obtain the inverse of the matrix defined above we can use the function :func:`matrix.inv`.
+Let us see how it works by using the matrix ``m`` defined above and taking its inverse::
+
+  use 'math'
+
+  -- we define the matrix
+  m = matrix.new(8, 8, |n,k| k <= n and sf.choose(n-1, k-1) or 0)
+
+  -- we obtain the inverse
+  minv = matrix.inv(m)
+
+Then the matrix ``minv`` will be equal to::
+
+   >>> minv
+   [   1   0   0   0   0   0   0   0 ]
+   [  -1   1   0   0   0   0   0   0 ]
+   [   1  -2   1   0   0   0   0   0 ]
+   [  -1   3  -3   1   0   0   0   0 ]
+   [   1  -4   6  -4   1   0   0   0 ]
+   [  -1   5 -10  10  -5   1   0   0 ]
+   [   1  -6  15 -20  15  -6   1   0 ]
+   [  -1   7 -21  35 -35  21  -7   1 ]
+
+If we want to check that ``minv`` is actually the inverse of ``m`` we can perform the matrix multiplication to check::
+
+   >>> minv * m
+   [ 1 0 0 0 0 0 0 0 ]
+   [ 0 1 0 0 0 0 0 0 ]
+   [ 0 0 1 0 0 0 0 0 ]
+   [ 0 0 0 1 0 0 0 0 ]
+   [ 0 0 0 0 1 0 0 0 ]
+   [ 0 0 0 0 0 1 0 0 ]
+   [ 0 0 0 0 0 0 1 0 ]
+   [ 0 0 0 0 0 0 0 1 ]
+
+and as we whould expect we have actually obtained the unit matrix.
+
+The matrix inverse can be used to solve a linear system so let us try.
+First we define a column vector, fox example::
+
+   b = matrix.new(8, 1, |i| sin(2*pi*(i-1)/8))
+   >>> b
+   [           0 ]
+   [  0.70710678 ]
+   [           1 ]
+   [  0.70710678 ]
+   [           0 ]
+   [ -0.70710678 ]
+   [          -1 ]
+   [ -0.70710678 ]
+
+The we can solve the linear system ``m * x = b`` using the inverse matrix ``minv`` as follows::
+
+   x = minv * b
+   >>> x
+   [           0 ]
+   [  0.70710678 ]
+   [ -0.41421356 ]
+   [ -0.17157288 ]
+   [  0.34314575 ]
+   [ -0.10050506 ]
+   [ -0.14213562 ]
+   [  0.14213562 ]
+
+so that the resulting column matrix x will satisfy the equation ``m * x = b``.
+
+The reader familiar with computer linear algebra may argue that using matrix inversion to solve a linear system is inefficient.
+This is actually true and GSL Shell offers the function :func:`matrix.solve` to solve a linear system efficiently.
+So in the example above we could have used the function :func:`matrix.solve` as follows::
+
+   x = matrix.solve(m, b)
+
+to obtain the same result of above.
+
+Working with complex matrices
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the example above we have shown how to solve a linear system in the form ``m * x = b``.
+We may wonder how to manage the case when ``m`` or ``b`` are complex.
+The answer is easy, since GSL Shell always check the type of the matrix and the appropriate algorithm is selected.
+
+So, to continue the example above, we can define b as a complex vector as follows::
+
+   b = matrix.cnew(8, 1, |i| complex.exp(2i*pi*(i-1)/8))
+   >>> b
+   [                       1 ]
+   [  0.70710678+0.70710678i ]
+   [                       i ]
+   [ -0.70710678+0.70710678i ]
+   [                      -1 ]
+   [ -0.70710678-0.70710678i ]
+   [                      -i ]
+   [  0.70710678-0.70710678i ]
+
+and then we can use the function :func:`matrix.solve` as above and we will obtain a complex matrix that solve the linear system.
+
+Please note that above we have used the function :func:`matrix.cnew` to create a new complex matrix.
+The reason is that we need to inform GSL Shell in advance if we want a real or a complex matrix.
+
+In general GSL Shell tries to ensure that all the common matrix operations are handle to transparently handle real or complex matrices.
+
 Matrix indexing
 ~~~~~~~~~~~~~~~
 
