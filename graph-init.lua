@@ -7,6 +7,24 @@ local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
 local lua_index_style = gslsh.lua_index_style
 
+local n_sampling_max = 8192
+local n_sampling_default = 512
+
+local function check_sampling(n)
+   if n then
+      if n <= 1 then
+	 error('sampling points should be > 1')
+      elseif n > n_sampling_max then
+	 echo('warning: too many sampling points requested, ' .. 
+	      'limiting to ' .. n_sampling_max)
+	 n = n_sampling_max
+      end
+   else
+      n = n_sampling_default
+   end
+   return n
+end
+
 function graph.ipath(f)
    local ln = graph.path(f())
    for x, y in f do
@@ -34,7 +52,7 @@ function graph.ipathp(f)
 end   
 
 function graph.fxline(f, xi, xs, n)
-   n = n and math.min(n, 8192) or 512
+   n = check_sampling(n)
    return graph.ipath(iter.sample(f, xi, xs, n))
 end
 
@@ -51,7 +69,7 @@ function graph.xyline(x, y)
 end
 
 function graph.fxplot(f, xi, xs, color, n)
-   n = n and n or 512
+   n = check_sampling(n)
    local p = graph.plot()
    p:addline(graph.ipathp(iter.sample(f, xi, xs, n)), color)
    p:show()
