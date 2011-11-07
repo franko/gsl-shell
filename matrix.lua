@@ -193,6 +193,11 @@ local function complex_imag(z)
    return y
 end
 
+local function complex_norm2(z)
+   local x, y = cartesian(z)
+   return x*x + y*y
+end
+
 local function complex_abs(z)
    local x, y = cartesian(z)
    return sqrt(x*x + y*y)
@@ -511,12 +516,14 @@ local function matrix_complex_norm(m)
 end
 
 complex = {
-   new  = gsl_complex,
-   conj = complex_conj,
-   real = complex_real,
-   imag = complex_imag,
-   abs  = complex_abs,
-   rect = cartesian,
+   new   = gsl_complex,
+   conj  = complex_conj,
+   real  = complex_real,
+   imag  = complex_imag,
+   abs   = complex_abs,
+   norm2 = complex_norm2,
+   rect  = cartesian,
+   i     = 1i,
 }
 
 local generic_add = vector_op(opadd, true)
