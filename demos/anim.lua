@@ -55,7 +55,7 @@ local function demo2()
    p:show()
 
    local N = 256
-   for k= 1, N do
+   for k= 2, N do
       local x = x0 + k * (x1-x0) / N
       local ca = fxline(f, x0, x, k)
       ca:line_to(x, 0); ca:line_to(0, 0); ca:close()
