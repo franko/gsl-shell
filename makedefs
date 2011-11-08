@@ -15,6 +15,14 @@ RANLIB= ranlib
 CC = gcc
 CXX = g++
 
+ifeq ($(strip $(LUA_BUILD)), yes)
+  PACKAGE_NAME = lua
+  PACKAGE_VERSION = 5.1
+else
+  PACKAGE_NAME = gsl-shell
+  PACKAGE_VERSION = 2.0
+endif
+
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall

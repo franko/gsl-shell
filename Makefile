@@ -84,6 +84,9 @@ DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 
+INSTALL_BIN_DIR = $(DESTDIR)$(PREFIX)/bin
+INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+
 LIBS += $(GSL_LIBS)
 
 all: $(SUBDIRS) $(TARGETS)
@@ -93,11 +96,11 @@ $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
 install: $(GSL_SHELL)
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp $(GSL_SHELL) $(DESTDIR)$(PREFIX)/bin
-	strip $(DESTDIR)$(PREFIX)/bin/$(GSL_SHELL)
-	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
-	cp --parents $(LUA_BASE_FILES) $(DESTDIR)$(PREFIX)/lib/gsl-shell
+	mkdir -p $(INSTALL_BIN_DIR)
+	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
+	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
+	mkdir -p $(INSTALL_LIB_DIR)
+	cp --parents $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
 
 .PHONY: clean all $(SUBDIRS)
 
