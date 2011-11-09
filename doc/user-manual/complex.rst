@@ -19,6 +19,41 @@ In this section we describe the mathematical functions on complex numbers.
 .. note::
    Please note that the standard functions from the :mod:`math` does *not* accept complex numbers.
 
+Basic Functions
+~~~~~~~~~~~~~~~
+
+.. function:: new(a, b)
+
+   Create a new complex number with real part ``a`` and imaginary part ``b``.
+
+.. function:: real(z)
+
+   Returns the real part of a complex number.
+
+.. function:: imag(z)
+
+   Returns the imaginary part of a complex number.
+
+.. function:: abs(z)
+
+   Returns the norm of the complex number ``z`` calculated as :math:`\sqrt{z \, z^\star}`.
+   This function accept real or complex number as argument.
+
+.. function:: norm2(z)
+
+   Returns the square norm of the complex number ``z`` calculated as :math:`z \, z^\star`.
+   This function accept real or complex number as argument.
+
+.. function:: rect(z)
+
+   Returns the real and the imaginary parts of the real or complex number ``z``.
+   If ``z`` is a real number returns an imaginary part equal to zero.
+
+.. data:: i
+
+   The imaginary unit.
+
+
 Elementary Complex Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
