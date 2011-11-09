@@ -538,6 +538,12 @@ local complex_mt = {
    __mul = generic_mul,
    __div = generic_div,
 
+   __eq = function(a, b)
+	     local ar, ai = cartesian(a)
+	     local br, bi = cartesian(b)
+	     return (ar == br) and (ai == bi)
+	  end,
+
    __pow = function(z,n) 
 	      if is_real(n) then
 		 return gsl.gsl_complex_pow_real (z, n)
