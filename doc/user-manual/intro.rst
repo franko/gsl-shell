@@ -162,7 +162,7 @@ If we want to check that ``minv`` is actually the inverse of ``m`` we can perfor
    [ 0 0 0 0 0 0 1 0 ]
    [ 0 0 0 0 0 0 0 1 ]
 
-and as we whould expect we have actually obtained the unit matrix.
+and as we should expect we have actually obtained the unit matrix.
 
 The matrix inverse can be used to solve a linear system so let us try.
 First we define a column vector, fox example::
@@ -193,7 +193,7 @@ The we can solve the linear system ``m * x = b`` using the inverse matrix ``minv
 
 so that the resulting column matrix x will satisfy the equation ``m * x = b``.
 
-The reader familiar with computer linear algebra may argue that using matrix inversion to solve a linear system is inefficient.
+The reader familiar with linear algebra computations may argue that using matrix inversion to solve a linear system is inefficient.
 This is actually true and GSL Shell offers the function :func:`matrix.solve` to solve a linear system efficiently.
 So in the example above we could have used the function :func:`matrix.solve` as follows::
 
@@ -313,8 +313,8 @@ Here the plot that we obtain with the snippet given above:
 You can refer to the :ref:`Graphics chapter <graphics-chapter>` for more details about the plotting functions.
 
 
-Functions
----------
+Defining a New Function
+-----------------------
 
 GSL Shell is very flexible about function definitions.
 It does allow to define global functions or to create on the fly a function and to assign it to a variable.
@@ -365,7 +365,7 @@ In GSL Shell you can very easily define an iterator over some integer range by u
 .. _short-func-notation:
 
 Short Function Notation
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Very often you need simple function that just return a value. In this case special notation is available::
 
