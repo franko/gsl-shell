@@ -32,6 +32,8 @@ else
   CXXFLAGS = -Os -fno-stack-protector -ffast-math -fno-rtti -Wall
 endif
 
+DEFS += -D_REENTRANT
+
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
