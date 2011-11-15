@@ -15,6 +15,7 @@
 #include "lj_tab.h"
 #include "lj_frame.h"
 #include "lj_ctype.h"
+#include "lj_cdata.h"
 #include "lj_cparse.h"
 #include "lj_cconv.h"
 #include "lj_clib.h"
@@ -785,7 +786,7 @@ static TRef crec_call_args(jit_State *J, RecordFFData *rd,
       did = ctype_cid(ctf->info);
     } else {
       if (!(ct->info & CTF_VARARG))
-        lj_trace_err(J, LJ_TRERR_NYICALL);  /* Too many arguments. */
+	lj_trace_err(J, LJ_TRERR_NYICALL);  /* Too many arguments. */
       did = lj_ccall_ctid_vararg(cts, o);  /* Infer vararg type. */
     }
     d = ctype_raw(cts, did);
@@ -853,6 +854,12 @@ static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
     CType *ctr = ctype_rawchild(cts, ct);
     IRType t = crec_ct2irt(ctr);
     TRef tr;
+    TValue tv;
+    /* Check for blacklisted C functions that might call a callback. */
+    setlightudV(&tv,
+		cdata_getptr(cdataptr(cd), (LJ_64 && tp == IRT_P64) ? 8 : 4));
+    if (tvistrue(lj_tab_get(J->L, cts->miscmap, &tv)))
+      lj_trace_err(J, LJ_TRERR_BLACKL);
     if (ctype_isvoid(ctr->info)) {
       t = IRT_NIL;
       rd->nres = 0;
@@ -890,13 +897,30 @@ static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
   return 0;
 }
 
+/* Record ctype call metamethod. */
+static void crec_call_meta(jit_State *J, RecordFFData *rd, CTypeID id)
+{
+  CTState *cts = ctype_ctsG(J2G(J));
+  CType *ct = ctype_raw(cts, id);
+  cTValue *tv;
+  if (ctype_isptr(ct->info)) id = ctype_cid(ct->info);
+  tv = lj_ctype_meta(cts, id, MM_call);
+  if (tv && tvisfunc(tv)) {
+    J->base[-1] = lj_ir_kfunc(J, funcV(tv)) | TREF_FRAME;
+    rd->nres = -1;  /* Pending tailcall. */
+  } else {
+    /* NYI: non-function metamethods. */
+    lj_trace_err(J, LJ_TRERR_BADTYPE);
+  }
+}
+
 void LJ_FASTCALL recff_cdata_call(jit_State *J, RecordFFData *rd)
 {
   GCcdata *cd = argv2cdata(J, J->base[0], &rd->argv[0]);
   if (cd->typeid == CTID_CTYPEID)
     crec_alloc(J, rd, crec_constructor(J, cd, J->base[0]));
   else if (!crec_call(J, rd, cd))
-    lj_trace_err(J, LJ_TRERR_BADTYPE);
+    crec_call_meta(J, rd, cd->typeid);
 }
 
 static TRef crec_arith_int64(jit_State *J, TRef *sp, CType **s, MMS mm)

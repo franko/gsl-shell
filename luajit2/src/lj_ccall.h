@@ -64,8 +64,8 @@ typedef intptr_t GPRArg;
 #define CCALL_NARG_FPR		8
 #define CCALL_NRET_GPR		4	/* For complex double. */
 #define CCALL_NRET_FPR		1
-#define CCALL_SPS_EXTRA		3
-#define CCALL_SPS_FREE		1
+#define CCALL_SPS_EXTRA		4
+#define CCALL_SPS_FREE		0
 
 typedef intptr_t GPRArg;
 typedef double FPRArg;
@@ -81,7 +81,7 @@ typedef double FPRArg;
 typedef intptr_t GPRArg;
 
 #else
-#error "missing calling convention definitions for this architecture"
+#error "Missing calling convention definitions for this architecture"
 #endif
 
 #ifndef CCALL_SPS_EXTRA
@@ -98,6 +98,10 @@ typedef intptr_t GPRArg;
   (CCALL_NARG_GPR > CCALL_NRET_GPR ? CCALL_NARG_GPR : CCALL_NRET_GPR)
 #define CCALL_NUM_FPR \
   (CCALL_NARG_FPR > CCALL_NRET_FPR ? CCALL_NARG_FPR : CCALL_NRET_FPR)
+
+/* Check against constants in lj_ctype.h. */
+LJ_STATIC_ASSERT(CCALL_NUM_GPR <= CCALL_MAX_GPR);
+LJ_STATIC_ASSERT(CCALL_NUM_FPR <= CCALL_MAX_FPR);
 
 #define CCALL_MAXSTACK		32
 
