@@ -3,15 +3,22 @@
 The GSL Shell Project
 #####################
 
-GSL shell is an interactive command line interface that gives easy access
-to the GNU Scientific Library (GSL) collection of mathematical methods for
-numerical computations.
+GSL shell is an interactive command line interface that gives easy access to a collection of numeric algorithms and functions based on the GNU Scientific Library (GSL). GSL Shell is able to work with matrices or vectors to perform linear algebra operations.
 
-GSL shell can be used interactively to perform calculations with matrices or
-vectors but it does allow also to write complex user defined functions based on the Lua programming language.
+**Fast**
+  GSL Shell is based on the outstanding Lua JIT compiler `LuaJIT2 <http://luajit.org>`_.
+  Thanks to LuaJIT2 the scripts defined with GSL Shell can run to at speed comparable to optimized C code.
 
-Lua is a very interesting and easy to learn scripting language that features advanced functionalities like closures and metamethods.
-Lua is very easy to learn and will give you the power of defining your own complex routines to use the GSL library more easily.
+**Easy to use**
+  Lua is a very interesting and easy to learn scripting language that features advanced functionalities like closures and metamethods.
+  Lua is easy to learn and will give you the power of defining your own complex routines to use the GSL library more easily.
+
+**Fast numeric algorithms**
+  GSL Shell has a special implementation of the algorithms for numerical integration, ODE integration and non-linear fit.
+  These algorithms are able to run at the speed of native code even if the functions are defined using a simple dynamic language like Lua.
+
+**Plotting functions**
+  You will be able also to create easily beautiful plots or animations using GSL Shell included graphical module.
 
 GSL Shell is hosted at `Savannah <http://savannah.nongnu.org>`_, here is the `project page <https://savannah.nongnu.org/projects/gsl-shell/>`_. GSL Shell comes with a complete `user manual <http://www.nongnu.org/gsl-shell/doc/>`_.
 
