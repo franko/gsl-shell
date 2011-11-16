@@ -31,7 +31,6 @@ local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
    local evol = s.evolve
    local ln = graph.path(x0, y0)
    s:init(t0, h0, f, x0, y0)
-   local tsmp = 0.04
    for t = tsmp, t1, tsmp do
       while s.t < t do
 	 evol(s, f, t)
@@ -41,6 +40,25 @@ local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
 
    local p = graph.plot('ODE integration example')
    p:addline(ln)
+   p:show()
+   return p
+end
+
+-- T is the period for the Poincare section
+local function poincareplot(f, t0, t1, x0, y0, h0, tsmp, T)
+   local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
+   local evol = s.evolve
+   s:init(t0, h0, f, x0, y0)
+   local ln = graph.path(x0, y0)
+   for t = t0, t1, tsmp do
+      while s.t < t do
+         evol(s, f, t)
+      end
+      if t % T <= tsmp then ln:line_to(s.y[1], s.y[2]) end
+   end
+
+   local p = graph.plot('Poincare section')
+   p:addline(ln, "black", {{'stroke'}, {'marker', size=0.01}})
    p:show()
    return p
 end
@@ -124,6 +142,17 @@ local function demo3()
    return p
 end
 
+local function demo4()
+   local a,b,d,g,omega = 1,1,0.2,0.3,1	
+   local odef = function(t, x, y)
+		   return  y, a*x-b*x^3-d*y+g*cos(omega*t)
+		end
+
+   local x, y = 0, 0
+
+   return poincareplot(odef, 0, 5000, x, y, 1e-3, 0.1, 2*pi/omega)
+end
+
 return {'ODE', {
   {
      name = 'ode1',
@@ -140,4 +169,10 @@ return {'ODE', {
      f = demo3, 
      description = 'Examples of damped harmonic oscillator'
   },
+      {
+     name = 'ode4',
+     f = demo4, 
+     description = 'Example of a Poincare section for the Duffing equation'
+  },
+
 }}
