@@ -3,6 +3,27 @@
 Older News
 ==========
 
+**October 2011**
+  Release of GSL Shel 2.0 beta1.
+
+  This new release of GSL Shell is a major change both in term of features and implementation.
+
+  First the functions are now organized into different modules for a greater clarity of the code.
+  Then the semantic of the arithmentic operations with numbers and matrix is now much more user-friendly.
+  The multiplication operator '*' it does perform now the matrix multiplication and you can mix freely complex and real number or matrices.
+
+  Under the hood there even more important changes since GSL Shell is now based on `LuaJIT2 <http://luajit.org>`_.
+  This latter is an highly optimized implementation of the Lua programming language.
+  LuaJIT2 is able to generate on the fly optimized machine code so that many programs can run at the speed of native code.
+  In addition, with the FFI module, you can call directly C functions opening the way to an incredible set of new applications.
+
+  The modules about numerical integration, ODE integration and non-linear fit have been *reimplemented* in Lua using direct FFI call to C functions.
+  The result is a greatly improved execution performance on par with optimized code.
+
+  Check the *demos* available in GSL Shell.
+  You may check the 'wave' demo that simulate a *quantum spinless particle in a step potential*.
+  Thanks to LuaJIT2 the demo run in realtime at an amazing speed.
+
 **January 2011**
   Release of GSL Shell 1.1
 
