@@ -215,7 +215,7 @@ man_pages = [
      [u'Francesco Abbate'], 1)
 ]
 
-texinfo_documents = [('index', 'gslshell', 'GSL Shell 2', 'Francesco', 'GSL Shell', 'Interactive GSL shell', 'Math', True)]
+texinfo_documents = [('index', 'gslshell', 'GSL Shell 2', 'Francesco', 'gsl-shell', 'Interactive GSL shell.', 'Math', True)]
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'gslshell': ('http://www.nongnu.org/gsl-shell/', 'gslshell-index.inv')}
