@@ -17,14 +17,17 @@ struct tinfo {
 static struct tinfo eval_info;
 
 static char output_buf[8192];
-static int output_pos;
-static int output_eof;
+static volatile int output_pos;
+static volatile int output_eof;
 
 static int pipe_fd[2];
 
 pthread_mutex_t io_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 lua_State *global_L;
+
+GtkTextBuffer *buffer;
+GtkTextMark *buffer_end_mark;
 
 static void
 sigio_handler (int sn)
@@ -40,13 +43,16 @@ sigio_handler (int sn)
     {
       errno = 0;
       nr = read (pipe_fd[0], buf, 128);
+
       if (nr == EOF)
 	{
 	  output_eof = 1;
 	  break;
 	}
-      if (nr <= 0 || errno != 0)
+
+      if (nr <= 0)
 	break;
+
       buf += nr;
     }
 
@@ -62,6 +68,7 @@ exec_line (void *_inf)
   int stdout_save_fd;
   fpos_t pos;
   struct sigaction io_act;
+  struct sigaction io_act_old;
   sigset_t block_mask;
   pid_t current_pid;
 
@@ -72,7 +79,7 @@ exec_line (void *_inf)
   io_act.sa_handler = sigio_handler;
   io_act.sa_mask = block_mask;
   io_act.sa_flags = SA_RESTART;
-  sigaction (SIGIO, &io_act, NULL);
+  sigaction (SIGIO, &io_act, &io_act_old);
   
   fflush (stdout);
   fgetpos (stdout, &pos);
@@ -92,13 +99,17 @@ exec_line (void *_inf)
   gsl_shell_exec (inf->L, inf->line);
 
   fflush (stdout);
+
   dup2 (stdout_save_fd, fileno(stdout));
   close (stdout_save_fd);
   clearerr (stdout);
   fsetpos (stdout, &pos);
 
+  sleep(1);
   close (pipe_fd[0]);
-  signal (SIGIO, SIG_DFL);
+
+  /* restore previous signal handler */
+  sigaction (SIGIO, &io_act_old, NULL);
 
   return NULL;
 }
@@ -136,15 +147,49 @@ on_key_pressed (GtkWidget *w, GdkEventKey *event, void *data)
   return FALSE;
 }
 
+static gboolean
+retrieve_data(gpointer data)
+{
+  char *p;
+
+  pthread_mutex_lock (&io_mutex);
+
+  for (p = output_buf; p < output_buf + output_pos; )
+    {
+      char *pn = strchr (p, '\n');
+      if (!pn)
+	break;
+      p = pn + 1;
+    }
+
+  if (p > output_buf)
+    {
+      GtkTextIter bpos[1];
+      int len = p - output_buf;
+      int rem_len = output_pos - len;
+      int j;
+
+      gtk_text_buffer_get_iter_at_mark (buffer, bpos, buffer_end_mark);
+
+      gtk_text_buffer_insert (buffer, bpos, output_buf, len);
+  
+      for (j = 0; j < rem_len; j++)
+	output_buf[j] = output_buf[len+j];
+
+      output_pos = rem_len;
+    }
+
+  pthread_mutex_unlock (&io_mutex);
+
+  return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
   GtkWidget *window;
   GtkWidget *view;
-  GtkTextBuffer *buffer;
   GtkTextIter p[1];
-  GtkTextMark *input_start, *input_end;
-  GtkTextMark *output_start, *output_end;
 
   gtk_init (&argc, &argv);
 
@@ -162,11 +207,15 @@ main (int argc, char *argv[])
 
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
 
-  gtk_text_buffer_get_start_iter (buffer, p);
-
   gtk_text_buffer_set_text (buffer, "Hello, this is some text", -1);
 
+  gtk_text_buffer_get_end_iter (buffer, p);
+
+  buffer_end_mark = gtk_text_buffer_create_mark (buffer, NULL, p, FALSE);  
+
   gtk_container_add (GTK_CONTAINER (window), view);
+
+  g_timeout_add (100, retrieve_data, NULL);
 
   gtk_widget_show (view);
   gtk_widget_show (window);
