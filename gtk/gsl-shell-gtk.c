@@ -28,8 +28,14 @@ char output_buf[BUF_SIZE];
 
 lua_State *global_L;
 
-GtkTextBuffer *buffer;
-GtkTextMark *buffer_end_mark;
+struct lua_repl {
+  GtkTextBuffer *buffer;
+  GtkTextMark *input_start, *input_end;
+  GtkTextMark *output_end;
+  gboolean input_ready;
+};
+
+static struct lua_repl repl;
 
 static void *
 exec_line (void *_inf)
@@ -77,12 +83,21 @@ start_eval_thread (lua_State *L, const char *line)
   return 0;
 }
 
+static void
+prepare_input ()
+{
+  GtkTextIter curr[1];
+  gtk_text_buffer_get_iter_at_mark (repl.buffer, curr, repl.output_end);
+  gtk_text_buffer_insert (repl.buffer, curr, "> ", 2);
+  gtk_text_buffer_move_mark (repl.buffer, repl.input_start, curr);
+  gtk_text_buffer_move_mark (repl.buffer, repl.input_end, curr);
+  repl.input_ready = TRUE;
+}
+
 static gboolean
 retrieve_data(gpointer data)
 {
   int nr;
-
-  fprintf (stderr, "inside retrieve data\n");
   
   do
     {
@@ -90,11 +105,10 @@ retrieve_data(gpointer data)
       
       if (nr > 0)
 	{
-	  GtkTextIter bpos[1];
-	  gtk_text_buffer_get_iter_at_mark (buffer, bpos, buffer_end_mark);
-	  gtk_text_buffer_insert (buffer, bpos, output_buf, nr);
+	  GtkTextIter e[1];
+	  gtk_text_buffer_get_iter_at_mark (repl.buffer, e, repl.output_end);
+	  gtk_text_buffer_insert (repl.buffer, e, output_buf, nr);
 	}
-      
     }
   while (nr > 0);
 
@@ -102,7 +116,11 @@ retrieve_data(gpointer data)
     {
       int n_rem;
       ioctl (pipe_fd[0], FIONREAD, &n_rem);
-      return (n_rem == 0 ? FALSE : TRUE);
+      if (n_rem == 0)
+	{
+	  prepare_input ();
+	  return FALSE;
+	}
     }
 
   return TRUE;
@@ -111,12 +129,20 @@ retrieve_data(gpointer data)
 static gboolean
 on_key_pressed (GtkWidget *w, GdkEventKey *event, void *data)
 {
-  if (event->keyval >= GDK_KEY_space || event->keyval <= GDK_KEY_asciitilde)
+  if (event->keyval == GDK_KEY_Return && repl.input_ready)
     {
-      printf("%c\n", event->keyval);
+      GtkTextIter s[1], e[1];
+      gchar *input_line;
+
+      repl.input_ready = FALSE;
+
+      gtk_text_buffer_get_iter_at_mark (repl.buffer, s, repl.input_start);
+      gtk_text_buffer_get_iter_at_mark (repl.buffer, e, repl.input_end);
+      input_line = gtk_text_buffer_get_text (repl.buffer, s, e, TRUE);
+
       luajit_running = TRUE;
       g_timeout_add (IO_TIMEOUT_MS, retrieve_data, NULL);
-      start_eval_thread (global_L, "for k=1, 12 do print(k^2) end");
+      start_eval_thread (global_L, input_line);
     }
   
   return FALSE;
@@ -127,6 +153,7 @@ main (int argc, char *argv[])
 {
   GtkWidget *window;
   GtkWidget *view;
+  GtkTextBuffer *buffer;
   GtkTextIter p[1];
 
   stdout_save_fd = dup (fileno(stdout));
@@ -152,11 +179,14 @@ main (int argc, char *argv[])
 
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
 
-  gtk_text_buffer_set_text (buffer, "Hello, this is some text", -1);
+  gtk_text_buffer_set_text (buffer, "Hello, this is some text\n", -1);
 
   gtk_text_buffer_get_end_iter (buffer, p);
-
-  buffer_end_mark = gtk_text_buffer_create_mark (buffer, NULL, p, FALSE);  
+  repl.output_end  = gtk_text_buffer_create_mark (buffer, NULL, p, FALSE);
+  repl.input_start = gtk_text_buffer_create_mark (buffer, NULL, p, TRUE);
+  repl.input_end   = gtk_text_buffer_create_mark (buffer, NULL, p, FALSE);
+  repl.buffer = buffer;
+  prepare_input ();
 
   gtk_container_add (GTK_CONTAINER (window), view);
 
