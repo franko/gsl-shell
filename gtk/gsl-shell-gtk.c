@@ -9,12 +9,8 @@
 
 #include "gsl-shell-interp.h"
 
-struct tinfo {
-  lua_State *L;
-  const char *line;
-};
-
-static struct tinfo eval_info;
+static pthread_mutex_t eval_mutex;
+static pthread_cond_t eval_ready;
 
 static int stdout_save_fd;
 static int pipe_fd[2];
@@ -26,8 +22,6 @@ static volatile gboolean luajit_running = FALSE;
 #define BUF_SIZE 4096
 char output_buf[BUF_SIZE];
 
-lua_State *global_L;
-
 struct lua_repl {
   GtkTextBuffer *buffer;
   GtkTextMark *input_start, *input_end;
@@ -37,11 +31,24 @@ struct lua_repl {
 
 static struct lua_repl repl;
 
-static void *
-exec_line (void *_inf)
+enum luajit_cmd {
+  LUAJIT_EVAL,
+  LUAJIT_EXIT,
+};
+
+struct luajit_request {
+  enum luajit_cmd cmd;
+  const char *line;
+};
+
+static volatile struct luajit_request g_luajit_request;
+
+static void
+luajit_exec_line (lua_State *L, const char *line)
 {
-  struct tinfo *inf = _inf;
   fpos_t pos;
+
+  luajit_running = TRUE;
 
   fflush (stdout);
   fgetpos (stdout, &pos);
@@ -49,7 +56,7 @@ exec_line (void *_inf)
   dup2 (pipe_fd[1], fileno(stdout));
 
   /* feed line to Lua interpreter */
-  gsl_shell_exec (inf->L, inf->line);
+  gsl_shell_exec (L, line);
 
   fflush (stdout);
 
@@ -58,23 +65,48 @@ exec_line (void *_inf)
   fsetpos (stdout, &pos);
 
   luajit_running = FALSE;
-
-  return NULL;
 }
 
-int
-start_eval_thread (lua_State *L, const char *line)
+static void *
+luajit_eval_thread (void *userdata)
+{
+  lua_State *L = gsl_shell_init ();
+
+  while (L)
+    {
+      pthread_mutex_lock (&eval_mutex);
+      pthread_cond_wait (&eval_ready, &eval_mutex);
+
+      enum luajit_cmd cmd = g_luajit_request.cmd;
+      const char *line = g_luajit_request.line;
+
+      pthread_mutex_unlock (&eval_mutex);
+
+      switch (cmd)
+	{
+	case LUAJIT_EVAL:
+	  luajit_exec_line (L, line);
+	  break;
+	case LUAJIT_EXIT:
+	  gsl_shell_close (L);
+	  L = NULL;
+	  break;
+	}
+    }
+
+  pthread_exit (NULL);
+}
+
+static int
+start_interp_thread ()
 {
   pthread_t eval_thread[1];
   pthread_attr_t attr[1];
 
-  eval_info.L = L;
-  eval_info.line = line;
-
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
 
-  if (pthread_create (eval_thread, attr, exec_line, (void*) &eval_info))
+  if (pthread_create (eval_thread, attr, luajit_eval_thread, NULL))
     {
       fprintf(stderr, "error creating thread");
       return 1;
@@ -129,7 +161,7 @@ retrieve_data(gpointer data)
 static gboolean
 on_key_pressed (GtkWidget *w, GdkEventKey *event, void *data)
 {
-  if (event->keyval == GDK_KEY_Return && repl.input_ready)
+  if (event->keyval == GDK_KEY_Return && repl.input_ready && !luajit_running)
     {
       GtkTextIter s[1], e[1];
       gchar *input_line;
@@ -140,9 +172,13 @@ on_key_pressed (GtkWidget *w, GdkEventKey *event, void *data)
       gtk_text_buffer_get_iter_at_mark (repl.buffer, e, repl.input_end);
       input_line = gtk_text_buffer_get_text (repl.buffer, s, e, TRUE);
 
-      luajit_running = TRUE;
+      pthread_mutex_lock (&eval_mutex);
+      g_luajit_request.cmd = LUAJIT_EVAL;
+      g_luajit_request.line = input_line;
+      pthread_cond_signal (&eval_ready);
+      pthread_mutex_unlock (&eval_mutex);
+
       g_timeout_add (IO_TIMEOUT_MS, retrieve_data, NULL);
-      start_eval_thread (global_L, input_line);
     }
   
   return FALSE;
@@ -164,9 +200,10 @@ main (int argc, char *argv[])
   fcntl (pipe_fd[0], F_SETOWN, getpid());
   fcntl (pipe_fd[0], F_SETFL, O_NONBLOCK);
 
-  gtk_init (&argc, &argv);
+  if (start_interp_thread ())
+    return 1;
 
-  global_L = gsl_shell_init ();
+  gtk_init (&argc, &argv);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
@@ -199,7 +236,10 @@ main (int argc, char *argv[])
 
   gtk_main ();
 
-  gsl_shell_close (global_L);
+  pthread_mutex_lock (&eval_mutex);
+  g_luajit_request.cmd = LUAJIT_EXIT;
+  pthread_cond_signal (&eval_ready);
+  pthread_mutex_unlock (&eval_mutex);
 
   return 0;
 }
