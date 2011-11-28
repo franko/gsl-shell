@@ -39,6 +39,7 @@
 #include "luajit.h"
 #include "lua-gsl.h"
 #include "gsl-shell.h"
+#include "completion.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -95,7 +96,7 @@ static void my_freeline (lua_State *L, char *b) { }
 
 #endif
 
-static lua_State *globalL = NULL;
+lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 pthread_mutex_t gsl_shell_mutex[1];
@@ -627,6 +628,7 @@ int main(int argc, char **argv)
 {
   int status;
   struct Smain s;
+  initialize_readline();
   pthread_mutex_init (gsl_shell_mutex, NULL);
   lua_State *L = lua_open();  /* create state */
   if (L == NULL) {

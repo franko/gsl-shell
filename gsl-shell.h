@@ -3,10 +3,13 @@
 
 #include "defs.h"
 #include <pthread.h>
+#include <lua.h>
 
 __BEGIN_DECLS
 
+extern lua_State *globalL;
 extern pthread_mutex_t gsl_shell_mutex[1];
+
 
 __END_DECLS
 
