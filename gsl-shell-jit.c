@@ -628,7 +628,9 @@ int main(int argc, char **argv)
 {
   int status;
   struct Smain s;
+#ifdef USE_READLINE
   initialize_readline();
+#endif
   pthread_mutex_init (gsl_shell_mutex, NULL);
   lua_State *L = lua_open();  /* create state */
   if (L == NULL) {

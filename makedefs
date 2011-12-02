@@ -49,8 +49,10 @@ ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
   DEFS += -DDISABLE_GAMMA_CORR
 endif
 
-ifeq ($(strip $(USE_READLINE)), yes)
+ifeq ($(strip $(USE_READLINE)),yes)
   ifneq ($(HOST_SYS),Windows)
     DEFS += -DUSE_READLINE
+  else
+    USE_READLINE = no
   endif
 endif
