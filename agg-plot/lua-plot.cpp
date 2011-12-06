@@ -38,6 +38,7 @@ extern "C" {
 #include "drawable.h"
 #include "resource-manager.h"
 #include "agg-parse-trans.h"
+#include "canvas_svg.h"
 
 __BEGIN_DECLS
 
@@ -58,6 +59,7 @@ static int plot_set_limits (lua_State *L);
 static int plot_push_layer (lua_State *L);
 static int plot_pop_layer  (lua_State *L);
 static int plot_clear      (lua_State *L);
+static int plot_save_svg   (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -95,6 +97,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"poplayer",    plot_pop_layer  },
   {"clear",       plot_clear      },
   {"save",        bitmap_save_image },
+  {"save_svg",    plot_save_svg   },
   {NULL, NULL}
 };
 
@@ -417,6 +420,31 @@ plot_clear (lua_State *L)
 
   if (p->sync_mode())
     plot_update_raw (L, p, 1);
+
+  return 0;
+}
+
+int
+plot_save_svg (lua_State *L)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  const char *filename = lua_tostring(L, 2);
+  double w = luaL_optnumber(L, 3, 800.0);
+  double h = luaL_optnumber(L, 4, 600.0);
+
+  if (!filename)
+    return gs_type_error(L, 2, "string");
+
+  FILE* f = fopen(filename, "w");
+  if (!f)
+    return luaL_error(L, "cannot open filename: %s", filename);
+
+  canvas_svg canvas(f);
+  agg::trans_affine m(w, 0.0, 0.0, -h, 0.0, h);
+  canvas.write_header(w, h);
+  p->draw(canvas, m);
+  canvas.write_end();
+  fclose(f);
 
   return 0;
 }

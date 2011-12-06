@@ -46,7 +46,7 @@ namespace list {
     pod_list<T> *n;
     for (/* */; p; p = n)
     {
-      n = p->m_next;
+      n = p->next();
       delete p;
     }
   }

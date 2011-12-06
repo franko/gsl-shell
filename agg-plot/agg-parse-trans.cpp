@@ -81,7 +81,7 @@ typename context::base_type* build_stroke (lua_State *L, int specindex, typename
 
   typename trans<context>::stroke_base& stroke = s->self();
 
-  stroke.width(width);
+  s->width(width);
 
   if (cap_str)
     {
@@ -122,7 +122,6 @@ build_dash (lua_State *L, int specindex, typename context::base_type *obj)
   typedef typename trans<context>::dash dash_type;
 
   dash_type *d = new dash_type(obj);
-  typename trans<context>::dash_base& dash = d->self();
 
   for (int j = 2; /* */; j += 2)
     {
@@ -137,7 +136,7 @@ build_dash (lua_State *L, int specindex, typename context::base_type *obj)
 
 	  double b = (lua_isnumber (L, -1) ? lua_tonumber (L, -1) : a);
 
-	  dash.add_dash(a, b);
+	  d->add_dash(a, b);
 	  lua_pop (L,1);
 	}
       else

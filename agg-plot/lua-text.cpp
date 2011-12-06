@@ -66,7 +66,7 @@ int
 agg_text_new (lua_State *L)
 {
   double size  = luaL_optnumber (L, 1, 10.0);
-  double width = luaL_optnumber (L, 2, 1.0);
+  double width = luaL_optnumber (L, 2, 1.0) + 0.7;
   new(L, GS_DRAW_TEXT) draw::text(size, width);
   return 1;
 }
