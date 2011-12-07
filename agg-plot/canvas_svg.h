@@ -14,18 +14,13 @@
 static const char *svg_header =						\
   "<?xml version=\"1.0\" standalone=\"no\"?>\n"				\
   "<svg\n"								\
-  "   xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n"			\
-  "   xmlns:cc=\"http://creativecommons.org/ns#\"\n"			\
-  "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n"	\
-  "   xmlns:svg=\"http://www.w3.org/2000/svg\"\n"			\
   "   xmlns=\"http://www.w3.org/2000/svg\"\n"				\
   "   version=\"1.1\"\n"						\
   "   width=\"%g\"\n"							\
   "   height=\"%g\"\n"							\
-  "   id=\"svg2\">\n"							\
-  "   <g id=\"layer1\" font-family=\"Helvetica\">\n";
+  "   font-family=\"Helvetica\">\n";
 
-static const char *svg_end = "   </g>\n" "</svg>\n";
+static const char *svg_end = "</svg>\n";
 
 class canvas_svg {
 public:
