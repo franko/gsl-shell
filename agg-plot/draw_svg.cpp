@@ -49,12 +49,15 @@ str svg_fill_path(str& path_coords, int id, agg::rgba8 c,
   char rgbstr[8];
   format_rgb(rgbstr, c);
 
-  double alpha = (double)c.a / 255;
-
   str s = str::print("<path d=\"%s\" "
 		     "id=\"path%i\" "
-		     "style=\"fill:%s;fill-opacity:%g;stroke:none\" />", 
-		     path_coords.cstr(), id, rgbstr, alpha);
+		     "style=\"fill:%s;stroke:none", 
+		     path_coords.cstr(), id, rgbstr);
+
+  if (c.a < 255) {
+    double alpha = (double)c.a / 255;
+    s.printf_add(";fill-opacity:%g", alpha);
+  }
   
   append_properties(s, properties);
   s.append("\" />");
