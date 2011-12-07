@@ -47,6 +47,38 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
+template <class VertexSource>
+struct virtual_canvas {
+  virtual void draw(VertexSource& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) = 0;
+
+  virtual void draw_vs(svg_vs& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline_vs(svg_vs& vs, agg::rgba8 c) = 0;
+
+  virtual void clip_box(const agg::rect_base<int>& clip) = 0;
+  virtual void reset_clipping() = 0;
+
+  virtual ~virtual_canvas() { }
+};
+
+template <class Canvas, class VertexSource>
+class canvas_adapter : public virtual_canvas<VertexSource> {
+public:
+  canvas_adapter(Canvas* c) : m_canvas(c) {}
+
+  virtual void draw(VertexSource& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
+  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
+
+  virtual void draw_vs(svg_vs& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
+  virtual void draw_outline_vs(svg_vs& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
+
+  virtual void clip_box(const agg::rect_base<int>& clip) { m_canvas->clip_box(clip);  }
+  virtual void reset_clipping() { m_canvas->reset_clipping(); }
+
+private:
+  Canvas* m_canvas;
+};
+
 template<class VertexSource>
 struct plot_item {
   VertexSource* vs;
@@ -71,6 +103,7 @@ class plot {
 
 public:
   typedef pod_list<item> iterator;
+  typedef virtual_canvas<vertex_source> canvas_type;
 
   plot(bool use_units = true) : 
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
@@ -104,8 +137,8 @@ public:
   virtual void add(vertex_source* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { };
   
-  template <class Canvas> 
-  void draw(Canvas &canvas, agg::trans_affine& m);
+  template <class Canvas>
+  void draw(Canvas& canvas, agg::trans_affine& m);
 
   virtual bool push_layer();
   virtual bool pop_layer();
@@ -122,7 +155,8 @@ public:
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
 
-  void draw_queue(canvas &canvas, agg::trans_affine& m, opt_rect<double>& bbox);
+  template <class Canvas>
+  void draw_queue(Canvas& canvas, agg::trans_affine& m, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -140,21 +174,14 @@ public:
   bool pad_mode() { return m_pad_units; };
 
 protected:
-  template <typename Canvas>
-  void draw_elements(Canvas &canvas, agg::trans_affine& m);
-
-  template <typename Canvas>
-  void draw_element(item& c, Canvas &canvas, agg::trans_affine& m);
-
-  template <typename Canvas>
-  void draw_title(Canvas& canvas, agg::trans_affine& m);
-
-  template <typename Canvas>
-  void draw_axis(Canvas& can, agg::trans_affine& m);
+  void draw_elements(canvas_type &canvas, agg::trans_affine& m);
+  void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
+  void draw_title(canvas_type& canvas, agg::trans_affine& m);
+  void draw_axis(canvas_type& can, agg::trans_affine& m);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
-  template <class Canvas> void clip_plot_area(Canvas &canvas, agg::trans_affine& canvas_mtx);
+  void clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx);
 
   void compute_user_trans();
 
@@ -252,8 +279,9 @@ void plot<VS,RM>::clear_drawing_queue()
 }
 
 template <class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw(Canvas &canvas, agg::trans_affine& canvas_mtx)
+template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
 {
+  canvas_adapter<Canvas, VS>  canvas(&_canvas);
   before_draw();
   draw_title(canvas, canvas_mtx);
   if (m_use_units)
@@ -262,7 +290,7 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas &canvas, agg::trans_affine
 };
 
 template <class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw_title(Canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::draw_title(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   double xt = 0.5, yt = 1.05;
 
@@ -278,11 +306,11 @@ template <class Canvas> void plot<VS,RM>::draw_title(Canvas &canvas, agg::trans_
   title.set_point(xt, yt);
   title.apply_transform(m, 1.0);
 
-  canvas.draw(*(drawable *) &title, agg::rgba(0, 0, 0));
+  canvas.draw_vs(title, agg::rgba(0, 0, 0));
 }
 
-template<class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw_element(item& c, Canvas &canvas, agg::trans_affine& m)
+template <class VS, class RM>
+void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
 {
   VS& vs = c.vertex_source();
   vs.apply_transform(m, 1.0);
@@ -293,7 +321,7 @@ template <class Canvas> void plot<VS,RM>::draw_element(item& c, Canvas &canvas, 
     canvas.draw(vs, c.color);
 }
 
-template<class VS, class RM>
+template <class VS, class RM>
 agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
@@ -303,7 +331,7 @@ agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-template <class Canvas> void plot<VS,RM>::clip_plot_area(Canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   if (this->clip_is_active())
     {
@@ -315,8 +343,8 @@ template <class Canvas> void plot<VS,RM>::clip_plot_area(Canvas &canvas, agg::tr
     }
 }
 
-template<class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw_elements(Canvas &canvas, agg::trans_affine& canvas_mtx)
+template <class VS, class RM>
+void plot<VS,RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
@@ -339,10 +367,11 @@ template <class Canvas> void plot<VS,RM>::draw_elements(Canvas &canvas, agg::tra
   canvas.reset_clipping();
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
-			     opt_rect<double>& bb)
+template <class VS, class RM>
+template <class Canvas> void plot<VS,RM>::draw_queue(Canvas& _canvas, agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
 {
+  canvas_adapter<Canvas, VS>  canvas(&_canvas);
+
   typedef typename plot<VS,RM>::iterator iter_type;
 
   before_draw();
@@ -366,7 +395,7 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
   canvas.reset_clipping();
 }
 
-template<class VS, class RM>
+template <class VS, class RM>
 void plot<VS,RM>::compute_user_trans()
 {
   agg::rect_base<double> r;
@@ -394,7 +423,7 @@ void plot<VS,RM>::compute_user_trans()
 }
 
 template <class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   typedef agg::path_storage path_type;
   typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
@@ -410,7 +439,8 @@ template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_a
 
   agg::path_storage mark;
   agg::conv_transform<path_type> mark_tr(mark, m);
-  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+  svg_proxy<agg::conv_transform<path_type> > marksvg(&mark_tr);
+  trans<svg_context>::stroke mark_stroke(&marksvg);
 
   agg::path_storage ln;
   agg::conv_transform<path_type> lntr(ln, m);
@@ -442,7 +472,7 @@ template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_a
 	    label.set_point(-0.02, y);
 	    label.apply_transform(m, 1.0);
 
-	    canvas.draw(*(drawable *) &label, agg::rgba(0, 0, 0));
+	    canvas.draw_vs(label, agg::rgba(0, 0, 0));
 
 	    mark.move_to(0.0, y);
 	    mark.line_to(-0.01, y);
@@ -474,7 +504,7 @@ template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_a
 	    label.set_point(x, 0);
 	    label.apply_transform(m, 1.0);
 
-	    canvas.draw(*(drawable *) &label, agg::rgba(0, 0, 0));
+	    canvas.draw_vs(label, agg::rgba(0, 0, 0));
 
 	    mark.move_to(x, 0.0);
 	    mark.line_to(x, -0.01);
@@ -490,14 +520,15 @@ template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_a
   lndashsvg.add_dash(7.0, 3.0);
 
   lns.width(std_line_width(scale, 0.25));
-  canvas.draw(*(svg_vs *) &lns, colors::black);
+  canvas.draw_vs(lns, colors::black);
 
   mark_stroke.width(std_line_width(scale, 0.75));
-  canvas.draw(mark_stroke, colors::black);
+  canvas.draw_vs(mark_stroke, colors::black);
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);
-  agg::conv_stroke<agg::conv_transform<path_type> > boxs(boxtr);
+  svg_proxy<agg::conv_transform<path_type> > boxsvg(&boxtr);
+  trans<svg_context>::stroke boxvs(&boxsvg);
 
   box.move_to(0.0, 0.0);
   box.line_to(0.0, 1.0);
@@ -505,9 +536,9 @@ template <class Canvas> void plot<VS,RM>::draw_axis(Canvas &canvas, agg::trans_a
   box.line_to(1.0, 0.0);
   box.close_polygon();
 
-  boxs.width(std_line_width(scale));
+  boxvs.width(std_line_width(scale));
 
-  canvas.draw(boxs, colors::black);
+  canvas.draw_vs(boxvs, colors::black);
 
   canvas.reset_clipping();
 };
