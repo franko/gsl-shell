@@ -58,7 +58,7 @@ local function poincareplot(f, t0, t1, x0, y0, h0, tsmp, T)
    end
 
    local p = graph.plot('Poincare section')
-   p:addline(ln, "black", {{'stroke'}, {'marker', size=0.01}})
+   p:add(ln, "black", {{'marker', size=4}})
    p:show()
    return p
 end
