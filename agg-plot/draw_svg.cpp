@@ -19,41 +19,45 @@ static void append_properties(str& s, svg_property_list* properties)
     }
 }
 
+static void property_append_alpha(str& s, agg::rgba8 c)
+{
+  if (c.a < 255) {
+    double alpha = (double)c.a / 255;
+    s.printf_add(";stroke-opacity:%g", alpha);
+  }
+}
+
+static str gen_path_element(str& content, str& style, int id)
+{
+  str s = str::print("<path d=\"%s\" ", content.cstr());
+  if (id >= 0)
+    s.printf_add("id=\"path%i\" ", id);
+  s.printf_add("style=\"%s\" />", style.cstr());
+  return s;
+}
+
 str svg_stroke_path(str& path_coords, double width, int id, agg::rgba8 c,
 		    svg_property_list* properties)
 {
   char rgbstr[8];
   format_rgb(rgbstr, c);
 
-  str s = str::print("<path d=\"%s\" "
-		     "id=\"path%i\" "
-		     "style=\"fill:none;stroke:%s;"
-		     "stroke-width:%gpx;stroke-linecap:butt;"
+  str s = str::print("fill:none;stroke:%s;"
+		     "stroke-width:%g;stroke-linecap:butt;"
 		     "stroke-linejoin:miter", 
-		     path_coords.cstr(), id, rgbstr, width);
+		     rgbstr, width);
 
-  if (c.a < 255) {
-    double alpha = (double)c.a / 255;
-    s.printf_add(";stroke-opacity:%g", alpha);
-  }
-
+  property_append_alpha(s, c);
   append_properties(s, properties);
-  s.append("\" />");
 
-  return s;
+  return gen_path_element(path_coords, s, id);
 }
 
 str svg_marker_path(str& path_coords, double sw, int id, svg_property_list* properties)
 {
-  str s = str::print("<path d=\"%s\" "
-		     "id=\"path%i\" "
-		     "style=\"fill:none;stroke:none;stroke-width:%g",
-		     path_coords.cstr(), id, sw);
-
+  str s = str::print("fill:none;stroke:none;stroke-width:%g", sw);
   append_properties(s, properties);
-  s.append("\" />");
-
-  return s;
+  return gen_path_element(path_coords, s, id);
 }
 
 str svg_fill_path(str& path_coords, int id, agg::rgba8 c,
@@ -61,19 +65,8 @@ str svg_fill_path(str& path_coords, int id, agg::rgba8 c,
 {
   char rgbstr[8];
   format_rgb(rgbstr, c);
-
-  str s = str::print("<path d=\"%s\" "
-		     "id=\"path%i\" "
-		     "style=\"fill:%s;stroke:none", 
-		     path_coords.cstr(), id, rgbstr);
-
-  if (c.a < 255) {
-    double alpha = (double)c.a / 255;
-    s.printf_add(";fill-opacity:%g", alpha);
-  }
-  
+  str s = str::print("fill:%s;stroke:none", rgbstr);
+  property_append_alpha(s, c);
   append_properties(s, properties);
-  s.append("\" />");
-
-  return s;
+  return gen_path_element(path_coords, s, id);
 }
