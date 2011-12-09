@@ -152,23 +152,84 @@ struct trans {
 
   class marker : public vs_marker {
     double m_size;
+    str m_symbol_name;
     vertex_source* m_symbol;
     agg::trans_affine m_matrix;
     agg::conv_transform<vertex_source> m_trans;
 
+    class svg_affine : public vertex_source {
+      agg::conv_transform<vertex_source> m_trans;
+      vertex_source* m_source;
+    public:
+      svg_affine(vertex_source* src, agg::trans_affine& m):
+	m_trans(*src, m), m_source(src)
+      { }
+
+      virtual void rewind(unsigned path_id) { m_trans.rewind(path_id); }
+
+      virtual unsigned vertex(double* x, double* y) {
+	return m_trans.vertex(x, y);
+      }
+
+      virtual void apply_transform(const agg::trans_affine& m, double as) { }
+    };
+
+    str gen_svg_marker_def(int id, agg::rgba8 c, str& marker_id) {
+
+      marker_id.printf("%s%i", m_symbol_name.cstr(), id);
+
+      agg::trans_affine m(100.0, 0.0, 0.0, 100.0, 50.0, 50.0);
+      svg_affine tr(m_symbol, m);
+
+      str marker_svg = tr.write_svg(id+1000, c);
+
+      str s = str::print("<defs><marker id=\"%s\" "
+			 "refX=\"50\" refY=\"50\" "
+			 "viewBox=\"0 0 100 100\" orient=\"0\" "
+			 "markerWidth=\"1\" markerHeight=\"1\">"
+                         "%s"
+			 "</marker></defs>",
+			 marker_id.cstr(), marker_svg.cstr());
+
+      return s;
+    }
+
+    static str gen_marker_url(str& marker_id) {
+      return str::print("url(#%s)", marker_id.cstr());
+    }
+
   public:
     marker(base_type* src, double size, const char *sym):  
       vs_marker(src, m_trans), 
-      m_size(size), m_symbol(new_marker_symbol(sym)), m_matrix(), 
-      m_trans(*m_symbol, m_matrix)
+      m_size(size), m_symbol_name(sym), m_symbol(new_marker_symbol(sym)),
+      m_matrix(), m_trans(*m_symbol, m_matrix)
     {
       m_matrix.scale(m_size);
     };
 
-    ~marker() 
-    { 
-      delete m_symbol;
-    };
+    virtual str write_svg(int id, agg::rgba8 c) {
+      str marker_id;
+      str marker_def = gen_svg_marker_def(id, c, marker_id);
+
+      str path;
+      svg_property_list* ls = this->m_source->svg_path(path);
+
+      str marker_url = gen_marker_url(marker_id);
+      const char* murl = marker_url.cstr();
+      svg_property_item item1(marker_start, murl);
+      svg_property_item item2(marker_mid, murl);
+      svg_property_item item3(marker_end, murl);
+      ls = new svg_property_list(item1, ls);
+      ls = new svg_property_list(item2, ls);
+      ls = new svg_property_list(item3, ls);
+
+      str svg = svg_marker_path(path, m_size, id, ls);
+      list::free(ls);
+
+      return str::print("%s\n   %s", marker_def.cstr(), svg.cstr());
+    }
+
+    virtual ~marker() { delete m_symbol; }
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {

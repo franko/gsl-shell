@@ -2,7 +2,7 @@
 
 #include "draw_svg.h"
 
-const char *svg_path_property_name[] = {"stroke-dasharray"};
+const char *svg_path_property_name[] = {"stroke-dasharray", "marker-start", "marker-mid", "marker-end"};
 
 void format_rgb(char rgbstr[], agg::rgba8 c)
 {
@@ -36,6 +36,19 @@ str svg_stroke_path(str& path_coords, double width, int id, agg::rgba8 c,
     double alpha = (double)c.a / 255;
     s.printf_add(";stroke-opacity:%g", alpha);
   }
+
+  append_properties(s, properties);
+  s.append("\" />");
+
+  return s;
+}
+
+str svg_marker_path(str& path_coords, double sw, int id, svg_property_list* properties)
+{
+  str s = str::print("<path d=\"%s\" "
+		     "id=\"path%i\" "
+		     "style=\"fill:none;stroke:none;stroke-width:%g",
+		     path_coords.cstr(), id, sw);
 
   append_properties(s, properties);
   s.append("\" />");
