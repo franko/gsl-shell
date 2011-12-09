@@ -181,7 +181,7 @@ struct trans {
       agg::trans_affine m(100.0, 0.0, 0.0, 100.0, 50.0, 50.0);
       svg_affine tr(m_symbol, m);
 
-      str marker_svg = tr.write_svg(id+1000, c);
+      str marker_svg = tr.write_svg(-1, c);
 
       str s = str::print("<defs><marker id=\"%s\" "
 			 "refX=\"50\" refY=\"50\" "
