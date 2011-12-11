@@ -1,4 +1,6 @@
 
+#define _GNU_SOURCE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/readline.h>
@@ -26,7 +28,8 @@ char *my_generator (const char *text, int state)
   static char words_buffer[WORDS_BUFFER_SIZE];
   static char *node_list[NODE_LIST_SIZE];
   static int word_number;
-  char *base_word, *word;
+  static char *base_word;
+  char *word;
   lua_State *L = globalL;
   int k;
 
