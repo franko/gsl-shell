@@ -22,12 +22,34 @@
 #define AGGPLOT_SCALABLE_H
 
 #include "agg_trans_affine.h"
+#include "draw_svg.h"
+#include "strpp.h"
 
-struct vertex_source {
+struct svg_vs {
+
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
+
+  virtual str write_svg(int id, agg::rgba8 c) {
+    str path;
+    svg_property_list* ls = this->svg_path(path);
+    str s = svg_fill_path(path, id, c, ls);
+    list::free(ls);
+    return s;
+  }
+
+  virtual svg_property_list* svg_path(str& s) {
+    svg_coords_from_vs(this, s);
+    return 0;
+  }
+
+  virtual ~svg_vs() { }
+};
+
+struct vertex_source : public svg_vs {
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual bool affine_compose(agg::trans_affine& m) { return false; };
+
   virtual ~vertex_source() { };
 };
 

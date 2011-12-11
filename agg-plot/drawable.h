@@ -7,6 +7,7 @@
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
 #include "agg_bounding_rect.h"
+#include "agg_color_rgba.h"
 
 struct drawable : public vertex_source {
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
@@ -24,6 +25,9 @@ class boxed_drawable : public drawable {
   virtual void rewind(unsigned path_id) { m_object->rewind(path_id); };
   virtual unsigned vertex(double* x, double* y) { return m_object->vertex(x, y); };
   virtual void apply_transform(const agg::trans_affine& m, double as) { m_object->apply_transform(m, as); };
+
+  virtual str write_svg(int id, agg::rgba8 c) { return m_object->write_svg(id, c); }
+  virtual svg_property_list* svg_path(str& s) { return m_object->svg_path(s); }
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {

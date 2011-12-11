@@ -509,8 +509,10 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       optional arguments are the width and the height in pixel of the
       image. The format used is BMP on windows and PPM on Linux.
 
-      all its graphical elements and make the previous level the
-      current one.
+   .. method:: save_svg(filename[, w, h])
+
+      Save the plot in the given filename in SVG format.
+      Two optional parameters can be given to specify the width and height of the drawing area.
 
    .. attribute:: units
 

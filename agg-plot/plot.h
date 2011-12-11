@@ -25,12 +25,16 @@
 
 #include "utils.h"
 #include "my_list.h"
+#include "strpp.h"
 #include "drawable.h"
 #include "canvas.h"
 #include "units.h"
 #include "resource-manager.h"
 #include "colors.h"
 #include "rect.h"
+#include "canvas_svg.h"
+#include "trans.h"
+#include "text.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -42,6 +46,38 @@
 #include "agg_conv_stroke.h"
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
+
+template <class VertexSource>
+struct virtual_canvas {
+  virtual void draw(VertexSource& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) = 0;
+
+  virtual void draw_vs(svg_vs& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline_vs(svg_vs& vs, agg::rgba8 c) = 0;
+
+  virtual void clip_box(const agg::rect_base<int>& clip) = 0;
+  virtual void reset_clipping() = 0;
+
+  virtual ~virtual_canvas() { }
+};
+
+template <class Canvas, class VertexSource>
+class canvas_adapter : public virtual_canvas<VertexSource> {
+public:
+  canvas_adapter(Canvas* c) : m_canvas(c) {}
+
+  virtual void draw(VertexSource& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
+  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
+
+  virtual void draw_vs(svg_vs& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
+  virtual void draw_outline_vs(svg_vs& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
+
+  virtual void clip_box(const agg::rect_base<int>& clip) { m_canvas->clip_box(clip);  }
+  virtual void reset_clipping() { m_canvas->reset_clipping(); }
+
+private:
+  Canvas* m_canvas;
+};
 
 template<class VertexSource>
 struct plot_item {
@@ -67,19 +103,16 @@ class plot {
 
 public:
   typedef pod_list<item> iterator;
+  typedef virtual_canvas<vertex_source> canvas_type;
 
   plot(bool use_units = true) : 
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
-    m_use_units(use_units), m_pad_units(false), m_title_buf(),
+    m_use_units(use_units), m_pad_units(false), m_title(),
     m_sync_mode(true)
   {
     compute_user_trans();
-
-    m_title_buf.capacity(32);
-    m_title = m_title_buf.data();
-    m_title[0] = '\0';
   };
 
   virtual ~plot() 
@@ -94,7 +127,7 @@ public:
   };
 
   void set_title(const char *text);
-  const char *title() const { return m_title; };
+  const char *title() const { return m_title.cstr(); };
 
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
@@ -104,7 +137,8 @@ public:
   virtual void add(vertex_source* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { };
   
-  void draw(canvas &canvas, agg::trans_affine& m);
+  template <class Canvas>
+  void draw(Canvas& canvas, agg::trans_affine& m);
 
   virtual bool push_layer();
   virtual bool pop_layer();
@@ -121,7 +155,8 @@ public:
   bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
 
-  void draw_queue(canvas &canvas, agg::trans_affine& m, opt_rect<double>& bbox);
+  template <class Canvas>
+  void draw_queue(Canvas& canvas, agg::trans_affine& m, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -139,14 +174,14 @@ public:
   bool pad_mode() { return m_pad_units; };
 
 protected:
-  void draw_elements(canvas &canvas, agg::trans_affine& m);
-  void draw_element(item& c, canvas &canvas, agg::trans_affine& m);
-  void draw_title(canvas& canvas, agg::trans_affine& m);
-  void draw_axis(canvas& can, agg::trans_affine& m);
+  void draw_elements(canvas_type &canvas, agg::trans_affine& m);
+  void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
+  void draw_title(canvas_type& canvas, agg::trans_affine& m);
+  void draw_axis(canvas_type& can, agg::trans_affine& m);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
-  void clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx);
+  void clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx);
 
   void compute_user_trans();
 
@@ -176,15 +211,14 @@ protected:
 private:
   bool m_pad_units;
 
-  agg::pod_vector<char> m_title_buf;
-  char *m_title;
+  str m_title;
 
   bool m_sync_mode;
 };
 
 static double 
 compute_scale(agg::trans_affine& m) { 
-  return min(m.sy, m.sx) / 480.0; 
+  return min(fabs(m.sy), fabs(m.sx)) / 480.0; 
 }
 
 static double
@@ -218,10 +252,7 @@ void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
 template <class VS, class RM>
 void plot<VS,RM>::set_title(const char *text) 
 {
-  unsigned int len = strlen(text);
-  m_title_buf.resize(len+1);
-  m_title = m_title_buf.data();
-  memcpy (m_title, text, len+1);
+  str_copy_c(&m_title, text);
 }
 
 template <class VS, class RM>
@@ -248,8 +279,9 @@ void plot<VS,RM>::clear_drawing_queue()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
+template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
 {
+  canvas_adapter<Canvas, VS>  canvas(&_canvas);
   before_draw();
   draw_title(canvas, canvas_mtx);
   if (m_use_units)
@@ -258,9 +290,9 @@ void plot<VS,RM>::draw(canvas &canvas, agg::trans_affine& canvas_mtx)
 };
 
 template <class VS, class RM>
-void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::draw_title(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
-  double xt = 0.5, yt = 1;
+  double xt = 0.5, yt = 1.05;
 
   agg::trans_affine m;
   this->viewport_scale(m);
@@ -268,27 +300,17 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
 
   double scale = compute_scale(canvas_mtx);
 
-  agg::gsv_text title;
-  agg::conv_stroke<agg::gsv_text> titlestroke(title);
+  draw::text title(12.0 * scale, std_line_width(scale));
+  title.set_text(m_title.cstr());
+  title.hjustif(0.5);
+  title.set_point(xt, yt);
+  title.apply_transform(m, 1.0);
 
-  title.size(12.0 * scale);
-  title.text(m_title);
-
-  titlestroke.width(std_line_width(scale));
-  titlestroke.line_cap(agg::round_cap);
-  titlestroke.line_join(agg::round_join);
-
-  m.transform(&xt, &yt);
-
-  xt += -title.text_width() / 2;
-  yt += 10.0 * scale;
-
-  title.start_point(xt, yt);
-  canvas.draw(titlestroke, agg::rgba(0, 0, 0));
+  canvas.draw_vs(title, agg::rgba(0, 0, 0));
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::draw_element(item& c, canvas &canvas, agg::trans_affine& m)
+template <class VS, class RM>
+void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
 {
   VS& vs = c.vertex_source();
   vs.apply_transform(m, 1.0);
@@ -299,7 +321,7 @@ void plot<VS,RM>::draw_element(item& c, canvas &canvas, agg::trans_affine& m)
     canvas.draw(vs, c.color);
 }
 
-template<class VS, class RM>
+template <class VS, class RM>
 agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
@@ -309,7 +331,7 @@ agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   if (this->clip_is_active())
     {
@@ -321,8 +343,8 @@ void plot<VS,RM>::clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx)
     }
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
+template <class VS, class RM>
+void plot<VS,RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
@@ -345,10 +367,11 @@ void plot<VS,RM>::draw_elements(canvas &canvas, agg::trans_affine& canvas_mtx)
   canvas.reset_clipping();
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
-			     opt_rect<double>& bb)
+template <class VS, class RM>
+template <class Canvas> void plot<VS,RM>::draw_queue(Canvas& _canvas, agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
 {
+  canvas_adapter<Canvas, VS>  canvas(&_canvas);
+
   typedef typename plot<VS,RM>::iterator iter_type;
 
   before_draw();
@@ -372,7 +395,7 @@ void plot<VS,RM>::draw_queue(canvas &canvas, agg::trans_affine& canvas_mtx,
   canvas.reset_clipping();
 }
 
-template<class VS, class RM>
+template <class VS, class RM>
 void plot<VS,RM>::compute_user_trans()
 {
   agg::rect_base<double> r;
@@ -400,7 +423,7 @@ void plot<VS,RM>::compute_user_trans()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
+void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   typedef agg::path_storage path_type;
   typedef agg::conv_dash<agg::conv_transform<path_type>, agg::vcgen_markers_term> dash_type;
@@ -416,15 +439,19 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 
   agg::path_storage mark;
   agg::conv_transform<path_type> mark_tr(mark, m);
-  agg::conv_stroke<agg::conv_transform<path_type> > mark_stroke(mark_tr);
+  svg_proxy<agg::conv_transform<path_type> > marksvg(&mark_tr);
+  trans<svg_context>::stroke mark_stroke(&marksvg);
 
   agg::path_storage ln;
   agg::conv_transform<path_type> lntr(ln, m);
-  dash_type lndash(lntr);
-  agg::conv_stroke<dash_type> lns(lndash);
+  svg_proxy<agg::conv_transform<path_type> > lntrsvg(&lntr);
+  trans<svg_context>::dash lndashsvg(&lntrsvg);
+  trans<svg_context>::stroke lns(&lndashsvg);
 
   const double yeps = 1.0e-3;
   const double xeps = 1.0e-3;
+
+  double line_width = std_line_width(scale);
 
   {
     int jinf = m_uy.begin(), jsup = m_uy.end();
@@ -434,32 +461,26 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 	this->m_trans.transform(&x, &y);
 	if (y >= - yeps && y <= 1.0 + yeps)
 	  {
-	    agg::gsv_text lab;
-	    agg::conv_stroke<agg::gsv_text> labs(lab);
+	    draw::text label(12.0 * scale, line_width);
 	    char lab_text[32];
-	    double xlab = 0, ylab = y;
 
-	    lab.size(12.0 * scale);
 	    m_uy.mark_label(lab_text, 32, j);
-	    lab.text(lab_text);
-	    labs.width(std_line_width(scale));
+	    label.set_text(lab_text);
 
-	    m.transform(&xlab, &ylab);
+	    label.hjustif(1.0);
+	    label.vjustif(0.5);
+	    label.set_point(-0.02, y);
+	    label.apply_transform(m, 1.0);
 
-	    xlab += -lab.text_width() - 10.0 * scale;
-	    ylab += -5.0 * scale;
-
-	    lab.start_point(xlab, ylab);
-	    canvas.draw(labs, agg::rgba(0, 0, 0));
+	    canvas.draw_vs(label, agg::rgba(0, 0, 0));
 
 	    mark.move_to(0.0, y);
 	    mark.line_to(-0.01, y);
 
-	    if (j > jinf && j < jsup)
-	      {
-		ln.move_to(0.0, y);
-		ln.line_to(1.0, y);
-	      }
+	    if (j > jinf && j < jsup) {
+	      ln.move_to(0.0, y);
+	      ln.line_to(1.0, y);
+	    }
 	  }
       }
   }
@@ -468,51 +489,46 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
     int jinf = m_ux.begin(), jsup = m_ux.end();
     for (int j = jinf; j <= jsup; j++)
       {
-	double x = m_ux.mark_value(j), y = m_uy.mark_value(j);
+	double x = m_ux.mark_value(j), y = 0.0;
 	this->m_trans.transform(&x, &y);
 	if (x >= - xeps && x <= 1.0 + xeps)
 	  {
-	    agg::gsv_text lab;
-	    agg::conv_stroke<agg::gsv_text> labs(lab);
+	    draw::text label(12.0 * scale, line_width);
 	    char lab_text[32];
-	    double xlab = x, ylab = 0;
 
-	    lab.size(12.0 * scale);
 	    m_ux.mark_label(lab_text, 32, j);
-	    lab.text(lab_text);
-	    labs.width(std_line_width(scale));
+	    label.set_text(lab_text);
 
-	    m.transform(&xlab, &ylab);
+	    label.hjustif(0.5);
+	    label.vjustif(1.6);
+	    label.set_point(x, 0);
+	    label.apply_transform(m, 1.0);
 
-	    xlab += -lab.text_width()/2.0;
-	    ylab += -24.0 * scale;
-
-	    lab.start_point(xlab, ylab);
-	    canvas.draw(labs, agg::rgba(0, 0, 0));
+	    canvas.draw_vs(label, agg::rgba(0, 0, 0));
 
 	    mark.move_to(x, 0.0);
 	    mark.line_to(x, -0.01);
 
-	    if (j > jinf && j < jsup)
-	      {
-		ln.move_to(x, 0.0);
-		ln.line_to(x, 1.0);
-	      }
+	    if (j > jinf && j < jsup) {
+	      ln.move_to(x, 0.0);
+	      ln.line_to(x, 1.0);
+	    }
 	  }
       }
   }
 
-  lndash.add_dash(7.0, 3.0);
+  lndashsvg.add_dash(7.0, 3.0);
 
   lns.width(std_line_width(scale, 0.25));
-  canvas.draw(lns, colors::black);
+  canvas.draw_vs(lns, colors::black);
 
   mark_stroke.width(std_line_width(scale, 0.75));
-  canvas.draw(mark_stroke, colors::black);
+  canvas.draw_vs(mark_stroke, colors::black);
 
   agg::path_storage box;
   agg::conv_transform<path_type> boxtr(box, m);
-  agg::conv_stroke<agg::conv_transform<path_type> > boxs(boxtr);
+  svg_proxy<agg::conv_transform<path_type> > boxsvg(&boxtr);
+  trans<svg_context>::stroke boxvs(&boxsvg);
 
   box.move_to(0.0, 0.0);
   box.line_to(0.0, 1.0);
@@ -520,9 +536,9 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
   box.line_to(1.0, 0.0);
   box.close_polygon();
 
-  boxs.width(std_line_width(scale));
+  boxvs.width(std_line_width(scale));
 
-  canvas.draw(boxs, colors::black);
+  canvas.draw_vs(boxvs, colors::black);
 
   canvas.reset_clipping();
 };
