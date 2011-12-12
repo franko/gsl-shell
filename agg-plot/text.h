@@ -42,6 +42,8 @@ namespace draw {
       m_hjustif(0.0), m_vjustif(0.0)
     {
       m_stroke.width(width);
+      m_stroke.line_cap(agg::round_cap);
+      m_stroke.line_join(agg::round_join);
       m_text.size(size);
     }
 
