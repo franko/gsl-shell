@@ -9,7 +9,6 @@ extern "C" {
 #include "lua-plot-cpp.h"
 #include "lua-cpp-utils.h"
 #include "plot.h"
-#include "drawable.h"
 #include "rect.h"
 #include "my_list.h"
 
@@ -19,8 +18,6 @@ extern "C" {
 
 class window : public canvas_window {
 public:
-  typedef plot<drawable, lua_management> plot_type;
-
   int window_id;
 
   typedef agg::trans_affine bmatrix;
@@ -28,7 +25,7 @@ public:
   struct ref {
     typedef tree::node<ref, direction_e> node;
 
-    plot_type *plot;
+    sg_plot* plot;
     int slot_id;
 
     bmatrix matrix;
@@ -39,7 +36,7 @@ public:
     bool valid_rect;
     opt_rect<double> dirty_rect;
 
-    ref(plot_type *p = 0)
+    ref(sg_plot* p = 0)
       : plot(p), matrix(), layer_buf(0), valid_rect(true), dirty_rect()
     {};
 
@@ -71,7 +68,7 @@ public:
   ~window() { if (m_tree) delete m_tree; };
 
   bool split(const char *spec);
-  int attach(lua_plot *plot, const char *spec);
+  int attach(sg_plot *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
   void refresh_slot(int slot_id);
   void start(lua_State *L, gslshell::ret_status& st);

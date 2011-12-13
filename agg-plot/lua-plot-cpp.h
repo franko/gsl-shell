@@ -9,8 +9,9 @@ extern "C" {
 
 #include "plot-auto.h"
 #include "resource-manager.h"
-#include "drawable.h"
+#include "sg_object.h"
 
-typedef plot<drawable, lua_management> lua_plot;
+typedef plot<sg_object, manage_owner> sg_plot;
+typedef plot_auto<sg_object, manage_owner> sg_plot_auto;
 
 #endif

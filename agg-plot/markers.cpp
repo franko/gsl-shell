@@ -1,20 +1,21 @@
 
 #include <math.h>
 
-#include "markers.h"
-#include "scalable.h"
-
 #include "agg_path_storage.h"
 #include "agg_ellipse.h"
 
+#include "markers.h"
+#include "trans.h"
+#include "path.h"
+
 struct symbol_reg {
   const char *name;
-  vertex_source *(*builder)();
+  sg_object *(*builder)();
 };
 
-static vertex_source *build_circle();
-static vertex_source *build_square();
-static vertex_source *build_triangle();
+static sg_object *build_circle();
+static sg_object *build_square();
+static sg_object *build_triangle();
 
 static struct symbol_reg builder_table[] = {
   {"circle",   build_circle},
@@ -23,20 +24,20 @@ static struct symbol_reg builder_table[] = {
   {NULL, NULL}
 };
 
-vertex_source *
+sg_object *
 build_circle()
 {
-  typedef vs_proxy<agg::ellipse, true> circle_type;
-  circle_type *circle = new circle_type();
-  circle->self().init(0.0, 0.0, 0.5, 0.5);
-  return (vertex_source *) circle;
+  draw::ellipse* c = new draw::ellipse();
+  trans::scaling* s = new trans::scaling((sg_object*)c);
+  c->self().init(0.0, 0.0, 0.5, 0.5);
+  return s;
 }
 
-vertex_source *
+sg_object *
 build_square()
 {
-  typedef vs_proxy<agg::path_storage, false> path_type;
-  path_type *p = new path_type();
+  draw::path* p = new draw::path();
+  trans::scaling* s = new trans::scaling((sg_object*)p);
   
   agg::path_storage& square = p->self();
   square.move_to(-0.5, -0.5);
@@ -45,14 +46,14 @@ build_square()
   square.line_to(-0.5,  0.5);
   square.close_polygon();
 
-  return (vertex_source *) p;
+  return s;
 }
 
-vertex_source *
+sg_object *
 build_triangle()
 {
-  typedef vs_proxy<agg::path_storage, false> path_type;
-  path_type *p = new path_type();
+  draw::path* p = new draw::path();
+  trans::scaling* s = new trans::scaling((sg_object*)p);
   
   agg::path_storage& triangle = p->self();
 
@@ -62,10 +63,10 @@ build_triangle()
   triangle.line_to( 0.0,  2*ht/3);
   triangle.close_polygon();
 
-  return (vertex_source *) p;
+  return s;
 }
 
-vertex_source*
+sg_object*
 new_marker_symbol (const char *req_name)
 {
   struct symbol_reg *reg;

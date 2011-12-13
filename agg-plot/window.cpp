@@ -334,7 +334,7 @@ next_int (const char *str, int& val)
 }
 
 /* Returns the slot_id or -1 in case of error. */
-int window::attach(lua_plot *plot, const char *spec)
+int window::attach(sg_plot* plot, const char *spec)
 {
   ref::node *n = m_tree;
   const char *ptr;
@@ -497,7 +497,7 @@ int
 window_attach (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
-  lua_plot *plot = object_check<lua_plot>(L, 2, GS_PLOT);
+  sg_plot* plot = object_check<sg_plot>(L, 2, GS_PLOT);
   const char *spec = luaL_checkstring (L, 3);
 
   win->lock();

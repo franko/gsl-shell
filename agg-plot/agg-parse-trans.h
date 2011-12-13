@@ -7,8 +7,7 @@ extern "C" {
 
 #include <exception>
 
-#include "scalable.h"
-#include "drawable.h"
+#include "sg_object.h"
 #include "agg_color_rgba.h"
 
 class agg_spec_error : public std::exception {
@@ -35,6 +34,6 @@ private:
   static const char *m_msg[];
 };
 
-extern drawable * parse_graph_args (lua_State *L, agg::rgba8& color);
+extern sg_object* parse_graph_args (lua_State *L, agg::rgba8& color);
 
 #endif

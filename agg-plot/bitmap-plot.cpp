@@ -14,7 +14,7 @@ extern "C" {
 #include "platform_support_ext.h"
 
 void
-bitmap_save_image_cpp (lua_plot *p, const char *fn, unsigned w, unsigned h,
+bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
 		       gslshell::ret_status& st)
 {
   try {
@@ -46,7 +46,7 @@ bitmap_save_image_cpp (lua_plot *p, const char *fn, unsigned w, unsigned h,
 int
 bitmap_save_image (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
   const char *fn = luaL_checkstring (L, 2);
   int w = luaL_optint (L, 3, 480), h = luaL_optint (L, 4, 480);
 

@@ -16,8 +16,6 @@ extern "C" {
 #include "gs-types.h"
 #include "colors.h"
 
-#include "scalable.h"
-#include "drawable.h"
 #include "path.h"
 #include "text.h"
 #include "trans.h"
@@ -68,18 +66,14 @@ property_lookup (struct property_reg *prop, const char *key)
   return default_value;
 }
 
-template <class context>
-typename context::base_type* build_stroke (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_stroke (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::stroke stroke_type;
-
   double width = mlua_named_optnumber (L, specindex, "width", 1.0);
   const char *cap_str  = mlua_named_optstring (L, specindex, "cap",  NULL);
   const char *join_str = mlua_named_optstring (L, specindex, "join", NULL);
 
-  stroke_type *s = new stroke_type(obj);
-
-  typename trans<context>::stroke_base& stroke = s->self();
+  trans::stroke* s = new trans::stroke(src);
+  trans::conv_stroke& stroke = s->self();
 
   s->width(width);
 
@@ -95,33 +89,26 @@ typename context::base_type* build_stroke (lua_State *L, int specindex, typename
       stroke.line_join((agg::line_join_e) join);
     }
 
-  return (typename context::base_type *) s;
+  return s;
 }
 
-template <class context> typename context::base_type*
-build_curve (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_curve (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::curve curve_type;
-  return (typename context::base_type *) new curve_type(obj);
+  return new trans::curve(src);
 }
 
-template <class context> typename context::base_type*
-build_marker (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::marker marker_type;
-
   double size = mlua_named_optnumber (L, specindex, "size", 3.0);
-  const char *mark = mlua_named_optstring (L, specindex, "mark", "circle");
-  marker_type *m = new marker_type(obj, size, mark);
-  return (typename context::base_type *) m;
+  const char *sym_name = mlua_named_optstring (L, specindex, "mark", "circle");
+  sg_object* sym = new_marker_symbol(sym_name);
+  trans::marker* m = new trans::marker(src, size, sym);
+  return m;
 }
 
-template <class context> typename context::base_type *
-build_dash (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_dash (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::dash dash_type;
-
-  dash_type *d = new dash_type(obj);
+  trans::dash* d = new trans::dash(src);
 
   for (int j = 2; /* */; j += 2)
     {
@@ -144,54 +131,40 @@ build_dash (lua_State *L, int specindex, typename context::base_type *obj)
     }
   lua_pop (L, 1);
 
-  return (typename context::base_type *) d;
+  return d;
 }
 
-template <class context> typename context::base_type*
-build_extend (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_extend (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::extend extend_type;
-
   double width = mlua_named_optnumber (L, specindex, "width", 1.0);
-  extend_type *m = new extend_type(obj);
+  trans::extend* m = new trans::extend(src);
 
-  typename trans<context>::extend_base& e = m->self();
+  agg::conv_contour<sg_object>& e = m->self();
   e.width(width);
   e.auto_detect_orientation(true);
 
-  return (typename context::base_type *) m;
+  return m;
 }
 
-template <class context> typename context::base_type *
-affine_object_compose(typename context::base_type *obj, agg::trans_affine& m)
+sg_object* affine_object_compose(sg_object* obj, agg::trans_affine& m)
 {
-  typedef typename trans<context>::affine affine_type;
-
   if (obj->affine_compose(m))
-    {
-      return obj;
-    }
+    return obj;
 
-  return (typename context::base_type *) new affine_type(obj, m);
+  return new trans::affine(obj, m);
 }
 
-template <class context> typename context::base_type*
-build_translate (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_translate (lua_State* L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::affine affine_type;
-
   double x = mlua_named_number (L, specindex, "x");
   double y = mlua_named_number (L, specindex, "y");
 
   agg::trans_affine mtx(1.0, 0.0, 0.0, 1.0, x, y);
-  return affine_object_compose<context>(obj, mtx);
+  return affine_object_compose(src, mtx);
 }
 
-template <class context> typename context::base_type*
-build_scale (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_scale (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::affine affine_type;
-
   lua_rawgeti (L, specindex, 2);
 
   if (! lua_isnumber (L, -1))
@@ -201,26 +174,20 @@ build_scale (lua_State *L, int specindex, typename context::base_type *obj)
   lua_pop (L, 1);
 
   agg::trans_affine mtx(s, 0.0, 0.0, s, 0.0, 0.0);
-  return affine_object_compose<context>(obj, mtx);
+  return affine_object_compose(src, mtx);
 }
 
-template <class context> typename context::base_type*
-build_rotate (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* build_rotate (lua_State *L, int specindex, sg_object* src)
 {
-  typedef typename trans<context>::affine affine_type;
-
   double a = mlua_named_number (L, specindex, "angle");
-
   double c = cos(a), s = sin(a);
   agg::trans_affine mtx(c, s, -s, c, 0.0, 0.0);
-  return affine_object_compose<context>(obj, mtx);
+  return affine_object_compose(src, mtx);
 }
 
-template <class context>
 class builder {
-  typedef typename context::base_type base_type;
 public:
-  typedef base_type *(func_type)(lua_State *, int, base_type *);
+  typedef sg_object* (func_type)(lua_State*, int, sg_object*);
 
   struct reg {
     const char *name;
@@ -245,23 +212,20 @@ public:
   }
 };
 
-template <class context>
-const typename builder<context>::reg builder<context>::builder_table[] = {
-  {"stroke",        build_stroke   <context>},
-  {"dash",          build_dash     <context>},
-  {"curve",         build_curve    <context>},
-  {"marker",        build_marker   <context>},
-  {"extend",        build_extend   <context>},
-  {"translate",     build_translate<context>},
-  {"scale",         build_scale    <context>},
-  {"rotate",        build_rotate   <context>},
+const builder::reg builder::builder_table[] = {
+  {"stroke",        build_stroke   },
+  {"dash",          build_dash     },
+  {"curve",         build_curve    },
+  {"marker",        build_marker   },
+  {"extend",        build_extend   },
+  {"translate",     build_translate},
+  {"scale",         build_scale    },
+  {"rotate",        build_rotate   },
   {NULL, NULL}
 };
 
-template <class context> typename context::base_type *
-parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
+sg_object* parse_spec (lua_State *L, int specindex, sg_object* src)
 {
-  typedef builder<context> builder_type;
   const char *tag;
 
   INDEX_SET_ABS(L, specindex);
@@ -276,16 +240,14 @@ parse_spec (lua_State *L, int specindex, typename context::base_type *obj)
   tag = lua_tostring (L, -1);
   lua_pop (L, 1);
 
-  typename builder_type::func_type *f = builder_type::lookup(tag);
+  builder::func_type* f = builder::lookup(tag);
 
   if (f == 0) throw agg_spec_error(agg_spec_error::invalid_tag);
 
-  typename context::base_type *retval = f (L, specindex, obj);
-  return retval;
+  return f(L, specindex, src);
 }
 
-template <class context> typename context::base_type *
-parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
+sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* obj)
 {
   if (lua_type (L, index) != LUA_TTABLE)
     throw agg_spec_error(agg_spec_error::invalid_spec);
@@ -295,51 +257,50 @@ parse_spec_pipeline (lua_State *L, int index, typename context::base_type *obj)
   for (k = nb; k > 0; k--)
     {
       lua_rawgeti (L, index, k);
-      obj = parse_spec<context> (L, -1, obj);
+      obj = parse_spec(L, -1, obj);
       lua_pop (L, 1);
     }
 
   return obj;
 }
 
-drawable *
-parse_graph_args (lua_State *L, agg::rgba8& color)
+sg_object* parse_graph_args (lua_State *L, agg::rgba8& color)
 {
   color = color_arg_lookup (L, 3);
 
-  std::auto_ptr<drawable> wobj;
+  std::auto_ptr<sg_object> wobj;
 
   if (gs_is_userdata (L, 2, GS_DRAW_SCALABLE))
     {
-      vertex_source *vs = (vertex_source *) lua_touserdata (L, 2);
-      std::auto_ptr<scalable> sobj(new boxed_scalable(vs));
+      sg_object* vs = (sg_object*) lua_touserdata (L, 2);
+      std::auto_ptr<sg_object> sobj(new sg_object_ref<manage_not_owner>(vs));
 
       if (! lua_isnoneornil (L, 5))
-	{
-	  scalable *st = parse_spec_pipeline<scalable_context> (L, 5, sobj.get());
-	  sobj.release();
-	  sobj = std::auto_ptr<scalable>(st);
-	}
+        {
+          sg_object* st = parse_spec_pipeline(L, 5, sobj.get());
+          sobj.release();
+          sobj = std::auto_ptr<sg_object>(st);
+        }
     
-      drawable *ws = new window_scalable(sobj.get());
+      sg_object* ws = new trans::scaling(sobj.get());
 
       sobj.release();
-      wobj = std::auto_ptr<drawable>(ws);
+      wobj = std::auto_ptr<sg_object>(ws);
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
-      drawable *vs = (drawable *) lua_touserdata (L, 2);
-      wobj = std::auto_ptr<drawable>(new boxed_drawable(vs));
+      sg_object* vs = (sg_object*) lua_touserdata (L, 2);
+      wobj = std::auto_ptr<sg_object>(new sg_object_ref<manage_not_owner>(vs));
     }
   else
     {
       throw agg_spec_error(agg_spec_error::invalid_object);
     }
 
-  drawable *w = wobj.get();
+  sg_object* w = wobj.get();
   if (! lua_isnoneornil (L, 4))
     {
-      w = parse_spec_pipeline<drawable_context> (L, 4, w);
+      w = parse_spec_pipeline(L, 4, w);
     }
 
   wobj.release();

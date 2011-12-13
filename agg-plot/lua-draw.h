@@ -14,7 +14,7 @@ __END_DECLS
 
 #include "agg_color_rgba.h"
 
-#include "drawable.h"
+#include "sg_object.h"
 #include "path.h"
 
 extern int agg_text_new       (lua_State *L);
