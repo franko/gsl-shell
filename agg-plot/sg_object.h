@@ -104,8 +104,7 @@ public:
    transformation like conv_stroke, conv_dash or any other transform
    with a sg_object source. This adapter implements therefore the
    virtual methods from the sg_object abstract class */
-template <class ConvType, class ApproxManager,
-	  class ResourceManager = manage_owner>
+template <class ConvType, class ApproxManager>
 class sg_adapter : public sg_object {
 protected:
   ConvType m_output;
@@ -115,13 +114,10 @@ public:
   sg_adapter(sg_object* src): m_output(*src), m_source(src) { }
 
   template <class InitType>
-  sg_adapter(sg_object* src, InitType& val):
-    m_output(*src, val), m_source(src)
-  {
-    ResourceManager::acquire(m_source);
-  }
+  sg_adapter(sg_object* src, InitType& val): m_output(*src, val), m_source(src)
+  { }
 
-  virtual ~sg_adapter() { ResourceManager::dispose(m_source); }
+  virtual ~sg_adapter() { }
 
   virtual void rewind(unsigned path_id) { m_output.rewind(path_id); }
   virtual unsigned vertex(double* x, double* y) { return m_output.vertex(x, y); }

@@ -21,15 +21,13 @@
 struct trans {
 
   typedef sg_object_scaling<manage_owner> scaling;
-  typedef sg_object_scaling<manage_not_owner> scaling_a;
 
   typedef agg::conv_stroke<sg_object> conv_stroke;
 
-  template <class ResourceManager>
-  class stroke_gen : public sg_adapter<conv_stroke, approx_scale, ResourceManager> {
-    typedef sg_adapter<conv_stroke, approx_scale, ResourceManager> base_type;
+  class stroke_a : public sg_adapter<conv_stroke, approx_scale> {
+    typedef sg_adapter<conv_stroke, approx_scale> base_type;
   public:
-    stroke_gen(sg_object* src): base_type(src), m_width(1.0) { }
+    stroke_a(sg_object* src): base_type(src), m_width(1.0) { }
 
     void width(double w) {
       this->m_output.width(w);
@@ -48,18 +46,18 @@ struct trans {
     double m_width;
   };
 
-  typedef stroke_gen<manage_owner> stroke;
-  typedef stroke_gen<manage_not_owner> stroke_a;
-
+  struct stroke : stroke_a {
+    stroke(sg_object* src) : stroke_a(src) {}
+    virtual ~stroke() { delete m_source; }
+  };
 
   //------------------------------------------------ curve transform
   typedef agg::conv_curve<sg_object> curve_type;
 
-  template <class ResourceManager>
-  class curve_gen : public sg_adapter<curve_type, approx_scale, ResourceManager> {
-    typedef sg_adapter<curve_type, approx_scale, ResourceManager> base_type;
+  class curve_a : public sg_adapter<curve_type, approx_scale> {
+    typedef sg_adapter<curve_type, approx_scale> base_type;
   public:
-    curve_gen(sg_object* src) : base_type(src) { }
+    curve_a(sg_object* src) : base_type(src) { }
 
     virtual svg_property_list* svg_path(str& s) {
       svg_curve_coords_from_vs(this->m_source, s);
@@ -67,18 +65,18 @@ struct trans {
     }
   };
 
-  typedef curve_gen<manage_owner> curve;
-  typedef curve_gen<manage_not_owner> curve_a;
-
+  struct curve : curve_a {
+    curve(sg_object* src) : curve_a(src) {}
+    virtual ~curve() { delete m_source; }
+  };
 
   //------------------------------------------------ dash transform
   typedef agg::conv_dash<sg_object> dash_type;
 
-  template <class ResourceManager>
-  class dash_gen : public sg_adapter<dash_type, no_approx_scale, ResourceManager> {
-    typedef sg_adapter<dash_type, no_approx_scale, ResourceManager> base_type;
+  class dash_a : public sg_adapter<dash_type, no_approx_scale> {
+    typedef sg_adapter<dash_type, no_approx_scale> base_type;
   public:
-    dash_gen(sg_object* src) : base_type(src), m_dasharray(16) { }
+    dash_a(sg_object* src) : base_type(src), m_dasharray(16) { }
 
     virtual svg_property_list* svg_path(str& s) {
       svg_property_list* ls = this->m_source->svg_path(s);
@@ -97,24 +95,23 @@ struct trans {
     str m_dasharray;
   };
 
-  typedef dash_gen<manage_owner> dash;
-  typedef dash_gen<manage_not_owner> dash_a;
-
-
+  struct dash : dash_a {
+    dash(sg_object* src) : dash_a(src) {}
+    virtual ~dash() { delete m_source; }
+  };
 
   //------------------------------------------------ affine transform
   typedef agg::conv_transform<sg_object> trans_type;
 
-  template <class ResourceManager>
-  class affine_gen :
-    public sg_adapter<trans_type, no_approx_scale, ResourceManager> {
+  class affine_a :
+    public sg_adapter<trans_type, no_approx_scale> {
     agg::trans_affine m_matrix;
     double m_norm;
 
-    typedef sg_adapter<trans_type, no_approx_scale, ResourceManager> base_type;
+    typedef sg_adapter<trans_type, no_approx_scale> base_type;
 
   public:
-    affine_gen(sg_object *src, const agg::trans_affine& mtx) : 
+    affine_a(sg_object *src, const agg::trans_affine& mtx) : 
       base_type(src, m_matrix), m_matrix(mtx)
     { 
       m_norm = m_matrix.scale();
@@ -132,25 +129,31 @@ struct trans {
     }
   };
 
-  typedef affine_gen<manage_owner> affine;
-  typedef affine_gen<manage_not_owner> affine_a;
+  struct affine : affine_a {
+    affine(sg_object* src, const agg::trans_affine& m) : affine_a(src, m) {}
+    virtual ~affine() { delete m_source; }
+  };
 
   //------------------------------------------------ extend transform
-  typedef sg_adapter<agg::conv_contour<sg_object>, approx_scale, manage_owner> extend;
+  struct extend : sg_adapter<agg::conv_contour<sg_object>, approx_scale> {
+    extend(sg_object* src):
+      sg_adapter<agg::conv_contour<sg_object>, approx_scale>(src) 
+    { }
+
+    virtual ~extend() { delete m_source; }
+  };
 
   //------------------------------------------------ marker transform
   typedef my::conv_simple_marker<sg_object, sg_object> marker_type;
 
-  template <class ResourceManager>
-  class marker_gen : 
-    public sg_adapter<marker_type, no_approx_scale, ResourceManager> {
+  class marker_a : 
+    public sg_adapter<marker_type, no_approx_scale> {
 
-    typedef sg_adapter<marker_type, no_approx_scale, ResourceManager> base_type;
+    typedef sg_adapter<marker_type, no_approx_scale> base_type;
 
   public:
-    marker_gen(sg_object* src, double size, sg_object* sym):  
-      base_type(src, *sym), m_size(size),
-      m_scale(m_size), m_symbol(sym)
+    marker_a(sg_object* src, double size, sg_object* sym):
+      base_type(src, *sym), m_size(size), m_scale(m_size), m_symbol(sym)
     { }
 
     virtual str write_svg(int id, agg::rgba8 c) {
@@ -175,7 +178,7 @@ struct trans {
       return str::print("%s\n   %s", marker_def.cstr(), svg.cstr());
     }
 
-    virtual ~marker_gen() { delete m_symbol; }
+    virtual ~marker_a() { delete m_symbol; }
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
@@ -214,8 +217,13 @@ struct trans {
     }
   };
 
-  typedef marker_gen<manage_owner> marker;
-  typedef marker_gen<manage_not_owner> marker_a;
+  struct marker : marker_a {
+    marker(sg_object* src, double size, sg_object* sym):
+      marker_a(src, size, sym) 
+    {}
+
+    virtual ~marker() { delete m_source; }
+  };
 };
 
 #endif
