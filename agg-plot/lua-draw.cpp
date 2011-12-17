@@ -182,16 +182,7 @@ agg_path_cmd (lua_State *L)
     }
 
   pthread_mutex_lock (agg_mutex);
-  try
-    {
-      path_cmd (p, id, s);
-    }
-  catch (std::bad_alloc&)
-    {
-      pthread_mutex_unlock (agg_mutex);
-      luaL_error (L, "out of memory");
-      return 0;
-    }
+  path_cmd (p, id, s);
   pthread_mutex_unlock (agg_mutex);
   return 0;
 }

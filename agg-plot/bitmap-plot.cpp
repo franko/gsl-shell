@@ -15,32 +15,35 @@ extern "C" {
 
 void
 bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
-		       gslshell::ret_status& st)
+                       gslshell::ret_status& st)
 {
-  try {
-    agg::rendering_buffer rbuf_tmp;
-    unsigned row_size = w * (gslshell::bpp / 8);
-    unsigned buf_size = h * row_size;
-    agg::pod_array<unsigned char> buffer(buf_size);
-    rbuf_tmp.attach(buffer.data(), w, h, gslshell::flip_y ? row_size : -row_size);
+  agg::rendering_buffer rbuf_tmp;
+  unsigned row_size = w * (gslshell::bpp / 8);
+  unsigned buf_size = h * row_size;
 
-    canvas can(rbuf_tmp, w, h, colors::white);
-    agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
-
-    agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
-    can.clear_box(r);
-
-    p->draw(can, mtx);
-  
-    bool success = platform_support_ext::save_image_file (rbuf_tmp, fn);
-
-    if (! success)
-      st.error("cannot save image file", "plot save");
-  }
-  catch (std::exception& e)
+  unsigned char* buffer = new(std::nothrow) unsigned char[buf_size];
+  if (!buffer)
     {
-      st.error(e.what(), "plot save");
+      st.error("cannot allocate memory", "plot save");
+      return;
     }
+
+  rbuf_tmp.attach(buffer, w, h, gslshell::flip_y ? row_size : -row_size);
+
+  canvas can(rbuf_tmp, w, h, colors::white);
+  agg::trans_affine mtx(w, 0.0, 0.0, h, 0.0, 0.0);
+
+  agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
+  can.clear_box(r);
+
+  p->draw(can, mtx);
+  
+  bool success = platform_support_ext::save_image_file (rbuf_tmp, fn);
+
+  if (! success)
+    st.error("cannot save image file", "plot save");
+
+  delete [] buffer;
 }
 
 int

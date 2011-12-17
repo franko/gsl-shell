@@ -165,23 +165,19 @@ plot_free (lua_State *L)
 
 void
 plot_add_gener_cpp (lua_State *L, sg_plot *p, bool as_line, 
-		    gslshell::ret_status& st)
+                    gslshell::ret_status& st)
 {
-  try {
-    agg::rgba8 color;
-    sg_object* obj = parse_graph_args(L, color);
+  agg::rgba8 color;
+  sg_object* obj = parse_graph_args(L, color, st);
 
-    AGG_LOCK();
-    p->add(obj, color, as_line);
-    AGG_UNLOCK();
+  if (!obj) return;
 
-    if (p->sync_mode())
-      plot_flush (L);
-  }
-  catch (std::exception& e)
-    {
-      st.error(e.what(), "plot add or addline");
-    }
+  AGG_LOCK();
+  p->add(obj, color, as_line);
+  AGG_UNLOCK();
+
+  if (p->sync_mode())
+    plot_flush (L);
 }
 
 static void

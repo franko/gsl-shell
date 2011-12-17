@@ -41,14 +41,6 @@ struct property_reg line_join_properties[] = {
   {0, NULL}
 };
 
-const char *agg_spec_error::m_msg[] = {
-  "invalid specification tag",
-  "invalid specification table",
-  "missing specification parameter",
-  "invalid graphical object",
-  "generic error during graphical operation"
-};
-
 static int
 property_lookup (struct property_reg *prop, const char *key)
 {
@@ -167,14 +159,16 @@ sg_object* build_scale (lua_State *L, int specindex, sg_object* src)
 {
   lua_rawgeti (L, specindex, 2);
 
-  if (! lua_isnumber (L, -1))
-    throw agg_spec_error(agg_spec_error::missing_parameter);
+  if (lua_isnumber (L, -1))
+    {
+      double s = luaL_optnumber (L, -1, 1.0);
+      lua_pop (L, 1);
 
-  double s = lua_tonumber (L, -1);
-  lua_pop (L, 1);
+      agg::trans_affine mtx(s, 0.0, 0.0, s, 0.0, 0.0);
+      return affine_object_compose(src, mtx);
+    }
 
-  agg::trans_affine mtx(s, 0.0, 0.0, s, 0.0, 0.0);
-  return affine_object_compose(src, mtx);
+  return src;
 }
 
 sg_object* build_rotate (lua_State *L, int specindex, sg_object* src)
@@ -224,85 +218,100 @@ const builder::reg builder::builder_table[] = {
   {NULL, NULL}
 };
 
-sg_object* parse_spec (lua_State *L, int specindex, sg_object* src)
+sg_object* parse_spec (lua_State *L, int specindex, sg_object* src,
+                       gslshell::ret_status& st)
 {
   const char *tag;
 
   INDEX_SET_ABS(L, specindex);
 
   if (lua_type (L, specindex) != LUA_TTABLE)
-    throw agg_spec_error(agg_spec_error::invalid_spec);
+    {
+      st.error("invalid specification table", "plot add");
+      return 0;
+    }
 
   lua_rawgeti (L, specindex, 1);
-  if (! lua_isstring (L, -1))
-    throw agg_spec_error(agg_spec_error::invalid_tag);
-
   tag = lua_tostring (L, -1);
   lua_pop (L, 1);
 
+  if (!tag)
+    {
+      st.error("invalid specification tag", "plot add");
+      return 0;
+    }
+
   builder::func_type* f = builder::lookup(tag);
 
-  if (f == 0) throw agg_spec_error(agg_spec_error::invalid_tag);
+  if (f == 0)
+    {
+      st.error("invalid specification tag", "plot add");
+      return 0;
+    }
 
   return f(L, specindex, src);
 }
 
-sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* obj)
+sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* src,
+                                gslshell::ret_status& st)
 {
   if (lua_type (L, index) != LUA_TTABLE)
-    throw agg_spec_error(agg_spec_error::invalid_spec);
+    {
+      st.error("invalid specification table", "plot add");
+      return 0;
+    }
 
   size_t k, nb = lua_objlen (L, index);
 
-  for (k = nb; k > 0; k--)
+  sg_object* obj = src;
+  for (k = nb; k > 0 && src; k--, src = obj)
     {
       lua_rawgeti (L, index, k);
-      obj = parse_spec(L, -1, obj);
+      obj = parse_spec(L, -1, src, st);
+      if (obj == 0)
+        delete src;
       lua_pop (L, 1);
     }
 
   return obj;
 }
 
-sg_object* parse_graph_args (lua_State *L, agg::rgba8& color)
+sg_object* parse_graph_args (lua_State *L, agg::rgba8& color,
+                             gslshell::ret_status& st)
 {
   color = color_arg_lookup (L, 3);
 
-  std::auto_ptr<sg_object> wobj;
+  sg_object* wobj;
 
   if (gs_is_userdata (L, 2, GS_DRAW_SCALABLE))
     {
       sg_object* vs = (sg_object*) lua_touserdata (L, 2);
-      std::auto_ptr<sg_object> sobj(new sg_object_ref<manage_not_owner>(vs));
+      sg_object* sobj = new sg_object_ref<manage_not_owner>(vs);
 
       if (! lua_isnoneornil (L, 5))
         {
-          sg_object* st = parse_spec_pipeline(L, 5, sobj.get());
-          sobj.release();
-          sobj = std::auto_ptr<sg_object>(st);
+          sobj = parse_spec_pipeline(L, 5, sobj, st);
+          if (!sobj)
+            return 0;
         }
-    
-      sg_object* ws = new trans::scaling(sobj.get());
 
-      sobj.release();
-      wobj = std::auto_ptr<sg_object>(ws);
+      wobj = new trans::scaling(sobj);
     }
   else if (gs_is_userdata (L, 2, GS_DRAW_DRAWABLE))
     {
       sg_object* vs = (sg_object*) lua_touserdata (L, 2);
-      wobj = std::auto_ptr<sg_object>(new sg_object_ref<manage_not_owner>(vs));
+      wobj = new sg_object_ref<manage_not_owner>(vs);
     }
   else
     {
-      throw agg_spec_error(agg_spec_error::invalid_object);
+      st.error("invalid graphical object", "plot add");
+      return 0;
     }
 
-  sg_object* w = wobj.get();
   if (! lua_isnoneornil (L, 4))
     {
-      w = parse_spec_pipeline(L, 4, w);
+      wobj = parse_spec_pipeline(L, 4, wobj, st);
     }
 
-  wobj.release();
-  return w;
+  return wobj;
 }
