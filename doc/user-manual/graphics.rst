@@ -671,7 +671,9 @@ Here a complete list of all the available transforms:
     Replace each vertex of the path with a circular mark
    
     * **size**, the size of the marker
-    * **mark**, the kind of marker, can be 'circle', 'triangle' or 'square'
+    * **mark**, the kind of marker, can be 'circle', 'triangle' or 'square' or any graphical object provided by the user.
+      If a graphical object is supplied its extension should be such that is contained in a box of size 1 and centered in (0, 0).
+      The object will be automatically scaled according to the parameter ``size``.
 
   **translate**
     A translation along the x and y axis. This transformation can be used only in the user coordinate system.

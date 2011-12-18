@@ -18,9 +18,27 @@ local function generate_sample(f, sigma, n)
    return x, y
 end
 
+local function star(r)
+   local a, ae = 54*pi/180, 72*pi/180
+   r = (r/2) / (r*sin(a) + r*cos(a)*tan(ae))
+   local li, hi = r*cos(a), r*sin(a)
+   local he = li*tan(ae)
+   local xv, yv = 0, - hi - he
+   local xb, yb = - li, - hi
+   local p = graph.path(xv, yv)
+   p:line_to(xb, yb)
+   for k=1, 4 do
+      local th = 2*pi*k/5
+      p:line_to(xv*cos(th) + yv*sin(th), yv*cos(th) - xv*sin(th))
+      p:line_to(xb*cos(th) + yb*sin(th), yb*cos(th) - xb*sin(th))
+   end
+   p:close()
+   return p
+end
+
 -- ths following function create a plot and save it using an user supplied
 -- function, "save_function"
-local function do_plot(save_function)
+local function do_plot(save_function, mmarker, msize)
    local n, nsamples = 50, 128
    local xs = |i| (i-1)/n
    local f0 = f_gen(2.5, -1.5, 5.3)
@@ -31,7 +49,7 @@ local function do_plot(save_function)
    local p = graph.plot('Plot example with dashed lines and markers')
 
    -- add the generated points using triangular merker symbols
-   p:add(graph.xyline(x, y), 'blue', {{'marker', size= 6, mark="triangle"}})
+   p:add(graph.xyline(x, y), 'blue', {{'marker', size= msize, mark= mmarker}})
 
    -- generate a graphical lines corrisponding to function f0 and add it to
    -- the plot using a thick dashed line
@@ -50,27 +68,40 @@ local function do_plot(save_function)
    return p
 end
 
+local save_svg = function(p) p:save_svg('demo.svg', 600, 400) end
+
 -- create a plot and save in SVG format
 local function demo1()
-   local p = do_plot(function(p) p:save_svg('demo.svg', 600, 400) end)
+   local p = do_plot(save_svg, 'triangle', 6)
+   p:show()
+end
+
+-- create a plot and save in SVG format with star shaped markers
+local function demo2()
+   local p = do_plot(save_svg, star(1), 10)
    p:show()
 end
 
 -- create a plot and save in BMP format
-local function demo2()
-   local p = do_plot(function(p) p:save('demo', 600, 400) end)
+local function demo3()
+   local p = do_plot(function(p) p:save('demo', 600, 400) end, star(1), 10)
    p:show()
 end
 
 return {'Saving a plot in BMP or SVG format', {
   {
-     name = 'svg',
+     name = 'svg1',
      f = demo1, 
      description = 'Plot saved in SVG format in file: demo.svg'
   },
   {
-     name = 'bmp',
+     name = 'svg2',
      f = demo2, 
+     description = 'Plot saved in SVG format in file: demo.svg'
+  },
+  {
+     name = 'bmp',
+     f = demo3,
      description = 'Plot saved in BMP/PPM format in file: demo.bmp (ppm on linux)'
   },
 }}

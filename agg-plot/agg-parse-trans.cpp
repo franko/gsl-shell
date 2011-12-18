@@ -91,11 +91,24 @@ sg_object* build_curve (lua_State *L, int specindex, sg_object* src)
 
 sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
 {
-  double size = mlua_named_optnumber (L, specindex, "size", 3.0);
-  const char *sym_name = mlua_named_optstring (L, specindex, "mark", "circle");
-  sg_object* sym = new_marker_symbol(sym_name);
-  trans::marker* m = new trans::marker(src, size, sym);
-  return m;
+  double size = mlua_named_optnumber(L, specindex, "size", 3.0);
+
+  lua_getfield(L, specindex, "mark");
+  const char *sym_name = lua_tostring(L, -1);
+
+  sg_object *sym;
+  if (!sym_name && gs_is_userdata(L, -1, GS_DRAW_SCALABLE))
+    {
+      sg_object* obj = (sg_object*) lua_touserdata(L, -1);
+      sym = new trans::scaling_a(obj);
+    }
+  else
+    {
+      sym = new_marker_symbol(sym_name ? sym_name : "circle");
+    }
+  lua_pop(L, 1);
+
+  return new trans::marker(src, size, sym);
 }
 
 sg_object* build_dash (lua_State *L, int specindex, sg_object* src)

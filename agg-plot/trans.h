@@ -21,6 +21,7 @@
 struct trans {
 
   typedef sg_object_scaling<manage_owner> scaling;
+  typedef sg_object_scaling<manage_not_owner> scaling_a;
 
   typedef agg::conv_stroke<sg_object> conv_stroke;
 
