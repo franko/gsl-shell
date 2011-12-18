@@ -162,7 +162,7 @@ struct trans {
       str marker_def = gen_svg_marker_def(id, c, marker_id);
 
       str path;
-      svg_property_list* ls = this->m_source->svg_path(path);
+      svg_property_list* ls = m_source->svg_path(path);
 
       str marker_url = gen_marker_url(marker_id);
       const char* murl = marker_url.cstr();
@@ -183,8 +183,8 @@ struct trans {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-      this->m_symbol->apply_transform(m_scale, as);
-      this->m_source->apply_transform(m, as);
+      m_symbol->apply_transform(m_scale, as);
+      m_source->apply_transform(m, as);
     }
 
   private:
@@ -194,12 +194,12 @@ struct trans {
 
     str gen_svg_marker_def(int id, agg::rgba8 c, str& marker_id) {
 
+      m_scale.tx = m_size / 2.0;
+      m_scale.ty = m_size / 2.0;
+
       marker_id.printf("marker%i", id);
 
-      const double S = 20.0;
-      agg::trans_affine m(S, 0.0, 0.0, S, S/2, S/2);
-      m_symbol->apply_transform(m, 1.0);
-
+      const double S = m_size;
       str marker_svg = m_symbol->write_svg(-1, c);
 
       str s = str::print("<defs><marker id=\"%s\" "
@@ -208,7 +208,11 @@ struct trans {
                          "markerWidth=\"1\" markerHeight=\"1\">"
                          "%s"
                          "</marker></defs>",
-                         marker_id.cstr(), S/2, S/2, S, S, marker_svg.cstr());
+                         marker_id.cstr(), S/2, S/2, S, S,
+                         marker_svg.cstr());
+
+      m_scale.tx = 0.0;
+      m_scale.ty = 0.0;
 
       return s;
     }
@@ -220,7 +224,7 @@ struct trans {
 
   struct marker : marker_a {
     marker(sg_object* src, double size, sg_object* sym):
-      marker_a(src, size, sym) 
+      marker_a(src, size, sym)
     {}
 
     virtual ~marker() { delete m_source; }

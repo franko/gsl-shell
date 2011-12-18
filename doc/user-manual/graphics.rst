@@ -671,9 +671,12 @@ Here a complete list of all the available transforms:
     Replace each vertex of the path with a circular mark
    
     * **size**, the size of the marker
-    * **mark**, the kind of marker, can be 'circle', 'triangle' or 'square' or any graphical object provided by the user.
+    * **mark**, a string, an integer number or a graphical object indicating the symbol to be used for the markers.
+      Available simbols are 'circle', 'triangle', 'square', 'diamong', 'plus', 'cross'.
+      If a number is given the symbol will be chosed in the list given above.
       If a graphical object is supplied its extension should be such that is contained in a box of size 1 and centered in (0, 0).
       The object will be automatically scaled according to the parameter ``size``.
+    * **outline**, if it is true draw the marker in outline
 
   **translate**
     A translation along the x and y axis. This transformation can be used only in the user coordinate system.

@@ -16,11 +16,18 @@ struct symbol_reg {
 static sg_object *build_circle();
 static sg_object *build_square();
 static sg_object *build_triangle();
+static sg_object *build_diamond();
+static sg_object *build_plus();
+static sg_object *build_cross();
 
-static struct symbol_reg builder_table[] = {
+const unsigned NB_SYMBOLS = 6;
+static struct symbol_reg builder_table[NB_SYMBOLS+1] = {
   {"circle",   build_circle},
   {"square",   build_square},
   {"triangle", build_triangle},
+  {"diamond",  build_diamond},
+  {"plus",     build_plus},
+  {"cross",    build_cross},
   {NULL, NULL}
 };
 
@@ -28,7 +35,7 @@ sg_object *
 build_circle()
 {
   draw::ellipse* c = new draw::ellipse();
-  trans::scaling* s = new trans::scaling((sg_object*)c);
+  trans::scaling* s = new trans::scaling(c);
   c->self().init(0.0, 0.0, 0.5, 0.5);
   return s;
 }
@@ -37,8 +44,8 @@ sg_object *
 build_square()
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling((sg_object*)p);
-  
+  trans::scaling* s = new trans::scaling(p);
+
   agg::path_storage& square = p->self();
   square.move_to(-0.5, -0.5);
   square.line_to( 0.5, -0.5);
@@ -53,8 +60,8 @@ sg_object *
 build_triangle()
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling((sg_object*)p);
-  
+  trans::scaling* s = new trans::scaling(p);
+
   agg::path_storage& triangle = p->self();
 
   double ht = 0.86602540378444;
@@ -64,6 +71,52 @@ build_triangle()
   triangle.close_polygon();
 
   return s;
+}
+
+sg_object *
+build_diamond()
+{
+  draw::path* p = new draw::path();
+  trans::scaling* s = new trans::scaling(p);
+
+  agg::path_storage& square = p->self();
+  square.move_to(-0.5,  0.0);
+  square.line_to( 0.0,  0.5);
+  square.line_to( 0.5,  0.0);
+  square.line_to( 0.0, -0.5);
+  square.close_polygon();
+
+  return s;
+}
+
+sg_object *
+build_plus()
+{
+  draw::path* p = new draw::path();
+  trans::scaling* s = new trans::scaling(p);
+
+  agg::path_storage& plus = p->self();
+  plus.move_to(-0.5,  0.0);
+  plus.line_to( 0.5,  0.0);
+  plus.move_to( 0.0, -0.5);
+  plus.line_to( 0.0,  0.5);
+
+  return new trans::stroke(s);
+}
+
+sg_object *
+build_cross()
+{
+  draw::path* p = new draw::path();
+  trans::scaling* s = new trans::scaling(p);
+
+  agg::path_storage& plus = p->self();
+  plus.move_to(-0.5, -0.5);
+  plus.line_to( 0.5,  0.5);
+  plus.move_to(-0.5,  0.5);
+  plus.line_to( 0.5, -0.5);
+
+  return new trans::stroke(s);
 }
 
 sg_object*
@@ -77,4 +130,11 @@ new_marker_symbol (const char *req_name)
     }
 
   return builder_table[0].builder();
+}
+
+sg_object*
+new_marker_symbol (int n)
+{
+  n = (n-1) % NB_SYMBOLS;
+  return builder_table[n].builder();
 }

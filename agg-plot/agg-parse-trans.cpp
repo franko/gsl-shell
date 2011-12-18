@@ -94,19 +94,37 @@ sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
   double size = mlua_named_optnumber(L, specindex, "size", 3.0);
 
   lua_getfield(L, specindex, "mark");
-  const char *sym_name = lua_tostring(L, -1);
 
   sg_object *sym;
-  if (!sym_name && gs_is_userdata(L, -1, GS_DRAW_SCALABLE))
+  if (lua_isnumber(L, -1))
     {
-      sg_object* obj = (sg_object*) lua_touserdata(L, -1);
-      sym = new trans::scaling_a(obj);
+      int n = lua_tointeger(L, -1);
+      sym = new_marker_symbol(n);
     }
   else
     {
-      sym = new_marker_symbol(sym_name ? sym_name : "circle");
+      const char *sym_name = lua_tostring(L, -1);
+      if (!sym_name && gs_is_userdata(L, -1, GS_DRAW_SCALABLE))
+        {
+          sg_object* obj = (sg_object*) lua_touserdata(L, -1);
+          sym = new trans::scaling_a(obj);
+        }
+      else
+        {
+          sym = new_marker_symbol(sym_name ? sym_name : "circle");
+        }
     }
   lua_pop(L, 1);
+
+  lua_getfield(L, specindex, "outline");
+  bool outline = !lua_isnil(L, -1);
+  lua_pop(L, 1);
+
+  if (outline)
+    {
+      trans::stroke* stroke = new trans::stroke(sym);
+      sym = stroke;
+    }
 
   return new trans::marker(src, size, sym);
 }
