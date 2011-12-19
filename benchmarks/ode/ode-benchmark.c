@@ -4,8 +4,7 @@
 #include <gsl/gsl_odeiv.h>
 
 int
-func (double t, const double y[], double f[],
-      void *params)
+func (double t, const double y[], double f[], void *params)
 {
   double mu = *(double *)params;
   f[0] = y[1];
@@ -14,12 +13,10 @@ func (double t, const double y[], double f[],
 }
 
 int
-jac (double t, const double y[], double *dfdy,
-     double dfdt[], void *params)
+jac (double t, const double y[], double *dfdy, double dfdt[], void *params)
 {
   double mu = *(double *)params;
-  gsl_matrix_view dfdy_mat
-    = gsl_matrix_view_array (dfdy, 2, 2);
+  gsl_matrix_view dfdy_mat = gsl_matrix_view_array (dfdy, 2, 2);
   gsl_matrix * m = &dfdy_mat.matrix;
   gsl_matrix_set (m, 0, 0, 0.0);
   gsl_matrix_set (m, 0, 1, 1.0);
@@ -60,7 +57,7 @@ main (void)
 	    break;
 	}
 
-      printf ("%g %g %g\n", t, y[0], y[1]);
+      printf ("%i\t%g %g %g\n", k+1, t, y[0], y[1]);
 
       gsl_odeiv_evolve_free (e);
       gsl_odeiv_control_free (c);
