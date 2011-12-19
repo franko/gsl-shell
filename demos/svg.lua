@@ -68,11 +68,18 @@ local function do_plot(save_function, symbol, ssize, outline)
    return p
 end
 
-local save_svg = function(p) p:save_svg('demo.svg', 600, 400) end
+local save_svg = function(p)
+		    p:save_svg('demo.svg', 600, 400)
+		    echo 'Plot saved in SVG format in file "demo.svg".'
+		 end
 
 -- create a plot and save in SVG format
 local function demo1()
    local p = do_plot(save_svg, 'circle', 5, true)
+
+   p:save('demo', 600, 400)
+   echo 'Plot saved in BMP format in demo.bmp (demo.ppm on linuex).'
+
    p:show()
 end
 
@@ -82,26 +89,15 @@ local function demo2()
    p:show()
 end
 
--- create a plot and save in BMP format
-local function demo3()
-   local p = do_plot(function(p) p:save('demo', 600, 400) end, star(1), 10)
-   p:show()
-end
-
 return {'Saving a plot in BMP or SVG format', {
   {
      name = 'svg1',
-     f = demo1, 
-     description = 'Plot saved in SVG format in file: demo.svg'
+     f = demo1,
+     description = 'Plot example with different line styles'
   },
   {
      name = 'svg2',
-     f = demo2, 
-     description = 'Plot saved in SVG format in file: demo.svg'
-  },
-  {
-     name = 'bmp',
-     f = demo3,
-     description = 'Plot saved in BMP/PPM format in file: demo.bmp (ppm on linux)'
+     f = demo2,
+     description = 'Like the example above but with user-defined markers'
   },
 }}

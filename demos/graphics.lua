@@ -48,12 +48,17 @@ local function set_contour(a)
    a:close()
 end
 
-function demo1()
+local function save_svg(p, name)
+   p:save_svg(name, 400, 400)
+   echo('Plot saved in file \"' .. name .. '\".')
+end
+
+local function demo1()
    local a = path()
    local n = 12
    local t = {{}, {{'curve'}}, {{'stroke'}, {'curve'}}, 
-	      {{'stroke'}, {'dash', 6, 3}, {'curve'}}}
-   local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
+	      {{'stroke'}, {'dash', 6, 3}, {'curve'}}, {{'marker', mark='cross'}}}
+   local color = {'red', 'yellow', 'blue', 'darkgreen', 'magenta', 'cyan'}
    local p = plot()
    local R = 120
    set_contour(a)
@@ -65,11 +70,12 @@ function demo1()
 	       {'translate', x= R*cos(ap), y= R*sin(ap)}, 
 	       {'rotate', angle=ad}})
    end
+   save_svg(p, 'graphics.svg')
    p:show()
    return p
 end
 
-function demo2()
+local function demo2()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = plot()
@@ -83,11 +89,12 @@ function demo2()
       txt.angle = a - pi
       p:add(txt, ch(color))
    end
+   save_svg(p, 'graphics.svg')
    p:show()
    return p
 end
 
-function demo3()
+local function demo3()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = canvas 'Rotating text'
@@ -109,9 +116,24 @@ function demo3()
       end
       p:flush()
    end
+   save_svg(p, 'graphics.svg')
    return p
 end
 
-echo 'demo1() - path objects with bezier segments and various transformations'
-echo 'demo2() - example of text object utilisation'
-echo 'demo3() - example of animation with window and text object'
+return {'Graphical system examples', {
+  {
+     name = 'graphics1',
+     f = demo1, 
+     description = 'Show the glyph of the "a" letter using bezier curves'
+  },
+  {
+     name = 'graphics2',
+     f = demo2, 
+     description = 'Show how to draw text using various options'
+  },
+  {
+     name = 'graphics3',
+     f = demo3,
+     description = 'Example of graphics with text animations'
+  },
+}}
