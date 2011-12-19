@@ -8,7 +8,7 @@ local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 local lua_index_style = gslsh.lua_index_style
 
 local n_sampling_max = 8192
-local n_sampling_default = 512
+local n_sampling_default = 256
 
 local function check_sampling(n)
    if n then
