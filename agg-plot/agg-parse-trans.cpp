@@ -123,6 +123,8 @@ sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
   if (outline)
     {
       trans::stroke* stroke = new trans::stroke(sym);
+      stroke->self().line_cap(agg::round_cap);
+      stroke->self().line_join(agg::round_join);
       sym = stroke;
     }
 

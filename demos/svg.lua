@@ -38,7 +38,7 @@ end
 
 -- ths following function create a plot and save it using an user supplied
 -- function, "save_function"
-local function do_plot(save_function, mmarker, msize)
+local function do_plot(save_function, symbol, ssize, outline)
    local n, nsamples = 50, 128
    local xs = |i| (i-1)/n
    local f0 = f_gen(2.5, -1.5, 5.3)
@@ -49,7 +49,7 @@ local function do_plot(save_function, mmarker, msize)
    local p = graph.plot('Plot example with dashed lines and markers')
 
    -- add the generated points using triangular merker symbols
-   p:add(graph.xyline(x, y), 'blue', {{'marker', size= msize, mark= mmarker}})
+   p:add(graph.xyline(x, y), 'blue', {{'marker', size= ssize, mark= symbol, outline= outline}})
 
    -- generate a graphical lines corrisponding to function f0 and add it to
    -- the plot using a thick dashed line
@@ -72,7 +72,7 @@ local save_svg = function(p) p:save_svg('demo.svg', 600, 400) end
 
 -- create a plot and save in SVG format
 local function demo1()
-   local p = do_plot(save_svg, 'triangle', 6)
+   local p = do_plot(save_svg, 'circle', 5, true)
    p:show()
 end
 

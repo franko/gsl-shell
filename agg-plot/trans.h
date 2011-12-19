@@ -194,21 +194,25 @@ struct trans {
 
     str gen_svg_marker_def(int id, agg::rgba8 c, str& marker_id) {
 
-      m_scale.tx = m_size / 2.0;
-      m_scale.ty = m_size / 2.0;
+      const double pad = 2.0;
+
+      m_scale.tx = m_size / 2.0 + pad;
+      m_scale.ty = m_size / 2.0 + pad;
 
       marker_id.printf("marker%i", id);
 
-      const double S = m_size;
+      const double S = m_size + 2*pad;
+      const double wf = S / m_size;
+
       str marker_svg = m_symbol->write_svg(-1, c);
 
       str s = str::print("<defs><marker id=\"%s\" "
                          "refX=\"%g\" refY=\"%g\" "
                          "viewBox=\"0 0 %g %g\" orient=\"0\" "
-                         "markerWidth=\"1\" markerHeight=\"1\">"
+                         "markerWidth=\"%g\" markerHeight=\"%g\">"
                          "%s"
                          "</marker></defs>",
-                         marker_id.cstr(), S/2, S/2, S, S,
+                         marker_id.cstr(), S/2, S/2, S, S, wf, wf,
                          marker_svg.cstr());
 
       m_scale.tx = 0.0;
