@@ -263,6 +263,9 @@ str_vprintf (str_t d, const char *fmt, int append, va_list ap)
   char *xbuf;
   int xbuf_size;
   int ns;
+  va_list aq;
+
+  va_copy (aq, ap);
 
   ns = vsnprintf (buffer, STR_BUFSIZE, fmt, ap);
 
@@ -270,13 +273,15 @@ str_vprintf (str_t d, const char *fmt, int append, va_list ap)
     {
       xbuf_size = ns+1;
       xbuf = malloc (xbuf_size);
-      vsnprintf (xbuf, xbuf_size, fmt, ap);
+      vsnprintf (xbuf, xbuf_size, fmt, aq);
     }
   else
     {
       xbuf = buffer;
       xbuf_size = 0;
     }
+
+  va_end (aq);
 
   if (append)
     {
