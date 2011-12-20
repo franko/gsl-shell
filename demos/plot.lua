@@ -15,6 +15,7 @@ local function demo2()
    p:add(b, 'darkgreen')
    p:addline(b, rgba(0, 0, 0, 0.6))
    p:addline(fxline(f, -4, 4), 'red')
+   p.xlab, p.ylab = 'x', 'Frequency'
    p:show()
    return p
 end

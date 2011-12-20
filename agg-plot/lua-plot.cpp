@@ -51,6 +51,10 @@ static int plot_free       (lua_State *L);
 static int plot_show       (lua_State *L);
 static int plot_title_set  (lua_State *L);
 static int plot_title_get  (lua_State *L);
+static int plot_xlab_set   (lua_State *L);
+static int plot_xlab_get   (lua_State *L);
+static int plot_ylab_set   (lua_State *L);
+static int plot_ylab_get   (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 static int plot_set_limits (lua_State *L);
@@ -101,6 +105,8 @@ static const struct luaL_Reg plot_methods[] = {
 
 static const struct luaL_Reg plot_properties_get[] = {
   {"title",        plot_title_get  },
+  {"xlab",         plot_xlab_get  },
+  {"ylab",         plot_ylab_get  },
   {"units",        plot_units_get  },
   {"sync",         plot_sync_mode_get  },
   {"pad",          plot_pad_mode_get  },
@@ -110,6 +116,8 @@ static const struct luaL_Reg plot_properties_get[] = {
 
 static const struct luaL_Reg plot_properties_set[] = {
   {"title",        plot_title_set  },
+  {"xlab",         plot_xlab_set  },
+  {"ylab",         plot_ylab_set  },
   {"units",        plot_units_set  },
   {"sync",         plot_sync_mode_set  },
   {"pad",          plot_pad_mode_set  },
@@ -234,17 +242,28 @@ plot_add_line (lua_State *L)
   return plot_add_gener (L, true);
 }
 
-int
-plot_title_set (lua_State *L)
+static int plot_string_property_get (lua_State* L, const char* (lua_plot::*getter)() const)
+{
+  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+
+  AGG_LOCK();
+  const char *title = (p->*getter)();
+  lua_pushstring (L, title);
+  AGG_UNLOCK();
+
+  return 1;
+}
+
+static int plot_string_property_set (lua_State* L, void (lua_plot::*setter)(const char*))
 {
   sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
-  const char *title = lua_tostring (L, 2);
+  const char *s = lua_tostring (L, 2);
 
-  if (title == NULL)
+  if (s == NULL)
     return gs_type_error (L, 2, "string");
 	  
   AGG_LOCK();
-  p->set_title(title);
+  (p->*setter)(s);
   AGG_UNLOCK();
 
   plot_update_raw (L, p, 1);
@@ -253,18 +272,39 @@ plot_title_set (lua_State *L)
 }
 
 int
+plot_title_set (lua_State *L)
+{
+  return plot_string_property_set(L, &lua_plot::set_title);
+}
+
+int
 plot_title_get (lua_State *L)
 {
-  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  return plot_string_property_get(L, &gs_plot::title);
+}
 
-  AGG_LOCK();
+int
+plot_xlab_set (lua_State *L)
+{
+  return plot_string_property_set(L, &lua_plot::set_xlabel);
+}
 
-  const char *title = p->title();
-  lua_pushstring (L, title);
+int
+plot_xlab_get (lua_State *L)
+{
+  return plot_string_property_get(L, &lua_plot::xlabel);
+}
 
-  AGG_UNLOCK();
-  
-  return 1;
+int
+plot_ylab_set (lua_State *L)
+{
+  return plot_string_property_set(L, &lua_plot::set_ylabel);
+}
+
+int
+plot_ylab_get (lua_State *L)
+{
+  return plot_string_property_get(L, &lua_plot::ylabel);
 }
 
 int

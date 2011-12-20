@@ -103,7 +103,7 @@ public:
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title(),
-    m_sync_mode(true)
+    m_xlabel(), m_ylabel(), m_sync_mode(true)
   {
     compute_user_trans();
   };
@@ -121,6 +121,12 @@ public:
 
   void set_title(const char *text);
   const char *title() const { return m_title.cstr(); };
+
+  void set_xlabel(const char *text) { str_copy_c(&m_xlabel, text); }
+  const char *xlabel() const { return m_xlabel.cstr(); };
+
+  void set_ylabel(const char *text) { str_copy_c(&m_ylabel, text); }
+  const char *ylabel() const { return m_ylabel.cstr(); };
 
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
@@ -204,7 +210,7 @@ protected:
 private:
   bool m_pad_units;
 
-  str m_title;
+  str m_title, m_xlabel, m_ylabel;
 
   bool m_sync_mode;
 };
@@ -285,8 +291,6 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affin
 template <class VS, class RM>
 void plot<VS,RM>::draw_title(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
-  double xt = 0.5, yt = 1.05;
-
   agg::trans_affine m;
   this->viewport_scale(m);
   trans_affine_compose (m, canvas_mtx);
@@ -296,10 +300,25 @@ void plot<VS,RM>::draw_title(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   draw::text title(12.0 * scale, std_line_width(scale));
   title.set_text(m_title.cstr());
   title.hjustif(0.5);
-  title.set_point(xt, yt);
+  title.set_point(0.5, 1.05);
   title.apply_transform(m, 1.0);
 
+  draw::text xlabel(11.0 * scale, std_line_width(scale));
+  xlabel.set_text(m_xlabel.cstr());
+  xlabel.hjustif(0.5);
+  xlabel.set_point(0.5, -0.1);
+  xlabel.apply_transform(m, 1.0);
+
+  draw::text ylabel(11.0 * scale, std_line_width(scale));
+  ylabel.set_text(m_ylabel.cstr());
+  ylabel.hjustif(0.5);
+  ylabel.set_point(-0.1, 0.5);
+  ylabel.angle(M_PI/2.0);
+  ylabel.apply_transform(m, 1.0);
+
   canvas.draw(title, agg::rgba(0, 0, 0));
+  canvas.draw(xlabel, agg::rgba(0, 0, 0));
+  canvas.draw(ylabel, agg::rgba(0, 0, 0));
 }
 
 template <class VS, class RM>
@@ -449,7 +468,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	this->m_trans.transform(&x, &y);
 	if (y >= - yeps && y <= 1.0 + yeps)
 	  {
-	    draw::text label(12.0 * scale, line_width);
+	    draw::text label(10.0 * scale, line_width);
 	    char lab_text[32];
 
 	    m_uy.mark_label(lab_text, 32, j);
@@ -481,7 +500,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	this->m_trans.transform(&x, &y);
 	if (x >= - xeps && x <= 1.0 + xeps)
 	  {
-	    draw::text label(12.0 * scale, line_width);
+	    draw::text label(10.0 * scale, line_width);
 	    char lab_text[32];
 
 	    m_ux.mark_label(lab_text, 32, j);
@@ -532,8 +551,9 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 template<class VS, class RM>
 void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
 {
-  const double xoffs = 0.09375, yoffs = 0.09375;
-  static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-2*yoffs, xoffs, yoffs);
+  const double L = 0.12, R = 0.095;
+  const double B = 0.1, T = 0.095;
+  static agg::trans_affine rsz(1-L-R, 0.0, 0.0, 1-B-T, L, B);
   trans_affine_compose (m, rsz);
 }
 
