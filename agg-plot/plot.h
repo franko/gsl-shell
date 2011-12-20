@@ -170,7 +170,7 @@ public:
       }
   };
 
-  bool pad_mode() { return m_pad_units; };
+  bool pad_mode() const { return m_pad_units; };
 
 protected:
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
