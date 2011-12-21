@@ -514,15 +514,21 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Save the plot in the given filename in SVG format.
       Two optional parameters can be given to specify the width and height of the drawing area.
 
-   .. attribute:: units
-
-      A boolean value that define if the axis and grids should be
-      drawn or not. By default it is true.
-
    .. attribute:: title
 
       The title of the plot. You can change or set the title using
       this attribute.
+
+   .. attribute:: xlab
+                  ylab
+
+      The string to be used to label and x and y axis of the plot.
+      By default the labels are empty.
+
+   .. attribute:: units
+
+      A boolean value that define if the axis and grids should be
+      drawn or not. By default it is true.
 
    .. attribute:: sync
 
@@ -532,6 +538,16 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       animation so that many operations can be performed and the
       window is updated only when the :meth:`~Plot.flush` method is called.
 
+   .. attribute:: pad
+
+      This attribute determine if the padding is active or not for the plot.
+      The padding determine if the viewport area should be larger than the actual plotting are to align with axis marks.
+      The default is ``false``.
+
+   .. attribute:: clip
+
+      Activate or not the clipping of the graphical elements inside the plotting viewport.
+      The default value is ``true``.
 
 .. _graphical-layer:
 
