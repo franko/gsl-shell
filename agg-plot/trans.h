@@ -183,6 +183,10 @@ struct trans {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
+      bool flip_y = (m.sy < 0.0);
+      m_scale.sy = (flip_y ? -m_size : m_size);
+      m_scale.ty = (flip_y ? m_size : 0);
+
       m_symbol->apply_transform(m_scale, as);
       m_source->apply_transform(m, as);
     }
