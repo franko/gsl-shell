@@ -1,7 +1,7 @@
 #ifndef AGGPLOT_TEXT_H
 #define AGGPLOT_TEXT_H
 
-#include "drawable.h"
+#include "sg_object.h"
 
 #include "agg_gsv_text.h"
 #include "agg_trans_affine.h"
@@ -10,7 +10,7 @@
 
 namespace draw {
 
-  class text : public drawable {
+  class text : public sg_object {
     typedef agg::gsv_text vs_text;
     typedef agg::conv_transform<vs_text> vs_trans_text;
     typedef agg::conv_stroke<vs_trans_text> vs_stroked_text;
@@ -83,7 +83,8 @@ namespace draw {
 
     virtual str write_svg(int id, agg::rgba8 c);
 
-    vs_text& self() { return m_text; };
+    const vs_text& self() const { return m_text; };
+          vs_text& self()       { return m_text; };
   };
 }
 

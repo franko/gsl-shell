@@ -306,20 +306,12 @@ namespace agg
         
         //--------------------------------------------------------------------
       case WM_SIZE:
-        try
-          {
-            app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
-                                         &app->rbuf_window());
+        app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
+                                     &app->rbuf_window());
 
-            app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
-            app->on_resize(LOWORD(lParam), HIWORD(lParam));
-            app->force_redraw();
-          }
-        catch (std::bad_alloc&)
-          {
-            ::PostQuitMessage(1);
-          }
-
+        app->trans_affine_resizing(LOWORD(lParam), HIWORD(lParam));
+        app->on_resize(LOWORD(lParam), HIWORD(lParam));
+        app->force_redraw();
         app->m_specific->m_is_ready = false;
 
         break;
@@ -423,32 +415,24 @@ namespace agg
         return false;
       }
 
+    RECT rct;
+    ::GetClientRect(m_specific->m_hwnd, &rct);
 
-    try
-      {
-        RECT rct;
-        ::GetClientRect(m_specific->m_hwnd, &rct);
-
-        ::MoveWindow(m_specific->m_hwnd,   // handle to window
-                     100,                  // horizontal position
-                     100,                  // vertical position
-                     width + (width - (rct.right - rct.left)),
-                     height + (height - (rct.bottom - rct.top)),
-                     FALSE);
+    ::MoveWindow(m_specific->m_hwnd,   // handle to window
+                 100,                  // horizontal position
+                 100,                  // vertical position
+                 width + (width - (rct.right - rct.left)),
+                 height + (height - (rct.bottom - rct.top)),
+                 FALSE);
    
-        ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
-        m_specific->create_pmap(width, height, &m_rbuf_window);
-        m_initial_width = width;
-        m_initial_height = height;
-        on_init();
-        m_specific->m_redraw_flag = true;
-        ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
-        ::SetForegroundWindow(m_specific->m_hwnd);
-      }
-    catch (std::bad_alloc&)
-      {
-        return false;
-      }
+    ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+    m_specific->create_pmap(width, height, &m_rbuf_window);
+    m_initial_width = width;
+    m_initial_height = height;
+    on_init();
+    m_specific->m_redraw_flag = true;
+    ::ShowWindow(m_specific->m_hwnd, g_windows_cmd_show);
+    ::SetForegroundWindow(m_specific->m_hwnd);
     return true;
   }
 

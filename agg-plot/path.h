@@ -1,15 +1,15 @@
 #ifndef AGGPLOT_PATH_H
 #define AGGPLOT_PATH_H
 
-#include "scalable.h"
+#include "sg_object.h"
 
 #include "agg_path_storage.h"
 #include "agg_ellipse.h"
 
 namespace draw {
 
-  typedef vs_proxy<agg::path_storage, false> path;
-  typedef vs_proxy<agg::ellipse, true> ellipse;
+  typedef sg_object_gen<agg::path_storage, no_approx_scale> path;
+  typedef sg_object_gen<agg::ellipse, approx_scale> ellipse;
 }
 
 #endif

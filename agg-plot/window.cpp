@@ -159,11 +159,7 @@ void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
   if (ref.plot)
     {
       AGG_LOCK();
-      try 
-	{
 	  ref.plot->draw(*m_canvas, mtx);
-	} 
-      catch (std::bad_alloc&) { }
       AGG_UNLOCK();
     }
 
@@ -242,14 +238,11 @@ window::refresh_slot_by_ref(ref& ref, bool draw_all)
     rect.set(rect_of_slot_matrix<double>(mtx));
 
   AGG_LOCK();
-  try {
-    opt_rect<double> draw_rect;
-    ref.plot->draw_queue(*m_canvas, mtx, draw_rect);
-    rect.add<rect_union>(draw_rect);
-    rect.add<rect_union>(ref.dirty_rect);
-    ref.dirty_rect = draw_rect;
-  }
-  catch (std::bad_alloc&) { }
+  opt_rect<double> draw_rect;
+  ref.plot->draw_queue(*m_canvas, mtx, draw_rect);
+  rect.add<rect_union>(draw_rect);
+  rect.add<rect_union>(ref.dirty_rect);
+  ref.dirty_rect = draw_rect;
   AGG_UNLOCK();
 
   if (rect.is_defined())
@@ -334,7 +327,7 @@ next_int (const char *str, int& val)
 }
 
 /* Returns the slot_id or -1 in case of error. */
-int window::attach(lua_plot *plot, const char *spec)
+int window::attach(sg_plot* plot, const char *spec)
 {
   ref::node *n = m_tree;
   const char *ptr;
@@ -497,7 +490,7 @@ int
 window_attach (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
-  lua_plot *plot = object_check<lua_plot>(L, 2, GS_PLOT);
+  sg_plot* plot = object_check<sg_plot>(L, 2, GS_PLOT);
   const char *spec = luaL_checkstring (L, 3);
 
   win->lock();

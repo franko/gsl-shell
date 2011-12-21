@@ -13,7 +13,6 @@ extern "C" {
 }
 
 #include "defs.h"
-#include "drawable.h"
 #include "canvas.h"
 #include "utils.h"
 

@@ -35,8 +35,6 @@ extern "C" {
 #include "lua-draw.h"
 #include "colors.h"
 #include "plot.h"
-#include "drawable.h"
-#include "resource-manager.h"
 #include "agg-parse-trans.h"
 #include "canvas_svg.h"
 
@@ -53,6 +51,10 @@ static int plot_free       (lua_State *L);
 static int plot_show       (lua_State *L);
 static int plot_title_set  (lua_State *L);
 static int plot_title_get  (lua_State *L);
+static int plot_xlab_set   (lua_State *L);
+static int plot_xlab_get   (lua_State *L);
+static int plot_ylab_set   (lua_State *L);
+static int plot_ylab_get   (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 static int plot_set_limits (lua_State *L);
@@ -71,7 +73,7 @@ static int plot_clip_mode_set (lua_State *L);
 static int canvas_new      (lua_State *L);
 
 static int   plot_add_gener  (lua_State *L, bool as_line);
-static void  plot_update_raw (lua_State *L, lua_plot *p, int plot_index);
+static void  plot_update_raw (lua_State *L, sg_plot *p, int plot_index);
 
 static const struct luaL_Reg plot_functions[] = {
   {"plot",        plot_new},
@@ -103,6 +105,8 @@ static const struct luaL_Reg plot_methods[] = {
 
 static const struct luaL_Reg plot_properties_get[] = {
   {"title",        plot_title_get  },
+  {"xlab",         plot_xlab_get  },
+  {"ylab",         plot_ylab_get  },
   {"units",        plot_units_get  },
   {"sync",         plot_sync_mode_get  },
   {"pad",          plot_pad_mode_get  },
@@ -112,6 +116,8 @@ static const struct luaL_Reg plot_properties_get[] = {
 
 static const struct luaL_Reg plot_properties_set[] = {
   {"title",        plot_title_set  },
+  {"xlab",         plot_xlab_set  },
+  {"ylab",         plot_ylab_set  },
   {"units",        plot_units_set  },
   {"sync",         plot_sync_mode_set  },
   {"pad",          plot_pad_mode_set  },
@@ -124,8 +130,7 @@ __END_DECLS
 int
 plot_new (lua_State *L)
 {
-  typedef plot_auto<drawable, lua_management> plot_type;
-  lua_plot *p = push_new_object<plot_type>(L, GS_PLOT);
+  sg_plot *p = push_new_object<sg_plot_auto>(L, GS_PLOT);
 
   lua_newtable (L);
   lua_setfenv (L, -2);
@@ -143,7 +148,7 @@ plot_new (lua_State *L)
 int
 canvas_new (lua_State *L)
 {
-  lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
+  sg_plot *p = push_new_object<sg_plot>(L, GS_PLOT);
 
   lua_newtable (L);
   lua_setfenv (L, -2);
@@ -163,28 +168,24 @@ canvas_new (lua_State *L)
 int
 plot_free (lua_State *L)
 {
-  return object_free<lua_plot>(L, 1, GS_PLOT);
+  return object_free<sg_plot>(L, 1, GS_PLOT);
 }
 
 void
-plot_add_gener_cpp (lua_State *L, lua_plot *p, bool as_line, 
-		    gslshell::ret_status& st)
+plot_add_gener_cpp (lua_State *L, sg_plot *p, bool as_line, 
+                    gslshell::ret_status& st)
 {
-  try {
-    agg::rgba8 color;
-    drawable *obj = parse_graph_args (L, color);
+  agg::rgba8 color;
+  sg_object* obj = parse_graph_args(L, color, st);
 
-    AGG_LOCK();
-    p->add(obj, color, as_line);
-    AGG_UNLOCK();
+  if (!obj) return;
 
-    if (p->sync_mode())
-      plot_flush (L);
-  }
-  catch (std::exception& e)
-    {
-      st.error(e.what(), "plot add or addline");
-    }
+  AGG_LOCK();
+  p->add(obj, color, as_line);
+  AGG_UNLOCK();
+
+  if (p->sync_mode())
+    plot_flush (L);
 }
 
 static void
@@ -215,7 +216,7 @@ objref_mref_add (lua_State *L, int table_index, int index, int value_index)
 int
 plot_add_gener (lua_State *L, bool as_line)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   gslshell::ret_status st;
   plot_add_gener_cpp (L, p, as_line, st);
@@ -241,61 +242,110 @@ plot_add_line (lua_State *L)
   return plot_add_gener (L, true);
 }
 
+static int plot_string_property_get (lua_State* L, const char* (sg_plot::*getter)() const)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+
+  AGG_LOCK();
+  const char *title = (p->*getter)();
+  lua_pushstring (L, title);
+  AGG_UNLOCK();
+  return 1;
+}
+
+static void plot_string_property_set (lua_State* L, void (sg_plot::*setter)(const char*), bool update)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  const char *s = lua_tostring (L, 2);
+
+  if (s == NULL)
+    gs_type_error (L, 2, "string");
+	  
+  AGG_LOCK();
+  (p->*setter)(s);
+  AGG_UNLOCK();
+
+  if (update)
+    plot_update_raw (L, p, 1);
+}
+
+static int plot_bool_property_get(lua_State* L, bool (sg_plot::*getter)() const)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  AGG_LOCK();
+  bool r = (p->*getter)();
+  lua_pushboolean(L, (int)r);
+  AGG_UNLOCK();
+  return 1;
+}
+
+static void plot_bool_property_set(lua_State* L, void (sg_plot::*setter)(bool), bool update)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+
+  if (!lua_isboolean(L, 2))
+    gs_type_error (L, 2, "boolean");
+
+  bool request = (bool) lua_toboolean (L, 2);
+
+  AGG_LOCK();
+  (p->*setter)(request);
+  AGG_UNLOCK();
+
+  if (update)
+    plot_update_raw (L, p, 1);
+}
+
 int
 plot_title_set (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  const char *title = lua_tostring (L, 2);
-
-  if (title == NULL)
-    return gs_type_error (L, 2, "string");
-	  
-  AGG_LOCK();
-  p->set_title(title);
-  AGG_UNLOCK();
-
-  plot_update_raw (L, p, 1);
-	  
+  plot_string_property_set(L, &sg_plot::set_title, true);
   return 0;
 }
 
 int
 plot_title_get (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  return plot_string_property_get(L, &sg_plot::title);
+}
 
-  AGG_LOCK();
+int
+plot_xlab_set (lua_State *L)
+{
+  plot_string_property_set(L, &sg_plot::set_xlabel, true);
+  return 0;
+}
 
-  const char *title = p->title();
-  lua_pushstring (L, title);
+int
+plot_xlab_get (lua_State *L)
+{
+  return plot_string_property_get(L, &sg_plot::xlabel);
+}
 
-  AGG_UNLOCK();
-  
-  return 1;
+int
+plot_ylab_set (lua_State *L)
+{
+  plot_string_property_set(L, &sg_plot::set_ylabel, true);
+  return 0;
+}
+
+int
+plot_ylab_get (lua_State *L)
+{
+  return plot_string_property_get(L, &sg_plot::ylabel);
 }
 
 int
 plot_units_set (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  bool request = (bool) lua_toboolean (L, 2);
-  AGG_LOCK();
-  p->set_units(request);
-  AGG_UNLOCK();
-  plot_update_raw (L, p, 1);
+  plot_bool_property_set(L, &sg_plot::set_units, true);
   return 0;
 }
 
 int
 plot_units_get (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-
-  AGG_LOCK();
-  lua_pushboolean (L, p->use_units());
-  AGG_UNLOCK();
-
-  return 1;
+  return plot_bool_property_get(L, &sg_plot::use_units);
 }
 
 int
@@ -313,7 +363,7 @@ plot_newindex (lua_State *L)
 }
 
 void
-plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
+plot_update_raw (lua_State *L, sg_plot *p, int plot_index)
 {
   window_refs_lookup_apply (L, plot_index, window_slot_update);
   p->commit_pending_draw();
@@ -322,7 +372,7 @@ plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
 int
 plot_update (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
   plot_update_raw (L, p, 1);
   return 0;
 }
@@ -330,7 +380,7 @@ plot_update (lua_State *L)
 int
 plot_flush (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
   window_refs_lookup_apply (L, 1, window_slot_refresh);
   p->commit_pending_draw();
   return 0;
@@ -350,7 +400,7 @@ plot_show (lua_State *L)
 int
 plot_set_limits (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   agg::rect_base<double> r;
   r.x1 = gs_check_number (L, 2, true);
@@ -368,7 +418,7 @@ plot_set_limits (lua_State *L)
 int
 plot_push_layer (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   window_refs_lookup_apply (L, 1, window_slot_refresh);
 
@@ -393,7 +443,7 @@ plot_ref_clear (lua_State *L, int index, int layer_id)
 int
 plot_pop_layer (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   plot_ref_clear (L, 1, p->current_layer_index());
 
@@ -408,7 +458,7 @@ plot_pop_layer (lua_State *L)
 int
 plot_clear (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   plot_ref_clear (L, 1, p->current_layer_index());
 
@@ -427,7 +477,7 @@ plot_clear (lua_State *L)
 int
 plot_save_svg (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
   const char *filename = lua_tostring(L, 2);
   double w = luaL_optnumber(L, 3, 800.0);
   double h = luaL_optnumber(L, 4, 600.0);
@@ -451,62 +501,36 @@ plot_save_svg (lua_State *L)
 
 static int plot_pad_mode_set (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  bool request = (bool) lua_toboolean (L, 2);
-  AGG_LOCK();
-  p->pad_mode(request);
-  AGG_UNLOCK();
-  plot_update_raw (L, p, 1);
+  plot_bool_property_set(L, &sg_plot::pad_mode, true);
   return 0;
 }
 
 static int plot_pad_mode_get (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  AGG_LOCK();
-  lua_pushboolean (L, p->pad_mode());
-  AGG_UNLOCK();
-  return 1;
+  return plot_bool_property_get(L, &sg_plot::pad_mode);
 }
 
 static int plot_clip_mode_set (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  bool request = (bool) lua_toboolean (L, 2);
-  AGG_LOCK();
-  p->set_clip_mode(request);
-  AGG_UNLOCK();
-  plot_update_raw (L, p, 1);
+  plot_bool_property_set(L, &sg_plot::set_clip_mode, true);
   return 0;
 }
 
 static int plot_clip_mode_get (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  AGG_LOCK();
-  lua_pushboolean (L, p->clip_is_active());
-  AGG_UNLOCK();
-  return 1;
+  return plot_bool_property_get(L, &sg_plot::clip_is_active);
 }
 
 int
 plot_sync_mode_get (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  AGG_LOCK();
-  lua_pushboolean (L, p->sync_mode());
-  AGG_UNLOCK();
-  return 1;
+  return plot_bool_property_get(L, &sg_plot::sync_mode);
 }
 
 int
 plot_sync_mode_set (lua_State *L)
 {
-  lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  bool request = (bool) lua_toboolean (L, 2);
-  AGG_LOCK();
-  p->sync_mode(request);
-  AGG_UNLOCK();
+  plot_bool_property_set(L, &sg_plot::sync_mode, false);
   return 0;
 }
 

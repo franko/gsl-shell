@@ -19,11 +19,11 @@ static void append_properties(str& s, svg_property_list* properties)
     }
 }
 
-static void property_append_alpha(str& s, agg::rgba8 c)
+static void property_append_alpha(str& s, const char* prop, agg::rgba8 c)
 {
   if (c.a < 255) {
     double alpha = (double)c.a / 255;
-    s.printf_add(";stroke-opacity:%g", alpha);
+    s.printf_add(";%s:%g", prop, alpha);
   }
 }
 
@@ -47,7 +47,7 @@ str svg_stroke_path(str& path_coords, double width, int id, agg::rgba8 c,
 		     "stroke-linejoin:miter", 
 		     rgbstr, width);
 
-  property_append_alpha(s, c);
+  property_append_alpha(s, "stroke-opacity", c);
   append_properties(s, properties);
 
   return gen_path_element(path_coords, s, id);
@@ -66,7 +66,7 @@ str svg_fill_path(str& path_coords, int id, agg::rgba8 c,
   char rgbstr[8];
   format_rgb(rgbstr, c);
   str s = str::print("fill:%s;stroke:none", rgbstr);
-  property_append_alpha(s, c);
+  property_append_alpha(s, "fill-opacity", c);
   append_properties(s, properties);
   return gen_path_element(path_coords, s, id);
 }

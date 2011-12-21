@@ -1,8 +1,9 @@
 #ifndef AGGPLOT_MARKERS_H
 #define AGGPLOT_MARKERS_H
 
-#include "scalable.h"
+#include "sg_object.h"
 
-extern vertex_source* new_marker_symbol(const char *name);
+extern sg_object* new_marker_symbol(const char *name);
+extern sg_object* new_marker_symbol(int n);
 
 #endif

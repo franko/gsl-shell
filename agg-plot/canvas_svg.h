@@ -8,7 +8,7 @@
 
 #include "defs.h"
 #include "strpp.h"
-#include "drawable.h"
+#include "sg_object.h"
 #include "draw_svg.h"
 
 static const char *svg_header =						\
@@ -67,10 +67,7 @@ private:
   int m_current_id;
 };
 
-template <> void canvas_svg::draw<svg_vs>(svg_vs& vs, agg::rgba8 c);
-template <> void canvas_svg::draw_outline<svg_vs>(svg_vs& vs, agg::rgba8 c);
-
-template <> void canvas_svg::draw<drawable>(drawable& vs, agg::rgba8 c);
-template <> void canvas_svg::draw_outline<drawable>(drawable& vs, agg::rgba8 c);
+template <> void canvas_svg::draw<sg_object>(sg_object& vs, agg::rgba8 c);
+template <> void canvas_svg::draw_outline<sg_object>(sg_object& vs, agg::rgba8 c);
 
 #endif
