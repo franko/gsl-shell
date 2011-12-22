@@ -21,11 +21,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include <gsl/gsl_types.h>
+#include <gsl/gsl_errno.h>
+
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "lua-rng.h"
-#include "randist.h"
 #include "sf.h"
 
 #include "lua-graph.h"
@@ -53,8 +54,6 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 
   register_graph (L);
-  rng_register (L);
-  randist_register (L);
   sf_register (L);
 
   return 1;

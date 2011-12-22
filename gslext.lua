@@ -3,6 +3,8 @@
 require('iter')
 require('matrix')
 require('num')
+require('rng')
+require('rnd')
 require('integ-init')
 require('fft-init')
 require('graph-init')
