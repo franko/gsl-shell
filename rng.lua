@@ -10,7 +10,7 @@ local rng_type = ffi.typeof('gsl_rng')
 
 local rng_mt = {
    __tostring = function(s)
-                   return format("<Random number generator: %p>", s)
+                   return format("<random number generator: %p>", s)
                 end,
 
    __index = {

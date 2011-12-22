@@ -10,14 +10,12 @@ __BEGIN_DECLS
 
 enum gs_type_e {
   GS_NO_TYPE = -1,
-  GS_RNG = 0,
-  GS_DRAW_PLOT,
+  GS_WINDOW = 0,
   GS_DRAW_SCALABLE, /* derived types are declared only after their base class */
   GS_DRAW_PATH,
   GS_DRAW_ELLIPSE,
   GS_DRAW_DRAWABLE,
   GS_DRAW_TEXT,
-  GS_WINDOW,
   GS_PLOT,
   GS_INVALID_TYPE,
 };
