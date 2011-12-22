@@ -66,59 +66,59 @@ Functions Index
       Actually GSL Shell implement alls the functions provided by the GSL library but some of them are not listed here.
       Please consult the GSL reference manual if you need a complete list of all the distributions available.
 
-.. function:: gaussian_pdf(x [, sigma])
-              gaussian_P(x [, sigma])
-              gaussian_Q(x [, sigma])
-              gaussian_Pinv(x [, sigma])
-              gaussian_Qinv(x [, sigma])
+.. function:: gaussian_pdf(x, sigma)
+              gaussian_P(x, sigma)
+              gaussian_Q(x, sigma)
+              gaussian_Pinv(x, sigma)
+              gaussian_Qinv(x, sigma)
 
    See :ref:`Gaussian distribution <rnd_gaussian>`.
 
-.. function:: exponential_pdf(x [, mu])
-              exponential_P(x [, mu])
-              exponential_Q(x [, mu])
-              exponential_Pinv(x [, mu])
-              exponential_Qinv(x [, mu])
+.. function:: exponential_pdf(x, mu)
+              exponential_P(x, mu)
+              exponential_Q(x, mu)
+              exponential_Pinv(x, mu)
+              exponential_Qinv(x, mu)
 
     See :ref:`Exponential  Distribution <rnd_exponential>`.
 
-.. function:: chisq_pdf(x [, nu])
-              chisq_P(x [, nu])
-              chisq_Q(x [, nu])
-              chisq_Pinv(x [, nu])
-              chisq_Qinv(x [, nu])
+.. function:: chisq_pdf(x, nu)
+              chisq_P(x, nu)
+              chisq_Q(x, nu)
+              chisq_Pinv(x, nu)
+              chisq_Qinv(x, nu)
 
     See :ref:`Chi square  Distribution <rnd_chisq>`.
 
-.. function:: laplace_pdf(x [, a])
-              laplace_P(x [, a])
-              laplace_Q(x [, a])
-              laplace_Pinv(x [, a])
-              laplace_Qinv(x [, a])
+.. function:: laplace_pdf(x, a)
+              laplace_P(x, a)
+              laplace_Q(x, a)
+              laplace_Pinv(x, a)
+              laplace_Qinv(x, a)
 
     See :ref:`Laplace  Distribution <rnd_fdist>`.
 
-.. function:: tdist_pdf(x [, nu])
-              tdist_P(x [, nu])
-              tdist_Q(x [, nu])
-              tdist_Pinv(x [, nu])
-              tdist_Qinv(x [, nu])
+.. function:: tdist_pdf(x, nu)
+              tdist_P(x, nu)
+              tdist_Q(x, nu)
+              tdist_Pinv(x, nu)
+              tdist_Qinv(x, nu)
 
     See :ref:`t- Distribution <rnd_tdist>`.
 
-.. function:: cauchy_pdf(x [, a])
-              cauchy_P(x [, a])
-              cauchy_Q(x [, a])
-              cauchy_Pinv(x [, a])
-              cauchy_Qinv(x [, a])
+.. function:: cauchy_pdf(x, a)
+              cauchy_P(x, a)
+              cauchy_Q(x, a)
+              cauchy_Pinv(x, a)
+              cauchy_Qinv(x, a)
 
     See :ref:`Cauchy  Distribution <rnd_cauchy>`.
 
-.. function:: rayleigh_pdf(x [, sigma])
-              rayleigh_P(x [, sigma])
-              rayleigh_Q(x [, sigma])
-              rayleigh_Pinv(x [, sigma])
-              rayleigh_Qinv(x [, sigma])
+.. function:: rayleigh_pdf(x, sigma)
+              rayleigh_P(x, sigma)
+              rayleigh_Q(x, sigma)
+              rayleigh_Pinv(x, sigma)
+              rayleigh_Qinv(x, sigma)
 
     See :ref:`Rayleigh  Distribution <rnd_rayleigh>`.
 
@@ -176,8 +176,8 @@ Functions Index
 
     See :ref:`Binomial  Distribution <rnd_binomial>`.
 
-.. function:: poisson_pdf(x [, mu])
-              poisson_P(x [, mu])
-              poisson_Q(x [, mu])
+.. function:: poisson_pdf(x, mu)
+              poisson_P(x, mu)
+              poisson_Q(x, mu)
 
     See :ref:`Poisson  Distribution <rnd_poisson>`.

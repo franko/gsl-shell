@@ -31,7 +31,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_gaussian:
 
-.. function:: gaussian(r [, sigma])
+.. function:: gaussian(r, sigma)
 
      This function returns a Gaussian random variate, with mean zero and
      standard deviation 'sigma'.  The probability distribution for
@@ -48,7 +48,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_exponential:
 
-.. function:: exponential(r [, mu])
+.. function:: exponential(r, mu)
 
      This function returns a random variate from the exponential
      distribution with mean 'mu'. The distribution is,
@@ -60,7 +60,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_chisq:
 
-.. function:: chisq(r [, nu])
+.. function:: chisq(r, nu)
 
    The chi-squared distribution arises in statistics.  If Y\ :sub:`i` are n
    independent gaussian random variates with unit variance then the
@@ -82,7 +82,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_laplace:
 
-.. function:: laplace(r [, a])
+.. function:: laplace(r, a)
 
      This function returns a random variate from the Laplace
      distribution with width ``a``.  The distribution is,
@@ -94,7 +94,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_tdist:
 
-.. function:: tdist(r [, nu])
+.. function:: tdist(r, nu)
    
    The t-distribution arises in statistics.  If Y\ :sub:`1` has a
    normal distribution and Y\ :sub:`2` has a chi-squared distribution
@@ -116,7 +116,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_cauchy:
 
-.. function:: cauchy(r [, a])
+.. function:: cauchy(r, a)
 
      This function returns a random variate from the Cauchy
      distribution with scale parameter A.  The probability distribution
@@ -130,7 +130,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_rayleigh:
 
-.. function:: rayleigh(r [, sigma])
+.. function:: rayleigh(r, sigma)
 
      This function returns a random variate from the Rayleigh
      distribution with scale parameter |sgr|.  The distribution is,
@@ -261,7 +261,7 @@ distribution, allowing full accuracy to be retained for small results.
 
 .. _rnd_poisson:
 
-.. function:: poisson(r [, mu])
+.. function:: poisson(r, mu)
 
    This function returns a random integer from the Poisson
    distribution with mean mu. The probability distribution for Poisson

@@ -8,7 +8,7 @@ require('rnd')
 require('integ-init')
 require('fft-init')
 require('graph-init')
-require('randist-init')
+require('randist')
 require('import')
 require('contour')
 
