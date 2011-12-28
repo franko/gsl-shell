@@ -9,7 +9,8 @@ __BEGIN_DECLS
 
 extern lua_State *globalL;
 extern pthread_mutex_t gsl_shell_mutex[1];
-
+extern pthread_mutex_t gsl_shell_shutdown_mutex[1];
+extern volatile int gsl_shell_shutting_down;
 
 __END_DECLS
 

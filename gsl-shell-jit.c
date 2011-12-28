@@ -40,6 +40,7 @@
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
+#include "lua-graph.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -100,6 +101,8 @@ lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
 pthread_mutex_t gsl_shell_mutex[1];
+pthread_mutex_t gsl_shell_shutdown_mutex[1];
+volatile int gsl_shell_shutting_down = 0;
 
 static void gsl_shell_openlibs(lua_State *L)
 {
@@ -365,7 +368,6 @@ static void dotty(lua_State *L)
 {
   int status;
   const char *oldprogname = progname;
-  GSL_SHELL_LOCK();
   progname = NULL;
   while ((status = loadline(L)) != -1) {
     if (status == 0) status = docall(L, 0, 0);
@@ -383,7 +385,6 @@ static void dotty(lua_State *L)
     }
   }
   lua_settop(L, 0);  /* clear stack */
-  GSL_SHELL_UNLOCK();
   fputs("\n", stdout);
   fflush(stdout);
   progname = oldprogname;
@@ -632,6 +633,9 @@ int main(int argc, char **argv)
   initialize_readline();
 #endif
   pthread_mutex_init (gsl_shell_mutex, NULL);
+  pthread_mutex_init (gsl_shell_shutdown_mutex, NULL);
+
+  GSL_SHELL_LOCK();
   lua_State *L = lua_open();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
@@ -641,8 +645,17 @@ int main(int argc, char **argv)
   s.argv = argv;
   status = lua_cpcall(L, pmain, &s);
   report(L, status);
+
+  pthread_mutex_lock (gsl_shell_shutdown_mutex);
+  gsl_shell_shutting_down = 1;
+  graph_close_windows(L);
   lua_close(L);
+  pthread_mutex_unlock (gsl_shell_shutdown_mutex);
+
+  GSL_SHELL_UNLOCK();
+
   pthread_mutex_destroy (gsl_shell_mutex);
+  pthread_mutex_destroy (gsl_shell_shutdown_mutex);
+
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-

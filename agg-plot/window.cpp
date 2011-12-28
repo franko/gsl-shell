@@ -398,7 +398,7 @@ void window::start (lua_State *L, gslshell::ret_status& st)
 {
   this->lock();
 
-  if (status != canvas_window::running && status != canvas_window::starting)
+  if (status != canvas_window::running)
     {
       typedef canvas_window::thread_info thread_info;
       std::auto_ptr<thread_info> inf(new thread_info(L, this));
@@ -455,7 +455,20 @@ window_show (lua_State *L)
 int
 window_free (lua_State *L)
 {
-  return object_free<window>(L, 1, GS_WINDOW);
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+
+  /* it is important here to lock to ensure that there isn't any thread starting
+     a new graphical window right now */
+  win->lock();
+
+  /* This should never happens. Running windows are never garbage collected
+     and before closing lua_State all the graphical windows are closed and
+     their threads have naturally finished. */
+  assert(win->status != window::running);
+
+  win->unlock();
+  win->~window();
+  return 0;
 }
 
 int
@@ -561,6 +574,14 @@ window_close (lua_State *L)
   if (win->status == canvas_window::running)
     win->close_request();
   win->unlock();
+  return 0;
+}
+
+int
+window_close_wait (lua_State *L)
+{
+  window *win = object_check<window>(L, 1, GS_WINDOW);
+  win->shutdown_close();
   return 0;
 }
 

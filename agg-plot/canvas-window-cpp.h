@@ -2,6 +2,7 @@
 #define CANVAS_WINDOW_CPP_H
 
 #include <memory>
+#include <pthread.h>
 
 #include "platform_support_ext.h"
 #include "agg_trans_affine.h"
@@ -23,6 +24,8 @@ protected:
 
   agg::trans_affine m_matrix;
 
+  pthread_t m_thread;
+
 public:
 
   struct thread_info {
@@ -33,7 +36,7 @@ public:
     thread_info (lua_State *L, canvas_window *win) : L(L), win(win) {};
   };
 
-  enum win_status_e { not_ready, starting, running, error, closed };
+  enum win_status_e { not_ready, running, error, closed };
 
   enum win_status_e status;
 
@@ -50,6 +53,8 @@ public:
 
   virtual void on_init();
   virtual void on_resize(int sx, int sy);
+
+  void shutdown_close();
 
   bool start_new_thread (std::auto_ptr<thread_info>& inf);
 

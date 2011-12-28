@@ -31,6 +31,12 @@
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
 void
+graph_close_windows (lua_State *L)
+{
+  window_index_apply_all (L, window_close_wait);
+}
+
+void
 register_graph (lua_State *L)
 {
   window_registry_prepare (L);

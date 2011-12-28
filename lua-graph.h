@@ -5,6 +5,7 @@
 #define MLUA_GRAPHLIBNAME "graph"
 #endif
 
+extern void graph_close_windows (lua_State *L);
 extern void register_graph (lua_State *L);
 
 #endif

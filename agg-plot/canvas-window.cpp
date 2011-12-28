@@ -62,15 +62,12 @@ bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>&
     return false;
 
   pthread_attr_t attr[1];
-  pthread_t win_thread[1];
 
   pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
-
-  this->status = canvas_window::starting;
+  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_JOINABLE);
 
   void *user_data = (void *) inf.get();
-  if (pthread_create(win_thread, attr, canvas_thread_function, user_data))
+  if (pthread_create(&m_thread, attr, canvas_thread_function, user_data))
     {
       this->status = canvas_window::error; 
       pthread_attr_destroy (attr);
@@ -108,9 +105,32 @@ canvas_thread_function (void *_inf)
 
   win->unlock();
 
-  GSL_SHELL_LOCK();
-  window_index_remove (inf->L, inf->window_id);
-  GSL_SHELL_UNLOCK();
+  pthread_mutex_lock (gsl_shell_shutdown_mutex);
+  if (!gsl_shell_shutting_down)
+    {
+      GSL_SHELL_LOCK();
+      window_index_remove (inf->L, inf->window_id);
+      GSL_SHELL_UNLOCK();
+    }
+  pthread_mutex_unlock (gsl_shell_shutdown_mutex);
 
   return NULL;
+}
+
+void
+canvas_window::shutdown_close()
+{
+  lock();
+  if (status == canvas_window::running)
+    {
+      close_request();
+      unlock();
+      pthread_mutex_unlock (gsl_shell_shutdown_mutex);
+      pthread_join(m_thread, NULL);
+      pthread_mutex_lock (gsl_shell_shutdown_mutex);
+    }
+  else
+    {
+      unlock();
+    }
 }
