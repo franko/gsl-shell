@@ -40,7 +40,7 @@ end
 
 function M.new(s)
    local T = rng_type_lookup(s)
-   return gsl.gsl_rng_alloc(T)
+   return ffi.gc(gsl.gsl_rng_alloc(T), gsl.gsl_rng_free)
 end
 
 function M.list()
