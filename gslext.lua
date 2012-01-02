@@ -11,6 +11,7 @@ require('graph-init')
 require('randist')
 require('import')
 require('contour')
+require('sf')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'

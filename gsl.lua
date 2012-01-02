@@ -1811,6 +1811,7 @@ double gsl_cdf_hypergeometric_Q (const unsigned int k, const unsigned int n1,
                                  const unsigned int n2, const unsigned int t);
 ]]
 
+
 if jit.os == 'Linux' then
 	return ffi.C
 elseif jit.os == 'OSX' then

@@ -54,7 +54,6 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 
   register_graph (L);
-  sf_register (L);
 
   return 1;
 }

@@ -1,15 +1,11 @@
 
 local M = {}
 
-local floor = math.floor
+local floor, mod = math.floor, math.mod
 local type = type
 
 local function is_integer(x)
-   if type(x) == 'number' then
-      return (floor(x) == x)
-   else
-      return false
-   end
+   return (mod(x, 1) == 0)
 end
 
 local function is_real(x)
