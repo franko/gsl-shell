@@ -27,7 +27,6 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "sf.h"
 
 #include "lua-graph.h"
 
