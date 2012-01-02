@@ -337,6 +337,7 @@ end
 -- @return result the result of the integration
 -- @return sigma the estimated error or standard deviation 
 -- @return num_int the number of runs required to calculate the integral
+-- @return run function to compute the integral again via run(calls)
 local function monte_vegas(f, a, b, calls, r, chidev)
   calls = calls or 5e5
   local rget = r and function() return r:get() end or random
@@ -349,15 +350,21 @@ local function monte_vegas(f, a, b, calls, r, chidev)
   state:clear_stage1() -- clear results
   state:rebin_stage2(1e4) -- intialise grid for 1e4 calls
   local result,sigma = state:integrate(f,a,rget)
-  local n = 0
+  local n
   -- full (stage 1)
-  repeat
-    state:clear_stage1() -- forget previous results, but not the grid
-    state:rebin_stage2(calls/state.iterations) -- initialise grid for calls/iterations calls
-    result,sigma = state:integrate(f,a,rget)
-    n=n+1
-  until abs(state.chisq - 1) < chidev
-  return result, sigma, n
+  local run = function (c)
+    calls = c or calls
+    n=0
+    repeat
+      state:clear_stage1() -- forget previous results, but not the grid
+      state:rebin_stage2(calls/state.iterations) -- initialise grid for calls/iterations calls
+      result,sigma = state:integrate(f,a,rget)
+      n=n+1
+    until abs(state.chisq - 1) < chidev
+    return result,sigma,n
+  end
+  result, sigma, n = run(calls)
+  return result, sigma, n, run
 end
 
 return monte_vegas
