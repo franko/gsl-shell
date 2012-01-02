@@ -646,12 +646,13 @@ int main(int argc, char **argv)
   status = lua_cpcall(L, pmain, &s);
   report(L, status);
 
+  GSL_SHELL_UNLOCK();
   pthread_mutex_lock (gsl_shell_shutdown_mutex);
   gsl_shell_shutting_down = 1;
+  GSL_SHELL_LOCK();
   graph_close_windows(L);
   lua_close(L);
   pthread_mutex_unlock (gsl_shell_shutdown_mutex);
-
   GSL_SHELL_UNLOCK();
 
   pthread_mutex_destroy (gsl_shell_mutex);
