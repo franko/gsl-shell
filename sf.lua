@@ -30,15 +30,15 @@ local function get_gsl_sf_mode(name, num_arg)
 
 		local status = 0
 		--very ugly construction with variable argument list
-		if num_arg == 1 then status = gsl[name](arg[1],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 2 then status = gsl[name](arg[1], arg[2],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 3 then status = gsl[name](arg[1], arg[2],arg[3],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 4 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 5 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 6 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 7 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 8 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],GSL_PREC_DOUBLE,result)
-		elseif num_arg == 9 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],GSL_PREC_DOUBLE,result) end	
+		if num_arg == 1 then status = gsl[fullname](arg[1],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 2 then status = gsl[fullname](arg[1], arg[2],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 3 then status = gsl[fullname](arg[1], arg[2],arg[3],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 4 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 5 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 6 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 7 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 8 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 9 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],GSL_PREC_DOUBLE,result) end	
 		gsl_check(status)
 		return result.val, result.err
 	end
@@ -112,13 +112,16 @@ local function get_gsl_sf_choice(choices, num_arg)
 		if #arg ~= num_arg then
 			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
 		end
-
-		if choices[n] == nil and is_integer(n) then n = '?' end
-		if choices[n] == nil then error("There is no valid function for the given integer n.") end
+		local l
+		if choices[n] == nil and is_integer(n) then
+			l = n
+			n = '?'
+		end
+		if choices[n] == nil then error("There is no valid function for the given integer n = " .. l .. ".") end
 
 		local result = ffi.new("gsl_sf_result")
 		--if we are using the generic function, we have to begin the argument list with the n value
-		if n == '?' then table.insert(arg, 1, n) end
+		if n == '?' then table.insert(arg, 1, tonumber(l)) end
 
 		local fullname = "gsl_sf_" .. choices[n] .. "_e"
 		local status = call_variable_arg(fullname,arg, result)
@@ -361,12 +364,12 @@ sf.besselj 		= bessel_generic("j","","l")
 sf.bessely 		= bessel_generic("y","","l")
 
 --Regular Modified Spherical
-sf.besseli 		= bessel_generic("i","","l")
+--sf.besseli 		= bessel_generic("i","","l")
 --Regular Modified Spherical scaled
 sf.besseli_scaled 	= bessel_generic("i","_scaled","l")
 
 --Irregular Modified Spherical
-sf.besselk		 = bessel_generic("k","","l")
+--sf.besselk		 = bessel_generic("k","","l")
 --Irregular Modified Spherical scaled
 sf.besselk_scaled 	= bessel_generic("k","_scaled", "l")
 
@@ -471,8 +474,8 @@ function sf.coulomb_wave_FG(eta, x, L_F, k)
 	local Fp = ffi.new("gsl_sf_result")
 	local G = ffi.new("gsl_sf_result")
 	local Gp = ffi.new("gsl_sf_result")
-	local exp_F = ffi.new("double")
-	local exp_G = ffi.new("double")
+	local exp_F = ffi.new("double[1]")
+	local exp_G = ffi.new("double[1]")
 	local status = 0
 
 	status = gsl["gsl_sf_coulomb_wave_FG_e"](eta, x, L_F,k,F,Fp,G,Gp,exp_F,exp_G)
@@ -623,7 +626,7 @@ function sf.cdilog(z)
 	local status = 0
 
 	local r = complex.abs(z)
-	local th = atan2(complex.imag(z), complex.real(z))
+	local th = math.atan2(complex.imag(z), complex.real(z))
 
 	status = gsl.gsl_sf_complex_dilog_e (r, th, result_r, result_i);
 
@@ -682,13 +685,13 @@ sf.ellint_Ecomp = get_gsl_sf_mode("ellint_Ecomp",1)
 
 sf.ellint_F = get_gsl_sf_mode("ellint_F",2)
 sf.ellint_E = get_gsl_sf_mode("ellint_E",2)
-sf.ellint_P = get_gsl_sf_mode("ellint_P",2)
-sf.ellint_D = get_gsl_sf_mode("ellint_D",2)
+sf.ellint_P = get_gsl_sf_mode("ellint_P",3)
+sf.ellint_D = get_gsl_sf_mode("ellint_D",3)
 
 sf.ellint_RC = get_gsl_sf_mode("ellint_RC",2)
-sf.ellint_RD = get_gsl_sf_mode("ellint_RD",2)
-sf.ellint_RF = get_gsl_sf_mode("ellint_RF",2)
-sf.ellint_RJ = get_gsl_sf_mode("ellint_RJ",2)
+sf.ellint_RD = get_gsl_sf_mode("ellint_RD",3)
+sf.ellint_RF = get_gsl_sf_mode("ellint_RF",3)
+sf.ellint_RJ = get_gsl_sf_mode("ellint_RJ",4)
 
 -------------------------------------------------------
 
@@ -698,13 +701,13 @@ int gsl_sf_elljac_e(double u, double m, double * sn, double * cn, double * dn);
 ]]
 
 function sf.elljac(u, m)
-	local sn = ffi.new("double")
-	local cn = ffi.new("double")
-	local dn = ffi.new("double")
+	local sn = ffi.new("double[1]")
+	local cn = ffi.new("double[1]")
+	local dn = ffi.new("double[1]")
 	local status = gsl.gsl_sf_elljac_e(u,m,sn,cn,dn)
 
 	gsl_check(status)
-	return sn.val, sn.err, cn.val, cn.err, dn.val, dn.err
+	return sn, cn, dn
 end
 
 
@@ -952,8 +955,8 @@ sf.gamma_inc_P	= get_gsl_sf("gamma_inc_P", 2)
 
 --TODO: Missing gamma complex, lngamma_sgn
 
-sf.beta 	= get_gsl_sf("beta", 1)
-sf.lnbeta 	= get_gsl_sf("lnbeta", 1)
+sf.beta 	= get_gsl_sf("beta", 2)
+sf.lnbeta 	= get_gsl_sf("lnbeta", 2)
 sf.beta_inc	= get_gsl_sf("beta_inc", 3)
 
 sf.poch		= get_gsl_sf("poch", 2)
