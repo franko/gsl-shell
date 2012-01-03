@@ -17,6 +17,7 @@ local GSL_PREC_APPROX = 2
 --Returns reference to a wrapper function that wraps the gsl function (with error) with a certain name, one argument, an optional mode
 local function get_gsl_sf_mode(name, num_arg)
 	return function(...)
+		local arg = {...}
 		local result = ffi.new("gsl_sf_result")
 		local status = 0
 		if arg == nil then error("Did not give argument count...") end
@@ -25,7 +26,19 @@ local function get_gsl_sf_mode(name, num_arg)
 		end
 
 		--execute the gsl function
-		status = gsl["gsl_sf_"..name.."_e"](unpack(arg), GSL_PREC_DOUBLE, result)
+		local fullname = "gsl_sf_"..name.."_e"
+
+		local status = 0
+		--very ugly construction with variable argument list
+		if num_arg == 1 then status = gsl[name](arg[1],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 2 then status = gsl[name](arg[1], arg[2],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 3 then status = gsl[name](arg[1], arg[2],arg[3],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 4 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 5 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 6 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 7 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 8 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],GSL_PREC_DOUBLE,result)
+		elseif num_arg == 9 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],GSL_PREC_DOUBLE,result) end	
 		gsl_check(status)
 		return result.val, result.err
 	end
@@ -47,14 +60,30 @@ local function get_gsl_sf_int(name)
 	end
 end
 
+local function call_variable_arg(name,arg, result)
+	local num_arg = #arg
+	local status = 0
+	--very ugly construction with variable argument list
+	if num_arg == 1 then status = gsl[name](arg[1],result)
+	elseif num_arg == 2 then status = gsl[name](arg[1], arg[2],result)
+	elseif num_arg == 3 then status = gsl[name](arg[1], arg[2],arg[3],result)
+	elseif num_arg == 4 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],result)
+	elseif num_arg == 5 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],result)
+	elseif num_arg == 6 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],result)
+	elseif num_arg == 7 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],result)
+	elseif num_arg == 8 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],result)
+	elseif num_arg == 9 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],result) end	
+	return status
+end
+
 --Return refernece to a gsl function with one argument
 local function get_gsl_sf(name, num_arg, is_e10)
 	return function(...)
-
-		if arg == nil then error("Did not give argument count...") end
+		local arg = {...}
+		if arg == nil then error("Did not give correct argument count...") end
 		if #arg ~= num_arg then
 			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
-		end
+		end		
 
 		local result
 		if is_e10 then
@@ -63,8 +92,10 @@ local function get_gsl_sf(name, num_arg, is_e10)
 			result = ffi.new("gsl_sf_result")
 		end
 
-		local status = 0
-		status = gsl["gsl_sf_"..name.."_e"](unpack(arg),result)
+		local fullname = "gsl_sf_"..name.."_e"
+
+		local status = call_variable_arg(fullname, arg, result)
+
 		gsl_check(status)
 		if is_e10 then
 			return result.val, result.err, result.e10
@@ -76,7 +107,7 @@ end
 
 local function get_gsl_sf_choice(choices, num_arg)
 	return function(n,...)
-
+		local arg = {...}
 		if arg == nil then error("Did not give argument count...") end
 		if #arg ~= num_arg then
 			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
@@ -89,7 +120,9 @@ local function get_gsl_sf_choice(choices, num_arg)
 		--if we are using the generic function, we have to begin the argument list with the n value
 		if n == '?' then table.insert(arg, 1, n) end
 
-		local status = gsl["gsl_sf_" .. choices[n] .. "_e"](unpack(arg), result)
+		local fullname = "gsl_sf_" .. choices[n] .. "_e"
+		local status = call_variable_arg(fullname,arg, result)
+
 		gsl_check(status)
 		return result.val, result.err
 	end
@@ -1170,9 +1203,8 @@ double gsl_sf_legendre_H3d(const int l, const double lambda, const double eta);
 int gsl_sf_legendre_H3d_array(const int lmax, const double lambda, const double eta, double * result_array);
 ]]
 
-sf.legendreP(n, x) 	= get_gsl_sf_choice({[1]='legendre_P1', [2]='legendre_P2', [3]='legendre_P3', ['?']='legendre_Pl'}, 1)
-
-sf.legendreQ(n, x) 	= get_gsl_sf_choice({[0]='legendre_Q0', [1]='legendre_Q1', ['?']='legendre_Ql'}, 1)
+sf.legendreP	 	= get_gsl_sf_choice({[1]='legendre_P1', [2]='legendre_P2', [3]='legendre_P3', ['?']='legendre_Pl'}, 1)
+sf.legendreQ	 	= get_gsl_sf_choice({[0]='legendre_Q0', [1]='legendre_Q1', ['?']='legendre_Ql'}, 1)
 
 sf.legendrePlm		= get_gsl_sf("legendre_Plm", 3)
 sf.legendresphPlm	= get_gsl_sf("legendre_sphPlm", 3)
@@ -1412,8 +1444,8 @@ local function get_gsl_sf_int_double(name_int, name_double)
 end
 
 sf.zeta		= get_gsl_sf_int_double("zeta_int", "zeta")
-sf.zetam1(n)	= get_gsl_sf_int_double("zetam1_int", "zetam1")
-sf.eta(n)	= get_gsl_sf_int_double("eta_int", "eta")
+sf.zetam1	= get_gsl_sf_int_double("zetam1_int", "zetam1")
+sf.eta		= get_gsl_sf_int_double("eta_int", "eta")
 sf.hzeta	= get_gsl_sf("hzeta", 2)
 
 
