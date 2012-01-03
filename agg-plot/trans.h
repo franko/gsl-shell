@@ -183,9 +183,7 @@ struct trans {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-      bool flip_y = (m.sy < 0.0);
-      m_scale.sy = (flip_y ? -m_size : m_size);
-      m_scale.ty = (flip_y ? m_size : 0);
+      m_scale.sy = (m.sy > 0.0 ? m_size : -m_size);
 
       m_symbol->apply_transform(m_scale, as);
       m_source->apply_transform(m, as);
@@ -199,6 +197,8 @@ struct trans {
     str gen_svg_marker_def(int id, agg::rgba8 c, str& marker_id) {
 
       const double pad = 2.0;
+
+      double tx_save = m_scale.tx, ty_save = m_scale.ty;
 
       m_scale.tx = m_size / 2.0 + pad;
       m_scale.ty = m_size / 2.0 + pad;
@@ -219,8 +219,8 @@ struct trans {
                          marker_id.cstr(), S/2, S/2, S, S, wf, wf,
                          marker_svg.cstr());
 
-      m_scale.tx = 0.0;
-      m_scale.ty = 0.0;
+      m_scale.tx = tx_save;
+      m_scale.ty = ty_save;
 
       return s;
     }
