@@ -119,14 +119,9 @@ public:
       }
   };
 
-  void set_title(const char *text);
-  const char *title() const { return m_title.cstr(); };
-
-  void set_xlabel(const char *text) { str_copy_c(&m_xlabel, text); }
-  const char *xlabel() const { return m_xlabel.cstr(); };
-
-  void set_ylabel(const char *text) { str_copy_c(&m_ylabel, text); }
-  const char *ylabel() const { return m_ylabel.cstr(); };
+  str& title() { return m_title; }
+  str& x_axis_title() { return m_xlabel; }
+  str& y_axis_title() { return m_ylabel; }
 
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
@@ -247,12 +242,6 @@ void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
   pod_list<item> *new_node = new pod_list<item>(d);
   m_drawing_queue = pod_list<item>::push_back(m_drawing_queue, new_node);
   RM::acquire(vs);
-}
-
-template <class VS, class RM>
-void plot<VS,RM>::set_title(const char *text)
-{
-  str_copy_c(&m_title, text);
 }
 
 template <class VS, class RM>

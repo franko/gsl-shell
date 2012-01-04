@@ -139,7 +139,7 @@ plot_new (lua_State *L)
     {
       const char *title = lua_tostring (L, 1);
       if (title)
-	p->set_title(title);
+	p->title() = title;
     }
 
   return 1;
@@ -159,7 +159,7 @@ canvas_new (lua_State *L)
     {
       const char *title = lua_tostring (L, 1);
       if (title)
-	p->set_title(title);
+	p->title() = title;
     }
 
   return 1;
@@ -242,18 +242,18 @@ plot_add_line (lua_State *L)
   return plot_add_gener (L, true);
 }
 
-static int plot_string_property_get (lua_State* L, const char* (sg_plot::*getter)() const)
+static int plot_string_property_get (lua_State* L, str& (sg_plot::*getref)())
 {
   sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
   AGG_LOCK();
-  const char *title = (p->*getter)();
-  lua_pushstring (L, title);
+  str& ref = (p->*getref)();
+  lua_pushstring (L, ref.cstr());
   AGG_UNLOCK();
   return 1;
 }
 
-static void plot_string_property_set (lua_State* L, void (sg_plot::*setter)(const char*), bool update)
+static void plot_string_property_set (lua_State* L, str& (sg_plot::*getref)(), bool update)
 {
   sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
   const char *s = lua_tostring (L, 2);
@@ -262,7 +262,7 @@ static void plot_string_property_set (lua_State* L, void (sg_plot::*setter)(cons
     gs_type_error (L, 2, "string");
 
   AGG_LOCK();
-  (p->*setter)(s);
+  (p->*getref)() = s;
   AGG_UNLOCK();
 
   if (update)
@@ -299,7 +299,7 @@ static void plot_bool_property_set(lua_State* L, void (sg_plot::*setter)(bool), 
 int
 plot_title_set (lua_State *L)
 {
-  plot_string_property_set(L, &sg_plot::set_title, true);
+  plot_string_property_set(L, &sg_plot::title, true);
   return 0;
 }
 
@@ -312,27 +312,27 @@ plot_title_get (lua_State *L)
 int
 plot_xlab_set (lua_State *L)
 {
-  plot_string_property_set(L, &sg_plot::set_xlabel, true);
+  plot_string_property_set(L, &sg_plot::x_axis_title, true);
   return 0;
 }
 
 int
 plot_xlab_get (lua_State *L)
 {
-  return plot_string_property_get(L, &sg_plot::xlabel);
+  return plot_string_property_get(L, &sg_plot::x_axis_title);
 }
 
 int
 plot_ylab_set (lua_State *L)
 {
-  plot_string_property_set(L, &sg_plot::set_ylabel, true);
+  plot_string_property_set(L, &sg_plot::y_axis_title, true);
   return 0;
 }
 
 int
 plot_ylab_get (lua_State *L)
 {
-  return plot_string_property_get(L, &sg_plot::ylabel);
+  return plot_string_property_get(L, &sg_plot::y_axis_title);
 }
 
 int
