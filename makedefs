@@ -5,7 +5,7 @@
 #
 # Suitable for POSIX platforms (Linux, *BSD, OSX etc.).
 # Note: the configurable options are in makeconfig.
-# 
+#
 # Copyright (C) 2009-2010 Francesco Abbate. See Copyright Notice in gsl-shell.c
 ##############################################################################
 
@@ -38,7 +38,7 @@ ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
 else
-  EXE_EXT = 
+  EXE_EXT =
 endif
 
 ifeq ($(strip $(DEBUG)), yes)

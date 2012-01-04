@@ -37,7 +37,7 @@ Functions
    Return the n-th zero of the respectives functions.
 
    .. figure:: examples-airy-functions-plot.png
-   
+
       Airy functions Ai and Bi.
 
 .. function::  besselJ(n, x)
@@ -91,7 +91,7 @@ Functions
 
 .. function:: laguerre(n, a, x)
 
-   The generalized Laguerre polynomials are defined in terms of confluent hypergeometric functions as 
+   The generalized Laguerre polynomials are defined in terms of confluent hypergeometric functions as
 
    .. math::
       L^a_n(x) = {(a+1)_n \over n!} {}_1 F_1(-n,a+1,x)
@@ -112,7 +112,7 @@ Functions
 
    .. figure:: examples-legendre-polynomials.png
 
-      Legendre polynomials  
+      Legendre polynomials
 
 .. function:: legendreQ(n, x)
 
@@ -223,7 +223,7 @@ Functions
    Compute the logarithm of the double factorial of N, log(n!!).
 
 .. function:: choose(n, k)
-            
+
    Compute the combinatorial factor
 
    .. math::
@@ -234,7 +234,7 @@ Functions
    Compute the logarithm of "n choose m".  This is equivalent to the sum :math:`\log(n!) - \log(m!) - \log((n-m)!)`.
 
 .. function:: gamma(x)
- 
+
    Compute the Gamma function |Ggr| (x), subject to x not being a negative integer or zero.  The function is computed using the real Lanczos method.
 
 .. function:: lngamma(x)
@@ -247,7 +247,7 @@ Functions
 .. function:: zeta(n)
 
     These routines compute the Riemann zeta function :math:`\zeta(s)` for arbitrary s, :math:`s \ne 1`.
-   
+
 Hypergeometric functions
 ------------------------
 

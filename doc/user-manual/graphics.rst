@@ -4,7 +4,7 @@
 
 .. _graphics-chapter:
 
-Graphics 
+Graphics
 =========
 
 Overview
@@ -65,7 +65,7 @@ Then to plot something you have just to call the 'myplot' function. For example:
 The function :func:`graph.fxline` takes three arguments, the function to plot and the initial anf final values of the variable. By default the function will be sampled with 256 points but if you want you can provide a fourth arguments to give the number of sample points.
 
 In this example we have used the :func:`graph.plot` function to create a plot, the :func:`graph.fxline` function to create the line to draw and the method :func:`~Plot.addline` to add the line to the plot (in red). These three operations can be done with a single function, :func:`graph.fxplot`. It works like that::
-  
+
    p = graph.fxplot(|x| sin(x), 0, 8*pi)
 
 where the first arguments is the function to plot and the following
@@ -96,7 +96,7 @@ We give in this section the description of all the higher level plotting functio
    The function returns the plot itself.
 
    *Example*::
-   
+
       -- plot the 'choose' function for some integer values
       graph.fiplot(|i| sf.choose(12, i), 12)
 
@@ -203,14 +203,14 @@ We give in this section the description of all the higher level plotting functio
 	 p:add(line, graph.rgba(1,1,0,0.6))
 	 p:addline(line)
 	 p:show()
- 
+
       The example above show how to create the more generic iterator just using basic Lua constructs.
       A generic iterator is very flexible because it can generate any sequence of values without restrictions of any kind.
       You will probably find that in many cases you want to build iterators that generate values over a range on integer numbers like we was doing for the circle in the example.
       In such cases it can be simpler to use the function :func:`iter.sequence` that creates an iterators over a range of integer.
       Here the same example of above but using the function :func:`iter.sequence`::
 
-         use 'math'      
+         use 'math'
 	 -- create a simple iterator that return n points uniformly spaced
          -- in a circle centerd in (x0, y0) with radius R
 	 circle = function(x0, y0, R, n)
@@ -249,7 +249,7 @@ We give in this section the description of all the higher level plotting functio
       p:show()
 
    We obtain the following plot:
- 
+
    .. figure:: graphics-example-ibars.png
 
 Multiple plot window
@@ -284,7 +284,7 @@ Let as see this at work with a second example::
    -- create a second plot
    p2 = graph.plot('f(x) = sin(x)/x')
    p2:addline(graph.fxline(|x| sin(x)/x, 0.0001, 10*pi), 'blue')
-   
+
    w:attach(p1, '1') -- attach plot "p1" to the first available slot
    w:attach(p2, '2') -- attach plot "p2" to the second slot
 
@@ -296,16 +296,16 @@ Window class
 ------------
 
 .. class:: Window
-   
+
    .. function:: window([layout])
-      
+
       Create a new empty window with the layout given by the optional
       :ref:`layout string <layout-string>`. If the argument is omitted
       the window will have a single drawing area that will cover the whole
       window.
 
    .. method:: layout(spec)
-      
+
       Remove all the plots that may be attached to the existing window
       and subdivide the window according to the given
       :ref:`layout string <layout-string>`.
@@ -315,7 +315,7 @@ Window class
       Attach the given ``plot`` to the window's slot speficied by the string ``slot``. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. For each of the mentioned integer the corresponding window partition will be choosen recursively.
 
       Example::
- 
+
         w = graph.window()
 
         -- create two vertical subdivision and divide the first area
@@ -344,7 +344,7 @@ With the serquence 'h' and 'v' you designate a subdivision along the horizontal 
 The pattern described above is recursive and you can use brackets to group items where needed to avoid ambiguity.
 
 Example::
- 
+
   w = window() -- create a window
   w:layout('v(h..).') -- split the windows in three drawing regions
 
@@ -424,7 +424,7 @@ We have seen in the previous paragraph that you can add more graphical elements 
 You can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
 
 .. function:: plot([title])
-   
+
    Create a new empty plot with an optional title. The plot is not
    attached to any window and is therefore not visible. To show the
    plot on the screen use either the :func:`show` plot's method or
@@ -440,7 +440,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
    when all the drawing operations have been done.
 
 .. function:: canvas([title])
-   
+
    Like the function above it does create a new empty plot with
    fixed logical limits. This latter kind of plot differs in that
    it will not update automatically its limits to fit the graphical
@@ -453,14 +453,14 @@ You can add elements to a plot in any moments even when it is already shown. GSL
 .. class:: Plot
 
    .. method:: add(obj, color[, post_trans, pre_trans])
-      
+
       Add the :ref:`graphical object <graphics-objects>` ``obj`` to
       the plot with the given ``color``.  The optional arguments
       ``post_trans`` and ``pre_trans`` should be a table of
       :ref:`graphical transformations <graphics-transforms>`.
 
    .. method:: addline(obj, color[, post_trans, pre_trans])
-      
+
       Add the :ref:`graphical object <graphics-objects>` ``obj`` to
       the plot by performing automatically a stroke of it. It is
       useful because you often need to draw lines and not filled
@@ -468,7 +468,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       unitary size in the viewport coordinates system.
 
    .. method:: limits(x1, y1, x2, y2)
-      
+
       Set the logical limits of the area displayed by the plot to the
       rectangle with lower-left corner (x1, y1) and upper-right corner
       (x2, y2). This method is used for plots with fixed limits
@@ -570,7 +570,7 @@ Here an simple example::
 
   x, y = 0, 0
   vx, vy = 2, 5
-  R = 20 
+  R = 20
 
   p:pushlayer()
   for k=1, 100 do
@@ -590,7 +590,7 @@ Graphical Objects
 -----------------
 
 .. function:: path([x, y])
- 
+
    Creates an empty path. If the two coordinates (x, y) are provided set the initial point of the path to (x, y).
 
 .. class:: Path
@@ -631,7 +631,7 @@ Graphical Objects
    Becasue of this difference a text object should be subject only to post-transforms.
 
    .. attribute:: angle
- 
+
       Rotate the text of the given angle (in radians).
 
    .. method:: justif(hv)
@@ -640,7 +640,7 @@ Graphical Objects
       The argument ``hv`` should be a string of the form 'xy' where x is a letter among 'l', 'c' or 'r' that determine the horizontal justification and y is a letter among 't', 'c' or 'b' for the vertical justification.
 
    .. method:: set(x, y)
- 
+
       Set the position where the test is diplayed. It corresponds to
       the bottom left corner of the text.
 
@@ -682,7 +682,7 @@ Here a complete list of all the available transforms:
 
   **marker**
     Replace each vertex of the path with a circular mark
-   
+
     * **size**, the size of the marker
     * **mark**, a string, an integer number or a graphical object indicating the symbol to be used for the markers.
       Available simbols are 'circle', 'triangle', 'square', 'diamong', 'plus', 'cross'.

@@ -16,7 +16,7 @@ The 3D plotting functions works by creating a :class:`Plot` object and is theref
 
 The functions for 3D plotting are defined in the module ``plot3d``.
 
-.. warning:: 
+.. warning::
 
   While this module is fully functional it does have some major
   limitations you should be aware of:
@@ -35,10 +35,10 @@ The 3D Function Plot give you the possibility of making a 3D plot of a function 
 
 .. function:: plot3d(f, xmin, ymin, xmax, ymax[, options])
 
-   Make a 3D plot of the function ``f(x, y)`` over the rectangular domain defined by ``xmin``, ``ymin``, ``xmax`` and ``ymax``. 
+   Make a 3D plot of the function ``f(x, y)`` over the rectangular domain defined by ``xmin``, ``ymin``, ``xmax`` and ``ymax``.
 
    The ``options`` argument is an optional table that can contain the following field:
- 
+
    * ``gridx``, number of subdivision along x
    * ``gridy``, number of subdivision along y
    * ``title``, the title of the plot
@@ -72,10 +72,10 @@ where u and v are two parameters that span a rectangular domain.
 
 .. function:: surfplot({x, y, z}, umin, vmin, umax, vmax[, options])
 
-   Make a 3D plot of the parameteric surface defined by the functions ``x(u, v)``, ``y(u, v)`` and ``z(u, v)`` when the parameters ``(u, v)`` span a rectangular domain defined by ``umin``, ``vmin``, ``umax`` and ``vmax``. 
+   Make a 3D plot of the parameteric surface defined by the functions ``x(u, v)``, ``y(u, v)`` and ``z(u, v)`` when the parameters ``(u, v)`` span a rectangular domain defined by ``umin``, ``vmin``, ``umax`` and ``vmax``.
 
    The ``options`` argument is an optional table that can contain the following field:
- 
+
    * ``gridu``, number of subdivision along x
    * ``gridv``, number of subdivision along y
    * ``title``, the title of the plot
@@ -99,7 +99,7 @@ here the code to produce the plot::
    x = |u,v| (1 + 1/2 * v *cos(u/2))*cos(u)
    y = |u,v| (1 + 1/2 * v *cos(u/2))*sin(u)
    z = |u,v| 1/2 * v * sin(u/2)
-   
+
    graph.surfplot({x, y, z}, 0, -1, 2*pi, 1, {gridu= 60, gridv= 4, stroke= true})
 
 and here an image of the resulting plot:

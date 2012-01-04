@@ -19,7 +19,7 @@ t\ :sub:`n+k-1`}, the n basis splines of order k are defined by
 .. math::
 
      \begin{array}{ll}
-       B_{i,1}(x) = &  \left\{ \begin{array}{rl} 
+       B_{i,1}(x) = &  \left\{ \begin{array}{rl}
                                 1 & \qquad t_i \le x < t_{i+1} \\
                                 0 & \qquad \textrm{else}
                               \end{array} \right. \\
@@ -69,29 +69,29 @@ The following example computes a linear least squares fit to data using cubic B-
 
      -- number of points and breakpoints
      n, br = 200, 10
-   
+
      f = |x| cos(x) * exp(-0.1 * x)
      xsmp = |i| 15 * (i-1) / (n-1)
-   
-     -- we calculate the simulated data     
+
+     -- we calculate the simulated data
      x, y = matrix.new(n, 1, xsmp), matrix.new(n, 1, |i| f(xsmp(i)))
-    
+
      -- we add a gaussian noise and calculate weights
      r = rng.new()
      w = matrix.new(n, 1)
-     for i=1,n do 
+     for i=1,n do
          local sigma = 0.1 * y[i]
         y:set(i,1, y[i] + rnd.gaussian(r, sigma))
         w:set(i,1, 1/sigma^2)
      end
-     
+
      -- we create a bspline object and we calculate the model matrix X
      b = num.bspline(0, 15, br)
      X = b:model(x)
-     
+
      -- linear least-squares fit
      c, cov = num.linfit(X, y, w)
-     
+
      -- plot
      p = plot('B-splines curve approximation')
      p:addline(xyline(x, X * c))

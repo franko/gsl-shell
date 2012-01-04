@@ -3,7 +3,7 @@
 #
 # Suitable for POSIX platforms (Linux, *BSD, OSX etc.).
 # Note: the configurable options are in makeconfig.
-# 
+#
 # Copyright (C) 2009-2010 Francesco Abbate. See Copyright Notice in gsl-shell.c
 ##############################################################################
 
@@ -13,7 +13,7 @@ ifeq ($(HOST_SYS),Windows)
   AGG_INCLUDES = -I$(AGG_HOME)/include
   AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32
 
-  GSL_INCLUDES = 
+  GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
   PTHREADS_LIBS = -lpthreadGCE2

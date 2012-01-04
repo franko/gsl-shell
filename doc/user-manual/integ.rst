@@ -94,7 +94,7 @@ The function returned is then called many times to obtain :math:`J_n(x)`::
       local fint = function(t) return cos(n*t - xs*sin(t)) end
       return function(x)
                 xs = x
-                return q(fint, 0, pi, epsabs, epsrel) / pi 
+                return q(fint, 0, pi, epsabs, epsrel) / pi
              end
    end
 

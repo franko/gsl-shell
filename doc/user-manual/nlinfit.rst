@@ -26,7 +26,7 @@ All algorithms proceed from an initial guess using the linearization,
      \psi(p) = || F(x+p) || \simeq || F(x) + J p ||
 
 where x is the initial point, p is the proposed step and J is the
-Jacobian matrix J\ :sub:`ij` = df\ :sub:`i` / dx\ :sub:`j`. 
+Jacobian matrix J\ :sub:`ij` = df\ :sub:`i` / dx\ :sub:`j`.
 Additional strategies are used
 to enlarge the region of convergence.  These include requiring a
 decrease in the norm ||F|| on each step or using a trust region to
@@ -108,7 +108,7 @@ Here a complete example::
    n = 40
 
    sigrf = 0.1
- 
+
    function fdf(x, f, J)
       for i=1, n do
          A, lambda, b = x[1], x[2], x[3]
@@ -122,7 +122,7 @@ Here a complete example::
          end
       end
    end
-   
+
    function model(x, t)
       A, lambda, b = x[1], x[2], x[3]
       return A * exp(- lambda * t) + b
@@ -159,7 +159,7 @@ and here the resulting plot where we have superposed the simulated points with t
 .. figure:: nlinfit-example-plot.png
 
    Non-linear fit of function A exp(a t) + b with gaussian noise
-   
+
 
 Solver class definition
 -----------------------
@@ -170,7 +170,7 @@ Solver class definition
    The argument ``spec`` should be a table in the form ``{n = ..., p = ...}`` where the fields n and p indicate, respectively the number of observations and the number of fit parameters.
 
 .. class:: NLinFit
-   
+
    Non-linear fit solver class.
 
    .. method:: set(fdf, x0)
@@ -179,12 +179,12 @@ Solver class definition
       The definition of the function ``fdf`` is given in the section :ref:`above <fdf-non-linear-descr>`.
 
    .. method:: iterate()
-      
+
       Advance the solver of a single step. It does return ``continue`` if it
       did not reach the optimal point and ``success`` otherwise.
 
    .. method:: test(eps_abs, eps_err)
-      
+
       Check if the the search converged for the given absolute error ``eps_abs`` and relative error ``eps_rel``.
 
    .. attribute:: x

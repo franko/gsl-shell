@@ -45,7 +45,7 @@ In the GSL Shell's indexing convention the first row or column of a matrix in id
 This is the same indexing convention used in fortran and also in standard mathematical notation and is also coherent with the Lua indexing of a table.
 
 In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in ``v[i]``.
-You can therefore read or set a specific element of a vector using 
+You can therefore read or set a specific element of a vector using
 simple indexing like we illustrate in the following example::
 
   >>> -- we define a vector, it is just a matrix with one column
@@ -124,40 +124,40 @@ Matrix methods
      Return a copy of the matrix.
 
   .. method:: get(i, j)
-     
+
      This function returns the (i,j)-th element of a matrix. As a
      general convention in GSL Shell the index of the first element is 1.
-  
+
   .. method:: set(i, j, v)
-  
-     This function sets the value of the (i,j)-th element of the matrix to v.   
-  
+
+     This function sets the value of the (i,j)-th element of the matrix to v.
+
   .. method:: slice(k0, k1, n0, n1)
-  
+
      Return a sub-matrix obtained from the original matrix by starting
      at the element (k0, k1) and taking n0 rows and n1 columns. The
      matrix that is returned is a "view" of the existing matrix in the
      sense that it make reference to the same underlying matrix. So if
      you modify the submatrix you will implicitely modify the original
      matrix and viceversa.
-  
+
   .. method:: norm()
-  
+
      Return the Frobenius norm of the matrix. It is defined as:
-  
+
      .. math::
         \|a\| = \sqrt{\sum_i \sum_j | a_{ij} |^2}
-  
+
      where a\ :sub:`ij` are the elements of the matrix.
-  
+
   .. method:: row(i)
-  
+
      Return the submatrix given by the i-th row of the matrix.
-  
+
   .. method:: col(j)
-  
+
      Return the submatrix given by the j-th column of the matrix.
-  
+
 
 
 Matrix Functions
@@ -195,7 +195,7 @@ All the functions described in this section have an equivalent function for comp
 
 
 .. function:: dim(m)
-   
+
    Returns two values, in the order, the number of rows and of columns of
    the matrix.
 

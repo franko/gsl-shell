@@ -18,7 +18,7 @@ You will be also able to create plot in real-time by using the powerful builtin 
 
   The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
   In addition the LuaJIT2 implementation provides excellent execution speed that can be very close to C compiled code.
-  
+
 
 First steps
 -----------
@@ -376,7 +376,7 @@ where ``expr`` is any expression is equivalent to::
    function(a, b, ...) return expr end
 
 So, for example, to write the function that return a square of a number plus one you could write::
- 
+
    f = |x| x^2+1
 
 this is exactly equivalent to the following syntax::

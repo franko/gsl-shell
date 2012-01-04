@@ -27,7 +27,7 @@ The functions describes below are available in the module :mod:`iter`.
    where ``f`` is the iterator.  If ``f`` returns multiple values they will be all returnd by the iterator.
 
 .. function:: sample(f, xi, xs, n)
-   
+
    Return an iterators that gives the couple ``x, f(x)`` for ``x`` going from ``xi`` to ``xs`` with ``n`` uniformly spaced intervals. If ``f`` returns multiple values only the first one is retained.
 
    Example::
@@ -39,7 +39,7 @@ The functions describes below are available in the module :mod:`iter`.
 
 .. function:: isample(f, a, b)
               isample(f, b)
-   
+
    Return an iterators that gives the couple ``i, f(i)`` where ``i`` is an iteger going from ``a`` to ``b``. In the second form the sequence will start from one. If ``f`` returns multiple values only the first one is retained.
 
 .. function:: ilist(f, a, b)

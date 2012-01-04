@@ -71,7 +71,7 @@ algorithm.
 So, if you want to generate random numbers the first step is to use the :func:`rng.new` function,
 
 .. function:: new([name])
-   
+
    This function returns a "random number generator" object of the
    specified type ``name``. If you do not specify a particular
    generator the default ``taus2`` generator will be used. See the
@@ -94,7 +94,7 @@ So, if you want to generate random numbers the first step is to use the :func:`r
      integers in the range [0,n-1] are produced with equal probability.
 
    .. method:: set(seed)
-   
+
      This method set the seed of the generator to the given integer value.
 
 .. function:: list()
@@ -108,7 +108,7 @@ So here a simple example that prints 20 integer numbers between 0 and 999::
 
    r = rng.new() -- we create a random number generator
    for k=1,20 do
-      local n = r:getint(1000) -- we obtain a random integer < 1000 
+      local n = r:getint(1000) -- we obtain a random integer < 1000
       print(n)
    end
 
@@ -191,7 +191,7 @@ randomness.
      generator use 24 words of state per generator.
 
      For more information see,
-     
+
      -  M. Lüscher, "A portable high-quality random number generator
         for lattice field theory calculations", 'Computer Physics
         Communications', 79 (1994) 100-110.
@@ -204,7 +204,7 @@ randomness.
      This is a combined multiple recursive generator by L'Ecuyer.  Its
      sequence is,
 
-     z\ :sub:`n`  = (x\ :sub:`n`  - y\ :sub:`n` ) mod m\ :sub:`1` 
+     z\ :sub:`n`  = (x\ :sub:`n`  - y\ :sub:`n` ) mod m\ :sub:`1`
 
      where the two underlying generators x\ :sub:`n`  and y\ :sub:`n`  are,
 
@@ -283,7 +283,7 @@ randomness.
      The 'gfsr4' generator is like a lagged-fibonacci generator, and
      produces each number as an 'xor''d sum of four previous values.
 
-     r\ :sub:`n`  = r\ :sub:`n-A`  ^^ r\ :sub:`n-B`  ^^ r\ :sub:`n-C`  ^^ r\ :sub:`n-D` 
+     r\ :sub:`n`  = r\ :sub:`n-A`  ^^ r\ :sub:`n-B`  ^^ r\ :sub:`n-C`  ^^ r\ :sub:`n-D`
 
      Ziff (ref below) notes that "it is now widely known" that two-tap
      registers (such as R250, which is described below) have serious

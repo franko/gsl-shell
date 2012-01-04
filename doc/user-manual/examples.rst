@@ -66,24 +66,24 @@ The Von-Koch curve
 The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the swedish mathematician Helge von Koch.
 
 Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
- 
+
    use 'math'
- 
+
    function vonkoch(n)
       local sx = {2, 1, -1, -2, -1,  1}
       local sy = {0, 1,  1,  0, -1, -1}
       local sh = {1, -2, 1}
       local a, x, y = 0, 0, 0
       local w = iter.ilist(|| 0, n+1)
-   
+
       local s = 1 / (3^n)
       for k=1, 6 do
          sx[k] = s * 0.5 * sx[k]
          sy[k] = s * sqrt(3)/2 * sy[k]
       end
-   
+
       local first = true
-   
+
       return function()
    	     if first then first = false; return x, y end
    	     if w[n+1] == 0 then
@@ -161,7 +161,7 @@ The last resort to obtain that would be to create a :class:`Path` object and to 
 
   -- we create a path and gives it the starting point
   ln = graph.path(t[1][1], t[1][2])
- 
+
   for i=2, #t do
     ln:line_to(t[i][1], t[i][2])
   end

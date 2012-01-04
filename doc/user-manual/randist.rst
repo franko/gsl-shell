@@ -95,7 +95,7 @@ distribution, allowing full accuracy to be retained for small results.
 .. _rnd_tdist:
 
 .. function:: tdist(r, nu)
-   
+
    The t-distribution arises in statistics.  If Y\ :sub:`1` has a
    normal distribution and Y\ :sub:`2` has a chi-squared distribution
    with \nu degrees of freedom then the ratio,
@@ -145,7 +145,7 @@ distribution, allowing full accuracy to be retained for small results.
 .. function:: fdist(r, nu1, nu2)
 
    The F-distribution arises in statistics.  If Y\ :sub:`1` and Y\
-   :sub:`2` are chi-squared deviates with |ngr| :sub:`1` and 
+   :sub:`2` are chi-squared deviates with |ngr| :sub:`1` and
    |ngr|\ :sub:`2` degrees of freedom then the ratio,
 
    .. math::
@@ -240,7 +240,7 @@ distribution, allowing full accuracy to be retained for small results.
    distribution. The distribution function is,
 
    .. math::
-          p(x) dx = {1 \over x \sqrt{2 \pi \sigma^2} } 
+          p(x) dx = {1 \over x \sqrt{2 \pi \sigma^2} }
           \exp(-(\ln(x) - \zeta)^2/2 \sigma^2) dx
 
    for x > 0.

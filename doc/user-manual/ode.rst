@@ -10,7 +10,7 @@ Ordinary Differential Equations
 Overview
 --------
 
-This chapter describes functions for solving ordinary differential equation (ODE) initial value problems. 
+This chapter describes functions for solving ordinary differential equation (ODE) initial value problems.
 
 .. note::
   The ODE integration routines in GSL Shell are based on GSL routines but they are completely rewritten in Lua.
@@ -101,14 +101,14 @@ ODE Solver Class Definition
 ---------------------------
 
 .. class:: ODE
-   
+
    Solver of ODE system.
 
    .. function:: ode(spec)
-      
+
       Create a new solver for an ODE system. The ``spec`` should be a table
       containing the following fields:
-      
+
       N
           The dimension of the ODE system.
       eps_abs
@@ -123,7 +123,7 @@ ODE Solver Class Definition
           - rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.
 
    .. method:: init(t0, h0, f, y0_1, y0_2, ..., y0_N)
-      
+
       Initialize the state of the solver to the time ``t0``.
       The second argument ``h0`` is the initial step size that the integrator will try.
       The function ``f`` is the function that defines the ODE system.

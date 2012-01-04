@@ -58,5 +58,5 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
 
    This function returns three values, in the order, U, |Sgr|, V. So you can
    write something like that::
-   
+
       u, s, v = svd(m)

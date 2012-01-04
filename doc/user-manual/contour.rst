@@ -25,7 +25,7 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
    Plot a contour plot of the function ``f`` in the rectangle delimited by (xmin, ymin), (xmax, ymax) and return the plot itself.
 
    The ``options`` argument is an optional table that can contain the following field:
- 
+
    * ``gridx``, number of subdivision along x
    * ``gridy``, number of subdivision along y
    * ``levels``, number of contour levels or a list of the level values in monotonic order.
@@ -42,5 +42,5 @@ Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^
 
      p = contour.polar_plot(|x,y| cos(x)+cos(y)+0.1*x+0.3*y, 8)
      p.title = 'cos(x) + cos(y) + 0.1*x + 0.3*y'
-   
+
    .. figure:: polar-contour-example-cos-cos.png
