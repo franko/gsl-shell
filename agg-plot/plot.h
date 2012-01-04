@@ -98,12 +98,17 @@ public:
   typedef pod_list<item> iterator;
   typedef virtual_canvas<VertexSource> canvas_type;
 
+  enum axis_e { x_axis, y_axis };
+
   plot(bool use_units = true) :
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title(),
-    m_xlabel(), m_ylabel(), m_sync_mode(true)
+    m_xlabel(), m_ylabel(), m_sync_mode(true),
+    m_xlabels_angle(0.0), m_ylabels_angle(0.0),
+    m_xlabels_hjustif(0.5), m_xlabels_vjustif(1.0),
+    m_ylabels_hjustif(1.0), m_ylabels_vjustif(0.5)
   {
     compute_user_trans();
   };
@@ -122,6 +127,13 @@ public:
   str& title() { return m_title; }
   str& x_axis_title() { return m_xlabel; }
   str& y_axis_title() { return m_ylabel; }
+
+  void set_axis_labels_angle(enum axis_e axis, double angle);
+
+  double get_axis_labels_angle(enum axis_e axis) const
+  {
+    return (axis == x_axis ? m_xlabels_angle : m_ylabels_angle);
+  }
 
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
@@ -209,6 +221,9 @@ private:
   double m_bottom_margin, m_top_margin;
 
   bool m_sync_mode;
+  double m_xlabels_angle, m_ylabels_angle;
+  double m_xlabels_hjustif, m_xlabels_vjustif;
+  double m_ylabels_hjustif, m_ylabels_vjustif;
 };
 
 static double compute_scale(agg::trans_affine& m)
@@ -442,7 +457,11 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	    char lab_text[32];
 	    m_uy.mark_label(lab_text, 32, j);
 
-	    draw::text* label = new draw::text(lab_text, 10.0 * scale, line_width, 1.0, 0.5);
+	    draw::text* label = new draw::text(lab_text, 10.0 * scale,
+					       line_width,
+					       m_ylabels_hjustif,
+					       m_ylabels_vjustif);
+	    label->angle(m_ylabels_angle);
 	    label->set_point(-ppad, y);
 
 	    mark.move_to(0.0, y);
@@ -480,7 +499,11 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	    char lab_text[32];
 	    m_ux.mark_label(lab_text, 32, j);
 
-	    draw::text* label = new draw::text(lab_text, 10.0 * scale, line_width, 0.5, 1.0);
+	    draw::text* label = new draw::text(lab_text, 10.0 * scale,
+					       line_width,
+					       m_xlabels_hjustif,
+					       m_xlabels_vjustif);
+	    label->angle(m_xlabels_angle);
 	    label->set_point(x, -ppad);
 
 	    mark.move_to(x, 0.0);
@@ -618,6 +641,28 @@ agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
   m.tx = m_left_margin + canvas_mtx.tx;
   m.ty = ysign * m_bottom_margin + canvas_mtx.ty;
   return m;
+}
+
+template<class VS, class RM>
+void plot<VS,RM>::set_axis_labels_angle(enum axis_e axis, double angle)
+{
+  if (axis == x_axis)
+    {
+      double c = sin(angle), s = cos(angle);
+      m_xlabels_hjustif = round(c + 1.0) / 2.0;
+      m_xlabels_vjustif = round(s + 1.0) / 2.0;
+      m_xlabels_angle = angle;
+    }
+  else
+    {
+      double c = cos(angle), s = -sin(angle);
+      m_ylabels_hjustif = round(c + 1.0) / 2.0;
+      m_ylabels_vjustif = round(s + 1.0) / 2.0;
+      m_ylabels_angle = angle;
+    }
+
+  m_need_redraw = true;
+  compute_user_trans();
 }
 
 template<class VS, class RM>

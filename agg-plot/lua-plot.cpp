@@ -62,6 +62,10 @@ static int plot_push_layer (lua_State *L);
 static int plot_pop_layer  (lua_State *L);
 static int plot_clear      (lua_State *L);
 static int plot_save_svg   (lua_State *L);
+static int plot_xlab_angle_set (lua_State *L);
+static int plot_xlab_angle_get (lua_State *L);
+static int plot_ylab_angle_set (lua_State *L);
+static int plot_ylab_angle_get (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -107,6 +111,8 @@ static const struct luaL_Reg plot_properties_get[] = {
   {"title",        plot_title_get  },
   {"xlab",         plot_xlab_get  },
   {"ylab",         plot_ylab_get  },
+  {"xlab_angle",   plot_xlab_angle_get  },
+  {"ylab_angle",   plot_ylab_angle_get  },
   {"units",        plot_units_get  },
   {"sync",         plot_sync_mode_get  },
   {"pad",          plot_pad_mode_get  },
@@ -118,6 +124,8 @@ static const struct luaL_Reg plot_properties_set[] = {
   {"title",        plot_title_set  },
   {"xlab",         plot_xlab_set  },
   {"ylab",         plot_ylab_set  },
+  {"xlab_angle",   plot_xlab_angle_set  },
+  {"ylab_angle",   plot_ylab_angle_set  },
   {"units",        plot_units_set  },
   {"sync",         plot_sync_mode_set  },
   {"pad",          plot_pad_mode_set  },
@@ -314,6 +322,57 @@ plot_xlab_set (lua_State *L)
 {
   plot_string_property_set(L, &sg_plot::x_axis_title, true);
   return 0;
+}
+
+static int
+plot_axis_label_angle_set (lua_State *L, sg_plot::axis_e axis)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  double angle = luaL_checknumber(L, 2);
+
+  AGG_LOCK();
+  p->set_axis_labels_angle(axis, angle);
+  AGG_UNLOCK();
+
+  plot_update_raw (L, p, 1);
+  return 0;
+}
+
+static int
+plot_axis_label_angle_get (lua_State *L, sg_plot::axis_e axis)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+
+  AGG_LOCK();
+  double angle = p->get_axis_labels_angle(axis);
+  AGG_UNLOCK();
+
+  lua_pushnumber(L, angle);
+  return 1;
+}
+
+int
+plot_xlab_angle_set(lua_State *L)
+{
+  return plot_axis_label_angle_set(L, sg_plot::x_axis);
+}
+
+int
+plot_xlab_angle_get(lua_State *L)
+{
+  return plot_axis_label_angle_get(L, sg_plot::x_axis);
+}
+
+int
+plot_ylab_angle_set(lua_State *L)
+{
+  return plot_axis_label_angle_set(L, sg_plot::y_axis);
+}
+
+int
+plot_ylab_angle_get(lua_State *L)
+{
+  return plot_axis_label_angle_get(L, sg_plot::y_axis);
 }
 
 int
