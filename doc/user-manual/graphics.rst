@@ -519,11 +519,17 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       The title of the plot. You can change or set the title using
       this attribute.
 
-   .. attribute:: xlab
-                  ylab
+   .. attribute:: xtitle
+                  ytitle
 
-      The string to be used to label and x and y axis of the plot.
+      The title to be used for the x and y axis of the plot.
       By default the labels are empty.
+
+   .. attribute:: xlab_angle
+                  ylab_angle
+
+      A rotation angle to be used for the text of the labels in the x or y axis.
+      The default angle is zero so that text is shown without rotations.
 
    .. attribute:: units
 
