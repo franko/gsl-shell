@@ -18,11 +18,10 @@ namespace draw {
     agg::trans_affine m_matrix;
     agg::trans_affine m_user_matrix;
 
+    str m_text_buf;
     vs_text m_text;
     vs_trans_text m_trans;
     vs_stroked_text m_stroke;
-
-    str m_text_buf;
 
     double m_x, m_y;
     double m_angle;
@@ -34,17 +33,21 @@ namespace draw {
     double m_vjustif;
 
   public:
-    text(double size = 10.0, double width = 1.0):
-      m_matrix(), m_user_matrix(),
+    text(const char* text, double size = 10.0, double width = 1.0,
+	 double hjustif = 0.0, double vjustif = 0.0):
+      m_matrix(), m_user_matrix(), m_text_buf(text),
       m_text(), m_trans(m_text, m_user_matrix), m_stroke(m_trans),
-      m_text_buf(), m_x(0.0), m_y(0.0), m_angle(0.0), 
+      m_x(0.0), m_y(0.0), m_angle(0.0),
       m_text_width(0.0), m_text_height(size),
-      m_hjustif(0.0), m_vjustif(0.0)
+      m_hjustif(hjustif), m_vjustif(vjustif)
     {
+      m_text.text(m_text_buf.cstr());
+      m_text.size(size);
+      m_text_width = m_text.text_width();
+
       m_stroke.width(width);
       m_stroke.line_cap(agg::round_cap);
       m_stroke.line_join(agg::round_join);
-      m_text.size(size);
     }
 
     void angle(double th) {
@@ -59,12 +62,6 @@ namespace draw {
     }
 
     double angle() const { return m_angle; };
-
-    void set_text(const char *txt) {
-      str_copy_c(&m_text_buf, txt);
-      m_text.text(txt);
-      m_text_width = m_text.text_width();
-    }
 
     const char * get_text() const { return m_text_buf.cstr(); }
 

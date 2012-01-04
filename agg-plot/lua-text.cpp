@@ -17,7 +17,6 @@ static int agg_text_set_point (lua_State *L);
 static int agg_text_index     (lua_State *L);
 static int agg_text_newindex  (lua_State *L);
 
-static int agg_text_text_set   (lua_State *L);
 static int agg_text_angle_set  (lua_State *L);
 static int agg_text_justif_set (lua_State *L);
 
@@ -51,7 +50,6 @@ static const struct luaL_Reg text_properties_get[] = {
 };
 
 static const struct luaL_Reg text_properties_set[] = {
-  {"text",        agg_text_text_set  },
   {"angle",       agg_text_angle_set  },
   {NULL, NULL}
 };
@@ -65,9 +63,10 @@ check_agg_text (lua_State *L, int index)
 int
 agg_text_new (lua_State *L)
 {
-  double size  = luaL_optnumber (L, 1, 10.0);
-  double width = luaL_optnumber (L, 2, 1.0) + 0.7;
-  new(L, GS_DRAW_TEXT) draw::text(size, width);
+  const char *text = luaL_checkstring (L, 1);
+  double size  = luaL_optnumber (L, 2, 10.0);
+  double width = luaL_optnumber (L, 3, 1.0) + 0.7;
+  new(L, GS_DRAW_TEXT) draw::text(text, size, width);
   return 1;
 }
 
@@ -77,15 +76,6 @@ agg_text_free (lua_State *L)
   typedef draw::text text_type;
   text_type *t = check_agg_text (L, 1);
   t->~text_type();
-  return 0;
-}
-
-int
-agg_text_text_set (lua_State *L)
-{
-  draw::text *t = check_agg_text (L, 1);
-  const char *str_text = luaL_checkstring (L, 2);
-  t->set_text(str_text);
   return 0;
 }
 

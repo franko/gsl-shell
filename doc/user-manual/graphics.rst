@@ -618,9 +618,10 @@ Graphical Objects
 
       Add a conic bezier curve up to (x, y) with two control points. The same remarks for the method :func:`curve3` applies to :func:`curve4`.
 
-.. function:: text([height, width])
+.. function:: text(text, [height, width])
 
-   Create a text of the given height.
+   Create a text object with the given text.
+   The first optional argument ``height`` indicate the text height.
    The second optional parameter ``width`` defines the width of the font.
 
 .. class:: Text
@@ -628,10 +629,6 @@ Graphical Objects
    A text object is used to display a text.
    This class of graphical object is special because it is not a shape that is resized rigidly with the window, the text is always displayed with the same size in pixel.
    Becasue of this difference a text object should be subject only to post-transforms.
-
-   .. attribute:: text
-
-      Set the text shown.
 
    .. attribute:: angle
  

@@ -450,15 +450,10 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	this->m_trans.transform(&x, &y);
 	if (y >= - yeps && y <= 1.0 + yeps)
 	  {
-	    draw::text* label = new draw::text(10.0 * scale, line_width);
-
 	    char lab_text[32];
-
 	    m_uy.mark_label(lab_text, 32, j);
-	    label->set_text(lab_text);
 
-	    label->hjustif(1.0);
-	    label->vjustif(0.5);
+	    draw::text* label = new draw::text(lab_text, 10.0 * scale, line_width, 1.0, 0.5);
 	    label->set_point(-ppad, y);
 
 	    mark.move_to(0.0, y);
@@ -493,14 +488,10 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	this->m_trans.transform(&x, &y);
 	if (x >= - xeps && x <= 1.0 + xeps)
 	  {
-	    draw::text* label = new draw::text(10.0 * scale, line_width);
 	    char lab_text[32];
-
 	    m_ux.mark_label(lab_text, 32, j);
-	    label->set_text(lab_text);
 
-	    label->hjustif(0.5);
-	    label->vjustif(1.0);
+	    draw::text* label = new draw::text(lab_text, 10.0 * scale, line_width, 0.5, 1.0);
 	    label->set_point(x, -ppad);
 
 	    mark.move_to(x, 0.0);
@@ -591,9 +582,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       double _labx = 0.5, laby = 0.0;
       canvas_mtx.transform(&_labx, &laby);
 
-      draw::text xlabel(label_text_size, std_line_width(scale));
-      xlabel.set_text(m_xlabel.cstr());
-      xlabel.hjustif(0.5);
+      draw::text xlabel(m_xlabel.cstr(), label_text_size, line_width, 0.5, 0.0);
       xlabel.set_point(labx, laby + ysign * (syr*ppad + fpad));
       xlabel.apply_transform(identity_matrix, 1.0);
 
@@ -605,10 +594,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       double labx = 0.0, laby = 0.5;
       m.transform(&labx, &laby);
 
-      draw::text ylabel(label_text_size, std_line_width(scale));
-      ylabel.set_text(m_ylabel.cstr());
-      ylabel.hjustif(0.5);
-      ylabel.vjustif(1.0);
+      draw::text ylabel(m_ylabel.cstr(), label_text_size, line_width, 0.5, 1.0);
       ylabel.set_point(sxr*ppad + fpad, laby);
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);
@@ -621,10 +607,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       double labx = 0.5, laby = 1.0;
       m.transform(&labx, &laby);
 
-      draw::text title(title_text_size, std_line_width(scale));
-      title.set_text(m_title.cstr());
-      title.hjustif(0.5);
-      title.vjustif(0.0);
+      draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
       title.set_point(labx, laby + ysign * (2*syr*ppad));
       title.apply_transform(identity_matrix, 1.0);
 
