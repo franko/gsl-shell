@@ -51,10 +51,10 @@ static int plot_free       (lua_State *L);
 static int plot_show       (lua_State *L);
 static int plot_title_set  (lua_State *L);
 static int plot_title_get  (lua_State *L);
-static int plot_xlab_set   (lua_State *L);
-static int plot_xlab_get   (lua_State *L);
-static int plot_ylab_set   (lua_State *L);
-static int plot_ylab_get   (lua_State *L);
+static int plot_xtitle_set   (lua_State *L);
+static int plot_xtitle_get   (lua_State *L);
+static int plot_ytitle_set   (lua_State *L);
+static int plot_ytitle_get   (lua_State *L);
 static int plot_units_set  (lua_State *L);
 static int plot_units_get  (lua_State *L);
 static int plot_set_limits (lua_State *L);
@@ -109,8 +109,8 @@ static const struct luaL_Reg plot_methods[] = {
 
 static const struct luaL_Reg plot_properties_get[] = {
   {"title",        plot_title_get  },
-  {"xlab",         plot_xlab_get  },
-  {"ylab",         plot_ylab_get  },
+  {"xtitle",       plot_xtitle_get  },
+  {"ytitle",       plot_ytitle_get  },
   {"xlab_angle",   plot_xlab_angle_get  },
   {"ylab_angle",   plot_ylab_angle_get  },
   {"units",        plot_units_get  },
@@ -122,8 +122,8 @@ static const struct luaL_Reg plot_properties_get[] = {
 
 static const struct luaL_Reg plot_properties_set[] = {
   {"title",        plot_title_set  },
-  {"xlab",         plot_xlab_set  },
-  {"ylab",         plot_ylab_set  },
+  {"xtitle",       plot_xtitle_set  },
+  {"ytitle",       plot_ytitle_set  },
   {"xlab_angle",   plot_xlab_angle_set  },
   {"ylab_angle",   plot_ylab_angle_set  },
   {"units",        plot_units_set  },
@@ -317,13 +317,6 @@ plot_title_get (lua_State *L)
   return plot_string_property_get(L, &sg_plot::title);
 }
 
-int
-plot_xlab_set (lua_State *L)
-{
-  plot_string_property_set(L, &sg_plot::x_axis_title, true);
-  return 0;
-}
-
 static int
 plot_axis_label_angle_set (lua_State *L, sg_plot::axis_e axis)
 {
@@ -376,20 +369,27 @@ plot_ylab_angle_get(lua_State *L)
 }
 
 int
-plot_xlab_get (lua_State *L)
+plot_xtitle_set (lua_State *L)
+{
+  plot_string_property_set(L, &sg_plot::x_axis_title, true);
+  return 0;
+}
+
+int
+plot_xtitle_get (lua_State *L)
 {
   return plot_string_property_get(L, &sg_plot::x_axis_title);
 }
 
 int
-plot_ylab_set (lua_State *L)
+plot_ytitle_set (lua_State *L)
 {
   plot_string_property_set(L, &sg_plot::y_axis_title, true);
   return 0;
 }
 
 int
-plot_ylab_get (lua_State *L)
+plot_ytitle_get (lua_State *L)
 {
   return plot_string_property_get(L, &sg_plot::y_axis_title);
 }

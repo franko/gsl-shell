@@ -15,7 +15,7 @@ local function demo2()
    p:add(b, 'darkgreen')
    p:addline(b, rgba(0, 0, 0, 0.6))
    p:addline(fxline(f, -4, 4), 'red')
-   p.xlab, p.ylab = 'x', 'Frequency'
+   p.xtitle, p.ytitle = 'x', 'Frequency'
    p:show()
    return p
 end
@@ -64,7 +64,7 @@ local function demo3()
    local c = rgba(0,0,0.7,0.2)
    pl:add(v, c)
    pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
+   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2},
 		     {'rotate', angle=-2*2*pi/3}})
    pl:add(t, c)
 
@@ -72,7 +72,7 @@ local function demo3()
 
    pl:addline(v, c)
    pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:addline(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
+   pl:addline(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2},
 			 {'rotate', angle=-2*2*pi/3}})
 
    pl:show()
