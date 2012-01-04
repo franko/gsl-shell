@@ -175,7 +175,6 @@ public:
 protected:
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
-  void draw_title(canvas_type& canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
@@ -184,7 +183,7 @@ protected:
 
   void compute_user_trans();
 
-  static void viewport_scale(agg::trans_affine& trans);
+  agg::trans_affine viewport_scale(agg::trans_affine& m);
 
   bool fit_inside(VertexSource *obj) const;
 
@@ -211,6 +210,8 @@ private:
   bool m_pad_units;
 
   str m_title, m_xlabel, m_ylabel;
+  double m_left_margin, m_right_margin;
+  double m_bottom_margin, m_top_margin;
 
   bool m_sync_mode;
 };
@@ -267,7 +268,7 @@ void plot<VS,RM>::push_drawing_queue()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::clear_drawing_queue() 
+void plot<VS,RM>::clear_drawing_queue()
 {
   while (m_drawing_queue)
     {
@@ -282,44 +283,9 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affin
 {
   canvas_adapter<Canvas, VS>  canvas(&_canvas);
   before_draw();
-  draw_title(canvas, canvas_mtx);
-  if (m_use_units)
-    draw_axis(canvas, canvas_mtx);
+  draw_axis(canvas, canvas_mtx);
   draw_elements(canvas, canvas_mtx);
 };
-
-template <class VS, class RM>
-void plot<VS,RM>::draw_title(canvas_type& canvas, agg::trans_affine& canvas_mtx)
-{
-  agg::trans_affine m;
-  this->viewport_scale(m);
-  trans_affine_compose (m, canvas_mtx);
-
-  double scale = compute_scale(canvas_mtx);
-
-  draw::text title(12.0 * scale, std_line_width(scale));
-  title.set_text(m_title.cstr());
-  title.hjustif(0.5);
-  title.set_point(0.5, 1.05);
-  title.apply_transform(m, 1.0);
-
-  draw::text xlabel(11.0 * scale, std_line_width(scale));
-  xlabel.set_text(m_xlabel.cstr());
-  xlabel.hjustif(0.5);
-  xlabel.set_point(0.5, -0.1);
-  xlabel.apply_transform(m, 1.0);
-
-  draw::text ylabel(11.0 * scale, std_line_width(scale));
-  ylabel.set_text(m_ylabel.cstr());
-  ylabel.hjustif(0.5);
-  ylabel.set_point(-0.1, 0.5);
-  ylabel.angle(M_PI/2.0);
-  ylabel.apply_transform(m, 1.0);
-
-  canvas.draw(title, agg::rgba(0, 0, 0));
-  canvas.draw(xlabel, agg::rgba(0, 0, 0));
-  canvas.draw(ylabel, agg::rgba(0, 0, 0));
-}
 
 template <class VS, class RM>
 void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
@@ -336,9 +302,9 @@ void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& 
 template <class VS, class RM>
 agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
+  agg::trans_affine mvp = viewport_scale(canvas_mtx);
   agg::trans_affine m = m_trans;
-  viewport_scale(m);
-  trans_affine_compose (m, canvas_mtx);
+  trans_affine_compose (m, mvp);
   return m;
 }
 
@@ -347,9 +313,7 @@ void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_
 {
   if (this->clip_is_active())
     {
-      agg::trans_affine mvp;
-      viewport_scale(mvp);
-      trans_affine_compose (mvp, canvas_mtx);
+      agg::trans_affine mvp = viewport_scale(canvas_mtx);
       agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
       canvas.clip_box(clip);
     }
@@ -437,9 +401,17 @@ void plot<VS,RM>::compute_user_trans()
 template <class VS, class RM>
 void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
+  if (!m_use_units)
+    {
+      const double pad = 10.0;
+      m_left_margin   = pad;
+      m_right_margin  = pad;
+      m_bottom_margin = pad;
+      m_top_margin    = pad;
+      return;
+    }
+
   agg::trans_affine m;
-  this->viewport_scale(m);
-  trans_affine_compose (m, canvas_mtx);
 
   double scale = compute_scale(canvas_mtx);
 
@@ -458,28 +430,36 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   const double yeps = 1.0e-3;
   const double xeps = 1.0e-3;
 
-  double line_width = std_line_width(scale);
+  const double line_width = std_line_width(scale);
+  const double label_text_size = 11.0 * scale;
+  const double title_text_size = 12.0 * scale;
+  const double ppad = 0.02, fpad = 4;
+
+  agg::pod_bvector<draw::text*> y_labels, x_labels;
+  double dx_label, dy_label;
 
   {
     int jinf = m_uy.begin(), jsup = m_uy.end();
+
+    opt_rect<double> ybox;
+    agg::rect_base<double> r;
+
     for (int j = jinf; j <= jsup; j++)
       {
 	double x = 0.0, y = m_uy.mark_value(j);
 	this->m_trans.transform(&x, &y);
 	if (y >= - yeps && y <= 1.0 + yeps)
 	  {
-	    draw::text label(10.0 * scale, line_width);
+	    draw::text* label = new draw::text(10.0 * scale, line_width);
+
 	    char lab_text[32];
 
 	    m_uy.mark_label(lab_text, 32, j);
-	    label.set_text(lab_text);
+	    label->set_text(lab_text);
 
-	    label.hjustif(1.0);
-	    label.vjustif(0.5);
-	    label.set_point(-0.02, y);
-	    label.apply_transform(m, 1.0);
-
-	    canvas.draw(label, agg::rgba(0, 0, 0));
+	    label->hjustif(1.0);
+	    label->vjustif(0.5);
+	    label->set_point(-ppad, y);
 
 	    mark.move_to(0.0, y);
 	    mark.line_to(-0.01, y);
@@ -488,30 +468,40 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	      ln.move_to(0.0, y);
 	      ln.line_to(1.0, y);
 	    }
+
+	    agg::bounding_rect_single(*label, 0, &r.x1, &r.y1, &r.x2, &r.y2);
+	    ybox.add<rect_union>(r);
+
+	    y_labels.add(label);
 	  }
       }
+
+    const agg::rect_base<double>& ybr = ybox.rect();
+    dx_label = ybr.x2 - ybr.x1;
   }
 
   {
     int jinf = m_ux.begin(), jsup = m_ux.end();
+
+    opt_rect<double> xbox;
+    agg::rect_base<double> r;
+    agg::pod_bvector<draw::text*> labels;
+
     for (int j = jinf; j <= jsup; j++)
       {
 	double x = m_ux.mark_value(j), y = 0.0;
 	this->m_trans.transform(&x, &y);
 	if (x >= - xeps && x <= 1.0 + xeps)
 	  {
-	    draw::text label(10.0 * scale, line_width);
+	    draw::text* label = new draw::text(10.0 * scale, line_width);
 	    char lab_text[32];
 
 	    m_ux.mark_label(lab_text, 32, j);
-	    label.set_text(lab_text);
+	    label->set_text(lab_text);
 
-	    label.hjustif(0.5);
-	    label.vjustif(1.6);
-	    label.set_point(x, 0);
-	    label.apply_transform(m, 1.0);
-
-	    canvas.draw(label, agg::rgba(0, 0, 0));
+	    label->hjustif(0.5);
+	    label->vjustif(1.0);
+	    label->set_point(x, -ppad);
 
 	    mark.move_to(x, 0.0);
 	    mark.line_to(x, -0.01);
@@ -520,9 +510,57 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 	      ln.move_to(x, 0.0);
 	      ln.line_to(x, 1.0);
 	    }
+
+	    agg::bounding_rect_single(*label, 0, &r.x1, &r.y1, &r.x2, &r.y2);
+	    xbox.add<rect_union>(r);
+
+	    x_labels.add(label);
 	  }
       }
+
+    const agg::rect_base<double>& xbr = xbox.rect();
+    dy_label = xbr.y2 - xbr.y1;
   }
+
+  const double sx = fabs(canvas_mtx.sx), sy = fabs(canvas_mtx.sy);
+  const int ysign = (canvas_mtx.sy < 0.0 ? -1 : 1);
+  const double lsx = (dx_label + 4 * ppad * sx + 2 * fpad) / (1 + 4 * ppad);
+  const double lsy = (dy_label + 4 * ppad * sy + 2 * fpad) / (1 + 4 * ppad);
+
+  m_left_margin   = (lsx + dx_label) / 2.0;
+  m_right_margin  = (lsx - dx_label) / 2.0;
+  m_bottom_margin = (lsy + dy_label) / 2.0;
+  m_top_margin    = (lsy - dy_label) / 2.0;
+
+  const double sxr = sx - lsx;
+  const double syr = sy - lsy;
+
+  if (!str_is_null(&m_ylabel))
+    m_left_margin += label_text_size + 2*sxr*ppad;
+
+  if (!str_is_null(&m_xlabel))
+    m_bottom_margin += label_text_size + 2*syr*ppad;
+
+  if (!str_is_null(&m_title))
+    m_top_margin += title_text_size + 2*syr*ppad;
+
+  m = this->viewport_scale(canvas_mtx);
+
+  for (unsigned j = 0; j < x_labels.size(); j++)
+    {
+      draw::text* label = x_labels[j];
+      label->apply_transform(m, 1.0);
+      canvas.draw(*label, agg::rgba(0, 0, 0));
+      delete label;
+    }
+
+  for (unsigned j = 0; j < y_labels.size(); j++)
+    {
+      draw::text* label = y_labels[j];
+      label->apply_transform(m, 1.0);
+      canvas.draw(*label, agg::rgba(0, 0, 0));
+      delete label;
+    }
 
   lndash.add_dash(7.0, 3.0);
 
@@ -545,16 +583,69 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   boxvs.width(std_line_width(scale));
   canvas.draw(boxvs, colors::black);
 
+  if (!str_is_null(&m_xlabel))
+    {
+      double labx = 0.5, _laby = 0.0;
+      m.transform(&labx, &_laby);
+
+      double _labx = 0.5, laby = 0.0;
+      canvas_mtx.transform(&_labx, &laby);
+
+      draw::text xlabel(label_text_size, std_line_width(scale));
+      xlabel.set_text(m_xlabel.cstr());
+      xlabel.hjustif(0.5);
+      xlabel.set_point(labx, laby + ysign * (syr*ppad + fpad));
+      xlabel.apply_transform(identity_matrix, 1.0);
+
+      canvas.draw(xlabel, colors::black);
+    }
+
+  if (!str_is_null(&m_ylabel))
+    {
+      double labx = 0.0, laby = 0.5;
+      m.transform(&labx, &laby);
+
+      draw::text ylabel(label_text_size, std_line_width(scale));
+      ylabel.set_text(m_ylabel.cstr());
+      ylabel.hjustif(0.5);
+      ylabel.vjustif(1.0);
+      ylabel.set_point(sxr*ppad + fpad, laby);
+      ylabel.angle(M_PI/2.0);
+      ylabel.apply_transform(identity_matrix, 1.0);
+
+      canvas.draw(ylabel, colors::black);
+    }
+
+  if (!str_is_null(&m_title))
+    {
+      double labx = 0.5, laby = 1.0;
+      m.transform(&labx, &laby);
+
+      draw::text title(title_text_size, std_line_width(scale));
+      title.set_text(m_title.cstr());
+      title.hjustif(0.5);
+      title.vjustif(0.0);
+      title.set_point(labx, laby + ysign * (2*syr*ppad));
+      title.apply_transform(identity_matrix, 1.0);
+
+      canvas.draw(title, colors::black);
+    }
+
   canvas.reset_clipping();
 };
 
 template<class VS, class RM>
-void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
+agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
 {
-  const double L = 0.12, R = 0.095;
-  const double B = 0.1, T = 0.095;
-  static agg::trans_affine rsz(1-L-R, 0.0, 0.0, 1-B-T, L, B);
-  trans_affine_compose (m, rsz);
+  agg::trans_affine m;
+  int ysign = (canvas_mtx.sy < 0.0 ? -1 : 1);
+  m.sx = canvas_mtx.sx - (m_left_margin + m_right_margin);
+  m.sy = canvas_mtx.sy - ysign * (m_top_margin + m_bottom_margin);
+  m.shx = 0.0;
+  m.shy = 0.0;
+  m.tx = m_left_margin + canvas_mtx.tx;
+  m.ty = ysign * m_bottom_margin + canvas_mtx.ty;
+  return m;
 }
 
 template<class VS, class RM>

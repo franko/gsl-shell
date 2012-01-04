@@ -33,6 +33,7 @@ namespace draw {
       m_matrix.sy  *= -1.0;
     }
 
+    m_trans.transformer(m_matrix);
     m_stroke.approximation_scale(as);
   }
 

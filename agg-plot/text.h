@@ -36,7 +36,7 @@ namespace draw {
   public:
     text(double size = 10.0, double width = 1.0):
       m_matrix(), m_user_matrix(),
-      m_text(), m_trans(m_text, m_matrix), m_stroke(m_trans),
+      m_text(), m_trans(m_text, m_user_matrix), m_stroke(m_trans),
       m_text_buf(), m_x(0.0), m_y(0.0), m_angle(0.0), 
       m_text_width(0.0), m_text_height(size),
       m_hjustif(0.0), m_vjustif(0.0)
@@ -71,6 +71,9 @@ namespace draw {
     void set_point(double x, double y) {
       m_x = x;
       m_y = y;
+
+      m_user_matrix.tx = m_x;
+      m_user_matrix.ty = m_y;
     }
 
     void hjustif(double hj) { m_hjustif = hj; }
