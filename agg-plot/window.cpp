@@ -94,7 +94,7 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 }
 
 void
-window::ref::save_image (agg::rendering_buffer& win_buf, 
+window::ref::save_image (agg::rendering_buffer& win_buf,
 			 agg::rect_base<int>& r,
 			 int img_bpp, bool flip_y)
 {
@@ -377,7 +377,7 @@ int window_generic_oper (lua_State *L, window_slot_method_type method)
 }
 
 template <class param_type>
-int window_generic_oper_ext (lua_State *L, 
+int window_generic_oper_ext (lua_State *L,
 			     void (window::*method)(int, param_type),
 			     param_type param)
 {
@@ -543,7 +543,7 @@ window_update (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
 
-  win->lock(); 
+  win->lock();
   if (win->status == canvas_window::running)
     {
       win->on_draw();

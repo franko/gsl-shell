@@ -11,11 +11,11 @@ push_gsl_result (lua_State *L, gsl_sf_result *r)
 static int
 gsh_sf_d_raw (lua_State *L, const char *fname, gsh_d_fun_t f_gsl)
 {
-  double x = luaL_checknumber (L, 1);		
-  gsl_sf_result res;				
+  double x = luaL_checknumber (L, 1);
+  gsl_sf_result res;
   int status = f_gsl(x, &res);
-  if (status != GSL_SUCCESS)				       
-    luaL_error (L, "%s: %s", fname, gsl_strerror (status));   
+  if (status != GSL_SUCCESS)
+    luaL_error (L, "%s: %s", fname, gsl_strerror (status));
 
   SF_RETURN(&res);
 }
@@ -23,11 +23,11 @@ gsh_sf_d_raw (lua_State *L, const char *fname, gsh_d_fun_t f_gsl)
 static int
 gsh_sf_u_raw (lua_State *L, const char *fname, gsh_u_fun_t f_gsl)
 {
-  unsigned int i = my_checkuint (L, 1);		
-  gsl_sf_result res;				
+  unsigned int i = my_checkuint (L, 1);
+  gsl_sf_result res;
   int status = f_gsl(i, &res);
-  if (status != GSL_SUCCESS)				       
-    luaL_error (L, "%s: %s", fname, gsl_strerror (status));   
+  if (status != GSL_SUCCESS)
+    luaL_error (L, "%s: %s", fname, gsl_strerror (status));
   SF_RETURN(&res);
 }
 

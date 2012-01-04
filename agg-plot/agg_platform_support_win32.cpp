@@ -5,20 +5,20 @@
 // Contact: mcseem@antigrain.com
 //          mcseemagg@yahoo.com
 //          http://antigrain.com
-// 
+//
 // AGG is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
 // as published by the Free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
-// 
+//
 // AGG is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with AGG; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ namespace agg
     int stride = pm.stride();
     rbuf->attach(pm.buf(), pm.width(), pm.height(), flip_y ? stride : -stride);
   }
-    
+
   //------------------------------------------------------------------------
   HINSTANCE g_windows_instance = 0;
   int       g_windows_cmd_show = 0;
@@ -56,13 +56,13 @@ namespace agg
     platform_specific(pix_format_e format, bool flip_y);
     ~platform_specific();
 
-    void create_pmap(unsigned width, unsigned height, 
+    void create_pmap(unsigned width, unsigned height,
                      rendering_buffer* wnd);
 
     void display_pmap(HDC dc, const rendering_buffer* src,
                       const agg::rect_base<int> *rect = 0);
 
-    bool save_pmap(const char* fn, unsigned idx, 
+    bool save_pmap(const char* fn, unsigned idx,
                    const rendering_buffer* src);
 
     void close();
@@ -132,7 +132,7 @@ namespace agg
 
 
   //------------------------------------------------------------------------
-  void platform_specific::create_pmap(unsigned width, 
+  void platform_specific::create_pmap(unsigned width,
                                       unsigned height,
                                       rendering_buffer* wnd)
   {
@@ -194,7 +194,7 @@ namespace agg
 
 
   //------------------------------------------------------------------------
-  bool platform_specific::save_pmap(const char* fn, unsigned idx, 
+  bool platform_specific::save_pmap(const char* fn, unsigned idx,
                                     const rendering_buffer* src)
   {
     pixel_map& img = m_pmap_img[idx];
@@ -259,8 +259,8 @@ namespace agg
   {
     LARGE_INTEGER stop;
     ::QueryPerformanceCounter(&stop);
-    return double(stop.QuadPart - 
-                  m_specific->m_sw_start.QuadPart) * 1000.0 / 
+    return double(stop.QuadPart -
+                  m_specific->m_sw_start.QuadPart) * 1000.0 /
       double(m_specific->m_sw_freq.QuadPart);
   }
 
@@ -298,12 +298,12 @@ namespace agg
     app->m_specific->m_current_dc = dc;
     LRESULT ret = 0;
 
-    switch(msg) 
+    switch(msg)
       {
         //--------------------------------------------------------------------
       case WM_CREATE:
         break;
-        
+
         //--------------------------------------------------------------------
       case WM_SIZE:
         app->m_specific->create_pmap(LOWORD(lParam), HIWORD(lParam),
@@ -315,11 +315,11 @@ namespace agg
         app->m_specific->m_is_ready = false;
 
         break;
-        
+
         //--------------------------------------------------------------------
       case WM_ERASEBKGND:
         break;
-       
+
         //--------------------------------------------------------------------
       case WM_PAINT:
         paintDC = ::BeginPaint(hWnd, &ps);
@@ -337,16 +337,16 @@ namespace agg
         app->m_specific->m_is_mapped = true;
         app->m_specific->m_is_ready = true;
         break;
-        
+
         //--------------------------------------------------------------------
       case WM_COMMAND:
         break;
-        
+
         //--------------------------------------------------------------------
       case WM_DESTROY:
         ::PostQuitMessage(0);
         break;
-        
+
         //--------------------------------------------------------------------
       default:
         ret = ::DefWindowProc(hWnd, msg, wParam, lParam);
@@ -424,7 +424,7 @@ namespace agg
                  width + (width - (rct.right - rct.left)),
                  height + (height - (rct.bottom - rct.top)),
                  FALSE);
-   
+
     ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
     m_specific->create_pmap(width, height, &m_rbuf_window);
     m_initial_width = width;
@@ -607,21 +607,21 @@ platform_support_ext::prepare()
     }
 }
 
-void 
+void
 platform_support_ext::lock()
-{ 
-  pthread_mutex_lock (m_specific->m_mutex); 
+{
+  pthread_mutex_lock (m_specific->m_mutex);
 }
 
 void
 platform_support_ext::unlock()
-{ 
-  pthread_mutex_unlock (m_specific->m_mutex); 
+{
+  pthread_mutex_unlock (m_specific->m_mutex);
 }
 
 bool
 platform_support_ext::is_mapped()
-{ 
+{
   return m_specific->m_is_mapped;
 }
 

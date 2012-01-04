@@ -1,18 +1,18 @@
 
 /* canvas-window.cpp
- * 
+ *
  * Copyright (C) 2009, 2010 Francesco Abbate
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -45,7 +45,7 @@ canvas_window::on_resize(int sx, int sy)
     delete m_canvas;
 
   m_canvas = new(std::nothrow) canvas(rbuf_window(), sx, sy, m_bgcolor);
-  
+
   m_matrix.sx = sx;
   m_matrix.sy = sy;
 }
@@ -69,7 +69,7 @@ bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>&
   void *user_data = (void *) inf.get();
   if (pthread_create(&m_thread, attr, canvas_thread_function, user_data))
     {
-      this->status = canvas_window::error; 
+      this->status = canvas_window::error;
       pthread_attr_destroy (attr);
       return false;
     }

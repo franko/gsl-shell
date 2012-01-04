@@ -19,10 +19,10 @@ namespace my {
 
   private:
     conv_simple_marker(const conv_simple_marker<MarkerLocator, MarkerShapes>&);
-    const conv_simple_marker<MarkerLocator, MarkerShapes>& 
+    const conv_simple_marker<MarkerLocator, MarkerShapes>&
     operator = (const conv_simple_marker<MarkerLocator, MarkerShapes>&);
 
-    enum status_e 
+    enum status_e
       {
 	initial,
 	markers,
@@ -38,7 +38,7 @@ namespace my {
 
 
   //------------------------------------------------------------------------
-  template<class MarkerLocator, class MarkerShapes> 
+  template<class MarkerLocator, class MarkerShapes>
   conv_simple_marker<MarkerLocator, MarkerShapes>::conv_simple_marker(MarkerLocator& ml, MarkerShapes& ms) :
     m_marker_locator(&ml),
     m_marker_shapes(&ms),
@@ -48,7 +48,7 @@ namespace my {
 
 
   //------------------------------------------------------------------------
-  template<class MarkerLocator, class MarkerShapes> 
+  template<class MarkerLocator, class MarkerShapes>
   void conv_simple_marker<MarkerLocator, MarkerShapes>::rewind(unsigned)
   {
     m_status = initial;
@@ -56,7 +56,7 @@ namespace my {
 
 
   //------------------------------------------------------------------------
-  template<class MarkerLocator, class MarkerShapes> 
+  template<class MarkerLocator, class MarkerShapes>
   unsigned conv_simple_marker<MarkerLocator, MarkerShapes>::vertex(double* x, double* y)
   {
     unsigned cmd = path_cmd_move_to;

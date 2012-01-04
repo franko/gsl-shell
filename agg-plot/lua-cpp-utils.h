@@ -12,7 +12,7 @@ __END_DECLS
 #include "gs-types.h"
 
 namespace gslshell {
-  
+
   class ret_status {
     bool m_success;
     const char *m_error_msg;
@@ -22,9 +22,9 @@ namespace gslshell {
     ret_status() : m_success(true) {};
 
     void success() { m_success = true; }
-    void error(const char *msg, const char *ctx) 
-    { 
-      m_success = false; 
+    void error(const char *msg, const char *ctx)
+    {
+      m_success = false;
       m_error_msg = msg;
       m_context = ctx;
     };

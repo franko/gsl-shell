@@ -67,7 +67,7 @@ extern void     str_dirname       (str_t to, const str_t from, int dirsep);
 extern int      str_getline       (str_t d, FILE *f);
 extern void     str_printf        (str_t d, const char *fmt, ...);
 extern void     str_printf_add    (str_t d, const char *fmt, ...);
-extern void     str_vprintf       (str_t d, const char *fmt, int append, 
+extern void     str_vprintf       (str_t d, const char *fmt, int append,
 				   va_list ap);
 extern void     str_pad           (str_t d, int len, char sep);
 

@@ -47,7 +47,7 @@ const struct gs_type gs_type_table[] = {
 const struct luaL_Reg gs_type_functions[] = {
   {"type",        gs_type_string},
   {NULL, NULL}
-};  
+};
 
 const char *
 type_qualified_name (int typeid)
@@ -77,7 +77,7 @@ userdata_full_name (lua_State *L, int index)
 	    continue;
 
 	  lua_getfield(L, LUA_REGISTRYINDEX, mt);
-	  if (lua_rawequal(L, -1, -2)) 
+	  if (lua_rawequal(L, -1, -2))
 	    {
 	      lua_pop (L, 2);
 	      return type_qualified_name (j);
@@ -120,7 +120,7 @@ gs_type_error (lua_State *L, int narg, const char *req_type)
   return luaL_argerror(L, narg, msg);
 }
 
-void * 
+void *
 gs_new_object (size_t nbytes, lua_State *L, enum gs_type_e tp)
 {
   void* p = lua_newuserdata(L, nbytes);
@@ -137,7 +137,7 @@ rec_check_type (lua_State *L, enum gs_type_e tp)
   if (mt)
     {
       lua_getfield(L, LUA_REGISTRYINDEX, mt);
-      if (lua_rawequal(L, -1, -2)) 
+      if (lua_rawequal(L, -1, -2))
 	{
 	  lua_pop (L, 1);
 	  return true;

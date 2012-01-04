@@ -37,14 +37,14 @@ namespace tree {
 
     node_list *m_head;
     tree_data_type m_data;
-  
+
   public:
     tree_node() : m_head(0), m_data() {};
 
     template <class init_type>
     tree_node(const init_type& init_val) : m_head(0), m_data(init_val) {};
-  
-    ~tree_node() 
+
+    ~tree_node()
     {
       node_list *n;
       for (node_list *p = m_head; p; p = n)
@@ -56,17 +56,17 @@ namespace tree {
     };
 
     virtual node_list* tree() { return m_head; };
-    virtual node_list* tree(tree_data_type& data) 
-    { 
+    virtual node_list* tree(tree_data_type& data)
+    {
       data = m_data;
-      return m_head; 
+      return m_head;
     };
 
     virtual base_type* content() { return 0; };
     virtual void content(const base_type& src) { };
 
-    void add(node_type* child) 
-    { 
+    void add(node_type* child)
+    {
       node_list *t = new node_list(child);
       m_head = node_list::push_back(m_head, t);
     }

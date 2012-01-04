@@ -1,18 +1,18 @@
 
 /* plot-auto.h
- * 
+ *
  * Copyright (C) 2009, 2010 Francesco Abbate
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -33,7 +33,7 @@ class plot_auto : public plot<VertexSource, resource_manager> {
   typedef agg::pod_bvector<item> item_list;
 
 public:
-  plot_auto() : 
+  plot_auto() :
     plot<VertexSource, resource_manager>(true),
     m_bbox_updated(true)
   { };
@@ -57,8 +57,8 @@ private:
 };
 
 template <class VS, class RM>
-void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline) 
-{ 
+void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
+{
   item d(vs, color, outline);
 
   if (!this->fit_inside(vs))
@@ -93,7 +93,7 @@ void plot_auto<VS,RM>::check_bounding_box()
   }
 
 template<class VS, class RM>
-void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, 
+void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer,
 					       opt_rect<double>& rect)
 {
   for (unsigned j = 0; j < layer.size(); j++)

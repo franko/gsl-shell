@@ -26,8 +26,8 @@ public:
 
   pixel_fmt pixfmt;
 
-  pixel_gamma_corr(agg::rendering_buffer& ren_buf): 
-    m_gamma(2.2), pixfmt(ren_buf, m_gamma) 
+  pixel_gamma_corr(agg::rendering_buffer& ren_buf):
+    m_gamma(2.2), pixfmt(ren_buf, m_gamma)
   { };
 
   enum { line_width = 150 };
@@ -60,8 +60,8 @@ class canvas_gen : private pixel {
   double m_height;
 
 public:
-  canvas_gen(agg::rendering_buffer& ren_buf, double width, double height, 
-	     agg::rgba bgcol): 
+  canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
+	     agg::rgba bgcol):
     pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)

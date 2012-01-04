@@ -41,11 +41,11 @@ public:
   enum win_status_e status;
 
   canvas_window(agg::rgba& bgcol) :
-    platform_support_ext(agg::pix_format_bgr24, true), 
+    platform_support_ext(agg::pix_format_bgr24, true),
     m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), status(not_ready)
   { };
 
-  virtual ~canvas_window() 
+  virtual ~canvas_window()
   {
     if (m_canvas)
       delete m_canvas;

@@ -70,7 +70,7 @@ window_index_apply_all (lua_State *L, lua_CFunction f)
   lua_getfield (L, LUA_REGISTRYINDEX, registry_tname);
 
   lua_pushnil (L);  /* first key */
-  while (lua_next(L, -2) != 0) 
+  while (lua_next(L, -2) != 0)
     {
       lua_pushcfunction (L, f);
       lua_insert (L, -2);
@@ -88,7 +88,7 @@ window_index_count (lua_State *L)
   lua_getfield (L, LUA_REGISTRYINDEX, registry_tname);
 
   lua_pushnil (L);  /* first key */
-  while (lua_next(L, -2) != 0) 
+  while (lua_next(L, -2) != 0)
     {
       lua_pop (L, 1);
       count ++;

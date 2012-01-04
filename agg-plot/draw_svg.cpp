@@ -44,7 +44,7 @@ str svg_stroke_path(str& path_coords, double width, int id, agg::rgba8 c,
 
   str s = str::print("fill:none;stroke:%s;"
 		     "stroke-width:%g;stroke-linecap:butt;"
-		     "stroke-linejoin:miter", 
+		     "stroke-linejoin:miter",
 		     rgbstr, width);
 
   property_append_alpha(s, "stroke-opacity", c);

@@ -45,7 +45,7 @@ namespace draw {
   }
 
   str
-  text::write_svg(int id, agg::rgba8 c) 
+  text::write_svg(int id, agg::rgba8 c)
   {
     const agg::trans_affine& m = m_user_matrix;
     const double eps = 1.0e-6;

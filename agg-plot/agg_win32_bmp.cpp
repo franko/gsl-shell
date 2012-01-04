@@ -45,8 +45,8 @@ namespace agg
 
 
     //------------------------------------------------------------------------
-    void pixel_map::create(unsigned width, 
-                           unsigned height, 
+    void pixel_map::create(unsigned width,
+                           unsigned height,
                            org_e    org,
                            unsigned clear_val)
     {
@@ -66,8 +66,8 @@ namespace agg
 
     //------------------------------------------------------------------------
     HBITMAP pixel_map::create_dib_section(HDC h_dc,
-                                          unsigned width, 
-                                          unsigned height, 
+                                          unsigned width,
+                                          unsigned height,
                                           org_e    org,
                                           unsigned clear_val)
     {
@@ -163,8 +163,8 @@ namespace agg
 
     //static
     //------------------------------------------------------------------------
-    BITMAPINFO* pixel_map::create_bitmap_info(unsigned width, 
-                                              unsigned height, 
+    BITMAPINFO* pixel_map::create_bitmap_info(unsigned width,
+                                              unsigned height,
                                               unsigned bits_per_pixel)
     {
         unsigned line_len = calc_row_len(width, bits_per_pixel);
@@ -205,8 +205,8 @@ namespace agg
         {
             brightness = (255 * i) / (rgb_size - 1);
             rgb->rgbBlue =
-            rgb->rgbGreen =  
-            rgb->rgbRed = (unsigned char)brightness; 
+            rgb->rgbGreen =
+            rgb->rgbRed = (unsigned char)brightness;
             rgb->rgbReserved = 0;
             rgb++;
         }
@@ -225,12 +225,12 @@ namespace agg
         {
             case  1: k = n;
                      n = n >> 3;
-                     if(k & 7) n++; 
+                     if(k & 7) n++;
                      break;
 
             case  4: k = n;
                      n = n >> 1;
-                     if(k & 3) n++; 
+                     if(k & 3) n++;
                      break;
 
             case  8:
@@ -239,16 +239,16 @@ namespace agg
             case 16: n *= 2;
                      break;
 
-            case 24: n *= 3; 
+            case 24: n *= 3;
                      break;
 
             case 32: n *= 4;
                      break;
 
-            case 48: n *= 6; 
+            case 48: n *= 6;
                      break;
 
-            case 64: n *= 8; 
+            case 64: n *= 8;
                      break;
 
             default: n = 0;
@@ -271,24 +271,24 @@ namespace agg
         unsigned bmp_width  = m_bmp->bmiHeader.biWidth;
         unsigned bmp_height = m_bmp->bmiHeader.biHeight;
         unsigned dvc_x = 0;
-        unsigned dvc_y = 0; 
+        unsigned dvc_y = 0;
         unsigned dvc_width  = m_bmp->bmiHeader.biWidth;
         unsigned dvc_height = m_bmp->bmiHeader.biHeight;
-        
-        if(bmp_rect) 
+
+        if(bmp_rect)
         {
             bmp_x      = bmp_rect->left;
             bmp_y      = bmp_rect->top;
             bmp_width  = bmp_rect->right  - bmp_rect->left;
             bmp_height = bmp_rect->bottom - bmp_rect->top;
-        } 
+        }
 
         dvc_x      = bmp_x;
         dvc_y      = bmp_y;
         dvc_width  = bmp_width;
         dvc_height = bmp_height;
 
-        if(device_rect) 
+        if(device_rect)
         {
             dvc_x      = device_rect->left;
             dvc_y      = device_rect->top;
@@ -300,31 +300,31 @@ namespace agg
         {
             ::SetStretchBltMode(h_dc, COLORONCOLOR);
             ::StretchDIBits(
-                h_dc,            // handle of device context 
-                dvc_x,           // x-coordinate of upper-left corner of source rect. 
-                dvc_y,           // y-coordinate of upper-left corner of source rect. 
-                dvc_width,       // width of source rectangle 
-                dvc_height,      // height of source rectangle 
+                h_dc,            // handle of device context
+                dvc_x,           // x-coordinate of upper-left corner of source rect.
+                dvc_y,           // y-coordinate of upper-left corner of source rect.
+                dvc_width,       // width of source rectangle
+                dvc_height,      // height of source rectangle
                 bmp_x,
-                bmp_y,           // x, y -coordinates of upper-left corner of dest. rect. 
-                bmp_width,       // width of destination rectangle 
-                bmp_height,      // height of destination rectangle 
-                m_buf,           // address of bitmap bits 
-                m_bmp,           // address of bitmap data 
-                DIB_RGB_COLORS,  // usage 
-                SRCCOPY          // raster operation code 
+                bmp_y,           // x, y -coordinates of upper-left corner of dest. rect.
+                bmp_width,       // width of destination rectangle
+                bmp_height,      // height of destination rectangle
+                m_buf,           // address of bitmap bits
+                m_bmp,           // address of bitmap data
+                DIB_RGB_COLORS,  // usage
+                SRCCOPY          // raster operation code
             );
         }
         else
         {
             ::SetDIBitsToDevice(
                 h_dc,            // handle to device context
-                dvc_x,           // x-coordinate of upper-left corner of 
-                dvc_y,           // y-coordinate of upper-left corner of 
+                dvc_x,           // x-coordinate of upper-left corner of
+                dvc_y,           // y-coordinate of upper-left corner of
                 dvc_width,       // source rectangle width
                 dvc_height,      // source rectangle height
-                bmp_x,           // x-coordinate of lower-left corner of 
-                bmp_y,           // y-coordinate of lower-left corner of 
+                bmp_x,           // x-coordinate of lower-left corner of
+                bmp_y,           // y-coordinate of lower-left corner of
                 0,               // first scan line in array
                 bmp_height,      // number of scan lines
                 m_buf,           // address of array with DIB bits
@@ -373,24 +373,24 @@ namespace agg
         unsigned bmp_width  = m_bmp->bmiHeader.biWidth;
         unsigned bmp_height = m_bmp->bmiHeader.biHeight;
         unsigned dvc_x = 0;
-        unsigned dvc_y = 0; 
+        unsigned dvc_y = 0;
         unsigned dvc_width  = m_bmp->bmiHeader.biWidth;
         unsigned dvc_height = m_bmp->bmiHeader.biHeight;
-        
-        if(bmp_rect) 
+
+        if(bmp_rect)
         {
             bmp_x      = bmp_rect->left;
             bmp_y      = bmp_rect->top;
             bmp_width  = bmp_rect->right  - bmp_rect->left;
             bmp_height = bmp_rect->bottom - bmp_rect->top;
-        } 
+        }
 
         dvc_x      = bmp_x;
         dvc_y      = bmp_y;
         dvc_width  = bmp_width;
         dvc_height = bmp_height;
 
-        if(device_rect) 
+        if(device_rect)
         {
             dvc_x      = device_rect->left;
             dvc_y      = device_rect->top;
@@ -401,8 +401,8 @@ namespace agg
         HDC mem_dc = ::CreateCompatibleDC(h_dc);
         void* buf = 0;
         HBITMAP bmp = ::CreateDIBSection(
-            mem_dc, 
-            m_bmp,  
+            mem_dc,
+            m_bmp,
             DIB_RGB_COLORS,
             &buf,
             0,
@@ -420,21 +420,21 @@ namespace agg
         blend.AlphaFormat = AC_SRC_ALPHA;
 //#elif defined(AC_SRC_NO_PREMULT_ALPHA)
 //        blend.AlphaFormat = AC_SRC_NO_PREMULT_ALPHA;
-#else 
+#else
 #error "No appropriate constant for alpha format. Check version of wingdi.h, There must be AC_SRC_ALPHA or AC_SRC_NO_PREMULT_ALPHA"
 #endif
 
         blend.SourceConstantAlpha = 255;
         ::AlphaBlend(
-          h_dc,      
-          dvc_x,      
-          dvc_y,      
-          dvc_width,  
-          dvc_height, 
+          h_dc,
+          dvc_x,
+          dvc_y,
+          dvc_width,
+          dvc_height,
           mem_dc,
           bmp_x,
-          bmp_y,     
-          bmp_width, 
+          bmp_y,
+          bmp_width,
           bmp_height,
           blend
         );
@@ -558,7 +558,7 @@ namespace agg
     //------------------------------------------------------------------------
     int pixel_map::stride() const
     {
-        return calc_row_len(m_bmp->bmiHeader.biWidth, 
+        return calc_row_len(m_bmp->bmiHeader.biWidth,
                             m_bmp->bmiHeader.biBitCount);
     }
 
@@ -569,8 +569,8 @@ namespace agg
     {
         if(bmp)
         {
-            m_img_size  = calc_row_len(bmp->bmiHeader.biWidth, 
-                                       bmp->bmiHeader.biBitCount) * 
+            m_img_size  = calc_row_len(bmp->bmiHeader.biWidth,
+                                       bmp->bmiHeader.biBitCount) *
                           bmp->bmiHeader.biHeight;
 
             m_full_size = calc_full_size(bmp);
@@ -583,17 +583,17 @@ namespace agg
     //private
     //------------------------------------------------------------------------
     HBITMAP pixel_map::create_dib_section_from_args(HDC h_dc,
-                                                    unsigned width, 
-                                                    unsigned height, 
+                                                    unsigned width,
+                                                    unsigned height,
                                                     unsigned bits_per_pixel)
     {
         unsigned line_len  = calc_row_len(width, bits_per_pixel);
         unsigned img_size  = line_len * height;
         unsigned rgb_size  = calc_palette_size(0, bits_per_pixel) * sizeof(RGBQUAD);
         unsigned full_size = sizeof(BITMAPINFOHEADER) + rgb_size;
-        
+
         BITMAPINFO *bmp = (BITMAPINFO *) new unsigned char[full_size];
-        
+
         bmp->bmiHeader.biSize   = sizeof(BITMAPINFOHEADER);
         bmp->bmiHeader.biWidth  = width;
         bmp->bmiHeader.biHeight = height;
@@ -605,10 +605,10 @@ namespace agg
         bmp->bmiHeader.biYPelsPerMeter = 0;
         bmp->bmiHeader.biClrUsed = 0;
         bmp->bmiHeader.biClrImportant = 0;
-        
+
         void*   img_ptr  = 0;
         HBITMAP h_bitmap = ::CreateDIBSection(h_dc, bmp, DIB_RGB_COLORS, &img_ptr, NULL, 0);
-        
+
         if(img_ptr)
         {
             m_img_size  = calc_row_len(width, bits_per_pixel) * height;
@@ -616,7 +616,7 @@ namespace agg
             m_bmp       = bmp;
             m_buf       = (unsigned char *) img_ptr;
         }
-        
+
         return h_bitmap;
     }
 }

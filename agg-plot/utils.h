@@ -24,7 +24,7 @@ T max(T a, T b)
   return (a > b) ? a : b;
 };
 
-extern void   trans_affine_compose  (agg::trans_affine& a, 
+extern void   trans_affine_compose  (agg::trans_affine& a,
 				     const agg::trans_affine& b);
 
 extern agg::trans_affine identity_matrix;

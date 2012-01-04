@@ -12,7 +12,7 @@ rgba8_lookup (lua_State *L, const char *color_str)
 
   if (strcmp (p, "white") == 0)
     return agg::rgba8(255, 255, 255, a);
-  
+
   int val = 180;
   int r = 0, g = 0, b = 0;
 
@@ -50,7 +50,7 @@ color_arg_lookup (lua_State *L, int index)
 {
   if (lua_isnoneornil (L, index))
     return colors::cdefault;
-  
+
   if (lua_isnumber(L, index))
     {
       unsigned int col = (unsigned int) lua_tointeger (L, index);

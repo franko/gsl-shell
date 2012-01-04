@@ -89,7 +89,7 @@ char *my_generator (const char *text, int state)
 
       word = strchr (word, '\0') + 1;
     }
-     
+
   if (!lua_istable(L, -1))
     goto pop_exit;
 

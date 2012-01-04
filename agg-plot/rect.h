@@ -21,10 +21,10 @@ public:
   void set(const rect_type& r) { m_defined = true; m_rect = r; };
   bool is_defined() const { return m_defined; };
 
-  const rect_type& rect() const 
+  const rect_type& rect() const
   {
     assert (m_defined);
-    return m_rect; 
+    return m_rect;
   }
 
   void operator = (const opt_rect& src)
@@ -35,8 +35,8 @@ public:
   }
 
   template <set_oper_e op>
-  void add(const rect_type& r) 
-  { 
+  void add(const rect_type& r)
+  {
     if (op == rect_union)
       m_rect = (m_defined ? agg::unite_rectangles(m_rect, r) : r);
     else
@@ -46,8 +46,8 @@ public:
   }
 
   template <set_oper_e op>
-  void add(const opt_rect& optr) 
-  { 
+  void add(const opt_rect& optr)
+  {
     if (optr.m_defined)
       this->add<op>(optr.m_rect);
   }

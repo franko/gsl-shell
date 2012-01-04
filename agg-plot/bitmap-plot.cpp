@@ -37,7 +37,7 @@ bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
   can.clear_box(r);
 
   p->draw(can, mtx);
-  
+
   bool success = platform_support_ext::save_image_file (rbuf_tmp, fn);
 
   if (! success)

@@ -7,7 +7,7 @@
 class platform_support_ext : public agg::platform_support {
 public:
   platform_support_ext (agg::pix_format_e format, bool flip_y)
-    : agg::platform_support(format, flip_y) 
+    : agg::platform_support(format, flip_y)
   { };
 
   void lock();
@@ -23,7 +23,7 @@ public:
   static bool save_image_file (agg::rendering_buffer& src, const char *fn);
 };
 
-template<class RenBufDst, class RenBufSrc, class CopyRow> 
+template<class RenBufDst, class RenBufSrc, class CopyRow>
 void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functor)
 {
   unsigned int width  = src->width();
@@ -35,7 +35,7 @@ void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functo
     }
 }
 
-template<class RenBufDst, class RenBufSrc> 
+template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
 				  unsigned pixel_width)
 {
@@ -49,8 +49,8 @@ void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base
     }
 }
 
-template<class RenBufDst, class RenBufSrc> 
-void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src, 
+template<class RenBufDst, class RenBufSrc>
+void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
 				      const agg::rect_base<int>& r,
 				      unsigned pixel_width, bool flip_y)
 {
@@ -61,8 +61,8 @@ void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
   view.attach(buf_start + pixel_width * x, w, h, src.stride());
 }
 
-template<class RenBufDst, class RenBufSrc> 
-void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src, 
+template<class RenBufDst, class RenBufSrc>
+void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src,
 				const agg::rect_base<int>& r,
 				unsigned pixel_width, bool flip_y)
 {
@@ -73,7 +73,7 @@ void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src,
   view.attach(buf_start + pixel_width * x, w, h, src.stride());
 }
 
-template<class RenBufDst, class RenBufSrc> 
+template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_put_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
 				  unsigned pixel_width)
 {
@@ -96,7 +96,7 @@ public:
   row_accessor_ro(const T* buf, unsigned width, unsigned height, int stride) :
     m_buf(buf), m_width(width), m_height(height), m_stride(stride)
   {
-    if(stride < 0) 
+    if(stride < 0)
       m_start = m_buf - int(height - 1) * stride;
     else
       m_start = m_buf;
@@ -108,8 +108,8 @@ public:
     m_width = width;
     m_height = height;
     m_stride = stride;
-    if(stride < 0) 
-      { 
+    if(stride < 0)
+      {
 	m_start = m_buf - int(height - 1) * stride;
       }
   };
@@ -119,9 +119,9 @@ public:
   unsigned width()  const { return m_width;  }
   unsigned height() const { return m_height; }
   int      stride() const { return m_stride; }
-  unsigned stride_abs() const 
+  unsigned stride_abs() const
   {
-    return (m_stride < 0) ? unsigned(-m_stride) : unsigned(m_stride); 
+    return (m_stride < 0) ? unsigned(-m_stride) : unsigned(m_stride);
   }
 
   //--------------------------------------------------------------------
@@ -134,7 +134,7 @@ private:
   unsigned      m_width;  // Width in pixels
   unsigned      m_height; // Height in pixels
   int           m_stride; // Number of bytes per row. Can be < 0
-  const T*      m_start;  // Pointer to first pixel depending on stride 
+  const T*      m_start;  // Pointer to first pixel depending on stride
 };
 
 typedef row_accessor_ro<unsigned char> rendering_buffer_ro;

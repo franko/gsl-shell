@@ -1,18 +1,18 @@
 
 /* plot.h
- * 
+ *
  * Copyright (C) 2009-2011 Francesco Abbate
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -80,7 +80,7 @@ struct plot_item {
 
   plot_item() : vs(0) {};
 
-  plot_item(VertexSource* vs, agg::rgba8& c, bool as_outline): 
+  plot_item(VertexSource* vs, agg::rgba8& c, bool as_outline):
     vs(vs), color(c), outline(as_outline)
   {};
 
@@ -98,7 +98,7 @@ public:
   typedef pod_list<item> iterator;
   typedef virtual_canvas<VertexSource> canvas_type;
 
-  plot(bool use_units = true) : 
+  plot(bool use_units = true) :
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
@@ -108,7 +108,7 @@ public:
     compute_user_trans();
   };
 
-  virtual ~plot() 
+  virtual ~plot()
   {
     layer_dispose_elements(m_root_layer);
     for (unsigned k = 0; k < m_layers.size(); k++)
@@ -135,7 +135,7 @@ public:
 
   virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { };
-  
+
   template <class Canvas>
   void draw(Canvas& canvas, agg::trans_affine& m);
 
@@ -160,11 +160,11 @@ public:
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
 
-  void pad_mode(bool req) 
-  { 
+  void pad_mode(bool req)
+  {
     if (req != m_pad_units)
       {
-	m_pad_units = req; 
+	m_pad_units = req;
 	m_need_redraw = true;
 	compute_user_trans();
       }
@@ -217,7 +217,7 @@ private:
 };
 
 static double compute_scale(agg::trans_affine& m)
-{ 
+{
   return m.scale() / 480.0;
 }
 
@@ -241,8 +241,8 @@ void plot<VS,RM>::commit_pending_draw()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline) 
-{ 
+void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
+{
   item d(vs, color, outline);
   pod_list<item> *new_node = new pod_list<item>(d);
   m_drawing_queue = pod_list<item>::push_back(m_drawing_queue, new_node);
@@ -250,19 +250,19 @@ void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::set_title(const char *text) 
+void plot<VS,RM>::set_title(const char *text)
 {
   str_copy_c(&m_title, text);
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::push_drawing_queue() 
+void plot<VS,RM>::push_drawing_queue()
 {
   for (pod_list<item> *c = m_drawing_queue; c != 0; c = c->next())
     {
       m_current_layer->add(c->content());
     }
-  
+
   while (m_drawing_queue)
     m_drawing_queue = list::pop(m_drawing_queue);
 }
@@ -633,7 +633,7 @@ agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
 
 template<class VS, class RM>
 void plot<VS,RM>::set_units(bool use_units)
-{ 
+{
   if (m_use_units != use_units)
     {
       m_use_units = use_units;
@@ -702,7 +702,7 @@ bool plot<VS,RM>::pop_layer()
 }
 
 template <class VS, class RM>
-void plot<VS,RM>::clear_current_layer() 
+void plot<VS,RM>::clear_current_layer()
 {
   clear_drawing_queue();
   layer_dispose_elements (current_layer());

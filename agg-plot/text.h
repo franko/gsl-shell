@@ -52,7 +52,7 @@ namespace draw {
 
     void angle(double th) {
       double c = cos(th), s = sin(th);
-      
+
       m_angle = th;
 
       m_user_matrix.sx  =  c;

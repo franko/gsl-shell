@@ -20,21 +20,21 @@ public:
     lexer(const char *str) : m_content(str), m_ptr(m_content) {};
 
     char next()
-    { 
+    {
       char c = *m_ptr;
       if (c != '\0')
 	m_ptr++;
       return c;
     };
 
-    void push() 
-    { 
-      if (m_ptr > m_content) 
-	m_ptr--; 
+    void push()
+    {
+      if (m_ptr > m_content)
+	m_ptr--;
     };
 
-    bool checknext(char reqchar) 
-    { 
+    bool checknext(char reqchar)
+    {
       char c = *m_ptr;
       if (c == reqchar)
 	{
@@ -49,7 +49,7 @@ public:
   static node_type* exprlist (lexer& lex, direction_e dir)
   {
     typedef tree::tree_node<base_type, direction_e> tree_type;
-  
+
     tree_type *t = new tree_type(dir);
 
     for (int c = 0; ; c++)
@@ -89,7 +89,7 @@ public:
       default:
 	return 0;
       }
-  
+
     return 0;
   }
 };

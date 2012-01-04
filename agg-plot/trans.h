@@ -112,9 +112,9 @@ struct trans {
     typedef sg_adapter<trans_type, no_approx_scale> base_type;
 
   public:
-    affine_a(sg_object *src, const agg::trans_affine& mtx) : 
+    affine_a(sg_object *src, const agg::trans_affine& mtx) :
       base_type(src, m_matrix), m_matrix(mtx)
-    { 
+    {
       m_norm = m_matrix.scale();
     }
 
@@ -123,10 +123,10 @@ struct trans {
       this->m_source->apply_transform(m, as * m_norm);
     };
 
-    virtual bool affine_compose(agg::trans_affine& m) 
-    { 
+    virtual bool affine_compose(agg::trans_affine& m)
+    {
       trans_affine_compose (m_matrix, m);
-      return true; 
+      return true;
     }
   };
 
@@ -138,7 +138,7 @@ struct trans {
   //------------------------------------------------ extend transform
   struct extend : sg_adapter<agg::conv_contour<sg_object>, approx_scale> {
     extend(sg_object* src):
-      sg_adapter<agg::conv_contour<sg_object>, approx_scale>(src) 
+      sg_adapter<agg::conv_contour<sg_object>, approx_scale>(src)
     { }
 
     virtual ~extend() { delete m_source; }
@@ -147,7 +147,7 @@ struct trans {
   //------------------------------------------------ marker transform
   typedef my::conv_simple_marker<sg_object, sg_object> marker_type;
 
-  class marker_a : 
+  class marker_a :
     public sg_adapter<marker_type, no_approx_scale> {
 
     typedef sg_adapter<marker_type, no_approx_scale> base_type;

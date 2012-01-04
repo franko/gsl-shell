@@ -1,18 +1,18 @@
 
 /* lua-plot.cpp
- * 
+ *
  * Copyright (C) 2009, 2010 Francesco Abbate
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -172,7 +172,7 @@ plot_free (lua_State *L)
 }
 
 void
-plot_add_gener_cpp (lua_State *L, sg_plot *p, bool as_line, 
+plot_add_gener_cpp (lua_State *L, sg_plot *p, bool as_line,
                     gslshell::ret_status& st)
 {
   agg::rgba8 color;
@@ -229,13 +229,13 @@ plot_add_gener (lua_State *L, bool as_line)
 
   return 0;
 }
- 
+
 int
 plot_add (lua_State *L)
 {
   return plot_add_gener (L, false);
 }
- 
+
 int
 plot_add_line (lua_State *L)
 {
@@ -260,7 +260,7 @@ static void plot_string_property_set (lua_State* L, void (sg_plot::*setter)(cons
 
   if (s == NULL)
     gs_type_error (L, 2, "string");
-	  
+
   AGG_LOCK();
   (p->*setter)(s);
   AGG_UNLOCK();
