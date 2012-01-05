@@ -155,7 +155,12 @@ struct trans {
   public:
     marker_a(sg_object* src, double size, sg_object* sym):
       base_type(src, *sym), m_size(size), m_scale(m_size), m_symbol(sym)
-    { }
+    {
+      // we need to apply the scale transform here to ensure that
+      // any call to bounding_box have the correct informations about
+      // the symbol size, even if it is called before apply_transform
+      m_symbol->apply_transform(m_scale, 1.0);
+    }
 
     virtual str write_svg(int id, agg::rgba8 c) {
       str marker_id;
