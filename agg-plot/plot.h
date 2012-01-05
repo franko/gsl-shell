@@ -34,6 +34,7 @@
 #include "canvas_svg.h"
 #include "trans.h"
 #include "text.h"
+#include "categories.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -45,17 +46,6 @@
 #include "agg_conv_stroke.h"
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
-
-template <class VertexSource>
-struct virtual_canvas {
-  virtual void draw(VertexSource& vs, agg::rgba8 c) = 0;
-  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) = 0;
-
-  virtual void clip_box(const agg::rect_base<int>& clip) = 0;
-  virtual void reset_clipping() = 0;
-
-  virtual ~virtual_canvas() { }
-};
 
 template <class Canvas, class VertexSource>
 class canvas_adapter : public virtual_canvas<VertexSource> {
@@ -100,15 +90,43 @@ public:
 
   enum axis_e { x_axis, y_axis };
 
+  struct axis {
+    str title;
+    axis_e dir;
+    bool use_categories;
+    category_map categories;
+
+    axis(axis_e _dir, const char* _title = 0):
+      title(_title ? _title : ""), dir(_dir), use_categories(false),
+      m_labels_angle(0.0),
+      m_labels_hjustif(_dir == x_axis ? 0.5 : 1.0),
+      m_labels_vjustif(_dir == x_axis ? 1.0 : 0.5)
+    { }
+
+    void set_labels_angle(double angle)
+    {
+      double a = (dir == x_axis ? -angle + M_PI/2 : -angle);
+      double c = cos(a), s = sin(a);
+      m_labels_hjustif = round(c + 1.0) / 2.0;
+      m_labels_vjustif = round(s + 1.0) / 2.0;
+      m_labels_angle = angle;
+    }
+
+    double labels_angle()   const { return m_labels_angle; }
+    double labels_hjustif() const { return m_labels_hjustif; }
+    double labels_vjustif() const { return m_labels_vjustif; }
+
+  private:
+    double m_labels_angle;
+    double m_labels_hjustif, m_labels_vjustif;
+  };
+
   plot(bool use_units = true) :
     m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title(),
-    m_xlabel(), m_ylabel(), m_sync_mode(true),
-    m_xlabels_angle(0.0), m_ylabels_angle(0.0),
-    m_xlabels_hjustif(0.5), m_xlabels_vjustif(1.0),
-    m_ylabels_hjustif(1.0), m_ylabels_vjustif(0.5)
+    m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis)
   {
     compute_user_trans();
   };
@@ -125,14 +143,24 @@ public:
   };
 
   str& title() { return m_title; }
-  str& x_axis_title() { return m_xlabel; }
-  str& y_axis_title() { return m_ylabel; }
+  str& x_axis_title() { return m_x_axis.title; }
+  str& y_axis_title() { return m_y_axis.title; }
 
-  void set_axis_labels_angle(enum axis_e axis, double angle);
-
-  double get_axis_labels_angle(enum axis_e axis) const
+  axis& get_axis(axis_e axis_dir)
   {
-    return (axis == x_axis ? m_xlabels_angle : m_ylabels_angle);
+    return (axis_dir == x_axis ? m_x_axis : m_y_axis);
+  }
+
+  const axis& get_axis(axis_e axis_dir) const
+  {
+    return (axis_dir == x_axis ? m_x_axis : m_y_axis);
+  }
+
+  void set_axis_labels_angle(axis_e axis, double angle);
+
+  double get_axis_labels_angle(axis_e axis_dir) const
+  {
+    return get_axis(axis_dir).labels_angle();
   }
 
   void set_units(bool use_units);
@@ -177,9 +205,28 @@ public:
       }
   };
 
-  bool pad_mode() const { return m_pad_units; };
+  bool pad_mode() const { return m_pad_units; }
+
+  void enable_categories(axis_e dir) { get_axis(dir).use_categories = true; }
+
+  void disable_categories(axis_e dir)
+  {
+    axis& ax = get_axis(dir);
+    ax.use_categories = false;
+    ax.categories.clear();
+  }
+
+  void add_category_entry(axis_e dir, double v, const char* text)
+  {
+    axis& ax = get_axis(dir);
+    ax.categories.add_item(v, text);
+  }
 
 protected:
+  double draw_axis_m(axis_e dir, units& u, agg::trans_affine& user_mtx,
+		     ptr_list<draw::text>& labels, double scale,
+		     agg::path_storage& mark, agg::path_storage& ln);
+
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m);
@@ -216,14 +263,13 @@ protected:
 private:
   bool m_pad_units;
 
-  str m_title, m_xlabel, m_ylabel;
+  str m_title;
   double m_left_margin, m_right_margin;
   double m_bottom_margin, m_top_margin;
 
   bool m_sync_mode;
-  double m_xlabels_angle, m_ylabels_angle;
-  double m_xlabels_hjustif, m_xlabels_vjustif;
-  double m_ylabels_hjustif, m_ylabels_vjustif;
+
+  axis m_x_axis, m_y_axis;
 };
 
 static double compute_scale(agg::trans_affine& m)
@@ -403,11 +449,91 @@ void plot<VS,RM>::compute_user_trans()
 }
 
 template <class VS, class RM>
+double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
+				agg::trans_affine& user_mtx,
+				ptr_list<draw::text>& labels, double scale,
+				agg::path_storage& mark, agg::path_storage& ln)
+{
+  const double ppad = 0.02;
+  const double eps = 1.0e-3;
+
+  const double line_width = std_line_width(scale);
+
+  opt_rect<double> bb;
+  agg::rect_base<double> r;
+
+  bool isx = (dir == x_axis);
+
+  const axis& ax = get_axis(dir);
+  double hj = ax.labels_hjustif(), vj = ax.labels_vjustif();
+  double langle = ax.labels_angle();
+
+  category_map::iterator clabels(ax.categories);
+  units_iterator ulabels(u);
+
+  label_iterator* ilabels = (ax.use_categories ? (label_iterator*) &clabels : (label_iterator*) &ulabels);
+
+  double uq;
+  const char* text;
+  while (ilabels->next(uq, text))
+    {
+      double x = (isx ? uq : 0.0), y = (isx ? 0.0 : uq);
+      user_mtx.transform(&x, &y);
+
+      double q = (isx ? x : y);
+
+      if (q < -eps || q > 1.0 + eps)
+	continue;
+
+      draw::text* label = new draw::text(text, 10.0*scale, line_width, hj, vj);
+
+      label->set_point(isx ? q : -ppad, isx ? -ppad : q);
+      label->angle(langle);
+
+      agg::bounding_rect_single(*label, 0, &r.x1, &r.y1, &r.x2, &r.y2);
+      bb.add<rect_union>(r);
+
+      labels.add(label);
+
+      mark.move_to(isx ? q :  0.0 , isx ?  0.0  : q);
+      mark.line_to(isx ? q : -0.01, isx ? -0.01 : q);
+    }
+
+  int jinf = u.begin(), jsup = u.end();
+  for (int j = jinf+1; j < jsup; j++)
+    {
+      double uq = u.mark_value(j);
+      double x = (isx ? uq : 0), y = (isx ? 0.0 : uq);
+      user_mtx.transform(&x, &y);
+      double q = (isx ? x : y);
+
+      if (q >= -eps && q <= 1.0 + eps)
+	{
+	  ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
+	  ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
+	}
+    }
+
+  double label_size;
+  if (bb.is_defined())
+    {
+      const agg::rect_base<double>& br = bb.rect();
+      label_size = (isx ? br.y2 - br.y1 : br.x2 - br.x1);
+    }
+  else
+    {
+      label_size = 0.0;
+    }
+
+  return label_size;
+}
+
+template <class VS, class RM>
 void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   if (!m_use_units)
     {
-      const double pad = 10.0;
+      const double pad = 4.0;
       m_left_margin   = pad;
       m_right_margin  = pad;
       m_bottom_margin = pad;
@@ -422,6 +548,16 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
   canvas.clip_box(clip);
 
+  agg::path_storage box;
+  sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
+  trans::stroke_a boxvs(&boxtr);
+
+  box.move_to(0.0, 0.0);
+  box.line_to(0.0, 1.0);
+  box.line_to(1.0, 1.0);
+  box.line_to(1.0, 0.0);
+  box.close_polygon();
+
   agg::path_storage mark;
   sg_object_gen<agg::conv_transform<agg::path_storage> > mark_tr(mark, m);
   trans::stroke_a mark_stroke(&mark_tr);
@@ -431,99 +567,16 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   trans::dash_a lndash(&ln_tr);
   trans::stroke_a lns(&lndash);
 
-  const double yeps = 1.0e-3;
-  const double xeps = 1.0e-3;
-
   const double line_width = std_line_width(scale);
   const double label_text_size = 11.0 * scale;
   const double title_text_size = 12.0 * scale;
   const double ppad = 0.02, fpad = 4;
 
-  agg::pod_bvector<draw::text*> y_labels, x_labels;
+  ptr_list<draw::text> labels;
   double dx_label, dy_label;
 
-  {
-    int jinf = m_uy.begin(), jsup = m_uy.end();
-
-    opt_rect<double> ybox;
-    agg::rect_base<double> r;
-
-    for (int j = jinf; j <= jsup; j++)
-      {
-	double x = 0.0, y = m_uy.mark_value(j);
-	this->m_trans.transform(&x, &y);
-	if (y >= - yeps && y <= 1.0 + yeps)
-	  {
-	    char lab_text[32];
-	    m_uy.mark_label(lab_text, 32, j);
-
-	    draw::text* label = new draw::text(lab_text, 10.0 * scale,
-					       line_width,
-					       m_ylabels_hjustif,
-					       m_ylabels_vjustif);
-	    label->angle(m_ylabels_angle);
-	    label->set_point(-ppad, y);
-
-	    mark.move_to(0.0, y);
-	    mark.line_to(-0.01, y);
-
-	    if (j > jinf && j < jsup) {
-	      ln.move_to(0.0, y);
-	      ln.line_to(1.0, y);
-	    }
-
-	    agg::bounding_rect_single(*label, 0, &r.x1, &r.y1, &r.x2, &r.y2);
-	    ybox.add<rect_union>(r);
-
-	    y_labels.add(label);
-	  }
-      }
-
-    const agg::rect_base<double>& ybr = ybox.rect();
-    dx_label = ybr.x2 - ybr.x1;
-  }
-
-  {
-    int jinf = m_ux.begin(), jsup = m_ux.end();
-
-    opt_rect<double> xbox;
-    agg::rect_base<double> r;
-    agg::pod_bvector<draw::text*> labels;
-
-    for (int j = jinf; j <= jsup; j++)
-      {
-	double x = m_ux.mark_value(j), y = 0.0;
-	this->m_trans.transform(&x, &y);
-	if (x >= - xeps && x <= 1.0 + xeps)
-	  {
-	    char lab_text[32];
-	    m_ux.mark_label(lab_text, 32, j);
-
-	    draw::text* label = new draw::text(lab_text, 10.0 * scale,
-					       line_width,
-					       m_xlabels_hjustif,
-					       m_xlabels_vjustif);
-	    label->angle(m_xlabels_angle);
-	    label->set_point(x, -ppad);
-
-	    mark.move_to(x, 0.0);
-	    mark.line_to(x, -0.01);
-
-	    if (j > jinf && j < jsup) {
-	      ln.move_to(x, 0.0);
-	      ln.line_to(x, 1.0);
-	    }
-
-	    agg::bounding_rect_single(*label, 0, &r.x1, &r.y1, &r.x2, &r.y2);
-	    xbox.add<rect_union>(r);
-
-	    x_labels.add(label);
-	  }
-      }
-
-    const agg::rect_base<double>& xbr = xbox.rect();
-    dy_label = xbr.y2 - xbr.y1;
-  }
+  dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+  dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
 
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double lsx = (dx_label + 4 * ppad * sx + 2 * fpad) / (1 + 4 * ppad);
@@ -537,10 +590,10 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   const double sxr = sx - lsx;
   const double syr = sy - lsy;
 
-  if (!str_is_null(&m_ylabel))
+  if (!str_is_null(&m_y_axis.title))
     m_left_margin += label_text_size + 2*sxr*ppad;
 
-  if (!str_is_null(&m_xlabel))
+  if (!str_is_null(&m_x_axis.title))
     m_bottom_margin += label_text_size + 2*syr*ppad;
 
   if (!str_is_null(&m_title))
@@ -548,21 +601,14 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 
   m = this->viewport_scale(canvas_mtx);
 
-  for (unsigned j = 0; j < x_labels.size(); j++)
+  for (unsigned j = 0; j < labels.size(); j++)
     {
-      draw::text* label = x_labels[j];
+      draw::text* label = labels[j];
       label->apply_transform(m, 1.0);
       canvas.draw(*label, agg::rgba(0, 0, 0));
-      delete label;
     }
 
-  for (unsigned j = 0; j < y_labels.size(); j++)
-    {
-      draw::text* label = y_labels[j];
-      label->apply_transform(m, 1.0);
-      canvas.draw(*label, agg::rgba(0, 0, 0));
-      delete label;
-    }
+  //  canvas.draw(boxtr, agg::rgba8(0xaa, 0xaa, 0xaa));
 
   lndash.add_dash(7.0, 3.0);
 
@@ -572,20 +618,10 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   mark_stroke.width(std_line_width(scale, 0.75));
   canvas.draw(mark_stroke, colors::black);
 
-  agg::path_storage box;
-  sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
-  trans::stroke_a boxvs(&boxtr);
-
-  box.move_to(0.0, 0.0);
-  box.line_to(0.0, 1.0);
-  box.line_to(1.0, 1.0);
-  box.line_to(1.0, 0.0);
-  box.close_polygon();
-
   boxvs.width(std_line_width(scale));
   canvas.draw(boxvs, colors::black);
 
-  if (!str_is_null(&m_xlabel))
+  if (!str_is_null(&m_x_axis.title))
     {
       double labx = 0.5, _laby = 0.0;
       m.transform(&labx, &_laby);
@@ -593,19 +629,21 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       double _labx = 0.5, laby = 0.0;
       canvas_mtx.transform(&_labx, &laby);
 
-      draw::text xlabel(m_xlabel.cstr(), label_text_size, line_width, 0.5, 0.0);
+      const char* text = m_x_axis.title.cstr();
+      draw::text xlabel(text, label_text_size, line_width, 0.5, 0.0);
       xlabel.set_point(labx, laby + syr*ppad + fpad);
       xlabel.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(xlabel, colors::black);
     }
 
-  if (!str_is_null(&m_ylabel))
+  if (!str_is_null(&m_y_axis.title))
     {
       double labx = 0.0, laby = 0.5;
       m.transform(&labx, &laby);
 
-      draw::text ylabel(m_ylabel.cstr(), label_text_size, line_width, 0.5, 1.0);
+      const char* text = m_y_axis.title.cstr();
+      draw::text ylabel(text, label_text_size, line_width, 0.5, 1.0);
       ylabel.set_point(sxr*ppad + fpad, laby);
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);
@@ -642,23 +680,9 @@ agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
 }
 
 template<class VS, class RM>
-void plot<VS,RM>::set_axis_labels_angle(enum axis_e axis, double angle)
+void plot<VS,RM>::set_axis_labels_angle(axis_e axis_dir, double angle)
 {
-  if (axis == x_axis)
-    {
-      double c = sin(angle), s = cos(angle);
-      m_xlabels_hjustif = round(c + 1.0) / 2.0;
-      m_xlabels_vjustif = round(s + 1.0) / 2.0;
-      m_xlabels_angle = angle;
-    }
-  else
-    {
-      double c = cos(angle), s = -sin(angle);
-      m_ylabels_hjustif = round(c + 1.0) / 2.0;
-      m_ylabels_vjustif = round(s + 1.0) / 2.0;
-      m_ylabels_angle = angle;
-    }
-
+  get_axis(axis_dir).set_labels_angle(angle);
   m_need_redraw = true;
   compute_user_trans();
 }

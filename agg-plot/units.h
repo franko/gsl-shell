@@ -21,6 +21,11 @@
 #ifndef AGGPLOT_UNITS_H
 #define AGGPLOT_UNITS_H
 
+struct label_iterator {
+  virtual bool next(double& val, const char*& text) = 0;
+  virtual ~label_iterator() {}
+};
+
 class units {
 private:
   int m_major;
@@ -49,6 +54,28 @@ public:
   void   mark_label (char *label, unsigned size, int mark) const;
   double mark_value (int mark) const { return dmajor * mark; };
   double mark_scale(double x);
+};
+
+class units_iterator : public label_iterator {
+public:
+  units_iterator(const units& u) : m_units(u) { m_index = u.begin(); }
+
+  virtual bool next(double& val, const char*& text)
+  {
+    if (m_index > m_units.end())
+      return false;
+
+    val = m_units.mark_value(m_index);
+    m_units.mark_label(m_buffer, 32, m_index);
+    text = m_buffer;
+    m_index ++;
+    return true;
+  }
+
+private:
+  char m_buffer[32];
+  int m_index;
+  const units& m_units;
 };
 
 #endif

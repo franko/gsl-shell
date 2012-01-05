@@ -66,6 +66,7 @@ static int plot_xlab_angle_set (lua_State *L);
 static int plot_xlab_angle_get (lua_State *L);
 static int plot_ylab_angle_set (lua_State *L);
 static int plot_ylab_angle_get (lua_State *L);
+static int plot_set_categories (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -104,6 +105,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"clear",       plot_clear      },
   {"save",        bitmap_save_image },
   {"save_svg",    plot_save_svg   },
+  {"set_categories", plot_set_categories},
   {NULL, NULL}
 };
 
@@ -590,6 +592,60 @@ int
 plot_sync_mode_set (lua_State *L)
 {
   plot_bool_property_set(L, &sg_plot::sync_mode, false);
+  return 0;
+}
+
+int
+plot_set_categories (lua_State *L)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  const char* axis_s = luaL_checkstring(L, 2);
+  sg_plot::axis_e dir;
+
+  if (strcmp(axis_s, "x") == 0)
+    dir = sg_plot::x_axis;
+  else if (strcmp(axis_s, "y") == 0)
+    dir = sg_plot::y_axis;
+  else
+    return luaL_error(L, "axis argument should be \"x\" or \"y\"");
+
+  AGG_LOCK();
+
+  if (lua_isnoneornil(L, 3))
+    {
+      p->disable_categories(dir);
+    }
+  else
+    {
+      int k, n;
+
+      if (!lua_istable(L, 3))
+	{
+	  AGG_UNLOCK();
+	  return luaL_error(L, "invalid categories, should be a table or nil");
+	}
+
+      p->enable_categories(dir);
+
+      n = lua_objlen(L, 3);
+      for (k = 1; k+1 <= n; k += 2)
+	{
+	  lua_rawgeti(L, 3, k);
+	  lua_rawgeti(L, 3, k+1);
+	  if (lua_isnumber(L, -2) && lua_isstring(L, -1))
+	    {
+	      double v = lua_tonumber(L, -2);
+	      const char* s = lua_tostring(L, -1);
+	      p->add_category_entry(dir, v, s);
+	    }
+	  lua_pop(L, 2);
+	}
+    }
+
+  AGG_UNLOCK();
+
+  plot_update_raw (L, p, 1);
+
   return 0;
 }
 

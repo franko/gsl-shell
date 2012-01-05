@@ -2,6 +2,7 @@
 #define AGGPLOT_UTILS_H
 
 #include "agg_trans_affine.h"
+#include "agg_array.h"
 
 #ifdef min
 #undef min
@@ -22,6 +23,29 @@ template <typename T>
 T max(T a, T b)
 {
   return (a > b) ? a : b;
+};
+
+template <class T>
+class ptr_list {
+public:
+  ~ptr_list() { clear(); }
+
+  void add(T* p) { m_list.add(p); }
+
+  T* operator [] (unsigned k) const { return m_list[k]; }
+
+  unsigned size() const { return m_list.size(); }
+
+  void clear()
+  {
+    unsigned n = m_list.size();
+    for (unsigned k = 0; k < n; k++)
+      delete m_list[k];
+    m_list.clear();
+  }
+
+private:
+  agg::pod_bvector<T*> m_list;
 };
 
 extern void   trans_affine_compose  (agg::trans_affine& a,
