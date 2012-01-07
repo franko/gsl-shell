@@ -1,7 +1,7 @@
 
 local bit = require 'bit'
 
-local floor = math.floor
+local floor, pi = math.floor, math.pi
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
@@ -118,6 +118,34 @@ function graph.ibars(f)
    return b
 end
 
+function graph.barplot(t)
+   local nr, nc = #t, #t[1] - 1
+   local pad = 0.1
+   local dx = (1-2*pad)/nc
+   local cat = {}
+   local p = graph.plot()
+   p.pad = true
+
+   for k = 1, nr do
+      local row = t[k]
+      local label = row[1]
+      cat[#cat+1] = k - 0.5
+      cat[#cat+1] = label
+      for j = 1, nc do
+	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
+	 local rect = graph.rect(x, 0, x+dx, y)
+	 p:add(rect, graph.webcolor(j))
+	 p:addline(rect, 'black')
+      end
+   end
+
+   p:set_categories('x', cat)
+   p.xlab_angle = pi/2
+
+   p:show()
+   return p
+end
+
 function graph.segment(x1, y1, x2, y2)
    local p = graph.path(x1, y1)
    p:line_to(x2, y2)
@@ -175,10 +203,18 @@ graph.color = {
 }
 
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
+local wcolors = {0x3366ff, 0xcc0000, 0xcc33ff, 0xff3366, 0xffcc33, 0x66ff33, 0x33ffcc}
+-- local wcolors = {0x6699ff, 0xcc66ff, 0xff6699, 0xffcc66, 0x99ff66, 0x66ffcc}
+-- local wcolors = {0x003399, 0x660099, 0x990033, 0x996600, 0x339900, 0x009966}
 
 function graph.rainbow(n)
    local p = #bcolors
    return graph.color[bcolors[(n-1) % p + 1]]
+end
+
+function graph.webcolor(n)
+   local p = #wcolors
+   return lshift(wcolors[(n-1) % p + 1], 8) + 0xff
 end
 
 local color_schema = {

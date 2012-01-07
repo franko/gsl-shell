@@ -112,10 +112,24 @@ local function demo_plot()
    demo4()
 end
 
+local function barplot_demo()
+   local t = {{'ode', 14, 17, 8}, {'integ', 21, 19, 7}, {'nlfit', 8,12,6}}
+   local p = barplot(t)
+   p.xtitle = 'Test'
+   p.ytitle = 'Execution time, ms'
+   p.title = 'Benchmark results'
+   return p
+end
+
 return {'Plotting', {
   {
      name= 'plot',
      f = demo_plot,
      description = 'Various kind of plots'
+  },
+  {
+     name= 'barplot',
+     f = barplot_demo,
+     description = 'Bar Plot example'
   },
 }}
