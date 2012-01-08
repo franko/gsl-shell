@@ -1,8 +1,9 @@
 --This is a test script for all the sf. methods
 
+--prints all available special functions in the name scope
 --for k,v in pairs(sf.) do print (k) end
 
-print("Starting to run the test.")
+print("Starting to run the special functions test.")
 sf.Chi(1)
 sf.Ci(1)
 sf.Shi(1)
@@ -62,9 +63,7 @@ sf.coulomb_wave_FG(1, 1, 1,1)
 
 sf.coupling_3j(1,1,1,1,1,1)
 sf.coupling_6j(1,1,1,1,1,1)
-sf.coupling_6j_INCORRECT(1,1,1,1,1,1)
 sf.coupling_9j(1,1,1,1,1,1,1,1,1)
-sf.coupling_RacahW(1,1,1,1,1,1)
 
 sf.dawson(1)
 
@@ -89,6 +88,7 @@ sf.erf(1)
 sf.erf_Q(1)
 sf.erf_Z(1)
 sf.erfc(1)
+sf.log_erfc(1)
 
 sf.eta(1)
 
@@ -102,10 +102,8 @@ sf.exp_mult_err(1,1,1,1)
 sf.exp_mult_err_e10(1,1,1,1)
 
 sf.expint3(1)
-sf.expint_E1(1)
-sf.expint_E2(1)
 sf.expint_Ei(1)
-sf.expint_En(1,1)
+sf.expint_E(1,1)
 
 sf.expm1(1)
 sf.exprel(1)
@@ -120,6 +118,7 @@ sf.gamma(1)
 sf.gamma_inc(1,1)
 sf.gamma_inc_P(1,1)
 sf.gamma_inc_Q(1,1)
+sf.lngammac(1+1i)
 sf.gammainv(1)
 sf.gammastar(1)
 
@@ -157,7 +156,6 @@ sf.log(1)
 sf.log_1plusx(1)
 sf.log_1plusx_mx(1)
 sf.log_abs(1)
-sf.log_erfc(1)
 
 sf.multiply(1,1)
 sf.multiply_err(1,1,1,1)
@@ -169,12 +167,11 @@ sf.pow_int(1,1)
 
 sf.psi(1)
 sf.psi_1(1)
-sf.psi_1_int(1)
 sf.psi_1piy(1)
-sf.psi_int(1)
 sf.psi_n(1,1)
 
-sf.synchrotron(1,1)
+sf.synchrotron1(1)
+sf.synchrotron2(1)
 
 sf.taylorcoeff(1,1)
 

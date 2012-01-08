@@ -8,28 +8,36 @@ local gsl_check = require 'gsl-check'
 local check     = require 'check'
 local is_integer = check.is_integer
 
------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+--This section contains small and versatile wrapper functions for the generically named special functions
+----------------------------------------------------------------------------------------------------------
 
 local GSL_PREC_DOUBLE = 0
 local GSL_PREC_SINGLE = 1
 local GSL_PREC_APPROX = 2
 
---Returns reference to a wrapper function that wraps the gsl function (with error) with a certain name, one argument, an optional mode
+local function check_arg(arg, num_arg)
+	if arg == nil then error("Did not give argument count...") end
+	if #arg ~= num_arg then
+		error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
+	end
+end
+
+--Returns reference to a wrapper function that wraps a gsl sf mode function (with error) with a certain name and a variable number of arguments num_arg
 local function get_gsl_sf_mode(name, num_arg)
 	return function(...)
 		local arg = {...}
 		local result = ffi.new("gsl_sf_result")
 		local status = 0
-		if arg == nil then error("Did not give argument count...") end
-		if #arg ~= num_arg then
-			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
-		end
+		
+		--check for correct argument count
+		check_arg(arg, num_arg)
 
-		--execute the gsl function
+		--Generate the generic function name
 		local fullname = "gsl_sf_"..name.."_e"
 
-		local status = 0
 		--very ugly construction with variable argument list
+		--a simple insertion of ... in this C function call would always only give the first (and not automatically all the others, as one would suspect)
 		if num_arg == 1 then status = gsl[fullname](arg[1],GSL_PREC_DOUBLE,result)
 		elseif num_arg == 2 then status = gsl[fullname](arg[1], arg[2],GSL_PREC_DOUBLE,result)
 		elseif num_arg == 3 then status = gsl[fullname](arg[1], arg[2],arg[3],GSL_PREC_DOUBLE,result)
@@ -39,12 +47,14 @@ local function get_gsl_sf_mode(name, num_arg)
 		elseif num_arg == 7 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],GSL_PREC_DOUBLE,result)
 		elseif num_arg == 8 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],GSL_PREC_DOUBLE,result)
 		elseif num_arg == 9 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],GSL_PREC_DOUBLE,result) end	
+		
+		--do the error checking and return with the result
 		gsl_check(status)
 		return result.val, result.err
 	end
 end
 
---Returns reference to a gsl function that only takes integers
+--Returns wrapper to a gsl function that only takes one integer
 local function get_gsl_sf_int(name)
 	return function(x)
 		if is_integer(x) then
@@ -60,30 +70,30 @@ local function get_gsl_sf_int(name)
 	end
 end
 
-local function call_variable_arg(name,arg, result)
+--calls a gsl function by the name of 'fullname' with a variable argument list 'arg' and stores the result in 'result'
+local function call_variable_arg(fullname,arg, result)
 	local num_arg = #arg
 	local status = 0
 	--very ugly construction with variable argument list
-	if num_arg == 1 then status = gsl[name](arg[1],result)
-	elseif num_arg == 2 then status = gsl[name](arg[1], arg[2],result)
-	elseif num_arg == 3 then status = gsl[name](arg[1], arg[2],arg[3],result)
-	elseif num_arg == 4 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],result)
-	elseif num_arg == 5 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],result)
-	elseif num_arg == 6 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],result)
-	elseif num_arg == 7 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],result)
-	elseif num_arg == 8 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],result)
-	elseif num_arg == 9 then status = gsl[name](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],result) end	
+	if num_arg == 1 then status = gsl[fullname](arg[1],result)
+	elseif num_arg == 2 then status = gsl[fullname](arg[1], arg[2],result)
+	elseif num_arg == 3 then status = gsl[fullname](arg[1], arg[2],arg[3],result)
+	elseif num_arg == 4 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],result)
+	elseif num_arg == 5 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],result)
+	elseif num_arg == 6 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],result)
+	elseif num_arg == 7 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],result)
+	elseif num_arg == 8 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],result)
+	elseif num_arg == 9 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],result) end	
 	return status
 end
 
---Return refernece to a gsl function with one argument
+--Returns warpper to a gsl function with variable argument count
 local function get_gsl_sf(name, num_arg, is_e10)
 	return function(...)
 		local arg = {...}
-		if arg == nil then error("Did not give correct argument count...") end
-		if #arg ~= num_arg then
-			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
-		end		
+		
+		--check for correct argument count
+		check_arg(arg, num_arg)	
 
 		local result
 		if is_e10 then
@@ -105,33 +115,56 @@ local function get_gsl_sf(name, num_arg, is_e10)
 	end
 end
 
+--Returns wrapper for a gsl function that takes an order as the first argument
+--This will map to different functions according to the order
+--The mapping is stored in the choices table as {[[order]]=='function_name',...}
 local function get_gsl_sf_choice(choices, num_arg)
 	return function(n,...)
 		local arg = {...}
-		if arg == nil then error("Did not give argument count...") end
-		if #arg ~= num_arg then
-			error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
-		end
+		
+		--check for correct argument count
+		check_arg(arg, num_arg)
+
+		--look if the order choice n is in the list, if yes, we will choose this function, otherwise, look for a '?' entry
 		local l
 		if choices[n] == nil and is_integer(n) then
 			l = n
 			n = '?'
 		end
+		--if '?' entry not exists, then we have a problem
 		if choices[n] == nil then error("There is no valid function for the given integer n = " .. l .. ".") end
 
 		local result = ffi.new("gsl_sf_result")
+		
 		--if we are using the generic function, we have to begin the argument list with the n value
 		if n == '?' then table.insert(arg, 1, tonumber(l)) end
 
 		local fullname = "gsl_sf_" .. choices[n] .. "_e"
 		local status = call_variable_arg(fullname,arg, result)
 
+		--check the status and return the result
 		gsl_check(status)
 		return result.val, result.err
 	end
 end
 
 
+
+local function get_gsl_sf_int_double(name_int, name_double)
+	return function(n)
+		local result = ffi.new("gsl_sf_result")
+		local status = 0
+
+		if is_integer(n) then
+			status = gsl["gsl_sf_" .. name_int .. "_e"](n,result)
+		else
+			status = gsl["gsl_sf_" .. name_double .. "_e"](n,result)
+		end
+
+		gsl_check(status)
+		return result.val, result.err
+	end
+end
 
 -------------------------------------------------------
 --Create the main special function table that holds the namespace for all the warpper functions
@@ -535,8 +568,8 @@ double gsl_sf_coupling_6j_INCORRECT(int two_ja, int two_jb, int two_jc,
 sf.coupling_3j = get_gsl_sf("coupling_3j",6)
 sf.coupling_6j = get_gsl_sf("coupling_6j",6)
 sf.coupling_9j = get_gsl_sf("coupling_9j",9)
-sf.coupling_RacahW = get_gsl_sf("coupling_RacahW",6)
-sf.coupling_6j_INCORRECT = get_gsl_sf("coupling_6j_INCORRECT",6)
+--sf.coupling_RacahW = get_gsl_sf("coupling_RacahW",6)
+--sf.coupling_6j_INCORRECT = get_gsl_sf("coupling_6j_INCORRECT",6)
 
 
 -------------------------------------------------------
@@ -735,6 +768,7 @@ sf.erfc			= get_gsl_sf("erfc", 1)
 sf.log_erfc		= get_gsl_sf("log_erfc", 1)
 sf.erf_Z		= get_gsl_sf("erf_Z", 1)
 sf.erf_Q		= get_gsl_sf("erf_Q", 1)
+sf.hazard		= get_gsl_sf("hazard", 1)
 
 -------------------------------------------------------
 
@@ -810,9 +844,7 @@ int     gsl_sf_atanint_e(const double x, gsl_sf_result * result);
 double  gsl_sf_atanint(const double x);
 ]]
 
-sf.expint_E1		= get_gsl_sf("expint_E1", 1)
-sf.expint_E2		= get_gsl_sf("expint_E2", 1)
-sf.expint_En		= get_gsl_sf("expint_En", 2)
+sf.expint_E			= get_gsl_sf_choice( {[1]="expint_E1", [2]="expint_E2", ['?']="expint_En"},1)
 sf.expint_Ei		= get_gsl_sf("expint_Ei", 1)
 
 sf.Shi			= get_gsl_sf("Shi", 1)
@@ -847,37 +879,15 @@ int     gsl_sf_fermi_dirac_inc_0_e(const double x, const double b, gsl_sf_result
 double     gsl_sf_fermi_dirac_inc_0(const double x, const double b);
 ]]
 
-
---Fermi dirac function sf.that returns [[value, error]]
-function sf.fermi_dirac(n,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if n == -1 then
-		status = gsl.gsl_sf_fermi_dirac_m1_e(x, result)
-	elseif n == 0 then
-		status = gsl.gsl_sf_fermi_dirac_0_e(x,result)
-	elseif n == 1 then
-		status = gsl.gsl_sf_fermi_dirac_1_e(x,result)
-	elseif n == 2 then
-		status = gsl.gsl_sf_fermi_dirac_2_e(x,result)
-	elseif n == -0.5 then
-		status = gsl.gsl_sf_fermi_dirac_mhalf_e(x,result)
-	elseif n == 0.5 then
-		status = gsl.gsl_sf_fermi_dirac_half_e(x,result)
-	elseif n == 1.5 then
-		status = gsl.gsl_sf_fermi_dirac_3half_e(x,result)
-	else
-		if is_integer(n) then
-			status = gsl.gsl_sf_fermi_dirac_int_e(n,x,result)
-		else
-			error("Input n is not a correct integer value")
-		end
-	end
-
-	gsl_check(status)
-	return result.val, result.err
-end
+sf.fermi_dirac	= get_gsl_sf_choice({
+									[-1]="fermi_dirac_m1",
+									[0]="fermi_dirac_0",
+									[1]="fermi_dirac_1",
+									[2]="fermi_dirac_2",
+									[-0.5]="fermi_dirac_mhalf",
+									[0.5]="fermi_dirac_half",
+									[1.5]="fermi_dirac_3half",
+									['?']="fermi_dirac_int"}, 1)
 
 sf.fermi_dirac_inc = get_gsl_sf("fermi_dirac_inc_0", 2)
 
@@ -934,26 +944,36 @@ double gsl_sf_beta_inc(const double a, const double b, const double x);
 
 
 
-sf.fact 	= get_gsl_sf("fact", 1)
-sf.doublefact 	= get_gsl_sf("doublefact", 1)
-sf.lnfact 	= get_gsl_sf("lnfact", 1)
-sf.lndoublefact = get_gsl_sf("lndoublefact", 1)
+sf.fact 			= get_gsl_sf("fact", 1)
+sf.doublefact 		= get_gsl_sf("doublefact", 1)
+sf.lnfact 			= get_gsl_sf("lnfact", 1)
+sf.lndoublefact 	= get_gsl_sf("lndoublefact", 1)
 
-sf.choose 	= get_gsl_sf("choose",2)
-sf.lnchoose 	= get_gsl_sf("lnchoose",2)
-sf.taylorcoeff 	= get_gsl_sf("taylorcoeff", 2)
+sf.choose 			= get_gsl_sf("choose",2)
+sf.lnchoose 		= get_gsl_sf("lnchoose",2)
+sf.taylorcoeff 		= get_gsl_sf("taylorcoeff", 2)
 
-sf.gamma 	= get_gsl_sf("gamma", 1)
-sf.lngamma 	= get_gsl_sf("lngamma", 1)
+sf.gamma 			= get_gsl_sf("gamma", 1)
+sf.lngamma 			= get_gsl_sf("lngamma", 1)
 
-sf.gammastar	= get_gsl_sf("gammastar", 1)
-sf.gammainv	= get_gsl_sf("gammainv", 1)
+sf.gammastar		= get_gsl_sf("gammastar", 1)
+sf.gammainv			= get_gsl_sf("gammainv", 1)
 
-sf.gamma_inc	= get_gsl_sf("gamma_inc", 2)
-sf.gamma_inc_Q	= get_gsl_sf("gamma_inc_Q", 2)
-sf.gamma_inc_P	= get_gsl_sf("gamma_inc_P", 2) 
+sf.gamma_inc		= get_gsl_sf("gamma_inc", 2)
+sf.gamma_inc_Q		= get_gsl_sf("gamma_inc_Q", 2)
+sf.gamma_inc_P		= get_gsl_sf("gamma_inc_P", 2) 
 
---TODO: Missing gamma complex, lngamma_sgn
+function sf.lngammac(z)
+
+   local lnr = ffi.new("gsl_sf_result")
+   local arg = ffi.new("gsl_sf_result")
+
+   local status = gsl.gsl_sf_lngamma_complex_e( complex.real(z), complex.imag(z), lnr, arg)
+
+   gsl_check(status)
+   
+   return lnr.val, lnr.err, arg.val, arg.err
+end
 
 sf.beta 	= get_gsl_sf("beta", 2)
 sf.lnbeta 	= get_gsl_sf("lnbeta", 2)
@@ -978,28 +998,7 @@ double gsl_sf_gegenpoly_n(int n, double lambda, double x);
 int gsl_sf_gegenpoly_array(int nmax, double lambda, double x, double * result_array);
 ]]
 
-function sf.gegenpoly(n, lambda, x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if n == 1 then
-		status = gsl.gsl_sf_gegenpoly_1(lambda, x, result)
-	elseif n == 2 then
-		status = gsl.gsl_sf_gegenpoly_2(lambda, x, result)
-	elseif n == 3 then
-		status = gsl.gsl_sf_gegenpoly_3(lambda, x, result)	
-	else
-		if is_integer(n) then
-			status = gsl.gsl_sf_gegenpoly_n(n,lambda, x, result)
-		else
-			error("Input n is not a correct integer value")
-		end
-	end
-
-	gsl_check(status)
-	return result.val, result.err
-end
-
+sf.gegenpoly = get_gsl_sf_choice({[1]="gegenpoly_1", [2]="gegenpoly_2", [3]="gegenpoly_3", ['?']="gegenpoly_n"}, 2)
 
 -------------------------------------------------------
 
@@ -1096,30 +1095,7 @@ int     gsl_sf_laguerre_n_e(const int n, const double a, const double x, gsl_sf_
 double     gsl_sf_laguerre_n(int n, double a, double x);
 ]]
 
-
-
-function sf.laguerre(n,a,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if n == 1 then
-		status = gsl.gsl_sf_laguerre_1_e (a, x, result)
-	elseif n == 2 then
-		status = gsl.gsl_sf_laguerre_2_e (a, x, result)
-	elseif n == 3 then
-		status = gsl.gsl_sf_laguerre_3_e (a, x, result)
-	else
-		if is_integer(n) then
-			status = gsl.gsl_sf_laguerre_n_e (n,a, x, result);
-		else
-			error("n = " .. n .. " is not a valid integer value for this function.")
-		end
-	end
-
-	gsl_check(status)
-	return result.val, result.err
-end
-
+sf.laguerre = get_gsl_sf_choice({[1]="laguerre_1",[2]="laguerre_2", [3]="laguerre_3",['?']="laguerre_n"},2)
 
 -------------------------------------------------------
 
@@ -1273,12 +1249,10 @@ int     gsl_sf_psi_n_e(const int n, const double x, gsl_sf_result * result);
 double  gsl_sf_psi_n(const int n, const double x);
 ]]
 
-sf.psi_int	= get_gsl_sf("psi_int", 1)
-sf.psi		= get_gsl_sf("psi", 1)
+sf.psi	= get_gsl_sf_int_double("psi_int", "psi")
 sf.psi_1piy	= get_gsl_sf("psi_1piy", 1)
 
-sf.psi_1_int	= get_gsl_sf("psi_1_int", 1)
-sf.psi_1	= get_gsl_sf("psi_1", 1)
+sf.psi_1 = get_gsl_sf_int_double("psi_1_int", "psi_1")
 
 sf.psi_n	= get_gsl_sf("psi_n", 2)
 
@@ -1294,7 +1268,8 @@ int     gsl_sf_synchrotron_2_e(const double x, gsl_sf_result * result);
 double     gsl_sf_synchrotron_2(const double x);
 ]]
 
-sf.synchrotron	= get_gsl_sf_choice({[1]="synchrotron_1", [2]='synchrotron_2'},1)
+sf.synchrotron1	= get_gsl_sf("synchrotron_1", 1)--get_gsl_sf_choice({[1]="synchrotron_1", [2]='synchrotron_2'},1)
+sf.synchrotron2 = get_gsl_sf("synchrotron_2", 1)
 
 
 -------------------------------------------------------
@@ -1428,23 +1403,6 @@ double gsl_sf_eta_int(const int n);
 int gsl_sf_eta_e(const double s, gsl_sf_result * result);
 double gsl_sf_eta(const double s);
 ]]
-
-
-local function get_gsl_sf_int_double(name_int, name_double)
-	return function(n)
-		local result = ffi.new("gsl_sf_result")
-		local status = 0
-
-		if is_integer(n) then
-			status = gsl["gsl_sf_" .. name_int .. "_e"](n,result)
-		else
-			status = gsl["gsl_sf_" .. name_double .. "_e"](n,result)
-		end
-
-		gsl_check(status)
-		return result.val, result.err
-	end
-end
 
 sf.zeta		= get_gsl_sf_int_double("zeta_int", "zeta")
 sf.zetam1	= get_gsl_sf_int_double("zetam1_int", "zetam1")
