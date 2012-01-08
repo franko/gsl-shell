@@ -31,12 +31,15 @@ Errors and consistency
 
 The VEGAS algorithm computes a number of independent estimates of the integral internally, and returns their weighted average. Random sampling of the integrand can occasionally produce an estimate where the error is zero, particularly if the function is constant in some regions. An estimate with zero error causes the weighted average to break down and must be handled separately. In the original Fortran implementations of VEGAS, the error estimate is made non-zero by substituting a small value (typically 1e-30). The implementation in GSL differs from this and avoids the use of an arbitrary constant -- it either assigns the value a weight which is the average weight of the preceding estimates or discards it according to the following procedure,
 
-current estimate has zero error, weighted average has finite error
-        The current estimate is assigned a weight which is the average weight of the preceding estimates. 
-current estimate has finite error, previous estimates had zero error
-        The previous estimates are discarded and the weighted averaging procedure begins with the current estimate. 
-current estimate has zero error, previous estimates had zero error
-        The estimates are averaged using the arithmetic mean, but no error is computed.
+* current estimate has zero error, weighted average has finite error
+
+    The current estimate is assigned a weight which is the average weight of the preceding estimates.
+* current estimate has finite error, previous estimates had zero error
+
+    The previous estimates are discarded and the weighted averaging procedure begins with the current estimate. 
+* current estimate has zero error, previous estimates had zero error
+    
+    The estimates are averaged using the arithmetic mean, but no error is computed.
 
 The convergence of the algorithm can be tested using the overall chi-squared value of the results. A value which differs significantly from 1 indicates that the values from different iterations are inconsistent. In this case the weighted error will be under-estimated, and further iterations of the algorithm are needed to obtain reliable results.
 
@@ -70,7 +73,7 @@ The integral over the momenta :math:`p_i` factorises, but the presence of the po
 
 so that :math:`\mathcal{Z}(T,V,N) = \mathcal{Z}_{\textrm{ideal}}(T,V,N) \times Q(T,V,N)`. 
 
-Using the VEGAS algorithm, we can perform a naieve calculation of :math:`Q(T,V,N)` for a one-dimensional box containing 5 particles with a Gaussian repulsive interaction:
+Using the VEGAS algorithm, we can perform a naieve calculation of :math:`Q(T,V,N)` for a one-dimensional box containing 5 particles with a Gaussian repulsive interaction::
 
   local exp = math.exp
   local T,V,N = 2,100,5
