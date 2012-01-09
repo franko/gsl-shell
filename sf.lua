@@ -8,6 +8,29 @@ local gsl_check = require 'gsl-check'
 local check     = require 'check'
 local is_integer = check.is_integer
 
+
+--Definition of result file
+ffi.cdef[[
+struct gsl_sf_result_struct {
+  double val;
+  double err;
+};
+typedef struct gsl_sf_result_struct gsl_sf_result;
+
+
+struct gsl_sf_result_e10_struct {
+  double val;
+  double err;
+  int    e10;
+};
+typedef struct gsl_sf_result_e10_struct gsl_sf_result_e10;
+
+typedef int gsl_mode_t;
+
+
+int gsl_sf_result_smash_e(const gsl_sf_result_e10 * re, gsl_sf_result * r);
+]]
+
 ----------------------------------------------------------------------------------------------------------
 --This section contains small and versatile wrapper functions for the generically named special functions
 ----------------------------------------------------------------------------------------------------------
@@ -16,6 +39,11 @@ local GSL_PREC_DOUBLE = 0
 local GSL_PREC_SINGLE = 1
 local GSL_PREC_APPROX = 2
 
+--stores the result of a special function call (global because we do not want to allocate memory at every function call and it is not nescessary)
+local result = ffi.new("gsl_sf_result")
+local result10 = ffi.new("gsl_sf_result_e10")
+
+--checks an argument list for the correct count and signals error in false cases
 local function check_arg(arg, num_arg)
 	if arg == nil then error("Did not give argument count...") end
 	if #arg ~= num_arg then
@@ -24,17 +52,17 @@ local function check_arg(arg, num_arg)
 end
 
 --Returns reference to a wrapper function that wraps a gsl sf mode function (with error) with a certain name and a variable number of arguments num_arg
-local function get_gsl_sf_mode(name, num_arg)
+local function get_gsl_sf_mode(name, num_arg)   
+    local fullname = "gsl_sf_"..name.."_e"
+    
 	return function(...)
 		local arg = {...}
-		local result = ffi.new("gsl_sf_result")
+
 		local status = 0
 		
 		--check for correct argument count
-		check_arg(arg, num_arg)
-
-		--Generate the generic function name
-		local fullname = "gsl_sf_"..name.."_e"
+        --is left out due to performance reasons, shell will notify about errors anyway
+		--check_arg(arg, num_arg)
 
 		--very ugly construction with variable argument list
 		--a simple insertion of ... in this C function call would always only give the first (and not automatically all the others, as one would suspect)
@@ -50,20 +78,22 @@ local function get_gsl_sf_mode(name, num_arg)
 		
 		--do the error checking and return with the result
 		gsl_check(status)
-		return result.val, result.err
+        sf.last_error = result.err
+		return result.val
 	end
 end
 
 --Returns wrapper to a gsl function that only takes one integer
 local function get_gsl_sf_int(name)
+    local fullname = "gsl_sf_"..name.."_e"
+    
 	return function(x)
 		if is_integer(x) then
-			local result = ffi.new("gsl_sf_result")
-			local status = 0
 			--execute the gsl function
-			status = gsl["gsl_sf_"..name.."_e"](x,result)
+			local status = gsl[fullname](x,result)
 			gsl_check(status)
-			return result.val, result.err
+			sf.last_error = result.err
+            return result.val
 		else
 			error("Argument is not an integer")
 		end
@@ -88,42 +118,56 @@ local function call_variable_arg(fullname,arg, result)
 end
 
 --Returns warpper to a gsl function with variable argument count
-local function get_gsl_sf(name, num_arg, is_e10)
+local function get_gsl_sf(name, num_arg)    
+    local fullname = "gsl_sf_"..name.."_e"
+    
 	return function(...)
 		local arg = {...}
 		
-		--check for correct argument count
-		check_arg(arg, num_arg)	
-
-		local result
-		if is_e10 then
-			result = ffi.new("gsl_sf_result_e10")
-		else
-			result = ffi.new("gsl_sf_result")
-		end
-
-		local fullname = "gsl_sf_"..name.."_e"
+        --check for correct argument count
+        --is left out due to performance reasons, shell will notify about errors anyway
+        --check_arg(arg, num_arg)
 
 		local status = call_variable_arg(fullname, arg, result)
 
 		gsl_check(status)
-		if is_e10 then
-			return result.val, result.err, result.e10
-		else
-			return result.val, result.err
-		end
+		sf.last_error = result.err
+        return result.val
 	end
+end
+
+--Returns warpper to a gsl function with variable argument count and additional result10 error
+local function get_gsl_sf10(name, num_arg)    
+    local fullname = "gsl_sf_"..name.."_e"
+    
+    return function(...)
+        local arg = {...}
+        
+        --check for correct argument count
+        --is left out due to performance reasons, shell will notify about errors anyway
+        --check_arg(arg, num_arg)
+
+        local status = call_variable_arg(fullname, arg, result10)
+
+        gsl_check(status)
+        sf.last_error = result10.err
+        sf.last_error10 = result10.e10
+        return result10.val
+    end
 end
 
 --Returns wrapper for a gsl function that takes an order as the first argument
 --This will map to different functions according to the order
 --The mapping is stored in the choices table as {[[order]]=='function_name',...}
 local function get_gsl_sf_choice(choices, num_arg)
+    for k,v in pairs(choices) do choices[k] = "gsl_sf_" .. choices[k] .. "_e" end
+    
 	return function(n,...)
 		local arg = {...}
 		
 		--check for correct argument count
-		check_arg(arg, num_arg)
+        --is left out due to performance reasons, shell will notify about errors anyway
+        --check_arg(arg, num_arg)
 
 		--look if the order choice n is in the list, if yes, we will choose this function, otherwise, look for a '?' entry
 		local l
@@ -131,38 +175,38 @@ local function get_gsl_sf_choice(choices, num_arg)
 			l = n
 			n = '?'
 		end
-		--if '?' entry not exists, then we have a problem
-		if choices[n] == nil then error("There is no valid function for the given integer n = " .. l .. ".") end
-
-		local result = ffi.new("gsl_sf_result")
 		
 		--if we are using the generic function, we have to begin the argument list with the n value
 		if n == '?' then table.insert(arg, 1, tonumber(l)) end
 
-		local fullname = "gsl_sf_" .. choices[n] .. "_e"
-		local status = call_variable_arg(fullname,arg, result)
+		local status = call_variable_arg(choices[n],arg, result)
 
 		--check the status and return the result
 		gsl_check(status)
-		return result.val, result.err
+        sf.last_error = result.err
+        return result.val
 	end
 end
 
-
-
+--wrapper function for gsl functions with integer and double version
 local function get_gsl_sf_int_double(name_int, name_double)
+    local int_name = "gsl_sf_" .. name_int .. "_e"
+    local double_name = "gsl_sf_" .. name_double .. "_e"
+    
 	return function(n)
-		local result = ffi.new("gsl_sf_result")
+
 		local status = 0
 
 		if is_integer(n) then
-			status = gsl["gsl_sf_" .. name_int .. "_e"](n,result)
+			status = gsl[int_name](n,result)
 		else
-			status = gsl["gsl_sf_" .. name_double .. "_e"](n,result)
+			status = gsl[double_name](n,result)
 		end
 
-		gsl_check(status)
-		return result.val, result.err
+        --check the status and return the result
+        gsl_check(status)
+        sf.last_error = result.err
+        return result.val
 	end
 end
 
@@ -171,28 +215,15 @@ end
 sf = {}
 -------------------------------------------------------
 
---Definition of result file
-ffi.cdef[[
-struct gsl_sf_result_struct {
-  double val;
-  double err;
-};
-typedef struct gsl_sf_result_struct gsl_sf_result;
+--Returns the last computed error
+function sf.get_last_error()
+   return sf.last_error
+end
 
-
-struct gsl_sf_result_e10_struct {
-  double val;
-  double err;
-  int    e10;
-};
-typedef struct gsl_sf_result_e10_struct gsl_sf_result_e10;
-
-typedef int gsl_mode_t;
-
-
-int gsl_sf_result_smash_e(const gsl_sf_result_e10 * re, gsl_sf_result * r);
-]]
-
+--Returns the last computed error10 value
+function sf.get_last_error10()
+   return sf.last_error10
+end
 -------------------------------------------------------
 
 --Definition of airy file
@@ -796,9 +827,9 @@ int gsl_sf_exp_mult_err_e10_e(const double x, const double dx, const double y, c
 ]]
 
 sf.exp			= get_gsl_sf("exp", 1)
-sf.exp_e10		= get_gsl_sf("exp_e10", 1, true)
+sf.exp_e10		= get_gsl_sf10("exp_e10", 1)
 sf.exp_mult		= get_gsl_sf("exp_mult", 2)
-sf.exp_mult_e10		= get_gsl_sf("exp_mult_e10", 2, true)
+sf.exp_mult_e10		= get_gsl_sf10("exp_mult_e10", 2)
 
 sf.expm1		= get_gsl_sf("expm1", 1)
 sf.exprel		= get_gsl_sf("exprel", 1)
@@ -806,9 +837,9 @@ sf.exprel_2		= get_gsl_sf("exprel_2", 1)
 sf.exprel_n		= get_gsl_sf("exprel_n", 2)
 
 sf.exp_err		= get_gsl_sf("exp_err", 2)
-sf.exp_err_e10		= get_gsl_sf("exp_err_e10", 2, true)
+sf.exp_err_e10		= get_gsl_sf10("exp_err_e10", 2)
 sf.exp_mult_err		= get_gsl_sf("exp_mult_err", 4)
-sf.exp_mult_err_e10	= get_gsl_sf("exp_mult_err_e10", 4, true)
+sf.exp_mult_err_e10	= get_gsl_sf10("exp_mult_err_e10", 4)
 
 -------------------------------------------------------
 

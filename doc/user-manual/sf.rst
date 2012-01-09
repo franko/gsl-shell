@@ -795,6 +795,19 @@ Zeta Functions
 
    These routines compute the Hurwitz zeta function :math:`\zeta(s,q)` for s > 1, q > 0.
 
+Function Errors
+-------------------
+
+For every special function, GSL offers the computation of an estimate of the absolute error.
+Also in some cases, an overflow or underflow can be detected and handled by these functions. In this case, it may be possible to return a scaling exponent as well as an error/value pair in order to save the result from exceeding the dynamic range of the built-in types.
+
+.. function:: get_last_error()
+   Returns the estimated error of the last special functions calculation.
+
+.. function:: get_last_error10()
+   If a special function offers e10 errors, then this function returns the value of the exponential error.
+   (Note that ``get_last_error()`` will also return the normal error of this call.)
+
 
 
 
