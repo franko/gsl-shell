@@ -169,9 +169,9 @@ local function get_gsl_sf_choice(choices, num_arg)
         --is left out due to performance reasons, shell will notify about errors anyway
         --check_arg(arg, num_arg)
 
-		--look if the order choice n is in the list, if yes, we will choose this function, otherwise, look for a '?' entry
+		--look if the order choice n is in the list, if yes, we will choose this function, otherwise use '?' entry
 		local l
-		if choices[n] == nil and is_integer(n) then
+		if choices[n] == nil then
 			l = n
 			n = '?'
 		end
@@ -380,24 +380,11 @@ double gsl_sf_bessel_zero_Jnu(double nu, unsigned int s);
 local function bessel_generic(letter, suffix, integer_name)
 	suffix = suffix or ""
 	integer_name = integer_name or "n"
-	return function(n,x)
-		local result = ffi.new("gsl_sf_result")
-		local status = 0
-		if n == 0 then
-			status = gsl["gsl_sf_bessel_"..letter.."0"..suffix.."_e"] ( x, result)
-		elseif n == 1 then
-			status = gsl["gsl_sf_bessel_"..letter.."1"..suffix.."_e"] ( x, result)
-		else
-			if is_integer(n) then
-				status = gsl["gsl_sf_bessel_"..letter..integer_name..suffix.."_e"] (n, x, result)
-			else
-				error("n = " .. n .. " is not a valid integer value for this function.")
-			end
-		end
-
-		gsl_check(status)
-		return result.val, result.err
-	end
+    local name0 = "bessel_"..letter.."0"..suffix
+    local name1 = "bessel_"..letter.."1"..suffix
+    local namen = "bessel_"..letter..integer_name..suffix
+    
+	return get_gsl_sf_choice({[0]=name0, [1]=name1, ['?']=namen},1)
 end
 
 local function bessel_nu_generic(letter, suffix, prefix)
@@ -446,27 +433,7 @@ sf.besselKnu		= bessel_nu_generic("K")
 sf.bessellnKnu		= bessel_nu_generic("K","","ln")
 sf.besselKnu_scaled	= bessel_nu_generic("K", "_scaled")
 
-
-function sf.besselJzero(n,s)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if s <= 0 then
-		error("Second argument must be postive")
-	end
-
-	if n == 0 then
-		status = gsl.gsl_sf_bessel_zero_J0_e(s,result)
-	elseif n == 1 then
-		status = gsl.gsl_sf_bessel_zero_J1_e(s,result)
-	else
-		status = gsl.gsl_sf_bessel_zero_Jnu_e(n,s,result)
-	end
-
-	gsl_check(status)
-	return result.val, result.err
-end
-
+sf.besselJzero = get_gsl_sf_choice({[0]='bessel_zero_J0',[1]='bessel_zero_J1',['?']='bessel_zero_Jnu'},1)
 
 -------------------------------------------------------
 
