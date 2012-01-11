@@ -89,6 +89,7 @@ public:
   typedef virtual_canvas<VertexSource> canvas_type;
 
   enum axis_e { x_axis, y_axis };
+  enum placement_e { right = 0, left = 1, bottom = 2, top = 3 };
 
   struct axis {
     str title;
@@ -129,6 +130,8 @@ public:
     m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis)
   {
     compute_user_trans();
+    for (unsigned k = 0; k < 4; k++)
+      m_mini_plot[k] = 0;
   };
 
   virtual ~plot()
@@ -145,6 +148,11 @@ public:
   str& title() { return m_title; }
   str& x_axis_title() { return m_x_axis.title; }
   str& y_axis_title() { return m_y_axis.title; }
+
+  void add_mini_plot(plot* p, placement_e where)
+  {
+    m_mini_plot[where] = p;
+  }
 
   axis& get_axis(axis_e axis_dir)
   {
@@ -169,7 +177,17 @@ public:
   void set_limits(const agg::rect_base<double>& r);
 
   virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
-  virtual void before_draw() { };
+  virtual void before_draw() { }
+
+  void get_bounding_rect(agg::rect_base<double>& bb)
+  {
+    before_draw();
+
+    if (m_rect.is_defined())
+      bb = m_rect.rect();
+    else
+      bb = agg::rect_base<double>(0.0, 0.0, 0.0, 0.0);
+  }
 
   template <class Canvas>
   void draw(Canvas& canvas, agg::trans_affine& m);
@@ -231,6 +249,9 @@ protected:
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m);
 
+  agg::trans_affine draw_mini_plots(canvas_type& canvas,
+				    agg::trans_affine& canvas_mtx);
+
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
   void clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx);
@@ -270,6 +291,7 @@ private:
   bool m_sync_mode;
 
   axis m_x_axis, m_y_axis;
+  plot* m_mini_plot[4];
 };
 
 static double compute_scale(agg::trans_affine& m)
@@ -333,8 +355,10 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affin
 {
   canvas_adapter<Canvas, VS>  canvas(&_canvas);
   before_draw();
-  draw_axis(canvas, canvas_mtx);
-  draw_elements(canvas, canvas_mtx);
+
+  agg::trans_affine area_mtx = draw_mini_plots(canvas, canvas_mtx);
+  draw_axis(canvas, area_mtx);
+  draw_elements(canvas, area_mtx);
 };
 
 template <class VS, class RM>
@@ -529,11 +553,71 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
 }
 
 template <class VS, class RM>
+agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
+					       agg::trans_affine& canvas_mtx)
+{
+  const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
+  const double pad = 2.0;
+
+  double dxl = 0.0, dxr = 0.0, dyb = 0.0, dyt = 0.0;
+
+  for (int k = 0; k < 4; k++)
+    {
+      plot* mp = m_mini_plot[k];
+
+      if (mp)
+	{
+	  agg::rect_base<double> bb;
+	  mp->get_bounding_rect(bb);
+
+	  double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
+	  double px, py;
+	  switch (k)
+	    {
+	    case right:
+	      px = sx - dx + pad;
+	      dxr = dx + 2*pad;
+	      py = (sy - dy) / 2 + pad;
+	      break;
+	    case left:
+	      px = pad;
+	      dxl = dx + 2*pad;
+	      py = (sy - dy) / 2 + pad;
+	      break;
+	    case bottom:
+	      py = pad;
+	      dyb = dy + 2*pad;
+	      px = (sx - dx) / 2 + pad;
+	      break;
+	    case top:
+	      py = sy - dy + pad;
+	      dyt = dy + 2*pad;
+	      px = (sx - dx) / 2 + pad;
+	      break;
+	    default:
+	      /* */;
+	    }
+
+	  agg::trans_affine mtx(dx + 2*pad, 0.0, 0.0, dy + 2*pad, px, py);
+
+	  mp->before_draw();
+	  mp->draw_axis(canvas, mtx);
+	  mp->draw_elements(canvas, mtx);
+	}
+    }
+
+  double cpx = canvas_mtx.tx, cpy = canvas_mtx.ty;
+
+  double ssx = sx - (dxl + dxr), ssy = sy - (dyb + dyt);
+  return agg::trans_affine(ssx, 0.0, 0.0, ssy, cpx + dxl, cpy + dyb);
+}
+
+template <class VS, class RM>
 void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   if (!m_use_units)
     {
-      const double pad = 4.0;
+      const double pad = 2.0;
       m_left_margin   = pad;
       m_right_margin  = pad;
       m_bottom_margin = pad;
@@ -573,10 +657,9 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   const double ppad = 0.02, fpad = 4;
 
   ptr_list<draw::text> labels;
-  double dx_label, dy_label;
 
-  dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
-  dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
+  double dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+  double dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
 
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double lsx = (dx_label + 4 * ppad * sx + 2 * fpad) / (1 + 4 * ppad);

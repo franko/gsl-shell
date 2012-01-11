@@ -67,6 +67,7 @@ static int plot_xlab_angle_get (lua_State *L);
 static int plot_ylab_angle_set (lua_State *L);
 static int plot_ylab_angle_get (lua_State *L);
 static int plot_set_categories (lua_State *L);
+static int plot_set_mini       (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -106,6 +107,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"save",        bitmap_save_image },
   {"save_svg",    plot_save_svg   },
   {"set_categories", plot_set_categories},
+  {"set_mini",    plot_set_mini},
   {NULL, NULL}
 };
 
@@ -642,6 +644,38 @@ plot_set_categories (lua_State *L)
 	}
     }
 
+  AGG_UNLOCK();
+
+  plot_update_raw (L, p, 1);
+
+  return 0;
+}
+
+int
+plot_set_mini(lua_State *L)
+{
+  sg_plot* p = object_check<sg_plot>(L, 1, GS_PLOT);
+  const char* placement = luaL_checkstring(L, 2);
+  sg_plot* mp = object_check<sg_plot>(L, 3, GS_PLOT);
+  sg_plot::placement_e pos;
+
+  char letter = placement[0];
+  if (letter == 'r')
+    pos = sg_plot::right;
+  else if (letter == 'l')
+    pos = sg_plot::left;
+  else if (letter == 'b')
+    pos = sg_plot::bottom;
+  else if (letter == 't')
+    pos = sg_plot::top;
+  else
+    return luaL_error (L, "invalid mini plot placement specification.");
+
+  lua_getfenv (L, 1);
+  objref_mref_add (L, -1, (int)pos, 3);
+
+  AGG_LOCK();
+  p->add_mini_plot(mp, pos);
   AGG_UNLOCK();
 
   plot_update_raw (L, p, 1);

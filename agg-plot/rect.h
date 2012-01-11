@@ -56,7 +56,8 @@ public:
 template <typename T>
 agg::rect_base<T> rect_of_slot_matrix (const agg::trans_affine& mtx)
 {
-  return agg::rect_base<T>(T(mtx.tx), T(mtx.ty), T(mtx.sx + mtx.tx), T(mtx.sy + mtx.ty));
+  T dx = T(mtx.sx + mtx.tx), dy = T(mtx.sy + mtx.ty);
+  return agg::rect_base<T>(T(mtx.tx), T(mtx.ty), dx, dy);
 }
 
 #endif

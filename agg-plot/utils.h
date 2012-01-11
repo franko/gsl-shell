@@ -48,6 +48,12 @@ private:
   agg::pod_bvector<T*> m_list;
 };
 
+inline bool is_unit_matrix(const agg::trans_affine& m, double eps = 1.0e-5)
+{
+  return (fabs(m.sx - 1.0) < eps && fabs(m.shx) < eps &&	\
+	  fabs(m.shy) < eps && fabs(m.sy - 1.0) < eps);
+}
+
 extern void   trans_affine_compose  (agg::trans_affine& a,
 				     const agg::trans_affine& b);
 

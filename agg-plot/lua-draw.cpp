@@ -26,6 +26,7 @@ extern "C" {
 }
 
 #include "lua-draw.h"
+#include "text-shape.h"
 #include "gsl-shell.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
@@ -62,6 +63,9 @@ static int agg_ellipse_new    (lua_State *L);
 static int agg_circle_new     (lua_State *L);
 static int agg_ellipse_free   (lua_State *L);
 
+static int textshape_new      (lua_State *L);
+static int textshape_free     (lua_State *L);
+
 static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
@@ -78,12 +82,18 @@ static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
   {"ellipse",  agg_ellipse_new},
   {"circle",   agg_circle_new},
+  {"textshape", textshape_new},
   {NULL, NULL}
 };
 
 static const struct luaL_Reg agg_path_methods[] = {
   {"__index",     agg_path_index},
   {"__gc",        agg_path_free},
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg textshape_methods[] = {
+  {"__gc",        textshape_free},
   {NULL, NULL}
 };
 
@@ -243,6 +253,23 @@ agg_ellipse_free (lua_State *L)
   return object_free<draw::ellipse>(L, 1, GS_DRAW_ELLIPSE);
 }
 
+int
+textshape_new (lua_State *L)
+{
+  double x = luaL_checknumber(L, 1);
+  double y = luaL_checknumber(L, 2);
+  const char* text = luaL_checkstring(L, 3);
+  double ts = luaL_checknumber(L, 4);
+  new(L, GS_DRAW_TEXTSHAPE) draw::text_shape(x, y, text, ts);
+  return 1;
+}
+
+int
+textshape_free (lua_State *L)
+{
+  return object_free<draw::text_shape>(L, 1, GS_DRAW_TEXTSHAPE);
+}
+
 void
 draw_register (lua_State *L)
 {
@@ -254,6 +281,10 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_ELLIPSE));
   luaL_register (L, NULL, agg_ellipse_methods);
+  lua_pop (L, 1);
+
+  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_TEXTSHAPE));
+  luaL_register (L, NULL, textshape_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */

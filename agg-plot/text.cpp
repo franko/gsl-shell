@@ -62,8 +62,7 @@ namespace draw {
       style.printf_add(";fill:%s", rgbstr);
     }
 
-    bool need_rotate = (fabs(m.sx - 1.0) > eps || fabs(m.shx) > eps || \
-			fabs(m.shy) > eps || fabs(m.sy - 1.0) > eps);
+    bool need_rotate = !is_unit_matrix(m, eps);
 
     int txt_size = (int)(m_text_height * 1.5);
 

@@ -41,7 +41,11 @@ public:
   virtual ~plot_auto() { };
 
   virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
-  virtual void before_draw() { check_bounding_box(); };
+  virtual void before_draw()
+  {
+    plot<VertexSource, resource_manager>::before_draw();
+    check_bounding_box();
+  };
 
   virtual bool pop_layer();
 
