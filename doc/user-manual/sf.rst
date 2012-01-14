@@ -8,8 +8,7 @@ Special functions
 =================
 
 The library includes routines for calculating the values of Airy functions, Bessel functions, Clausen functions, Coulomb wave functions, Coupling coefficients, the Dawson function, Debye functions, Dilogarithms, Elliptic integrals, Jacobi elliptic functions, Error functions, Exponential integrals, Fermi-Dirac functions, Gamma functions, Gegenbauer functions, Hypergeometric functions, Laguerre functions, Legendre functions and Spherical Harmonics, the Psi (Digamma) Function, Synchrotron functions, Transport functions, Trigonometric functions and Zeta functions.
-Each routine also computes an estimate of the numerical error in the calculated value of the function and returns it as a second return value (unless otherwise stated).
-Whenever there is an optimized version in the GSL Library for a certain order of a function, gsl-shell will use this specialized function automatically.
+Any error returned by the special function (such as invalid input domains, etc...) will be signaled.
 
 .. module:: sf
 
@@ -167,7 +166,7 @@ Coulomb Functions
    Note that L itself is not restricted to being an integer.
    The results are returned as::
    
-      F, F_err,Fp, Fp_err,G, G_err, Gp, Gp_err, exp_F, exp_G = coulomb_wave_FG(eta, x, L_F,k)
+      F, Fp, G, Gp, exp_F, exp_G = coulomb_wave_FG(eta, x, L_F,k)
 
    with ``Fp`` and ``Gp`` being the derivates. If an overflow occurs, GSL_EOVRFLW is returned as an error and scaling exponents are stored in the return values exp_F, exp_G.
 
@@ -330,7 +329,7 @@ Elliptic Function
    This function computes the Jacobian elliptic functions :math:`sn(u|m)`, :math:`cn(u|m)`, :math:`dn(u|m)` by descending Landen transformations.
    It returns sn, cn and dn as::
 
-      sn, sn_err, cn, cn_err, dn, dn_err = elljac(u, m)
+      sn, cn, dn = elljac(u, m)
 
 Error Functions
 -------------------
@@ -363,22 +362,18 @@ Exponential Functions
 ---------------------
 
 .. function:: exp(x)
-.. function:: exp_e10(x)
 
-   These routines provide an exponential function :math:`\exp(x)` using GSL semantics and error checking.
+   These routines provide an exponential function :math:`\exp(x)`.
 
 .. function:: exp_err(x, dx)
-.. function:: exp_err_e10(x,dx)
 
    This function exponentiates x with an associated absolute error dx.
 
 .. function:: exp_mult(x,y)
-.. function:: exp_mult_e10(x,y)
 
    These routines exponentiate x and multiply by the factor y to return the product :math:`y \exp(x)`.   
 
 .. function:: exp_mult_err(x,dx,y,dy)
-.. function:: exp_mult_err_e10(x,dx,y,dy)
 
    This routine computes the product :math:`y \exp(x)` for the quantities x, y with associated absolute errors dx, dy.
 
@@ -552,7 +547,7 @@ Gamma and Beta Functions
 
    The functions returns::
 
-      lnr, lnr_err, arg, arg_err = lngammac(z)
+      lnr, arg = lngammac(z)
 
 .. function:: beta(a, b)
 
@@ -794,22 +789,3 @@ Zeta Functions
 .. function:: hzeta(s,q)
 
    These routines compute the Hurwitz zeta function :math:`\zeta(s,q)` for s > 1, q > 0.
-
-Function Errors
--------------------
-
-For every special function, GSL offers the computation of an estimate of the absolute error.
-Also in some cases, an overflow or underflow can be detected and handled by these functions. In this case, it may be possible to return a scaling exponent as well as an error/value pair in order to save the result from exceeding the dynamic range of the built-in types.
-
-.. function:: get_last_error()
-   Returns the estimated error of the last special functions calculation.
-
-.. function:: get_last_error10()
-   If a special function offers e10 errors, then this function returns the value of the exponential error.
-   (Note that ``get_last_error()`` will also return the normal error of this call.)
-
-
-
-
-
-

@@ -41,15 +41,14 @@ local GSL_PREC_APPROX = 2
 
 --stores the result of a special function call (global because we do not want to allocate memory at every function call and it is not nescessary)
 local result = ffi.new("gsl_sf_result")
-local result10 = ffi.new("gsl_sf_result_e10")
 
 --checks an argument list for the correct count and signals error in false cases
-local function check_arg(arg, num_arg)
+--[[local function check_arg(arg, num_arg)
 	if arg == nil then error("Did not give argument count...") end
 	if #arg ~= num_arg then
 		error("You gave " .. #arg .. "arguments, but the function needs " .. num_arg .. " arguments. Please consult the documentation.")
 	end
-end
+end]]--
 
 --Returns reference to a wrapper function that wraps a gsl sf mode function (with error) with a certain name and a variable number of arguments num_arg
 local function get_gsl_sf_mode(name, num_arg)   
@@ -57,12 +56,7 @@ local function get_gsl_sf_mode(name, num_arg)
     
 	return function(...)
 		local arg = {...}
-
 		local status = 0
-		
-		--check for correct argument count
-        --is left out due to performance reasons, shell will notify about errors anyway
-		--check_arg(arg, num_arg)
 
 		--very ugly construction with variable argument list
 		--a simple insertion of ... in this C function call would always only give the first (and not automatically all the others, as one would suspect)
@@ -78,43 +72,8 @@ local function get_gsl_sf_mode(name, num_arg)
 		
 		--do the error checking and return with the result
 		gsl_check(status)
-        sf.last_error = result.err
 		return result.val
 	end
-end
-
---Returns wrapper to a gsl function that only takes one integer
-local function get_gsl_sf_int(name)
-    local fullname = "gsl_sf_"..name.."_e"
-    
-	return function(x)
-		if is_integer(x) then
-			--execute the gsl function
-			local status = gsl[fullname](x,result)
-			gsl_check(status)
-			sf.last_error = result.err
-            return result.val
-		else
-			error("Argument is not an integer")
-		end
-	end
-end
-
---calls a gsl function by the name of 'fullname' with a variable argument list 'arg' and stores the result in 'result'
-local function call_variable_arg(fullname,arg, result)
-	local num_arg = #arg
-	local status = 0
-	--very ugly construction with variable argument list
-	if num_arg == 1 then status = gsl[fullname](arg[1],result)
-	elseif num_arg == 2 then status = gsl[fullname](arg[1], arg[2],result)
-	elseif num_arg == 3 then status = gsl[fullname](arg[1], arg[2],arg[3],result)
-	elseif num_arg == 4 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],result)
-	elseif num_arg == 5 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],result)
-	elseif num_arg == 6 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],result)
-	elseif num_arg == 7 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],result)
-	elseif num_arg == 8 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],result)
-	elseif num_arg == 9 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],result) end	
-	return status
 end
 
 --Returns warpper to a gsl function with variable argument count
@@ -123,51 +82,30 @@ local function get_gsl_sf(name, num_arg)
     
 	return function(...)
 		local arg = {...}
+		local status = 0
 		
-        --check for correct argument count
-        --is left out due to performance reasons, shell will notify about errors anyway
-        --check_arg(arg, num_arg)
-
-		local status = call_variable_arg(fullname, arg, result)
-
+		if num_arg == 1 then status = gsl[fullname](arg[1],result)
+		elseif num_arg == 2 then status = gsl[fullname](arg[1], arg[2],result)
+		elseif num_arg == 3 then status = gsl[fullname](arg[1], arg[2],arg[3],result)
+		elseif num_arg == 4 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],result)
+		elseif num_arg == 5 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],result)
+		elseif num_arg == 6 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],result)
+		elseif num_arg == 7 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],result)
+		elseif num_arg == 8 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],result)
+		elseif num_arg == 9 then status = gsl[fullname](arg[1], arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9],result) end	
+	
 		gsl_check(status)
-		sf.last_error = result.err
-        return result.val
+		return result.val
 	end
-end
-
---Returns warpper to a gsl function with variable argument count and additional result10 error
-local function get_gsl_sf10(name, num_arg)    
-    local fullname = "gsl_sf_"..name.."_e"
-    
-    return function(...)
-        local arg = {...}
-        
-        --check for correct argument count
-        --is left out due to performance reasons, shell will notify about errors anyway
-        --check_arg(arg, num_arg)
-
-        local status = call_variable_arg(fullname, arg, result10)
-
-        gsl_check(status)
-        sf.last_error = result10.err
-        sf.last_error10 = result10.e10
-        return result10.val
-    end
 end
 
 --Returns wrapper for a gsl function that takes an order as the first argument
 --This will map to different functions according to the order
 --The mapping is stored in the choices table as {[[order]]=='function_name',...}
-local function get_gsl_sf_choice(choices, num_arg)
-    for k,v in pairs(choices) do choices[k] = "gsl_sf_" .. choices[k] .. "_e" end
-    
+local function get_gsl_sf_choice(choices)
+    for k,v in pairs(choices) do choices[k] = "gsl_sf_" .. choices[k] .. "_e" end    
 	return function(n,...)
 		local arg = {...}
-		
-		--check for correct argument count
-        --is left out due to performance reasons, shell will notify about errors anyway
-        --check_arg(arg, num_arg)
 
 		--look if the order choice n is in the list, if yes, we will choose this function, otherwise use '?' entry
 		local l
@@ -179,33 +117,11 @@ local function get_gsl_sf_choice(choices, num_arg)
 		--if we are using the generic function, we have to begin the argument list with the n value
 		if n == '?' then table.insert(arg, 1, tonumber(l)) end
 
-		local status = call_variable_arg(choices[n],arg, result)
+		local status = call_variable_arg(choices[n],arg)
 
 		--check the status and return the result
 		gsl_check(status)
-        sf.last_error = result.err
-        return result.val
-	end
-end
 
---wrapper function for gsl functions with integer and double version
-local function get_gsl_sf_int_double(name_int, name_double)
-    local int_name = "gsl_sf_" .. name_int .. "_e"
-    local double_name = "gsl_sf_" .. name_double .. "_e"
-    
-	return function(n)
-
-		local status = 0
-
-		if is_integer(n) then
-			status = gsl[int_name](n,result)
-		else
-			status = gsl[double_name](n,result)
-		end
-
-        --check the status and return the result
-        gsl_check(status)
-        sf.last_error = result.err
         return result.val
 	end
 end
@@ -215,16 +131,6 @@ end
 sf = {}
 -------------------------------------------------------
 
---Returns the last computed error
-function sf.get_last_error()
-   return sf.last_error
-end
-
---Returns the last computed error10 value
-function sf.get_last_error10()
-   return sf.last_error10
-end
--------------------------------------------------------
 
 --Definition of airy file
 ffi.cdef[[
@@ -264,11 +170,11 @@ sf.airyBi_deriv 		= get_gsl_sf_mode("airy_Bi_deriv", 1)
 sf.airyAi_deriv_scaled 		= get_gsl_sf_mode("airy_Ai_deriv_scaled", 1)
 sf.airyBi_deriv_scaled 		= get_gsl_sf_mode("airy_Bi_deriv_scaled", 1)
 
-sf.airyAizero 		= get_gsl_sf_int("airy_zero_Ai",1 )
-sf.airyBizero 		= get_gsl_sf_int("airy_zero_Bi",1 )
+sf.airyAizero 		= get_gsl_sf("airy_zero_Ai",1 )
+sf.airyBizero 		= get_gsl_sf("airy_zero_Bi",1 )
 
-sf.airyAizero_deriv 		= get_gsl_sf_int("airy_zero_Ai_deriv", 1 )
-sf.airyBizero_deriv 		= get_gsl_sf_int("airy_zero_Bi_deriv", 1 )
+sf.airyAizero_deriv 		= get_gsl_sf("airy_zero_Ai_deriv", 1 )
+sf.airyBizero_deriv 		= get_gsl_sf("airy_zero_Bi_deriv", 1 )
 
 -------------------------------------------------------
 
@@ -378,13 +284,11 @@ double gsl_sf_bessel_zero_Jnu(double nu, unsigned int s);
 ]]
 
 local function bessel_generic(letter, suffix, integer_name)
-	suffix = suffix or ""
-	integer_name = integer_name or "n"
-    local name0 = "bessel_"..letter.."0"..suffix
-    local name1 = "bessel_"..letter.."1"..suffix
-    local namen = "bessel_"..letter..integer_name..suffix
+    suffix = suffix or ""
+    integer_name = integer_name or "n"
+    local name = "bessel_"..letter..integer_name..suffix
     
-	return get_gsl_sf_choice({[0]=name0, [1]=name1, ['?']=namen},1)
+	return get_gsl_sf(name,2)
 end
 
 local function bessel_nu_generic(letter, suffix, prefix)
@@ -433,7 +337,7 @@ sf.besselKnu		= bessel_nu_generic("K")
 sf.bessellnKnu		= bessel_nu_generic("K","","ln")
 sf.besselKnu_scaled	= bessel_nu_generic("K", "_scaled")
 
-sf.besselJzero = get_gsl_sf_choice({[0]='bessel_zero_J0',[1]='bessel_zero_J1',['?']='bessel_zero_Jnu'},1)
+sf.besselJzero 		= get_gsl_sf('bessel_zero_Jnu',2)
 
 -------------------------------------------------------
 
@@ -487,20 +391,11 @@ int gsl_sf_coulomb_CL_e(double L, double eta, gsl_sf_result * result);
 int gsl_sf_coulomb_CL_array(double Lmin, int kmax, double eta, double * cl);
 ]]
 
-sf.hydrogenicR_1 = get_gsl_sf("hydrogenicR_1", 2)
-sf.coulomb_CL = get_gsl_sf("coulomb_CL", 2)
+sf.hydrogenicR_1 		= get_gsl_sf("hydrogenicR_1", 2)
+sf.coulomb_CL 			= get_gsl_sf("coulomb_CL", 2)
+sf.hydrogenicR 			= get_gsl_sf("hydrogenicR", 4)
 
-function sf.hydrogenicR(n, l, Z, r)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	status = gsl["gsl_sf_hydrogenicR_e"] ( n, l, Z, r, result)
-
-	gsl_check(status)
-	return result.val, result.err
-end
-
-function sf.coulomb_wave_FG(eta, x, L_F, k)
+local function wave_wrap()
 	local F = ffi.new("gsl_sf_result")
 	local Fp = ffi.new("gsl_sf_result")
 	local G = ffi.new("gsl_sf_result")
@@ -509,16 +404,16 @@ function sf.coulomb_wave_FG(eta, x, L_F, k)
 	local exp_G = ffi.new("double[1]")
 	local status = 0
 
-	status = gsl["gsl_sf_coulomb_wave_FG_e"](eta, x, L_F,k,F,Fp,G,Gp,exp_F,exp_G)
+	return function(eta, x, L_F, k)
+		status = gsl.gsl_sf_coulomb_wave_FG_e(eta, x, L_F,k,F,Fp,G,Gp,exp_F,exp_G)
 
-	gsl_check(status)
-	return {	F=F.val,	F_err=F.err,
-			Fp=Fp.val,	Fp_err=Fp.err,
-			G=G.val,	G_err=G.err,
-			Gp=Gp.val,	Gp_err=Gp.err,
-			exp_F = exp_F,	exp_G = exp_G }
+		gsl_check(status)
+		return F.val, Fp.val, G.val, Gp.val, exp_F[0],	exp_G[0]
+	end
+
 end
 
+sf.coulomb_wave_FG		= wave_wrap()
 
 -------------------------------------------------------
 
@@ -600,7 +495,6 @@ double     gsl_sf_debye_6(const double x);
 
 
 function sf.debye(n,x)
-	local result = ffi.new("gsl_sf_result")
 	local status = 0
 
 	if n == 1 then
@@ -620,7 +514,7 @@ function sf.debye(n,x)
 	end
 
 	gsl_check(status)
-	return result.val, result.err
+	return result.val
 end
 
 -------------------------------------------------------
@@ -650,10 +544,11 @@ int	gsl_sf_complex_spence_xy_e(
   gsl_sf_result * imag_sp
   );
 ]]
-
+local result_r = ffi.new("gsl_sf_result")
+local result_i = ffi.new("gsl_sf_result")
+	
 function sf.cdilog(z)
-	local result_r = ffi.new("gsl_sf_result")
-	local result_i = ffi.new("gsl_sf_result")
+
 	local status = 0
 
 	local r = complex.abs(z)
@@ -730,15 +625,14 @@ sf.ellint_RJ = get_gsl_sf_mode("ellint_RJ",4)
 ffi.cdef[[
 int gsl_sf_elljac_e(double u, double m, double * sn, double * cn, double * dn);
 ]]
+local sn = ffi.new("double[1]")
+local cn = ffi.new("double[1]")
+local dn = ffi.new("double[1]")
 
 function sf.elljac(u, m)
-	local sn = ffi.new("double[1]")
-	local cn = ffi.new("double[1]")
-	local dn = ffi.new("double[1]")
 	local status = gsl.gsl_sf_elljac_e(u,m,sn,cn,dn)
-
 	gsl_check(status)
-	return sn, cn, dn
+	return sn[0], cn[0], dn[0]
 end
 
 
@@ -794,9 +688,7 @@ int gsl_sf_exp_mult_err_e10_e(const double x, const double dx, const double y, c
 ]]
 
 sf.exp			= get_gsl_sf("exp", 1)
-sf.exp_e10		= get_gsl_sf10("exp_e10", 1)
 sf.exp_mult		= get_gsl_sf("exp_mult", 2)
-sf.exp_mult_e10		= get_gsl_sf10("exp_mult_e10", 2)
 
 sf.expm1		= get_gsl_sf("expm1", 1)
 sf.exprel		= get_gsl_sf("exprel", 1)
@@ -804,9 +696,7 @@ sf.exprel_2		= get_gsl_sf("exprel_2", 1)
 sf.exprel_n		= get_gsl_sf("exprel_n", 2)
 
 sf.exp_err		= get_gsl_sf("exp_err", 2)
-sf.exp_err_e10		= get_gsl_sf10("exp_err_e10", 2)
 sf.exp_mult_err		= get_gsl_sf("exp_mult_err", 4)
-sf.exp_mult_err_e10	= get_gsl_sf10("exp_mult_err_e10", 4)
 
 -------------------------------------------------------
 
@@ -842,7 +732,7 @@ int     gsl_sf_atanint_e(const double x, gsl_sf_result * result);
 double  gsl_sf_atanint(const double x);
 ]]
 
-sf.expint_E			= get_gsl_sf_choice( {[1]="expint_E1", [2]="expint_E2", ['?']="expint_En"},1)
+sf.expint_E			= get_gsl_sf("expint_En", 2)
 sf.expint_Ei		= get_gsl_sf("expint_Ei", 1)
 
 sf.Shi			= get_gsl_sf("Shi", 1)
@@ -877,18 +767,8 @@ int     gsl_sf_fermi_dirac_inc_0_e(const double x, const double b, gsl_sf_result
 double     gsl_sf_fermi_dirac_inc_0(const double x, const double b);
 ]]
 
-sf.fermi_dirac	= get_gsl_sf_choice({
-									[-1]="fermi_dirac_m1",
-									[0]="fermi_dirac_0",
-									[1]="fermi_dirac_1",
-									[2]="fermi_dirac_2",
-									[-0.5]="fermi_dirac_mhalf",
-									[0.5]="fermi_dirac_half",
-									[1.5]="fermi_dirac_3half",
-									['?']="fermi_dirac_int"}, 1)
-
+sf.fermi_dirac	= get_gsl_sf("fermi_dirac_int", 2)
 sf.fermi_dirac_inc = get_gsl_sf("fermi_dirac_inc_0", 2)
-
 
 -------------------------------------------------------
 
@@ -961,16 +841,14 @@ sf.gamma_inc		= get_gsl_sf("gamma_inc", 2)
 sf.gamma_inc_Q		= get_gsl_sf("gamma_inc_Q", 2)
 sf.gamma_inc_P		= get_gsl_sf("gamma_inc_P", 2) 
 
+local lnr = ffi.new("gsl_sf_result")
+local arg = ffi.new("gsl_sf_result")
+
 function sf.lngammac(z)
-
-   local lnr = ffi.new("gsl_sf_result")
-   local arg = ffi.new("gsl_sf_result")
-
    local status = gsl.gsl_sf_lngamma_complex_e( complex.real(z), complex.imag(z), lnr, arg)
 
-   gsl_check(status)
-   
-   return lnr.val, lnr.err, arg.val, arg.err
+   gsl_check(status)   
+   return lnr.val, arg.val
 end
 
 sf.beta 	= get_gsl_sf("beta", 2)
@@ -996,7 +874,7 @@ double gsl_sf_gegenpoly_n(int n, double lambda, double x);
 int gsl_sf_gegenpoly_array(int nmax, double lambda, double x, double * result_array);
 ]]
 
-sf.gegenpoly = get_gsl_sf_choice({[1]="gegenpoly_1", [2]="gegenpoly_2", [3]="gegenpoly_3", ['?']="gegenpoly_n"}, 2)
+sf.gegenpoly = get_gsl_sf("gegenpoly_n", 3)
 
 -------------------------------------------------------
 
@@ -1027,53 +905,23 @@ double     gsl_sf_hyperg_2F0(const double a, const double b, const double x);
 ]]
 
 
-function sf.hyperg1F1(m,n,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if is_integer(m) and is_integer(n) then
-		status = gsl.gsl_sf_hyperg_1F1_int_e(m,n,x,result)
-	else
-		status = gsl.gsl_sf_hyperg_1F1_e(m,n,x,result)
-	end
-
-	return result.val, result.err
-end
-
-function sf.hypergU(m,n,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	if is_integer(m) and is_integer(n) then
-		status = gsl.gsl_sf_hyperg_U_int_e(m,n,x,result)
-	else
-		status = gsl.gsl_sf_hyperg_U_e(m,n,x,result)
-	end
-
-	return result.val, result.err
-end
-
-
+sf.hyperg1F1 	= get_gsl_sf("hyperg_1F1", 3)
+sf.hypergU		= get_gsl_sf("hyperg_U", 3)
 
 function sf.hyperg2F1conj(a,c,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	gsl.gsl_sf_hyperg_2F1_conj_e(complex.real(a), complex.imag(a), c, x, result);
+	local status = gsl.gsl_sf_hyperg_2F1_conj_e(complex.real(a), complex.imag(a), c, x, result);
 
 	gsl_check(status)
-	return result.val, result.err
+	return result.val
 end
 
 function sf.hyperg2F1conj_renorm(a,c,x)
-	local result = ffi.new("gsl_sf_result")
-	local status = 0
-
-	gsl.gsl_sf_hyperg_2F1_conj_renorm_e(complex.real(a), complex.imag(a), c, x, result);
+	local status = gsl.gsl_sf_hyperg_2F1_conj_renorm_e(complex.real(a), complex.imag(a), c, x, result);
 
 	gsl_check(status)
-	return result.val, result.err
+	return result.val
 end
+
 sf.hyperg0F1		= get_gsl_sf("hyperg_0F1", 2)
 sf.hyperg2F1		= get_gsl_sf("hyperg_2F1", 4)
 sf.hyperg2F1_renorm	= get_gsl_sf("hyperg_2F1_renorm", 4)
@@ -1093,7 +941,7 @@ int     gsl_sf_laguerre_n_e(const int n, const double a, const double x, gsl_sf_
 double     gsl_sf_laguerre_n(int n, double a, double x);
 ]]
 
-sf.laguerre = get_gsl_sf_choice({[1]="laguerre_1",[2]="laguerre_2", [3]="laguerre_3",['?']="laguerre_n"},2)
+sf.laguerre = get_gsl_sf("laguerre_n",3)
 
 -------------------------------------------------------
 
@@ -1180,18 +1028,35 @@ double gsl_sf_legendre_H3d(const int l, const double lambda, const double eta);
 int gsl_sf_legendre_H3d_array(const int lmax, const double lambda, const double eta, double * result_array);
 ]]
 
-sf.legendreP	 	= get_gsl_sf_choice({[1]='legendre_P1', [2]='legendre_P2', [3]='legendre_P3', ['?']='legendre_Pl'}, 1)
-sf.legendreQ	 	= get_gsl_sf_choice({[0]='legendre_Q0', [1]='legendre_Q1', ['?']='legendre_Ql'}, 1)
+sf.legendreP	 	= get_gsl_sf("legendre_Pl", 2)
+sf.legendreQ	 	= get_gsl_sf("legendre_Ql", 2)
 
 sf.legendrePlm		= get_gsl_sf("legendre_Plm", 3)
 sf.legendresphPlm	= get_gsl_sf("legendre_sphPlm", 3)
 
-sf.conicalP		= get_gsl_sf_choice({[0.5]='conicalP_half',[-0.5]='conicalP_mhalf',[0]='conicalP_0',[1]='conicalP_1'}, 2)
-
 sf.conicalPsphreg	= get_gsl_sf("conicalP_sph_reg", 3)
 sf.conicalPcylreg	= get_gsl_sf("conicalP_cyl_reg", 3)
 
-sf.legendreH3d		= get_gsl_sf_choice({[0]='legendre_H3d_0',[1]='legendre_H3d_1',['?']='legendre_H3d'},2)
+sf.legendreH3d		= get_gsl_sf("legendre_H3d",3)
+
+function sf.conicalP(n,lambda,x)
+  
+	local status = 0
+	if n == 0.5 then
+		status = gsl.gsl_sf_conicalP_half_e (lambda, x, result)
+	elseif n == -0.5 then
+		status = gsl.gsl_sf_conicalP_mhalf_e (lambda, x, result)
+	elseif n == 0 then
+		status = gsl.gsl_sf_conicalP_0_e (lambda, x, result)
+	elseif n == 1 then
+		status = gsl.gsl_sf_conicalP_1_e (lambda, x, result)	
+	else
+		error("n = " .. n .. " is not a valid integer value for this function.")
+	end
+
+	gsl_check(status)
+	return result.val
+end
 
 -------------------------------------------------------
 
@@ -1247,12 +1112,10 @@ int     gsl_sf_psi_n_e(const int n, const double x, gsl_sf_result * result);
 double  gsl_sf_psi_n(const int n, const double x);
 ]]
 
-sf.psi	= get_gsl_sf_int_double("psi_int", "psi")
-sf.psi_1piy	= get_gsl_sf("psi_1piy", 1)
-
-sf.psi_1 = get_gsl_sf_int_double("psi_1_int", "psi_1")
-
-sf.psi_n	= get_gsl_sf("psi_n", 2)
+sf.psi			= get_gsl_sf("psi", 1)
+sf.psi_1piy		= get_gsl_sf("psi_1piy", 1)
+sf.psi_1 		= get_gsl_sf("psi_1", 1)
+sf.psi_n		= get_gsl_sf("psi_n", 2)
 
 
 
@@ -1284,7 +1147,24 @@ int     gsl_sf_transport_5_e(const double x, gsl_sf_result * result);
 double     gsl_sf_transport_5(const double x);
 ]]
 
-sf.transport	= get_gsl_sf_choice({[2]='transport_2',[3]='transport_3',[4]='transport_4',[5]='transport_5'},1)
+function sf.transport(n,x)
+  
+	local status = 0
+	if n == 2 then
+		status = gsl.gsl_sf_transport_2_e (x, result)
+	elseif n == 3 then
+		status = gsl.gsl_sf_transport_3_e (x, result)
+	elseif n == 4 then
+		status = gsl.gsl_sf_transport_4_e (x, result)
+	elseif n == 5 then
+		status = gsl.gsl_sf_transport_5_e (x, result)	
+	else
+		error("n = " .. n .. " is not a valid integer value for this function.")
+	end
+
+	gsl_check(status)
+	return result.val
+end
 
 -------------------------------------------------------
 
@@ -1402,9 +1282,9 @@ int gsl_sf_eta_e(const double s, gsl_sf_result * result);
 double gsl_sf_eta(const double s);
 ]]
 
-sf.zeta		= get_gsl_sf_int_double("zeta_int", "zeta")
-sf.zetam1	= get_gsl_sf_int_double("zetam1_int", "zetam1")
-sf.eta		= get_gsl_sf_int_double("eta_int", "eta")
+sf.zeta		= get_gsl_sf("zeta", 1)
+sf.zetam1	= get_gsl_sf("zetam1", 1)
+sf.eta		= get_gsl_sf("eta", 1)
 sf.hzeta	= get_gsl_sf("hzeta", 2)
 
 
