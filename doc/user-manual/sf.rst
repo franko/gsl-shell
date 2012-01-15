@@ -48,10 +48,10 @@ Airy Functions
 
    These routines compute the Airy function derivatives and their scaled version with the same scaling factor as the airyAi_scaled and airyBi_scaled versions.
 
-.. function:: airyAizero(n)
-.. function:: airyAizero_deriv(n)
-.. function:: airyBizero(n)
-.. function:: airyBizero_deriv(n)
+.. function:: airyAi_zero(n)
+.. function:: airyAi_deriv_zero(n)
+.. function:: airyBi_zero(n)
+.. function:: airyBi_deriv_zero(n)
 
    Return the n-th zero of the respectives functions or their derivatives.
 
@@ -71,7 +71,7 @@ Bessel Functions
 
       Bessel functions J0(red), J1(green), J2(blue)
 
-.. function:: besselJzero(n, s)
+.. function:: besselJ_zero(n, s)
 
    Return the s-th zero of the Bessel J\ :sub:`n` function.
 
@@ -543,7 +543,7 @@ Gamma and Beta Functions
 
    This routine computes :math:`\log(\Gamma(z))` for complex z and z not a negative integer or zero, using the complex Lanczos method.
    The returned parameters are :math:`lnr = \log|\Gamma(z)|` and :math:`arg = \arg(\Gamma(z)) in (-\pi,\pi]`.
-   Note that the phase part (arg) is not well-determined when |z| is very large, due to inevitable roundoff in restricting to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. The absolute value part (lnr), however, never suffers from loss of precision.
+   Note that the phase part (arg) is not well-determined when :math:`|z|` is very large, due to inevitable roundoff in restricting to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. The absolute value part (lnr), however, never suffers from loss of precision.
 
    The functions returns::
 
