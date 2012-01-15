@@ -55,7 +55,7 @@ function mt:reset_val_and_box()
 end
 
 -- step through the box coordinates like
--- {0, 1},..., {1, boxes-1}, {2, 1}, {2, 2},..., {2, boxes-1}, ...
+-- {0, 1},..., {0, boxes-1}, {1, 0}, {1, 1},..., {1, boxes-1}, ...
 -- returns true when reaching {0,0} again
 function mt:boxes_traversed()
   for i=self.dim,1,-1 do
@@ -114,14 +114,14 @@ function mt:resize(bins)
       dw = dw + 1
       xold, xnew =  xnew, self.xi[i][k]
       while dw > pts_per_bin do
-	dw = dw - pts_per_bin
-	xin[j] = xnew - (xnew - xold) * dw
-	j = j + 1
+        dw = dw - pts_per_bin
+        xin[j] = xnew - (xnew - xold) * dw
+        j = j + 1
       end
     end
     xin[bins+1] = 1
     self.xi[i] = xin
-     self.d[i] = {} -- distribution (depends on function^2) (# dim*bins)
+    self.d[i] = {} -- distribution (depends on function^2) (# dim*bins)
   end
   self.bins = bins
 end
@@ -146,28 +146,30 @@ function mt:refine()
     for j=1,bins do
       self.weight[j]=0.
       if d[i][j] > 0 then
-	oldg = grid_tot_i / d[i][j]
-	-- damped change
-	self.weight[j] = ((oldg - 1) / (oldg * log(oldg)))^self.alpha 
+        local invwt = grid_tot_i / d[i][j] -- kind of "inverse weight"
+        -- damped change
+        self.weight[j] = ((invwt - 1) / (invwt* log(invwt)))^self.alpha 
       end
       tot_weight = tot_weight + self.weight[j]
     end
     
     -- now determine the new bin boundaries
     local pts_per_bin = tot_weight / bins
-    local xin = {0}
-    local xold,xnew,dw,j = 0,0,0,2
-    for k=1,bins do
-      dw = dw + self.weight[k]
-      xold, xnew = xnew, self.xi[i][k+1]
-      while dw > pts_per_bin do
-	dw = dw - pts_per_bin
-	xin[j] = xnew - (xnew - xold) * dw / self.weight[k]
-	j = j + 1
+    if pts_per_bin~=0 then -- don't update grid if tot_weight==0
+      local xin = {0}
+      local xold,xnew,dw,j = 0,0,0,2
+      for k=1,bins do
+        dw = dw + self.weight[k]
+        xold, xnew = xnew, self.xi[i][k+1]
+        while dw > pts_per_bin do
+          dw = dw - pts_per_bin
+          xin[j] = xnew - (xnew - xold) * dw / self.weight[k]
+          j = j + 1
+        end
       end
+      xin[bins+1] = 1
+      self.xi[i] = xin
     end
-    xin[bins+1] = 1
-    self.xi[i] = xin
   end
 end
 
@@ -221,23 +223,23 @@ function mt:integrate(f,a,rget)
       local m,q = 0,0 -- first and second moment
       local f_sq_sum = 0
       for k=1,calls_per_box do 
-	local bin_vol = self:random_point(a,rget)
-	local fval = jacbin * bin_vol * f(self.x)
-	
-	-- incrementally calculate first (mean) and second moments 
-	local d = fval - m
-	m = m + d / (k)
-	q = q + d*d * ((k-1)/k)
-	if self.mode~="stratified" then
-	  self:accumulate_distribution(fval*fval)
-	end
-	
+        local bin_vol = self:random_point(a,rget)
+        local fval = jacbin * bin_vol * f(self.x)
+        
+        -- incrementally calculate first (mean) and second moments 
+        local d = fval - m
+        m = m + d / (k)
+        q = q + d*d * ((k-1)/k)
+        if self.mode~="stratified" then
+          self:accumulate_distribution(fval*fval)
+        end
+        
       end
       intgrl = intgrl + m * calls_per_box;
       f_sq_sum = q * calls_per_box;
       tss = tss + f_sq_sum;
       if self.mode=="stratified" then
-	self:accumulate_distribution(f_sq_sum)
+        self:accumulate_distribution(f_sq_sum)
       end
     until self:boxes_traversed()
     
@@ -268,11 +270,11 @@ function mt:integrate(f,a,rget)
       cum_sig = sqrt (1 / self.sum_wgts)
 
       if self.samples == 1 then 
-	self.chisq = 0
+        self.chisq = 0
       else
         self.chisq = self.chisq * (self.samples - 2)
-	self.chisq = self.chisq + (wgt / (1 + (wgt / sum_wgts))) * q * q 
-	self.chisq = self.chisq / (self.samples - 1)
+        self.chisq = self.chisq + (wgt / (1 + (wgt / sum_wgts))) * q * q 
+        self.chisq = self.chisq / (self.samples - 1)
       end
     else
       cum_int = cum_int + (intgrl - cum_int) / it
@@ -305,7 +307,7 @@ local function getnewstate(a,b)
 
       -- control variables
       alpha = 1.5,	-- grid stiffness (for rebinning), typically between
-			-- 1 and 2 (higher is more adaptive, 0 is rigid)
+                    -- 1 and 2 (higher is more adaptive, 0 is rigid)
       mode = "importance",
       iterations=5,
 
@@ -318,9 +320,9 @@ local function getnewstate(a,b)
       sum_wgts = 0,	-- sum of weights (denominator)
       chi_sum = 0,	-- sum of squares of the integrals computed this run
       it_num = 1, 	-- current iteration
-      it_start = 1, 	-- start iteration for this run
+      it_start = 1, -- start iteration for this run
       samples = 0,	-- number of integrals computed this run
-      chisq = 0,	-- chi^2 for the integrals computed this run
+      chisq = 0,	  -- chi^2 for the integrals computed this run
       calls_per_box=2,
       
       },{__index = mt}):init(a,b)
