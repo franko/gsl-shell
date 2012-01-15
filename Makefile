@@ -54,7 +54,7 @@ endif
 LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua graph-init.lua rng.lua rnd.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua strict.lua csv.lua gslext.lua num.lua demo-init.lua import.lua plot3d.lua sf.lua
 
 DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour svg graphics
-LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4
+LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-defs
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
