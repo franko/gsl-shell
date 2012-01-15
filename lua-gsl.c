@@ -27,7 +27,6 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "sf.h"
 
 #include "lua-graph.h"
 
@@ -54,7 +53,6 @@ luaopen_gsl (lua_State *L)
   lua_pop (L, 1);
 
   register_graph (L);
-  sf_register (L);
 
   return 1;
 }

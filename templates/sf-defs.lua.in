@@ -1,0 +1,449 @@
+# function SF_NAME(name)
+#   return "gsl_sf_"..name.."_e"
+# end
+
+# function ARGS(num_arg)
+#   local t = {}
+#   for k = 1, num_arg do t[k] = "a"..k end
+#   return table.concat(t, ",")
+# end
+
+# function SF_DECLARE(short_name, full_name, num_arg, mode)
+#   local xargs = ARGS(num_arg)
+#   local mode_arg = mode and ',GSL_PREC_DOUBLE' or ''
+#   t = {
+#     "function sf."..short_name.."("..xargs..")",
+#     "  local status = gsl."..full_name.."("..xargs..mode_arg..",result)",
+#     "  gsl_check(status)",
+#     "  return result.val",
+#     "end" }
+#   return table.concat(t, "\n")
+# end
+
+local ffi = require 'ffi'
+local gsl = require 'gsl'
+
+local gsl_check = require 'gsl-check'
+
+local sqrt, atan2 = math.sqrt, math.atan2
+
+local GSL_PREC_DOUBLE = 0
+local GSL_PREC_SINGLE = 1
+local GSL_PREC_APPROX = 2
+
+--stores the result of a special function call (global because we do not want to allocate memory at every function call and it is not nescessary)
+local result = ffi.new("gsl_sf_result")
+
+# -------------------------------------------------------
+--Create the main special function table that holds the namespace for all the warpper functions
+sf = {}
+# -------------------------------------------------------
+# -- Definition of airy file
+
+$(SF_DECLARE("airyAi", SF_NAME("airy_Ai"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyBi", SF_NAME("airy_Bi"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyAi_scaled", SF_NAME("airy_Ai_scaled"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyBi_scaled", SF_NAME("airy_Bi_scaled"), 1, 'DOUBLE'))
+
+$(SF_DECLARE("airyAi_deriv", SF_NAME("airy_Ai_deriv"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyBi_deriv", SF_NAME("airy_Bi_deriv"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyAi_deriv_scaled", SF_NAME("airy_Ai_deriv_scaled"), 1, 'DOUBLE'))
+$(SF_DECLARE("airyBi_deriv_scaled", SF_NAME("airy_Bi_deriv_scaled"), 1, 'DOUBLE'))
+
+$(SF_DECLARE("airyAi_zero", SF_NAME("airy_zero_Ai"), 1))
+$(SF_DECLARE("airyBi_zero", SF_NAME("airy_zero_Bi"), 1))
+
+ $(SF_DECLARE("airyAi_deriv_zero", SF_NAME("airy_zero_Ai_deriv"), 1))
+ $(SF_DECLARE("airyBi_deriv_zero", SF_NAME("airy_zero_Bi_deriv"), 1))
+
+# -----------------------------------------------------------------
+# -- Definition of bessel file
+
+# function BESSEL_GENERIC(letter, suffix, integer_name)
+#   suffix = suffix or ""
+#   integer_name = integer_name or "n"
+#   return SF_NAME("bessel_"..letter..integer_name..suffix)
+# end
+
+# function BESSEL_NU_GENERIC(letter, suffix, prefix)
+#   suffix = suffix or ""
+#   prefix = prefix or ""
+#   return SF_NAME("bessel_"..prefix..letter.."nu"..suffix)
+# end
+
+--Regular Cylindrical
+$(SF_DECLARE('besselJ', BESSEL_GENERIC('J'), 2))
+--Irregular Cylindrical
+$(SF_DECLARE('besselY', BESSEL_GENERIC('Y'), 2))
+
+--Regular Modified Cylindrical
+$(SF_DECLARE('besselI', BESSEL_GENERIC('I'), 2))
+--Regular Modified Cylindrical scaled
+$(SF_DECLARE('besselI_scaled', BESSEL_GENERIC('I', '_scaled'), 2))
+
+--Irregular Modified Cylindrical
+$(SF_DECLARE('besselK', BESSEL_GENERIC('K'), 2))
+--Irregular Modified Cylindrical scaled
+$(SF_DECLARE('besselK_scaled', BESSEL_GENERIC('K', '_scaled'), 2))
+
+--Regular Spherical
+$(SF_DECLARE('besselj', BESSEL_GENERIC('j', '', 'l'), 2))
+--Irregular Spherical
+$(SF_DECLARE('bessely', BESSEL_GENERIC('y', '', 'l'), 2))
+
+--Regular Modified Spherical scaled
+$(SF_DECLARE('besseli_scaled', BESSEL_GENERIC('i', '_scaled', 'l'), 2))
+
+--Irregular Modified Spherical scaled
+$(SF_DECLARE('besselk_scaled', BESSEL_GENERIC('k', '_scaled', 'l'), 2))
+
+$(SF_DECLARE('besselJnu', BESSEL_NU_GENERIC('J'), 2))
+$(SF_DECLARE('besselYnu', BESSEL_NU_GENERIC('Y'), 2))
+$(SF_DECLARE('besselInu', BESSEL_NU_GENERIC('I'), 2))
+$(SF_DECLARE('besselInu_scaled', BESSEL_NU_GENERIC('I', '_scaled'), 2))
+$(SF_DECLARE('besselKnu', BESSEL_NU_GENERIC('K'), 2))
+$(SF_DECLARE('bessellnKnu', BESSEL_NU_GENERIC('K', '', 'ln'), 2))
+$(SF_DECLARE('besselKnu_scaled', BESSEL_NU_GENERIC('K', '_scaled'), 2))
+
+$(SF_DECLARE('besselJ_zero', SF_NAME('bessel_zero_Jnu'), 2))
+
+# -------------------------------------------------------
+# -- Definition of clausen file
+
+$(SF_DECLARE('clausen', SF_NAME('clausen'), 1))
+
+# -------------------------------------------------------
+# -- Definition of coulomb file
+
+$(SF_DECLARE('hydrogenicR_1', SF_NAME('hydrogenicR_1'), 2))
+$(SF_DECLARE('coulomb_CL', SF_NAME('coulomb_CL'), 2))
+$(SF_DECLARE('hydrogenicR', SF_NAME('hydrogenicR'), 2))
+
+local function wave_wrap()
+	local F = ffi.new("gsl_sf_result")
+	local Fp = ffi.new("gsl_sf_result")
+	local G = ffi.new("gsl_sf_result")
+	local Gp = ffi.new("gsl_sf_result")
+	local exp_F = ffi.new("double[1]")
+	local exp_G = ffi.new("double[1]")
+	local status = 0
+
+	return function(eta, x, L_F, k)
+		status = gsl.gsl_sf_coulomb_wave_FG_e(eta, x, L_F,k,F,Fp,G,Gp,exp_F,exp_G)
+
+		gsl_check(status)
+		return F.val, Fp.val, G.val, Gp.val, exp_F[0],	exp_G[0]
+	end
+
+end
+
+sf.coulomb_wave_FG		= wave_wrap()
+
+# -------------------------------------------------------
+# -- Definition of coupling coefficients file
+
+$(SF_DECLARE('coupling_3j', SF_NAME('coupling_3j'), 6))
+$(SF_DECLARE('coupling_6j', SF_NAME('coupling_6j'), 6))
+$(SF_DECLARE('coupling_9j', SF_NAME('coupling_9j'), 9))
+
+# -------------------------------------------------------
+# -- Definition of dawson file
+
+$(SF_DECLARE('dawson', SF_NAME('dawson'), 1))
+
+# -------------------------------------------------------
+# -- Definition of debye file
+
+function sf.debye(n,x)
+	local status = 0
+
+	if n == 1 then
+		status = gsl.gsl_sf_debye_1_e (x, result)
+	elseif n == 2 then
+		status = gsl.gsl_sf_debye_2_e (x, result)
+	elseif n == 3 then
+		status = gsl.gsl_sf_debye_3_e (x, result)
+	elseif n == 4 then
+		status = gsl.gsl_sf_debye_4_e (x, result)
+	elseif n == 5 then
+		status = gsl.gsl_sf_debye_5_e (x, result)
+	elseif n == 6 then
+		status = gsl.gsl_sf_debye_6_e (x, result)
+	else
+		error("n = " .. n .. " is not a valid integer value for this function.")
+	end
+
+	gsl_check(status)
+	return result.val
+end
+
+# -------------------------------------------------------
+# -- Definition of dilog file
+
+local result_r = ffi.new("gsl_sf_result")
+local result_i = ffi.new("gsl_sf_result")
+
+local cartesian, complex_new = complex.rect, complex.new
+
+function sf.cdilog(z)
+   local x, y = cartesian(z)
+   local r, th = sqrt(x*x + y*y), atan2(y, x)
+
+   local status = gsl.gsl_sf_complex_dilog_e (r, th, result_r, result_i);
+
+   gsl_check(status)
+   return complex_new(result_r.val, result_i.val)
+end
+
+$(SF_DECLARE('dilog', SF_NAME('dilog'), 1))
+
+# -------------------------------------------------------
+# -- Definition of ellint file
+
+$(SF_DECLARE('ellint_Kcomp', SF_NAME('ellint_Kcomp'), 1, 'DOUBLE'))
+$(SF_DECLARE('ellint_Ecomp', SF_NAME('ellint_Ecomp'), 1, 'DOUBLE'))
+
+$(SF_DECLARE('ellint_F', SF_NAME('ellint_F'), 2, 'DOUBLE'))
+$(SF_DECLARE('ellint_E', SF_NAME('ellint_E'), 2, 'DOUBLE'))
+$(SF_DECLARE('ellint_P', SF_NAME('ellint_P'), 3, 'DOUBLE'))
+$(SF_DECLARE('ellint_D', SF_NAME('ellint_D'), 3, 'DOUBLE'))
+
+$(SF_DECLARE('ellint_RC', SF_NAME('ellint_RC'), 2, 'DOUBLE'))
+$(SF_DECLARE('ellint_RD', SF_NAME('ellint_RD'), 3, 'DOUBLE'))
+$(SF_DECLARE('ellint_RF', SF_NAME('ellint_RF'), 3, 'DOUBLE'))
+$(SF_DECLARE('ellint_RJ', SF_NAME('ellint_RJ'), 4, 'DOUBLE'))
+
+# -------------------------------------------------------
+# -- Definition of elljac file
+
+local sn = ffi.new("double[1]")
+local cn = ffi.new("double[1]")
+local dn = ffi.new("double[1]")
+
+function sf.elljac(u, m)
+	local status = gsl.gsl_sf_elljac_e(u,m,sn,cn,dn)
+	gsl_check(status)
+	return sn[0], cn[0], dn[0]
+end
+
+
+# -------------------------------------------------------
+# -- Definition of erf file
+
+$(SF_DECLARE('erf', SF_NAME('erf'),  1))
+$(SF_DECLARE('erfc', SF_NAME('erfc'), 1))
+$(SF_DECLARE('log_erfc', SF_NAME('log_erfc'), 1))
+$(SF_DECLARE('erf_Z', SF_NAME('erf_Z'), 1))
+$(SF_DECLARE('erf_Q', SF_NAME('erf_Q'), 1))
+$(SF_DECLARE('hazard', SF_NAME('hazard'), 1))
+
+# -------------------------------------------------------
+# -- Definition of exp file
+
+$(SF_DECLARE('exp', SF_NAME('exp'), 1))
+$(SF_DECLARE('exp_mult', SF_NAME('exp_mult'), 2))
+
+$(SF_DECLARE('expm1', SF_NAME('expm1'), 1))
+$(SF_DECLARE('exprel', SF_NAME('exprel'), 1))
+$(SF_DECLARE('exprel_2', SF_NAME('exprel_2'), 1))
+$(SF_DECLARE('exprel_n', SF_NAME('exprel_n'), 2))
+
+$(SF_DECLARE('exp_err', SF_NAME('exp_err'), 2))
+$(SF_DECLARE('exp_mult_err', SF_NAME('exp_mult_err'), 4))
+
+# -------------------------------------------------------
+# -- Definition of expint file
+
+$(SF_DECLARE('expint_E', SF_NAME('expint_En'), 2))
+$(SF_DECLARE('expint_Ei', SF_NAME('expint_Ei'), 1))
+
+$(SF_DECLARE('Shi', SF_NAME('Shi'), 1))
+$(SF_DECLARE('Chi', SF_NAME('Chi'), 1))
+
+$(SF_DECLARE('expint3', SF_NAME('expint_3'), 1))
+$(SF_DECLARE('Si', SF_NAME('Si'), 1))
+$(SF_DECLARE('Ci', SF_NAME('Ci'), 1))
+$(SF_DECLARE('atanint', SF_NAME('atanint'), 1))
+
+# -------------------------------------------------------
+# -- Definition of fermi_dirac file
+
+$(SF_DECLARE('fermi_dirac', SF_NAME('fermi_dirac_int'), 2))
+$(SF_DECLARE('fermi_dirac_inc', SF_NAME('fermi_dirac_inc_0'), 2))
+
+# -------------------------------------------------------
+# -- Definition of gamma file
+
+$(SF_DECLARE('fact', SF_NAME('fact'), 1))
+$(SF_DECLARE('doublefact', SF_NAME('doublefact'), 1))
+$(SF_DECLARE('lnfact', SF_NAME('lnfact'), 1))
+$(SF_DECLARE('lndoublefact', SF_NAME('lndoublefact'), 1))
+
+$(SF_DECLARE('choose', SF_NAME('choose'),2))
+$(SF_DECLARE('lnchoose', SF_NAME('lnchoose'),2))
+$(SF_DECLARE('taylorcoeff', SF_NAME('taylorcoeff'), 2))
+
+$(SF_DECLARE('gamma', SF_NAME('gamma'), 1))
+$(SF_DECLARE('lngamma', SF_NAME('lngamma'), 1))
+
+$(SF_DECLARE('gammastar', SF_NAME('gammastar'), 1))
+$(SF_DECLARE('gammainv', SF_NAME('gammainv'), 1))
+
+$(SF_DECLARE('gamma_inc', SF_NAME('gamma_inc'), 2))
+$(SF_DECLARE('gamma_inc_Q', SF_NAME('gamma_inc_Q'), 2))
+$(SF_DECLARE('gamma_inc_P', SF_NAME('gamma_inc_P'), 2) )
+
+function sf.lngammac(z)
+   local x, y = cartesian(z)
+   local status = gsl.gsl_sf_lngamma_complex_e(x, y, result_r, result_i)
+
+   gsl_check(status)   
+   return result_r.val, result_i.val
+end
+
+$(SF_DECLARE('beta', SF_NAME('beta'), 2))
+$(SF_DECLARE('lnbeta', SF_NAME('lnbeta'), 2))
+$(SF_DECLARE('beta_inc', SF_NAME('beta_inc'), 3))
+
+$(SF_DECLARE('poch', SF_NAME('poch'), 2))
+$(SF_DECLARE('lnpoch', SF_NAME('lnpoch'), 2))
+$(SF_DECLARE('pochrel', SF_NAME('pochrel'), 2))
+
+# -------------------------------------------------------
+# -- Definition of gegenbauer file
+
+$(SF_DECLARE('gegenpoly', SF_NAME('gegenpoly_n'), 3))
+
+# -------------------------------------------------------
+# -- Definition of hyperg file
+
+$(SF_DECLARE('hyperg1F1', SF_NAME('hyperg_1F1'), 3))
+$(SF_DECLARE('hypergU', SF_NAME('hyperg_U'), 3))
+
+function sf.hyperg2F1conj(a,c,x)
+   local ax, ay = cartesian(a)
+   local status = gsl.gsl_sf_hyperg_2F1_conj_e(ax, ay, c, x, result);
+   gsl_check(status)
+   return result.val
+end
+
+function sf.hyperg2F1conj_renorm(a,c,x)
+   local ax, ay = cartesian(a)
+   local status = gsl.gsl_sf_hyperg_2F1_conj_renorm_e(ax, ay, c, x, result);
+   gsl_check(status)
+   return result.val
+end
+
+$(SF_DECLARE('hyperg0F1', SF_NAME('hyperg_0F1'), 2))
+$(SF_DECLARE('hyperg2F1', SF_NAME('hyperg_2F1'), 4))
+$(SF_DECLARE('hyperg2F1_renorm', SF_NAME('hyperg_2F1_renorm'), 4))
+$(SF_DECLARE('hyperg2F0', SF_NAME('hyperg_2F0'), 3))
+
+# -------------------------------------------------------
+# -- Definition of laguerre file
+
+$(SF_DECLARE('laguerre', SF_NAME('laguerre_n'),3))
+
+# -------------------------------------------------------
+# -- Definition of lambert file
+
+$(SF_DECLARE('lambertW0', SF_NAME('lambert_W0'), 1))
+$(SF_DECLARE('lambertWm1', SF_NAME('lambert_Wm1'), 1))
+
+
+# -------------------------------------------------------
+# -- Definition of legendre file
+
+$(SF_DECLARE('legendreP', SF_NAME('legendre_Pl'), 2))
+$(SF_DECLARE('legendreQ', SF_NAME('legendre_Ql'), 2))
+
+$(SF_DECLARE('legendrePlm', SF_NAME('legendre_Plm'), 3))
+$(SF_DECLARE('legendresphPlm', SF_NAME('legendre_sphPlm'), 3))
+
+$(SF_DECLARE('conicalPsphreg', SF_NAME('conicalP_sph_reg'), 3))
+$(SF_DECLARE('conicalPcylreg', SF_NAME('conicalP_cyl_reg'), 3))
+
+$(SF_DECLARE('legendreH3d', SF_NAME('legendre_H3d'),3))
+
+function sf.conicalP(n,lambda,x)
+  
+	local status = 0
+	if n == 0.5 then
+		status = gsl.gsl_sf_conicalP_half_e (lambda, x, result)
+	elseif n == -0.5 then
+		status = gsl.gsl_sf_conicalP_mhalf_e (lambda, x, result)
+	elseif n == 0 then
+		status = gsl.gsl_sf_conicalP_0_e (lambda, x, result)
+	elseif n == 1 then
+		status = gsl.gsl_sf_conicalP_1_e (lambda, x, result)	
+	else
+		error("n = " .. n .. " is not a valid integer value for this function.")
+	end
+
+	gsl_check(status)
+	return result.val
+end
+
+# -------------------------------------------------------
+# -- Definition of log file
+
+$(SF_DECLARE('log', SF_NAME('log'), 1))
+$(SF_DECLARE('log_abs', SF_NAME('log_abs'), 1))
+$(SF_DECLARE('log_1plusx', SF_NAME('log_1plusx'), 1))
+$(SF_DECLARE('log_1plusx_mx', SF_NAME('log_1plusx_mx'), 1))
+
+# -------------------------------------------------------
+# -- Definition of pow_int file
+
+$(SF_DECLARE('pow_int', SF_NAME('pow_int'), 2))
+
+# -------------------------------------------------------
+# -- Definition of psi file
+
+$(SF_DECLARE('psi', SF_NAME('psi'), 1))
+$(SF_DECLARE('psi_1piy', SF_NAME('psi_1piy'), 1))
+$(SF_DECLARE('psi_1', SF_NAME('psi_1'), 1))
+$(SF_DECLARE('psi_n', SF_NAME('psi_n'), 2))
+
+
+
+# -------------------------------------------------------
+# -- Definition of syn file
+
+$(SF_DECLARE('synchrotron1', SF_NAME('synchrotron_1'), 1))
+$(SF_DECLARE('synchrotron2', SF_NAME('synchrotron_2'), 1))
+
+
+# -------------------------------------------------------
+# -- Definition of transport file
+
+function sf.transport(n,x)
+  
+	local status = 0
+	if n == 2 then
+		status = gsl.gsl_sf_transport_2_e (x, result)
+	elseif n == 3 then
+		status = gsl.gsl_sf_transport_3_e (x, result)
+	elseif n == 4 then
+		status = gsl.gsl_sf_transport_4_e (x, result)
+	elseif n == 5 then
+		status = gsl.gsl_sf_transport_5_e (x, result)	
+	else
+		error("n = " .. n .. " is not a valid integer value for this function.")
+	end
+
+	gsl_check(status)
+	return result.val
+end
+
+# -------------------------------------------------------
+# -- Definition of zeta file
+
+$(SF_DECLARE('zeta', SF_NAME('zeta'), 1))
+$(SF_DECLARE('zetam1', SF_NAME('zetam1'), 1))
+$(SF_DECLARE('eta', SF_NAME('eta'), 1))
+$(SF_DECLARE('hzeta', SF_NAME('hzeta'), 2))
+
+# -------------------------------------------------------
+
+return sf
