@@ -10,7 +10,7 @@
 
 # function SF_DECLARE(short_name, full_name, num_arg, mode)
 #   local xargs = ARGS(num_arg)
-#   local mode_arg = mode and ',GSL_PREC_DOUBLE' or ''
+#   local mode_arg = mode and ',GSL_PREC_'..mode or ''
 #   t = {
 #     "function sf."..short_name.."("..xargs..")",
 #     "  local status = gsl."..full_name.."("..xargs..mode_arg..",result)",
@@ -297,7 +297,7 @@ function sf.lngammac(z)
    local x, y = cartesian(z)
    local status = gsl.gsl_sf_lngamma_complex_e(x, y, result_r, result_i)
 
-   gsl_check(status)   
+   gsl_check(status)
    return result_r.val, result_i.val
 end
 
@@ -366,7 +366,7 @@ $(SF_DECLARE('conicalPcylreg', SF_NAME('conicalP_cyl_reg'), 3))
 $(SF_DECLARE('legendreH3d', SF_NAME('legendre_H3d'),3))
 
 function sf.conicalP(n,lambda,x)
-  
+
 	local status = 0
 	if n == 0.5 then
 		status = gsl.gsl_sf_conicalP_half_e (lambda, x, result)
@@ -375,7 +375,7 @@ function sf.conicalP(n,lambda,x)
 	elseif n == 0 then
 		status = gsl.gsl_sf_conicalP_0_e (lambda, x, result)
 	elseif n == 1 then
-		status = gsl.gsl_sf_conicalP_1_e (lambda, x, result)	
+		status = gsl.gsl_sf_conicalP_1_e (lambda, x, result)
 	else
 		error("n = " .. n .. " is not a valid integer value for this function.")
 	end
@@ -418,7 +418,7 @@ $(SF_DECLARE('synchrotron2', SF_NAME('synchrotron_2'), 1))
 # -- Definition of transport file
 
 function sf.transport(n,x)
-  
+
 	local status = 0
 	if n == 2 then
 		status = gsl.gsl_sf_transport_2_e (x, result)
@@ -427,7 +427,7 @@ function sf.transport(n,x)
 	elseif n == 4 then
 		status = gsl.gsl_sf_transport_4_e (x, result)
 	elseif n == 5 then
-		status = gsl.gsl_sf_transport_5_e (x, result)	
+		status = gsl.gsl_sf_transport_5_e (x, result)
 	else
 		error("n = " .. n .. " is not a valid integer value for this function.")
 	end
