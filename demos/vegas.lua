@@ -27,9 +27,8 @@ local function demo1()
   local maxdim = 10
   local lo,hi = 0,2
   local results = {}
-  local p = graph.canvas('Integral of sum (i*x_i^2) (i=1..n)')
-  p:limits(0,0,11,80000)
-  p.sync=true
+  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..n)')
+  p.clip, p.pad = false, true
   local exact = graph.filine(|n| n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1),maxdim)
   local computed = graph.filine(testdim,1,maxdim)
   p:addline(exact)
@@ -56,14 +55,15 @@ end
 
 local function demo2()
   local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
-  for d=2,10 do
+  local max_dim = 14
+  for d=2, max_dim do
     io.write("==========================================\n")
     io.write("Calculating the volume of a unit ",d,"-sphere.\n")
     local a,b ={},{}
     for i=1,d do
       -- we evaluate the integral in one quadrant and multiply
       -- it by the number of quadrants 2^d afterwards.
-      a[i],b[i] = 0,1 
+      a[i],b[i] = 0,1
     end
     local calls, n = d*1e4,1
     local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
@@ -77,8 +77,9 @@ local function demo2()
     end
     ln:line_to(d,res*2^d)
   end
-  local p = graph.canvas('Volume of a unit n-sphere')
-  p:limits(0,0,11,6)
+  local p = graph.plot('Volume of a unit n-sphere')
+  p.clip, p.pad = false, true
+  p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
   p:add(ln, "blue", {{'marker', size=8}})
   p.xlab="n"
   p.ylab="V"
