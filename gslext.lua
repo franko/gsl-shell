@@ -14,7 +14,8 @@ require('contour')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
-num.monte_vegas = require 'monte-vegas'
+num.monte_vegas = require 'vegas'
+
 local demomod
 
 function demo(name)
