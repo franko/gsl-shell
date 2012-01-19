@@ -12,7 +12,8 @@ local function testdim(n)
   local s=table.concat(t,"+")
   io.write("Integrating ",s,"\nExact integral = ",exact,"\n")
   local calls = 1e6*n
-  local result,sigma,runs,cont = monte_vegas(loadstring("return |x| "..s)(),a,b,calls)
+  local r = rng.new('taus2')
+  local result,sigma,runs,cont = monte_vegas(loadstring("return |x| "..s)(),a,b,calls,r)
   io.write( string.format([[
 ==================
 result = %.6f
