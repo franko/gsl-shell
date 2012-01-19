@@ -111,10 +111,7 @@ end
 --- reset the distribution of the grid and the current box coordinates
 local function reset_val_and_box()
     ffi.fill(box, $(N * SIZE_OF_INT))
-    local bins_byte_size = bins * $(SIZE_OF_DOUBLE)
-#   for i=0, N-1 do
-        ffi.fill(d[$(i)], bins_byte_size)
-#   end
+    ffi.fill(d, $(N * K * SIZE_OF_DOUBLE))
 end
 
 -- step through the box coordinates like
@@ -132,18 +129,19 @@ end
 -- "a" will be a table indexed from 1
 local function random_point(a, rget)
     local vol = 1
-    for i=0, $(N-1) do
-
+#   for i=0, N-1 do
+    do
         -- box[j] + ran gives the position in the box units,
         -- while z is the position in bin units.
-        local z = (( box[i] + rget() ) / boxes ) * bins + 1
+        local z = (( box[$(i)] + rget() ) / boxes ) * bins + 1
         local k, loc = modf(z) -- int: bin index and fract: location inside bin
-        bin[i] = k-1
-        local bin_width = xi[i][k] - xi[i][k-1]
-        local y = xi[i][k-1] + loc * bin_width
-        x[i+1] = a[i+1] + y * dx[i]
+        bin[$(i)] = k-1
+        local bin_width = xi[$(i)][k] - xi[$(i)][k-1]
+        local y = xi[$(i)][k-1] + loc * bin_width
+        x[$(i+1)] = a[$(i+1)] + y * dx[$(i)]
         vol = vol * bin_width
     end
+#   end
     return vol
 end
 
