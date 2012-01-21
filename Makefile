@@ -1,18 +1,18 @@
 
 # Makefile
-# 
+#
 # Copyright (C) 2009, 2010 Francesco Abbate
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or (at
 # your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -51,10 +51,10 @@ ifeq ($(strip $(USE_READLINE)),yes)
   C_SRC_FILES += completion.c
 endif
 
-LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua strict.lua csv.lua gslext.lua num.lua monte-vegas.lua demo-init.lua import.lua plot3d.lua
+LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua strict.lua csv.lua gslext.lua num.lua vegas.lua demo-init.lua import.lua plot3d.lua
 
 DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ vegas anim linfit contour svg graphics
-LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4
+LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 vegas-defs
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
