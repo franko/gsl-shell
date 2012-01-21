@@ -1,0 +1,339 @@
+-- monte-vegas.lua
+--
+-- Copyright (C) 2012 Lesley De Cruz
+--
+-- This program is free software; you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3 of the License, or (at
+-- your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program; if not, write to the Free Software
+-- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+--
+-- This is an implementation of the adaptive Monte-Carlo algorithm "VEGAS"
+-- of G. P. Lepage, originally described in J. Comp. Phys. 27, 192(1978).
+-- The current version of the algorithm was described in the Cornell
+-- preprint CLNS-80/447 of March, 1980.
+--
+-- Adapted from GSL, version 1.15
+--
+-- Original author: Michael J. Booth, 1996
+-- Modified by: Brian Gough, 12/2000
+-- Adapted for LuaJIT2 by Lesley De Cruz and Francesco Abbate, 2012
+
+local ffi = require 'ffi'
+
+local floor, min, max = math.floor, math.min, math.max
+local modf, sqrt, log  = math.modf, math.sqrt, math.log
+
+-- a table is used here because this will be passed to the user defined function
+local x = {} -- evaluate the function at x (# dim)
+
+local dx  = ffi.new('double[$(N)]') -- ranges, delta x (# dim)
+local box = ffi.new('int[$(N)]')    -- current box coordinates (integer) (# dim)
+local bin = ffi.new('int[$(N)]')    -- current bin coordinates (integer) (# dim)
+
+-- distribution (depends on function^2) (# dim*bins)
+local d  = ffi.new('double[$(N)][$(K)]')
+
+-- bin boundaries, i.e. grid (# dim*(bins+1))
+local xi  = ffi.new('double[$(N)][$(K+1)]')
+local xin = ffi.new('double[$(K+1)]')
+
+-- ratio of bin sizes (# bins)
+local weight = ffi.new('double[$(K)]') -- ratio of bin sizes (# bins)
+
+
+local bins = 1          -- number of bins
+local boxes = 0         -- number of boxes
+local volume = 1        -- volume of the integration domain
+
+-- control variables
+local alpha = 1.5         -- grid stiffness (for rebinning), typically between
+                        -- 1 and 2 (higher is more adaptive, 0 is rigid)
+local mode = $(MODE_IMPORTANCE)
+local iterations = 5
+
+-- intermediate results for an iteration
+local result = 0
+local sigma = 0
+
+-- intermediate results for an integrate(...)
+
+-- weighted sum of integrals of each iteration (numerator)
+local wtd_int_sum = 0
+local sum_wgts = 0        -- sum of weights (denominator)
+local chi_sum = 0         -- sum of squares of the integrals computed this run
+local it_num = 1          -- current iteration
+local it_start = 1        -- start iteration for this run
+local samples = 0         -- number of integrals computed this run
+local chisq = 0           -- chi^2 for the integrals computed this run
+local calls_per_box = 2
+local jac
+
+--- initialise a fresh vegas state
+--- NB: function argumens are table indexed from 1
+local function init(a, b)
+    for i=0, $(N-1) do
+        assert(a[i+1] < b[i+1],"lower bound should be smaller than upper bound")
+        dx[i] = b[i+1] - a[i+1]
+        volume = volume * dx[i]
+        xi[i][0] = 0
+        xi[i][1] = 1
+    end
+end
+
+--- reset the distribution of the grid and the current box coordinates
+local function reset_val_and_box()
+    ffi.fill(box, $(N * SIZE_OF_INT))
+    ffi.fill(d, $(N * K * SIZE_OF_DOUBLE))
+end
+
+-- step through the box coordinates like
+-- {0, 1},..., {0, boxes-1}, {1, 0}, {1, 1},..., {1, boxes-1}, ...
+-- returns true when reaching {0,0} again
+local function boxes_traversed()
+#   for i= N-1,0,-1 do
+        box[$(i)] = ( (box[$(i)] + 1) % boxes)
+        if box[$(i)] ~= 0 then return false end
+#   end
+    return true
+end
+
+-- return a random point from the box, weighted with bin_vol
+-- "a" will be a table indexed from 1
+local function random_point(a, x_out, rget)
+    local vol = 1
+#   for i=0, N-1 do
+    do
+        -- box[j] + ran gives the position in the box units,
+        -- while z is the position in bin units.
+        local z = (( box[$(i)] + rget() ) / boxes ) * bins + 1
+        local k, loc = modf(z) -- int: bin index and fract: location inside bin
+        bin[$(i)] = k-1
+        local bin_width = xi[$(i)][k] - xi[$(i)][k-1]
+        local y = xi[$(i)][k-1] + loc * bin_width
+        x_out[$(i+1)] = a[$(i+1)] + y * dx[$(i)]
+        vol = vol * bin_width
+    end
+#   end
+    return vol
+end
+
+-- keep track of the squared function value in each bin
+-- to later refine the grid
+local function accumulate_distribution(fsq)
+#   for i=0, N-1 do
+    do
+        local bin_$(i) = bin[$(i)]
+        d[$(i)][bin_$(i)] = d[$(i)][bin_$(i)] + fsq
+    end
+#   end
+end
+
+-- clear the results, but keep the grid
+-- done in stage 0 and 1 in GSL
+local function clear_stage1()
+    wtd_int_sum = 0
+    sum_wgts = 0
+    chi_sum = 0
+    it_num = 1
+    samples = 0
+    chisq = 0
+end
+
+-- intelligently resize the old grid given the new number of bins
+local function resize(req_bins)
+    local pts_per_bin = bins / req_bins
+    for i=0, $(N-1) do
+          xin[0] = 0
+          local xold,xnew,dw,j=0,0,0,1
+          for k=1, bins do
+              dw = dw + 1
+              xold, xnew =  xnew, xi[i][k]
+              while dw > pts_per_bin do
+                  dw = dw - pts_per_bin
+                  xin[j] = xnew - (xnew - xold) * dw
+                  j = j + 1
+              end
+          end
+          ffi.copy(xi[i], xin, j * $(SIZE_OF_DOUBLE))
+          xi[i][req_bins] = 1
+          -- distribution (depends on function^2) (# dim*bins)
+    end
+    bins = req_bins
+end
+
+-- refine the grid based on accumulated stats in self.d.
+local function refine()
+    for i=0, $(N-1) do
+          -- implements gs[i][j] = (gs[i][j-1]+gs[i][j]+gs[i][j+1])/3
+          local oldg,newg = d[i][0],d[i][1]
+          -- total grid value for dimension i
+          local grid_tot_i = (oldg + newg) / 2
+          d[i][0] = grid_tot_i
+          for j=1,bins-2 do
+              oldg, newg, d[i][j] = newg, d[i][j+1],(oldg + newg + d[i][j+1]) / 3
+              grid_tot_i = grid_tot_i + d[i][j]
+          end
+          d[i][bins - 1] = (oldg + newg) / 2
+          grid_tot_i = grid_tot_i + d[i][bins - 1]
+
+          local tot_weight = 0
+          for j=0, bins - 1 do
+              weight[j] = 0
+              if d[i][j] > 0 then
+                  local invwt = grid_tot_i / d[i][j] -- kind of "inverse weight"
+                  -- damped change
+                  weight[j] = ((invwt - 1) / (invwt* log(invwt)))^alpha
+              end
+              tot_weight = tot_weight + weight[j]
+          end
+
+          -- now determine the new bin boundaries
+          local pts_per_bin = tot_weight / bins
+          if pts_per_bin ~= 0 then -- don't update grid if tot_weight==0
+              xin[0] = 0
+              local xold,xnew,dw,j = 0,0,0,1
+              for k=0, bins - 1 do
+                  dw = dw + weight[k]
+                  xold, xnew = xnew, xi[i][k+1]
+                  while dw > pts_per_bin do
+                      dw = dw - pts_per_bin
+                      xin[j] = xnew - (xnew - xold) * dw / weight[k]
+                      j = j + 1
+                  end
+              end
+              ffi.copy(xi[i], xin, j * $(SIZE_OF_DOUBLE))
+              xi[i][bins] = 1
+	  end
+    end
+end
+
+-- determine the number of calls, bins, boxes etc.
+-- based on the requested number of calls
+-- intelligently rebin the old grid
+-- done in stage 0,1 and 2 in GSL
+local function rebin_stage2(calls)
+    local new_bins = $(K)
+    boxes = 1
+    if mode ~= $(MODE_IMPORTANCE_ONLY) then
+        -- shooting for 2 calls/box
+        boxes = floor((calls/2)^(1/$(N)))
+        mode = $(MODE_IMPORTANCE)
+        if 2*boxes >= $(K) then
+            -- if there are too many boxes, we switch to stratified sampling
+            local box_per_bin = max(floor(boxes/$(K)),1)
+            new_bins = min(floor(boxes/box_per_bin), $(K))
+            boxes = box_per_bin * new_bins
+            mode = $(MODE_STRATIFIED)
+        end
+    end
+
+    local tot_boxes= boxes^$(N)
+    calls_per_box = max(floor(calls/tot_boxes),2)
+    calls = calls_per_box * tot_boxes
+    -- x-space volume / avg number of calls per bin
+    jac = volume * new_bins^$(N) / calls
+    -- If the number of bins changes from the previous invocation, bins
+    -- are expanded or contracted accordingly, while preserving bin
+    -- density
+    if new_bins ~= bins then
+        resize(new_bins)
+    end
+end
+
+--- run (self.iterations) integrations
+-- "a" will be a table indexed from 1
+local function integrate(f, a, rget)
+    it_start = it_num
+    local cum_int, cum_sig = 0, 0
+    for it= 1, iterations do
+        local intgrl = 0 -- integral for this iteration
+        local tss = 0 -- total squared sum
+
+        it_num = it_start + it
+        reset_val_and_box()
+
+        repeat
+            local m,q = 0,0 -- first and second moment
+            local f_sq_sum = 0
+            for k=1,calls_per_box do
+                 local bin_vol = random_point(a, x, rget)
+                 local fval = jac * bin_vol * f(x)
+
+                 -- incrementally calculate first (mean) and second moments
+                 local d = fval - m
+                 m = m + d / (k)
+                 q = q + d*d * ((k-1)/k)
+                 if mode ~= $(MODE_STRATIFIED) then
+                     accumulate_distribution(fval*fval)
+                 end
+
+             end
+
+             intgrl = intgrl + m * calls_per_box;
+             f_sq_sum = q * calls_per_box;
+             tss = tss + f_sq_sum;
+             if mode == $(MODE_STRATIFIED) then
+                 accumulate_distribution(f_sq_sum)
+             end
+        until boxes_traversed()
+
+        -- Compute final results for this iteration
+        -- Determine variance and weight
+        local var, wgt = tss / (calls_per_box - 1), 0
+
+        if var > 0 then
+            wgt = 1 / var
+        elseif sum_wgts > 0 then
+            wgt = sum_wgts / samples
+        end
+        result = intgrl
+        sigma = sqrt(var)
+
+        if wgt > 0 then
+            local old_sum_wgts = sum_wgts
+            local m = (sum_wgts > 0) and (wtd_int_sum / sum_wgts) or 0
+            local q = intgrl - m
+
+            -- update stats
+            samples = samples + 1
+            sum_wgts = sum_wgts + wgt
+            wtd_int_sum = wtd_int_sum + intgrl * wgt
+            chi_sum = chi_sum + intgrl * intgrl * wgt
+            cum_int = wtd_int_sum / sum_wgts
+            cum_sig = sqrt(1 / sum_wgts)
+
+            if samples == 1 then
+                chisq = 0
+            else
+                chisq = chisq * (samples - 2)
+                chisq = chisq + (wgt / (1 + (wgt / old_sum_wgts))) * q * q
+                chisq = chisq / (samples - 1)
+            end
+        else
+            cum_int = cum_int + (intgrl - cum_int) / it
+            cum_sig = 0
+        end
+
+        refine()
+    end
+
+    return cum_int, cum_sig
+end
+
+return {
+    init         = init,
+    integrate    = integrate,
+    clear_stage1 = clear_stage1,
+    rebin_stage2 = rebin_stage2,
+    iterations   = function() return iterations end,
+    chisq        = function() return chisq end,
+}

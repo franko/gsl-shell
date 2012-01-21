@@ -38,6 +38,7 @@ Contents:
    ode.rst
    integ.rst
    sf.rst
+   vegas.rst
    graphics.rst
    plot3d.rst
    contour.rst

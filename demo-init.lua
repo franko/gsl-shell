@@ -5,18 +5,18 @@ local function load_demo(name)
    local record = require('demos/' .. name)
    local group, info = record[1], record[2]
    local section = demo_list[group]
-   if not section then 
+   if not section then
       section = {}
       demo_list[group] = section
    end
    local i = #section
-   for k, v in ipairs(info) do 
+   for k, v in ipairs(info) do
       section[i+k] = v
    end
 end
 
 local demo_files = {
-  'fft', 'bspline', 'wave-particle', 'plot', 'fractals', 'ode', 'nlinfit', 'integ', 'anim', 'linfit', 'contour', 'svg', 'graphics', 'sf'}
+  'fft', 'bspline', 'wave-particle', 'plot', 'fractals', 'ode', 'nlinfit', 'integ', 'anim', 'linfit', 'contour', 'svg', 'graphics', 'sf', 'vegas'}
 
 for i, name in ipairs(demo_files) do
    load_demo(name)

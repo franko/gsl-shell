@@ -15,6 +15,7 @@ require('sf')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
+num.monte_vegas = require 'vegas'
 
 local demomod
 
