@@ -27,29 +27,10 @@
 -- Modified by: Brian Gough, 12/2000
 -- Adapted for LuaJIT2 by: Lesley De Cruz, 2012
 
-# function VL(var)
-#  local res = {}
-#  for i = 0, N-1 do
-#    res[i] = var..'_'..i
-#  end
-#  return table.concat(res,',')
-# end
-
-# function AL(var)
-#  local res = {}
-#  for i = 0, N-1 do
-#    res[i] = var..'['..i..']'
-#  end
-#  return table.concat(res,',')
-# end
-
 local ffi = require 'ffi'
 
 local floor, min, max = math.floor, math.min, math.max
 local modf, sqrt, log  = math.modf, math.sqrt, math.log
-
-local strict = require 'strict'
-strict.enable()
 
 -- a table is used here because this will be passed to the user defined function
 local x = {} -- evaluate the function at x (# dim)
@@ -127,7 +108,7 @@ end
 
 -- return a random point from the box, weighted with bin_vol
 -- "a" will be a table indexed from 1
-local function random_point(a, rget)
+local function random_point(a, x_out, rget)
     local vol = 1
 #   for i=0, N-1 do
     do
@@ -138,7 +119,7 @@ local function random_point(a, rget)
         bin[$(i)] = k-1
         local bin_width = xi[$(i)][k] - xi[$(i)][k-1]
         local y = xi[$(i)][k-1] + loc * bin_width
-        x[$(i+1)] = a[$(i+1)] + y * dx[$(i)]
+        x_out[$(i+1)] = a[$(i+1)] + y * dx[$(i)]
         vol = vol * bin_width
     end
 #   end
@@ -284,7 +265,7 @@ local function integrate(f, a, rget)
             local m,q = 0,0 -- first and second moment
             local f_sq_sum = 0
             for k=1,calls_per_box do
-                 local bin_vol = random_point(a, rget)
+                 local bin_vol = random_point(a, x, rget)
                  local fval = jac * bin_vol * f(x)
 
                  -- incrementally calculate first (mean) and second moments

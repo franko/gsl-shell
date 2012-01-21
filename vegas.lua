@@ -1,7 +1,7 @@
 local template = require 'template'
 local ffi = require 'ffi'
 
-local abs = math.abs
+local abs, random = math.abs, math.random
 
 local spec = {
    K = 50, -- bins max. even integer, will be divided by two
@@ -26,7 +26,8 @@ local spec = {
 -- @return run function to compute the integral again via run(calls)
 local function monte_vegas(f, a, b, calls, r, chidev)
   calls = calls or 5e5
-  local rget = r and function() return r:get() end or math.random
+  local rget_call = r and r.get
+  local rget = r and (function() return rget_call(r) end) or random
   chidev = chidev or 0.5
   local dim = #a
   assert(dim==#b,"number of dimensions of lower and upper bounds differ")
