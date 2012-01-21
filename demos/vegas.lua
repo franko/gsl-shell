@@ -1,18 +1,19 @@
 local monte_vegas = num.monte_vegas
+local ilist = iter.ilist
 
 local function testdim(n)
   local lo,hi = 0,2
   local exact =  n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1)
-  local t,a,b={},{},{}
-  for i=1,n do
-    t[i]=string.format("%d*x[%d]^2",i,i)
-    a[i],b[i]=lo,hi
+  local function integrand(x)
+     local s = 0
+     for k= 1, n do s = s + k*x[k]^2 end
+     return s
   end
-  local s=table.concat(t,"+")
-  io.write("Integrating ",s,"\n")
+  local a, b = ilist(|| lo, n), ilist(|| hi, n)
+  echo("Integrating SUM_(k=1,"..n..") k*x[k]^2")
   local calls = 1e4*n
-  local result,sigma,runs,cont=monte_vegas(loadstring("return |x| "..s)(),a,b,calls)
-  io.write( string.format([[
+  local result,sigma,runs,cont=monte_vegas(integrand,a,b,calls)
+  echo( string.format([[
 result = %.6f
 sigma  = %.6f
 exact  = %.6f
@@ -37,42 +38,29 @@ local function demo1()
   p:show()
 end
 
-local function getsumsq(n)
-  local t={}
-  for i=1,n do
-    t[i]="x["..i.."]^2"
-  end
-  local s=table.concat(t,"+")
-  return loadstring("return |x| "..s)()
-end
-
 local function getunitsphere(n)
-  local dist=getsumsq(n)
-  return function(x)
-    if dist(x) < 1 then return 1 else return 0 end
-  end
+   return function(x)
+	     local s = 0
+	     for k= 1, n do s = s + x[k]^2 end
+	     return s < 1 and 1 or 0
+	  end
 end
 
 local function demo2()
   local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
   local max_dim = 14
   for d=2, max_dim do
-    io.write("==========================================\n")
-    io.write("Calculating the volume of a unit ",d,"-sphere.\n")
-    local a,b ={},{}
-    for i=1,d do
-      -- we evaluate the integral in one quadrant and multiply
-      -- it by the number of quadrants 2^d afterwards.
-      a[i],b[i] = 0,1
-    end
+    echo("==========================================")
+    echo("Calculating the volume of a unit ",d,"-sphere.")
+    local a, b = ilist(|| 0, d), ilist(|| 1, d)
     local calls, n = d*1e4,1
     local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
-    local fmt = "Volume = %.3f +/- %.3f \n"
-    io.write(string.format(fmt,res*2^d,sig*2^d))
+    local fmt = "Volume = %.3f +/- %.3f "
+    echo(string.format(fmt,res*2^d,sig*2^d))
     while(sig/res > 0.005) do
-      io.write("Increasing accuracy, doubling number of calls...\n")
+      echo("Increasing accuracy, doubling number of calls...")
       res,sig,num = cont(calls*(2^n))
-      io.write(string.format(fmt,res*2^d,sig*2^d))
+      echo(string.format(fmt,res*2^d,sig*2^d))
       n=n+1
     end
     ln:line_to(d,res*2^d)
