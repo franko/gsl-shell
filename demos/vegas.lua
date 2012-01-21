@@ -34,7 +34,7 @@ local function demo1()
   local computed = graph.filine(testdim,1,maxdim)
   p:addline(exact)
   p:add(computed, "blue", {{'marker', size=8}})
-  p.xlab="n"
+  p.xtitle="n"
   p:show()
 end
 
@@ -69,8 +69,8 @@ local function demo2()
   p.clip, p.pad = false, true
   p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
   p:add(ln, "blue", {{'marker', size=8}})
-  p.xlab="n"
-  p.ylab="V"
+  p.xtitle="n"
+  p.ytitle="V"
   p:show()
 end
 
