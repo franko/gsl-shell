@@ -59,5 +59,5 @@ main (void)
     display_results ("vegas final", res, err, i);
 
     gsl_monte_vegas_free (s);
-    return 1;
+    return 0;
     }
