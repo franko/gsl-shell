@@ -26,7 +26,9 @@ so that the AGG and GSL libraries can be located. Please note that if the
 libraries are installed in the standard locations you can leave empty the
 variables AGG_INCLUDES and GSL_INCLUDES.
 
-Once you have modified the file "makepackage" you can just give
+Also make sure that PREFIX (default: /usr/local) is correctly set in "makeconfig".
+
+Once you have modified the files "makepackage" and "makeconfig" you can just give
 
 > make
 
