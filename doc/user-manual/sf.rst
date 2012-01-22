@@ -10,10 +10,13 @@ Special functions
 The library includes routines for calculating the values of Airy functions, Bessel functions, Clausen functions, Coulomb wave functions, Coupling coefficients, the Dawson function, Debye functions, Dilogarithms, Elliptic integrals, Jacobi elliptic functions, Error functions, Exponential integrals, Fermi-Dirac functions, Gamma functions, Gegenbauer functions, Hypergeometric functions, Laguerre functions, Legendre functions and Spherical Harmonics, the Psi (Digamma) Function, Synchrotron functions, Transport functions, Trigonometric functions and Zeta functions.
 Any error returned by the special function (such as invalid input domains, etc...) will be signaled.
 
+Overview
+--------------
+
 .. module:: sf
 
 Airy Functions
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. function:: airyAi(x)
 
@@ -60,7 +63,7 @@ Airy Functions
       Airy functions Ai and Bi.
 
 Bessel Functions
---------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. function:: besselJ(n, x)
 
@@ -126,7 +129,7 @@ Bessel Functions
    Compute the irregular modified spherical Bessel function of l-th order.
 
 Clausen Function
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. function::  clausen(x)
 
@@ -138,7 +141,7 @@ Clausen Function
    It is related to the dilogarithm by :math:`Cl_2(\theta) = \Im Li_2(\exp(i\theta))`.
 
 Coulomb Functions
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. function:: hydrogenicR_1(Z, r)
 
@@ -175,7 +178,7 @@ Coulomb Functions
    This function computes the Coulomb wave function normalization constant :math:`C_L(\eta)` for L > -1.
 
 Coupling Coefficients
----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: coupling_3j( two_ja, two_jb, two_jc, two_ma, two_mb, two_mc)
 
@@ -215,7 +218,7 @@ Coupling Coefficients
    where the arguments are given in half-integer units, ja = two_ja/2, ma = two_ma/2, etc.
 
 Dawson Function
------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: dawson(x)
 
@@ -227,7 +230,7 @@ Dawson Function
    A table of Dawson's integral can be found in Abramowitz & Stegun, Table 7.5.
 
 Debye Functions
-------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: debye(n, x)
 
@@ -240,7 +243,7 @@ Debye Functions
 
 
 Dilogarithms
------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: dilog(x)
 
@@ -261,7 +264,7 @@ Dilogarithms
    Compute the dilogarithm for a complex argument.
 
 Elliptic Integrals
---------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Legendre forms of elliptic integrals :math:`F(\phi,k)`, :math:`E(\phi,k)` and :math:`\Pi(\phi,k,n)` are defined by,
 
@@ -322,7 +325,7 @@ The Carlson symmetric forms of elliptical integrals :math:`RC(x,y)`, :math:`RD(x
    These routines compute the incomplete elliptic integral :math:`RJ(x,y,z,p)` to the accuracy specified by the mode variable mode.
 
 Elliptic Function
--------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: elljac(u, m)
 
@@ -332,7 +335,7 @@ Elliptic Function
       sn, cn, dn = elljac(u, m)
 
 Error Functions
--------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: erf(x)
 
@@ -359,7 +362,7 @@ Error Functions
    These routines compute the hazard function for the normal distribution.
 
 Exponential Functions
----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: exp(x)
 
@@ -396,7 +399,7 @@ Exponential Functions
                   = 1F1 (1,1+N,x)
 
 Exponential Integrals
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: expint_E(n, x)
 
@@ -440,7 +443,7 @@ Exponential Integrals
 
 
 Fermi Dirac Function
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: fermi_dirac(n, x)
 
@@ -461,7 +464,7 @@ Fermi Dirac Function
       F_j(x,b)   := (1/\Gamma(j+1)) \int_b^\infty dt (t^j / (\exp(t-x) + 1))
 
 Gamma and Beta Functions
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: Shi(x)
 
@@ -593,7 +596,7 @@ Gamma and Beta Functions
 
 
 Gegenbauer Functions
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: gegenpoly(n, lambda, x)
 
@@ -601,7 +604,7 @@ Gegenbauer Functions
    for a specific value of n, lambda, x subject to :math:`\lambda > -1/2`, n >= 0.
 
 Hypergeometric functions
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: hyperg0F1(a, b)
 
@@ -627,7 +630,7 @@ Hypergeometric functions
    These routines compute the Gauss hypergeometric function :math:`2F1(a, a^*, c, x)` where a is complex parameter, c and x are real parameters with :math:`|x| < 1`.
 
 Laguerre Functions
----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: laguerre(n, a, x)
 
@@ -649,7 +652,7 @@ Laguerre Functions
    For more information see Abramowitz & Stegun, Chapter 22.
 
 Lambert W Functions
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Lambert's W functions, W(x), are defined to be solutions of the equation :math:`W(x) \exp(W(x)) = x`.
 This function has multiple branches for x < 0; however, it has only two real-valued branches.
@@ -665,7 +668,7 @@ We define :math:`W_0(x)` to be the principal branch, where W > -1 for x < 0, and
 
 
 Legendre Functions and Spherical Harmonics
--------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: legendreP(n, x)
 
@@ -704,7 +707,7 @@ Legendre Functions and Spherical Harmonics
    These routines compute the l-th radial eigenfunction of the Laplacian on the 3-dimensional hyperbolic space :math:`\eta >= 0`, l >= 0. In the flat limit this takes the form :math:`L^{H3d}_l(\lambda,\eta) = j_l(\lambda\eta)`.
 
 Logarithm and Related Functions
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: log(x)
 
@@ -724,7 +727,7 @@ Logarithm and Related Functions
 
 
 Psi (Digamma) Functions
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The polygamma functions of order n are defined by
 
@@ -750,7 +753,7 @@ where :math:`\psi(x) = \Gamma'(x)/\Gamma(x)` is known as the digamma function.
    These routines compute the polygamma function :math:`\psi^{(n)}(x)` for n >= 0, x > 0.
 
 Synchrotron Functions
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: synchrotron1(n,x)
 
@@ -761,7 +764,8 @@ Synchrotron Functions
    These routines compute the second synchrotron function :math:`x K_{2/3}(x)` for x >= 0.
 
 Transport Functions
---------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The transport functions J(n,x) are defined by the integral representations :math:`J(n,x) := \int_0^x dt t^n e^t /(e^t - 1)^2`.
 
 .. function:: transport(n,x)
@@ -769,7 +773,7 @@ The transport functions J(n,x) are defined by the integral representations :math
    These routines compute the transport function :math:`J(n,x)` with :math:`n \in {2,3,4,5}`
 
 Zeta Functions
------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: zeta(s)
 
