@@ -83,10 +83,10 @@ namespace draw {
     const char* cont = m_text_buf.cstr();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
 			 " style=\"font-size:%i%s\">"			\
-			 " <tspan x=\"%g\" y=\"%g\" id=\"tspan%i\">%s</tspan>" \
+			 " <tspan id=\"tspan%i\">%s</tspan>" \
 			 "</text>",
 			 x_svg, y_svg, id, txt_size, style.cstr(),
-			 x_svg, y_svg, id, cont);
+			 id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
