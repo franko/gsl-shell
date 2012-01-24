@@ -28,11 +28,6 @@ namespace draw {
 
     m_matrix = m_user_matrix;
 
-    if (m.sy < 0.0) {
-      m_matrix.shy *= -1.0;
-      m_matrix.sy  *= -1.0;
-    }
-
     m_trans.transformer(m_matrix);
     m_stroke.approximation_scale(as);
   }
@@ -72,25 +67,25 @@ namespace draw {
 
     int txt_size = (int)(m_text_height * 1.5);
 
-    double x = 0.0, y = m_vjustif * m_text_height * 1.2;
-    if (!need_rotate) {
-      x += m.tx;
-      y += m.ty;
-    }
+    double x = 0.0, y = - m_vjustif * m_text_height * 1.2;
 
-    double x_svg = x, y_svg = svg_y_coord(y, h);
+    if (!need_rotate) {
+      x = x + m.tx;
+      y = svg_y_coord(y + m.ty, h);
+    }
 
     const char* cont = m_text_buf.cstr();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
 			 " style=\"font-size:%i%s\">"			\
 			 " <tspan id=\"tspan%i\">%s</tspan>" \
 			 "</text>",
-			 x_svg, y_svg, id, txt_size, style.cstr(),
+			 x, y, id, txt_size, style.cstr(),
 			 id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-		     m.sx, m.shx, m.shy, m.sy, m.tx, m.ty, txt.cstr());
+		     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
+		     txt.cstr());
     } else {
       s = txt;
     }

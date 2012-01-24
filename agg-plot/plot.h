@@ -525,8 +525,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
     dy_label = xbr.y2 - xbr.y1;
   }
 
-  const double sx = fabs(canvas_mtx.sx), sy = fabs(canvas_mtx.sy);
-  const int ysign = (canvas_mtx.sy < 0.0 ? -1 : 1);
+  const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double lsx = (dx_label + 4 * ppad * sx + 2 * fpad) / (1 + 4 * ppad);
   const double lsy = (dy_label + 4 * ppad * sy + 2 * fpad) / (1 + 4 * ppad);
 
@@ -595,7 +594,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       canvas_mtx.transform(&_labx, &laby);
 
       draw::text xlabel(m_xlabel.cstr(), label_text_size, line_width, 0.5, 0.0);
-      xlabel.set_point(labx, laby + ysign * (syr*ppad + fpad));
+      xlabel.set_point(labx, laby + syr*ppad + fpad);
       xlabel.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(xlabel, colors::black);
@@ -620,7 +619,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       m.transform(&labx, &laby);
 
       draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
-      title.set_point(labx, laby + ysign * (2*syr*ppad));
+      title.set_point(labx, laby + 2*syr*ppad);
       title.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(title, colors::black);
@@ -633,13 +632,12 @@ template<class VS, class RM>
 agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m;
-  int ysign = (canvas_mtx.sy < 0.0 ? -1 : 1);
   m.sx = canvas_mtx.sx - (m_left_margin + m_right_margin);
-  m.sy = canvas_mtx.sy - ysign * (m_top_margin + m_bottom_margin);
+  m.sy = canvas_mtx.sy - (m_top_margin + m_bottom_margin);
   m.shx = 0.0;
   m.shy = 0.0;
-  m.tx = m_left_margin + canvas_mtx.tx;
-  m.ty = ysign * m_bottom_margin + canvas_mtx.ty;
+  m.tx = canvas_mtx.tx + m_left_margin;
+  m.ty = canvas_mtx.ty + m_bottom_margin;
   return m;
 }
 

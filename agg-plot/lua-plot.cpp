@@ -549,7 +549,7 @@ plot_save_svg (lua_State *L)
     return luaL_error(L, "cannot open filename: %s", filename);
 
   canvas_svg canvas(f, h);
-  agg::trans_affine m(w, 0.0, 0.0, -h, 0.0, h);
+  agg::trans_affine_scaling m(w, h);
   canvas.write_header(w, h);
   p->draw(canvas, m);
   canvas.write_end();
