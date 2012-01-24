@@ -22,10 +22,21 @@ struct svg_property_item {
   svg_property_item(enum svg_path_property_e k, const char *v) : key(k), value(v) { }
 };
 
+static inline double svg_y_coord(double y, double h) { return h - y; }
+
+template <class VertexSource>
+static inline unsigned
+vertex_flip(VertexSource* vs, double* x, double* y, double h)
+{
+  unsigned cmd = vs->vertex(x, y);
+  *y = svg_y_coord(*y, h);
+  return cmd;
+}
+
 typedef pod_list<svg_property_item> svg_property_list;
 
 template <typename VertexSource>
-void svg_coords_from_vs(VertexSource* vs, str& s)
+void svg_coords_from_vs(VertexSource* vs, str& s, double h)
 {
   unsigned cmd;
   double x, y;
@@ -34,7 +45,7 @@ void svg_coords_from_vs(VertexSource* vs, str& s)
 
   vs->rewind(0);
 
-  while ((cmd = vs->vertex(&x, &y)))
+  while ((cmd = vertex_flip(vs, &x, &y, h)))
     {
       if (agg::is_move_to(cmd)) {
 	s.printf_add("%sM %g,%g", sep, x, y);
@@ -43,11 +54,11 @@ void svg_coords_from_vs(VertexSource* vs, str& s)
       }	else if (agg::is_close(cmd)) {
 	s.printf_add("%sz", sep);
       }	else if (agg::is_curve3(cmd)) {
-	vs->vertex(&x, &y);
+	vertex_flip(vs, &x, &y, h);
 	s.printf_add("%s%g,%g", sep, x, y);
       }	else if (agg::is_curve4(cmd)) {
 	vs->vertex(&x, &y);
-	vs->vertex(&x, &y);
+	vertex_flip(vs, &x, &y, h);
 	s.printf_add("%s%g,%g", sep, x, y);
       }
       sep = space;
@@ -55,7 +66,7 @@ void svg_coords_from_vs(VertexSource* vs, str& s)
 }
 
 template <typename VertexSource>
-void svg_curve_coords_from_vs(VertexSource* vs, str& s)
+void svg_curve_coords_from_vs(VertexSource* vs, str& s, double h)
 {
   unsigned cmd;
   double x, y;
@@ -65,7 +76,7 @@ void svg_curve_coords_from_vs(VertexSource* vs, str& s)
 
   vs->rewind(0);
 
-  while ((cmd = vs->vertex(&x, &y)))
+  while ((cmd = vertex_flip(vs, &x, &y, h)))
     {
       if (agg::is_move_to(cmd)) {
 	s.printf_add("%sM %g,%g", sep, x, y);
@@ -75,13 +86,13 @@ void svg_curve_coords_from_vs(VertexSource* vs, str& s)
       }	else if (agg::is_curve4(cmd)) {
 	double x1 = x, y1 = y;
 	double x2, y2;
-	vs->vertex(&x2, &y2);
-	vs->vertex(&x, &y);
+	vertex_flip(vs, &x2, &y2, h);
+	vertex_flip(vs, &x, &y, h);
 	s.printf_add("%sC %g,%g %g,%g %g,%g", sep, x1, y1, x2, x2, x, y);
 	omit_line_to = false;
       }	else if (agg::is_curve3(cmd)) {
 	double x1 = x, y1 = y;
-	vs->vertex(&x, &y);
+	vertex_flip(vs, &x, &y, h);
 	s.printf_add("%sQ %g,%g %g,%g", sep, x1, y1, x, y);
 	omit_line_to = false;
       }	else if (agg::is_close(cmd)) {

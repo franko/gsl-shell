@@ -45,7 +45,7 @@ namespace draw {
   }
 
   str
-  text::write_svg(int id, agg::rgba8 c)
+  text::write_svg(int id, agg::rgba8 c, double h)
   {
     const agg::trans_affine& m = m_user_matrix;
     const double eps = 1.0e-6;
@@ -78,12 +78,15 @@ namespace draw {
       y += m.ty;
     }
 
+    double x_svg = x, y_svg = svg_y_coord(y, h);
+
     const char* cont = m_text_buf.cstr();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
 			 " style=\"font-size:%i%s\">"			\
 			 " <tspan x=\"%g\" y=\"%g\" id=\"tspan%i\">%s</tspan>" \
 			 "</text>",
-			 x, y, id, txt_size, style.cstr(), x, y, id, cont);
+			 x_svg, y_svg, id, txt_size, style.cstr(),
+			 x_svg, y_svg, id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",

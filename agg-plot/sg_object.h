@@ -43,16 +43,16 @@ struct sg_object : public vertex_source {
 
   virtual bool affine_compose(agg::trans_affine& m) { return false; }
 
-  virtual str write_svg(int id, agg::rgba8 c) {
+  virtual str write_svg(int id, agg::rgba8 c, double h) {
     str path;
-    svg_property_list* ls = this->svg_path(path);
+    svg_property_list* ls = this->svg_path(path, h);
     str s = svg_fill_path(path, id, c, ls);
     list::free(ls);
     return s;
   }
 
-  virtual svg_property_list* svg_path(str& s) {
-    svg_coords_from_vs(this, s);
+  virtual svg_property_list* svg_path(str& s, double h) {
+    svg_coords_from_vs(this, s, h);
     return 0;
   }
 
@@ -188,9 +188,13 @@ public:
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) { this->m_source->bounding_box(x1, y1, x2, y2); }
 
-  virtual str write_svg(int id, agg::rgba8 c) { return this->m_source->write_svg(id, c); }
+  virtual str write_svg(int id, agg::rgba8 c, double h) {
+    return this->m_source->write_svg(id, c, h);
+  }
 
-  virtual svg_property_list* svg_path(str& s) { return this->m_source->svg_path(s); }
+  virtual svg_property_list* svg_path(str& s, double h) {
+    return this->m_source->svg_path(s, h);
+  }
 
   virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
 

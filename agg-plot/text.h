@@ -81,7 +81,7 @@ namespace draw {
     virtual void apply_transform(const agg::trans_affine& m, double as);
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
 
-    virtual str write_svg(int id, agg::rgba8 c);
+    virtual str write_svg(int id, agg::rgba8 c, double h);
 
     const vs_text& self() const { return m_text; };
           vs_text& self()       { return m_text; };
