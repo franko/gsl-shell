@@ -84,6 +84,13 @@ class plot {
 
   static const unsigned max_layers = 8;
 
+  enum {
+    axis_label_prop_space = 20,
+    axis_title_prop_space = 30,
+    canvas_margin_prop_space = 15,
+    canvas_margin_fixed_space = 4,
+  };
+
 public:
   typedef pod_list<item> iterator;
   typedef virtual_canvas<VertexSource> canvas_type;
@@ -247,7 +254,7 @@ protected:
 
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
-  void draw_axis(canvas_type& can, agg::trans_affine& m);
+  void draw_axis(canvas_type& can, agg::trans_affine& m, agg::rect_base<int>* clip = 0);
 
   agg::trans_affine draw_mini_plots(canvas_type& canvas,
 				    agg::trans_affine& canvas_mtx);
@@ -257,8 +264,6 @@ protected:
   void clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx);
 
   void compute_user_trans();
-
-  agg::trans_affine viewport_scale(agg::trans_affine& m);
 
   bool fit_inside(VertexSource *obj) const;
 
@@ -285,8 +290,7 @@ private:
   bool m_pad_units;
 
   str m_title;
-  double m_left_margin, m_right_margin;
-  double m_bottom_margin, m_top_margin;
+  agg::trans_affine m_area_mtx;
 
   bool m_sync_mode;
 
@@ -350,15 +354,27 @@ void plot<VS,RM>::clear_drawing_queue()
     }
 }
 
+static bool area_is_valid(const agg::trans_affine& b)
+{
+  const double thresold = 40.0;
+  return (b.sx > thresold && b.sy > thresold);
+}
+
 template <class VS, class RM>
 template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
 {
   canvas_adapter<Canvas, VS>  canvas(&_canvas);
   before_draw();
 
+  agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
+
   agg::trans_affine area_mtx = draw_mini_plots(canvas, canvas_mtx);
-  draw_axis(canvas, area_mtx);
-  draw_elements(canvas, area_mtx);
+
+  if (area_is_valid(area_mtx))
+    {
+      draw_axis(canvas, area_mtx, &clip);
+      draw_elements(canvas, area_mtx);
+    }
 };
 
 template <class VS, class RM>
@@ -376,9 +392,8 @@ void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& 
 template <class VS, class RM>
 agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
-  agg::trans_affine mvp = viewport_scale(canvas_mtx);
   agg::trans_affine m = m_trans;
-  trans_affine_compose (m, mvp);
+  trans_affine_compose (m, m_area_mtx);
   return m;
 }
 
@@ -387,8 +402,7 @@ void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_
 {
   if (this->clip_is_active())
     {
-      agg::trans_affine mvp = viewport_scale(canvas_mtx);
-      agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
+      agg::rect_base<int> clip = rect_of_slot_matrix<int>(m_area_mtx);
       canvas.clip_box(clip);
     }
 }
@@ -478,7 +492,7 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
 				ptr_list<draw::text>& labels, double scale,
 				agg::path_storage& mark, agg::path_storage& ln)
 {
-  const double ppad = 0.02;
+  const double ppad = double(axis_label_prop_space) / 1000.0;
   const double eps = 1.0e-3;
 
   const double line_width = std_line_width(scale);
@@ -557,9 +571,13 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 					       agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
-  const double pad = 2.0;
+  const double ppad = double(canvas_margin_prop_space) / 1000.0;
+  const double fpad = double(canvas_margin_fixed_space);
 
-  double dxl = 0.0, dxr = 0.0, dyb = 0.0, dyt = 0.0;
+  double dxl, dxr, dyb, dyt;
+
+  dxl = dxr = fpad+ppad*sx;
+  dyb = dyt = fpad+ppad*sy;
 
   for (int k = 0; k < 4; k++)
     {
@@ -575,62 +593,65 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 	  switch (k)
 	    {
 	    case right:
-	      px = sx - dx + pad;
-	      dxr = dx + 2*pad;
-	      py = (sy - dy) / 2 + pad;
+	      px = sx - dx - ppad * sx - dxr;
+	      py = (sy - dy) / 2;
+	      dxr += dx + 2 * ppad * sx;
 	      break;
 	    case left:
-	      px = pad;
-	      dxl = dx + 2*pad;
-	      py = (sy - dy) / 2 + pad;
+	      px = ppad * sx + dxr;
+	      py = (sy - dy) / 2;
+	      dxl += dx + 2 * ppad * sx;
 	      break;
 	    case bottom:
-	      py = pad;
-	      dyb = dy + 2*pad;
-	      px = (sx - dx) / 2 + pad;
+	      py = ppad * sy + dyb;
+	      px = (sx - dx) / 2;
+	      dyb += dy + 2 * ppad * sy;
 	      break;
 	    case top:
-	      py = sy - dy + pad;
-	      dyt = dy + 2*pad;
-	      px = (sx - dx) / 2 + pad;
+	      py = sy - dy - ppad * sy - dyt;
+	      px = (sx - dx) / 2;
+	      dyt += dy + 2 * ppad * sy;
 	      break;
 	    default:
 	      /* */;
 	    }
 
-	  agg::trans_affine mtx(dx + 2*pad, 0.0, 0.0, dy + 2*pad, px, py);
-
-	  mp->before_draw();
-	  mp->draw_axis(canvas, mtx);
-	  mp->draw_elements(canvas, mtx);
+	  if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
+	    {
+	      agg::trans_affine mtx(dx, 0.0, 0.0, dy, px, py);
+	      mp->before_draw();
+	      mp->draw_axis(canvas, mtx);
+	      mp->draw_elements(canvas, mtx);
+	    }
 	}
     }
 
   double cpx = canvas_mtx.tx, cpy = canvas_mtx.ty;
-
   double ssx = sx - (dxl + dxr), ssy = sy - (dyb + dyt);
   return agg::trans_affine(ssx, 0.0, 0.0, ssy, cpx + dxl, cpy + dyb);
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
+static inline double approx_text_height(double text_size)
 {
+  return text_size * 1.5;
+}
+
+template <class VS, class RM>
+void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
+			    agg::rect_base<int>* clip)
+{
+  agg::trans_affine& m = m_area_mtx;
+
   if (!m_use_units)
     {
-      const double pad = 2.0;
-      m_left_margin   = pad;
-      m_right_margin  = pad;
-      m_bottom_margin = pad;
-      m_top_margin    = pad;
+      m = canvas_mtx;
       return;
     }
 
-  agg::trans_affine m;
-
   double scale = compute_scale(canvas_mtx);
 
-  agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
-  canvas.clip_box(clip);
+  if (clip)
+    canvas.clip_box(*clip);
 
   agg::path_storage box;
   sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
@@ -654,35 +675,52 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   const double line_width = std_line_width(scale);
   const double label_text_size = 11.0 * scale;
   const double title_text_size = 12.0 * scale;
-  const double ppad = 0.02, fpad = 4;
+  const double plpad = double(axis_label_prop_space) / 1000.0;
+  const double ptpad = double(axis_title_prop_space) / 1000.0;
 
   ptr_list<draw::text> labels;
 
   double dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
   double dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
 
-  const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
-  const double lsx = (dx_label + 4 * ppad * sx + 2 * fpad) / (1 + 4 * ppad);
-  const double lsy = (dy_label + 4 * ppad * sy + 2 * fpad) / (1 + 4 * ppad);
+  double ppad_left = plpad, ppad_right = plpad;
+  double ppad_bottom = plpad, ppad_top = plpad;
+  double dx_left = dx_label, dx_right = 0.0;
+  double dy_bottom = dy_label, dy_top = 0.0;
 
-  m_left_margin   = (lsx + dx_label) / 2.0;
-  m_right_margin  = (lsx - dx_label) / 2.0;
-  m_bottom_margin = (lsy + dy_label) / 2.0;
-  m_top_margin    = (lsy - dy_label) / 2.0;
+  if (!str_is_null(&m_y_axis.title))
+    {
+      dx_left += approx_text_height(label_text_size);
+      ppad_left += ptpad;
+    }
+
+  if (!str_is_null(&m_x_axis.title))
+    {
+      dy_bottom += approx_text_height(label_text_size);
+      ppad_bottom += ptpad;
+    }
+
+  if (!str_is_null(&m_title))
+    {
+      dy_top += approx_text_height(title_text_size);
+      ppad_top += ptpad;
+    }
+
+  const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
+
+  const double xppad = (ppad_left + ppad_right);
+  const double lsx = (dx_left + dx_right + xppad * sx) / (1 + xppad);
+
+  const double yppad = (ppad_bottom + ppad_top);
+  const double lsy = (dy_bottom + dy_top + yppad * sy) / (1 + yppad);
 
   const double sxr = sx - lsx;
   const double syr = sy - lsy;
 
-  if (!str_is_null(&m_y_axis.title))
-    m_left_margin += label_text_size + 2*sxr*ppad;
-
-  if (!str_is_null(&m_x_axis.title))
-    m_bottom_margin += label_text_size + 2*syr*ppad;
-
-  if (!str_is_null(&m_title))
-    m_top_margin += title_text_size + 2*syr*ppad;
-
-  m = this->viewport_scale(canvas_mtx);
+  m.sx = sxr;
+  m.sy = syr;
+  m.tx = canvas_mtx.tx + dx_left + ppad_left * sxr;
+  m.ty = canvas_mtx.ty + dy_bottom + ppad_bottom * syr;
 
   for (unsigned j = 0; j < labels.size(); j++)
     {
@@ -690,8 +728,6 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
       label->apply_transform(m, 1.0);
       canvas.draw(*label, agg::rgba(0, 0, 0));
     }
-
-  //  canvas.draw(boxtr, agg::rgba8(0xaa, 0xaa, 0xaa));
 
   lndash.add_dash(7.0, 3.0);
 
@@ -706,15 +742,12 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 
   if (!str_is_null(&m_x_axis.title))
     {
-      double labx = 0.5, _laby = 0.0;
-      m.transform(&labx, &_laby);
-
-      double _labx = 0.5, laby = 0.0;
-      canvas_mtx.transform(&_labx, &laby);
+      double labx = m.sx * 0.5 + m.tx;
+      double laby = canvas_mtx.ty;
 
       const char* text = m_x_axis.title.cstr();
       draw::text xlabel(text, label_text_size, line_width, 0.5, 0.0);
-      xlabel.set_point(labx, laby + syr*ppad + fpad);
+      xlabel.set_point(labx, laby);
       xlabel.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(xlabel, colors::black);
@@ -722,12 +755,12 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 
   if (!str_is_null(&m_y_axis.title))
     {
-      double labx = 0.0, laby = 0.5;
-      m.transform(&labx, &laby);
+      double labx = canvas_mtx.tx;
+      double laby = m.sy * 0.5 + m.ty;
 
       const char* text = m_y_axis.title.cstr();
       draw::text ylabel(text, label_text_size, line_width, 0.5, 1.0);
-      ylabel.set_point(sxr*ppad + fpad, laby);
+      ylabel.set_point(labx, laby);
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);
 
@@ -736,30 +769,18 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 
   if (!str_is_null(&m_title))
     {
-      double labx = 0.5, laby = 1.0;
-      m.transform(&labx, &laby);
+      double labx = canvas_mtx.tx + canvas_mtx.sx * 0.5;
+      double laby = m.ty + m.sy + 2 * ptpad * syr;
 
       draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
-      title.set_point(labx, laby + 2*syr*ppad);
+      title.set_point(labx, laby);
       title.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(title, colors::black);
     }
 
-  canvas.reset_clipping();
-};
-
-template<class VS, class RM>
-agg::trans_affine plot<VS,RM>::viewport_scale(agg::trans_affine& canvas_mtx)
-{
-  agg::trans_affine m;
-  m.sx = canvas_mtx.sx - (m_left_margin + m_right_margin);
-  m.sy = canvas_mtx.sy - (m_top_margin + m_bottom_margin);
-  m.shx = 0.0;
-  m.shy = 0.0;
-  m.tx = canvas_mtx.tx + m_left_margin;
-  m.ty = canvas_mtx.ty + m_bottom_margin;
-  return m;
+  if (clip)
+    canvas.reset_clipping();
 }
 
 template<class VS, class RM>
