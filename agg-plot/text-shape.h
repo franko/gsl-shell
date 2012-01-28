@@ -44,6 +44,11 @@ namespace draw {
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
       agg::bounding_rect_single(m_sg_text, 0, x1, y1, x2, y2);
+      const double pad = 1.0;
+      *x1 -= pad;
+      *y1 -= pad;
+      *x2 += pad;
+      *y2 += pad;
     }
 
     virtual str write_svg(int id, agg::rgba8 c, double h)
