@@ -8,7 +8,7 @@ GSL Shell introduction
 GSL Shell is an interactive interface that gives access to the GSL numerical routines by using Lua, an easy to learn and powerful programming language.
 With GSL Shell you can access very easily the functions provided by the GSL library without the need of writing and compile a stand-alone C application.
 In addition the power and expressivity of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines.
-You will be also able to create plot in real-time by using the powerful builtin graphical module.
+You will be also able to create plots in real-time by using the powerful built-in graphical module.
 
 .. note::
   GSL Shell is still a young project and it is currently not widely used.
@@ -19,6 +19,7 @@ You will be also able to create plot in real-time by using the powerful builtin 
   The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
   In addition the LuaJIT2 implementation provides excellent execution speed that can be very close to C compiled code.
 
+GSL Shell also introduces some extensions to the Lua language that will be explained in the following sections. Those features include :ref:`complex numbers<complex_numbers>`, easy-to-use :ref:`vector/matrix<matrices>` implementataions, :ref:`short function syntax<short-func-notation>` and :ref:`iterators<lua_base>`. They are designed to fasciliate the work with numbers and mathematical algorithms.
 
 First steps
 -----------
@@ -30,6 +31,7 @@ Sometimes we will refer to these kind of number as *real* number in opposition t
 For integer numbers GSL Shell differs from many other programming environment because it does not have a distinct type to represent them.
 In other words integer numbers are treated just like *real* number with all the implications that follows.
 
+.. _complex_numbers:
 Complex numbers
 ~~~~~~~~~~~~~~~
 
@@ -59,18 +61,19 @@ When you are working in a interactive session GSL Shell will always remember the
 You can access its value using the global variable "_".
 When the you evaluate a statement or an expression that returns no values the variable "_" is not modified.
 
+.. _matrices:
 Working with matrices
 ~~~~~~~~~~~~~~~~~~~~~
 
 In order to define a matrix you have basically two options, you can enumerate all the values or you can provide a function that generate the terms of the matrix.
 In the first case you should use the :func:`matrix.def` like in the following example::
 
-  use 'math'
+   use 'math'
 
-  th = pi/8 -- define the angle "th"
+   th = pi/8 -- define the angle "th"
 
-  -- define 2x2 rotation matrix for the given angle "th"
-  m = matrix.def {{cos(th), sin(th)}, {-sin(th), cos(th)}}
+   -- define 2x2 rotation matrix for the given angle "th"
+   m = matrix.def {{cos(th), sin(th)}, {-sin(th), cos(th)}}
 
 You can remark that we have used the :func:`matrix.def` function without parentheses to enclose its arguments.
 The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing paretheses.
@@ -81,46 +84,46 @@ If you don't use :func:`use` the function :func:`math.sin` and :func:`math.cos` 
 
 You can define also a column matrix using the function :func:`matrix.vec` like follows::
 
-  v = matrix.vec {cos(th), sin(th)}
+   v = matrix.vec {cos(th), sin(th)}
 
 The other way to define a matrix is by using the :func:`matrix.new` function (or :func:`matrix.cnew` to create a complex matrix).
 This latter function takes the number of rows and columns as the first two arguments and a function as an optional third argument.
 Let as see an example to illustrate how it works::
 
-  -- define a matrix whose (i, j) elements is 1/(i + j)
-  m = matrix.new(4, 4, |i,j| 1/(i + j))
+   -- define a matrix whose (i, j) elements is 1/(i + j)
+   m = matrix.new(4, 4, |i,j| 1/(i + j))
 
 In this example the third argument is a function expressed with the :ref:`short function notation <short-func-notation>`.
 This function takes two arguments, respectively the row and column number, and returns the value that should be assigned to the corrisponding matrix element.
 Of course you are not forced to define the function in the same line, you can define it before and use it later with the :func:`matrix.new` function like in the following example::
 
-  -- define the binomial function
-  function binomial(n, k)
-    if k <= n then
-      return sf.choose(n-1, k-1)
-    else
-      return 0
-    end
-  end
+   -- define the binomial function
+   function binomial(n, k)
+     if k <= n then
+         return sf.choose(n-1, k-1)
+     else
+         return 0
+     end
+   end
 
-  -- define a matrix based on the function just defined
-  m = matrix.new(8, 8, binomial)
+   -- define a matrix based on the function just defined
+   m = matrix.new(8, 8, binomial)
 
 and here the result:
 
-  >>> m
-  [  1  0  0  0  0  0  0  0 ]
-  [  1  1  0  0  0  0  0  0 ]
-  [  1  2  1  0  0  0  0  0 ]
-  [  1  3  3  1  0  0  0  0 ]
-  [  1  4  6  4  1  0  0  0 ]
-  [  1  5 10 10  5  1  0  0 ]
-  [  1  6 15 20 15  6  1  0 ]
-  [  1  7 21 35 35 21  7  1 ]
+    >>> m
+    [  1  0  0  0  0  0  0  0 ]
+    [  1  1  0  0  0  0  0  0 ]
+    [  1  2  1  0  0  0  0  0 ]
+    [  1  3  3  1  0  0  0  0 ]
+    [  1  4  6  4  1  0  0  0 ]
+    [  1  5 10 10  5  1  0  0 ]
+    [  1  6 15 20 15  6  1  0 ]
+    [  1  7 21 35 35 21  7  1 ]
 
 An alternative compact writing could have been::
 
-  m = matrix.new(8, 8, |n,k| k <= n and sf.choose(n-1, k-1) or 0)
+    m = matrix.new(8, 8, |n,k| k <= n and sf.choose(n-1, k-1) or 0)
 
 where we have used again the short function notation and the Lua logical operators ``and`` and ``or``.
 
@@ -272,6 +275,7 @@ Another opportunity is to adress directly matrix data by using its ``data`` fiel
 
 You can find more details in the chapter about :ref:`GSL FFI interface <gsl-ffi-interface>`.
 
+.. _plotting:
 Plotting functions
 ~~~~~~~~~~~~~~~~~~
 
@@ -282,17 +286,17 @@ The idea is that you can create the objects as needed and add them of the plot a
 
 Here a simple example to plot some simple functions::
 
-  use 'math'
+   use 'math'
 
-  -- we create a plot of a simple function
-  p = graph.fxplot(|x| exp(-0.1*x) * sin(x), 0, 8*pi)
+   -- we create a plot of a simple function
+   p = graph.fxplot(|x| exp(-0.1*x) * sin(x), 0, 8*pi)
 
-  -- we create a graphical object that describe second function
-  -- and we add it to the previous plot
-  ln = graph.fxline(|x| exp(-0.1*x) * cos(x), 0, 8*pi)
-  p:addline(ln, 'blue')
+   -- we create a graphical object that describe second function
+   -- and we add it to the previous plot
+   ln = graph.fxline(|x| exp(-0.1*x) * cos(x), 0, 8*pi)
+   p:addline(ln, 'blue')
 
-  p.title = 'Damped sine and cosine'
+   p.title = 'Damped sine and cosine'
 
 Let us explain the example step by step.
 To use the function :func:`graph.fxplot` we pass three arguments: the function that we want to plot and the minimum and maximum value of the abscissa.
@@ -312,62 +316,11 @@ Here the plot that we obtain with the snippet given above:
 
 You can refer to the :ref:`Graphics chapter <graphics-chapter>` for more details about the plotting functions.
 
-
-Defining a New Function
------------------------
-
-GSL Shell is very flexible about function definitions.
-It does allow to define global functions or to create on the fly a function and to assign it to a variable.
-Actually in GSL Shell functions are first class object and they can be treated like any other objects.
-
-Here an examples where we define the normalized gaussian function centered in zero::
-
-    function gauss(x, s)
-       local n = 1/sqrt(2*pi*s^2)
-       return n * exp(-x^2/2)
-    end
-
-Please note that we have used a "local" variable, ``n`` that is visible only withing the scope of the function.
-This is very convenient because in this way the variable ``n`` will not interfere with the global variables.
-
-GSL Shell also support *closures* like many other advanced programming languages like Lisp, Scheme or ML languages.
-A closure is a function that refers to some local variables that lives in the scope of the calling function.
-
-Here an examples of a closure the define a "counter"::
-
-   function make_counter(n)
-      local i = 0
-      return function()
-                if i < n then
-                   i = i + 1
-                   return i
-                end
-   end
-
-and here an examples of its utilisation:
-
-  >>> -- make a counter up to 3
-  >>> c = make_counter(3)
-  >>> c()
-  1
-  >>> c()
-  2
-  >>> c()
-  3
-  >>> c()
-  nil
-
-The function ``make_counter`` is not a closure because does not refer to any variable of any enclosing function but the function that it does returns *is* a closure because the returned function refer to the variable ``i`` which is local to the scope of the enclosing function ``make_counter``.
-
-This kind of function is ofter called an "iterator".
-In GSL Shell you can very easily define an iterator over some integer range by using the function :func:`iter.sequence`.
-
 .. _short-func-notation:
-
 Short Function Notation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Very often you need simple function that just return a value. In this case special notation is available::
+In numerical environments, one often needs simple functions that just return a value. In this case GSL Shell introduces a special notation::
 
    |a, b, ...| expr
 
@@ -388,3 +341,82 @@ this is exactly equivalent to the following syntax::
 or, alternatively::
 
    f = function(x) return x^2+1 end
+
+An Example
+------------
+
+To illustrate most of the key features of GSL Shell, let us write a short script to calculate the volume of an n-dimensional unit sphere and compare it with the analytical solution of :math:`V_n=\pi^{n/2}/ \Gamma(1+n/2)`.
+
+For the integration in high dimensions, we will the :ref:`Monte Carlo VEGAS <monte-vegas>` implementation, that is included in GSL Shell.
+
+At the beginning of each script, you should think about which sections of GSL Shell you want to use. If you utilise functions from certains modules more often, you might want to call those functions directly with the help of the :func:`use` directive::
+
+   use 'iter'
+   use 'math'
+   local monte_vegas = num.monte_vegas
+
+In other cases, it is useful to create simple aliases such as `monte_vegas` instead of injecting the complete module into global namespace. The later is recommended in performance critical applications.
+
+Let's continue with a function `getunitsphere` that returns a function itself. This `n`-dimensional function then calculates the summed square of the table argument for a given size which equals :math:`R^2=\sum_{i=1}^nx_i^2`. It returns 1 if the given `R` is within the sphere or 0 otherwise::
+
+   local function getunitsphere(n)
+      return function(x)
+         local s = 0
+         for k= 1, n do s = s + x[k]^2 end
+         return s < 1 and 1 or 0
+      end
+   end
+
+This is the function we will use to integrate later. Now we can prepare a graph path that will hold all calculated values (:func:`graph.path`). Also ::
+
+   local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
+
+Now we can start to calculate the volume of the unit sphere of the first 14 dimensions::
+
+   for d=2, 14 do
+
+      local a, b = ilist(|| 0, d), ilist(|| 1, d)
+      local calls, n = d*1e4,1
+
+      --Obtaining monte carlo vegas callback
+      local res,sig,num,cont = monte_vegas(getunitsphere(d),a,b,calls)
+
+      --Increasing the number of calls to reach a satisfying result
+      while(sig/res > 0.005) do
+         res,sig,num = cont(calls*(2^n))
+         n=n+1
+      end
+
+      ln:line_to(d,res*2^d)
+   end
+
+The loop consists of three major parts. In the first part we initialize the important variabes with the help of the `short function syntax` and the :func:`iter.ilist` function, which convieniently creates vectors of any size with a value provided by the function. In this case `a` and `b` are the lower and the upper boundary for the integration.
+
+By calling :func:`num.monte_vegas` with the desired unitsphere function, the monte carlo vegas algorithm is being invoked for the first time. It returns multiple arguments, namely the result itself, the precision, the number of iterations it took and a continuation function that can be called to recalculate the result with higher precision.
+
+Depending on the relative precision `sig/res`, we continue to recalculate the integrale with increasing numbers of iterations. When it is done, we add the dimension and the result to our given path by :func:`~Path.line_to`.
+
+We can now continue to compare the data with analytical solutions and plot these results. First we need to initialize a :func:`graph.plot` object. Then we can add the data to the plot with :func:`~Plot.add` and the result of the analytical solution with :func:`~Plot.addline`. Notice that you can change the appearance of the data points at this moment. We are going for markers with size 8.
+At that point, we are using `short functions` again which greatly fascilitates the syntax in this case::
+
+   local p = graph.plot('Volume of a unit n-sphere')
+   p.clip, p.pad = false, true
+   p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
+   p:add(ln, "blue", {{'marker', size=8}})
+   p.xtitle="n"
+   p.ytitle="V"
+   p:show()
+
+Also we are using :func:`sf.gamma` from the special functions section which offers all such functions that you can find in the gsl library. After setting the axis-names with :func:`~Plot.xtitle` and :func:`~Plot.ytitle`, we are ready to show the plot with :func:`~Plot.show`:
+
+.. figure:: vegas.png
+
+Here is the code in a whole:
+
+.. literalinclude:: intro-example.lua
+   :language: lua
+
+This rather simple example showed quite a lot of important features of GSL Shell. Creating data structures with `iterators` and `short functions` are both very common. Also the plotting of data will be often done and is both flexible and easy-to-use. Benchmarks that include the above example can be found `here`.
+..TODO: ADD THE BENCHMARK LINK LATER
+
+

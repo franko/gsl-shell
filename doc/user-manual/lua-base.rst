@@ -4,7 +4,7 @@
 
 .. _lua_base:
 
-GSL Shell standard functions
+Iterators
 ============================
 
 GSL Shell provides some simple functions to perform some common tasks related to iterators.
