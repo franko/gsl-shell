@@ -121,6 +121,25 @@ local function barplot_demo()
    return p
 end
 
+local function legend_demo()
+   local p = graph.legend({'sinus', 'cosinus'}, 'line', {'red', 'blue'}, {{'dash', 7,3}})
+   p:show()
+
+   local pi = math.pi
+   local NS = 64
+
+   local mp = graph.fxplot(math.sin, 0, 2*pi, 'red', 32)
+   mp:addline(graph.fxline(math.cos, 0, 2*pi, 32), 'blue', {{'dash', 7,3}})
+   mp.title = 'Plot example'
+   mp.xtitle = 'x axis title'
+
+   mp:set_mini('r', p)
+   mp:save_svg('demo.svg', 600, 400)
+   p:save_svg('legend.svg', 400, 200)
+
+   echo('Plot saved in "demo.svg" and "legend.svg".')
+end
+
 return {'Plotting', {
   {
      name= 'plot',
@@ -131,5 +150,10 @@ return {'Plotting', {
      name= 'barplot',
      f = barplot_demo,
      description = 'Bar Plot example'
+  },
+  {
+     name= 'legend',
+     f = legend_demo,
+     description = 'Plot example with legend'
   },
 }}

@@ -15,7 +15,7 @@ local function check_sampling(n)
       if n <= 1 then
 	 error('sampling points should be > 1')
       elseif n > n_sampling_max then
-	 echo('warning: too many sampling points requested, ' .. 
+	 echo('warning: too many sampling points requested, ' ..
 	      'limiting to ' .. n_sampling_max)
 	 n = n_sampling_max
       end
@@ -31,7 +31,7 @@ function graph.ipath(f)
       ln:line_to(x, y)
    end
    return ln
-end   
+end
 
 function graph.ipathp(f)
    local ln = graph.path()
@@ -49,7 +49,7 @@ function graph.ipathp(f)
       if not success then print('warning:', more) end
    until not more
    return ln
-end   
+end
 
 function graph.fxline(f, xi, xs, n)
    n = check_sampling(n)
@@ -226,8 +226,8 @@ local color_schema = {
 function graph.color_function(schema, alpha)
    local c = color_schema[schema]
    return function(a)
-	     return graph.rgba(c[1] + a*(c[4]-c[1]), 
-			     c[2] + a*(c[5]-c[2]), 
+	     return graph.rgba(c[1] + a*(c[4]-c[1]),
+			     c[2] + a*(c[5]-c[2]),
 			     c[3] + a*(c[6]-c[3]), alpha)
 	  end
 end
@@ -279,5 +279,37 @@ function graph.plot_lines(ln, title)
       p:addline(ln[k], rainbow(k))
    end
    p:show()
+   return p
+end
+
+local function legend_symbol(sym, dx, dy)
+   if sym == 'square' then
+      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
+   elseif sym == 'circle' then
+      return graph.ellipse(10+dx, 10+dy, 5, 5)
+   elseif sym == 'line' then
+      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
+   end
+end
+
+function graph.legend(labels, symbol, colors, trans)
+   local n = #labels
+   local p = graph.plot()
+   p.units, p.clip = false, false
+   for k= 1, n do
+      local y = (k-1) * 20
+      local sym, symtr = legend_symbol(symbol, 0, y)
+      local tr
+      if symtr then
+	 tr = { symtr }
+	 if trans then
+	    for j= 1, #trans do tr[#tr+1] = trans[j] end
+	 end
+      else
+	 tr = trans
+      end
+      p:add(sym, colors[k], tr)
+      p:add(graph.textshape(25, y + 6, labels[k], 10), 'black')
+   end
    return p
 end
