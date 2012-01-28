@@ -60,3 +60,15 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
    write something like that::
 
       u, s, v = svd(m)
+
+.. function:: sv_solve(m,b)
+	This function solves the system :math:`Ax=b` using the singular value decomposition (U, S, V) of A.
+	Only non-zero singular values are used in computing the solution.
+	The parts of the solution corresponding to singular values of zero are ignored.
+	Other singular values can be edited out by setting them to zero before calling this function.
+
+	In the over-determined case where A has more rows than columns the system is solved in the least squares sense,
+	returning the solution x which minimizes :math:`||A x - b||_2`.
+
+.. function:: pinv(m)
+	Returns the Moore–Penrose pseudoinverse of matrix m by using the singular value decomposition.

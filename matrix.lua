@@ -892,7 +892,7 @@ function matrix.solve(m, b)
    end
 end
 
-local function matrix_sv_decomp(a, v, s, w)
+function matrix.sv_decomp(a, v, s, w)
    local sv = gsl.gsl_matrix_column(s, 0)
    local w
    if w then
@@ -912,10 +912,34 @@ function matrix.svd(a)
    local sv = gsl.gsl_matrix_diagonal(s)
    local wv = ffi.gc(gsl.gsl_vector_alloc(n), gsl.gsl_vector_free)
    gsl_check(gsl.gsl_linalg_SV_decomp (u, v, sv, wv))
-   return u, s, v
+   return u, s, v, sv
 end
 
-matrix.sv_decomp = matrix_sv_decomp
+function matrix.sv_solve(m, b)
+	local n = m.size1
+	local u,s,v,sv = matrix.svd(m)
+	local x = matrix_alloc(n, 1)
+	local xv = gsl.gsl_matrix_column(x, 0)
+	local bv = gsl.gsl_matrix_column(b, 0)
+	gsl_check(gsl.gsl_linalg_SV_solve(u,v,sv,bv,xv))	
+	return x
+end
+
+function matrix.pinv(m)
+	local n = tonumber(m.size1)
+	print(n)
+	local u,s,v = matrix.svd(m)
+	
+	for i = 1,n do
+		if s[i][i] > 0.0000000001 then
+			s[i][i] = 1/s[i][i]
+		else
+			s[i][i] = 0
+		end
+	end
+	
+	return matrix.transpose(u*matrix.transpose(s)*matrix.transpose(v))
+end
 
 matrix.diag = function(d)
 		 local n = #d
