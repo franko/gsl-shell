@@ -324,6 +324,7 @@ gsl_eigen_invert_jacobi(const gsl_matrix * matrix,
 -------------------------------------------------------------------------------
 eigen = {}
 
+--Definitions of the sorting order of the eigenvalues
 eigen.SORT_VAL_DESC = gsl.GSL_EIGEN_SORT_VAL_DESC
 eigen.SORT_VAL_ASC = gsl.GSL_EIGEN_SORT_VAL_ASC
 eigen.SORT_ABS_ASC = gsl.GSL_EIGEN_SORT_ABS_ASC
