@@ -7,6 +7,7 @@ local sqrt, abs = math.sqrt, math.abs
 local format = string.format
 
 local check = require 'check'
+local gsl_check = require'gsl-check'
 local is_integer, is_real = check.is_integer, check.is_real
 local matrix = require 'matrix'
 
@@ -337,7 +338,7 @@ function eigen.symmv(m, order)
 	local A = matrix.copy(m)
     local eval = matrix.alloc(size, 1)
 	local xeval = gsl.gsl_matrix_column(eval, 0)
-    local evec = gsl.gsl_matrix_alloc (size, size)
+    local evec = matrix.alloc (size, size)
     local w = gsl.gsl_eigen_symmv_alloc (size)
 	order = order or gsl.GSL_EIGEN_SORT_VAL_DESC
 
