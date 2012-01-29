@@ -886,7 +886,7 @@ function matrix_det(m)
    local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
    gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
 
-   local det = gsl.gsl_linalg_LU_det(lu, signum))
+   local det = gsl.gsl_linalg_LU_det(lu, signum[0])
    return det
 end
 
@@ -896,7 +896,7 @@ function matrix_det_complex(m)
    local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
    gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
 
-   local det = gsl.gsl_linalg_complex_LU_det(lu, signum))
+   local det = gsl.gsl_linalg_complex_LU_det(lu, signum[0])
    return det
 end
 
@@ -949,7 +949,7 @@ function matrix.sv_solve(m, b)
 	local x = matrix_alloc(n, 1)
 	local xv = gsl.gsl_matrix_column(x, 0)
 	local bv = gsl.gsl_matrix_column(b, 0)
-	gsl_check(gsl.gsl_linalg_SV_solve(u,v,sv,bv,xv))	
+	gsl_check(gsl.gsl_linalg_SV_solve(u,v,sv,bv,xv))
 	return x
 end
 
@@ -957,7 +957,7 @@ function matrix.pinv(m)
 	local n = tonumber(m.size1)
 	print(n)
 	local u,s,v = matrix.svd(m)
-	
+
 	for i = 1,n do
 		if s[i][i] > 0.0000000001 then
 			s[i][i] = 1/s[i][i]
@@ -965,7 +965,7 @@ function matrix.pinv(m)
 			s[i][i] = 0
 		end
 	end
-	
+
 	return matrix.transpose(u*matrix.transpose(s)*matrix.transpose(v))
 end
 
