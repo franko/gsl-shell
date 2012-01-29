@@ -15,6 +15,11 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
 .. function:: inv(m)
 
    Returns the inverse of the matrix m.
+   
+.. function:: det(m)
+
+   This function computes the determinant of a matrix m from its LU decomposition, LU.
+   The determinant is computed as the product of the diagonal elements of U and the sign of the row permutation signum.
 
 .. function:: solve(A, b)
 

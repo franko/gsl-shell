@@ -36,7 +36,7 @@ end
 
 local function cartesian(x)
    if is_real(x) then
-      return x, 0 
+      return x, 0
    else
       return x[0], x[1]
    end
@@ -101,14 +101,14 @@ local function matrix_cnew(n1, n2, f)
 end
 
 local function matrix_free(m)
-   if m.owner then 
+   if m.owner then
       local b = m.block
       b.ref_count = b.ref_count - 1
       if b.ref_count == 0 then
 	 ffi.C.free(b.data)
 	 ffi.C.free(b)
       end
-   end 
+   end
 end
 
 local function matrix_dim(m)
@@ -218,13 +218,13 @@ local function recttostr(x, y, eps)
    if x_sub and y_sub then
       fmt, x_sub, y_sub = '%.0f', x==0, y==0
    end
-   
+
    if not x_sub then
       local sign = x+eps < 0 and '-' or ''
       local ax = abs(x)
       if y_sub then
 	 return format('%s'..fmt, sign, ax)
-      else 
+      else
 	 return format('%s'..fmt..'%s', sign, ax, itostr(y, eps, fmt, true))
       end
    else
@@ -400,7 +400,7 @@ local function real_get(x) return x, 0 end
 local function complex_get(z) return z[0], z[1] end
 local function mat_real_get(m,i,j) return m.data[i*m.tda+j], 0 end
 
-local function mat_complex_get(m,i,j) 
+local function mat_complex_get(m,i,j)
    local idx = 2*i*m.tda+2*j
    return m.data[idx],  m.data[idx+1]
 end
@@ -544,7 +544,7 @@ local complex_mt = {
 	     return (ar == br) and (ai == bi)
 	  end,
 
-   __pow = function(z,n) 
+   __pow = function(z,n)
 	      if is_real(n) then
 		 return gsl.gsl_complex_pow_real (z, n)
 	      else
@@ -681,7 +681,7 @@ end
 
 local matrix_mt = {
    __gc = matrix_free,
-   
+
    __add = generic_add,
    __sub = generic_sub,
    __mul = generic_mul,
@@ -877,6 +877,34 @@ function matrix.inv(m)
       return matrix_inv(m)
    else
       return matrix_complex_inv(m)
+   end
+end
+
+function matrix_det(m)
+   local n = m.size1
+   local lu = matrix_copy(m)
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
+
+   local det = gsl.gsl_linalg_LU_det(lu, signum))
+   return det
+end
+
+function matrix_det_complex(m)
+   local n = m.size1
+   local lu = matrix_complex_copy(m)
+   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+   gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+
+   local det = gsl.gsl_linalg_complex_LU_det(lu, signum))
+   return det
+end
+
+function matrix.det(m)
+   if ffi.istype(gsl_matrix, m) then
+      return matrix_det(m)
+   else
+      return matrix_det_complex(m)
    end
 end
 
