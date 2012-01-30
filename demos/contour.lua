@@ -6,12 +6,14 @@ local function rosenbrock()
    local N = 7
    local function frbeval(k) return f(1, 1 - 2 * (k/N)^2) end
    local ls = iter.ilist(frbeval, N)
-   return contour.plot(f, -1.5, -0.5, 1.5, 2, {gridx= 80, gridy= 80, ls= levels})
+   local p = contour.plot(f, -1.5, -0.5, 1.5, 2, {gridx= 80, gridy= 80, levels= ls})
+   p.title = 'Contour plot of Rosenbrock function'
+   return p
 end
 
 local function sincos()
    local fsincos = function(sx,sy)
-		      return function(x,y) 
+		      return function(x,y)
 				return cos(x)+cos(y) + sx*x + sy*y
 			     end
 		   end
@@ -41,7 +43,7 @@ end
 return {'Contour Plots', {
   {
      name = 'contour1',
-     f = rosenbrock, 
+     f = rosenbrock,
      description = 'Contour plot of Rosenbrock function',
   },
   {
