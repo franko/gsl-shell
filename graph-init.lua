@@ -289,27 +289,30 @@ local function legend_symbol(sym, dx, dy)
       return graph.ellipse(10+dx, 10+dy, 5, 5)
    elseif sym == 'line' then
       return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
+   else
+      error('invalid legend symbol: ' .. sym)
    end
 end
 
-function graph.legend(labels, symbol, colors, trans)
-   local n = #labels
+function graph.legend(entries)
+   local n = #entries
    local p = graph.plot()
    p.units, p.clip = false, false
    for k= 1, n do
+      local text, color, symspec, trans = unpack(entries[k])
       local y = (k-1) * 20
-      local sym, symtr = legend_symbol(symbol, 0, y)
+      local sym, symtr = legend_symbol(symspec, 0, y)
       local tr
       if symtr then
 	 tr = { symtr }
 	 if trans then
-	    for j= 1, #trans do tr[#tr+1] = trans[j] end
+	    for j, xtr in ipairs(trans) do tr[#tr+1] = xtr end
 	 end
       else
 	 tr = trans
       end
-      p:add(sym, colors[k], tr)
-      p:add(graph.textshape(25, y + 6, labels[k], 10), 'black')
+      p:add(sym, color, tr)
+      p:add(graph.textshape(25, y + 6, text, 10), 'black')
    end
    return p
 end

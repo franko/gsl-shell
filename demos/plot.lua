@@ -122,7 +122,10 @@ local function barplot_demo()
 end
 
 local function legend_demo()
-   local p = graph.legend({'sinus', 'cosinus'}, 'line', {'red', 'blue'}, {{'dash', 7,3}})
+   local p = graph.legend {
+      {'sinus', 'red', 'line'},
+      {'cosinus', 'blue', 'line', {{'dash', 7, 3}}},
+   }
    p:show()
 
    local pi = math.pi
