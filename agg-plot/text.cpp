@@ -71,6 +71,8 @@ namespace draw {
     if (!need_rotate) {
       x = x + m.tx;
       y = svg_y_coord(y + m.ty, h);
+    } else {
+      y = -y;
     }
 
     const char* cont = m_text_buf.cstr();
