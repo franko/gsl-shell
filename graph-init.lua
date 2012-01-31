@@ -203,9 +203,8 @@ graph.color = {
 }
 
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
-local wcolors = {0x3366ff, 0xcc0000, 0xcc33ff, 0xff3366, 0xffcc33, 0x66ff33, 0x33ffcc}
--- local wcolors = {0x6699ff, 0xcc66ff, 0xff6699, 0xffcc66, 0x99ff66, 0x66ffcc}
--- local wcolors = {0x003399, 0x660099, 0x990033, 0x996600, 0x339900, 0x009966}
+-- colors from a popular spreadsheet application
+local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38}
 
 function graph.rainbow(n)
    local p = #bcolors
