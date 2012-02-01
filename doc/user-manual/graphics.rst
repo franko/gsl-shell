@@ -514,6 +514,31 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Save the plot in the given filename in SVG format.
       Two optional parameters can be given to specify the width and height of the drawing area.
 
+
+   .. method:: set_mini(placement, p)
+
+      Add the plot ``p`` as a small plot is the side area of the main plot.
+      The argument ``placement`` is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
+      They stands for "left", "right", "bottom" and "top" respectively.
+
+   .. method:: set_categories(axis, categories)
+
+      Configure the given ``axis`` (a letter, 'x' or 'y') to use a custom set of labels specified by ``categories``.
+      This latter should be a list of that gives in a sequence, the values where the label should be placed and the label text itself.
+      The coordinate refers to the plot system of coordinates.
+
+      Example::
+
+        use 'math'
+
+        p = graph.fxplot(sin, 0, 2*pi)
+        p:set_categories('x', {0, '0', pi, 'pi', 2*pi, '2 pi'})
+        p.title = 'Sin function'
+
+      will produce the following plot:
+
+      .. figure:: graphics-categories-example.png
+
    .. attribute:: title
 
       The title of the plot. You can change or set the title using
