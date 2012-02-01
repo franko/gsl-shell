@@ -1,6 +1,6 @@
 /*
 ** Function handling (prototypes, functions and upvalues).
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -118,6 +118,7 @@ GCfunc *lj_func_newC(lua_State *L, MSize nelems, GCtab *env)
 
 static GCfunc *func_newL(lua_State *L, GCproto *pt, GCtab *env)
 {
+  uint32_t count;
   GCfunc *fn = (GCfunc *)lj_mem_newgco(L, sizeLfunc((MSize)pt->sizeuv));
   fn->l.gct = ~LJ_TFUNC;
   fn->l.ffid = FF_LUA;
@@ -125,6 +126,9 @@ static GCfunc *func_newL(lua_State *L, GCproto *pt, GCtab *env)
   /* NOBARRIER: Really a setgcref. But the GCfunc is new (marked white). */
   setmref(fn->l.pc, proto_bc(pt));
   setgcref(fn->l.env, obj2gco(env));
+  /* Saturating 3 bit counter (0..7) for created closures. */
+  count = (uint32_t)pt->flags + PROTO_CLCOUNT;
+  pt->flags = (uint8_t)(count - ((count >> PROTO_CLC_BITS) & PROTO_CLCOUNT));
   return fn;
 }
 

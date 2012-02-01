@@ -1,6 +1,6 @@
 /*
 ** PPC IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Register allocator extensions --------------------------------------- */
@@ -1490,7 +1490,7 @@ static void asm_fuseandsh(ASMState *as, PPCIns pi, int32_t mask, IRRef ref)
   IRIns *ir;
   Reg left;
   if (mayfuse(as, ref) && (ir = IR(ref), ra_noreg(ir->r)) &&
-      irref_isk(ir->op2)) {
+      irref_isk(ir->op2) && ir->o >= IR_BSHL && ir->o <= IR_BROR) {
     int32_t sh = (IR(ir->op2)->i & 31);
     switch (ir->o) {
     case IR_BSHL:
@@ -1793,8 +1793,8 @@ static void asm_stack_check(ASMState *as, BCReg topslot,
 static void asm_stack_restore(ASMState *as, SnapShot *snap)
 {
   SnapEntry *map = &as->T->snapmap[snap->mapofs];
+  SnapEntry *flinks = &as->T->snapmap[snap_nextofs(as->T, snap)-1];
   MSize n, nent = snap->nent;
-  SnapEntry *flinks = map + nent + snap->depth;
   /* Store the value of all modified slots to the Lua stack. */
   for (n = 0; n < nent; n++) {
     SnapEntry sn = map[n];
@@ -2130,13 +2130,13 @@ void lj_asm_patchexit(jit_State *J, GCtrace *T, ExitNo exitno, MCode *target)
     *px = PPCI_B | ((uint32_t)delta & 0x03ffffffu);
   }
   if (!cstart) cstart = px;
-  asm_cache_flush(cstart, px+1);
+  lj_mcode_sync(cstart, px+1);
   if (clearso) {  /* Extend the current trace. Ugly workaround. */
     MCode *pp = J->cur.mcode;
     J->cur.szmcode += sizeof(MCode);
     *--pp = PPCI_MCRXR;  /* Clear SO flag. */
     J->cur.mcode = pp;
-    asm_cache_flush(pp, pp+1);
+    lj_mcode_sync(pp, pp+1);
   }
   lj_mcode_patch(J, mcarea, 1);
 }

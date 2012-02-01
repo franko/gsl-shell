@@ -1,6 +1,6 @@
 /*
 ** Lexical analyzer.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -137,14 +137,17 @@ static int lex_number64(LexState *ls, TValue *tv)
 /* Parse a number literal. */
 static void lex_number(LexState *ls, TValue *tv)
 {
-  int c;
+  int c, xp = 'E';
   lua_assert(lj_char_isdigit(ls->current));
-  do {
+  if ((c = ls->current) == '0') {
+    save_and_next(ls);
+    if ((ls->current & ~0x20) == 'X') xp = 'P';
+  }
+  while (lj_char_isident(ls->current) || ls->current == '.' ||
+	 ((ls->current == '-' || ls->current == '+') && (c & ~0x20) == xp)) {
     c = ls->current;
     save_and_next(ls);
-  } while (lj_char_isident(ls->current) || ls->current == '.' ||
-	   ((ls->current == '-' || ls->current == '+') &&
-	    ((c & ~0x20) == 'E' || (c & ~0x20) == 'P')));
+  }
 #if LJ_HASFFI
   c &= ~0x20;
   if ((c == 'I' || c == 'L' || c == 'U') && !ctype_ctsG(G(ls->L)))

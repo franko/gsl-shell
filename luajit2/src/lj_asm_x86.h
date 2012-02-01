@@ -1,6 +1,6 @@
 /*
 ** x86/x64 IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Guard handling ------------------------------------------------------ */
@@ -496,7 +496,7 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
 	emit_movmroi(as, RID_ESP, ofs, ir->i);
       } else {
 	r = ra_alloc1(as, ref, RSET_GPR);
-	emit_movtomro(as, REX_64IR(ir, r), RID_ESP, ofs);
+	emit_movtomro(as, REX_64 + r, RID_ESP, ofs);
       }
       ofs += sizeof(intptr_t);
     }
@@ -593,13 +593,14 @@ static void asm_callx(ASMState *as, IRIns *ir)
   CCallInfo ci;
   IRRef func;
   IRIns *irf;
+  int32_t spadj = 0;
   ci.flags = asm_callx_flags(as, ir);
   asm_collectargs(as, ir, &ci, args);
   asm_setupresult(as, ir, &ci);
 #if LJ_32
   /* Have to readjust stack after non-cdecl calls due to callee cleanup. */
   if ((ci.flags & CCI_CC_MASK) != CCI_CC_CDECL)
-    emit_spsub(as, 4 * asm_count_call_slots(as, &ci, args));
+    spadj = 4 * asm_count_call_slots(as, &ci, args);
 #endif
   func = ir->op2; irf = IR(func);
   if (irf->o == IR_CARG) { func = irf->op1; irf = IR(func); }
@@ -608,7 +609,10 @@ static void asm_callx(ASMState *as, IRIns *ir)
     /* Use a (hoistable) non-scratch register for indirect calls. */
     RegSet allow = (RSET_GPR & ~RSET_SCRATCH);
     Reg r = ra_alloc1(as, func, allow);
+    if (LJ_32) emit_spsub(as, spadj);  /* Above code may cause restores! */
     emit_rr(as, XO_GROUP5, XOg_CALL, r);
+  } else if (LJ_32) {
+    emit_spsub(as, spadj);
   }
   asm_gencall(as, &ci, args);
 }
@@ -2316,8 +2320,8 @@ static void asm_stack_check(ASMState *as, BCReg topslot,
 static void asm_stack_restore(ASMState *as, SnapShot *snap)
 {
   SnapEntry *map = &as->T->snapmap[snap->mapofs];
+  SnapEntry *flinks = &as->T->snapmap[snap_nextofs(as->T, snap)-1];
   MSize n, nent = snap->nent;
-  SnapEntry *flinks = map + nent + snap->depth;
   /* Store the value of all modified slots to the Lua stack. */
   for (n = 0; n < nent; n++) {
     SnapEntry sn = map[n];
@@ -2741,7 +2745,7 @@ void lj_asm_patchexit(jit_State *J, GCtrace *T, ExitNo exitno, MCode *target)
       p += 5;
     }
   }
+  lj_mcode_sync(T->mcode, T->mcode + T->szmcode);
   lj_mcode_patch(J, mcarea, 1);
-  VG_INVALIDATE(T->mcode, T->szmcode);
 }
 

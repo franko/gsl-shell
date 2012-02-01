@@ -1,6 +1,6 @@
 /*
 ** IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_asm_c
@@ -146,14 +146,6 @@ IRFLDEF(FLOFS)
 #undef FLOFS
   0
 };
-
-/* Define this if you want to run LuaJIT with Valgrind. */
-#ifdef LUAJIT_USE_VALGRIND
-#include <valgrind/valgrind.h>
-#define VG_INVALIDATE(p, sz)	VALGRIND_DISCARD_TRANSLATIONS(p, sz)
-#else
-#define VG_INVALIDATE(p, sz)	((void)0)
-#endif
 
 /* -- Target-specific instruction emitter --------------------------------- */
 
@@ -903,30 +895,6 @@ static uint32_t asm_callx_flags(ASMState *as, IRIns *ir)
   return (nargs | (ir->t.irt << CCI_OTSHIFT));
 }
 
-/* Get extent of the stack for a snapshot. */
-static BCReg asm_stack_extent(ASMState *as, SnapShot *snap, BCReg *ptopslot)
-{
-  SnapEntry *map = &as->T->snapmap[snap->mapofs];
-  MSize n, nent = snap->nent;
-  BCReg baseslot = 0, topslot = 0;
-  /* Must check all frames to find topslot (outer can be larger than inner). */
-  for (n = 0; n < nent; n++) {
-    SnapEntry sn = map[n];
-    if ((sn & SNAP_FRAME)) {
-      IRIns *ir = IR(snap_ref(sn));
-      GCfunc *fn = ir_kfunc(ir);
-      if (isluafunc(fn)) {
-	BCReg s = snap_slot(sn);
-	BCReg fs = s + funcproto(fn)->framesize;
-	if (fs > topslot) topslot = fs;
-	baseslot = s;
-      }
-    }
-  }
-  *ptopslot = topslot;
-  return baseslot;
-}
-
 /* Calculate stack adjustment. */
 static int32_t asm_stack_adjust(ASMState *as)
 {
@@ -953,41 +921,6 @@ static uint32_t ir_khash(IRIns *ir)
     hi = lo + HASH_BIAS;
   }
   return hashrot(lo, hi);
-}
-
-#if !LJ_TARGET_X86ORX64 && LJ_TARGET_OSX
-void sys_icache_invalidate(void *start, size_t len);
-#endif
-
-#if LJ_TARGET_LINUX && LJ_TARGET_PPC
-#include <dlfcn.h>
-static void (*asm_ppc_cache_flush)(MCode *start, MCode *end);
-static void asm_dummy_cache_flush(MCode *start, MCode *end)
-{
-  UNUSED(start); UNUSED(end);
-}
-#endif
-
-/* Flush instruction cache. */
-static void asm_cache_flush(MCode *start, MCode *end)
-{
-  VG_INVALIDATE(start, (char *)end-(char *)start);
-#if LJ_TARGET_X86ORX64
-  UNUSED(start); UNUSED(end);
-#elif LJ_TARGET_OSX
-  sys_icache_invalidate(start, end-start);
-#elif LJ_TARGET_LINUX && LJ_TARGET_PPC
-  if (!asm_ppc_cache_flush) {
-    void *vdso = dlopen("linux-vdso32.so.1", RTLD_LAZY);
-    if (!vdso || !(asm_ppc_cache_flush = dlsym(vdso, "__kernel_sync_dicache")))
-      asm_ppc_cache_flush = asm_dummy_cache_flush;
-  }
-  asm_ppc_cache_flush(start, end);
-#elif defined(__GNUC__) && !LJ_TARGET_PPC
-  __clear_cache(start, end);
-#else
-#error "Missing builtin to flush instruction cache"
-#endif
 }
 
 /* -- Allocations --------------------------------------------------------- */
@@ -1415,13 +1348,30 @@ static void asm_head_side(ASMState *as)
 
 /* -- Tail of trace ------------------------------------------------------- */
 
+/* Get base slot for a snapshot. */
+static BCReg asm_baseslot(ASMState *as, SnapShot *snap, int *gotframe)
+{
+  SnapEntry *map = &as->T->snapmap[snap->mapofs];
+  MSize n;
+  for (n = snap->nent; n > 0; n--) {
+    SnapEntry sn = map[n-1];
+    if ((sn & SNAP_FRAME)) {
+      *gotframe = 1;
+      return snap_slot(sn);
+    }
+  }
+  return 0;
+}
+
 /* Link to another trace. */
 static void asm_tail_link(ASMState *as)
 {
   SnapNo snapno = as->T->nsnap-1;  /* Last snapshot. */
   SnapShot *snap = &as->T->snap[snapno];
-  BCReg baseslot = asm_stack_extent(as, snap, &as->topslot);
+  int gotframe = 0;
+  BCReg baseslot = asm_baseslot(as, snap, &gotframe);
 
+  as->topslot = snap->topslot;
   checkmclim(as);
   ra_allocref(as, REF_BASE, RID2RSET(RID_BASE));
 
@@ -1454,8 +1404,8 @@ static void asm_tail_link(ASMState *as)
   /* Sync the interpreter state with the on-trace state. */
   asm_stack_restore(as, snap);
 
-  /* Root traces that grow the stack need to check the stack at the end. */
-  if (!as->parent && as->topslot)
+  /* Root traces that add frames need to check the stack at the end. */
+  if (!as->parent && gotframe)
     asm_stack_check(as, as->topslot, NULL, as->freeset & RSET_GPR, snapno);
 }
 
@@ -1783,7 +1733,7 @@ void lj_asm_trace(jit_State *J, GCtrace *T)
   if (!as->loopref)
     asm_tail_fixup(as, T->link);  /* Note: this may change as->mctop! */
   T->szmcode = (MSize)((char *)as->mctop - (char *)as->mcp);
-  asm_cache_flush(T->mcode, origtop);
+  lj_mcode_sync(T->mcode, origtop);
 }
 
 #undef IR

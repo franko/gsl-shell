@@ -1,6 +1,6 @@
 /*
 ** ARM IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Register allocator extensions --------------------------------------- */
@@ -1422,8 +1422,9 @@ static void asm_stack_check(ASMState *as, BCReg topslot,
   Reg pbase;
   uint32_t k;
   if (irp) {
-    if (ra_hasreg(irp->r)) {
+    if (!ra_hasspill(irp->s)) {
       pbase = irp->r;
+      lua_assert(ra_hasreg(pbase));
     } else if (allow) {
       pbase = rset_pickbot(allow);
     } else {
@@ -1442,14 +1443,11 @@ static void asm_stack_check(ASMState *as, BCReg topslot,
 	   (int32_t)offsetof(lua_State, maxstack));
   if (irp) {  /* Must not spill arbitrary registers in head of side trace. */
     int32_t i = i32ptr(&J2G(as->J)->jit_L);
-    if (ra_noreg(irp->r)) {
-      lua_assert(ra_hasspill(irp->s));
-      emit_lso(as, ARMI_LDR, RID_RET, RID_SP, sps_scale(irp->s));
-    }
+    if (ra_hasspill(irp->s))
+      emit_lso(as, ARMI_LDR, pbase, RID_SP, sps_scale(irp->s));
     emit_lso(as, ARMI_LDR, RID_TMP, RID_TMP, (i & 4095));
-    if (ra_noreg(irp->r)) {
+    if (ra_hasspill(irp->s) && !allow)
       emit_lso(as, ARMI_STR, RID_RET, RID_SP, 0);  /* Save temp. register. */
-    }
     emit_loadi(as, RID_TMP, (i & ~4095));
   } else {
     emit_getgl(as, RID_TMP, jit_L);
@@ -1460,8 +1458,8 @@ static void asm_stack_check(ASMState *as, BCReg topslot,
 static void asm_stack_restore(ASMState *as, SnapShot *snap)
 {
   SnapEntry *map = &as->T->snapmap[snap->mapofs];
+  SnapEntry *flinks = &as->T->snapmap[snap_nextofs(as->T, snap)-1];
   MSize n, nent = snap->nent;
-  SnapEntry *flinks = map + nent + snap->depth;
   /* Store the value of all modified slots to the Lua stack. */
   for (n = 0; n < nent; n++) {
     SnapEntry sn = map[n];
@@ -1781,7 +1779,7 @@ void lj_asm_patchexit(jit_State *J, GCtrace *T, ExitNo exitno, MCode *target)
     }
   }
   lua_assert(cstart != NULL);
-  asm_cache_flush(cstart, cend);
+  lj_mcode_sync(cstart, cend);
   lj_mcode_patch(J, mcarea, 1);
 }
 

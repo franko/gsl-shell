@@ -1,6 +1,6 @@
 /*
 ** JIT library.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lib_jit_c
@@ -614,6 +614,8 @@ static uint32_t jit_cpudetect(lua_State *L)
 #endif
 #elif LJ_TARGET_PPC || LJ_TARGET_PPCSPE
   /* Nothing to do. */
+#elif LJ_TARGET_MIPS
+  /* NYI */
 #else
 #error "Missing CPU detection for this architecture"
 #endif

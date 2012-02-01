@@ -1,6 +1,6 @@
 /*
 ** Trace recorder for C data operations.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_ffrecord_c
@@ -27,6 +27,7 @@
 #include "lj_trace.h"
 #include "lj_record.h"
 #include "lj_ffrecord.h"
+#include "lj_snap.h"
 #include "lj_crecord.h"
 #include "lj_dispatch.h"
 
@@ -839,6 +840,28 @@ static TRef crec_call_args(jit_State *J, RecordFFData *rd,
   return tr;
 }
 
+/* Create a snapshot for the caller, simulating a 'false' return value. */
+static void crec_snap_caller(jit_State *J)
+{
+  lua_State *L = J->L;
+  TValue *base = L->base, *top = L->top;
+  const BCIns *pc = J->pc;
+  TRef ftr = J->base[-1];
+  ptrdiff_t delta;
+  if (!frame_islua(base-1))
+    lj_trace_err(J, LJ_TRERR_NYICALL);
+  J->pc = frame_pc(base-1); delta = 1+bc_a(J->pc[-1]);
+  L->top = base; L->base = base - delta;
+  J->base[-1] = TREF_FALSE;
+  J->base -= delta; J->baseslot -= (BCReg)delta;
+  J->maxslot = (BCReg)delta; J->framedepth--;
+  lj_snap_add(J);
+  L->base = base; L->top = top;
+  J->framedepth++; J->maxslot = 1;
+  J->base += delta; J->baseslot += (BCReg)delta;
+  J->base[-1] = ftr; J->pc = pc;
+}
+
 /* Record function call. */
 static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
 {
@@ -867,8 +890,7 @@ static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
       ctr = ctype_child(cts, ctr);
     }
     if (!(ctype_isnum(ctr->info) || ctype_isptr(ctr->info) ||
-	  ctype_isvoid(ctr->info)) ||
-	ctype_isbool(ctr->info) || t == IRT_CDATA)
+	  ctype_isvoid(ctr->info)) || t == IRT_CDATA)
       lj_trace_err(J, LJ_TRERR_NYICALL);
     if ((ct->info & CTF_VARARG)
 #if LJ_TARGET_X86
@@ -878,7 +900,12 @@ static int crec_call(jit_State *J, RecordFFData *rd, GCcdata *cd)
       func = emitir(IRT(IR_CARG, IRT_NIL), func,
 		    lj_ir_kint(J, ctype_typeid(cts, ct)));
     tr = emitir(IRT(IR_CALLXS, t), crec_call_args(J, rd, cts, ct), func);
-    if (t == IRT_FLOAT || t == IRT_U32) {
+    if (ctype_isbool(ctr->info)) {
+      crec_snap_caller(J);
+      lj_ir_set(J, IRTGI(IR_NE), tr, lj_ir_kint(J, 0));
+      J->postproc = LJ_POST_FIXGUARDSNAP;
+      tr = TREF_TRUE;
+    } else if (t == IRT_FLOAT || t == IRT_U32) {
       tr = emitconv(tr, IRT_NUM, t, 0);
     } else if (t == IRT_I8 || t == IRT_I16) {
       tr = emitconv(tr, IRT_INT, t, IRCONV_SEXT);
@@ -1178,6 +1205,14 @@ static TRef crec_toint(jit_State *J, CTState *cts, TRef sp, TValue *sval)
 void LJ_FASTCALL recff_ffi_new(jit_State *J, RecordFFData *rd)
 {
   crec_alloc(J, rd, argv2ctype(J, J->base[0], &rd->argv[0]));
+}
+
+void LJ_FASTCALL recff_ffi_errno(jit_State *J, RecordFFData *rd)
+{
+  UNUSED(rd);
+  if (J->base[0])
+    lj_trace_err(J, LJ_TRERR_NYICALL);
+  J->base[0] = lj_ir_call(J, IRCALL_lj_vm_errno);
 }
 
 void LJ_FASTCALL recff_ffi_string(jit_State *J, RecordFFData *rd)

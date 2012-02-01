@@ -1,6 +1,6 @@
 /*
 ** IR CALL* instruction definitions.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_IRCALL_H
@@ -168,9 +168,10 @@ typedef struct CCallInfo {
   _(FFI,	lj_carith_powi64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER) \
   _(FFI,	lj_carith_powu64,	ARG2_64,   N, U64, CCI_NOFPRCLOBBER) \
   _(FFI,	lj_cdata_setfin,	2,        FN, P32, CCI_L) \
-  _(FFI,	strlen,			1,         N, INTP, 0) \
+  _(FFI,	strlen,			1,         L, INTP, 0) \
   _(FFI,	memcpy,			3,         S, PTR, 0) \
   _(FFI,	memset,			3,         S, PTR, 0) \
+  _(FFI,	lj_vm_errno,		0,         S, INT, CCI_NOFPRCLOBBER) \
   _(FFI32,	lj_carith_mul64,	ARG2_64,   N, I64, CCI_NOFPRCLOBBER)
   \
   /* End of list. */

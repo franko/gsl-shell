@@ -1,6 +1,6 @@
 /*
 ** FFI library.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lib_ffi_c
@@ -603,7 +603,7 @@ LJLIB_CF(ffi_offsetof)
   return 0;
 }
 
-LJLIB_CF(ffi_errno)
+LJLIB_CF(ffi_errno)	LJLIB_REC(.)
 {
   int err = errno;
   if (L->top > L->base)

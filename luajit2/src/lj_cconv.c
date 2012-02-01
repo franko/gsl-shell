@@ -1,6 +1,6 @@
 /*
 ** C type conversions.
-** Copyright (C) 2005-2011 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #include "lj_obj.h"
@@ -391,7 +391,7 @@ int lj_cconv_tv_ct(CTState *cts, CType *s, CTypeID sid,
 	lua_assert(tvisnum(o));
       }
     } else {
-      uint32_t b = ((*sp) & 1);
+      uint32_t b = (*sp != 0);
       setboolV(o, b);
       setboolV(&cts->g->tmptv2, b);  /* Remember for trace recorder. */
     }
