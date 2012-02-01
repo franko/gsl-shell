@@ -521,6 +521,9 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       The argument ``placement`` is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
       They stands for "left", "right", "bottom" and "top" respectively.
 
+      The mini plot is shown using an region of the drawing area are equal to the bounding box of the mini plot itself.
+      When rendered as a mini plot the plot coordinates and the screen coordinates are therefore in a one-to-one scale rapport.
+
    .. method:: set_categories(axis, categories)
 
       Configure the given ``axis`` (a letter, 'x' or 'y') to use a custom set of labels specified by ``categories``.
@@ -674,6 +677,25 @@ Graphical Objects
 
       Set the position where the test is diplayed. It corresponds to
       the bottom left corner of the text.
+
+.. function:: textshape(x, y, text, size)
+
+   Create a text shape graphical object of given ``text`` and ``size`` at the position ``x``, ``y``.
+
+.. class:: TextShape
+
+   A text shape object is used to display a text.
+   The difference with a simple text object is that a text shape has a well definite shape and extension in the plot system of coordinates.
+   One of the implications is that the text shape will occupy a well definite area and the plot can adapt its area to include the text itself.
+   For the other side text shape could be deformed if a different scale is used for x and y axis.
+   If the aspect ration of coordinate system is not unitary a simple "text" object should be used instead.
+
+   The text shape has currently no methods and its properties are determined during the creation of the object.
+
+   .. tip::
+     Text shape objects are useful to create plot legends.
+     In this case the size and position of the text shape can be expressed in screen coordinates (pixel).
+     The reason is that when a mini plot is added to a plot the area of the screen used to display the mini plot is equal to the bounding box of the mini plot itself.
 
 .. _graphics-transforms:
 
