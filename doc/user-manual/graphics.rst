@@ -252,6 +252,28 @@ We give in this section the description of all the higher level plotting functio
 
    .. figure:: graphics-example-ibars.png
 
+.. function:: rgb(r, g, b)
+              rgba(r, g, b, a)
+
+   Returns a color specified by the given ``r``, ``g``, ``b`` values.
+   These latters should be numbers in the interval [0, 1].
+   The second variant of the function let you specify an alpha value.
+   This latter can range from 0 (completely transparent) to 1 (completely opaque).
+
+   In GSL Shell a color is encoded as an integer number with 8 bit per channel and 4 channels, R, G, B, A in the given order.
+   To express a pure green color you can for example write::
+
+     green = 0x00ff00ff
+
+   where the last two digits express the alpha value equal to 255 for opaque color.
+
+.. function:: raindow(n)
+              webcolor(n)
+
+   Returns a color from a predefined palette.
+   The argument ``n`` can be any integer number to select the color.
+   A limited number of colors is available and they are repeated cyclically.
+
 Multiple plot window
 --------------------
 
