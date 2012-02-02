@@ -32,6 +32,7 @@ For integer numbers GSL Shell differs from many other programming environment be
 In other words integer numbers are treated just like *real* number with all the implications that follows.
 
 .. _complex_numbers:
+
 Complex numbers
 ~~~~~~~~~~~~~~~
 
@@ -62,6 +63,7 @@ You can access its value using the global variable "_".
 When the you evaluate a statement or an expression that returns no values the variable "_" is not modified.
 
 .. _matrices:
+
 Working with matrices
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -276,6 +278,7 @@ Another opportunity is to adress directly matrix data by using its ``data`` fiel
 You can find more details in the chapter about :ref:`GSL FFI interface <gsl-ffi-interface>`.
 
 .. _plotting:
+
 Plotting functions
 ~~~~~~~~~~~~~~~~~~
 
@@ -317,6 +320,7 @@ Here the plot that we obtain with the snippet given above:
 You can refer to the :ref:`Graphics chapter <graphics-chapter>` for more details about the plotting functions.
 
 .. _short-func-notation:
+
 Short Function Notation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -349,15 +353,24 @@ To illustrate most of the key features of GSL Shell, let us write a short script
 
 For the integration in high dimensions, we will the :ref:`Monte Carlo VEGAS <monte-vegas>` implementation, that is included in GSL Shell.
 
-At the beginning of each script, you should think about which sections of GSL Shell you want to use. If you utilise functions from certains modules more often, you might want to call those functions directly with the help of the :func:`use` directive::
+At the beginning of each script, you should think about which sections of GSL Shell you want to use.
+If you utilise functions from certains modules more often, you might want to call those functions directly with the help of the :func:`use` directive::
 
    use 'iter'
    use 'math'
-   local monte_vegas = num.monte_vegas
 
-In other cases, it is useful to create simple aliases such as `monte_vegas` instead of injecting the complete module into global namespace. The later is recommended in performance critical applications.
+If you dont use the :func:`use` directive you can still access the functions from a module but you need to specify the full name.
+So, for example, you can refer to the VEGAS algorithm using its full name ``num.monte_vegas``.
+This latter approach is useful bacause avoids conflicts in the global namespace.
 
-Let's continue with a function `getunitsphere` that returns a function itself. This `n`-dimensional function then calculates the summed square of the table argument for a given size which equals :math:`R^2=\sum_{i=1}^nx_i^2`. It returns 1 if the given `R` is within the sphere or 0 otherwise::
+Now we need to define the integrand function.
+Since we want to calculate the volume of a `n`-dimensional sphere the function should accept a `n`-tuple of coordinates and return 1 if the sampling point is inside the unit sphere or 0 otherwise.
+To work correctly the VEGAS algorithm assume that the integrand function takes a single arguments that is a table with the `n` coordinates.
+Since the computation depends on the dimension `n` of the space we need to take this later intro account.
+The solution is to define a function that we can call `getunitsphere` that returns the integrand function for the `n`-dimension space.
+
+The `n`-dimensional integrand function itself calculates the summed square of the table values for a given size which equals :math:`R^2=\sum_{i=1}^nx_i^2`.
+So `getunitsphere` can be defined as follows::
 
    local function getunitsphere(n)
       return function(x)
@@ -367,7 +380,10 @@ Let's continue with a function `getunitsphere` that returns a function itself. T
       end
    end
 
-This is the function we will use to integrate later. Now we can prepare a graph path that will hold all calculated values (:func:`graph.path`). Also ::
+This is the function we will use to integrate later.
+
+Now we can prepare a graph path that will hold all calculated values (:func:`graph.path`).
+Also ::
 
    local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
 
@@ -390,24 +406,33 @@ Now we can start to calculate the volume of the unit sphere of the first 14 dime
       ln:line_to(d,res*2^d)
    end
 
-The loop consists of three major parts. In the first part we initialize the important variabes with the help of the `short function syntax` and the :func:`iter.ilist` function, which convieniently creates vectors of any size with a value provided by the function. In this case `a` and `b` are the lower and the upper boundary for the integration.
+The loop consists of three major parts.
+In the first part we initialize the important variabes with the help of the `short function syntax` and the :func:`iter.ilist` function, which convieniently creates vectors of any size with a value provided by the function.
+In this case `a` and `b` are the lower and the upper boundary for the integration.
 
-By calling :func:`num.monte_vegas` with the desired unitsphere function, the monte carlo vegas algorithm is being invoked for the first time. It returns multiple arguments, namely the result itself, the precision, the number of iterations it took and a continuation function that can be called to recalculate the result with higher precision.
+By calling :func:`num.monte_vegas` with the desired unitsphere function, the monte carlo vegas algorithm is being invoked for the first time.
+It returns multiple arguments, namely the result itself, the precision, the number of iterations it took and a continuation function that can be called to recalculate the result with higher precision.
 
-Depending on the relative precision `sig/res`, we continue to recalculate the integrale with increasing numbers of iterations. When it is done, we add the dimension and the result to our given path by :func:`~Path.line_to`.
+Depending on the relative precision `sig/res`, we continue to recalculate the integral with increasing numbers of iterations.
+When it is done, we add the dimension and the result to our given path by :func:`~Path.line_to`.
 
-We can now continue to compare the data with analytical solutions and plot these results. First we need to initialize a :func:`graph.plot` object. Then we can add the data to the plot with :func:`~Plot.add` and the result of the analytical solution with :func:`~Plot.addline`. Notice that you can change the appearance of the data points at this moment. We are going for markers with size 8.
+We can now continue to compare the data with analytical solutions and plot these results.
+First we need to initialize a :func:`graph.plot` object.
+Then we can add the data to the plot with :func:`~Plot.add` and the result of the analytical solution with :meth:`~Plot.addline`.
+Notice that you can change the appearance of the data points at this moment.
+We are going for markers with size 8.
 At that point, we are using `short functions` again which greatly fascilitates the syntax in this case::
 
    local p = graph.plot('Volume of a unit n-sphere')
    p.clip, p.pad = false, true
-   p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
+   p:addline(graph.fxline(|n| pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
    p:add(ln, "blue", {{'marker', size=8}})
    p.xtitle="n"
    p.ytitle="V"
    p:show()
 
-Also we are using :func:`sf.gamma` from the special functions section which offers all such functions that you can find in the gsl library. After setting the axis-names with :func:`~Plot.xtitle` and :func:`~Plot.ytitle`, we are ready to show the plot with :func:`~Plot.show`:
+Also we are using :func:`sf.gamma` from the special functions section which offers all such functions that you can find in the GSL library.
+After setting the axis-names with :func:`~Plot.xtitle` and :func:`~Plot.ytitle`, we are ready to show the plot with :func:`~Plot.show`:
 
 .. figure:: vegas.png
 
@@ -416,7 +441,11 @@ Here is the code in a whole:
 .. literalinclude:: intro-example.lua
    :language: lua
 
-This rather simple example showed quite a lot of important features of GSL Shell. Creating data structures with `iterators` and `short functions` are both very common. Also the plotting of data will be often done and is both flexible and easy-to-use. Benchmarks that include the above example can be found `here`.
-..TODO: ADD THE BENCHMARK LINK LATER
+This rather simple example showed quite a lot of important features of GSL Shell.
+Creating data structures with `iterators` and `short functions` are both very common.
 
+With the function `getunitsphere` we have shown that some problems can be solved in an elegant way by returning a function.
+These kind of functions are called closures because they refer to local variables declared outside of the function body itself.
+In this particular case the function returned by `getunitsphere` is a closure because it does refer to the variable `n` defined outside of its body.
+The function `cont` returned my `num.monte_vegas` is also another example of closure since it does refer to the current state of the VEGAS integration.
 
