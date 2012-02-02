@@ -252,6 +252,28 @@ We give in this section the description of all the higher level plotting functio
 
    .. figure:: graphics-example-ibars.png
 
+.. function:: rgb(r, g, b)
+              rgba(r, g, b, a)
+
+   Returns a color specified by the given ``r``, ``g``, ``b`` values.
+   These latters should be numbers in the interval [0, 1].
+   The second variant of the function let you specify an alpha value.
+   This latter can range from 0 (completely transparent) to 1 (completely opaque).
+
+   In GSL Shell a color is encoded as an integer number with 8 bit per channel and 4 channels, R, G, B, A in the given order.
+   To express a pure green color you can for example write::
+
+     green = 0x00ff00ff
+
+   where the last two digits express the alpha value equal to 255 for opaque color.
+
+.. function:: raindow(n)
+              webcolor(n)
+
+   Returns a color from a predefined palette.
+   The argument ``n`` can be any integer number to select the color.
+   A limited number of colors is available and they are repeated cyclically.
+
 Multiple plot window
 --------------------
 
@@ -514,6 +536,34 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Save the plot in the given filename in SVG format.
       Two optional parameters can be given to specify the width and height of the drawing area.
 
+
+   .. method:: set_mini(placement, p)
+
+      Add the plot ``p`` as a small plot is the side area of the main plot.
+      The argument ``placement`` is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
+      They stands for "left", "right", "bottom" and "top" respectively.
+
+      The mini plot is shown using an region of the drawing area are equal to the bounding box of the mini plot itself.
+      When rendered as a mini plot the plot coordinates and the screen coordinates are therefore in a one-to-one scale rapport.
+
+   .. method:: set_categories(axis, categories)
+
+      Configure the given ``axis`` (a letter, 'x' or 'y') to use a custom set of labels specified by ``categories``.
+      This latter should be a list of that gives in a sequence, the values where the label should be placed and the label text itself.
+      The coordinate refers to the plot system of coordinates.
+
+      Example::
+
+        use 'math'
+
+        p = graph.fxplot(sin, 0, 2*pi)
+        p:set_categories('x', {0, '0', pi, 'pi', 2*pi, '2 pi'})
+        p.title = 'Sin function'
+
+      will produce the following plot:
+
+      .. figure:: graphics-categories-example.png
+
    .. attribute:: title
 
       The title of the plot. You can change or set the title using
@@ -649,6 +699,25 @@ Graphical Objects
 
       Set the position where the test is diplayed. It corresponds to
       the bottom left corner of the text.
+
+.. function:: textshape(x, y, text, size)
+
+   Create a text shape graphical object of given ``text`` and ``size`` at the position ``x``, ``y``.
+
+.. class:: TextShape
+
+   A text shape object is used to display a text.
+   The difference with a simple text object is that a text shape has a well definite shape and extension in the plot system of coordinates.
+   One of the implications is that the text shape will occupy a well definite area and the plot can adapt its area to include the text itself.
+   For the other side text shape could be deformed if a different scale is used for x and y axis.
+   If the aspect ration of coordinate system is not unitary a simple "text" object should be used instead.
+
+   The text shape has currently no methods and its properties are determined during the creation of the object.
+
+   .. tip::
+     Text shape objects are useful to create plot legends.
+     In this case the size and position of the text shape can be expressed in screen coordinates (pixel).
+     The reason is that when a mini plot is added to a plot the area of the screen used to display the mini plot is equal to the bounding box of the mini plot itself.
 
 .. _graphics-transforms:
 
