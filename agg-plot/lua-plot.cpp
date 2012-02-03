@@ -655,8 +655,8 @@ int
 plot_set_mini(lua_State *L)
 {
   sg_plot* p = object_check<sg_plot>(L, 1, GS_PLOT);
-  const char* placement = luaL_checkstring(L, 2);
-  sg_plot* mp = object_check<sg_plot>(L, 3, GS_PLOT);
+  sg_plot* mp = object_check<sg_plot>(L, 2, GS_PLOT);
+  const char* placement = luaL_optstring(L, 3, "r");
   sg_plot::placement_e pos;
 
   char letter = placement[0];

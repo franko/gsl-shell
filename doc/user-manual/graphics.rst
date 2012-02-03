@@ -537,11 +537,12 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Two optional parameters can be given to specify the width and height of the drawing area.
 
 
-   .. method:: set_mini(placement, p)
+   .. method:: set_mini(p[, placement])
 
       Add the plot ``p`` as a small plot is the side area of the main plot.
       The argument ``placement`` is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
       They stands for "left", "right", "bottom" and "top" respectively.
+      By default the placement of the mini plot is on the right side.
 
       The mini plot is shown using an region of the drawing area are equal to the bounding box of the mini plot itself.
       When rendered as a mini plot the plot coordinates and the screen coordinates are therefore in a one-to-one scale rapport.
