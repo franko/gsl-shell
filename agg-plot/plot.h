@@ -566,6 +566,11 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
   return label_size;
 }
 
+static inline double approx_text_height(double text_size)
+{
+  return text_size * 1.5;
+}
+
 template <class VS, class RM>
 agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 					       agg::trans_affine& canvas_mtx)
@@ -576,8 +581,28 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 
   double dxl, dxr, dyb, dyt;
 
-  dxl = dxr = fpad+ppad*sx;
-  dyb = dyt = fpad+ppad*sy;
+  dxl = dxr = fpad + ppad * sx;
+  dyb = dyt = fpad + ppad * sy;
+
+  if (!str_is_null(&m_title))
+    {
+      const double scale = compute_scale(canvas_mtx);
+      const double line_width = std_line_width(scale);
+      const double ptpad = double(axis_title_prop_space) / 1000.0;
+      const double title_text_size = 12.0 * scale;
+      const double th = approx_text_height(title_text_size);
+
+      double labx = canvas_mtx.tx + canvas_mtx.sx * 0.5;
+      double laby = canvas_mtx.sy - (ptpad + dyt + title_text_size);
+
+      draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
+      title.set_point(labx, laby);
+      title.apply_transform(identity_matrix, 1.0);
+
+      canvas.draw(title, colors::black);
+
+      dyt += 2 * ptpad + th;
+    }
 
   for (int k = 0; k < 4; k++)
     {
@@ -631,11 +656,6 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
   return agg::trans_affine(ssx, 0.0, 0.0, ssy, cpx + dxl, cpy + dyb);
 }
 
-static inline double approx_text_height(double text_size)
-{
-  return text_size * 1.5;
-}
-
 template <class VS, class RM>
 void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
 			    agg::rect_base<int>* clip)
@@ -674,7 +694,6 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
 
   const double line_width = std_line_width(scale);
   const double label_text_size = 11.0 * scale;
-  const double title_text_size = 12.0 * scale;
   const double plpad = double(axis_label_prop_space) / 1000.0;
   const double ptpad = double(axis_title_prop_space) / 1000.0;
 
@@ -698,12 +717,6 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
     {
       dy_bottom += approx_text_height(label_text_size);
       ppad_bottom += ptpad;
-    }
-
-  if (!str_is_null(&m_title))
-    {
-      dy_top += approx_text_height(title_text_size);
-      ppad_top += ptpad;
     }
 
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
@@ -765,18 +778,6 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       ylabel.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(ylabel, colors::black);
-    }
-
-  if (!str_is_null(&m_title))
-    {
-      double labx = canvas_mtx.tx + canvas_mtx.sx * 0.5;
-      double laby = m.ty + m.sy + 2 * ptpad * syr;
-
-      draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
-      title.set_point(labx, laby);
-      title.apply_transform(identity_matrix, 1.0);
-
-      canvas.draw(title, colors::black);
     }
 
   if (clip)
