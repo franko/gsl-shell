@@ -60,6 +60,7 @@ Contents:
    :maxdepth: 2
 
    download.rst
+   benchmarks.rst
    why-donate.rst
    older-news.rst
    acknowledgments.rst

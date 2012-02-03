@@ -1,4 +1,5 @@
 .. highlight:: lua
+.. _monte-vegas:
 
 Monte Carlo Integration
 =======================

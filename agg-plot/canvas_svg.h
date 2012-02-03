@@ -13,7 +13,7 @@
 
 static const char *svg_header =						\
   "<?xml version=\"1.0\" standalone=\"no\"?>\n"				\
-  "<!-- Created using GSL Shell 2 -->\n"				\
+  "<!-- Created using GSL Shell -->\n"					\
   "<svg\n"								\
   "   xmlns=\"http://www.w3.org/2000/svg\"\n"				\
   "   version=\"1.1\"\n"						\
@@ -25,7 +25,8 @@ static const char *svg_end = "</svg>\n";
 
 class canvas_svg {
 public:
-  canvas_svg(FILE *f) : m_output(f), m_current_id(0)  { }
+  canvas_svg(FILE *f, double height):
+    m_output(f), m_height(height), m_current_id(0)  { }
 
   void clip_box(const agg::rect_base<int>& clip) { }
 
@@ -35,7 +36,7 @@ public:
   void draw(VertexSource& vs, agg::rgba8 c)
   {
     str path;
-    svg_coords_from_vs(&vs, path);
+    svg_coords_from_vs(&vs, path, m_height);
     str s = svg_fill_path(path, m_current_id++, c);
     writeln(m_output, s, "   ");
   }
@@ -44,7 +45,7 @@ public:
   void draw_outline(VertexSource& vs, agg::rgba8 c)
   {
     str path;
-    svg_coords_from_vs(&vs, path);
+    svg_coords_from_vs(&vs, path, m_height);
     str s = svg_stroke_path(path, default_stroke_width, m_current_id++, c);
     writeln(m_output, s, "   ");
   }
@@ -64,6 +65,7 @@ public:
 
 private:
   FILE *m_output;
+  double m_height;
   int m_current_id;
 };
 

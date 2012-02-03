@@ -35,9 +35,9 @@ struct trans {
       m_width = w;
     }
 
-    virtual str write_svg(int id, agg::rgba8 c) {
+    virtual str write_svg(int id, agg::rgba8 c, double h) {
       str path;
-      svg_property_list* ls = this->m_source->svg_path(path);
+      svg_property_list* ls = this->m_source->svg_path(path, h);
       str s = svg_stroke_path(path, m_width, id, c, ls);
       list::free(ls);
       return s;
@@ -60,8 +60,8 @@ struct trans {
   public:
     curve_a(sg_object* src) : base_type(src) { }
 
-    virtual svg_property_list* svg_path(str& s) {
-      svg_curve_coords_from_vs(this->m_source, s);
+    virtual svg_property_list* svg_path(str& s, double h) {
+      svg_curve_coords_from_vs(this->m_source, s, h);
       return 0;
     }
   };
@@ -79,8 +79,8 @@ struct trans {
   public:
     dash_a(sg_object* src) : base_type(src), m_dasharray(16) { }
 
-    virtual svg_property_list* svg_path(str& s) {
-      svg_property_list* ls = this->m_source->svg_path(s);
+    virtual svg_property_list* svg_path(str& s, double h) {
+      svg_property_list* ls = this->m_source->svg_path(s, h);
       svg_property_item item(stroke_dasharray, m_dasharray.cstr());
       ls = new svg_property_list(item, ls);
       return ls;
@@ -162,12 +162,12 @@ struct trans {
       m_symbol->apply_transform(m_scale, 1.0);
     }
 
-    virtual str write_svg(int id, agg::rgba8 c) {
+    virtual str write_svg(int id, agg::rgba8 c, double h) {
       str marker_id;
       str marker_def = gen_svg_marker_def(id, c, marker_id);
 
       str path;
-      svg_property_list* ls = m_source->svg_path(path);
+      svg_property_list* ls = m_source->svg_path(path, h);
 
       str marker_url = gen_marker_url(marker_id);
       const char* murl = marker_url.cstr();
@@ -188,8 +188,6 @@ struct trans {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-      m_scale.sy = (m.sy > 0.0 ? m_size : -m_size);
-
       m_symbol->apply_transform(m_scale, as);
       m_source->apply_transform(m, as);
     }
@@ -213,7 +211,7 @@ struct trans {
       const double S = m_size + 2*pad;
       const double wf = S / m_size;
 
-      str marker_svg = m_symbol->write_svg(-1, c);
+      str marker_svg = m_symbol->write_svg(-1, c, S);
 
       str s = str::print("<defs><marker id=\"%s\" "
                          "refX=\"%g\" refY=\"%g\" "

@@ -28,11 +28,6 @@ namespace draw {
 
     m_matrix = m_user_matrix;
 
-    if (m.sy < 0.0) {
-      m_matrix.shy *= -1.0;
-      m_matrix.sy  *= -1.0;
-    }
-
     m_trans.transformer(m_matrix);
     m_stroke.approximation_scale(as);
   }
@@ -45,7 +40,7 @@ namespace draw {
   }
 
   str
-  text::write_svg(int id, agg::rgba8 c)
+  text::write_svg(int id, agg::rgba8 c, double h)
   {
     const agg::trans_affine& m = m_user_matrix;
     const double eps = 1.0e-6;
@@ -67,27 +62,31 @@ namespace draw {
       style.printf_add(";fill:%s", rgbstr);
     }
 
-    bool need_rotate = (fabs(m.sx - 1.0) > eps || fabs(m.shx) > eps || \
-			fabs(m.shy) > eps || fabs(m.sy - 1.0) > eps);
+    bool need_rotate = !is_unit_matrix(m, eps);
 
     int txt_size = (int)(m_text_height * 1.5);
 
-    double x = 0.0, y = m_vjustif * m_text_height * 1.2;
+    double x = 0.0, y = - m_vjustif * m_text_height * 1.2;
+
     if (!need_rotate) {
-      x += m.tx;
-      y += m.ty;
+      x = x + m.tx;
+      y = svg_y_coord(y + m.ty, h);
+    } else {
+      y = -y;
     }
 
     const char* cont = m_text_buf.cstr();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
 			 " style=\"font-size:%i%s\">"			\
-			 " <tspan x=\"%g\" y=\"%g\" id=\"tspan%i\">%s</tspan>" \
+			 " <tspan id=\"tspan%i\">%s</tspan>" \
 			 "</text>",
-			 x, y, id, txt_size, style.cstr(), x, y, id, cont);
+			 x, y, id, txt_size, style.cstr(),
+			 id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-		     m.sx, m.shx, m.shy, m.sy, m.tx, m.ty, txt.cstr());
+		     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
+		     txt.cstr());
     } else {
       s = txt;
     }

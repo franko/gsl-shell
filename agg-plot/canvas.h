@@ -107,6 +107,17 @@ public:
   };
 };
 
+template <class VertexSource>
+struct virtual_canvas {
+  virtual void draw(VertexSource& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) = 0;
+
+  virtual void clip_box(const agg::rect_base<int>& clip) = 0;
+  virtual void reset_clipping() = 0;
+
+  virtual ~virtual_canvas() { }
+};
+
 #ifdef DISABLE_GAMMA_CORR
 typedef canvas_gen<pixel_simple> canvas;
 #else

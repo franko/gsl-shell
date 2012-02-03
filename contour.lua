@@ -1,18 +1,18 @@
 
 -- contour.lua
---  
+--
 -- Copyright (C) 2009, 2010 Francesco Abbate
---  
+--
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation; either version 3 of the License, or (at
 -- your option) any later version.
---  
+--
 -- This program is distributed in the hope that it will be useful, but
 -- WITHOUT ANY WARRANTY; without even the implied warranty of
 -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 -- General Public License for more details.
---  
+--
 -- You should have received a copy of the GNU General Public License
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -139,7 +139,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function bord_index_is_between(bi, bi1, bi2)
-      if bi1 <= bi2 then 
+      if bi1 <= bi2 then
 	 return bi > bi1 and bi <= bi2
       else
 	 return bi > bi1 or  bi <= bi2
@@ -191,11 +191,11 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 		if bi1 < bi2 then
 		   bi1 = bi1 + 1
 		   local k = bi1 % (2*nx + 2*ny)
-		   local j = k <= nx and k or 
-		      (k <= nx+ny and nx or 
+		   local j = k <= nx and k or
+		      (k <= nx+ny and nx or
 		       (k <= 2*nx+ny and 2*nx + ny - k or 0))
-		   local i = k <= nx and 0 or 
-		      (k <= nx+ny and k - nx or 
+		   local i = k <= nx and 0 or
+		      (k <= nx+ny and k - nx or
 		       (k <= 2*nx+ny and ny or 2*nx + 2*ny - k))
 		   return map(grid_point(i, j))
 		end
@@ -259,14 +259,14 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       local curve = curves[id]
       local domn, domp = curve.domain[-1], curve.domain[1]
       if domn ~= domid and domp ~= domid then
-	 error 'wrong curve/domain request' 
+	 error 'wrong curve/domain request'
       end
       return (domn == domid and domp or domn)
    end
 
    local function node_acw_next(nid)
       local idx
-      for i, k in ipairs(nodes_order) do 
+      for i, k in ipairs(nodes_order) do
 	 if k == nid then
 	    idx = i
 	    break
@@ -284,7 +284,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       local function nfsort(aidx, bidx)
 	 local a, b = nodes[aidx], nodes[bidx]
 
-	 if a.bi ~= b.bi then 
+	 if a.bi ~= b.bi then
 	    return a.bi < b.bi
 	 else
 	    local s = bord_main_index(a.si)
@@ -295,7 +295,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	    else error 'invalid segment index in node_sort' end
 	 end
       end
-      
+
       table.sort(nodes_order, nfsort)
    end
 
@@ -305,15 +305,15 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function assign_cross_at_index(idx, k, id)
-      if cross[idx] then 
+      if cross[idx] then
 	 if cross[idx][k] ~= 'undef' then error 'invalid intersection' end
-	 cross[idx][k] = id 
+	 cross[idx][k] = id
       end
    end
 
    local function check_cross(idx, k, id)
       if not id then error 'curve id not specified' end
-      return cross[idx] and cross[idx][k] == id 
+      return cross[idx] and cross[idx][k] == id
    end
 
    local function point_is_valid(i, j)
@@ -353,10 +353,10 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 
    for i=0, ny do
       for j=0, nx do
-	 local x, y = grid_point(i, j) 
+	 local x, y = grid_point(i, j)
 	 local z = f(x, y)
 	 if not (z == z) then
-	    local msg = string.format('function eval at: (%g, %g) gives %g', 
+	    local msg = string.format('function eval at: (%g, %g) gives %g',
 				      x, y, z)
 	    error(msg)
 	 end
@@ -444,10 +444,10 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	 end
       end
 
-      if #domains == 0 then 
+      if #domains == 0 then
 	 local z, lev = g.z[index(0,0)], 0
 	 while zlevels[lev+1] and zlevels[lev+1] < z do lev = lev+1 end
-	 insert(domains, {level= lev}) 
+	 insert(domains, {level= lev})
       end
    end
 
@@ -490,13 +490,13 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 
 	 repeat
 	    status = segment_lookup(s, idx0)
-	    if status == 'success' then 
+	    if status == 'success' then
 	       curve_add_point(c, segment_index(s))
 
 	       local p
-	       if     s[1] == irt and s[1] == s[3] then 
+	       if     s[1] == irt and s[1] == s[3] then
 		  p = (s[2] - s0[2]) * (s[4] - s[2])
-	       elseif s[2] == jrt and s[2] == s[4] then 
+	       elseif s[2] == jrt and s[2] == s[4] then
 		  p = (s[1] - s0[1]) * (s[3] - s[1])
 	       end
 	       if p then cw = cw + (p < 0 and 1 or -1) end
@@ -562,18 +562,18 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 
    local function order_curves()
       searchlist = {}
-      for id, _ in ipairs(curves) do 
+      for id, _ in ipairs(curves) do
 	 if curves[id].closed then insert(searchlist, id) end
       end
 
-      table.sort(searchlist, 
+      table.sort(searchlist,
 		 function(ia, ib) return #curves[ia] < #curves[ib] end)
 
-      local function make_col_iter(j) 
+      local function make_col_iter(j)
 	 return sequence(function(i) return segment_index_i(i, j, i+1, j) end,
 			  0, ny-1)
       end
-      
+
       local order_tree, treated = {}, {}
 
       for _, id in ipairs(searchlist) do
@@ -614,7 +614,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function grid_find_curves()
-      
+
       for level=0, nlevels do
 	 for s, _ in grid_iter_intersects(level) do
 	    local id = curve_next_id()
@@ -746,11 +746,46 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       end
       pl:add(ln, col, {{'stroke', width=0.75}})
    end
-	 
+
+   local function create_legend()
+      local bs = 25
+      local p = graph.plot()
+      local tk = graph.path()
+      local ln = graph.path(0, 0)
+      ln:line_to(bs, 0)
+      for k = 0, nlevels do
+	 local y = k * bs
+
+	 if k < nlevels then
+	    ln:move_to(0,  y)
+	    ln:line_to(0,  y + bs)
+	    ln:line_to(bs, y + bs)
+	    ln:line_to(bs, y)
+
+	    p:add(graph.rect(0, y, bs, y + bs), color((k+1)/(nlevels+1)))
+	 end
+
+	 tk:move_to(bs, y)
+	 tk:line_to(bs+5, y)
+
+	 local txt = string.format("%g", zlevels[k])
+	 p:add(graph.textshape(bs+10, y - 3, txt, 8), 'black')
+      end
+
+      p:addline(ln, 'black')
+      p:addline(tk, 'black')
+
+      p.units, p.clip = false, false
+
+      return p
+   end
+
    return {
            find_curves    = grid_find_curves,
            draw_regions   = grid_draw_regions,
-           draw_lines     = grid_draw_lines}
+           draw_lines     = grid_draw_lines,
+           create_legend  = create_legend,
+   }
 end
 
 local function circle_map_gener(R)
@@ -768,12 +803,14 @@ local function opt_gener(options, defaults)
 	  end
 end
 
+local contour_default = {gridx= 40, gridy= 40, levels= 10,
+			 colormap= default_color_map,
+			 lines= true, show= true, legend= true}
+
 contour = {}
 
 function contour.plot(f, x1, y1, x2, y2, options)
-   local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
-				   colormap= default_color_map, 
-				   lines= true, show= true})
+   local opt = opt_gener(options, contour_default)
 
    local g = grid_create(f, x1, y1, x2, y2, opt'gridx', opt'gridy', opt'levels',
 			 opt'colormap')
@@ -783,15 +820,19 @@ function contour.plot(f, x1, y1, x2, y2, options)
    local p = graph.plot()
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
+
+   if opt 'legend' then
+      local lgd = g.create_legend()
+      p:set_mini('r', lgd)
+   end
+
    if opt 'show' then p:show() end
 
    return p
 end
 
 function contour.polar_plot(f, R, options)
-   local opt = opt_gener(options, {gridx= 40, gridy= 40, levels= 10, 
-				   colormap= default_color_map, 
-				   lines= true, show= true})
+   local opt = opt_gener(options, contour_default)
    local map = circle_map_gener(R)
    local g = grid_create(f, -1, -1, 1, 1, opt'gridx', opt'gridy', opt'levels',
 			 opt'colormap', map)
@@ -800,6 +841,12 @@ function contour.polar_plot(f, R, options)
 
    local p = graph.plot()
    g.draw_regions(p)
+
+   if opt 'legend' then
+      local lgd = g.create_legend()
+      p:set_mini('r', lgd)
+   end
+
    if opt 'lines' then g.draw_lines(p, 'black') end
    if opt 'show' then p:show() end
 

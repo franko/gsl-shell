@@ -1,7 +1,7 @@
 
 local bit = require 'bit'
 
-local floor = math.floor
+local floor, pi = math.floor, math.pi
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
@@ -15,7 +15,7 @@ local function check_sampling(n)
       if n <= 1 then
 	 error('sampling points should be > 1')
       elseif n > n_sampling_max then
-	 echo('warning: too many sampling points requested, ' .. 
+	 echo('warning: too many sampling points requested, ' ..
 	      'limiting to ' .. n_sampling_max)
 	 n = n_sampling_max
       end
@@ -31,7 +31,7 @@ function graph.ipath(f)
       ln:line_to(x, y)
    end
    return ln
-end   
+end
 
 function graph.ipathp(f)
    local ln = graph.path()
@@ -49,7 +49,7 @@ function graph.ipathp(f)
       if not success then print('warning:', more) end
    until not more
    return ln
-end   
+end
 
 function graph.fxline(f, xi, xs, n)
    n = check_sampling(n)
@@ -118,6 +118,34 @@ function graph.ibars(f)
    return b
 end
 
+function graph.barplot(t)
+   local nr, nc = #t, #t[1] - 1
+   local pad = 0.1
+   local dx = (1-2*pad)/nc
+   local cat = {}
+   local p = graph.plot()
+   p.pad = true
+
+   for k = 1, nr do
+      local row = t[k]
+      local label = row[1]
+      cat[#cat+1] = k - 0.5
+      cat[#cat+1] = label
+      for j = 1, nc do
+	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
+	 local rect = graph.rect(x, 0, x+dx, y)
+	 p:add(rect, graph.webcolor(j))
+	 p:addline(rect, 'black')
+      end
+   end
+
+   p:set_categories('x', cat)
+   p.xlab_angle = pi/2
+
+   p:show()
+   return p
+end
+
 function graph.segment(x1, y1, x2, y2)
    local p = graph.path(x1, y1)
    p:line_to(x2, y2)
@@ -175,10 +203,17 @@ graph.color = {
 }
 
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
+-- colors from a popular spreadsheet application
+local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38}
 
 function graph.rainbow(n)
    local p = #bcolors
    return graph.color[bcolors[(n-1) % p + 1]]
+end
+
+function graph.webcolor(n)
+   local p = #wcolors
+   return lshift(wcolors[(n-1) % p + 1], 8) + 0xff
 end
 
 local color_schema = {
@@ -190,8 +225,8 @@ local color_schema = {
 function graph.color_function(schema, alpha)
    local c = color_schema[schema]
    return function(a)
-	     return graph.rgba(c[1] + a*(c[4]-c[1]), 
-			     c[2] + a*(c[5]-c[2]), 
+	     return graph.rgba(c[1] + a*(c[4]-c[1]),
+			     c[2] + a*(c[5]-c[2]),
 			     c[3] + a*(c[6]-c[3]), alpha)
 	  end
 end
@@ -243,5 +278,40 @@ function graph.plot_lines(ln, title)
       p:addline(ln[k], rainbow(k))
    end
    p:show()
+   return p
+end
+
+local function legend_symbol(sym, dx, dy)
+   if sym == 'square' then
+      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
+   elseif sym == 'circle' then
+      return graph.ellipse(10+dx, 10+dy, 5, 5)
+   elseif sym == 'line' then
+      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
+   else
+      error('invalid legend symbol: ' .. sym)
+   end
+end
+
+function graph.legend(entries)
+   local n = #entries
+   local p = graph.plot()
+   p.units, p.clip = false, false
+   for k= 1, n do
+      local text, color, symspec, trans = unpack(entries[k])
+      local y = (k-1) * 20
+      local sym, symtr = legend_symbol(symspec, 0, y)
+      local tr
+      if symtr then
+	 tr = { symtr }
+	 if trans then
+	    for j, xtr in ipairs(trans) do tr[#tr+1] = xtr end
+	 end
+      else
+	 tr = trans
+      end
+      p:add(sym, color, tr)
+      p:add(graph.textshape(25, y + 6, text, 10), 'black')
+   end
    return p
 end
