@@ -84,7 +84,7 @@ local function htable_barplot(ht)
    local lgs = iter.ilist(|k| {fb[k], graph.webcolor(k), 'square'}, #fb)
    local lg = graph.legend(lgs)
 
-   p:set_mini('r', lg)
+   p:set_mini(lg)
 
    p:show()
    return p
