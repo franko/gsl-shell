@@ -50,6 +50,7 @@ Basic Functions
    If ``z`` is a real number returns an imaginary part equal to zero.
 
 .. function:: conj(z)
+
    Returns the complex conjugate :math:`z^\star` of the complex number ``z``.
 
 .. data:: i

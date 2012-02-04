@@ -1,3 +1,6 @@
+use 'math'
+use 'iter'
+
 local function getunitsphere(n)
    return function(x)
       local s = 0
