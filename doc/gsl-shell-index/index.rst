@@ -26,13 +26,17 @@ You can download the latest release of GSL Shell in the :ref:`download section <
 You will find the source code and the binary packages for Windows and Linux.
 
 **NEW**
-  *GSL Shell 2.0.0 released*.
+  *GSL Shell 2.1.0 released*.
 
-  This release fix mainly some build problems of the beta release.
+  This release introduces some new, intesting features.
 
-  * Now GSL Shell can compile and run correctly on x86, x64 and ARM architecture.
-  * Support added to compile and run on Mac OS X
-  * Added documentation in GNU info format, included in linux package
+  * Added support to save plot in SVG format.
+  * Implemented support for plot legends and customized axis labels.
+  * Implementation of the VEGAS algorithm for Monte Carlo integration.
+  * Better and more complete implementation of the Special Functions modules using the FFI interface.
+  * Smart auto-complete for Lua global variables.
+
+  A new page to show benchmarks results is now published and three new contributors have also joined the GSL Shell project.
 
 Donate
 ~~~~~~
