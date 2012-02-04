@@ -345,7 +345,9 @@ function eigen.symmv(m, order)
     gsl_check(gsl.gsl_eigen_symmv (A, xeval, evec, w))
     gsl.gsl_eigen_symmv_free (w)
 
-    gsl.gsl_eigen_symmv_sort (xeval, evec, order)
+    if order then
+    	gsl.gsl_eigen_symmv_sort (xeval, evec, order)
+    end
 
 	return eval, evec
 end
@@ -354,6 +356,7 @@ end
 --the order can be used to determine the sorting of the eigenvalues according to their value
 --TODO: Return the Schur form T which is the upper part of the matrix
 --TODO: Check, the matrix m is being modified and may be copied before
+--TODO: make matries complex
 function eigen.non_symm(m, order)
 
     local size = m.size1
@@ -367,7 +370,9 @@ function eigen.non_symm(m, order)
     gsl_check(gsl.gsl_eigen_nonsymmv (A, xeval, evec, w))
     gsl.gsl_eigen_nonsymmv_free (w)
 
-    gsl.gsl_eigen_nonsymmv_sort (xeval, evec,  order)
+    if order then
+   	gsl.gsl_eigen_nonsymmv_sort (xeval, evec,  order)
+    end
 
 	return eval,evec,A
 end
