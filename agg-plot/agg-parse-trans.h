@@ -10,6 +10,6 @@ extern "C" {
 #include "agg_color_rgba.h"
 
 extern sg_object* parse_graph_args (lua_State *L, agg::rgba8& color,
-                                    gslshell::ret_status& st);
+                                    gslshell::ret_status& st, int layer_index);
 
 #endif

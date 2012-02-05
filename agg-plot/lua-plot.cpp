@@ -184,11 +184,13 @@ plot_free (lua_State *L)
 }
 
 void
-plot_add_gener_cpp (lua_State *L, sg_plot *p, bool as_line,
-                    gslshell::ret_status& st)
+plot_add_gener_cpp (lua_State *L, sg_plot* p, bool as_line,
+		    gslshell::ret_status& st)
 {
   agg::rgba8 color;
-  sg_object* obj = parse_graph_args(L, color, st);
+  int layer_index = p->current_layer_index();
+
+  sg_object* obj = parse_graph_args(L, color, st, layer_index);
 
   if (!obj) return;
 
@@ -205,6 +207,7 @@ objref_mref_add (lua_State *L, int table_index, int index, int value_index)
 {
   int n;
   INDEX_SET_ABS(L, table_index);
+  INDEX_SET_ABS(L, value_index);
 
   lua_rawgeti (L, table_index, index);
   if (lua_isnil (L, -1))
@@ -222,6 +225,14 @@ objref_mref_add (lua_State *L, int table_index, int index, int value_index)
 
   lua_pushvalue (L, value_index);
   lua_rawseti (L, -2, n+1);
+  lua_pop (L, 1);
+}
+
+void
+plot_lua_add_ref (lua_State* L, int plot_index, int ref_index)
+{
+  lua_getfenv (L, plot_index);
+  objref_mref_add (L, -1, ref_index, -2);
   lua_pop (L, 1);
 }
 

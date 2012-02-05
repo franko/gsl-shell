@@ -9,6 +9,7 @@ extern "C" {
 #include <memory>
 
 #include "agg-parse-trans.h"
+#include "lua-plot.h"
 #include "lua-defs.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"
@@ -58,7 +59,7 @@ property_lookup (struct property_reg *prop, const char *key)
   return default_value;
 }
 
-sg_object* build_stroke (lua_State *L, int specindex, sg_object* src)
+sg_object* build_stroke (lua_State *L, int specindex, sg_object* src, int li)
 {
   double width = mlua_named_optnumber (L, specindex, "width", 1.0);
   const char *cap_str  = mlua_named_optstring (L, specindex, "cap",  NULL);
@@ -84,12 +85,12 @@ sg_object* build_stroke (lua_State *L, int specindex, sg_object* src)
   return s;
 }
 
-sg_object* build_curve (lua_State *L, int specindex, sg_object* src)
+sg_object* build_curve (lua_State *L, int specindex, sg_object* src, int li)
 {
   return new trans::curve(src);
 }
 
-sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
+sg_object* build_marker (lua_State *L, int specindex, sg_object* src, int li)
 {
   double size = mlua_named_optnumber(L, specindex, "size", 3.0);
 
@@ -108,6 +109,7 @@ sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
         {
           sg_object* obj = (sg_object*) lua_touserdata(L, -1);
           sym = new trans::scaling_a(obj);
+	  plot_lua_add_ref (L, 1, li);
         }
       else
         {
@@ -131,7 +133,7 @@ sg_object* build_marker (lua_State *L, int specindex, sg_object* src)
   return new trans::marker(src, size, sym);
 }
 
-sg_object* build_dash (lua_State *L, int specindex, sg_object* src)
+sg_object* build_dash (lua_State *L, int specindex, sg_object* src, int li)
 {
   trans::dash* d = new trans::dash(src);
 
@@ -159,7 +161,7 @@ sg_object* build_dash (lua_State *L, int specindex, sg_object* src)
   return d;
 }
 
-sg_object* build_extend (lua_State *L, int specindex, sg_object* src)
+sg_object* build_extend (lua_State *L, int specindex, sg_object* src, int li)
 {
   double width = mlua_named_optnumber (L, specindex, "width", 1.0);
   trans::extend* m = new trans::extend(src);
@@ -179,7 +181,7 @@ sg_object* affine_object_compose(sg_object* obj, agg::trans_affine& m)
   return new trans::affine(obj, m);
 }
 
-sg_object* build_translate (lua_State* L, int specindex, sg_object* src)
+sg_object* build_translate (lua_State* L, int specindex, sg_object* src, int li)
 {
   double x = mlua_named_number (L, specindex, "x");
   double y = mlua_named_number (L, specindex, "y");
@@ -188,7 +190,7 @@ sg_object* build_translate (lua_State* L, int specindex, sg_object* src)
   return affine_object_compose(src, mtx);
 }
 
-sg_object* build_scale (lua_State *L, int specindex, sg_object* src)
+sg_object* build_scale (lua_State *L, int specindex, sg_object* src, int li)
 {
   lua_rawgeti (L, specindex, 2);
 
@@ -204,7 +206,7 @@ sg_object* build_scale (lua_State *L, int specindex, sg_object* src)
   return src;
 }
 
-sg_object* build_rotate (lua_State *L, int specindex, sg_object* src)
+sg_object* build_rotate (lua_State *L, int specindex, sg_object* src, int li)
 {
   double a = mlua_named_number (L, specindex, "angle");
   double c = cos(a), s = sin(a);
@@ -214,7 +216,7 @@ sg_object* build_rotate (lua_State *L, int specindex, sg_object* src)
 
 class builder {
 public:
-  typedef sg_object* (func_type)(lua_State*, int, sg_object*);
+  typedef sg_object* (func_type)(lua_State*, int, sg_object*, int);
 
   struct reg {
     const char *name;
@@ -252,7 +254,7 @@ const builder::reg builder::builder_table[] = {
 };
 
 sg_object* parse_spec (lua_State *L, int specindex, sg_object* src,
-                       gslshell::ret_status& st)
+                       gslshell::ret_status& st, int layer_index)
 {
   const char *tag;
 
@@ -282,11 +284,11 @@ sg_object* parse_spec (lua_State *L, int specindex, sg_object* src,
       return 0;
     }
 
-  return f(L, specindex, src);
+  return f(L, specindex, src, layer_index);
 }
 
 sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* src,
-                                gslshell::ret_status& st)
+                                gslshell::ret_status& st, int layer_index)
 {
   if (lua_type (L, index) != LUA_TTABLE)
     {
@@ -300,7 +302,7 @@ sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* src,
   for (k = nb; k > 0 && src; k--, src = obj)
     {
       lua_rawgeti (L, index, k);
-      obj = parse_spec(L, -1, src, st);
+      obj = parse_spec(L, -1, src, st, layer_index);
       if (obj == 0)
         delete src;
       lua_pop (L, 1);
@@ -310,7 +312,7 @@ sg_object* parse_spec_pipeline (lua_State* L, int index, sg_object* src,
 }
 
 sg_object* parse_graph_args (lua_State *L, agg::rgba8& color,
-                             gslshell::ret_status& st)
+                             gslshell::ret_status& st, int layer_index)
 {
   color = color_arg_lookup (L, 3);
 
@@ -323,7 +325,7 @@ sg_object* parse_graph_args (lua_State *L, agg::rgba8& color,
 
       if (! lua_isnoneornil (L, 5))
         {
-          sobj = parse_spec_pipeline(L, 5, sobj, st);
+          sobj = parse_spec_pipeline(L, 5, sobj, st, layer_index);
           if (!sobj)
             return 0;
         }
@@ -343,7 +345,7 @@ sg_object* parse_graph_args (lua_State *L, agg::rgba8& color,
 
   if (! lua_isnoneornil (L, 4))
     {
-      wobj = parse_spec_pipeline(L, 4, wobj, st);
+      wobj = parse_spec_pipeline(L, 4, wobj, st, layer_index);
     }
 
   return wobj;

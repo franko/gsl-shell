@@ -9,6 +9,8 @@ __BEGIN_DECLS
 
 extern void plot_register (lua_State *L);
 
+extern void plot_lua_add_ref (lua_State* L, int plot_index, int ref_index);
+
 __END_DECLS
 
 #endif
