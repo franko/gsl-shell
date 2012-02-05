@@ -36,7 +36,7 @@ You will find the source code and the binary packages for Windows and Linux.
   * Better and more complete implementation of the Special Functions modules using the FFI interface.
   * Smart auto-complete for Lua global variables.
 
-  A new page to show benchmarks results is now published and three new contributors have also joined the GSL Shell project.
+  A new page to show benchmarks results is now published and `three new contributors <http:///www.nongnu.org/gsl-shell/authors.html>`_ have also joined the GSL Shell project.
 
 Donate
 ~~~~~~
@@ -67,4 +67,5 @@ Contents:
    benchmarks.rst
    why-donate.rst
    older-news.rst
+   authors.rst
    acknowledgments.rst
