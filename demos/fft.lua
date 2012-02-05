@@ -71,7 +71,7 @@ end
 
 local function demo3()
    local n, ncut, order = 512, 11, 8
-   local x1 = sf.besselJzero(order, 14)
+   local x1 = sf.besselJ_zero(order, 14)
    local xsmp = |k| x1*(k-1)/(n-1)
 
    local bess = matrix.new(n, 1, |i| sf.besselJ(order, xsmp(i)))
