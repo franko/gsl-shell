@@ -671,8 +671,9 @@ plot_set_mini(lua_State *L)
   else
     return luaL_error (L, "invalid mini plot placement specification.");
 
+  int ref_index = (1 << 16) + (int)pos;
   lua_getfenv (L, 1);
-  objref_mref_add (L, -1, (int)pos, 3);
+  objref_mref_add (L, -1, ref_index, 2);
 
   AGG_LOCK();
   p->add_mini_plot(mp, pos);
