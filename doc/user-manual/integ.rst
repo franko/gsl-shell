@@ -7,13 +7,13 @@ Numerical Integration
 
 This chapter describes routines for performing numerical integration
 (quadrature) of a function in one dimension.
-GSL Shell reimplements the the algorithms used in QUADPACK, a numerical integration package written by Piessens, Doncker-Kapenga, Uberhuber and Kahaner.
-Fortran code for QUADPACK is available on Netlib.
+GSL Shell re-implements the the algorithms used in QUADPACK, a numerical integration package written by Piessens, Doncker-Kapenga, Uberhuber and Kahaner.
+FORTRAN code for QUADPACK is available on Netlib.
 
 Currently only two integration methods are available in GSL Shell.
 Both of them are based on Gauss-Kronrod integration rules.
 The first method is non-adaptive and is called QNG while the seconde one, QAG, is adaptive.
-The adaptive method QAG is suitable as a general purpose integrator and the QNG method should be used only in particular cases where the function has a simple known smooth behaviour.
+The adaptive method QAG is suitable as a general purpose integrator and the QNG method should be used only in particular cases where the function has a simple known smooth behavior.
 
 Introduction
 ------------
@@ -74,7 +74,7 @@ Functions
       The maximum number of subdivisions for adaptive algorithms.
       The default value is 64.
 
-Uage Example
+Usage Example
 ------------
 
 Here a simple example that shows how to plot the Bessel function using its integral definition:

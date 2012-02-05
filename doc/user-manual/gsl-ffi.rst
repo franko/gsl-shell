@@ -11,14 +11,14 @@ Introduction
 ~~~~~~~~~~~~
 
 The access to the C GSL functions is possible by using the FFI module provided by LuaJIT2 on which GSL Shell is based.
-The FFI module allows to call directly from Lua code any C functions available from the dinamic libraries currently loaded.
+The FFI module allows to call directly from Lua code any C functions available from the dynamic libraries currently loaded.
 
 Some of the modules available in GSL Shell are reimplemented in Lua using the FFI interface and the basic GSL functions about BLAS and linear algebra.
 
 For example the module for non-linear fit have been completely reimplemented in Lua using the FFI interface.
 Thanks to the capability of LuaJIT2 to generate highly optimized code on the fly the Lua implementation run at a speed comparable to compiled optimized C code.
 For the ODE systems LuaJIT2 is actually, in some cases, faster then optimized C code and is in general comparable to C in term of speed.
-Another module re-implemented in Lua is the module about numerical integration, whare the QAG adaptive routine have been ported with execellent results.
+Another module re-implemented in Lua is the module about numerical integration, where the QAG adaptive routine have been ported with excellent results.
 
 The non-linear fit module re-implemented in Lua has been checked for correctness using a subset of the `NIST datasets <http://www.itl.nist.gov/div898/strd/nls/nls_main.shtml>`_.
 You can run yourself the tests by giving the following commands::
@@ -37,7 +37,7 @@ GSL FFI interface
 .. module:: gsl
 
 The usage of the GSL FFI interface is done using the :mod:`gsl` module.
-This latter contains all the GSL functions available and you can call them directely from Lua code.
+This latter contains all the GSL functions available and you can call them directly from Lua code.
 
 Let us see a simple example::
 

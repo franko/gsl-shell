@@ -11,7 +11,7 @@ Overview
 --------
 
 When you are working with a lot of numbers and complicated functions it is often useful to be able to do some plotting of the data.
-GSL Shell offers a graphics module that allow to produce beatiful graphics with a very rich interface and almost illimited possibilities.
+GSL Shell offers a graphics module that allow to produce beautiful graphics with a very rich interface and almost unlimited possibilities.
 
 The graphics module in GSL Shell use for its implementation the excellent `Anti-Grain Geometry <http://www.antigrain.com/>`_ library, version 2.5, of Maxim Shemanarev.
 
@@ -32,7 +32,7 @@ where |agr| and |ohgr| are constants and t vary from 0 to t1.
 Before starting we need to note a couple of things.
 
 The mathematical functions like exp, sin, cos are contained in the 'math' module.
-You can use ``use 'math'`` to make them directely available.
+You can use ``use 'math'`` to make them directly available.
 The graphical functions are in the module 'graph'.
 In order to access them you can use the :func:`use` function or just prefix all the functions with the module name like, for example, ``graph.plot``.
 Choose whatever option you prefer, it is just a matter of taste.
@@ -62,16 +62,16 @@ Then to plot something you have just to call the 'myplot' function. For example:
 
 .. figure:: graphics-example-1.png
 
-The function :func:`graph.fxline` takes three arguments, the function to plot and the initial anf final values of the variable. By default the function will be sampled with 256 points but if you want you can provide a fourth arguments to give the number of sample points.
+The function :func:`graph.fxline` takes three arguments, the function to plot and the initial and final values of the variable. By default the function will be sampled with 256 points but if you want you can provide a fourth arguments to give the number of sample points.
 
 In this example we have used the :func:`graph.plot` function to create a plot, the :func:`graph.fxline` function to create the line to draw and the method :func:`~Plot.addline` to add the line to the plot (in red). These three operations can be done with a single function, :func:`graph.fxplot`. It works like that::
 
    p = graph.fxplot(|x| sin(x), 0, 8*pi)
 
 where the first arguments is the function to plot and the following
-arguments are the extrema of variation of the indipendent variable x.
+arguments are the extrema of variation of the independent variable x.
 
-You may whish to add a title to the plot by using the :attr:`~Plot.title` attribute and may be save it in a file as an image by using the :meth:`~Plot.save` method. Here how to do it in two lines of code::
+You may wish to add a title to the plot by using the :attr:`~Plot.title` attribute and may be save it in a file as an image by using the :meth:`~Plot.save` method. Here how to do it in two lines of code::
 
   p.title = "y = sin(x)"
   p:save('sin-function', 640, 480)
@@ -154,7 +154,7 @@ We give in this section the description of all the higher level plotting functio
 
 .. function:: xyline(x, y)
 
-   This function takes two column matrix of dimendions N as arguments and returns a graphical object of type :class:`Path` given by the points (x[i], y[i]) where i goes from 1 to N.
+   This function takes two column matrix of dimensions N as arguments and returns a graphical object of type :class:`Path` given by the points (x[i], y[i]) where i goes from 1 to N.
 
    *Example*::
 
@@ -162,7 +162,7 @@ We give in this section the description of all the higher level plotting functio
 
       N = 256
       sio2n = |w| sqrt(1.4923 + 0.61497*w^2/(w^2 - 0.115^2)-0.01059*w^2)
-      -- define a matrix with wavelength and refrective index in each column
+      -- define a matrix with wavelength and refractive index in each column
       d = matrix.new(N, 2, function(i,j)
                               local w = 0.4*(i-1)/(N-1)+0.4
                               return j == 1 and w or sio2n(w)
@@ -212,7 +212,7 @@ We give in this section the description of all the higher level plotting functio
 
          use 'math'
 	 -- create a simple iterator that return n points uniformly spaced
-         -- in a circle centerd in (x0, y0) with radius R
+         -- in a circle centered in (x0, y0) with radius R
 	 circle = function(x0, y0, R, n)
                      return function(k)
          	               local th = 2*k*pi/n
@@ -230,14 +230,14 @@ We give in this section the description of all the higher level plotting functio
 
 .. function:: ibars(f)
 
-   This function takes an iterator function ``f`` and returns a :class:`Path` object that draws many adjacent rectangular boxs correspondings to the points (x, y) returned by the iterator ``f``.
+   This function takes an iterator function ``f`` and returns a :class:`Path` object that draws many adjacent rectangular boxes corresponding to the points (x, y) returned by the iterator ``f``.
    This function simplify the creation of histograms.
 
    *Example*::
 
       use 'math'
 
-      -- draws the histogram of a simulated gaussian distribution
+      -- draws the histogram of a simulated Gaussian distribution
       N = 800
       r = rng.new()
       f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
@@ -267,7 +267,7 @@ We give in this section the description of all the higher level plotting functio
 
    where the last two digits express the alpha value equal to 255 for opaque color.
 
-.. function:: raindow(n)
+.. function:: rainbow(n)
               webcolor(n)
 
    Returns a color from a predefined palette.
@@ -279,12 +279,12 @@ Multiple plot window
 
 With GSL shell it is possible to put several plots in a given window or also to put a given plot on several windows. To better understand what follows lets clarify a little bit the relations between plots and windows.
 
-In GSL shell a plot can exists indipendetely of any window and viceversa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :meth:`~Plot.show` what happens is that:
+In GSL shell a plot can exists independently of any window and vice versa, a window can exists without being associated to any plot. When you create a plot using the "plot" function the plot is not shown and is not associated to any window. When you call the method :meth:`~Plot.show` what happens is that:
 
  * a window is created and shown on the screen
  * the plot is *attached* to the window
 
-You can perform the operations above explicitely if you want. For example::
+You can perform the operations above explicitly if you want. For example::
 
    p = graph.plot('Test plot')
    w = graph.window()
@@ -334,7 +334,7 @@ Window class
 
    .. method:: attach(plot, slot)
 
-      Attach the given ``plot`` to the window's slot speficied by the string ``slot``. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. For each of the mentioned integer the corresponding window partition will be choosen recursively.
+      Attach the given ``plot`` to the window's slot specified by the string ``slot``. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. For each of the mentioned integer the corresponding window partition will be chosen recursively.
 
       Example::
 
@@ -361,7 +361,7 @@ A valid string layout is defined recursively and it is either:
 * the character 'v' followed by a sequence of layout strings
 * the same as above but enclosed between brackets: '(' ')'.
 
-With the serquence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
+With the sequence 'h' and 'v' you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done in according to the sequence of cell layout that follows the 'h' or 'v'.
 
 The pattern described above is recursive and you can use brackets to group items where needed to avoid ambiguity.
 
@@ -376,7 +376,7 @@ and here how the resulting window can look:
 
 we have added some empty plots so that you can see something inside the window.
 
-Now let us see how to specify a particulat drawing area once the :meth:`~Window.layout` is done. Drawing are specification is done with the method :meth:`~Window.attach` with a string that identifies the drawing area. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth you should specify as many numbers as are the depth level of the drawing are you want to address.
+Now let us see how to specify a particular drawing area once the :meth:`~Window.layout` is done. Drawing are specification is done with the method :meth:`~Window.attach` with a string that identifies the drawing area. The string should be a list of comma separated integer number in the form 'n1,n2,...,nk'. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth you should specify as many numbers as are the depth level of the drawing are you want to address.
 
 For examples, to identify the drawing area in the sample above the following string should be used: '1,1', '1,2', '2'. You can attach a plot to a particular drawing area by using the method :meth:`~Window.attach` as follows::
 
@@ -387,7 +387,7 @@ Graphics primitives
 -------------------
 
 In order to better understand the way GSL shell graphics works it is better to take a step back. Let use suppose that we want to plot an equilateral triangle. We can proceed as follows:
-  - define a 'path' that describe the countour that we want to plot
+  - define a 'path' that describe the contour that we want to plot
   - add the 'path' that we have defined to a 'plot' object to show it
 
 In order to create a 'path' we can use the function :func:`graph.path` which just creates an empty path. Then we add the the points by using the methods :meth:`~Path.move_to` and :meth:`~Path.line_to` methods. When you use :meth:`~Path.move_to` a new curve is started at the given points and with :meth:`~Path.line_to` you can draw your curve.
@@ -416,7 +416,7 @@ Now let us suppose that we want to plot only the contour of the triangle with a 
 
 .. figure:: simpler-example-2.png
 
-As you can see we have used the 'stroke' trasnformation and we have provided two parameters: 'width' and 'cap' to specify of the stroke should be done.
+As you can see we have used the 'stroke' transformation and we have provided two parameters: 'width' and 'cap' to specify of the stroke should be done.
 
 Now, to continue our example, let us suppose that we want to plot a dashed line just one pixel thick. In this case we have to cascade two transformations, the 'dash' transformation and the 'stroke' transformation. It can be done as follows::
 
@@ -514,7 +514,7 @@ You can add elements to a plot in any moments even when it is already shown. GSL
    .. method:: pushlayer()
 
       Add a new :ref:`graphical layer <graphical-layer>` and into the
-      plot so that it becames the current one and all the elements
+      plot so that it becomes the current one and all the elements
       added with methods :meth:`~Plot.add` or :meth:`~Plot.addline`
       are associated with this new layer.
 
@@ -657,7 +657,7 @@ Graphical Objects
       Move the current point to the coordinates (x, y) and start here a new path.
    .. method:: line_to(x, y)
 
-      Add a line into the path from the previous point to the specified (x, y) coordnates.
+      Add a line into the path from the previous point to the specified (x, y) coordinates.
 
    .. method:: close()
 
@@ -669,7 +669,7 @@ Graphical Objects
 
    .. method:: curve3(x_ctrl, y_ctrl, x, y)
 
-      Add a conic bezier curve up to (x, y) with a single control point. The curve will be dislayed as such only if a 'curve' :ref:`graphical transformation <graphics-transforms>` is used in the transformations pipeline.
+      Add a conic bezier curve up to (x, y) with a single control point. The curve will be displayed as such only if a 'curve' :ref:`graphical transformation <graphics-transforms>` is used in the transformations pipeline.
 
    .. method:: curve4(x1_ctrl, y1_ctrl, x2_ctrl, y2_ctrl, x, y)
 
@@ -685,7 +685,7 @@ Graphical Objects
 
    A text object is used to display a text.
    This class of graphical object is special because it is not a shape that is resized rigidly with the window, the text is always displayed with the same size in pixel.
-   Becasue of this difference a text object should be subject only to post-transforms.
+   Because of this difference a text object should be subject only to post-transforms.
 
    .. attribute:: angle
 
@@ -698,7 +698,7 @@ Graphical Objects
 
    .. method:: set(x, y)
 
-      Set the position where the test is diplayed. It corresponds to
+      Set the position where the test is displayed. It corresponds to
       the bottom left corner of the text.
 
 .. function:: textshape(x, y, text, size)
@@ -725,7 +725,7 @@ Graphical Objects
 Graphical transformations
 -------------------------
 
-A generical graphical transformation is expressed in the form of table with the following layout::
+A generic graphical transformation is expressed in the form of table with the following layout::
 
   {'name',
    property1 = value1,
@@ -749,7 +749,7 @@ Here a complete list of all the available transforms:
      * **join**, can be 'miter', 'miter.rev', 'miter.round', 'round' and 'bevel'
 
   **dash**
-    Transform the path to a sequence of dashes. The following elements in the table are the length of the dashs and gaps.
+    Transform the path to a sequence of dashes. The following elements in the table are the length of the dashes and gaps.
 
     For example, to express a dash-dot  line you can write ``{'dash', 7,3,3,3}``.
 
@@ -761,8 +761,8 @@ Here a complete list of all the available transforms:
 
     * **size**, the size of the marker
     * **mark**, a string, an integer number or a graphical object indicating the symbol to be used for the markers.
-      Available simbols are 'circle', 'triangle', 'square', 'diamong', 'plus', 'cross'.
-      If a number is given the symbol will be chosed in the list given above.
+      Available symbols are 'circle', 'triangle', 'square', 'diamond', 'plus', 'cross'.
+      If a number is given the symbol will be chosen in the list given above.
       If a graphical object is supplied its extension should be such that is contained in a box of size 1 and centered in (0, 0).
       The object will be automatically scaled according to the parameter ``size``.
     * **outline**, if it is true draw the marker in outline

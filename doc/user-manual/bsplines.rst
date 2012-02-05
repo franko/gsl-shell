@@ -45,7 +45,7 @@ B-Splines functions
 .. function:: bspline(a, b, N[, order])
               bspline(knots[, order])
 
-   Create an object of type :class:`BSpline`. In the first form it will create a basis splines in the interval from ``a`` to ``b`` with ``N`` uniformly spaced breaks. The ``order`` is 4 if unspecified, it does correspond to cubic splines. In the second form you shoud provide a non-decreasing list ``knots`` with all the points.
+   Create an object of type :class:`BSpline`. In the first form it will create a basis splines in the interval from ``a`` to ``b`` with ``N`` uniformly spaced breaks. The ``order`` is 4 if unspecified, it does correspond to cubic splines. In the second form you should provide a non-decreasing list ``knots`` with all the points.
 
 .. class:: BSpline
 
@@ -57,12 +57,12 @@ B-Splines functions
 
    .. method:: model(x)
 
-      Takes a column matrix of dimension N and returns a matrix of M columns and N rows where M = nbreak + order - 1. The matrix will contain, for each column, the value of the correspoding basis function evaluated in all the N position given by ``x``.
+      Takes a column matrix of dimension N and returns a matrix of M columns and N rows where M = nbreak + order - 1. The matrix will contain, for each column, the value of the corresponding basis function evaluated in all the N position given by ``x``.
 
 B-splines Example
 ------------------
 
-The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve :math:`y(x) = \cos(x) \exp(-x/10)` on the interval [0,15] with gaussian noise added::
+The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve :math:`y(x) = \cos(x) \exp(-x/10)` on the interval [0,15] with Gaussian noise added::
 
      use 'math'
      use 'graph'
@@ -76,7 +76,7 @@ The following example computes a linear least squares fit to data using cubic B-
      -- we calculate the simulated data
      x, y = matrix.new(n, 1, xsmp), matrix.new(n, 1, |i| f(xsmp(i)))
 
-     -- we add a gaussian noise and calculate weights
+     -- we add a Gaussian noise and calculate weights
      r = rng.new()
      w = matrix.new(n, 1)
      for i=1,n do

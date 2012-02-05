@@ -77,7 +77,7 @@ and here the code that we can write to implement it::
       s:evolve(odef, t1)
    end
 
-In anternative you may want to make a plot of the curve that you obtain. Here an example, we create a "path" to describe the curve that we want to plot and then we iterate with the ODE solver and we add all the points with the "line_to" method. The we create an empy plot and we add the line that we have just created::
+In alternative you may want to make a plot of the curve that you obtain. Here an example, we create a "path" to describe the curve that we want to plot and then we iterate with the ODE solver and we add all the points with the "line_to" method. The we create an empty plot and we add the line that we have just created::
 
    -- we create a line and add the points obtained by integrating the ODE
    ln = graph.path(x0, y0)
@@ -116,7 +116,7 @@ ODE Solver Class Definition
       eps_rel, *optional*
           The maximum relative error in the y that should be tolerated.
       method, *optional*
-          The low-level integration method used. Can be choosed between:
+          The low-level integration method used. Can be chosen between:
 
           - rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.
 
@@ -127,7 +127,7 @@ ODE Solver Class Definition
       Initialize the state of the solver to the time ``t0``.
       The second argument ``h0`` is the initial step size that the integrator will try.
       The function ``f`` is the function that defines the ODE system.
-      It will be called like ``f(t, y_1, y_2, ..., y_N)`` where ``t`` is the time and ``y_1, y_2, ...`` are the values of the N indipendent values conventionnaly denoted here by 'y'.
+      It will be called like ``f(t, y_1, y_2, ..., y_N)`` where ``t`` is the time and ``y_1, y_2, ...`` are the values of the N independent values conventionally denoted here by 'y'.
       The function ``f`` should return N values that correspond to values ``f_i(t, y_1, ..., y_N)`` for each component ``f_i`` of the ODE system function.
 
    .. method:: evolve(f, t1)

@@ -56,7 +56,7 @@ Airy Functions
 .. function:: airyBi_zero(n)
 .. function:: airyBi_deriv_zero(n)
 
-   Return the n-th zero of the respectives functions or their derivatives.
+   Return the n-th zero of the respective functions or their derivatives.
 
    .. figure:: examples-airy-functions-plot.png
 
@@ -110,7 +110,7 @@ Bessel Functions
 .. function:: bessellnKnu(nu, x)
 .. function:: besselKnu_scaled(nu, x)
 
-   Compute the (scaled or lagarithm) irregular modified Bessel function of fractional order :math:`\nu, K_\nu(x)` for x>0, \nu>0.
+   Compute the (scaled or logarithm) irregular modified Bessel function of fractional order :math:`\nu, K_\nu(x)` for x>0, \nu>0.
 
 .. function:: besselj(l, x)
 
@@ -152,13 +152,13 @@ Coulomb Functions
 
 .. function:: hydrogenicR(n, l, Z, r)
 
-   These routines compute the n-th normalized hydrogenic bound state radial wavefunction,
+   These routines compute the n-th normalized hydrogenic bound state radial wave function,
 
    .. math::
       R_n := 2 (Z^{3/2}/n^2) \sqrt{(n-l-1)!/(n+l)!} \exp(-Z r/n) (2Zr/n)^lL^{2l+1}_{n-l-1}(2Zr/n)
 
    where :math:`L^a_b(x)` is the generalized Laguerre polynomial (see Laguerre Functions).
-   The normalization is chosen such that the wavefunction :math:`\psi` is given by :math:`\psi(n,l,r) = R_n Y_{lm}`.
+   The normalization is chosen such that the wave function :math:`\psi` is given by :math:`\psi(n,l,r) = R_n Y_{lm}`.
 
 .. function:: coulomb_wave_FG(eta, x, L_F,k)
 
@@ -452,7 +452,7 @@ Fermi Dirac Function
    .. math::
       F_n(x) = {1 \over \Gamma(n+1)} \int_0^\infty dt {t^n \over e^{t-x} + 1}
 
-   Note that the Fermi-Dirac integral is sometimes defined without the normalisation factor in other texts.
+   Note that the Fermi-Dirac integral is sometimes defined without the normalization factor in other texts.
 
 .. function:: fermi_dirac_inc(x, b)
 
@@ -579,7 +579,7 @@ Gamma and Beta Functions
 
 .. function:: pochrel(a,x)
 
-   hese routines compute the relative Pochhammer symbol :math:`((a)_x - 1)/x where (a)_x = \Gamma(a + x)/\Gamma(a)`.
+   These routines compute the relative Pochhammer symbol :math:`((a)_x - 1)/x where (a)_x = \Gamma(a + x)/\Gamma(a)`.
 
 .. function:: gamma_inc(a,x)
 

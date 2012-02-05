@@ -112,7 +112,7 @@ So here a simple example that prints 20 integer numbers between 0 and 999::
       print(n)
    end
 
-and here another example that creates a 5x5 matrix and initiliaze it with random numbers like before::
+and here another example that creates a 5x5 matrix and initialize it with random numbers like before::
 
    r = rng.new() -- we create a random number generator
    m = new(5, 5, |i,j| r:getint(1000)) -- create the matrix

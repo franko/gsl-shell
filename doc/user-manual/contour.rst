@@ -10,9 +10,9 @@ Contour Plots
 Overview
 --------
 
-GSL shell offer a contour plot function to draw contour curve of bidimensional functions. The current algorthm works correctly only for continous functions and it may gives bad results if the function have discontinuities.
+GSL shell offer a contour plot function to draw contour curve of bidimensional functions. The current algorithm works correctly only for continuous functions and it may gives bad results if the function have discontinuities.
 
-Here an example of its utilisation to plot the function :math:`f(x,y) = x^2 - y^2`::
+Here an example of its utilization to plot the function :math:`f(x,y) = x^2 - y^2`::
 
    contour.plot(|x,y| x^2 - y^2, -8, -8, 8, 8)
 

@@ -42,7 +42,7 @@ The 3D Function Plot give you the possibility of making a 3D plot of a function 
    * ``gridx``, number of subdivision along x
    * ``gridy``, number of subdivision along y
    * ``title``, the title of the plot
-   * ``stroke``, a boolean valua that indicate if the wireframe
+   * ``stroke``, a boolean value that indicate if the wireframe
      should be drawn or not.
 
 Here a simples example::
@@ -72,14 +72,14 @@ where u and v are two parameters that span a rectangular domain.
 
 .. function:: surfplot({x, y, z}, umin, vmin, umax, vmax[, options])
 
-   Make a 3D plot of the parameteric surface defined by the functions ``x(u, v)``, ``y(u, v)`` and ``z(u, v)`` when the parameters ``(u, v)`` span a rectangular domain defined by ``umin``, ``vmin``, ``umax`` and ``vmax``.
+   Make a 3D plot of the parametric surface defined by the functions ``x(u, v)``, ``y(u, v)`` and ``z(u, v)`` when the parameters ``(u, v)`` span a rectangular domain defined by ``umin``, ``vmin``, ``umax`` and ``vmax``.
 
    The ``options`` argument is an optional table that can contain the following field:
 
    * ``gridu``, number of subdivision along x
    * ``gridv``, number of subdivision along y
    * ``title``, the title of the plot
-   * ``stroke``, a boolean valua that indicate if the wireframe should
+   * ``stroke``, a boolean value that indicate if the wireframe should
      be drawn or not.
 
 Here a simples example that plot the Moebius surface starting from a parametric: form:

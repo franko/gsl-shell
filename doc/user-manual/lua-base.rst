@@ -8,7 +8,7 @@ Iterators
 ============================
 
 GSL Shell provides some simple functions to perform some common tasks related to iterators.
-The utilisation of these functions allows to write more simple and compact code and to improve the readability.
+The utilization of these functions allows to write more simple and compact code and to improve the readability.
 The functions describes below are available in the module :mod:`iter`.
 
 .. module:: iter
@@ -24,7 +24,7 @@ The functions describes below are available in the module :mod:`iter`.
          -- [ some code here]
       end
 
-   where ``f`` is the iterator.  If ``f`` returns multiple values they will be all returnd by the iterator.
+   where ``f`` is the iterator.  If ``f`` returns multiple values they will be all returned by the iterator.
 
 .. function:: sample(f, xi, xs, n)
 
@@ -40,7 +40,7 @@ The functions describes below are available in the module :mod:`iter`.
 .. function:: isample(f, a, b)
               isample(f, b)
 
-   Return an iterators that gives the couple ``i, f(i)`` where ``i`` is an iteger going from ``a`` to ``b``. In the second form the sequence will start from one. If ``f`` returns multiple values only the first one is retained.
+   Return an iterators that gives the couple ``i, f(i)`` where ``i`` is an integer going from ``a`` to ``b``. In the second form the sequence will start from one. If ``f`` returns multiple values only the first one is retained.
 
 .. function:: ilist(f, a, b)
               ilist(f, b)
@@ -82,7 +82,7 @@ We give an example to build a stateless row "iterator" over the rows of a matrix
       print('Row number', i, ':', row)
    end
 
-Note that in this case we have to provide the "iterator", its "state" and the initial "index" value ``i0`` explicitely. You may avoid that by using an "iterator builder" like in the following example::
+Note that in this case we have to provide the "iterator", its "state" and the initial "index" value ``i0`` explicitly. You may avoid that by using an "iterator builder" like in the following example::
 
    function make_row_iter(m)
       return my_row_iter, m, 1

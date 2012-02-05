@@ -7,7 +7,7 @@ GSL Shell introduction
 
 GSL Shell is an interactive interface that gives access to the GSL numerical routines by using Lua, an easy to learn and powerful programming language.
 With GSL Shell you can access very easily the functions provided by the GSL library without the need of writing and compile a stand-alone C application.
-In addition the power and expressivity of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines.
+In addition the power and expressiveness of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines.
 You will be also able to create plots in real-time by using the powerful built-in graphical module.
 
 .. note::
@@ -19,7 +19,7 @@ You will be also able to create plots in real-time by using the powerful built-i
   The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
   In addition the LuaJIT2 implementation provides excellent execution speed that can be very close to C compiled code.
 
-GSL Shell also introduces some extensions to the Lua language that will be explained in the following sections. Those features include :ref:`complex numbers<complex_numbers>`, easy-to-use :ref:`vector/matrix<matrices>` implementataions, :ref:`short function syntax<short-func-notation>` and :ref:`iterators<lua_base>`. They are designed to fasciliate the work with numbers and mathematical algorithms.
+GSL Shell also introduces some extensions to the Lua language that will be explained in the following sections. Those features include :ref:`complex numbers<complex_numbers>`, easy-to-use :ref:`vector/matrix<matrices>` implementations, :ref:`short function syntax<short-func-notation>` and :ref:`iterators<lua_base>`. They are designed to facilitate the work with numbers and mathematical algorithms.
 
 First steps
 -----------
@@ -41,9 +41,9 @@ When you need to define a complex number you can use a native syntax like in the
    x = 3 + 4i
 
 The rule is that when you write a number followed by an 'i' it will be considered as a pure imaginary number.
-The imaginary number will be accepted only if the 'i' follows immediately the number without any interleving spaces.
+The imaginary number will be accepted only if the 'i' follows immediately the number without any interleaving spaces.
 Note also that if you write 'i' alone this will be not interpreted as the imaginary unit but as the variable 'i'.
-The imaginary unit can be declared by writing '1i' because the '1' at the beginning force the intepreter to consider it like a number.
+The imaginary unit can be declared by writing '1i' because the '1' at the beginning force the interpreter to consider it like a number.
 
 All the functions in the :mod:`math` like exp, sin, cos etc. works on *real* numbers.
 If you want to have operations that operates on complex numbers you should use the functions defined in the :mod:`complex` module.
@@ -78,11 +78,11 @@ In the first case you should use the :func:`matrix.def` like in the following ex
    m = matrix.def {{cos(th), sin(th)}, {-sin(th), cos(th)}}
 
 You can remark that we have used the :func:`matrix.def` function without parentheses to enclose its arguments.
-The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing paretheses.
-In this case we have therefore omitted the parantheses because :func:`matrix.def` has a single argument that is a literal table.
+The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing parentheses.
+In this case we have therefore omitted the parenthesize because :func:`matrix.def` has a single argument that is a literal table.
 
 Note that in our snippet of code we have used the function :func:`use` to make the function available in the module :mod:`math` available.
-If you don't use :func:`use` the function :func:`math.sin` and :func:`math.cos` should be accessed by specifying the explicitely the ``math`` namespace.
+If you don't use :func:`use` the function :func:`math.sin` and :func:`math.cos` should be accessed by specifying the explicitly the ``math`` namespace.
 
 You can define also a column matrix using the function :func:`matrix.vec` like follows::
 
@@ -96,7 +96,7 @@ Let as see an example to illustrate how it works::
    m = matrix.new(4, 4, |i,j| 1/(i + j))
 
 In this example the third argument is a function expressed with the :ref:`short function notation <short-func-notation>`.
-This function takes two arguments, respectively the row and column number, and returns the value that should be assigned to the corrisponding matrix element.
+This function takes two arguments, respectively the row and column number, and returns the value that should be assigned to the corresponding matrix element.
 Of course you are not forced to define the function in the same line, you can define it before and use it later with the :func:`matrix.new` function like in the following example::
 
    -- define the binomial function
@@ -236,10 +236,10 @@ In general GSL Shell tries to ensure that all the common matrix operations are h
 Matrix indexing
 ~~~~~~~~~~~~~~~
 
-You can index the matrix but only one index is permitted so the syntax ``m[2]`` is ok but ``m[2,3]`` will not be accepted.
+You can index the matrix but only one index is permitted so the syntax ``m[2]`` is OK but ``m[2,3]`` will not be accepted.
 This is limitation of GSL Shell that is related to the Lua programming language on which it is based.
 
-So when you write ``m[2]`` you will obtain the second row ofthe matrix ``m`` but in *column* form.
+So when you write ``m[2]`` you will obtain the second row of the matrix ``m`` but in *column* form.
 So, if we use the matrix ``m`` defined above we could have:
 
   >>> m[5]
@@ -273,7 +273,7 @@ If you use a simple indexing you can assign the content of a whole row all at on
 Just a small note about efficiency.
 The double indexing method can be slow and should be probably avoided in the tight loop where the performance is important.
 In this case you should use the methods :meth:`~Matrix.get` and :meth:`~Matrix.set`.
-Another opportunity is to adress directly matrix data by using its ``data`` field but this requires a particular attention since this kind of operations are not safe and you could easily crash the application.
+Another opportunity is to address directly matrix data by using its ``data`` field but this requires a particular attention since this kind of operations are not safe and you could easily crash the application.
 
 You can find more details in the chapter about :ref:`GSL FFI interface <gsl-ffi-interface>`.
 
@@ -354,14 +354,14 @@ To illustrate most of the key features of GSL Shell, let us write a short script
 For the integration in high dimensions, we will the :ref:`Monte Carlo VEGAS <monte-vegas>` implementation, that is included in GSL Shell.
 
 At the beginning of each script, you should think about which sections of GSL Shell you want to use.
-If you utilise functions from certains modules more often, you might want to call those functions directly with the help of the :func:`use` directive::
+If you utilize functions from certain modules more often, you might want to call those functions directly with the help of the :func:`use` directive::
 
    use 'iter'
    use 'math'
 
-If you dont use the :func:`use` directive you can still access the functions from a module but you need to specify the full name.
+If you don't use the :func:`use` directive you can still access the functions from a module but you need to specify the full name.
 So, for example, you can refer to the VEGAS algorithm using its full name ``num.monte_vegas``.
-This latter approach is useful bacause avoids conflicts in the global namespace.
+This latter approach is useful because avoids conflicts in the global namespace.
 
 Now we need to define the integrand function.
 Since we want to calculate the volume of a `n`-dimensional sphere the function should accept a `n`-tuple of coordinates and return 1 if the sampling point is inside the unit sphere or 0 otherwise.
@@ -407,7 +407,7 @@ Now we can start to calculate the volume of the unit sphere of the first 14 dime
    end
 
 The loop consists of three major parts.
-In the first part we initialize the important variabes with the help of the `short function syntax` and the :func:`iter.ilist` function, which convieniently creates vectors of any size with a value provided by the function.
+In the first part we initialize the important variables with the help of the `short function syntax` and the :func:`iter.ilist` function, which conveniently creates vectors of any size with a value provided by the function.
 In this case `a` and `b` are the lower and the upper boundary for the integration.
 
 By calling :func:`num.monte_vegas` with the desired unitsphere function, the monte carlo vegas algorithm is being invoked for the first time.
@@ -421,7 +421,7 @@ First we need to initialize a :func:`graph.plot` object.
 Then we can add the data to the plot with :func:`~Plot.add` and the result of the analytical solution with :meth:`~Plot.addline`.
 Notice that you can change the appearance of the data points at this moment.
 We are going for markers with size 8.
-At that point, we are using `short functions` again which greatly fascilitates the syntax in this case::
+At that point, we are using `short functions` again which greatly facilitates the syntax in this case::
 
    local p = graph.plot('Volume of a unit n-sphere')
    p.clip, p.pad = false, true

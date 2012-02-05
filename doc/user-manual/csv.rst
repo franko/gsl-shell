@@ -13,7 +13,7 @@ The module ``csv`` offer a few useful functions to read data files in 'csv' form
 
    Read the given filename and returns a table that store the values from the given file (``filename`` argument). The table returned is in the form ``{{row1_v1, row1_v2, ...}, {row2_v1, row2_v2, ...}, ...}`` so that you can obtain the number of lines read by using the ``#`` operator (number of element in a table). The table can contains both numeric values or strings accordingly to the csv specifications. Each row can potentially contain a different number of elements. The user can check the number of number of elements of each row if needed.
 
-   Here an example of utilisation::
+   Here an example of utilization::
 
       csv = require 'csv'
 
@@ -33,4 +33,4 @@ The module ``csv`` offer a few useful functions to read data files in 'csv' form
 
 .. function:: line(str)
 
-   This function split the string ``str`` using commas as separators accordingly to the csv format specifications. This function can be useful to build a customised csv parser.
+   This function split the string ``str`` using commas as separators accordingly to the csv format specifications. This function can be useful to build a customized csv parser.

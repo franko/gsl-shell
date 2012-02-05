@@ -20,9 +20,9 @@ In general the inversion of the matrix can be performed using the function :func
 
 In general most of the matrix related functions can operate on both real or complex matrices and return the appropriate result.
 
-In order to create a new matrix you should use the :func:`matrix.new` function to define a *real* matrix and :func:`matrix.cnew` for a *complex* matrix. If you want a matrix by giving explicitely all its elements you can use instead the function :func:`matrix.def`.
+In order to create a new matrix you should use the :func:`matrix.new` function to define a *real* matrix and :func:`matrix.cnew` for a *complex* matrix. If you want a matrix by giving explicitly all its elements you can use instead the function :func:`matrix.def`.
 
-The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialised to zero. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialise the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialise matrices. As an example, let us suppose that we want to define a matrix ``m`` of dimension :math:`n \times n` whose elements are given by :math:`m_{jk} = \textrm{exp} (2 \pi i j k / n)`.
+The :func:`new` function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialized to zero. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialize the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialize matrices. As an example, let us suppose that we want to define a matrix ``m`` of dimension :math:`n \times n` whose elements are given by :math:`m_{jk} = \textrm{exp} (2 \pi i j k / n)`.
 
 In GSL Shell we can define the matrix with the following command::
 
@@ -30,7 +30,7 @@ In GSL Shell we can define the matrix with the following command::
 
    n = 4
 
-   -- we define a complex matrix that operate a fourier transform
+   -- we define a complex matrix that operate a Fourier transform
    m = matrix.cnew(n, n, |j,k| complex.exp(2i*pi*(j-1)*(k-1)/n))
 
 where you have previously defined ``n`` to be a small integer number.
@@ -42,7 +42,7 @@ To access an element of a matrix placed at the i-th row and the j-th column you 
 You can also change the value with the following syntax ``m:set(i, j, x)`` to set the element to the value ``x``.
 
 In the GSL Shell's indexing convention the first row or column of a matrix in identified by the number one.
-This is the same indexing convention used in fortran and also in standard mathematical notation and is also coherent with the Lua indexing of a table.
+This is the same indexing convention used in FORTRAN and also in standard mathematical notation and is also coherent with the Lua indexing of a table.
 
 In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in ``v[i]``.
 You can therefore read or set a specific element of a vector using
@@ -95,7 +95,7 @@ Here some simple examples of matrix manipulations::
 In general the aliasing between matrices can be useful in many circumstances to refer to an original matrix by using a submatrix.
 In case you really need a submatrix which is an independent copy of its parent matrix you can just use the :func:`matrix.copy` function to obtain a copy.
 
-You should have noticed that when you index a matrix with many column you obtain the row identifyied by the index but in column form.
+You should have noticed that when you index a matrix with many column you obtain the row identified by the index but in column form.
 If you want to obtain a row in the form of a row matrix you can use the :meth:`~Matrix.row` method.
 In alternative you can also use the :meth:`~Matrix.slice` method that let you extract any submatrix of contiguous rows and columns.
 
@@ -138,8 +138,8 @@ Matrix methods
      at the element (k0, k1) and taking n0 rows and n1 columns. The
      matrix that is returned is a "view" of the existing matrix in the
      sense that it make reference to the same underlying matrix. So if
-     you modify the submatrix you will implicitely modify the original
-     matrix and viceversa.
+     you modify the submatrix you will implicitly modify the original
+     matrix and vice versa.
 
   .. method:: norm()
 

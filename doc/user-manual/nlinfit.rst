@@ -33,7 +33,7 @@ decrease in the norm ||F|| on each step or using a trust region to
 avoid steps which fall outside the linear regime.
 
 To perform a weighted least-squares fit of a nonlinear model Y(x,t)
-to data (t\ :sub:`i`, y\ :sub:`i`) with independent gaussian errors
+to data (t\ :sub:`i`, y\ :sub:`i`) with independent Gaussian errors
 |sgr|\ :sub:`i`, use
 function components of the following form
 
@@ -68,14 +68,14 @@ The function is called with the following calling convention::
 
 where the function ``fdf`` is the function that you provide, ``x`` is column matrix that contains the P parameters, ``f`` is a column matrix of size N used to store the values :math:`f_i`  and J is a matrix of size N x P whose generic element :math:`J_{ij}` is the derivative of :math:`f_i` with respect of the j-th fit parameter.
 
-In some cases the function can be called with ``f`` or ``J`` equal to ``nil`` because their values does not need to be computed. This imply that the user defined function should always check the argument ``f`` and ``J`` and set their values ony if the variable is not ``nil``.
+In some cases the function can be called with ``f`` or ``J`` equal to ``nil`` because their values does not need to be computed. This imply that the user defined function should always check the argument ``f`` and ``J`` and set their values only if the variable is not ``nil``.
 
 For example let us suppose that we want to fit the function
 
 .. math::
    f(t) = A \, e^{ - \lambda t} + b
 
-where A, |lgr| and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t\ :sub:`1`, ..., t\ :sub:`i`, ..., t\ :sub:`N`. If this case the vector ``x`` will have size P, ``f`` size N and ``J`` size N x P. The function for the non-lineat fit can be therefore defined as follows::
+where A, |lgr| and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t\ :sub:`1`, ..., t\ :sub:`i`, ..., t\ :sub:`N`. If this case the vector ``x`` will have size P, ``f`` size N and ``J`` size N x P. The function for the non-linear fit can be therefore defined as follows::
 
    use 'math'
 
@@ -98,7 +98,7 @@ You can note in the definition above the we have chosen to store the three param
 
 Note also that the assignment to the elements of the vector ``f`` and the matrix ``J`` are done only if their respective variables ``f`` and ``J`` are not ``nil``.
 
-Once that the function is defined the most delicate work is done and you should crete a non-linear fit solver of the appropriate size N and P with the function :func:`num.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you shoud iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`.
+Once that the function is defined the most delicate work is done and you should create a non-linear fit solver of the appropriate size N and P with the function :func:`num.nlinfit`. Once the non-linear fit solver is defined you indicate the function ``fdf`` and the values using the method :meth:`~NLinFit.set`. Then you should iterate the search procedure with the method :meth:`~NLinFit.iterate` and test the convergence with the method :meth:`~NLinFit.test`.
 
 Here a complete example::
 
@@ -158,7 +158,7 @@ and here the resulting plot where we have superposed the simulated points with t
 
 .. figure:: nlinfit-example-plot.png
 
-   Non-linear fit of function A exp(a t) + b with gaussian noise
+   Non-linear fit of function A exp(a t) + b with Gaussian noise
 
 
 Solver class definition

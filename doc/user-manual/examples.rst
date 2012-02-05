@@ -12,7 +12,7 @@ In this chapter we gives some examples about the usage of GSL Shell.
 Home-made Bessel Functions
 --------------------------
 
-The Bessel's function J\ :sub:`n` for integer values of n can de defined with the following integral:
+The Bessel's function J\ :sub:`n` for integer values of n can be defined with the following integral:
 
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
@@ -63,7 +63,7 @@ And we obtain the following matrix::
 The Von-Koch curve
 ------------------
 
-The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the swedish mathematician Helge von Koch.
+The `Von-Koch curve <http://en.wikipedia.org/wiki/Koch_snowflake>`_ is a simple and beautiful fractal curve described in 1904 by the Swedish mathematician Helge von Koch.
 
 Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job::
 
@@ -168,7 +168,7 @@ The last resort to obtain that would be to create a :class:`Path` object and to 
 
 but it can be more handy to use the :func:`ipath` function to build the curve. This latter function build a curve using an iterator that returns values in the form ``(x, y)``. Then to obtain the iterator we use the :func:`sequence` function that let us easily build an iterator over a sequence of integer numbers.
 
-So to make more clear the code given above we can separate the curve and the iterator instatiations like in the following example::
+So to make more clear the code given above we can separate the curve and the iterator instantiations like in the following example::
 
   p = graph.plot()
 
@@ -220,7 +220,7 @@ Implementation
 
 The above formula can be implemented quite straightforwardly in GSL shell with only a subtle point about the factorials in the denominator. The problem is that in same cases you can have the factorial of negative number and if you feed a negative number to the :func:`fact` function you will get an error.
 
-Actually the meaning of the formula is that the factorial of a negative number if :math:`\infty` and so, since it does appear in the denominator, its contribution to the sum is null. So, in order to implement this behaviour we just define an euxialiary function that return the inverse of the factorial and zero when the argument is negative.
+Actually the meaning of the formula is that the factorial of a negative number if :math:`\infty` and so, since it does appear in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that return the inverse of the factorial and zero when the argument is negative.
 
 So here the code for the radial part::
 
@@ -249,7 +249,7 @@ and the we define the Zernike's function completed with the angular part::
      return zerR(n, m, p) * pf
   end
 
-Now we are just ready to draw our function, the only missing piece is the relation between ρ, φ and the cartesian coordinates but this is trivial:
+Now we are just ready to draw our function, the only missing piece is the relation between ρ, φ and the Cartesian coordinates but this is trivial:
 
 .. math::
    \begin{array}{ll}
