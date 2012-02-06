@@ -7,8 +7,8 @@ Probability Distribution Functions
 
 .. module:: randist
 
-The module :mod:`randist` offer a set of functions that mirrors those avaiable from the module :mod:`rnd`.
-Generally, for each kind of distribution a few functions are availabel to calculate the probability density, the cumulative probability and its inverse.
+The module :mod:`randist` offer a set of functions that mirrors those available from the module :mod:`rnd`.
+Generally, for each kind of distribution a few functions are available to calculate the probability density, the cumulative probability and its inverse.
 
 Continuous random number distributions are defined by a probability density function, p(x), such that the probability of x occurring in the infinitesimal range x to x+dx is p dx.
 
@@ -63,7 +63,7 @@ Functions Index
    We present here the list of the available probability functions.
 
    .. note::
-      Actually GSL Shell implement alls the functions provided by the GSL library but some of them are not listed here.
+      Actually GSL Shell implements all the functions provided by the GSL library but some of them are not listed here.
       Please consult the GSL reference manual if you need a complete list of all the distributions available.
 
 .. function:: gaussian_pdf(x, sigma)
