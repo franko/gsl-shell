@@ -147,7 +147,10 @@ path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
       ps.move_to (s->f[0], s->f[1]);
       break;
     case CMD_LINE_TO:
-      ps.line_to (s->f[0], s->f[1]);
+      if (ps.total_vertices() == 0)
+	ps.move_to (s->f[0], s->f[1]);
+      else
+	ps.line_to (s->f[0], s->f[1]);
       break;
     case CMD_CLOSE:
       ps.close_polygon ();

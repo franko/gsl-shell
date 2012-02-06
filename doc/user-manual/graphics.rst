@@ -658,6 +658,11 @@ Graphical Objects
    .. method:: line_to(x, y)
 
       Add a line into the path from the previous point to the specified (x, y) coordinates.
+      As a special case, if the path is empty, this method is equivalent to :meth:`~Path.move_to`.
+
+      .. hint::
+        If you want to define a polygonal line you don't need to use the :meth:`~Path.move_to` method for the first point.
+        Instead you can use the method :meth:`~Path.line_to` to add each point.
 
    .. method:: close()
 
