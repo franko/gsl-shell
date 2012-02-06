@@ -592,11 +592,12 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
       const double title_text_size = 12.0 * scale;
       const double th = approx_text_height(title_text_size);
 
-      double labx = canvas_mtx.tx + canvas_mtx.sx * 0.5;
-      double laby = canvas_mtx.sy - (ptpad + dyt + title_text_size);
+      double x = 0.5, y = 1.0;
+      canvas_mtx.transform(&x, &y);
+      y -= ptpad + dyt + title_text_size;
 
       draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
-      title.set_point(labx, laby);
+      title.set_point(x, y);
       title.apply_transform(identity_matrix, 1.0);
 
       canvas.draw(title, colors::black);
