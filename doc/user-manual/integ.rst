@@ -75,7 +75,7 @@ Functions
       The default value is 64.
 
 Usage Example
-------------
+-------------
 
 Here a simple example that shows how to plot the Bessel function using its integral definition:
 

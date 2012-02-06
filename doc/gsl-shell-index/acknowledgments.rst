@@ -1,5 +1,5 @@
 Acknowledgments
---------------
+---------------
 
 If GSL Shell exists is thanks to the many high quality free software projects on which it is based.
 
