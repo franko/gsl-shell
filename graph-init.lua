@@ -135,12 +135,12 @@ function graph.barplot(t)
 	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
 	 local rect = graph.rect(x, 0, x+dx, y)
 	 p:add(rect, graph.webcolor(j))
-	 p:addline(rect, 'black')
+	 p:add(rect, 'black', {{'stroke', width= 0.5}})
       end
    end
 
    p:set_categories('x', cat)
-   p.xlab_angle = pi/2
+   p.xlab_angle = pi/4
 
    p:show()
    return p
