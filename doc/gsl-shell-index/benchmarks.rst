@@ -4,11 +4,11 @@
 Benchmarks
 ==========
 
-The performance of the algorithms implemented in GSL Shell have been tested agaist an equivalent C implementation.
+The performance of the algorithms implemented in GSL Shell have been tested against an equivalent C implementation.
 
 The purpose of the benchmarks is twofold. One of the objectives is to test the correctness of the results against the native GSL implementation while the other is to compare C and Lua implementation in term of performance.
 
-The performance is measured simply in term of time of execution, no attemt has been done to add other factors like memory utilisation or others.
+The performance is measured simply in term of time of execution, no attempt has been done to add other factors like memory utilization or others.
 
 Besides the benchmark of optimized C code the LuaJIT2 implementation was tested with and without the JIT support enabled.
 When the JIT support is disabled (option ``-joff``) the algorithm is executed in purely interpreted mode.
@@ -33,7 +33,7 @@ This difference can affect the execution speed and should be kept in mind.
 Otherwise there is nothing that prevents the implementation in GSL Shell of an ODE integrator in array form.
 This is actually planned to be done in the near future.
 
-For all the other algorithms the GSL implementation closely mirror the GSL interface and the comparaison is aboslutely fair.
+For all the other algorithms the GSL implementation closely mirror the GSL interface and the comparison is absolutely fair.
 
 
 Technical details

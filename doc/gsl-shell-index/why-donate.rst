@@ -7,7 +7,7 @@ Why donate
 
 GSL Shell is developed mainly by me, Francesco Abbate. The goal of this project is to develop an high quality free software for numerical computations and graphics. By high quality I mean:
 
-* *lightweighted*, it should not require a ton of resources and take several minutes to start. Well written software can be small and the resources can be left to users for doing more useful things.
+* *lightweight*, it should not require a ton of resources and take several minutes to start. Well written software can be small and the resources can be left to users for doing more useful things.
 * *well designed*, the interface should be designed so that it is simple to use but yet powerful and flexible to let you write complex functions with a compact syntax
 * *efficient*, most of the functions should be performed by using the computer resources in an optimal or near-optimal way
 * *reliable*, it should not crash or leak memory, quality before all as the most important parameter

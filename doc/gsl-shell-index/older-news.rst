@@ -10,7 +10,7 @@ Older News
 
   * Now GSL Shell can compile and run correctly on x86, x64 and ARM architecture.
   * Support added to compile and run on Mac OS X
-  * Added documentation in GNU info format, included in linux package
+  * Added documentation in GNU info format, included in Linux package
 
 **October 2011**
   Release of GSL Shel 2.0 beta1.
@@ -18,7 +18,7 @@ Older News
   This new release of GSL Shell is a major change both in term of features and implementation.
 
   First the functions are now organized into different modules for a greater clarity of the code.
-  Then the semantic of the arithmentic operations with numbers and matrix is now much more user-friendly.
+  Then the semantic of the arithmetic operations with numbers and matrix is now much more user-friendly.
   The multiplication operator '*' it does perform now the matrix multiplication and you can mix freely complex and real number or matrices.
 
   Under the hood there even more important changes since GSL Shell is now based on `LuaJIT2 <http://luajit.org>`_.
@@ -31,7 +31,7 @@ Older News
 
   Check the *demos* available in GSL Shell.
   You may check the 'wave' demo that simulate a *quantum spinless particle in a step potential*.
-  Thanks to LuaJIT2 the demo run in realtime at an amazing speed.
+  Thanks to LuaJIT2 the demo run in real-time at an amazing speed.
 
 **January 2011**
   Release of GSL Shell 1.1
@@ -54,7 +54,7 @@ Older News
   * make animations
   * have multiple graphical layers in a plot.
 
-  The graphical rendering code was almost completely rewritten and optimised for to be efficient both for static plot and animations.
+  The graphical rendering code was almost completely rewritten and optimized for to be efficient both for static plot and animations.
 
   We have also a first implementation of a 3D plotting module based on the JavaScript `Pre3d library <http://deanm.github.com/pre3d/>`_ of Dean Mc Namee. This module give you the possibility to create simple 3D plots and animations with a simple interface. Just be aware that, While this module is quite functional and usable, it could nevertheless replaced in future by a more efficient implementation. The reason is not the quality of the Pre3d code, which is excellent in itself, but the usage of JavaScript/Lua for 3D graphics which is inherently inefficient in term of speed and memory usage.
 
@@ -73,14 +73,14 @@ Older News
 
   * A contour plot algorithm is implemented. It is written entirely in
     Lua and it is quite fast. Its main limitations is that it is not
-    able to treate discontinuous functions.
+    able to treat discontinuous functions.
 
   * An "high precision" experimental contour plot is also
     available. It is much more computational expensive but it draws
     accurate smooths curve and it does require the derivatives of the
     function. As the algorithm is experimental it may fails in some
     cases. It will fails almost surely fails if the derivatives are
-    discontinous or if both components becomes null at some point.
+    discontinuous or if both components becomes null at some point.
 
   * To print an expression now you don't need to write an '=' sign before
 
@@ -94,7 +94,7 @@ Older News
 
   * Many improvements in almost all the modules.
 
-**2 Janvier 2010**
+**2 January 2010**
   GSL Shell version 0.9.6 released.
 
   A lot of exciting features have been introduced:
@@ -117,7 +117,7 @@ Older News
   will select the appropriate algorithm and manage the required resources for
   you. The implemented interface does not introduce any significant overhead
   over the low-level GSL functions, data are never copied if not necessary
-  and a smart interface has been disigned to allow uniform access to
+  and a smart interface has been designed to allow uniform access to
   half-complex arrays.
 
   A new notation has been introduced also for function literals. Now to
@@ -170,7 +170,7 @@ Older News
     x, err = integ {f= function(x) return 1/(x+1) end, points= {0, 24*pi},
 		    weight = {type='sin', omega = 1}}
 
-    -- a fourier integral
+    -- a Fourier integral
     x, err = integ {f= function(x) exp(-x*x/2)*sin(5*x) end,
 		    points= {'inf', '+inf'},
 		    weight = {type='sin', omega = 4.5}}

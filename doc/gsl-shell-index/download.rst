@@ -4,12 +4,12 @@
 Downloads
 =========
 
-The binary packages for GSL Shell are provided for Windows and Linux for Debian based distrubutions.
+The binary packages for GSL Shell are provided for Windows and Linux for Debian based distributions.
 
 Debian packages
 ---------------
 
-The debian packages should work on most Debian based distribution like Debian itself, Ubuntu, Linux Mint and others.
+The Debian packages should work on most Debian based distribution like Debian itself, Ubuntu, Linux Mint and others.
 
 * GSL Shell 2.0.0 `gsl-shell-2.0.0-1_i386.deb <http://download.savannah.gnu.org/releases/gsl-shell/gsl-shell-2.0.0-1_i386.deb>`_
 * GSL Shell 1.1 `gsl-shell-1.1-1_i386.deb <http://download.savannah.gnu.org/releases/gsl-shell/gsl-shell-1.1-1_i386.deb>`_

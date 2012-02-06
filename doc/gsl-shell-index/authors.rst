@@ -8,6 +8,6 @@ The main author of GSL Shell is **Francesco Abbate**. He was so fearless that he
 
 The VEGAS algorithm implementation is from **Lesley De Cruz**. Since he joined the project the author feels less lonely and knows that the user base of GSL Shell is of at least two people (including the authors).
 
-The new implementation of the Special Function module is from **Benjamin von Ardenne**. The author suspect it is a pseudonim of Lesley so that the author have the impression of having a huge user base (three users).
+The new implementation of the Special Function module is from **Benjamin von Ardenne**. The author suspect it is a pseudonym of Lesley so that the author have the impression of having a huge user base (three users).
 
-The smart auto-complete function is based on the work of **Jesus Romero Hebrero**. Desperate about the bad English of Francesco he is currently striving to learn italian and works on an integrated editor in the spare time.
+The smart auto-complete function is based on the work of **Jesus Romero Hebrero**. Desperate about the bad English of Francesco he is currently striving to learn Italian and works on an integrated editor in the spare time.

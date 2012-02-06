@@ -28,7 +28,7 @@ You will find the source code and the binary packages for Windows and Linux.
 **NEW**
   *GSL Shell 2.1.0 released*.
 
-  This release introduces some new, intesting features.
+  This release introduces some new, interesting features.
 
   * Added support to save plot in SVG format.
   * Implemented support for plot legends and customized axis labels.
