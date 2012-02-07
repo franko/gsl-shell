@@ -5,8 +5,6 @@ local floor, pi = math.floor, math.pi
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
-local lua_index_style = gslsh.lua_index_style
-
 local n_sampling_max = 8192
 local n_sampling_default = 256
 
@@ -61,7 +59,7 @@ function graph.filine(f, a, b)
 end
 
 function graph.xyline(x, y)
-   local i0 = lua_index_style and 1 or 0
+   local i0 = 1
    local n = matrix.dim(x)
    local ln = graph.path(x[i0], y[i0])
    for i=i0+1, i0+n-1 do ln:line_to(x[i], y[i]) end

@@ -22,8 +22,6 @@ local cat = table.concat
 local fmt = string.format
 local gsl_type = gslsh.type
 
-gslsh.lua_index_style = true
-
 function math.divmod(n, p)
    local r = n % p
    return (n-r)/p, r

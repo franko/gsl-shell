@@ -8,8 +8,6 @@ local format = string.format
 local check = require 'check'
 local is_integer, is_real = check.is_integer, check.is_real
 
-local lua_index_style = gslsh.lua_index_style
-
 local gsl_matrix         = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
 local gsl_complex        = ffi.typeof('complex')
@@ -73,7 +71,7 @@ local function matrix_new(n1, n2, f)
    if f then
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    local x = check_real(lua_index_style and f(i+1, j+1) or f(i,j))
+	    local x = check_real(f(i+1, j+1))
 	    m.data[i*n2+j] = x
 	 end
       end
@@ -88,7 +86,7 @@ local function matrix_cnew(n1, n2, f)
    if f then
       for i=0, n1-1 do
 	 for j=0, n2-1 do
-	    local z = lua_index_style and f(i+1, j+1) or f(i,j)
+	    local z = f(i+1, j+1)
 	    local x, y = cartesian(z)
 	    m.data[2*i*n2+2*j  ] = x
 	    m.data[2*i*n2+2*j+1] = y
@@ -135,27 +133,24 @@ end
 
 local function check_indices(m, i, j)
    local r, c = matrix_dim(m)
-   if lua_index_style then i, j = i-1, j-1 end
-   if i < 0 or i >= r or j < 0 or j >= c then
+   if i < 1 or i > r or j < 1 or j > c then
       error('matrix index out of bounds', 3)
    end
-   return i, j
+   return i-1, j-1
 end
 
 local function check_row_index(m, i)
-   if lua_index_style then i = i-1 end
-   if i < 0 or i >= matrix_len(m) then
+   if i < 1 or i > matrix_len(m) then
       error('matrix index out of bounds', 3)
    end
-   return i
+   return i-1
 end
 
 local function check_col_index(m, j)
-   if lua_index_style then j = j-1 end
-   if j < 0 or j >= tonumber(m.size2) then
+   if j < 1 or j > tonumber(m.size2) then
       error('matrix index out of bounds', 3)
    end
-   return j
+   return j-1
 end
 
 local function matrix_get(m, i, j)
