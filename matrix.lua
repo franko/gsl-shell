@@ -482,6 +482,34 @@ local function vector_op(scalar_op, element_wise, no_inverse)
 	  end
 end
 
+local function complex_unm(a)
+   local x, y = cartesian(a)
+   return gsl_complex(-x, -y)
+end
+
+local function matrix_unm(a)
+   local n1, n2 = matrix_dim(a)
+   local m = matrix_alloc(n1, n2)
+   for i=0, n1-1 do
+      for j=0, n2-1 do
+	 m.data[n2*i+j] = -a.data[n2*i+j]
+      end
+   end
+   return m
+end
+
+local function matrix_complex_unm(a)
+   local n1, n2 = matrix_dim(a)
+   local m = matrix_calloc(n1, n2)
+   for i=0, n1-1 do
+      for j=0, n2-1 do
+	 m.data[2*n2*i+2*j  ] = -a.data[2*n2*i+2*j  ]
+	 m.data[2*n2*i+2*j+1] = -a.data[2*n2*i+2*j+1]
+      end
+   end
+   return m
+end
+
 local function matrix_norm(m)
    local r, c = matrix_dim(m)
    local tda = m.tda
@@ -532,6 +560,7 @@ local complex_mt = {
    __sub = generic_sub,
    __mul = generic_mul,
    __div = generic_div,
+   __unm = complex_unm,
 
    __eq = function(a, b)
 	     local ar, ai = cartesian(a)
@@ -681,6 +710,7 @@ local matrix_mt = {
    __sub = generic_sub,
    __mul = generic_mul,
    __div = generic_div,
+   __unm = matrix_unm,
 
    __len = matrix_len,
 
@@ -749,6 +779,7 @@ local matrix_complex_mt = {
    __sub = generic_sub,
    __mul = generic_mul,
    __div = generic_div,
+   __unm = matrix_complex_unm,
 
    __len = matrix_len,
 
