@@ -26,9 +26,9 @@
 # function KCONV(var, ord, i)
 #    local sm = {}
 #    for j = 1, ord do
-#       local bc = var[j]
-#       if tonumber(bc) ~= 0 then
-#          sm[#sm+1] = string.format('(%s)*k%i_%i', bc, j, i)
+#       local t_j = var[j]
+#       if tonumber(t_j) ~= 0 then
+#          sm[#sm+1] = string.format('(%s)*k%i_%i', t_j, j, i)
 #       end
 #    end
 #    return table.concat(sm, ' + ')

@@ -30,6 +30,33 @@ function num.ode(spec)
    return setmetatable(ode.new(), mt)
 end
 
+function num.odevec(spec)
+   local required = {N= 'number', eps_abs= 'number'}
+   local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
+   local is_known = {rk8pd= true}
+
+   for k, tp in pairs(required) do
+      if type(spec[k]) ~= tp then
+	 error(string.format('parameter %s should be a %s', k, tp))
+      end
+   end
+   for k, v in pairs(defaults) do
+      if not spec[k] then spec[k] = v end
+   end
+
+   local method = spec.method and spec.method or 'rk8pd'
+   if not is_known[method] then error('unknown ode method: ' .. method) end
+   spec.method = nil
+
+   local ode = template.load(method .. '-vec', spec)
+
+   local mt = {
+      __index = {evolve = ode.evolve, init = ode.init}
+   }
+
+   return setmetatable(ode.new(), mt)
+end
+
 local NLINFIT = {
    __index = function(t, k)
 		if k == 'chisq' then
