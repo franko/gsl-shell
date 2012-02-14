@@ -33,7 +33,8 @@ local abs, max, min = math.abs, math.max, math.min
 
 # order = 8
 
-local gsl = require 'gsl'
+local ffi = require 'ffi'
+local cblas = require 'cblas'
 
 local function hadjust(rmax, h)
    local S = 0.9
@@ -177,21 +178,9 @@ end
 
 # y_err_only = (a_dydt == 0)
 
-local function copy(dst, src)
-   gsl.cblas_dcopy($(N), src, 1, dst, 1)
-end
-
-local function axpy(alpha, x, y)
-   gsl.cblas_daxpy($(N), alpha, x, 1, y, 1)
-end
-
-local function view(m, i)
-   return m.data + m.tda * i
-end
-
-local function zero(x)
-   for i = 0, $(N-1) do x[i] = 0 end
-end
+# function ZERO(x)
+#    return string.format('ffi.fill(%s, %d)', x, N * SIZE_OF_DOUBLE)
+# end
 
 local function rk8pd_vec_evolve(s, f, t1)
    local t, h, s_y, s_dydt = s.t, s.h, s.y, s.dydt
@@ -202,31 +191,31 @@ local function rk8pd_vec_evolve(s, f, t1)
 #  end
 
    local y = s.ytmp1
-   copy(k1.data, s_dydt.data)
+   cblas.cblas_dcopy($(N), s_dydt.data, 1, k1.data, 1)
 
    if t + h > t1 then h = t1 - t end
 
    while h > 0 do
-      copy(y.data, s_y.data)
+      cblas.cblas_dcopy($(N), s_y.data, 1, y.data, 1)
       local rmax = 0
 
       do
       local ytmp = s.ytmp2
 
 #     for S = 2, 13 do
-         copy(ytmp.data, y.data)
+         cblas.cblas_dcopy($(N), y.data, 1, ytmp.data, 1)
 #        for J = 1, S-1 do
-	    axpy(h * $(B[S][J]), k$(J).data, ytmp.data)
+	    cblas.cblas_daxpy($(N), h * $(B[S][J]), k$(J).data, 1, ytmp.data, 1)
 #        end
          f(t + $(ah[S-1]) * h, ytmp, k$(S))
 #     end
 
       local ksum8 = s.ksum8.data
-      zero(ksum8)
+      $(ZERO('ksum8'))
 #     for S = 1, 13 do
-         axpy($(Abar[S]), k$(S).data, ksum8)
+         cblas.cblas_daxpy($(N), $(Abar[S]), k$(S).data, 1, ksum8, 1)
 #     end
-      axpy(h, ksum8, y.data)
+      cblas.cblas_daxpy($(N), h, ksum8, 1, y.data, 1)
 
 #     if not y_err_only then
          f(t + h, y, s_dydt)
@@ -262,7 +251,7 @@ local function rk8pd_vec_evolve(s, f, t1)
       f(t + h, y, s_dydt)
 #  end
 
-   copy(s_y.data, y.data)
+   cblas.cblas_dcopy($(N), y.data, 1, s_y.data, 1)
    s.t = t + h
    s.h = hadj
 
@@ -286,7 +275,7 @@ local function ode_vec_new()
 end
 
 local function ode_vec_init(s, t0, h0, f, y)
-   copy(s.y.data, y.data)
+   cblas.cblas_dcopy($(N), y.data, 1, s.y.data, 1)
    f(t0, y, s.dydt)
    s.t = t0
    s.h = h0

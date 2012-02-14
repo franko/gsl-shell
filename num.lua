@@ -31,6 +31,7 @@ function num.ode(spec)
 end
 
 function num.odevec(spec)
+   local ffi = require('ffi')
    local required = {N= 'number', eps_abs= 'number'}
    local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
    local is_known = {rk8pd= true}
@@ -47,6 +48,8 @@ function num.odevec(spec)
    local method = spec.method and spec.method or 'rk8pd'
    if not is_known[method] then error('unknown ode method: ' .. method) end
    spec.method = nil
+
+   spec['SIZE_OF_DOUBLE'] = ffi.sizeof('double')
 
    local ode = template.load(method .. '-vec', spec)
 
