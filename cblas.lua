@@ -79,6 +79,42 @@ void cblas_drotm(const int N, double *X, const int incX,
 void cblas_dscal(const int N, const double alpha, double *X, const int incX);
 void cblas_zscal(const int N, const void *alpha, void *X, const int incX);
 void cblas_zdscal(const int N, const double alpha, void *X, const int incX);
+
+/*
+ * ===========================================================================
+ * Prototypes for level 3 BLAS
+ * ===========================================================================
+ */
+
+void cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
+                 const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+                 const int K, const double alpha, const double *A,
+                 const int lda, const double *B, const int ldb,
+                 const double beta, double *C, const int ldc);
+void cblas_dsymm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
+                 const enum CBLAS_UPLO Uplo, const int M, const int N,
+                 const double alpha, const double *A, const int lda,
+                 const double *B, const int ldb, const double beta,
+                 double *C, const int ldc);
+void cblas_dsyrk(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo,
+                 const enum CBLAS_TRANSPOSE Trans, const int N, const int K,
+                 const double alpha, const double *A, const int lda,
+                 const double beta, double *C, const int ldc);
+void cblas_dsyr2k(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo,
+                  const enum CBLAS_TRANSPOSE Trans, const int N, const int K,
+                  const double alpha, const double *A, const int lda,
+                  const double *B, const int ldb, const double beta,
+                  double *C, const int ldc);
+void cblas_dtrmm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
+                 const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE TransA,
+                 const enum CBLAS_DIAG Diag, const int M, const int N,
+                 const double alpha, const double *A, const int lda,
+                 double *B, const int ldb);
+void cblas_dtrsm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
+                 const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE TransA,
+                 const enum CBLAS_DIAG Diag, const int M, const int N,
+                 const double alpha, const double *A, const int lda,
+                 double *B, const int ldb);
 ]]
 
 if jit.os == 'Linux' then
