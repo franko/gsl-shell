@@ -81,10 +81,9 @@ local function demo2()
    local p = plot()
    local R = 40
    for k=0, n-1 do
-      local txt = text 'Hello world'
       local a = 2*pi*k/n - pi/2
+      local txt = text(R*cos(a), R*sin(a), 'Hello world')
       local ch = |t| t[(k % #t)+1]
-      txt:set(R*cos(a), R*sin(a))
       txt.angle = a - pi
       p:add(txt, ch(color))
    end
@@ -97,7 +96,7 @@ local function demo3()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = canvas 'Rotating text'
-   local txt = text 'Hello world!'
+   local txt = text(0, 0, 'Hello world!')
 
    p:limits(-1, -1, 1, 1)
    p:show()

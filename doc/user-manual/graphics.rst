@@ -680,11 +680,10 @@ Graphical Objects
 
       Add a conic bezier curve up to (x, y) with two control points. The same remarks for the method :func:`curve3` applies to :func:`curve4`.
 
-.. function:: text(text, [height, width])
+.. function:: text(x, y, text, [height])
 
-   Create a text object with the given text.
+   Create a text object with the given text at the position (x,y).
    The first optional argument ``height`` indicate the text height.
-   The second optional parameter ``width`` defines the width of the font.
 
 .. class:: Text
 
