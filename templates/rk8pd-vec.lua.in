@@ -249,24 +249,22 @@ end
 
 local function ode_vec_new()
    local n = $(N)
-   local k_mat = matrix.new(13, n)
-   local y_mat = matrix.new(6, n)
+   local ws = matrix.new(6 + 13, n)
    return {t    = 0,
 	   h    = 1,
 	   dim  = n,
 
-	   y     = y_mat.data,
-	   dydt  = y_mat.data + n,
-	   ksum8 = y_mat.data + 2*n,
-	   ytmp1 = y_mat.data + 3*n,
-	   ytmp2 = y_mat.data + 4*n,
-	   ksum7 = y_mat.data + 5*n,
+	   y     = ws.data,
+	   dydt  = ws.data + n,
+	   ksum8 = ws.data + 2*n,
+	   ytmp1 = ws.data + 3*n,
+	   ytmp2 = ws.data + 4*n,
+	   ksum7 = ws.data + 5*n,
 
-	   k    = k_mat.data,
+	   k     = ws.data + 6*n,
 
 	   -- ensure that allocated data is not collected
-	   __k_mat = k_mat,
-	   __y_mat = y_mat,
+	   __ws = ws,
 	}
 end
 

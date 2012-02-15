@@ -68,7 +68,7 @@ end
 
 local function read_file(filename)
    local f = io.open(filename)
-   if not f then 
+   if not f then
       error(string.format('error opening template file %s', filename))
    end
    local content = f:read('*a')
@@ -99,13 +99,6 @@ local function load(filename, defs)
    local code = process(filename, defs)
    local f, err = loadstring(code, filename)
    if not f then template_error(code, filename, err) end
-   if filename == 'rk8pd-vec' then
-      local log = io.open('rk8pd-vec.pp.lua', 'w')
-      log:write(code)
-      log:close()
-      print('ODE DEBUG: preprocessed file written in rk8pd-vec.pp.lua')
-      io.read('*l')
-   end
    return f()
 end
 
