@@ -177,8 +177,8 @@ local function demo5()
    local p = graph.plot('Lotka-Volterra ODE integration')
    p.clip = false
 
-   p:add(graph.path(0, x0), 'red', {{'marker', size=8}})
-   p:add(graph.path(0, y0), 'blue', {{'marker', size=8}})
+   p:add(graph.marker(0, x0, 'cross', 8), 'red')
+   p:add(graph.marker(0, y0, 'circle', 8), 'blue')
 
    p:add(graph.text(0.5, x0, 'Preys'), 'black')
    p:add(graph.text(0.5, y0, 'Predators'), 'black')

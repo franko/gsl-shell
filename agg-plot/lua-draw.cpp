@@ -32,6 +32,7 @@ extern "C" {
 #include "gs-types.h"
 #include "trans.h"
 #include "colors.h"
+#include "sg_marker.h"
 
 pthread_mutex_t agg_mutex[1];
 
@@ -66,6 +67,9 @@ static int agg_ellipse_free   (lua_State *L);
 static int textshape_new      (lua_State *L);
 static int textshape_free     (lua_State *L);
 
+static int marker_new         (lua_State *L);
+static int marker_free        (lua_State *L);
+
 static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
@@ -83,6 +87,7 @@ static const struct luaL_Reg draw_functions[] = {
   {"ellipse",  agg_ellipse_new},
   {"circle",   agg_circle_new},
   {"textshape", textshape_new},
+  {"marker",   marker_new},
   {NULL, NULL}
 };
 
@@ -100,6 +105,12 @@ static const struct luaL_Reg textshape_methods[] = {
 
 static const struct luaL_Reg agg_ellipse_methods[] = {
   {"__gc",        agg_ellipse_free},
+  {NULL, NULL}
+};
+
+
+static const struct luaL_Reg marker_methods[] = {
+  {"__gc",        marker_free},
   {NULL, NULL}
 };
 
@@ -273,6 +284,32 @@ textshape_free (lua_State *L)
   return object_free<draw::text_shape>(L, 1, GS_DRAW_TEXTSHAPE);
 }
 
+int
+marker_new (lua_State *L)
+{
+  const double x = luaL_checknumber(L, 1);
+  const double y = luaL_checknumber(L, 2);
+  const char *sym_name = luaL_optstring(L, 3, "");
+  const double size = luaL_optnumber(L, 4, 5.0);
+
+  bool stroke;
+  sg_object* sym = new_marker_symbol_raw(sym_name, stroke);
+  draw::marker* marker = new draw::marker(x, y, sym, size);
+
+  if (stroke)
+    new(L, GS_DRAW_MARKER) trans::stroke(marker);
+  else
+    new(L, GS_DRAW_MARKER) sg_object_ref<manage_owner>(marker);
+
+  return 1;
+}
+
+int
+marker_free (lua_State *L)
+{
+  return object_free<sg_object>(L, 1, GS_DRAW_MARKER);
+}
+
 void
 draw_register (lua_State *L)
 {
@@ -288,6 +325,10 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_TEXTSHAPE));
   luaL_register (L, NULL, textshape_methods);
+  lua_pop (L, 1);
+
+  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_MARKER));
+  luaL_register (L, NULL, marker_methods);
   lua_pop (L, 1);
 
   /* gsl module registration */

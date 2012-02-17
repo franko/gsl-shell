@@ -724,6 +724,12 @@ Graphical Objects
      In this case the size and position of the text shape can be expressed in screen coordinates (pixel).
      The reason is that when a mini plot is added to a plot the area of the screen used to display the mini plot is equal to the bounding box of the mini plot itself.
 
+.. function:: marker(x, y, symbol, size)
+
+   Create a marker object with the given ``symbol`` and ``size`` at the position ``x``, ``y``.
+   A marker object is a graphical symbol drawn at the given coordinates and can be useful to mark a geometic point.
+   The accepted symbol strings are the same of those accepted by the 'marker' graphical transformation.
+
 .. _graphics-transforms:
 
 Graphical transformations
