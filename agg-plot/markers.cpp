@@ -35,17 +35,15 @@ sg_object *
 build_circle(bool& stroke)
 {
   draw::ellipse* c = new draw::ellipse();
-  trans::scaling* s = new trans::scaling(c);
   c->self().init(0.0, 0.0, 0.5, 0.5);
   stroke = false;
-  return s;
+  return c;
 }
 
 sg_object *
 build_square(bool& stroke)
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling(p);
 
   agg::path_storage& square = p->self();
   square.move_to(-0.5, -0.5);
@@ -55,14 +53,13 @@ build_square(bool& stroke)
   square.close_polygon();
 
   stroke = false;
-  return s;
+  return p;
 }
 
 sg_object *
 build_triangle(bool& stroke)
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling(p);
 
   agg::path_storage& triangle = p->self();
 
@@ -73,14 +70,13 @@ build_triangle(bool& stroke)
   triangle.close_polygon();
 
   stroke = false;
-  return s;
+  return p;
 }
 
 sg_object *
 build_diamond(bool& stroke)
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling(p);
 
   agg::path_storage& square = p->self();
   square.move_to(-0.5,  0.0);
@@ -90,14 +86,13 @@ build_diamond(bool& stroke)
   square.close_polygon();
 
   stroke = false;
-  return s;
+  return p;
 }
 
 sg_object *
 build_plus(bool& stroke)
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling(p);
 
   agg::path_storage& plus = p->self();
   plus.move_to(-0.5,  0.0);
@@ -106,14 +101,13 @@ build_plus(bool& stroke)
   plus.line_to( 0.0,  0.5);
 
   stroke = true;
-  return s;
+  return p;
 }
 
 sg_object *
 build_cross(bool& stroke)
 {
   draw::path* p = new draw::path();
-  trans::scaling* s = new trans::scaling(p);
 
   agg::path_storage& plus = p->self();
   plus.move_to(-0.5, -0.5);
@@ -122,7 +116,7 @@ build_cross(bool& stroke)
   plus.line_to( 0.5, -0.5);
 
   stroke = true;
-  return s;
+  return p;
 }
 
 sg_object*
