@@ -192,6 +192,55 @@ local function demo5()
    return p
 end
 
+local function demo6()
+   -- Lorenz atmospheric model
+
+   -- fluid parameters
+   local s,r,b = 10,28,8/3 -- sigma (Prandtl), rho (Rayleigh), beta
+
+   local function f(t, x,y,z)
+      return s*(y-x), x*(r-z)-y, x*y-b*z
+   end
+
+   local x0, y0, z0 = -1, 3, 4
+   local t0, t1, h0, tsmp = 0, 30, 1e-3, 1e-3
+   local s = num.ode {N= 3, eps_abs= 1e-8, method='rk8pd'}
+   local evol = s.evolve
+   local lnxy = graph.path(x0, y0)
+   local lnxz = graph.path(x0, z0)
+   local lnyz = graph.path(y0, z0)
+   --local ln2 = graph.path(t0, y0)
+
+   s:init(t0, h0, f, x0, y0, z0)
+   for t = tsmp, t1, tsmp do
+      while s.t < t do
+	 evol(s, f, t)
+      end
+      lnxy:line_to(s.y[1], s.y[2])
+      lnxz:line_to(s.y[1], s.y[3])
+      lnyz:line_to(s.y[2], s.y[3])
+   end
+
+   local w = graph.window("v...")
+
+   local pxy = graph.plot("Lorenz atmospheric model")
+   pxy.xtitle, pxy.ytitle ="x", "y"
+   local pxz = graph.plot()
+   pxz.xtitle, pxz.ytitle ="x", "z"
+   local pyz = graph.plot()
+   pyz.xtitle, pyz.ytitle ="y", "z"
+
+   pxy:addline(lnxy)
+   pxz:addline(lnxz)
+   pyz:addline(lnyz)
+
+   w:attach(pxy,'3')
+   w:attach(pxz,'2')
+   w:attach(pyz,'1')
+
+   return w
+end
+
 return {'ODE', {
   {
      name = 'ode1',
@@ -217,6 +266,11 @@ return {'ODE', {
      name = 'ode5',
      f = demo5,
      description = 'Lotka-Volterra ODE integration'
+  },
+  {
+     name = 'ode6',
+     f = demo6,
+     description = 'Lorenz atmospheric model'
   },
 
 }}
