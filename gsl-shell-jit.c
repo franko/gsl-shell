@@ -308,10 +308,8 @@ static int pushline (lua_State *L, int firstline) {
    that the value is returned as a result of the evaluation.
    If the value is not an expression leave the stack as before and
    returns a non zero value. */
-static int yield_expr(lua_State* L, int index)
+static int yield_expr(lua_State* L, int index, const char* line, size_t len)
 {
-  size_t len;
-  const char *line = lua_tolstring(L, index, &len);
   const char *p;
   int status;
 
@@ -340,34 +338,47 @@ static int yield_expr(lua_State* L, int index)
 static int loadline(lua_State *L)
 {
   int status;
+  size_t len;
+  const char *line;
+
   lua_settop(L, 0);
   if (!pushline(L, 1))
     return -1;  /* no input */
 
-  if (strcmp (lua_tostring(L, 1), "exit") == 0)
+  line = lua_tolstring(L, 1, &len);
+
+  if (strcmp (line, "exit") == 0)
     return -1;
 
   /* try to load the string as an expression */
-  if (yield_expr(L, 1) == 0)
+  if (yield_expr(L, 1, line, len) == 0)
     return 0;
 
-  for (;;) {  /* repeat until gets a complete line */
-    status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
-    if (!incomplete(L, status)) break;  /* cannot try to add lines? */
-    if (!pushline(L, 0))  /* no more input? */
-      return -1;
-    lua_pushliteral(L, "\n");  /* add a new line... */
-    lua_insert(L, -2);  /* ...between the two lines */
-    lua_concat(L, 3);  /* join them */
-  }
+  /* try to load it as a simple Lua chunk */
+  status = luaL_loadbuffer(L, line, len, "=stdin");
 
-  /* even if previous "load" was successfull we try to load the string as
-     an expression */
-  if (yield_expr(L, 1) == 0)
+  if (incomplete(L, status))
     {
-      /* remove old eval function */
-      lua_remove(L, 1);
-      return 0;
+      for (;;) {  /* repeat until gets a complete line */
+	if (!pushline(L, 0))  /* no more input? */
+	  return -1;
+	lua_pushliteral(L, "\n");  /* add a new line... */
+	lua_insert(L, -2);  /* ...between the two lines */
+	lua_concat(L, 3);  /* join them */
+
+	line = lua_tolstring(L, 1, &len);
+	status = luaL_loadbuffer(L, line, len, "=stdin");
+	if (!incomplete(L, status)) break;  /* cannot try to add lines? */
+      }
+
+      /* even if previous "load" was successfull we try to load the string as
+	 an expression */
+      if (yield_expr(L, 1, line, len) == 0)
+	{
+	  /* remove old eval function */
+	  lua_remove(L, 1);
+	  return 0;
+	}
     }
 
   my_saveline(L, 1);
