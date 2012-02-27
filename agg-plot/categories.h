@@ -15,6 +15,7 @@ class category_map : public ptr_list<category_item> {
 
   typedef category_item item;
 
+public:
   class iterator : public label_iterator {
   public:
     iterator(const category_map& cat) : m_index(0), m_cat(cat) { }
