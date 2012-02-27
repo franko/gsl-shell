@@ -310,8 +310,19 @@ static int pushline (lua_State *L, int firstline) {
    returns a non zero value. */
 static int yield_expr(lua_State* L, int index)
 {
-  const char *line = lua_tostring(L, index);
+  size_t len;
+  const char *line = lua_tolstring(L, index, &len);
+  const char *p;
   int status;
+
+  for (p = line + len - 1; p >= line; p--)
+    {
+      const char c = *p;
+      if (c == ';')
+	return 1;
+      if (c != ' ')
+	break;
+    }
 
   lua_pushfstring(L, "return %s", line);
   status = luaL_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");

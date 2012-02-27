@@ -55,12 +55,15 @@ You can work with both types as far as you understand the difference and use the
 
 Most of the GSL functions operate on real or complex matrix because of the nature of the GSL library itself.
 
-An useful trick
-~~~~~~~~~~~~~~~
+A couple of useful tricks
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you are working in a interactive session GSL Shell will always remember the last result evaluated.
 You can access its value using the global variable "_".
 When the you evaluate a statement or an expression that returns no values the variable "_" is not modified.
+
+Another useful thing to know is that you can suppress the returned value by adding a ';' character at the end of line.
+This can be useful to avoid to show a large table or matrix if you don't want to see them on the screen.
 
 .. _matrices:
 
