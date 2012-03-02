@@ -53,7 +53,12 @@ local function save_svg(p, name)
    echo('Plot saved in file \"' .. name .. '\".')
 end
 
-local function demo1()
+local function testsvg(v)
+      local svg = io.open(v); local svgcontent = svg:read("*a"); svg:close()
+      return {[v]=svgcontent}
+end
+
+local function demo1(test)
    local a = path()
    local n = 12
    local t = {{}, {{'curve'}}, {{'stroke'}, {'curve'}}, 
@@ -72,10 +77,11 @@ local function demo1()
    end
    save_svg(p, 'graphics.svg')
    p:show()
+   if test then test(testsvg'graphics.svg') end
    return p
 end
 
-local function demo2()
+local function demo2(test)
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = plot()
@@ -89,10 +95,11 @@ local function demo2()
    end
    save_svg(p, 'graphics.svg')
    p:show()
+   if test then test(testsvg'graphics.svg') end
    return p
 end
 
-local function demo3()
+local function demo3(test)
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
    local p = canvas 'Rotating text'
@@ -114,6 +121,7 @@ local function demo3()
       p:flush()
    end
    save_svg(p, 'graphics.svg')
+   if test then test(testsvg'graphics.svg') end
    return p
 end
 

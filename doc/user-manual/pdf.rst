@@ -147,18 +147,12 @@ Functions Index
     See :ref:`Beta  Distribution <rnd_beta>`.
 
 .. function:: gaussian_tail_pdf(x, a, sigma)
-              gaussian_tail_P(x, a, sigma)
-              gaussian_tail_Q(x, a, sigma)
-              gaussian_tail_Pinv(x, a, sigma)
-              gaussian_tail_Qinv(x, a, sigma)
 
     See :ref:`Gaussian tail  Distribution <rnd_gaussian_tail>`.
 
 .. function:: exppow_pdf(x, a, b)
               exppow_P(x, a, b)
               exppow_Q(x, a, b)
-              exppow_Pinv(x, a, b)
-              exppow_Qinv(x, a, b)
 
     See :ref:`Exponential Power  Distribution <rnd_exppow>`.
 

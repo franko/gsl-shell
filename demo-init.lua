@@ -45,4 +45,5 @@ end
 return {
    list = print_demos_list,
    load = load_demo,
+   demo_list = demo_list
 }

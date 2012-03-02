@@ -744,7 +744,7 @@ where :math:`\psi(x) = \Gamma'(x)/\Gamma(x)` is known as the digamma function.
 
    These routines compute the Trigamma function :math:`\psi'(x)` for general x.
 
-.. function:: 1piy(y)
+.. function:: psi_1piy(y)
 
    These routines compute the real part of the digamma function on the line 1+i y, :math:`\Re[\psi(1 + i y)]`.
 

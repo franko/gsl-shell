@@ -55,6 +55,7 @@ LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua 
 
 DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour svg graphics sf vegas
 LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-defs vegas-defs
+TESTS = demos matrix sf complex randist iter linalg
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
@@ -111,6 +112,12 @@ include makerules
 
 $(SUBDIRS):
 	cd $@; $(MAKE)
+
+recreate-test:
+	$(GSL_SHELL) tests/tests.lua recreate $(TESTS) > tests/stdout.txt
+
+test:
+	$(GSL_SHELL) tests/tests.lua $(TESTS) > tests/stdout.txt
 
 clean:
 	$(MAKE) -C agg-plot clean

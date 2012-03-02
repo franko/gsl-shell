@@ -112,7 +112,7 @@ local function demo_plot()
    demo4()
 end
 
-local function barplot_demo()
+local function barplot_demo(test)
    local t = {{'ode', 14, 17, 8}, {'integ', 21, 19, 7}, {'nlfit', 8,12,6}}
    local p = barplot(t)
    p.xtitle = 'Test'
@@ -121,7 +121,7 @@ local function barplot_demo()
    return p
 end
 
-local function legend_demo()
+local function legend_demo(test)
    local p = graph.legend {
       {'sinus', 'red', 'line'},
       {'cosinus', 'blue', 'line', {{'dash', 7, 3}}},
@@ -141,6 +141,14 @@ local function legend_demo()
    p:save_svg('legend.svg', 400, 200)
 
    echo('Plot saved in "demo.svg" and "legend.svg".')
+
+   if test then 
+      local t={}
+      for k,v in ipairs{'demo.svg','legend.svg'} do
+        svg = io.open(v); t[v]=svg:read("*a"); svg:close()
+      end
+      test(t)
+   end
 end
 
 return {'Plotting', {

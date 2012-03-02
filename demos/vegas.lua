@@ -24,10 +24,9 @@ calls  = %.0f
   return result
 end
 
-local function demo1()
+local function demo1(test)
   local maxdim = 10
   local lo,hi = 0,2
-  local results = {}
   local p = graph.plot('Integral of sum (i*x_i^2) (i=1..n)')
   p.clip, p.pad = false, true
   local exact = graph.filine(|n| n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1),maxdim)
@@ -36,6 +35,7 @@ local function demo1()
   p:add(computed, "blue", {{'marker', size=8}})
   p.xtitle="n"
   p:show()
+  if test then test(ilist(testdim,maxdim)) end
 end
 
 local function getunitsphere(n)
@@ -46,7 +46,7 @@ local function getunitsphere(n)
 	  end
 end
 
-local function demo2()
+local function demo2(test)
   local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
   local max_dim = 14
   for d=2, max_dim do
@@ -72,6 +72,7 @@ local function demo2()
   p.xtitle="n"
   p.ytitle="V"
   p:show()
+  --if test then test() end
 end
 
 return {'VEGAS Monte Carlo integration', {
