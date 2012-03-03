@@ -283,7 +283,7 @@ local function runtests(options,t)
     end
   else
   -- if none are given, run tests for all categories
-    for cat,fun in keysortedpairs(mytests) do
+    for cat in keysortedpairs(mytests) do
       testcategory(cat,options)
     end  
   end

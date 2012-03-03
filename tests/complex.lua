@@ -37,7 +37,6 @@ t.csch = function(test) test{csch(z)} end
 t.coth = function(test) test{coth(z)} end
 t.asinh = function(test) test{asinh(z)} end
 t.acosh = function(test) test{acosh(z)} end
-t.real = function(test) test{real(z)} end
 t.atanh = function(test) test{atanh(z)} end
 t.asech = function(test) test{asech(z)} end
 t.acsch = function(test) test{acsch(z)} end

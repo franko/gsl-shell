@@ -196,10 +196,6 @@ Inverse Complex Hyperbolic Functions
    The branch cut is on the real axis, less than 1.
    Note that in this case we use the negative square root in formula 4.6.21 of Abramowitz & Stegun giving :math:`\textrm{acosh}(z)=\log(z-\sqrt{z^2-1})`.
 
-.. function:: real(z)
-
-   This function returns the complex hyperbolic arccosine of the real number z, :math:`\textrm{acosh}(z)`.
-
 .. function:: atanh(z)
 
    This function returns the complex hyperbolic arctangent of the complex number z, :math:`\textrm{atanh}(z)`.
