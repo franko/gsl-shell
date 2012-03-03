@@ -117,11 +117,13 @@ local function serialize (f, o, indent)
   indent = indent or 1
   local otype = type(o)
   if otype == "string" then f:write(string.format("%q", o))
-  elseif otype == "number" or otype == "boolean" then
+  elseif otype == "number" then
     if o~=o then f:write("0/0") -- nan
     elseif o==math.huge then f:write("math.huge") -- inf
     elseif o==-math.huge then f:write("-math.huge") -- -inf
     else f:write(string.format("%.16e",o)) end -- other numbers
+  elseif otype == "boolean" then
+    f:write(tostring(o))
   elseif otype == "table" then 
     f:write("{")
     local comma,counter,moreThan1,simpleList="",1,next(o,next(o))
@@ -188,11 +190,12 @@ end
 -- Pass the test function as a callback to the function f
 -- and log the results
   local function logresult(f,recreate,category,name,description)
-  local ok = pcall(f,gettest(recreate,category,name))
+  local ok, err= pcall(f,gettest(recreate,category,name))
   logoutcome(category,name,testresult[category][name] or "NO_TEST")
   if not ok then 
     log(" / ")
     logoutcome(category,name,"EXCEPTION")
+    description = err
   end
   log("\t", name , description and ": "..description or "" ,"\n")
 end
@@ -235,8 +238,8 @@ local function summary(recreate)
   if recreate then
     log(
       '\t',rc.RECORD, " tests recorded\n",
-      '\t',rc.NO_TEST, " functions without tests\n",
-      '\t',rc.EXCEPTION, " exceptions\n")
+      '\t',rc.EXCEPTION, " exceptions\n",
+      rc.NO_TEST, " functions without tests\n")      
     for cat,tab in pairs(expected) do
       local f = io.open("tests/expected/"..cat..".lua","w")
       f:write("return ")
