@@ -47,6 +47,22 @@ local function ode_init(s, t0, h0, f, $(VL'y'))
    s.t, s.h, s.f = t0, h0, f
 end
 
+local function ode_evolve(s, t1, tsmp)
+   local step, t0, y = s.step, s.t, s.y
+
+   local function it(s, t)
+      t = t and t + tsmp or t0
+      if t <= t1 then
+	 while s.t < t do
+	    step(s, t)
+	 end
+	 return t, $(AL'y.data')
+      end
+   end
+
+   return it, s
+end
+
 local function hadjust(rmax, h)
    local S = 0.9
    if rmax > 1.1 then
