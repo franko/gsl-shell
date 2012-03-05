@@ -67,6 +67,8 @@ Complex Hermitian Matrices
 Real Generalized Symmetric-Definite Eigensystems
 -------------------------------------------------
 
+.. function:: gensymm(a, b)
+
    The real generalized symmetric-definite eigenvalue problem is to find eigenvalues \lambda and eigenvectors x such that
 
 .. math::
@@ -90,6 +92,8 @@ Real Generalized Symmetric-Definite Eigensystems
 Complex Generalized Hermitian-Definite Eigensystems
 ------------------------------------------------------
 
+.. function:: genherm(a, b)
+
    The complex generalized hermitian-definite eigenvalue problem is to find eigenvalues \lambda and eigenvectors x such that
 
    .. math::
@@ -104,6 +108,8 @@ Complex Generalized Hermitian-Definite Eigensystems
 
 Real Generalized Nonsymmetric Eigensystems
 --------------------------------------------
+
+.. function:: genv(a, b)
 
    Given two square matrices (A, B), the generalized nonsymmetric eigenvalue problem is to find eigenvalues \lambda and eigenvectors x such that
 
