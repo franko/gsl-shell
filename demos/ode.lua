@@ -26,12 +26,12 @@ end
 
 local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
    local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
+   local step = s.step
    local ln = graph.path(x0, y0)
    s:init(t0, h0, f, x0, y0)
    for t = tsmp, t1, tsmp do
       while s.t < t do
-	 evol(s, f, t)
+	 step(s, t)
       end
       ln:line_to(s.y[1], s.y[2])
    end
@@ -45,12 +45,12 @@ end
 -- T is the period for the Poincare section
 local function poincareplot(f, t0, t1, x0, y0, h0, tsmp, T)
    local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
+   local step = s.step
    s:init(t0, h0, f, x0, y0)
    local ln = graph.path(x0, y0)
    for t = t0, t1, tsmp do
       while s.t < t do
-         evol(s, f, t)
+         step(s, t)
       end
       if t % T <= tsmp then ln:line_to(s.y[1], s.y[2]) end
    end
@@ -65,12 +65,12 @@ local function modeplot(s, f, t0, y0, t1, tsmp)
    local n = #y0
    local t = {}
    for k=1, n do t[k] = graph.path(t0, y0[k]) end
-   local evol = s.evolve
+   local step = s.step
 
    if tsmp then
       for t = tsmp, t1, tsmp do
 	 while s.t < t do
-	    evol(s, f, t)
+	    step(s, t)
 	 end
 	 for k=1, n do
 	    t[k]:line_to(s.t, s.y[k])
@@ -78,7 +78,7 @@ local function modeplot(s, f, t0, y0, t1, tsmp)
       end
    else
       while s.t < t1 do
-	 evol(s, f, t1)
+	 step(s, t1)
 	 for k=1, n do
 	    t[k]:line_to(s.t, s.y[k])
 	 end
@@ -129,7 +129,7 @@ local function demo3()
    local ln = graph.path(t0, x)
    for t= hsamp, t1, hsamp do
       while s.t < t do
-	 s:evolve(f, t)
+	 s:step(t)
       end
       ln:line_to(s.t, s.y[1])
    end
@@ -164,11 +164,11 @@ local function demo5()
    local ln1 = graph.path(t0, x0)
    local ln2 = graph.path(t0, y0)
 
-   local evol = s.evolve
+   local step = s.step
    s:init(t0, h0, f, x0, y0)
    for t = tsmp, t1, tsmp do
       while s.t < t do
-	 evol(s, f, t)
+	 step(s, t)
       end
       ln1:line_to(s.t, s.y[1])
       ln2:line_to(s.t, s.y[2])
@@ -205,7 +205,7 @@ local function demo6()
    local x0, y0, z0 = -1, 3, 4
    local t0, t1, h0, tsmp = 0, 30, 1e-3, 1e-3
    local s = num.ode {N= 3, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
+   local step = s.step
    local lnxy = graph.path(x0, y0)
    local lnxz = graph.path(x0, z0)
    local lnyz = graph.path(y0, z0)
@@ -214,7 +214,7 @@ local function demo6()
    s:init(t0, h0, f, x0, y0, z0)
    for t = tsmp, t1, tsmp do
       while s.t < t do
-	 evol(s, f, t)
+	 step(s, t)
       end
       lnxy:line_to(s.y[1], s.y[2])
       lnxz:line_to(s.y[1], s.y[3])

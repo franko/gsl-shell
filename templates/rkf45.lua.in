@@ -55,8 +55,9 @@ $(include 'ode-defs')
 
 # y_err_only = (a_dydt == 0)
 
-local function rkf45_evolve(s, f, t1)
-   local t, h, s_y, s_dydt = s.t, s.h, s.y, s.dydt
+local function rkf45_evolve(s, t1)
+   local t, h, f = s.t, s.h, s.f
+   local s_y, s_dydt = s.y, s.dydt
    local hadj, inc
 
    local $(VL'y')
@@ -128,4 +129,4 @@ local function rkf45_evolve(s, f, t1)
    return h
 end
 
-return {new= ode_new, init= ode_init, evolve= rkf45_evolve}
+return {new= ode_new, init= ode_init, step= rkf45_evolve}

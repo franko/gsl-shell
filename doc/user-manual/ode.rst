@@ -74,7 +74,7 @@ and here the code that we can write to implement it::
 
    -- the ODE solver is iterated till the time t1 is reached
    while s.t < t1 do
-      s:evolve(odef, t1)
+      s:step(t1)
    end
 
 In alternative you may want to make a plot of the curve that you obtain. Here an example, we create a "path" to describe the curve that we want to plot and then we iterate with the ODE solver and we add all the points with the "line_to" method. The we create an empty plot and we add the line that we have just created::
@@ -82,7 +82,7 @@ In alternative you may want to make a plot of the curve that you obtain. Here an
    -- we create a line and add the points obtained by integrating the ODE
    ln = graph.path(x0, y0)
    while s.t < t1 do
-      s:evolve(odef, t1)
+      s:step(t1)
       ln:line_to(s.y[1], s.y[2])
    end
 
@@ -130,7 +130,7 @@ ODE Solver Class Definition
       It will be called like ``f(t, y_1, y_2, ..., y_N)`` where ``t`` is the time and ``y_1, y_2, ...`` are the values of the N independent values conventionally denoted here by 'y'.
       The function ``f`` should return N values that correspond to values ``f_i(t, y_1, ..., y_N)`` for each component ``f_i`` of the ODE system function.
 
-   .. method:: evolve(f, t1)
+   .. method:: step(t1)
 
       Advance the solution of the system by a step chosen adaptively based on the previous step size.
       The new values (t, y) are stored internally by the solver and can be retrieved as properties with the name ``t`` and ``y`` where the latter is a column matrix of size N.
