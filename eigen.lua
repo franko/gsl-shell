@@ -433,7 +433,7 @@ function eigen.genherm(a, b)
    return eval,evec
 end
 
-function eigen.genv(a, b)
+function eigen.gen(a, b)
    local size = a.size1
    local A = matrix.copy(a)
    local B = matrix.copy(b)

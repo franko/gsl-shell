@@ -109,7 +109,7 @@ Complex Generalized Hermitian-Definite Eigensystems
 Real Generalized Nonsymmetric Eigensystems
 --------------------------------------------
 
-.. function:: genv(a, b)
+.. function:: gen(a, b)
 
    Given two square matrices (A, B), the generalized nonsymmetric eigenvalue problem is to find eigenvalues \lambda and eigenvectors x such that
 
