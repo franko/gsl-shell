@@ -88,7 +88,7 @@ void svg_curve_coords_from_vs(VertexSource* vs, str& s, double h)
 	double x2, y2;
 	vertex_flip(vs, &x2, &y2, h);
 	vertex_flip(vs, &x, &y, h);
-	s.printf_add("%sC %g,%g %g,%g %g,%g", sep, x1, y1, x2, x2, x, y);
+	s.printf_add("%sC %g,%g %g,%g %g,%g", sep, x1, y1, x2, y2, x, y);
 	omit_line_to = false;
       }	else if (agg::is_curve3(cmd)) {
 	double x1 = x, y1 = y;
