@@ -18,30 +18,30 @@ Real Symmetric Matrices
 
    This function computes the eigenvalues and eigenvectors of the real symmetric matrix A. The default ordering of the eigenvalues and eigenvectors is descending order in numerical value.
    You can however choose from the following sorting shemes for the eigenvalues:
-   
+
    `eigen.SORT_VAL_DESC`
-      descending order in numerical value 
+      descending order in numerical value
    `eigen.SORT_VAL_ASC`
-      ascending order in numerical value 
+      ascending order in numerical value
    `eigen.SORT_ABS_ASC`
-      ascending order in magnitude 
+      ascending order in magnitude
    `eigen.SORT_ABS_DESC`
       descending order in magnitude
    `eigen.SORT_NONE`
       eigenvalue sorting
-	   
+
    The function returns::
-      
+
 	  eigenvalues, eigenvectors = symm(A, eigen.SORT_ABS_ASC)
-	  
+
    while the first eigenvalue correpsonds to the first eigenvector stored in the first column of the eigenvectors matrix.
    For real symmetric matrices, the library uses the symmetric bidiagonalization and QR reduction method.
    This is described in Golub & van Loan, section 8.3. The computed eigenvalues are accurate to an absolute accuracy of :math:`\epsilon ||m||_2`, where :math:`\epsilon` is the machine precision.
 
 Real Nonsymmetric Matrices
 --------------------------
-   
-.. funtion:: non_symm(A [, order ] ])
+
+.. function:: non_symm(A [, order ] ])
 
    The solution of the real nonsymmetric eigensystem problem for a matrix A involves computing the Schur decomposition
 
@@ -49,10 +49,10 @@ Real Nonsymmetric Matrices
 
    where Z is an orthogonal matrix of Schur vectors and T, the Schur form, is quasi upper triangular with diagonal 1-by-1 blocks which are real eigenvalues of A,
    and diagonal 2-by-2 blocks whose eigenvalues are complex conjugate eigenvalues of A. The algorithm used is the double-shift Francis method.
-   
+
    This function computes eigenvalues and right eigenvectors of the n-by-n real nonsymmetric matrix A.
    The computed eigenvectors are normalized to have unit magnitude. On output, the upper portion of A contains the Schur form T::
-   
+
       eigenvalues, eigenvector, A = non_symm(A, eigen.SORT_ABS_ASC)
 
 
@@ -71,8 +71,8 @@ Real Generalized Symmetric-Definite Eigensystems
 
    The real generalized symmetric-definite eigenvalue problem is to find eigenvalues \lambda and eigenvectors x such that
 
-.. math::
-   A x = \lambda B x
+   .. math::
+     A x = \lambda B x
 
    where A and B are symmetric matrices, and B is positive-definite.
    This problem reduces to the standard symmetric eigenvalue problem by applying the Cholesky decomposition to B:
@@ -140,7 +140,7 @@ Real Generalized Nonsymmetric Eigensystems
 
    The solution of the real generalized nonsymmetric eigensystem problem for a matrix pair (A, B)
    involves computing the generalized Schur decomposition
-   
+
    .. math::
 
       A = Q S Z^T
@@ -150,4 +150,4 @@ Real Generalized Nonsymmetric Eigensystems
    where Q and Z are orthogonal matrices of left and right Schur vectors respectively,
    and (S, T) is the generalized Schur form whose diagonal elements give the :math:`\alpha` and :math:`\beta` values.
    The algorithm used is the QZ method due to Moler and Stewart (see references).
-	 
+
