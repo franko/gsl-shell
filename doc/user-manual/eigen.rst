@@ -32,7 +32,7 @@ Real Symmetric Matrices
 
    The function returns::
 
-	  eigenvalues, eigenvectors = symm(A, eigen.SORT_ABS_ASC)
+	  eval, evec = symm(A, eigen.SORT_ABS_ASC)
 
    while the first eigenvalue correpsonds to the first eigenvector stored in the first column of the eigenvectors matrix.
    For real symmetric matrices, the library uses the symmetric bidiagonalization and QR reduction method.
@@ -53,7 +53,7 @@ Real Nonsymmetric Matrices
    This function computes eigenvalues and right eigenvectors of the n-by-n real nonsymmetric matrix A.
    The computed eigenvectors are normalized to have unit magnitude. On output, the upper portion of A contains the Schur form T::
 
-      eigenvalues, eigenvector, A = non_symm(A, eigen.SORT_ABS_ASC)
+      eval, evec, A = non_symm(A, eigen.SORT_ABS_ASC)
 
 
 Complex Hermitian Matrices
