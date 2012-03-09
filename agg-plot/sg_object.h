@@ -56,6 +56,10 @@ struct sg_object : public vertex_source {
     return 0;
   }
 
+  // the following methods return the vertices but it does preserve the Bezier
+  // points informations because SVG natively support them
+  virtual unsigned svg_vertex(double* x, double* y) = 0;
+
   virtual ~sg_object() { }
 };
 
@@ -96,6 +100,8 @@ public:
     agg::bounding_rect_single(m_base, 0, x1, y1, x2, y2);
   }
 
+  virtual unsigned svg_vertex(double* x, double* y) { return m_base.vertex(x, y); }
+
   const VertexSource& self() const { return m_base; };
         VertexSource& self()       { return m_base; };
 };
@@ -133,6 +139,8 @@ public:
     this->m_source->bounding_box(x1, y1, x2, y2);
   }
 
+  virtual unsigned svg_vertex(double* x, double* y) { return m_output.vertex(x, y); }
+
   const ConvType& self() const { return m_output; };
         ConvType& self()       { return m_output; };
 };
@@ -144,11 +152,12 @@ template <class ResourceManager = manage_owner>
 class sg_object_scaling : public sg_object
 {
   sg_object* m_source;
+  const agg::trans_affine* m_mtx;
   agg::conv_transform<sg_object> m_trans;
 
 public:
-  sg_object_scaling(sg_object* src, agg::trans_affine& mtx=identity_matrix):
-    m_source(src), m_trans(*m_source, mtx)
+  sg_object_scaling(sg_object* src):
+    m_source(src), m_mtx(&identity_matrix), m_trans(*m_source, identity_matrix)
   {
     ResourceManager::acquire(m_source);
   }
@@ -160,6 +169,7 @@ public:
 
   virtual void apply_transform(const agg::trans_affine& m, double as)
   {
+    m_mtx = &m;
     m_trans.transformer(m);
     m_source->apply_transform (m, as * m.scale());
   }
@@ -167,6 +177,16 @@ public:
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
   {
     agg::bounding_rect_single (*m_source, 0, x1, y1, x2, y2);
+  }
+
+  virtual unsigned svg_vertex(double* x, double* y)
+  {
+    unsigned cmd = m_source->svg_vertex(x, y);
+    if(agg::is_vertex(cmd))
+      {
+	m_mtx->transform(x, y);
+      }
+    return cmd;
   }
 };
 
@@ -192,11 +212,9 @@ public:
     return this->m_source->write_svg(id, c, h);
   }
 
-  virtual svg_property_list* svg_path(str& s, double h) {
-    return this->m_source->svg_path(s, h);
-  }
-
   virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
+
+  virtual unsigned svg_vertex(double* x, double* y) { return this->m_source->svg_vertex(x, y); }
 
 private:
   sg_object* m_source;

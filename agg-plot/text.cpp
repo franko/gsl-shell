@@ -18,6 +18,12 @@ namespace draw {
     return m_stroke.vertex(x, y);
   }
 
+  unsigned
+  text::svg_vertex(double* x, double* y)
+  {
+    return m_stroke.vertex(x, y);
+  }
+
   void
   text::apply_transform(const agg::trans_affine& m, double as)
   {

@@ -41,6 +41,11 @@ namespace draw {
       return m_stroke.vertex(x, y);
     }
 
+    virtual unsigned svg_vertex(double* x, double* y)
+    {
+      return m_stroke.vertex(x, y);
+    }
+
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
       agg::bounding_rect_single(m_sg_text, 0, x1, y1, x2, y2);

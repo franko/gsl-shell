@@ -60,10 +60,7 @@ struct trans {
   public:
     curve_a(sg_object* src) : base_type(src) { }
 
-    virtual svg_property_list* svg_path(str& s, double h) {
-      svg_curve_coords_from_vs(this->m_source, s, h);
-      return 0;
-    }
+    virtual unsigned svg_vertex(double* x, double* y) { return m_source->vertex(x, y);  }
   };
 
   struct curve : curve_a {
@@ -127,6 +124,16 @@ struct trans {
     {
       trans_affine_compose (m_matrix, m);
       return true;
+    }
+
+    virtual unsigned svg_vertex(double* x, double* y)
+    {
+      unsigned cmd = m_source->svg_vertex(x, y);
+      if(is_vertex(cmd))
+	{
+	  m_matrix.transform(x, y);
+	}
+      return cmd;
     }
   };
 
