@@ -60,6 +60,9 @@ struct path_cmd_reg {
 static int agg_path_free      (lua_State *L);
 static int agg_path_index     (lua_State *L);
 
+static int curve_new          (lua_State *L);
+static int curve_free         (lua_State *L);
+
 static int agg_ellipse_new    (lua_State *L);
 static int agg_circle_new     (lua_State *L);
 static int agg_ellipse_free   (lua_State *L);
@@ -70,7 +73,7 @@ static int textshape_free     (lua_State *L);
 static int marker_new         (lua_State *L);
 static int marker_free        (lua_State *L);
 
-static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
+static void path_cmd (agg::path_storage *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
   {CMD_MOVE_TO,  "move_to",  "ff"},
@@ -84,6 +87,7 @@ static struct path_cmd_reg cmd_table[] = {
 
 static const struct luaL_Reg draw_functions[] = {
   {"path",     agg_path_new},
+  {"curve",    curve_new},
   {"ellipse",  agg_ellipse_new},
   {"circle",   agg_circle_new},
   {"textshape", textshape_new},
@@ -94,6 +98,12 @@ static const struct luaL_Reg draw_functions[] = {
 static const struct luaL_Reg agg_path_methods[] = {
   {"__index",     agg_path_index},
   {"__gc",        agg_path_free},
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg curve_methods[] = {
+  {"__index",     agg_path_index},
+  {"__gc",        curve_free},
   {NULL, NULL}
 };
 
@@ -114,11 +124,9 @@ static const struct luaL_Reg marker_methods[] = {
   {NULL, NULL}
 };
 
-int
-agg_path_new (lua_State *L)
+static void
+path_init (lua_State* L, agg::path_storage* p)
 {
-  draw::path *vs = push_new_object<draw::path>(L, GS_DRAW_PATH);
-
   if (lua_gettop (L) >= 2)
     {
       double x = gs_check_number (L, 1, FP_CHECK_NORMAL);
@@ -128,16 +136,24 @@ agg_path_new (lua_State *L)
       s->f[0] = x;
       s->f[1] = y;
 
-      path_cmd (vs, CMD_MOVE_TO, s);
+      path_cmd (p, CMD_MOVE_TO, s);
     }
+}
 
+int
+agg_path_new (lua_State *L)
+{
+  draw::path *vs = push_new_object<draw::path>(L, GS_DRAW_PATH);
+  path_init(L, &vs->self());
   return 1;
 }
 
-draw::path *
-check_agg_path (lua_State *L, int index)
+int
+curve_new (lua_State *L)
 {
-  return (draw::path *) gs_check_userdata (L, index, GS_DRAW_PATH);
+  draw::curve* c = push_new_object<draw::curve>(L, GS_DRAW_CURVE);
+  path_init(L, c->path());
+  return 1;
 }
 
 int
@@ -146,34 +162,39 @@ agg_path_free (lua_State *L)
   return object_free<draw::path>(L, 1, GS_DRAW_PATH);
 }
 
-void
-path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
+int
+curve_free (lua_State *L)
 {
-  agg::path_storage& ps = p->self();
+  return object_free<draw::curve>(L, 1, GS_DRAW_CURVE);
+}
+
+void
+path_cmd (agg::path_storage* p, int _cmd, struct cmd_call_stack *s)
+{
   path_cmd_e cmd = (path_cmd_e) _cmd;
 
   switch (cmd)
     {
     case CMD_MOVE_TO:
-      ps.move_to (s->f[0], s->f[1]);
+      p->move_to (s->f[0], s->f[1]);
       break;
     case CMD_LINE_TO:
-      if (ps.total_vertices() == 0)
-	ps.move_to (s->f[0], s->f[1]);
+      if (p->total_vertices() == 0)
+	p->move_to (s->f[0], s->f[1]);
       else
-	ps.line_to (s->f[0], s->f[1]);
+	p->line_to (s->f[0], s->f[1]);
       break;
     case CMD_CLOSE:
-      ps.close_polygon ();
+      p->close_polygon ();
       break;
     case CMD_ARC_TO:
-      ps.arc_to (s->f[0], s->f[1], s->f[2], s->b[0], s->b[1], s->f[3], s->f[4]);
+      p->arc_to (s->f[0], s->f[1], s->f[2], s->b[0], s->b[1], s->f[3], s->f[4]);
       break;
     case CMD_CURVE3:
-      ps.curve3 (s->f[0], s->f[1], s->f[2], s->f[3]);
+      p->curve3 (s->f[0], s->f[1], s->f[2], s->f[3]);
       break;
     case CMD_CURVE4:
-      ps.curve4 (s->f[0], s->f[1], s->f[2], s->f[3], s->f[4], s->f[5]);
+      p->curve4 (s->f[0], s->f[1], s->f[2], s->f[3], s->f[4], s->f[5]);
       break;
     case CMD_ERROR:
       ;
@@ -183,12 +204,23 @@ path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
 static int
 agg_path_cmd (lua_State *L)
 {
-  draw::path *p = check_agg_path (L, 1);
-  int id = lua_tointeger (L, lua_upvalueindex(1));
-  const char *signature = lua_tostring (L, lua_upvalueindex(2));
+  int id = lua_tointeger(L, lua_upvalueindex(1));
+  const char *signature = lua_tostring(L, lua_upvalueindex(2));
   int argc = 2, f_count = 0, b_count = 0;
   struct cmd_call_stack s[1];
   const char *fc;
+  agg::path_storage* p;
+
+  if (gs_is_userdata(L, 1, GS_DRAW_CURVE))
+    {
+      draw::curve* c = (draw::curve*) lua_touserdata(L, 1);
+      p = c->path();
+    }
+  else
+    {
+      draw::path* pt = object_check<draw::path>(L, 1, GS_DRAW_PATH);
+      p = &pt->self();
+    }
 
   for (fc = signature; fc[0]; fc++)
     {
@@ -317,6 +349,10 @@ draw_register (lua_State *L)
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);
+  lua_pop (L, 1);
+
+  luaL_newmetatable (L, GS_METATABLE(GS_DRAW_CURVE));
+  luaL_register (L, NULL, curve_methods);
   lua_pop (L, 1);
 
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_ELLIPSE));
