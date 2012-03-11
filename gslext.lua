@@ -13,10 +13,6 @@ require('import')
 require('contour')
 require('sf')
 
-num.linfit  = require 'linfit'
-num.bspline = require 'bspline'
-num.monte_vegas = require 'vegas'
-
 local demomod
 
 function demo(name)

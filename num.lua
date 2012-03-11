@@ -60,4 +60,8 @@ function num.nlinfit(spec)
    return s
 end
 
+num.linfit  = require 'linfit'
+num.bspline = require 'bspline'
+num.monte_vegas = require 'vegas'
+
 return num

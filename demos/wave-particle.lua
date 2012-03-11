@@ -297,9 +297,13 @@ local function state_plot()
    end
 end
 
-local function y_samp(i)
-   local rp, ip = y.data[2*i], y.data[2*i+1]
-   return xsmp(i), rp*rp + ip*ip
+local function y_samp_ln()
+   local ln = graph.path()
+   for i = 0, p-1 do
+      local rp, ip = y.data[2*i], y.data[2*i+1]
+      ln:line_to(xsmp(i), rp*rp + ip*ip)
+   end
+   return ln
 end
 
 local function anim(pcs)
@@ -307,8 +311,7 @@ local function anim(pcs)
    for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
       pcs:clear()
-      local ln = graph.ipath(sequence(y_samp, 0, p-1))
-      pcs:add(ln, col)
+      pcs:add(y_samp_ln(), col)
       pcs:flush()
    end
 end

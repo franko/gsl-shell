@@ -1,7 +1,8 @@
 
 local bit = require 'bit'
+local bezier_approx = require('bezier').approx
 
-local floor, pi = math.floor, math.pi
+local floor, pi, max, min = math.floor, math.pi, math.max, math.min
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
@@ -23,12 +24,32 @@ local function check_sampling(n)
    return n
 end
 
+local x_ref, y_ref
+local function x_get(i)
+   return x_ref[i]
+end
+
+local function y_get(i)
+   return y_ref[i]
+end
+
 function graph.ipath(f)
-   local ln = graph.path(f())
+   local x0, y0 = f()
+   x_ref, y_ref = {x0}, {y0}
+   local ymax, ymin = y0, y0
+   local i = 2
    for x, y in f do
-      ln:line_to(x, y)
+      x_ref[i] = x
+      y_ref[i] = y
+      ymax = max(ymax, y)
+      ymin = min(ymin, y)
+      i = i + 1
    end
-   return ln
+
+   local n = i - 1
+   local tol = 1e-7 * (ymax - ymin)^2
+   local c = bezier_approx(x_get, y_get, n, tol)
+   return c
 end
 
 function graph.ipathp(f)
