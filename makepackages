@@ -13,6 +13,10 @@ ifeq ($(HOST_SYS),Windows)
   AGG_INCLUDES = -I$(AGG_HOME)/include
   AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32
 
+  FOX_HOME = c:/fra/src/fox-1.6.43
+  FOX_INCLUDES = -I$(FOX_HOME)/include
+  FOX_LIBS = -L$(FOX_HOME)/src -lfox -mwindows
+
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
@@ -23,6 +27,9 @@ else
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
+
+  FOX_INCLUDES =
+  FOX_LIBS = -lfox
 
   PTHREADS_LIBS = -lpthread
 endif

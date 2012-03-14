@@ -74,12 +74,6 @@ LIBS += $(AGG_LIBS) $(PTHREADS_LIBS)
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
 
-ifeq ($(HOST_SYS),Darwin)
-  LINK_EXE = $(CXX) $(LDFLAGS)
-else
-  LINK_EXE = $(CC) $(LDFLAGS)
-endif
-
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 
 DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
