@@ -1,33 +1,42 @@
 
+#include <fxkeys.h>
 #include "fx_console.h"
 
-// Message Map for the Scribble Window class
 FXDEFMAP(fx_console) fx_console_map[]={
-
-  //________Message_Type_____________________ID____________Message_Handler_______
+  FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
 };
 
-FXIMPLEMENT(fx_console,FXMainWindow,fx_console_map,ARRAYNUMBER(fx_console_map))
+FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 
-fx_console::fx_console(FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
-  FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h)
+char const * const fx_console::prompt = "> ";
+
+fx_console::fx_console(FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
+  FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), m_status(not_ready)
 {
-  m_menu_bar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  m_status_bar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
+}
 
-  m_file_menu = new FXMenuPane(this);
-  new FXMenuCommand(m_file_menu, "&Quit\tCtl-Q", NULL, app, FXApp::ID_QUIT);
-  new FXMenuTitle(m_menu_bar, "&File", NULL, m_file_menu);
-
-  FXVerticalFrame* frame = new FXVerticalFrame(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-  m_text_font = new FXFont(app, "lucida console", 10);
-  m_text = new FXText(frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED);
-  m_text->setFont(m_text_font);
+void fx_console::prepare_input()
+{
+  appendText(prompt, strlen(prompt));
+  m_status = input_mode;
 }
 
 void fx_console::create()
 {
-  FXMainWindow::create();
-  show(PLACEMENT_SCREEN);
+  FXText::create();
+  init("Welcome to GSL Shell 2.1\n");
+}
+
+void fx_console::init(const FXString& greeting)
+{
+  appendText(greeting);
+  prepare_input();
+}
+
+long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
+{
+  FXEvent* event = (FXEvent*)ptr;
+  if (event->code == KEY_Return)
+    printf("KEY Enter!\n");
+  return FXText::onKeyPress(obj, sel, ptr);
 }
