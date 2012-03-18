@@ -1,8 +1,7 @@
 #include "gsl_shell_window.h"
 
 FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]={
-
-  //________Message_Type_____________________ID____________Message_Handler_______
+  FXMAPFUNC(SEL_IO_READ, gsl_shell_window::ID_SOCKET, gsl_shell_window::on_socket_input),
 };
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
@@ -22,6 +21,11 @@ gsl_shell_window::gsl_shell_window(FXApp* app, const FXString& name, FXIcon *ic,
   m_text_font = new FXFont(app, "lucida console", 10);
   m_text = new fx_console(frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED);
   m_text->setFont(m_text_font);
+}
+
+long gsl_shell_window::on_socket_input(FXObject*,FXSelector,void* _socket)
+{
+  //  FXInputHandle* f = (FXInputHandle)
 }
 
 void gsl_shell_window::create()
