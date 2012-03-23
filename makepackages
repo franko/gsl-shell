@@ -15,7 +15,7 @@ ifeq ($(HOST_SYS),Windows)
 
   FOX_HOME = c:/fra/src/fox-1.6.43
   FOX_INCLUDES = -I$(FOX_HOME)/include
-  FOX_LIBS = -L$(FOX_HOME)/src -lfox -mwindows
+  FOX_LIBS = -L$(FOX_HOME)/src -lfox
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm

@@ -6,6 +6,8 @@
 #include <fx.h>
 #include <FXArray.h>
 
+#include "lua_engine.h"
+
 class input_history {
 public:
   input_history() {}
@@ -42,13 +44,21 @@ public:
   virtual void create();
 
   long on_key_press(FXObject*,FXSelector,void*);
+  long on_read_input(FXObject*,FXSelector,void*);
+
+  enum {
+    ID_READ_INPUT = FXText::ID_LAST,
+    ID_LAST,
+  };
 
 protected:
   fx_console() {}
 
 private:
   input_history m_history;
+  FXint m_input_begin;
   status_e m_status;
+  lua_engine m_engine;
 };
 
 #endif

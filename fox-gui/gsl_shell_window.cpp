@@ -25,6 +25,7 @@ gsl_shell_window::gsl_shell_window(FXApp* app, const FXString& name, FXIcon *ic,
 
 long gsl_shell_window::on_socket_input(FXObject*,FXSelector,void* _socket)
 {
+  return 0;
   //  FXInputHandle* f = (FXInputHandle)
 }
 
