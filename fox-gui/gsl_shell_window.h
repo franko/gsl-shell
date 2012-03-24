@@ -18,14 +18,6 @@ public:
 
   virtual void create();
 
-public:
-  long on_socket_input(FXObject*,FXSelector,void*);
-
-  enum {
-    ID_SOCKET = FXMainWindow::ID_LAST,
-    ID_LAST,
-  };
-
 protected:
   gsl_shell_window() {}
 
