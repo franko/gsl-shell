@@ -1,5 +1,7 @@
 
+#include <errno.h>
 #include <fxkeys.h>
+
 #include "fx_console.h"
 #include "lua_engine.h"
 
@@ -13,7 +15,7 @@ FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 char const * const fx_console::prompt = "> ";
 
 fx_console::fx_console(FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
-  FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), 
+  FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
   m_status(not_ready), m_engine()
 {
 }
@@ -45,19 +47,13 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
     {
       FXint pos = getCursorPos();
       FXint line_end = lineEnd(pos), line_start = m_input_begin;
-      FXString line;
-      extractText(line, line_start, line_end - line_start);
-
-      //      printf("LINE: %s\n", line.text());
-      //      appendText("LINE:\n");
-      //      appendText(line);
-      //      appendText("ACK\n");
+      extractText(m_input, line_start, line_end - line_start);
+      appendText("\n");
 
       this->m_status = output_mode;
-      getApp()->addTimeout(this, fx_console::ID_READ_INPUT, 200, NULL);
-      m_engine.input(line.text());
-
-      return FXText::onKeyPress(obj, sel, ptr);
+      m_engine.input(m_input.text());
+      on_read_input(NULL, 0, NULL);
+      return 1;
     }
 
   return FXText::onKeyPress(obj, sel, ptr);
@@ -65,19 +61,31 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 
 long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
 {
-  char buffer[16];
+  char buffer[1024];
 
-  m_engine.read(buffer, 16);
-  appendText(buffer);
-
-  if (m_engine.is_ready())
+  while (1)
     {
-      prepare_input();
-    }
-  else
-    {
-      getApp()->addTimeout(this, ID_READ_INPUT, 200, NULL);
+      int nr = m_engine.read(buffer, 1023);
+      if (nr < 0)
+	{
+	  if (errno == EAGAIN || errno == EWOULDBLOCK)
+	    break;
+	}
+      if (nr == 0)
+	break;
+
+      if (buffer[nr-1] == 0x1a)
+	{
+	  buffer[nr-1] = 0;
+	  appendText(buffer);
+	  prepare_input();
+	  return 1;
+	}
+
+      buffer[nr] = 0;
+      appendText(buffer);
     }
 
+  getApp()->addTimeout(this, ID_READ_INPUT, 200, NULL);
   return 1;
 }

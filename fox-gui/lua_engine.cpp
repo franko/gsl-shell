@@ -1,6 +1,6 @@
 #include <pthread.h>
 #include <stdio.h>
-#include <io.h>
+//#include <io.h>
 
 #include "lua_engine.h"
 
@@ -72,6 +72,8 @@ lua_engine::run()
       printf("SECOND LINE\n");
       for (int k = 1; k <= 10; k++)
 	printf("MSG: line nr #%d.\n", k);
+
+      fputc(0x1a, stdout);
 
       fflush(stdout);
     }

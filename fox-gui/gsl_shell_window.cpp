@@ -18,7 +18,7 @@ gsl_shell_window::gsl_shell_window(FXApp* app, const FXString& name, FXIcon *ic,
 
   FXVerticalFrame* frame = new FXVerticalFrame(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  m_text_font = new FXFont(app, "lucida console", 10);
+  m_text_font = new FXFont(app, "monospace", 10);
   m_text = new fx_console(frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED);
   m_text->setFont(m_text_font);
 }

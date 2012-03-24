@@ -57,6 +57,7 @@ protected:
 private:
   input_history m_history;
   FXint m_input_begin;
+  FXString m_input;
   status_e m_status;
   lua_engine m_engine;
 };

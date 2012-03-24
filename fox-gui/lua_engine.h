@@ -1,7 +1,6 @@
 #ifndef FOXGUI_LUA_ENGINE_H
 #define FOXGUI_LUA_ENGINE_H
 
-#include <windows.h>
 #include <pthread.h>
 
 #include "redirect.h"
@@ -12,7 +11,7 @@ public:
 
   lua_engine();
   ~lua_engine();
-  
+
   void input(const char* line);
   void start();
   void run();

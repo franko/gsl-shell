@@ -28,8 +28,8 @@ else
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
-  FOX_INCLUDES =
-  FOX_LIBS = -lfox
+  FOX_INCLUDES := $(shell pkg-config fox --cflags)
+  FOX_LIBS = $(shell pkg-config fox --libs)
 
   PTHREADS_LIBS = -lpthread
 endif
