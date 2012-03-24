@@ -3,13 +3,15 @@
 //#include <io.h>
 
 #include "lua_engine.h"
+#include "gsl_shell_interp.h"
 
-extern "C" void * testing_eval_thread (void *userdata);
+extern "C" void * luajit_eval_thread (void *userdata);
 
 void *
-testing_eval_thread (void *userdata)
+luajit_eval_thread (void *userdata)
 {
   lua_engine* eng = (lua_engine*) userdata;
+  eng->start_gsl_shell();
   eng->run();
   pthread_exit (NULL);
   return NULL;
@@ -24,7 +26,7 @@ start_interp_thread (lua_engine* eng)
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
 
-  if (pthread_create (eval_thread, attr, testing_eval_thread, eng))
+  if (pthread_create (eval_thread, attr, luajit_eval_thread, eng))
     {
       fprintf(stderr, "error creating thread");
       return 1;
@@ -41,16 +43,21 @@ lua_engine::~lua_engine()
 }
 
 lua_engine::lua_engine()
-  : m_status(starting), m_redirect(4096), m_line_pending(0)
+  : m_status(starting), m_redirect(4096), m_line_pending(0), m_lua_state(0)
 {
   pthread_mutex_init(&m_eval_mutex, NULL);
   pthread_cond_init(&m_eval_ready, NULL);
 }
 
+void lua_engine::start_gsl_shell()
+{
+  m_lua_state = gsl_shell_init();
+}
+
 void lua_engine::start()
 {
-  start_interp_thread(this);
   m_redirect.start();
+  start_interp_thread(this);
 }
 
 void
@@ -68,10 +75,7 @@ lua_engine::run()
       this->set_state(busy);
       pthread_mutex_unlock(&m_eval_mutex);
 
-      printf("YOU WROTE: %s.\n", line);
-      printf("SECOND LINE\n");
-      for (int k = 1; k <= 10; k++)
-	printf("MSG: line nr #%d.\n", k);
+      gsl_shell_exec (m_lua_state, line);
 
       fputc(0x1a, stdout);
 
