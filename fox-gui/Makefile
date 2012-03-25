@@ -32,7 +32,7 @@ LUADIR = $(GSH_BASE_DIR)/luajit2
 INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
 LIBS += $(LUADIR)/src/libluajit.a $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++ #-mwindows
 
-FOXGUI_SRC_FILES = fx_console.cpp redirect.cpp gsl_shell_interp.cpp lua_engine.cpp gsl_shell_window.cpp gsl-shell-fox.cpp
+FOXGUI_SRC_FILES = fatal.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp lua_engine.cpp gsl_shell_window.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
 
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)

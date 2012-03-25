@@ -46,6 +46,9 @@ typedef int bool;
 #include <stdbool.h>
 #endif
 
+#define likely(x)	__builtin_expect(!!(x), 1)
+#define unlikely(x)	__builtin_expect(!!(x), 0)
+
 extern char const * const OUT_OF_MEMORY_MSG;
 extern char const * const INVALID_INDEX_MSG;
 

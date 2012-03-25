@@ -1,6 +1,7 @@
 #ifndef GSL_SHELL_INTERP_H
 #define GSL_SHELL_INTERP_H
 
+#include "defs.h"
 #include "pthreadpp.h"
 
 extern "C" {

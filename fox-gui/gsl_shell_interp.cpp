@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdexcept>
 
 #define luajit_c
 
@@ -15,6 +14,7 @@ extern "C" {
 // #include "gsl-shell.h"
 
 #include  "gsl_shell_interp.h"
+#include "fatal.h"
 
 /*
 static void gsl_shell_openlibs(lua_State *L)
@@ -59,15 +59,15 @@ void gsl_shell::init()
 
   L = lua_open();  /* create state */
 
-  if (L == NULL)
-    throw std::runtime_error("cannot create state: not enough memory");
+  if (unlikely(L == NULL))
+    fatal_exception("cannot create state: not enough memory");
 
   status = lua_cpcall(L, pinit, NULL);
 
-  if (report(L, status))
+  if (unlikely(report(L, status)))
     {
       lua_close(L);
-      throw std::runtime_error("cannot initialize Lua state");
+      fatal_exception("cannot initialize Lua state");
     }
 
   m_lua_state = L;
