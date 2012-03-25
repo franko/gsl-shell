@@ -25,9 +25,6 @@
 #include "lua-utils.h"
 #include "gs-types.h"
 
-char const * const OUT_OF_MEMORY_MSG = "out of memory";
-char const * const INVALID_INDEX_MSG = "index out of limits";
-
 static char const * const CACHE_FIELD_NAME = "__cache";
 
 const struct luaL_Reg *

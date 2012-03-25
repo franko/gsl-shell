@@ -46,7 +46,4 @@ typedef int bool;
 #include <stdbool.h>
 #endif
 
-extern char const * const OUT_OF_MEMORY_MSG;
-extern char const * const INVALID_INDEX_MSG;
-
 #endif
