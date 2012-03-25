@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <string.h>
+#include <stdexcept>
 
 #define luajit_c
 
@@ -15,8 +15,6 @@ extern "C" {
 // #include "gsl-shell.h"
 
 #include  "gsl_shell_interp.h"
-
-pthread_mutex_t gsl_shell_mutex[1];
 
 /*
 static void gsl_shell_openlibs(lua_State *L)
@@ -48,52 +46,46 @@ static int pinit(lua_State *L)
   return 0;
 }
 
-void
-gsl_shell_close (lua_State *L)
+gsl_shell::~gsl_shell()
 {
-  lua_close (L);
-  pthread_mutex_destroy (gsl_shell_mutex);
+  if (m_lua_state)
+    lua_close(m_lua_state);
 }
 
-lua_State *
-gsl_shell_init ()
+void gsl_shell::init()
 {
   lua_State *L;
   int status;
 
-  pthread_mutex_init (gsl_shell_mutex, NULL);
-
   L = lua_open();  /* create state */
 
   if (L == NULL)
-    {
-      fprintf(stderr, "cannot create state: not enough memory");
-      return NULL;
-    }
+    throw std::runtime_error("cannot create state: not enough memory");
 
   status = lua_cpcall(L, pinit, NULL);
 
   if (report(L, status))
     {
-      gsl_shell_close (L);
-      return NULL;
+      lua_close(L);
+      throw std::runtime_error("cannot initialize Lua state");
     }
 
-  return L;
+  m_lua_state = L;
 }
 
-int
-gsl_shell_exec (lua_State *L, const char *line)
+int gsl_shell::exec (const char *line)
 {
-  int status;
-  pthread_mutex_lock (gsl_shell_mutex);
-  status = luaL_loadbuffer(L, line, strlen(line), "=<user input>");
+  m_interp.lock();
+
+  lua_State* L = m_lua_state;
+  int status = luaL_loadbuffer(L, line, strlen(line), "=<user input>");
   if (status == 0)
     {
       status = lua_pcall(L, 0, 0, 0);
       /* force a complete garbage collection in case of errors */
       if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
     }
-  pthread_mutex_unlock (gsl_shell_mutex);
+
+  m_interp.unlock();
   return status;
 }

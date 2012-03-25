@@ -1,14 +1,23 @@
 #ifndef GSL_SHELL_INTERP_H
 #define GSL_SHELL_INTERP_H
 
+#include "pthreadpp.h"
+
 extern "C" {
-
 #include "lua.h"
-
-extern int         gsl_shell_exec  (lua_State *L, const char *line);
-extern lua_State * gsl_shell_init  ();
-extern void        gsl_shell_close (lua_State *L);
-
 }
+
+class gsl_shell {
+public:
+  gsl_shell(): m_lua_state(0) { }
+  ~gsl_shell();
+
+  void init();
+  int exec(const char* line);
+
+private:
+  lua_State* m_lua_state;
+  pthread::mutex m_interp;
+};
 
 #endif

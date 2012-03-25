@@ -37,21 +37,12 @@ start_interp_thread (lua_engine* eng)
 
 lua_engine::~lua_engine()
 {
-  pthread_mutex_destroy(&m_eval_mutex);
-  pthread_cond_destroy(&m_eval_ready);
   m_redirect.stop();
 }
 
 lua_engine::lua_engine()
-  : m_status(starting), m_redirect(4096), m_line_pending(0), m_lua_state(0)
+  : m_status(starting), m_redirect(4096), m_line_pending(0)
 {
-  pthread_mutex_init(&m_eval_mutex, NULL);
-  pthread_cond_init(&m_eval_ready, NULL);
-}
-
-void lua_engine::start_gsl_shell()
-{
-  m_lua_state = gsl_shell_init();
 }
 
 void lua_engine::start()
@@ -65,20 +56,19 @@ lua_engine::run()
 {
   while (1)
     {
-      pthread_mutex_lock (&m_eval_mutex);
+      m_eval.lock();
       this->set_state(ready);
-      pthread_cond_wait (&m_eval_ready, &m_eval_mutex);
+      m_eval.wait();
 
       const char* line = m_line_pending;
       m_line_pending = NULL;
 
       this->set_state(busy);
-      pthread_mutex_unlock(&m_eval_mutex);
+      m_eval.unlock();
 
-      gsl_shell_exec (m_lua_state, line);
+      m_gsl_shell.exec(line);
 
       fputc(0x1a, stdout);
-
       fflush(stdout);
     }
 }
@@ -86,13 +76,13 @@ lua_engine::run()
 void
 lua_engine::input(const char* line)
 {
-  pthread_mutex_lock (&m_eval_mutex);
+  m_eval.lock();
   if (m_status == ready)
     {
       m_line_pending = line;
-      pthread_cond_signal (&m_eval_ready);
+      m_eval.signal();
     }
-  pthread_mutex_unlock (&m_eval_mutex);
+  m_eval.unlock();
 }
 
 int
@@ -103,8 +93,8 @@ lua_engine::read(char* buffer, unsigned buffer_size)
 
 bool lua_engine::is_ready()
 {
-  pthread_mutex_lock (&m_eval_mutex);
+  m_eval.lock();
   bool is_ready = (m_status == ready);
-  pthread_mutex_unlock (&m_eval_mutex);
+  m_eval.unlock();
   return is_ready;
 }
