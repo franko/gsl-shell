@@ -23,18 +23,6 @@ static void gsl_shell_openlibs(lua_State *L)
 }
 */
 
-static int
-report(lua_State *L, int status)
-{
-  if (status && !lua_isnil(L, -1)) {
-    const char *msg = lua_tostring(L, -1);
-    if (msg == NULL) msg = "(error object is not a string)";
-    fprintf(stderr, "%s\n", msg);
-    lua_pop(L, 1);
-  }
-  return status;
-}
-
 static int pinit(lua_State *L)
 {
   LUAJIT_VERSION_SYM();  /* linker-enforced version check */
@@ -73,7 +61,23 @@ void gsl_shell::init()
   m_lua_state = L;
 }
 
-int gsl_shell::exec (const char *line)
+int gsl_shell::report(lua_State* L, int status)
+{
+  if (status && !lua_isnil(L, -1))
+    {
+      const char *msg = lua_tostring(L, -1);
+      if (msg == NULL) msg = "(error object is not a string)";
+
+      int np = snprintf(m_error_msg, ERROR_MSG_MAX_LENGTH, "%s", msg);
+      if (np >= ERROR_MSG_MAX_LENGTH)
+	m_error_msg[ERROR_MSG_MAX_LENGTH - 1] = 0;
+
+      lua_pop(L, 1);
+    }
+  return status;
+}
+
+int gsl_shell::exec(const char *line)
 {
   m_interp.lock();
 
@@ -83,9 +87,12 @@ int gsl_shell::exec (const char *line)
     {
       status = lua_pcall(L, 0, 0, 0);
       /* force a complete garbage collection in case of errors */
-      if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
+      if (status != 0)
+	lua_gc(L, LUA_GCCOLLECT, 0);
     }
 
+  report(L, status);
+
   m_interp.unlock();
-  return status;
+  return (status == 0 ? eval_success : eval_error);
 }

@@ -66,7 +66,7 @@ lua_engine::run()
       this->set_state(busy);
       m_eval.unlock();
 
-      m_gsl_shell.exec(line);
+      m_eval_status = m_gsl_shell.exec(line);
 
       fputc(eot_character, stdout);
       fflush(stdout);

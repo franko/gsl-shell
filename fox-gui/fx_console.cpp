@@ -27,6 +27,16 @@ void fx_console::prepare_input()
   m_input_begin = getCursorPos();
 }
 
+void fx_console::show_errors()
+{
+  if (m_engine.eval_status() == gsl_shell::eval_error)
+    {
+      appendText("Error reported: ");
+      appendText(m_engine.error_msg());
+      appendText("\n");
+    }
+}
+
 void fx_console::create()
 {
   FXText::create();
@@ -82,6 +92,7 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
 	{
 	  buffer[nr-1] = 0;
 	  appendText(buffer);
+	  show_errors();
 	  prepare_input();
 	  return 1;
 	}

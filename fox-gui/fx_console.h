@@ -39,6 +39,7 @@ public:
   // prepare to accept input
   void init(const FXString& greeting);
   void prepare_input();
+  void show_errors();
 
 public:
   virtual void create();
