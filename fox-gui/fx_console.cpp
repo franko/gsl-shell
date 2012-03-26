@@ -3,7 +3,7 @@
 #include <fxkeys.h>
 
 #include "fx_console.h"
-#include "lua_engine.h"
+#include "gsl_shell_thread.h"
 
 FXDEFMAP(fx_console) fx_console_map[]={
   FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),

@@ -6,7 +6,7 @@
 #include <fx.h>
 #include <FXArray.h>
 
-#include "lua_engine.h"
+#include "gsl_shell_thread.h"
 
 class input_history {
 public:

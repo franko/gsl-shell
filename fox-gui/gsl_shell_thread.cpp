@@ -1,8 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
-//#include <io.h>
 
-#include "lua_engine.h"
+#include "gsl_shell_thread.h"
 #include "gsl_shell_interp.h"
 
 extern "C" void * luajit_eval_thread (void *userdata);
