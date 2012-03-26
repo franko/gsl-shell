@@ -1,5 +1,5 @@
-#ifndef MY_PTHREADPP_H
-#define MY_PTHREADPP_H
+#ifndef CPP_PTHREADPP_H
+#define CPP_PTHREADPP_H
 
 #include <pthread.h>
 

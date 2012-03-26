@@ -39,7 +39,7 @@ struct trans {
       str path;
       svg_property_list* ls = this->m_source->svg_path(path, h);
       str s = svg_stroke_path(path, m_width, id, c, ls);
-      list::free(ls);
+      svg_property_list::free(ls);
       return s;
     }
 
@@ -179,7 +179,7 @@ struct trans {
       ls = new svg_property_list(item3, ls);
 
       str svg = svg_marker_path(path, m_size, id, ls);
-      list::free(ls);
+      svg_property_list::free(ls);
 
       return str::print("%s\n   %s", marker_def.cstr(), svg.cstr());
     }

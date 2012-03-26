@@ -1,7 +1,7 @@
 #ifndef AGGPLOT_SPLIT_PARSER_H
 #define AGGPLOT_SPLIT_PARSER_H
 
-#include "my_tree.h"
+#include "tree.h"
 
 enum direction_e { along_x, along_y };
 

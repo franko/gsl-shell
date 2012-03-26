@@ -71,8 +71,8 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
       this->m_need_redraw = true;
     }
 
-  pod_list<item> *nn = new pod_list<item>(d);
-  this->m_drawing_queue = pod_list<item>::push_back(this->m_drawing_queue, nn);
+  list<item> *nn = new list<item>(d);
+  this->m_drawing_queue = list<item>::push_back(this->m_drawing_queue, nn);
 
   RM::acquire(vs);
 }
@@ -121,7 +121,7 @@ void plot_auto<VS,RM>::calc_bounding_box()
       calc_layer_bounding_box(*(this->m_layers[j]), box);
     }
 
-  for (pod_list<item> *t = this->m_drawing_queue; t; t = t->next())
+  for (list<item> *t = this->m_drawing_queue; t; t = t->next())
     {
       const item& d = t->content();
       agg::rect_base<double> r;

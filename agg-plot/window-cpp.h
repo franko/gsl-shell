@@ -10,7 +10,7 @@ extern "C" {
 #include "lua-cpp-utils.h"
 #include "plot.h"
 #include "rect.h"
-#include "my_list.h"
+#include "list.h"
 
 #include "agg_color_rgba.h"
 #include "agg_trans_affine.h"

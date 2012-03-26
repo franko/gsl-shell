@@ -24,7 +24,7 @@
 #include <new>
 
 #include "utils.h"
-#include "my_list.h"
+#include "list.h"
 #include "strpp.h"
 #include "canvas.h"
 #include "units.h"
@@ -92,7 +92,7 @@ class plot {
   };
 
 public:
-  typedef pod_list<item> iterator;
+  typedef list<item> iterator;
   typedef virtual_canvas<VertexSource> canvas_type;
 
   enum axis_e { x_axis, y_axis };
@@ -276,7 +276,7 @@ protected:
   item_list *m_current_layer;
 
   agg::trans_affine m_trans;
-  pod_list<item> *m_drawing_queue;
+  list<item> *m_drawing_queue;
 
   bool m_clip_flag;
 
@@ -326,21 +326,21 @@ template <class VS, class RM>
 void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
 {
   item d(vs, color, outline);
-  pod_list<item> *new_node = new pod_list<item>(d);
-  m_drawing_queue = pod_list<item>::push_back(m_drawing_queue, new_node);
+  list<item> *new_node = new list<item>(d);
+  m_drawing_queue = list<item>::push_back(m_drawing_queue, new_node);
   RM::acquire(vs);
 }
 
 template <class VS, class RM>
 void plot<VS,RM>::push_drawing_queue()
 {
-  for (pod_list<item> *c = m_drawing_queue; c != 0; c = c->next())
+  for (list<item> *c = m_drawing_queue; c != 0; c = c->next())
     {
       m_current_layer->add(c->content());
     }
 
   while (m_drawing_queue)
-    m_drawing_queue = list::pop(m_drawing_queue);
+    m_drawing_queue = list<item>::pop(m_drawing_queue);
 }
 
 template <class VS, class RM>
@@ -350,7 +350,7 @@ void plot<VS,RM>::clear_drawing_queue()
     {
       item& d = m_drawing_queue->content();
       RM::dispose(d.vs);
-      m_drawing_queue = list::pop(m_drawing_queue);
+      m_drawing_queue = list<item>::pop(m_drawing_queue);
     }
 }
 

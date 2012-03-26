@@ -47,7 +47,7 @@ struct sg_object : public vertex_source {
     str path;
     svg_property_list* ls = this->svg_path(path, h);
     str s = svg_fill_path(path, id, c, ls);
-    list::free(ls);
+    svg_property_list::free(ls);
     return s;
   }
 

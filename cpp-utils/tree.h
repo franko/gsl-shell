@@ -1,16 +1,14 @@
-#ifndef AGGPLOT_MY_TREE_H
-#define AGGPLOT_MY_TREE_H
+#ifndef CPP_TREE_H
+#define CPP_TREE_H
 
-#include "my_list.h"
+#include "list.h"
 
 namespace tree {
 
   template <class base_type, class tree_data_type>
   struct node {
-    typedef pod_list<node*> list;
-
-    virtual list* tree() { return 0; };
-    virtual list* tree(tree_data_type& data) { return 0; };
+    virtual list<node*>* tree() { return 0; };
+    virtual list<node*>* tree(tree_data_type& data) { return 0; };
 
     virtual base_type* content() = 0;
     virtual void content(const base_type& src) = 0;
@@ -33,7 +31,7 @@ namespace tree {
   class tree_node : public node<base_type, tree_data_type> {
 
     typedef node<base_type, tree_data_type> node_type;
-    typedef typename node<base_type, tree_data_type>::list node_list;
+    typedef list<node_type*> node_list;
 
     node_list *m_head;
     tree_data_type m_data;
@@ -79,7 +77,8 @@ namespace tree {
     if (c)
       f::func(*c);
 
-    typename node<base_type, tree_data_type>::list *ls = t->tree();
+    typedef node<base_type, tree_data_type> node_type;
+    list<node_type*>* ls = t->tree();
     if (ls)
       {
 	for ( ; ls; ls = ls->next())

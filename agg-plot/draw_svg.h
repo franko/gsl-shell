@@ -3,7 +3,7 @@
 
 #include "agg_basics.h"
 #include "agg_color_rgba.h"
-#include "my_list.h"
+#include "list.h"
 #include "strpp.h"
 
 enum svg_path_property_e {
@@ -33,7 +33,7 @@ vertex_flip(VertexSource* vs, double* x, double* y, double h)
   return cmd;
 }
 
-typedef pod_list<svg_property_item> svg_property_list;
+typedef list<svg_property_item> svg_property_list;
 
 template <typename VertexSource>
 void svg_coords_from_vs(VertexSource* vs, str& s, double h)

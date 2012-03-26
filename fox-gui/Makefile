@@ -29,7 +29,7 @@ GSL_SHELL_GUI = gsl-shell-fox.exe
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
-INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
+INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
 LIBS += $(LUADIR)/src/libluajit.a $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++
 
 FOXGUI_SRC_FILES = fatal.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp gsl_shell_window.cpp gsl-shell-fox.cpp

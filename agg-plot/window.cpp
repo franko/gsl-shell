@@ -64,14 +64,14 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
       r->matrix = m;
     }
 
-  int nb = list::length(t->tree());
+  int nb = list<ref::node*>::length(t->tree());
 
   if (nb > 0)
     {
       double frac = 1 / (double) nb;
 
       direction_e dir;
-      ref::node::list *ls = t->tree(dir);
+      list<ref::node*> *ls = t->tree(dir);
       if (ls)
 	{
 	  bmatrix lm;
@@ -117,7 +117,7 @@ window::ref::save_image (agg::rendering_buffer& win_buf,
 void
 window::draw_rec(ref::node *n)
 {
-  ref::node::list *ls;
+  list<ref::node*> *ls;
   for (ls = n->tree(); ls != NULL; ls = ls->next())
     draw_rec(ls->content());
 
@@ -130,7 +130,7 @@ window::draw_rec(ref::node *n)
 
 window::ref* window::ref_lookup (ref::node *p, int slot_id)
 {
-  ref::node::list *t = p->tree();
+  list<ref::node*> *t = p->tree();
   for (/* */; t; t = t->next())
     {
       ref *ref = window::ref_lookup(t->content(), slot_id);
@@ -274,7 +274,7 @@ window::on_resize(int sx, int sy)
 void
 window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
 {
-  for (ref::node::list *ls = n->tree(); ls != NULL; ls = ls->next())
+  for (list<ref::node*> *ls = n->tree(); ls != NULL; ls = ls->next())
     cleanup_tree_rec(L, window_index, ls->content());
 
   ref *ref = n->content();
@@ -335,7 +335,7 @@ int window::attach(sg_plot* plot, const char *spec)
 
   for (ptr = next_int (spec, k); ptr; ptr = next_int (ptr, k))
     {
-      ref::node::list* list = n->tree();
+      list<ref::node*>* list = n->tree();
 
       if (! list)
 	return -1;
