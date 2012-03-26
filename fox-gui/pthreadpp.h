@@ -3,6 +3,10 @@
 
 #include <pthread.h>
 
+/* Simple C++ wrapper around basic mutex/condition operations.
+   The added value of the wrapper is more clean C++ code with automatic
+   initialization/deallocation of resources. */
+
 namespace pthread {
 
   class mutex {
@@ -19,6 +23,10 @@ namespace pthread {
     pthread_mutex_t m_mutex;
   };
 
+  /* Since the official documentation recommend to use pthread conditions
+     always in pair with a mutex we let a condtion inherit from a mutex.
+     In this way a C++ "cond" instance can perform both mutex and condition
+     operations. */
   class cond : public mutex {
   public:
     cond() { pthread_cond_init(&m_cond, NULL); }
