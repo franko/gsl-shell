@@ -68,7 +68,7 @@ lua_engine::run()
 
       m_gsl_shell.exec(line);
 
-      fputc(0x1a, stdout);
+      fputc(eot_character, stdout);
       fflush(stdout);
     }
 }

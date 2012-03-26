@@ -16,13 +16,6 @@
 
 #define CHECK(a) if ((a)!= 0) return -1;
 
-#ifdef WIN32
-#define dup2   _dup2
-#define close  _close
-#define read   _read
-#define fileno _fileno
-#endif
-
 stdout_redirect::~stdout_redirect()
 {
   close(fd_stdout);

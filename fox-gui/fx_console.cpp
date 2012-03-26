@@ -68,13 +68,17 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
       int nr = m_engine.read(buffer, 1023);
       if (nr < 0)
 	{
+#ifndef WIN32
 	  if (errno == EAGAIN || errno == EWOULDBLOCK)
 	    break;
+#endif
+	  fprintf(stderr, "ERROR on read: %d.\n", errno);
+	  break;
 	}
       if (nr == 0)
 	break;
 
-      if (buffer[nr-1] == 0x1a)
+      if (buffer[nr-1] == lua_engine::eot_character)
 	{
 	  buffer[nr-1] = 0;
 	  appendText(buffer);

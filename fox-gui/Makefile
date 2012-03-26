@@ -30,7 +30,7 @@ GSL_SHELL_GUI = gsl-shell-fox.exe
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
 INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
-LIBS += $(LUADIR)/src/libluajit.a $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++ #-mwindows
+LIBS += $(LUADIR)/src/libluajit.a $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++
 
 FOXGUI_SRC_FILES = fatal.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp lua_engine.cpp gsl_shell_window.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
@@ -47,7 +47,7 @@ all: $(TARGETS)
 
 $(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES)
 	@echo Linking $@
-	$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
+	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
 
 include $(GSH_BASE_DIR)/makerules
 

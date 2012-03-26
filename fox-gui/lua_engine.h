@@ -12,6 +12,7 @@ extern "C" {
 class lua_engine {
 public:
   enum engine_status_e { starting, ready, busy, terminated };
+  enum { eot_character = 0x04 };
 
   lua_engine();
   ~lua_engine();
