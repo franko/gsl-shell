@@ -60,7 +60,7 @@ private:
   FXint m_input_begin;
   FXString m_input;
   status_e m_status;
-  lua_engine m_engine;
+  gsl_shell_thread m_engine;
 };
 
 #endif

@@ -10,15 +10,15 @@ extern "C" void * luajit_eval_thread (void *userdata);
 void *
 luajit_eval_thread (void *userdata)
 {
-  lua_engine* eng = (lua_engine*) userdata;
-  eng->start_gsl_shell();
+  gsl_shell_thread* eng = (gsl_shell_thread*) userdata;
+  eng->init();
   eng->run();
   pthread_exit (NULL);
   return NULL;
 }
 
 static int
-start_interp_thread (lua_engine* eng)
+start_interp_thread (gsl_shell_thread* eng)
 {
   pthread_t eval_thread[1];
   pthread_attr_t attr[1];
@@ -35,38 +35,38 @@ start_interp_thread (lua_engine* eng)
   return 0;
 }
 
-lua_engine::~lua_engine()
+gsl_shell_thread::~gsl_shell_thread()
 {
   m_redirect.stop();
 }
 
-lua_engine::lua_engine()
+gsl_shell_thread::gsl_shell_thread()
   : m_status(starting), m_redirect(4096), m_line_pending(0)
 {
 }
 
-void lua_engine::start()
+void gsl_shell_thread::start()
 {
   m_redirect.start();
   start_interp_thread(this);
 }
 
 void
-lua_engine::run()
+gsl_shell_thread::run()
 {
   while (1)
     {
       m_eval.lock();
-      this->set_state(ready);
+      m_status = ready;
       m_eval.wait();
 
       const char* line = m_line_pending;
       m_line_pending = NULL;
 
-      this->set_state(busy);
+      m_status = busy;
       m_eval.unlock();
 
-      m_eval_status = m_gsl_shell.exec(line);
+      m_eval_status = this->exec(line);
 
       fputc(eot_character, stdout);
       fflush(stdout);
@@ -74,7 +74,7 @@ lua_engine::run()
 }
 
 void
-lua_engine::input(const char* line)
+gsl_shell_thread::input(const char* line)
 {
   m_eval.lock();
   if (m_status == ready)
@@ -86,12 +86,12 @@ lua_engine::input(const char* line)
 }
 
 int
-lua_engine::read(char* buffer, unsigned buffer_size)
+gsl_shell_thread::read(char* buffer, unsigned buffer_size)
 {
   return m_redirect.read(buffer, buffer_size);
 }
 
-bool lua_engine::is_ready()
+bool gsl_shell_thread::is_ready()
 {
   m_eval.lock();
   bool is_ready = (m_status == ready);

@@ -88,7 +88,7 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
       if (nr == 0)
 	break;
 
-      if (buffer[nr-1] == lua_engine::eot_character)
+      if (buffer[nr-1] == gsl_shell_thread::eot_character)
 	{
 	  buffer[nr-1] = 0;
 	  appendText(buffer);
