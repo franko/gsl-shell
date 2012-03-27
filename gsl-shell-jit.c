@@ -38,7 +38,6 @@
 #include "lualib.h"
 #include "luajit.h"
 #include "lua-gsl.h"
-#include "gsl-shell.h"
 #include "completion.h"
 #include "lua-graph.h"
 
@@ -97,16 +96,13 @@ static void my_freeline (lua_State *L, char *b) { }
 
 #endif
 
-lua_State *globalL = NULL;
+static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
-
-pthread_mutex_t gsl_shell_mutex[1];
-pthread_mutex_t gsl_shell_shutdown_mutex[1];
-volatile int gsl_shell_shutting_down = 0;
 
 static void gsl_shell_openlibs(lua_State *L)
 {
   luaopen_gsl (L);
+  register_graph (L);
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -654,8 +650,7 @@ int main(int argc, char **argv)
 #ifdef USE_READLINE
   initialize_readline();
 #endif
-  pthread_mutex_init (gsl_shell_mutex, NULL);
-  pthread_mutex_init (gsl_shell_shutdown_mutex, NULL);
+  gsl_shell_init();
 
   GSL_SHELL_LOCK();
   lua_State *L = lua_open();  /* create state */
@@ -667,18 +662,10 @@ int main(int argc, char **argv)
   s.argv = argv;
   status = lua_cpcall(L, pmain, &s);
   report(L, status);
-
-  GSL_SHELL_UNLOCK();
-  pthread_mutex_lock (gsl_shell_shutdown_mutex);
-  gsl_shell_shutting_down = 1;
-  GSL_SHELL_LOCK();
-  graph_close_windows(L);
-  lua_close(L);
-  pthread_mutex_unlock (gsl_shell_shutdown_mutex);
   GSL_SHELL_UNLOCK();
 
-  pthread_mutex_destroy (gsl_shell_mutex);
-  pthread_mutex_destroy (gsl_shell_shutdown_mutex);
+  lua_close_with_graph(L);
+  gsl_shell_close();
 
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -48,7 +48,7 @@ extern const struct gs_type gs_type_table[];
 
 #define GS_METATABLE(id) gs_type_table[(id)].mt_name
 
-extern const struct luaL_Reg gs_type_functions[];
+extern int gs_type_string (lua_State *L);
 
 __END_DECLS
 

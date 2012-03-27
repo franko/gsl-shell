@@ -52,6 +52,7 @@ gsl_shell_thread::run()
     {
       m_eval.lock();
       m_status = ready;
+      this->unlock();
       m_eval.wait();
 
       const char* line = m_line_pending;
@@ -59,6 +60,7 @@ gsl_shell_thread::run()
 
       m_status = busy;
       m_eval.unlock();
+      this->lock();
 
       m_eval_status = this->exec(line);
 

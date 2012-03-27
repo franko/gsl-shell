@@ -8,8 +8,6 @@
 #include <gsl/gsl_errno.h>
 #include <math.h>
 
-static int gs_type_string (lua_State *L);
-
 #define GS_WINDOW_NAME_DEF  "GSL.window"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
@@ -47,11 +45,6 @@ const struct gs_type gs_type_table[] = {
 #undef MYCAT3x
 #undef MY_EXPAND
 #undef MY_EXPAND_DER
-
-const struct luaL_Reg gs_type_functions[] = {
-  {"type",        gs_type_string},
-  {NULL, NULL}
-};
 
 const char *
 type_qualified_name (int typeid)

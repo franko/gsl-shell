@@ -27,7 +27,6 @@ extern "C" {
 
 #include "lua-draw.h"
 #include "text-shape.h"
-#include "gsl-shell.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
 #include "trans.h"

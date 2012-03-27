@@ -1,5 +1,5 @@
 
-/* cmpl.h
+/* lua-gsl.c
  *
  * Copyright (C) 2009 Francesco Abbate
  *
@@ -18,25 +18,41 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef CMPL_VECTOR_H
-#define CMPL_VECTOR_H
+#include <lua.h>
+#include <lauxlib.h>
 
-#include <math.h>
+#include <gsl/gsl_types.h>
+#include <gsl/gsl_errno.h>
 
-#ifdef __cplusplus
-#define complex _Complex
-#else
-#include <complex.h>
-#endif /* C++ */
+#include "lua-gsl.h"
+#include "gs-types.h"
+#include "lua-utils.h"
 
-#include "defs.h"
+pthread_mutex_t gsl_shell_mutex[1];
+pthread_mutex_t gsl_shell_shutdown_mutex[1];
+volatile int gsl_shell_shutting_down = 0;
 
-__BEGIN_DECLS
+void
+gsl_shell_init ()
+{
+  pthread_mutex_init (gsl_shell_mutex, NULL);
+  pthread_mutex_init (gsl_shell_shutdown_mutex, NULL);
+}
 
-#define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
+int
+luaopen_gsl (lua_State *L)
+{
+  gsl_set_error_handler_off ();
 
-typedef double complex cmpl;
+  lua_pushcfunction (L, gs_type_string);
+  lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
 
-__END_DECLS
+  return 0;
+}
 
-#endif
+void
+gsl_shell_close ()
+{
+  pthread_mutex_destroy (gsl_shell_mutex);
+  pthread_mutex_destroy (gsl_shell_shutdown_mutex);
+}

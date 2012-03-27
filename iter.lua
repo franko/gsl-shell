@@ -20,7 +20,12 @@
 
 local cat = table.concat
 local fmt = string.format
-local gsl_type = gslsh.type
+
+local gsl_type
+do
+   local reg = debug.getregistry()
+   gsl_typename = reg.__gsl_type
+end
 
 function math.divmod(n, p)
    local r = n % p
@@ -61,8 +66,8 @@ tos = function (t, maxdepth)
       local mt = getmetatable(t)
       local ftostr = mt and mt.__tostring
       if ftostr then return ftostr(t) else
-	 if gsl_type then
-	    return fmt('<%s: %p>', gsl_type(t), t)
+	 if gsl_typename then
+	    return fmt('<%s: %p>', gsl_typename(t), t)
 	 else
 	    return fmt('<userdata: %p>', t)
 	 end

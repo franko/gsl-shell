@@ -1,18 +1,18 @@
 
 # Makefile
-# 
+#
 # Copyright (C) 2009 Francesco Abbate
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or (at
 # your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -27,30 +27,22 @@ include $(GSH_BASE_DIR)/makedefs
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
-ifeq ($(HOST_SYS),Windows)
-  INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
-  PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
-else
-  PLATSUP_SRC_FILES = agg_platform_support_x11.cpp
-endif
+INCLUDES += -I$(LUADIR)/src -I$(GSH_BASE_DIR)
 
-INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
+LUAGSL_SRC_FILES = gs-types.c lua-utils.c lua-gsl.c str.c
+LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
-
-AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
-
-DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
+DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) 
+COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-TARGETS = libaggplot.a
+TARGETS = libluagsl.a
 
 all: $(TARGETS)
 
-libaggplot.a: $(AGGPLOT_OBJ_FILES)
+libluagsl.a: $(LUAGSL_OBJ_FILES)
 	@echo Archive $@
 	@$(AR) $@ $?
 	@$(RANLIB) $@

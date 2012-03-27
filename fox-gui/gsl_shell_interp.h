@@ -20,6 +20,9 @@ public:
   int exec(const char* line);
   const char* error_msg() const { return m_error_msg; }
 
+  void lock();
+  void unlock();
+
 private:
   int report(lua_State* L, int status);
 

@@ -18,15 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+}
 
 #include "lua-graph.h"
+#include "lua-gsl.h"
 #include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-text.h"
 #include "window.h"
 #include "lua-plot.h"
+
+#ifndef MLUA_GRAPHLIBNAME
+#define MLUA_GRAPHLIBNAME "graph"
+#endif
 
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
@@ -49,4 +56,16 @@ register_graph (lua_State *L)
   plot_register (L);
 
   lua_pop(L, 1);
+}
+
+void
+lua_close_with_graph (lua_State* L)
+{
+  pthread_mutex_lock (gsl_shell_shutdown_mutex);
+  gsl_shell_shutting_down = 1;
+  GSL_SHELL_LOCK();
+  graph_close_windows(L);
+  lua_close(L);
+  pthread_mutex_unlock (gsl_shell_shutdown_mutex);
+  GSL_SHELL_UNLOCK();
 }

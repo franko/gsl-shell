@@ -25,7 +25,7 @@ include makedefs
 
 LUADIR = luajit2
 
-INCLUDES += -I. $(GSL_INCLUDES)
+INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
 GSL_SHELL = gsl-shell$(EXE_EXT)
 LUA_CFLAGS = -I$(LUADIR)/src
 
@@ -43,9 +43,9 @@ else
   endif
 endif
 
-SUBDIRS = $(LUADIR)
+SUBDIRS = $(LUADIR) lua-gsl
 
-C_SRC_FILES = str.c gs-types.c lua-utils.c lua-graph.c lua-gsl.c
+C_SRC_FILES =
 
 ifeq ($(strip $(USE_READLINE)),yes)
   C_SRC_FILES += completion.c
@@ -59,7 +59,8 @@ LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-de
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
 
-LUAGSL_LIBS = $(LUADIR)/src/libluajit.a
+LUAGSL_LIBS += $(LUADIR)/src/libluajit.a
+
 C_SRC_FILES += gsl-shell-jit.c
 
 TARGETS = $(GSL_SHELL)
@@ -71,12 +72,13 @@ SUBDIRS += agg-plot
 LUAGSL_LIBS += agg-plot/libaggplot.a
 LIBS += $(AGG_LIBS) $(PTHREADS_LIBS)
 
+LUAGSL_LIBS += lua-gsl/libluagsl.a
+
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
-CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
 
-LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
+LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o)
 
-DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P) $(CXX_SRC_FILES:%.cpp=.deps/%.P)
+DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
@@ -90,7 +92,7 @@ all: $(SUBDIRS) $(TARGETS)
 
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
 install: $(GSL_SHELL)
 	mkdir -p $(INSTALL_BIN_DIR)
