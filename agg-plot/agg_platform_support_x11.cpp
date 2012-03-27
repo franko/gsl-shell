@@ -32,8 +32,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
-#include <pthread.h>
 #include <new>
+
+#include "pthreadpp.h"
 #include "agg_basics.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "agg-pixfmt-config.h"
@@ -167,7 +168,7 @@ namespace agg
 
   public:
     platform_specific(pix_format_e format, bool flip_y);
-    ~platform_specific();
+    ~platform_specific() {};
 
     void free_x_resources();
 
@@ -202,7 +203,7 @@ namespace agg
     bool m_is_mapped;
     clock_t m_sw_start;
 
-    pthread_mutex_t m_mutex[1];
+    pthread::mutex m_mutex;
 
     static bool initialized;
   };
@@ -255,14 +256,6 @@ namespace agg
         break;
       }
     m_sw_start = clock();
-
-    pthread_mutex_init (m_mutex, NULL);
-  }
-
-  //------------------------------------------------------------------------
-  platform_specific::~platform_specific()
-  {
-    pthread_mutex_destroy (m_mutex);
   }
 
   void platform_specific::close_connections()
@@ -731,9 +724,9 @@ namespace agg
         XEvent x_event;
         if (ps->m_is_mapped)
           {
-            pthread_mutex_unlock (ps->m_mutex);
+            ps->m_mutex.unlock();
             XNextEvent(xc->display, &x_event);
-            pthread_mutex_lock (ps->m_mutex);
+            ps->m_mutex.lock();
           }
         else
           {
@@ -1072,13 +1065,13 @@ platform_support_ext::prepare()
 void
 platform_support_ext::lock()
 {
-  pthread_mutex_lock (m_specific->m_mutex);
+  m_specific->m_mutex.lock();
 }
 
 void
 platform_support_ext::unlock()
 {
-  pthread_mutex_unlock (m_specific->m_mutex);
+  m_specific->m_mutex.unlock();
 }
 
 bool

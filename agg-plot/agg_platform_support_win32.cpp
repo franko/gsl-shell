@@ -24,8 +24,8 @@
 
 #include <windows.h>
 #include <string.h>
-#include <pthread.h>
 #include <new>
+#include "pthreadpp.h"
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
@@ -87,7 +87,7 @@ namespace agg
     bool m_is_mapped;
     bool m_is_ready;
 
-    pthread_mutex_t m_mutex[1];
+    pthread::mutex m_mutex;
 
     static void bitmap_info_resize (BITMAPINFO* bmp, unsigned w, unsigned h);
   };
@@ -112,15 +112,11 @@ namespace agg
   {
     ::QueryPerformanceFrequency(&m_sw_freq);
     ::QueryPerformanceCounter(&m_sw_start);
-
-    pthread_mutex_init (m_mutex, NULL);
   }
 
   //------------------------------------------------------------------------
   platform_specific::~platform_specific()
   {
-    pthread_mutex_destroy (m_mutex);
-
     if (m_bmp_draw)
       delete [] (unsigned char*) m_bmp_draw;
   }
@@ -451,9 +447,9 @@ namespace agg
 
             if (m_specific->m_is_ready)
               {
-                pthread_mutex_unlock (m_specific->m_mutex);
+                m_specific->m_mutex.unlock();
                 status = ::GetMessage(&msg, 0, 0, 0);
-                pthread_mutex_lock (m_specific->m_mutex);
+                m_specific->m_mutex.lock();
               }
             else
               {
@@ -610,13 +606,13 @@ platform_support_ext::prepare()
 void
 platform_support_ext::lock()
 {
-  pthread_mutex_lock (m_specific->m_mutex);
+  m_specific->m_mutex.lock();
 }
 
 void
 platform_support_ext::unlock()
 {
-  pthread_mutex_unlock (m_specific->m_mutex);
+  m_specific->m_mutex.unlock();
 }
 
 bool

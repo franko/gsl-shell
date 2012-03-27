@@ -14,7 +14,7 @@ public:
   enum engine_status_e { starting, ready, busy, terminated };
   enum { eot_character = 0x04 };
 
-  gsl_shell_thread();
+  gsl_shell_thread(): m_status(starting), m_redirect(4096), m_line_pending(0) {}
   ~gsl_shell_thread();
 
   void input(const char* line);

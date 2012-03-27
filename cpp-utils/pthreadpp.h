@@ -23,6 +23,14 @@ namespace pthread {
     pthread_mutex_t m_mutex;
   };
 
+  class auto_lock {
+  public:
+    auto_lock(mutex& m): m_mutex(m) { m_mutex.lock(); }
+    ~auto_lock() { m_mutex.unlock(); }
+  private:
+    mutex& m_mutex;
+  };
+
   /* Since the official documentation recommend to use pthread conditions
      always in pair with a mutex we let a condtion inherit from a mutex.
      In this way a C++ "cond" instance can perform both mutex and condition

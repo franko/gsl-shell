@@ -39,11 +39,6 @@ gsl_shell_thread::~gsl_shell_thread()
   m_redirect.stop();
 }
 
-gsl_shell_thread::gsl_shell_thread()
-  : m_status(starting), m_redirect(4096), m_line_pending(0)
-{
-}
-
 void gsl_shell_thread::start()
 {
   m_redirect.start();
@@ -75,13 +70,13 @@ gsl_shell_thread::run()
 void
 gsl_shell_thread::input(const char* line)
 {
-  m_eval.lock();
+  pthread::auto_lock lock(m_eval);
+
   if (m_status == ready)
     {
       m_line_pending = line;
       m_eval.signal();
     }
-  m_eval.unlock();
 }
 
 int
@@ -92,8 +87,7 @@ gsl_shell_thread::read(char* buffer, unsigned buffer_size)
 
 bool gsl_shell_thread::is_ready()
 {
-  m_eval.lock();
+  pthread::auto_lock lock(m_eval);
   bool is_ready = (m_status == ready);
-  m_eval.unlock();
   return is_ready;
 }
