@@ -53,7 +53,7 @@ void fx_console::init(const FXString& greeting)
 long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 {
   FXEvent* event = (FXEvent*)ptr;
-  if (event->code == KEY_Return)
+  if (event->code == KEY_Return && m_status == input_mode)
     {
       FXint pos = getCursorPos();
       FXint line_end = lineEnd(pos), line_start = m_input_begin;
@@ -92,9 +92,18 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
 	{
 	  buffer[nr-1] = 0;
 	  appendText(buffer);
-	  show_errors();
-	  prepare_input();
-	  return 1;
+
+	  if (m_engine.eval_status() == gsl_shell::incomplete_input)
+	    {
+	      m_status = input_mode;
+	      return 1;
+	    }
+	  else
+	    {
+	      show_errors();
+	      prepare_input();
+	      return 1;
+	    }
 	}
 
       buffer[nr] = 0;

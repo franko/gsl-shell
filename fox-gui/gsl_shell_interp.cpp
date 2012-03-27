@@ -34,6 +34,22 @@ static int pinit(lua_State *L)
   return 0;
 }
 
+static int incomplete(lua_State *L, int status)
+{
+  if (status == LUA_ERRSYNTAX)
+    {
+      size_t lmsg;
+      const char *msg = lua_tolstring(L, -1, &lmsg);
+      const char *tp = msg + lmsg - (sizeof(LUA_QL("<eof>")) - 1);
+      if (strstr(msg, LUA_QL("<eof>")) == tp)
+	{
+	  lua_pop(L, 1);
+	  return 1;
+	}
+    }
+  return 0;  /* else... */
+}
+
 gsl_shell::~gsl_shell()
 {
   if (m_lua_state)
@@ -79,10 +95,14 @@ int gsl_shell::report(lua_State* L, int status)
 
 int gsl_shell::exec(const char *line)
 {
-  m_interp.lock();
-
+  pthread::auto_lock lock(m_interp);
   lua_State* L = m_lua_state;
+
   int status = luaL_loadbuffer(L, line, strlen(line), "=<user input>");
+
+  if (incomplete(L, status))
+    return incomplete_input;
+
   if (status == 0)
     {
       status = lua_pcall(L, 0, 0, 0);
@@ -93,6 +113,5 @@ int gsl_shell::exec(const char *line)
 
   report(L, status);
 
-  m_interp.unlock();
   return (status == 0 ? eval_success : eval_error);
 }
