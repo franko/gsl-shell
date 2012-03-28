@@ -28,6 +28,7 @@ extern "C" {
 #include "lua-cpp-utils.h"
 #include "bitmap-plot.h"
 #include "window.h"
+#include "window-cpp.h"
 #include "gs-types.h"
 #include "lua-utils.h"
 #include "window_registry.h"
@@ -463,11 +464,19 @@ plot_flush (lua_State *L)
 int
 plot_show (lua_State *L)
 {
-  lua_pushcfunction (L, window_attach);
-  window_new (L);
-  lua_pushvalue (L, 1);
-  lua_pushstring (L, "");
-  lua_call (L, 3, 0);
+  sg_plot* plot = object_check<sg_plot>(L, 1, GS_PLOT);
+  window* win = push_new_object<window>(L, GS_WINDOW, colors::white);
+
+  int slot_id = win->attach (plot, "");
+  assert(slot_id >= 0);
+  window_refs_add (L, slot_id, -1, 1);
+
+  gslshell::ret_status st;
+  win->start(L, st);
+
+  if (st.error_msg())
+    return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+
   return 0;
 }
 
