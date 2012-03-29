@@ -29,7 +29,7 @@ LUADIR = $(GSH_BASE_DIR)/luajit2
 
 INCLUDES += -I$(LUADIR)/src -I$(GSH_BASE_DIR)
 
-LUAGSL_SRC_FILES = gs-types.c lua-utils.c lua-gsl.c str.c
+LUAGSL_SRC_FILES = gs-types.c lua-utils.c lua-gsl.c str.c fatal.c
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 
 DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)

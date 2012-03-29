@@ -44,6 +44,8 @@ public:
 public:
   virtual void create();
 
+  void stop() { m_engine.stop(); }
+
   long on_key_press(FXObject*,FXSelector,void*);
   long on_read_input(FXObject*,FXSelector,void*);
 

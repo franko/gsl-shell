@@ -9,7 +9,7 @@ __BEGIN_DECLS
 
 extern void graph_close_windows (lua_State *L);
 extern void register_graph (lua_State *L);
-extern void lua_close_with_graph (lua_State* L);
+extern void gsl_shell_close_with_graph (struct gsl_shell_state* gs);
 
 __END_DECLS
 

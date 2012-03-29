@@ -35,7 +35,7 @@ LIBS += $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BA
 INCLUDES += $(PTHREADS_CFLAGS)
 LIBS += $(AGG_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS)
 
-FOXGUI_SRC_FILES = fatal.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp gsl_shell_window.cpp gsl-shell-fox.cpp
+FOXGUI_SRC_FILES = fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp gsl_shell_window.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
 
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)

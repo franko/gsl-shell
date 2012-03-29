@@ -11,8 +11,15 @@ public:
 
   ~str() { str_free(this); }
 
-  const str& operator = (const str& s) {
+  const str& operator= (const str& s)
+  {
     str_copy(this, &s);
+    return *this;
+  }
+
+  const str& operator= (const char* s) 
+  {
+    str_copy_c(this, s);
     return *this;
   }
 

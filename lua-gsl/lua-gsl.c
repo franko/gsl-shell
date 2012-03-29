@@ -27,16 +27,29 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-
-pthread_mutex_t gsl_shell_mutex[1];
-pthread_mutex_t gsl_shell_shutdown_mutex[1];
-volatile int gsl_shell_shutting_down = 0;
+#include "fatal.h"
 
 void
-gsl_shell_init ()
+gsl_shell_open (struct gsl_shell_state *gs)
 {
-  pthread_mutex_init (gsl_shell_mutex, NULL);
-  pthread_mutex_init (gsl_shell_shutdown_mutex, NULL);
+  gs->L = lua_open();  /* create state */
+
+  if (unlikely(gs->L == NULL))
+    fatal_exception("cannot create state: not enough memory");
+
+  lua_pushlightuserdata(gs->L, (void*) gs);
+  lua_setfield(gs->L, LUA_REGISTRYINDEX, "__gsl_shell");
+
+  pthread_mutex_init (&gs->exec_mutex, NULL);
+  pthread_mutex_init (&gs->shutdown_mutex, NULL);
+  gs->is_shutting_down = 0;
+}
+
+void
+gsl_shell_close (struct gsl_shell_state *gs)
+{
+  pthread_mutex_destroy (&gs->exec_mutex);
+  pthread_mutex_destroy (&gs->shutdown_mutex);
 }
 
 int
@@ -48,11 +61,4 @@ luaopen_gsl (lua_State *L)
   lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
 
   return 0;
-}
-
-void
-gsl_shell_close ()
-{
-  pthread_mutex_destroy (gsl_shell_mutex);
-  pthread_mutex_destroy (gsl_shell_shutdown_mutex);
 }

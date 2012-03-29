@@ -105,14 +105,16 @@ canvas_thread_function (void *_inf)
 
   win->unlock();
 
-  pthread_mutex_lock (gsl_shell_shutdown_mutex);
-  if (!gsl_shell_shutting_down)
+  gsl_shell_state* gs = win->state();
+
+  pthread_mutex_lock (&gs->shutdown_mutex);
+  if (!gs->is_shutting_down)
     {
-      GSL_SHELL_LOCK();
-      window_index_remove (inf->L, inf->window_id);
-      GSL_SHELL_UNLOCK();
+      pthread_mutex_lock(&gs->exec_mutex);
+      window_index_remove (gs->L, inf->window_id);
+      pthread_mutex_unlock(&gs->exec_mutex);
     }
-  pthread_mutex_unlock (gsl_shell_shutdown_mutex);
+  pthread_mutex_unlock (&gs->shutdown_mutex);
 
   return NULL;
 }
@@ -125,9 +127,11 @@ canvas_window::shutdown_close()
     {
       close_request();
       unlock();
-      pthread_mutex_unlock (gsl_shell_shutdown_mutex);
+
+      gsl_shell_state* gs = this->m_gsl_shell;
+      pthread_mutex_unlock (&gs->shutdown_mutex);
       pthread_join(m_thread, NULL);
-      pthread_mutex_lock (gsl_shell_shutdown_mutex);
+      pthread_mutex_lock (&gs->shutdown_mutex);
     }
   else
     {

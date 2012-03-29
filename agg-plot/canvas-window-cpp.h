@@ -16,6 +16,7 @@ extern "C" {
 #include "defs.h"
 #include "canvas.h"
 #include "utils.h"
+#include "lua-gsl.h"
 
 class canvas_window : public platform_support_ext {
 protected:
@@ -25,6 +26,7 @@ protected:
   agg::trans_affine m_matrix;
 
   pthread_t m_thread;
+  gsl_shell_state* m_gsl_shell;
 
 public:
 
@@ -40,9 +42,10 @@ public:
 
   enum win_status_e status;
 
-  canvas_window(agg::rgba& bgcol) :
+  canvas_window(gsl_shell_state* gs, agg::rgba& bgcol) :
     platform_support_ext(agg::pix_format_bgr24, true),
-    m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), status(not_ready)
+    m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), m_gsl_shell(gs),
+    status(not_ready)
   { };
 
   virtual ~canvas_window()
@@ -55,6 +58,7 @@ public:
   virtual void on_resize(int sx, int sy);
 
   void shutdown_close();
+  gsl_shell_state* state() { return m_gsl_shell; }
 
   bool start_new_thread (std::auto_ptr<thread_info>& inf);
 

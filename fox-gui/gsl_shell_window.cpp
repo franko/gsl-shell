@@ -7,6 +7,8 @@
 #endif
 
 FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]={
+  FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_window::on_close),
+
 };
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
@@ -35,4 +37,10 @@ void gsl_shell_window::create()
 {
   FXMainWindow::create();
   show(PLACEMENT_SCREEN);
+}
+
+long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
+{
+  m_text->stop();
+  return FXMainWindow::close(FALSE);
 }

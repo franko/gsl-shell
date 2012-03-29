@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 
 #define luajit_c
 
@@ -12,13 +11,10 @@ extern "C" {
 #include "luajit.h"
 }
 
+#include "gsl_shell_interp.h"
 #include "lua-gsl.h"
 #include "lua-graph.h"
-
-#include  "gsl_shell_interp.h"
 #include "fatal.h"
-
-lua_State *globalL = NULL;
 
 static void stderr_message(const char *pname, const char *msg)
 {
@@ -36,16 +32,6 @@ static int stderr_report(lua_State *L, int status)
     lua_pop(L, 1);
   }
   return status;
-}
-
-static void lstop(lua_State *L, lua_Debug *ar)
-{
-  (void)ar;  /* unused arg. */
-  lua_sethook(L, NULL, 0, 0);
-  /* Avoid luaL_error -- a C hook doesn't add an extra frame. */
-  luaL_where(L, 0);
-  lua_pushfstring(L, "%sinterrupted!", lua_tostring(L, -1));
-  lua_error(L);
 }
 
 static int traceback(lua_State *L)
@@ -68,22 +54,13 @@ static int traceback(lua_State *L)
   return 1;
 }
 
-static void laction(int i)
-{
-  signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
-			 terminate process (default action) */
-  lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
-}
-
 static int docall(lua_State *L, int narg, int clear)
 {
   int status;
   int base = lua_gettop(L) - narg;  /* function index */
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
-  signal(SIGINT, laction);
   status = lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base);
-  signal(SIGINT, SIG_DFL);
   lua_remove(L, base);  /* remove traceback function */
   /* force a complete garbage collection in case of errors */
   if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
@@ -125,50 +102,31 @@ static int incomplete(lua_State *L, int status)
   return 0;  /* else... */
 }
 
-gsl_shell::~gsl_shell()
-{
-  if (m_lua_state)
-    {
-      lua_close_with_graph(m_lua_state);
-      gsl_shell_close();
-    }
-}
-
 void gsl_shell::init()
 {
-  lua_State *L;
-  int status;
+  int status = lua_cpcall(this->L, pinit, NULL);
 
-  GSL_SHELL_LOCK();
-  gsl_shell_init();
-  L = lua_open();  /* create state */
-  globalL = L;
-
-  if (unlikely(L == NULL))
-    fatal_exception("cannot create state: not enough memory");
-
-  status = lua_cpcall(L, pinit, NULL);
-
-  if (unlikely(report(L, status)))
+  if (unlikely(stderr_report(this->L, status)))
     {
-      lua_close(L);
+      lua_close(this->L);
       fatal_exception("cannot initialize Lua state");
     }
-
-  m_lua_state = L;
 }
 
-int gsl_shell::report(lua_State* L, int status)
+void gsl_shell::close()
 {
+  gsl_shell_close_with_graph(this);
+}
+
+
+int gsl_shell::error_report(int status)
+{
+  lua_State* L = this->L;
   if (status && !lua_isnil(L, -1))
     {
       const char *msg = lua_tostring(L, -1);
       if (msg == NULL) msg = "(error object is not a string)";
-
-      int np = snprintf(m_error_msg, ERROR_MSG_MAX_LENGTH, "%s", msg);
-      if (np >= ERROR_MSG_MAX_LENGTH)
-	m_error_msg[ERROR_MSG_MAX_LENGTH - 1] = 0;
-
+      m_error_msg = msg;
       lua_pop(L, 1);
     }
   return status;
@@ -176,8 +134,7 @@ int gsl_shell::report(lua_State* L, int status)
 
 int gsl_shell::exec(const char *line)
 {
-  pthread::auto_lock lock(m_interp);
-  lua_State* L = m_lua_state;
+  lua_State* L = this->L;
 
   int status = luaL_loadbuffer(L, line, strlen(line), "=<user input>");
 
@@ -192,18 +149,7 @@ int gsl_shell::exec(const char *line)
 	lua_gc(L, LUA_GCCOLLECT, 0);
     }
 
-  report(L, status);
-  GSL_SHELL_UNLOCK();
+  error_report(status);
 
   return (status == 0 ? eval_success : eval_error);
-}
-
-void gsl_shell::lock()
-{
-  GSL_SHELL_LOCK();
-}
-
-void gsl_shell::unlock()
-{
-  GSL_SHELL_UNLOCK();
 }

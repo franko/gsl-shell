@@ -18,6 +18,8 @@ public:
 
   virtual void create();
 
+  long on_close(FXObject* obj, FXSelector sel, void* ptr);
+
 protected:
   gsl_shell_window() {}
 

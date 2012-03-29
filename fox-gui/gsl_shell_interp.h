@@ -1,34 +1,31 @@
 #ifndef GSL_SHELL_INTERP_H
 #define GSL_SHELL_INTERP_H
 
-#include "defs.h"
-#include "pthreadpp.h"
-
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
-class gsl_shell {
-  enum { ERROR_MSG_MAX_LENGTH = 128 };
+#include "defs.h"
+#include "pthreadpp.h"
+#include "lua-gsl.h"
+#include "strpp.h"
+
+class gsl_shell : public gsl_shell_state {
 public:
   enum eval_result_e { eval_success, eval_error, incomplete_input };
 
-  gsl_shell(): m_lua_state(0) { }
-  ~gsl_shell();
+  gsl_shell() { gsl_shell_open(this); }
+  ~gsl_shell() { }
 
   void init();
+  void close();
   int exec(const char* line);
-  const char* error_msg() const { return m_error_msg; }
-
-  void lock();
-  void unlock();
+  const char* error_msg() const { return m_error_msg.cstr(); }
 
 private:
-  int report(lua_State* L, int status);
+  int error_report(int status);
 
-  lua_State* m_lua_state;
-  pthread::mutex m_interp;
-  char m_error_msg[ERROR_MSG_MAX_LENGTH];
+  str m_error_msg;
 };
 
 #endif
