@@ -17,7 +17,7 @@ public:
     return *this;
   }
 
-  const str& operator= (const char* s) 
+  const str& operator= (const char* s)
   {
     str_copy_c(this, s);
     return *this;

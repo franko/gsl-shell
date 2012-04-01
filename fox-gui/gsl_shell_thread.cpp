@@ -18,8 +18,7 @@ luajit_eval_thread (void *userdata)
 }
 
 gsl_shell_thread::gsl_shell_thread():
-  m_status(starting), m_redirect(4096), m_line_pending(0),
-  m_exit_request(false)
+  m_status(starting), m_redirect(4096), m_exit_request(false)
 {
 }
 
@@ -61,12 +60,12 @@ gsl_shell_thread::run()
 	  break;
 	}
 
-      const char* line = m_line_pending;
-      m_line_pending = NULL;
-
       m_status = busy;
       m_eval.unlock();
 
+      // here m_line_pending cannot be modified by the other thread
+      // because we declared above m_status to "busy" befor unlocking m_eval
+      const char* line = m_line_pending.cstr();
       m_eval_status = this->exec(line);
 
       fputc(eot_character, stdout);
