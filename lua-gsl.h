@@ -17,7 +17,8 @@ struct gsl_shell_state {
 };
 
 extern void gsl_shell_open (struct gsl_shell_state *gs);
-extern void gsl_shell_close (struct gsl_shell_state *gs);
+extern void gsl_shell_free (struct gsl_shell_state *gs);
+extern void gsl_shell_init (struct gsl_shell_state *gs);
 
 extern int luaopen_gsl (lua_State *L);
 

@@ -664,6 +664,7 @@ int main(int argc, char **argv)
   pthread_mutex_unlock(&gsl_shell->exec_mutex);
 
   gsl_shell_close_with_graph(gsl_shell);
+  gsl_shell_free(gsl_shell);
 
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

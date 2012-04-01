@@ -92,7 +92,7 @@ all: $(SUBDIRS) $(TARGETS)
 
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	@echo Linking $@
-	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
 install: $(GSL_SHELL)
 	mkdir -p $(INSTALL_BIN_DIR)

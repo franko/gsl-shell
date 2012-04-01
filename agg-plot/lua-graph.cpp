@@ -68,6 +68,4 @@ gsl_shell_close_with_graph (struct gsl_shell_state* gs)
   lua_close(gs->L);
   pthread_mutex_unlock(&gs->shutdown_mutex);
   pthread_mutex_unlock(&gs->exec_mutex);
-
-  gsl_shell_close(gs);
 }

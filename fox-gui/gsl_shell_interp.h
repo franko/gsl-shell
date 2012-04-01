@@ -15,7 +15,7 @@ public:
   enum eval_result_e { eval_success, eval_error, incomplete_input };
 
   gsl_shell() { gsl_shell_open(this); }
-  ~gsl_shell() { }
+  ~gsl_shell() { gsl_shell_free(this); }
 
   void init();
   void close();

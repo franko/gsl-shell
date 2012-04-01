@@ -40,13 +40,19 @@ gsl_shell_open (struct gsl_shell_state *gs)
   lua_pushlightuserdata(gs->L, (void*) gs);
   lua_setfield(gs->L, LUA_REGISTRYINDEX, "__gsl_shell");
 
+  gsl_shell_init(gs);
+}
+
+void
+gsl_shell_init (struct gsl_shell_state *gs)
+{
   pthread_mutex_init (&gs->exec_mutex, NULL);
   pthread_mutex_init (&gs->shutdown_mutex, NULL);
   gs->is_shutting_down = 0;
 }
 
 void
-gsl_shell_close (struct gsl_shell_state *gs)
+gsl_shell_free (struct gsl_shell_state *gs)
 {
   pthread_mutex_destroy (&gs->exec_mutex);
   pthread_mutex_destroy (&gs->shutdown_mutex);
