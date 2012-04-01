@@ -13,26 +13,8 @@ luajit_eval_thread (void *userdata)
   eng->lock();
   eng->init();
   eng->run();
-  pthread_exit (NULL);
+  pthread_exit(NULL);
   return NULL;
-}
-
-static int
-start_interp_thread (gsl_shell_thread* eng)
-{
-  pthread_t eval_thread[1];
-  pthread_attr_t attr[1];
-
-  pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
-
-  if (pthread_create (eval_thread, attr, luajit_eval_thread, eng))
-    {
-      fprintf(stderr, "error creating thread");
-      return 1;
-    }
-
-  return 0;
 }
 
 gsl_shell_thread::gsl_shell_thread():
@@ -49,7 +31,16 @@ gsl_shell_thread::~gsl_shell_thread()
 void gsl_shell_thread::start()
 {
   m_redirect.start();
-  start_interp_thread(this);
+
+  pthread_attr_t attr[1];
+
+  pthread_attr_init (attr);
+  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+  if (pthread_create (&m_thread, attr, luajit_eval_thread, (void*)this))
+    {
+      fprintf(stderr, "error creating thread");
+    }
 }
 
 void
@@ -84,10 +75,6 @@ gsl_shell_thread::run()
 
   this->unlock();
   this->close();
-
-  m_eval.lock();
-  m_eval.signal();
-  m_eval.unlock();
 }
 
 void
@@ -96,7 +83,7 @@ gsl_shell_thread::stop()
   pthread::auto_lock lock(m_eval);
   m_exit_request = true;
   m_eval.signal();
-  m_eval.wait();
+  pthread_join(m_thread, NULL);
 }
 
 void

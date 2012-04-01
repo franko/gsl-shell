@@ -30,6 +30,7 @@ public:
   int eval_status() const { return m_eval_status; }
 
 private:
+  pthread_t m_thread;
   engine_status_e m_status;
   stdout_redirect m_redirect;
   pthread::cond m_eval;
