@@ -143,10 +143,18 @@ int gsl_shell::exec(const char *line)
 
   if (status == 0)
     {
-      status = lua_pcall(L, 0, 0, 0);
-      /* force a complete garbage collection in case of errors */
-      if (status != 0)
-	lua_gc(L, LUA_GCCOLLECT, 0);
+      status = docall(L, 0, 0);
+      error_report(status);
+      if (status == 0 && lua_gettop(L) > 0)   /* any result to print? */
+	{
+	  lua_pushvalue(L, -1);
+	  lua_setfield(L, LUA_GLOBALSINDEX, "_");
+
+	  lua_getglobal(L, "print");
+	  lua_insert(L, 1);
+	  if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
+	    fprintf(stderr, "error calling print function");
+	}
     }
 
   error_report(status);
