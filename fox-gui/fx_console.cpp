@@ -41,6 +41,7 @@ void fx_console::create()
 {
   FXText::create();
   init("Welcome to GSL Shell 2.1\n");
+  setFocus();
   m_engine.start();
 }
 
