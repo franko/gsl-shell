@@ -71,11 +71,11 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 
 long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
 {
-  char buffer[1024];
+  char buffer[128];
 
   while (1)
     {
-      int nr = m_engine.read(buffer, 1023);
+      int nr = m_engine.read(buffer, 127);
       if (nr < 0)
 	{
 #ifndef WIN32
@@ -93,9 +93,17 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
 	  buffer[nr-1] = 0;
 	  appendText(buffer);
 
-	  if (m_engine.eval_status() == gsl_shell::incomplete_input)
+	  int status = m_engine.eval_status();
+
+	  if (status == gsl_shell::incomplete_input)
 	    {
 	      m_status = input_mode;
+	      return 1;
+	    }
+	  else if (status == gsl_shell::exit_request)
+	    {
+	      FXApp* app = getApp();
+	      app->handle(this, FXSEL(SEL_COMMAND,FXApp::ID_QUIT), NULL);
 	      return 1;
 	    }
 	  else

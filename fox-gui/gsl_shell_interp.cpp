@@ -86,6 +86,30 @@ static int pinit(lua_State *L)
   return 0;
 }
 
+/* If the input is an expression we load it preceded by "return" so
+   that the value is returned as a result of the evaluation.
+   If the value is not an expression leave the stack as before and
+   returns a non zero value. */
+static int yield_expr(lua_State* L, const char* line, size_t len)
+{
+  const char *p;
+  int status;
+
+  for (p = line + len - 1; p >= line; p--)
+    {
+      const char c = *p;
+      if (c == ';')
+	return 1;
+      if (c != ' ')
+	break;
+    }
+
+  str mline = str::print("return %s", line);
+  status = luaL_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+  if (status != 0) lua_pop(L, 1); // remove the error message
+  return status;
+}
+
 static int incomplete(lua_State *L, int status)
 {
   if (status == LUA_ERRSYNTAX)
@@ -135,11 +159,21 @@ int gsl_shell::error_report(int status)
 int gsl_shell::exec(const char *line)
 {
   lua_State* L = this->L;
+  size_t len = strlen(line);
 
-  int status = luaL_loadbuffer(L, line, strlen(line), "=<user input>");
+  if (strcmp (line, "exit") == 0)
+    return exit_request;
 
-  if (incomplete(L, status))
-    return incomplete_input;
+  /* try to load the string as an expression */
+  int status = yield_expr(L, line, len);
+
+  if (status != 0)
+    {
+      status = luaL_loadbuffer(L, line, len, "=<user input>");
+
+      if (incomplete(L, status))
+	return incomplete_input;
+    }
 
   if (status == 0)
     {
