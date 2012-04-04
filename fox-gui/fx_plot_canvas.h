@@ -1,5 +1,5 @@
-#ifndef FOXGUI_PLOT_CANVAS_H
-#define FOXGUI_PLOT_CANVAS_H
+#ifndef FOXGUI_FX_PLOT_CANVAS_H
+#define FOXGUI_FX_PLOT_CANVAS_H
 
 #include <fx.h>
 #include <agg_rendering_buffer.h>
@@ -12,7 +12,7 @@ class fx_plot_canvas : public FXCanvas {
   FXDECLARE(fx_plot_canvas)
 
 public:
-  typedef plot_auto<sg_object, manage_owner> plot;
+  typedef plot<sg_object, manage_owner> plot_type;
 
   fx_plot_canvas(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0,
 		 FXuint opts=FRAME_NORMAL,
@@ -20,7 +20,7 @@ public:
 
   ~fx_plot_canvas();
 
-  void attach(plot* p);
+  void attach(plot_type* p);
   void draw(FXEvent* event);
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
@@ -35,7 +35,7 @@ private:
 
   FXImage* m_img;
   agg::rendering_buffer m_rbuf;
-  plot* m_plot;
+  plot_type* m_plot;
   canvas* m_canvas;
   bool m_dirty_flag;
 };

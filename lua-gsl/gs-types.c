@@ -9,6 +9,7 @@
 #include <math.h>
 
 #define GS_WINDOW_NAME_DEF  "GSL.window"
+#define GS_FOX_WINDOW_NAME_DEF  "GSL.FOXwindow"
 #define GS_DRAW_SCALABLE_NAME_DEF NULL
 #define GS_DRAW_PATH_NAME_DEF   "GSL.path"
 #define GS_DRAW_ELLIPSE_NAME_DEF   "GSL.ellipse"
@@ -27,6 +28,7 @@
 #define MY_EXPAND_DER(NM,DESCR,BASE) {MYCAT2(GS,NM), MYCAT3(GS,NM,NAME_DEF), DESCR, MYCAT2(GS,BASE)}
 
 const struct gs_type gs_type_table[] = {
+  MY_EXPAND(FOX_WINDOW, "FOX graphical window"),
   MY_EXPAND(WINDOW, "graphical window"),
   MY_EXPAND(DRAW_SCALABLE, "graphical object"),
   MY_EXPAND_DER(DRAW_PATH, "geometric line", DRAW_SCALABLE),

@@ -67,7 +67,7 @@ void fx_plot_canvas::draw(FXEvent* event)
   m_dirty_flag = false;
 }
 
-void fx_plot_canvas::attach(plot* p)
+void fx_plot_canvas::attach(plot_type* p)
 {
   m_plot = p;
   m_dirty_flag = true;

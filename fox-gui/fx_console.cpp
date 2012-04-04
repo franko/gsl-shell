@@ -4,6 +4,8 @@
 
 #include "fx_console.h"
 #include "gsl_shell_thread.h"
+#include "lua_plot_window.h"
+#include "fx_plot_window.h"
 
 FXDEFMAP(fx_console) fx_console_map[]={
   FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
@@ -43,6 +45,12 @@ void fx_console::create()
   init("Welcome to GSL Shell 2.1\n");
   setFocus();
   m_engine.start();
+
+  lua_State* L = m_engine.L;
+  lua_pushlightuserdata(L, (void*) getApp());
+  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
+
+  fox_window_register(L);
 }
 
 void fx_console::init(const FXString& greeting)
