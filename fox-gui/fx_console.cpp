@@ -39,18 +39,23 @@ void fx_console::show_errors()
     }
 }
 
+static int
+lua_fox_init(lua_State* L, void* _app)
+{
+  lua_pushlightuserdata(L, _app);
+  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
+
+  fox_window_register(L);
+  return 0;
+}
+
 void fx_console::create()
 {
   FXText::create();
   init("Welcome to GSL Shell 2.1\n");
   setFocus();
+  m_engine.set_init_func(lua_fox_init, (void*) getApp());
   m_engine.start();
-
-  lua_State* L = m_engine.L;
-  lua_pushlightuserdata(L, (void*) getApp());
-  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
-
-  fox_window_register(L);
 }
 
 void fx_console::init(const FXString& greeting)

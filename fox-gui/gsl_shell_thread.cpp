@@ -12,13 +12,15 @@ luajit_eval_thread (void *userdata)
   gsl_shell_thread* eng = (gsl_shell_thread*) userdata;
   eng->lock();
   eng->init();
+  eng->user_init(eng->L);
   eng->run();
   pthread_exit(NULL);
   return NULL;
 }
 
 gsl_shell_thread::gsl_shell_thread():
-  m_status(starting), m_redirect(4096), m_exit_request(false)
+  m_status(starting), m_redirect(4096), m_exit_request(false),
+  m_init_func(0), m_init_userdata(0)
 {
 }
 

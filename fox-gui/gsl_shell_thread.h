@@ -12,6 +12,8 @@ extern "C" {
 
 class gsl_shell_thread : public gsl_shell {
 public:
+  typedef int (*lua_init_func_t)(lua_State*, void*);
+
   enum engine_status_e { starting, ready, busy, terminated };
   enum { eot_character = 0x04 };
 
@@ -22,6 +24,18 @@ public:
   void start();
   void run();
   void stop();
+
+  void set_init_func(lua_init_func_t init_func, void* userdata)
+  {
+    m_init_func = init_func;
+    m_init_userdata = userdata;
+  }
+
+  void user_init(lua_State* L)
+  {
+    if (m_init_func)
+      (*m_init_func)(L, m_init_userdata);
+  }
 
   void lock() { pthread_mutex_lock(&this->exec_mutex); }
   void unlock() { pthread_mutex_unlock(&this->exec_mutex); }
@@ -38,6 +52,8 @@ private:
   str m_line_pending;
   int m_eval_status;
   bool m_exit_request;
+  lua_init_func_t m_init_func;
+  void* m_init_userdata;
 };
 
 #endif

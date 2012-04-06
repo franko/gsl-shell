@@ -15,7 +15,7 @@ fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FX
 
 fx_plot_canvas::~fx_plot_canvas()
 {
-  delete m_img; 
+  delete m_img;
   delete m_canvas;
 }
 
