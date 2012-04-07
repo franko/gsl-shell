@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include "lua_plot_window.h"
+#include "gsl_shell_app.h"
 #include "fx_plot_window.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
@@ -37,7 +38,7 @@ int
 fox_window_new (lua_State *L)
 {
   lua_getfield(L, LUA_REGISTRYINDEX, "__fox_app");
-  FXApp* app = (FXApp*) lua_touserdata(L, -1);
+  gsl_shell_app* app = (gsl_shell_app*) lua_touserdata(L, -1);
   lua_pop(L, 1);
 
   if (unlikely(app == NULL))
@@ -45,8 +46,7 @@ fox_window_new (lua_State *L)
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 640, 480);
 
-  win->create();
-  win->show(PLACEMENT_SCREEN);
+  app->schedule_window(win);
 
   return 1;
 }

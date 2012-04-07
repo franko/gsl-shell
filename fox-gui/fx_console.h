@@ -48,9 +48,11 @@ public:
 
   long on_key_press(FXObject*,FXSelector,void*);
   long on_read_input(FXObject*,FXSelector,void*);
+  long on_create_windows(FXObject*,FXSelector,void*);
 
   enum {
     ID_READ_INPUT = FXText::ID_LAST,
+    ID_CREATE_WINDOWS,
     ID_LAST,
   };
 
