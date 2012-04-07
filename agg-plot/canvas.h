@@ -9,6 +9,7 @@
 #include "agg_rendering_buffer.h"
 #include "agg_rasterizer_scanline_aa.h"
 #include "agg_pixfmt_rgb.h"
+#include "agg_pixfmt_rgba.h"
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
@@ -16,9 +17,24 @@
 
 #include "agg_gamma_lut.h"
 
+#if 0
+//-----------------------------------------------------pixfmt_rgb24_gamma
+template<class Gamma> class pixfmt_rgba32_gamma :
+  public pixfmt_alpha_blend_rgb<blender_rgb_gamma<rgba8, order_rgba, Gamma>, rendering_buffer>
+{
+public:
+  pixfmt_rgba32_gamma(rendering_buffer& rb, const Gamma& g) :
+    pixfmt_alpha_blend_rgb<blender_rgb_gamma<rgba8, order_rgb, Gamma>, rendering_buffer>(rb)
+        {
+            this->blender().gamma(g);
+        }
+    };
+#endif
+
+#if 0
 class pixel_gamma_corr {
   typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
-  typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
+  typedef agg::pixfmt_rgba32_gamma<gamma_type> pixel_fmt;
 
   gamma_type m_gamma;
 public:
@@ -32,11 +48,12 @@ public:
 
   enum { line_width = 150 };
 };
+#endif
 
 struct pixel_simple {
-  agg::pixfmt_bgr24 pixfmt;
+  agg::pixfmt_rgba32 pixfmt;
 
-  typedef agg::pixfmt_bgr24 fmt;
+  typedef agg::pixfmt_rgba32 fmt;
 
   pixel_simple(agg::rendering_buffer& ren_buf): pixfmt(ren_buf) { };
 
