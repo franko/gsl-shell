@@ -11,7 +11,6 @@
 FXDEFMAP(fx_console) fx_console_map[]={
   FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
   FXMAPFUNC(SEL_TIMEOUT, fx_console::ID_READ_INPUT, fx_console::on_read_input),
-  FXMAPFUNC(SEL_TIMEOUT, fx_console::ID_CREATE_WINDOWS, fx_console::on_create_windows),
 };
 
 FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
@@ -79,8 +78,6 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
       this->m_status = output_mode;
       m_engine.input(m_input.text());
 
-      getApp()->addTimeout(this, ID_CREATE_WINDOWS, 98, NULL);
-
       on_read_input(NULL, 0, NULL);
       return 1;
     }
@@ -138,14 +135,5 @@ long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
     }
 
   getApp()->addTimeout(this, ID_READ_INPUT, 200, NULL);
-  return 1;
-}
-
-long fx_console::on_create_windows(FXObject* obj, FXSelector sel, void* ptr)
-{
-  gsl_shell_app* app = (gsl_shell_app*) getApp();
-  app->spawn_scheduled_window();
-  if (m_status == output_mode)
-    app->addTimeout(this, ID_CREATE_WINDOWS, 98, NULL);
   return 1;
 }

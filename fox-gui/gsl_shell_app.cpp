@@ -19,10 +19,7 @@ long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
   m_lua_int.lock();
   mutex().unlock(); // FXApp unlock
   m_lua_int.signal();
-  //  m_lua_wait.lock();
   mutex().lock();
-  //  m_lua_wait.unlock();
   m_lua_int.unlock();
-  //  fprintf(stderr, "Got a signal!\n");
   return 1;
 }
