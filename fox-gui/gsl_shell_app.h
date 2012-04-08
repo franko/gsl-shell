@@ -3,6 +3,7 @@
 
 #include <fx.h>
 
+#include "pthreadpp.h"
 #include "agg_array.h"
 
 class gsl_shell_app : public FXApp {
@@ -12,7 +13,7 @@ public:
   ~gsl_shell_app() { delete m_signal; }
 
   void schedule_window(FXMainWindow* win) { m_windows_queue.add(win); }
-  void lua_signal() { m_signal->signal(); }
+  //  void lua_signal() { m_signal->signal(); }
 
   void spawn_scheduled_window()
   {
@@ -25,6 +26,22 @@ public:
       }
   }
 
+  void interrupt()
+  {
+    m_lua_int.lock();
+    m_signal->signal();
+    //    m_lua_wait.lock();
+    m_lua_int.wait();
+    mutex().lock();
+    //    m_lua_wait.unlock();
+    m_lua_int.unlock();
+  }
+
+  void resume()
+  {
+    mutex().unlock();
+  }
+
   long on_lua_interrupt(FXObject*,FXSelector,void*);
 
   enum {
@@ -35,6 +52,8 @@ public:
 private:
   agg::pod_bvector<FXMainWindow*> m_windows_queue;
   FXGUISignal* m_signal;
+  pthread::cond m_lua_int;
+  pthread::mutex m_lua_wait;
 };
 
 #endif

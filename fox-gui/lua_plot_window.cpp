@@ -46,8 +46,11 @@ fox_window_new (lua_State *L)
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 640, 480);
 
-  app->lua_signal();
-  app->schedule_window(win);
+  app->interrupt();
+  win->create();
+  win->show(PLACEMENT_SCREEN);
+  app->resume();
+  //  app->schedule_window(win);
 
   return 1;
 }
