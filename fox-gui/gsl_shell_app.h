@@ -3,7 +3,6 @@
 
 #include <fx.h>
 
-#include "pthreadpp.h"
 #include "agg_array.h"
 
 class gsl_shell_app : public FXApp {
@@ -12,32 +11,8 @@ public:
   gsl_shell_app();
   ~gsl_shell_app();
 
-  void interrupt()
-  {
-    fprintf(stderr, "INTERRUPTING: locking...\n");
-    m_lua_int.lock();
-    if (!m_waiting_lua)
-      {
-	fprintf(stderr, "INTERRUPTING: sending EVENT signal...\n");
-	m_event_loop->signal();
-	fprintf(stderr, "INTERRUPTING: waiting FOX main loop...\n");
-	m_lua_int.wait();
-      }
-    m_lua_int.unlock();
-    mutex().lock();
-    fprintf(stderr, "INTERRUPTING: FOX main lock taken!\n");
-  }
-
-  void resume()
-  {
-    mutex().unlock();
-    fprintf(stderr, "RESUME: locking...\n");
-    m_lua_int.lock();
-    fprintf(stderr, "RESUME: sending signal...\n");
-    m_lua_int.signal();
-    m_lua_int.unlock();
-    fprintf(stderr, "RESUME: done.\n");
-  }
+  bool interrupt();
+  void resume(bool signal_end);
 
   long on_lua_interrupt(FXObject*,FXSelector,void*);
 
@@ -48,9 +23,7 @@ public:
 
 private:
   FXGUISignal* m_event_loop;
-  pthread::mutex m_lua_handler;
-  pthread::cond m_lua_int;
-  //  pthread::cond m_lua_end;
+  FXCondition m_lua_int;
   bool m_waiting_lua;
 };
 

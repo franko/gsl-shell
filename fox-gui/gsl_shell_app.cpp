@@ -21,17 +21,33 @@ gsl_shell_app::~gsl_shell_app()
 
 long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
 {
-  fprintf(stderr, "LUA INTERRUPT HANDLER: locking...\n");
-  m_lua_int.lock();
+  FXMutex& app_mutex = mutex();
   m_waiting_lua = true;
-  mutex().unlock();
-  fprintf(stderr, "LUA INTERRUPT HANDLER: sending signal...\n");
   m_lua_int.signal();
-  fprintf(stderr, "LUA INTERRUPT HANDLER: waiting END signal...\n");
-  m_lua_int.wait();
+  m_lua_int.wait(app_mutex);
   m_waiting_lua = false;
-  m_lua_int.unlock();
-  mutex().lock();
-  fprintf(stderr, "LUA INTERRUPT HANDLER: Done.\n");
   return 1;
+}
+
+bool gsl_shell_app::interrupt()
+{
+  FXMutex& app_mutex = mutex();
+  app_mutex.lock();
+
+  if (!m_waiting_lua)
+    {
+      m_event_loop->signal();
+      m_lua_int.wait(app_mutex);
+      return true;
+    }
+
+  return false;
+}
+
+void gsl_shell_app::resume(bool signal_end)
+{
+  FXMutex& app_mutex = mutex();
+  if (signal_end)
+    m_lua_int.signal();
+  app_mutex.unlock();
 }
