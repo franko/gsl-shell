@@ -9,6 +9,7 @@ local check     = require 'check'
 local is_integer = check.is_integer
 
 local tobit, band, rshift = bit.tobit, bit.band, bit.rshift
+local tonumber = tonumber
 
 ffi.cdef [[
    typedef struct
@@ -142,12 +143,12 @@ local function get_hc_block(ft, ip)
    local n = tonumber(ft.size)
    local b, data, stride
    if ip then
-      b, data, stride = ft.block, ft.data, ft.stride
+      b, data, stride = ft.block, ft.data, tonumber(ft.stride)
       b.ref_count = b.ref_count + 1
    else
       b = matrix.block(n)
       data, stride = b.data, 1
-      for i=0, n-1 do data[i] = ft.data[ft.stride * i] end
+      for i=0, n-1 do data[i] = ft.data[tonumber(ft.stride) * i] end
    end
    return b, data, stride
 end
@@ -224,39 +225,43 @@ local function halfcomplex_set(indexer, data, n, stride, k, z)
 end
 
 local function hc_length(ft)
-   return ft.size
+   return tonumber(ft.size)
 end
 
 local function hc_radix2_index(ft, k)
    if is_integer(k) then
       local idx = halfcomplex_radix2_index
-      return halfcomplex_get(idx, ft.data, ft.size, ft.stride, k)
+      local size, stride = tonumber(ft.size), tonumber(ft.stride)
+      return halfcomplex_get(idx, ft.data, size, stride, k)
    end
 end
 
 local function hc_radix2_newindex(ft, k, z)
    if is_integer(k) then
       local idx = halfcomplex_radix2_index
-      return halfcomplex_set(idx, ft.data, ft.size, ft.stride, k, z)
+      local size, stride = tonumber(ft.size), tonumber(ft.stride)
+      return halfcomplex_set(idx, ft.data, size, stride, k, z)
    end
 end
 
 local function hc_index(ft, k)
    if is_integer(k) then
       local idx = halfcomplex_index
-      return halfcomplex_get(idx, ft.data, ft.size, ft.stride, k)
+      local size, stride = tonumber(ft.size), tonumber(ft.stride)
+      return halfcomplex_get(idx, ft.data, size, stride, k)
    end
 end
 
 local function hc_newindex(ft, k, z)
    if is_integer(k) then
       local idx = halfcomplex_index
-      return halfcomplex_set(idx, ft.data, ft.size, ft.stride, k, z)
+      local size, stride = tonumber(ft.size), tonumber(ft.stride)
+      return halfcomplex_set(idx, ft.data, size, stride, k, z)
    end
 end
 
 local function halfcomplex_to_matrix(hc)
-   return matrix.cnew(hc.size, 1, function(i) return hc[i-1] end)
+   return matrix.cnew(tonumber(hc.size), 1, function(i) return hc[i-1] end)
 end
 
 local function hc_tostring(hc)
