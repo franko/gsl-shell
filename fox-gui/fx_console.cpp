@@ -10,7 +10,7 @@
 
 FXDEFMAP(fx_console) fx_console_map[]={
   FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
-  FXMAPFUNC(SEL_TIMEOUT, fx_console::ID_READ_INPUT, fx_console::on_read_input),
+  FXMAPFUNC(SEL_IO_READ, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
 
 FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
@@ -21,6 +21,15 @@ fx_console::fx_console(FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opt
   FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
   m_status(not_ready), m_engine()
 {
+  FXApp* app = getApp();
+  m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
+  m_lua_io_thread = new lua_io_thread(&m_engine, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
+}
+
+fx_console::~fx_console()
+{
+  delete m_lua_io_thread;
+  delete m_lua_io_signal;
 }
 
 void fx_console::prepare_input()
@@ -57,6 +66,7 @@ void fx_console::create()
   setFocus();
   m_engine.set_init_func(lua_fox_init, (void*) getApp());
   m_engine.start();
+  m_lua_io_thread->start();
 }
 
 void fx_console::init(const FXString& greeting)
@@ -78,62 +88,76 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
       this->m_status = output_mode;
       m_engine.input(m_input.text());
 
-      on_read_input(NULL, 0, NULL);
       return 1;
     }
 
   return FXText::onKeyPress(obj, sel, ptr);
 }
 
-long fx_console::on_read_input(FXObject* obj, FXSelector sel, void* ptr)
+long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
+{
+  bool eot = false;
+
+  m_lua_io_mutex.lock();
+  FXint len = m_lua_io_buffer.length();
+  if (len > 0)
+    {
+      if (m_lua_io_buffer[len-1] == gsl_shell_thread::eot_character)
+	{
+	  eot = true;
+	  m_lua_io_buffer.trunc(len-1);
+	}
+    }
+  appendText(m_lua_io_buffer);
+  m_lua_io_buffer.clear();
+  m_lua_io_mutex.unlock();
+
+  if (eot)
+    {
+      int status = m_engine.eval_status();
+
+      if (status == gsl_shell::incomplete_input)
+	{
+	  m_status = input_mode;
+	}
+      else if (status == gsl_shell::exit_request)
+	{
+	  FXApp* app = getApp();
+	  app->handle(this, FXSEL(SEL_COMMAND,FXApp::ID_QUIT), NULL);
+	}
+      else
+	{
+	  show_errors();
+	  prepare_input();
+	}
+    }
+
+  return 1;
+}
+
+FXint lua_io_thread::run()
 {
   char buffer[128];
 
   while (1)
     {
-      int nr = m_engine.read(buffer, 127);
+      int nr = m_engine->read(buffer, 127);
       if (nr < 0)
 	{
-#ifndef WIN32
-	  if (errno == EAGAIN || errno == EWOULDBLOCK)
-	    break;
-#endif
 	  fprintf(stderr, "ERROR on read: %d.\n", errno);
 	  break;
 	}
       if (nr == 0)
 	break;
 
-      if (buffer[nr-1] == gsl_shell_thread::eot_character)
-	{
-	  buffer[nr-1] = 0;
-	  appendText(buffer);
-
-	  int status = m_engine.eval_status();
-
-	  if (status == gsl_shell::incomplete_input)
-	    {
-	      m_status = input_mode;
-	      return 1;
-	    }
-	  else if (status == gsl_shell::exit_request)
-	    {
-	      FXApp* app = getApp();
-	      app->handle(this, FXSEL(SEL_COMMAND,FXApp::ID_QUIT), NULL);
-	      return 1;
-	    }
-	  else
-	    {
-	      show_errors();
-	      prepare_input();
-	      return 1;
-	    }
-	}
-
       buffer[nr] = 0;
-      appendText(buffer);
+
+      m_io_protect->lock();
+      m_io_buffer->append((const FXchar*)buffer);
+      m_io_protect->unlock();
+
+      m_io_ready->signal();
     }
 
-  getApp()->addTimeout(this, ID_READ_INPUT, 200, NULL);
-  return 1;
+  return 0;
 }
