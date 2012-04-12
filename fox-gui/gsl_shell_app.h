@@ -14,15 +14,21 @@ public:
   bool interrupt();
   void resume(bool signal_end);
 
+  void window_create_request(FXMainWindow* win);
+
   long on_lua_interrupt(FXObject*,FXSelector,void*);
+  long on_lua_request(FXObject*,FXSelector,void*);
 
   enum {
     ID_LUA_INTERRUPT = FXApp::ID_LAST,
+    ID_LUA_REQUEST,
     ID_LAST
   };
 
 private:
   FXGUISignal* m_event_loop;
+  FXGUISignal* m_lua_request;
+  FXMainWindow* m_lua_request_win;
   FXCondition m_lua_int;
   bool m_waiting_lua;
 };
