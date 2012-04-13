@@ -3,6 +3,7 @@
 
 #include "gsl_shell_thread.h"
 #include "gsl_shell_interp.h"
+#include "window_registry.h"
 
 extern "C" void * luajit_eval_thread (void *userdata);
 
@@ -53,8 +54,11 @@ gsl_shell_thread::run()
       m_status = ready;
 
       this->unlock();
+      fprintf(stderr, "GSL SHELL LOOP: waiting EVAL signal...\n");
       m_eval.wait();
       this->lock();
+
+      treat_close_window_queue();
 
       if (m_exit_request)
 	{
@@ -63,7 +67,10 @@ gsl_shell_thread::run()
 	}
 
       m_status = busy;
+      fprintf(stderr, "GSL SHELL LOOP: unlocking EVAL mutex...\n");
       m_eval.unlock();
+      fprintf(stderr, "GSL SHELL LOOP: unlocked.\n");
+
 
       // here m_line_pending cannot be modified by the other thread
       // because we declared above m_status to "busy" befor unlocking m_eval
@@ -95,7 +102,9 @@ gsl_shell_thread::input(const char* line)
   if (m_status == ready)
     {
       m_line_pending = line;
+      fprintf(stderr, "GSL SHELL INPUT: sending EVAL signal...\n");
       m_eval.signal();
+      fprintf(stderr, "GSL SHELL INPUT: EVAL signal sent.\n");
     }
 }
 
@@ -103,4 +112,23 @@ int
 gsl_shell_thread::read(char* buffer, unsigned buffer_size)
 {
   return m_redirect.read(buffer, buffer_size);
+}
+
+void
+gsl_shell_thread::window_close_notify(int window_id)
+{
+  fprintf(stderr, "got WINDOW CLOSE notification: %d\n", window_id);
+  m_eval.lock();
+  m_window_close_queue.add(window_id);
+  m_eval.unlock();
+}
+
+void
+gsl_shell_thread::treat_close_window_queue()
+{
+  for (unsigned k = 0; k < m_window_close_queue.size(); k++)
+    {
+      fprintf(stderr, "unregistering window id: %d\n", m_window_close_queue[k]);
+      window_index_remove (this->L, m_window_close_queue[k]);
+    }
 }

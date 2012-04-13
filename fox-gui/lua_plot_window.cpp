@@ -6,6 +6,7 @@ extern "C" {
 
 #include "lua_plot_window.h"
 #include "gsl_shell_app.h"
+#include "window_registry.h"
 #include "fx_plot_window.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
@@ -46,6 +47,9 @@ fox_window_new (lua_State *L)
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 640, 480);
 
+  win->lua_id = window_index_add (L, -1);
+
+  win->setTarget(app);
   app->window_create_request(win);
 
   return 1;

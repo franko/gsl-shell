@@ -5,6 +5,8 @@ extern "C" {
 #include "lua.h"
 }
 
+#include "agg_array.h"
+
 #include "gsl_shell_interp.h"
 #include "pthreadpp.h"
 #include "redirect.h"
@@ -24,6 +26,8 @@ public:
   void start();
   void run();
   void stop();
+
+  void window_close_notify(int window_id);
 
   void set_init_func(lua_init_func_t init_func, void* userdata)
   {
@@ -45,6 +49,8 @@ public:
   int eval_status() const { return m_eval_status; }
 
 private:
+  void treat_close_window_queue();
+
   pthread_t m_thread;
   engine_status_e m_status;
   stdout_redirect m_redirect;
@@ -54,6 +60,7 @@ private:
   bool m_exit_request;
   lua_init_func_t m_init_func;
   void* m_init_userdata;
+  agg::pod_bvector<int> m_window_close_queue;
 };
 
 #endif

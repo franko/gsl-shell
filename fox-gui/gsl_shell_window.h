@@ -3,12 +3,13 @@
 
 #include <fx.h>
 
+#include "gsl_shell_thread.h"
 #include "fx_console.h"
 
 class gsl_shell_window : public FXMainWindow {
   FXDECLARE(gsl_shell_window)
 public:
-  gsl_shell_window(FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
+  gsl_shell_window(gsl_shell_thread* gs, FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
   virtual ~gsl_shell_window()
   {

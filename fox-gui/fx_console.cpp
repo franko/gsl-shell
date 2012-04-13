@@ -5,7 +5,6 @@
 #include "fx_console.h"
 #include "gsl_shell_app.h"
 #include "gsl_shell_thread.h"
-#include "lua_plot_window.h"
 #include "fx_plot_window.h"
 
 FXDEFMAP(fx_console) fx_console_map[]={
@@ -17,13 +16,13 @@ FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 
 char const * const fx_console::prompt = "> ";
 
-fx_console::fx_console(FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
+fx_console::fx_console(gsl_shell_thread* gs, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
   FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
-  m_status(not_ready), m_engine()
+  m_status(not_ready), m_engine(gs)
 {
   FXApp* app = getApp();
   m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
-  m_lua_io_thread = new lua_io_thread(&m_engine, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
+  m_lua_io_thread = new lua_io_thread(m_engine, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
 }
 
 fx_console::~fx_console()
@@ -41,22 +40,12 @@ void fx_console::prepare_input()
 
 void fx_console::show_errors()
 {
-  if (m_engine.eval_status() == gsl_shell::eval_error)
+  if (m_engine->eval_status() == gsl_shell::eval_error)
     {
       appendText("Error reported: ");
-      appendText(m_engine.error_msg());
+      appendText(m_engine->error_msg());
       appendText("\n");
     }
-}
-
-static int
-lua_fox_init(lua_State* L, void* _app)
-{
-  lua_pushlightuserdata(L, _app);
-  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
-
-  fox_window_register(L);
-  return 0;
 }
 
 void fx_console::create()
@@ -64,8 +53,6 @@ void fx_console::create()
   FXText::create();
   init("Welcome to GSL Shell 2.1\n");
   setFocus();
-  m_engine.set_init_func(lua_fox_init, (void*) getApp());
-  m_engine.start();
   m_lua_io_thread->start();
 }
 
@@ -86,7 +73,7 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
       appendText("\n");
 
       this->m_status = output_mode;
-      m_engine.input(m_input.text());
+      m_engine->input(m_input.text());
 
       return 1;
     }
@@ -114,7 +101,7 @@ long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
 
   if (eot)
     {
-      int status = m_engine.eval_status();
+      int status = m_engine->eval_status();
 
       if (status == gsl_shell::incomplete_input)
 	{

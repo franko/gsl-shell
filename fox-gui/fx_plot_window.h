@@ -17,6 +17,9 @@ public:
 
   fx_plot_canvas& canvas() { return *m_canvas; }
 
+  // the following is used by Lua to keep trace of the window
+  int lua_id;
+
 protected:
   fx_plot_window() {}
 

@@ -13,7 +13,7 @@ FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]={
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
 
-gsl_shell_window::gsl_shell_window(FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
+gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
   FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h)
 {
   m_menu_bar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -29,7 +29,7 @@ gsl_shell_window::gsl_shell_window(FXApp* app, const FXString& name, FXIcon *ic,
   FXHorizontalFrame *textbox = new FXHorizontalFrame(frame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
   m_text_font = new FXFont(app, CONSOLE_FONT, 10);
-  m_text = new fx_console(textbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  m_text = new fx_console(gs, textbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
   m_text->setFont(m_text_font);
 }
 
@@ -41,6 +41,6 @@ void gsl_shell_window::create()
 
 long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
 {
-  m_text->stop();
+  //  m_text->stop();
   return FXMainWindow::close(FALSE);
 }

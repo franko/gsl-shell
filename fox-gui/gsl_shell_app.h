@@ -4,6 +4,7 @@
 #include <fx.h>
 
 #include "agg_array.h"
+#include "gsl_shell_thread.h"
 
 class gsl_shell_app : public FXApp {
   FXDECLARE(gsl_shell_app)
@@ -18,6 +19,7 @@ public:
 
   long on_lua_interrupt(FXObject*,FXSelector,void*);
   long on_lua_request(FXObject*,FXSelector,void*);
+  long on_window_close(FXObject*,FXSelector,void*);
 
   enum {
     ID_LUA_INTERRUPT = FXApp::ID_LAST,
@@ -26,6 +28,7 @@ public:
   };
 
 private:
+  gsl_shell_thread m_engine;
   FXGUISignal* m_event_loop;
   FXGUISignal* m_lua_request;
   FXMainWindow* m_lua_request_win;
