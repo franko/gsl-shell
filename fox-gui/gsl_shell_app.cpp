@@ -13,23 +13,12 @@ FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]={
 
 FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map))
 
-static int
-lua_fox_init(lua_State* L, void* _app)
-{
-  lua_pushlightuserdata(L, _app);
-  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
-
-  fox_window_register(L);
-  return 0;
-}
-
 gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
-  m_waiting_lua(false)
+  m_engine(this), m_waiting_lua(false)
 {
   m_event_loop  = new FXGUISignal(this, this, ID_LUA_INTERRUPT);
   m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
 
-  m_engine.set_init_func(lua_fox_init, this);
   m_engine.start();
 
   new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);

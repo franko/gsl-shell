@@ -17,8 +17,9 @@ public:
   gsl_shell() { gsl_shell_open(this); }
   ~gsl_shell() { gsl_shell_free(this); }
 
-  void init();
-  void close();
+  virtual void init();
+  virtual void close();
+
   int exec(const char* line);
   const char* error_msg() const { return m_error_msg.cstr(); }
 

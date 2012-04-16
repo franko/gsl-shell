@@ -57,15 +57,3 @@ register_graph (lua_State *L)
 
   lua_pop(L, 1);
 }
-
-void
-gsl_shell_close_with_graph (struct gsl_shell_state* gs)
-{
-  pthread_mutex_lock (&gs->shutdown_mutex);
-  gs->is_shutting_down = 1;
-  pthread_mutex_lock(&gs->exec_mutex);
-  graph_close_windows(gs->L);
-  lua_close(gs->L);
-  pthread_mutex_unlock(&gs->shutdown_mutex);
-  pthread_mutex_unlock(&gs->exec_mutex);
-}

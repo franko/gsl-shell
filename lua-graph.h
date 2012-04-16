@@ -7,9 +7,8 @@ __BEGIN_DECLS
 
 #include <lua.h>
 
-extern void graph_close_windows (lua_State *L);
 extern void register_graph (lua_State *L);
-extern void gsl_shell_close_with_graph (struct gsl_shell_state* gs);
+extern void graph_close_windows (lua_State *L);
 
 __END_DECLS
 

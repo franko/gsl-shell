@@ -139,9 +139,8 @@ void gsl_shell::init()
 
 void gsl_shell::close()
 {
-  gsl_shell_close_with_graph(this);
+  lua_close(this->L);
 }
-
 
 int gsl_shell::error_report(int status)
 {

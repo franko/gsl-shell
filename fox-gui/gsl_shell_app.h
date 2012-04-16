@@ -4,7 +4,7 @@
 #include <fx.h>
 
 #include "agg_array.h"
-#include "gsl_shell_thread.h"
+#include "fox_gsl_shell.h"
 
 class gsl_shell_app : public FXApp {
   FXDECLARE(gsl_shell_app)
@@ -28,7 +28,7 @@ public:
   };
 
 private:
-  gsl_shell_thread m_engine;
+  fox_gsl_shell m_engine;
   FXGUISignal* m_event_loop;
   FXGUISignal* m_lua_request;
   FXMainWindow* m_lua_request_win;
