@@ -86,7 +86,8 @@ long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
 {
   fx_plot_window* win = (fx_plot_window*) sender;
   m_engine.window_close_notify(win->lua_id);
-  return 0;
+  win->hide();
+  return 1;
 }
 
 void gsl_shell_app::resume(bool signal_end)

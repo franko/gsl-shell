@@ -131,4 +131,5 @@ gsl_shell_thread::treat_close_window_queue()
       fprintf(stderr, "unregistering window id: %d\n", m_window_close_queue[k]);
       window_index_remove (this->L, m_window_close_queue[k]);
     }
+  m_window_close_queue.clear();
 }

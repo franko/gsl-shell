@@ -10,15 +10,11 @@ class fx_plot_window : public FXMainWindow {
 public:
   fx_plot_window(FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
-  ~fx_plot_window()
-  {
-    delete m_plot_menu;
-  }
+  ~fx_plot_window();
 
   fx_plot_canvas& canvas() { return *m_canvas; }
 
-  // the following is used by Lua to keep trace of the window
-  int lua_id;
+  int lua_id; // the following is used by Lua to keep trace of the window
 
 protected:
   fx_plot_window() {}

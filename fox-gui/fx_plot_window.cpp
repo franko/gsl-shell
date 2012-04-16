@@ -22,3 +22,9 @@ fx_plot_window::fx_plot_window(FXApp* app, const FXString& name, FXIcon *ic, FXI
 
   m_canvas = new fx_plot_canvas(cbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 }
+
+fx_plot_window::~fx_plot_window()
+{
+  fprintf(stderr, "FX PLOT WINDOW destructor.\n");
+  delete m_plot_menu;
+}
