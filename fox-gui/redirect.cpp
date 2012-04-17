@@ -30,7 +30,7 @@ stdout_redirect::stdout_redirect(int bufferSize)
 #ifdef WIN32
   status = _pipe(fd_pipe, bufferSize, O_TEXT);
 #else
-  status = pipe2(fd_pipe, O_NONBLOCK);
+  status = pipe(fd_pipe);
 #endif
 
   assert(status == 0);
