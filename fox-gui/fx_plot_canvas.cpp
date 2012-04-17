@@ -9,38 +9,38 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
   FXCanvas(p, tgt, sel, opts, x, y, w, h),
-  m_img(0), m_plot(0), m_canvas(0), m_dirty_flag(true)
+  m_img_data(0), m_plot(0), m_canvas(0), m_dirty_flag(true)
 {
 }
 
 fx_plot_canvas::~fx_plot_canvas()
 {
-  delete m_img;
+  delete[] m_img_data;
   delete m_canvas;
 }
 
 void fx_plot_canvas::prepare_image_buffer(int ww, int hh)
 {
-  delete m_img;
+  delete[] m_img_data;
 
-  m_img = new FXImage(getApp(), NULL, IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-  m_img->create();
+  const unsigned bpp = 32;
+  const unsigned pixel_size = bpp / 8;
 
-  agg::int8u* buf = (agg::int8u*) m_img->getData();
+  m_img_data = new agg::int8u[ww * hh * pixel_size];
+
+  m_img_width = ww;
+  m_img_height = hh;
+
   unsigned width = ww, height = hh;
-  unsigned stride = - width * sizeof(FXColor);
+  unsigned stride = - width * pixel_size;
 
-  m_rbuf.attach(buf, width, height, stride);
+  m_rbuf.attach(m_img_data, width, height, stride);
   m_canvas = new canvas(m_rbuf, width, height, colors::white);
 }
 
 void fx_plot_canvas::ensure_canvas_size(int ww, int hh)
 {
-  if (! m_img)
-    {
-      prepare_image_buffer(ww, hh);
-    }
-  else if (m_img->getWidth() != ww || m_img->getHeight() != hh)
+  if (!m_img_data || m_img_width != ww || m_img_height != hh)
     {
       prepare_image_buffer(ww, hh);
     }
@@ -57,10 +57,12 @@ void fx_plot_canvas::draw(FXEvent* event)
       agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
       m_canvas->clear();
       m_plot->draw<canvas>(*m_canvas, m);
-      m_img->render();
+
+      FXImage* img = new FXImage(getApp(), (const FXColor*) m_img_data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      img->create();
 
       FXDCWindow *dc = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
-      dc->drawImage(m_img, 0, 0);
+      dc->drawImage(img, 0, 0);
       delete dc;
     }
 

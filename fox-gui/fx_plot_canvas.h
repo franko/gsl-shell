@@ -33,7 +33,8 @@ private:
   void prepare_image_buffer(int ww, int hh);
   void ensure_canvas_size(int ww, int hh);
 
-  FXImage* m_img;
+  agg::int8u* m_img_data;
+  int m_img_width, m_img_height;
   agg::rendering_buffer m_rbuf;
   plot_type* m_plot;
   canvas* m_canvas;
