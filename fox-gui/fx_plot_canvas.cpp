@@ -58,11 +58,12 @@ void fx_plot_canvas::draw(FXEvent* event)
       m_canvas->clear();
       m_plot->draw<canvas>(*m_canvas, m);
 
-      FXImage* img = new FXImage(getApp(), (const FXColor*) m_img_data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-      img->create();
+      const FXColor* data = (const FXColor*) m_img_data;
+      FXImage img(getApp(), data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      img.create();
 
       FXDCWindow *dc = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
-      dc->drawImage(img, 0, 0);
+      dc->drawImage(&img, 0, 0);
       delete dc;
     }
 
