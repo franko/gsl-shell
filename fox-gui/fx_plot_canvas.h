@@ -22,6 +22,7 @@ public:
 
   void attach(plot_type* p);
   void draw(FXEvent* event);
+  void update_region(const FXRectangle& r);
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
   long on_update(FXObject *, FXSelector, void *);

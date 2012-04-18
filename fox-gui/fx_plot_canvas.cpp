@@ -70,6 +70,32 @@ void fx_plot_canvas::draw(FXEvent* event)
   m_dirty_flag = false;
 }
 
+void fx_plot_canvas::update_region(const FXRectangle& r)
+{
+  if (!m_canvas || !m_plot)
+    return;
+
+  FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, r.w, r.h);
+
+  const unsigned bpp = 32;
+  const unsigned pixel_size = bpp / 8;
+
+  agg::rendering_buffer dest;
+  dest.attach((agg::int8u*) img.getData(), r.w, r.h, -r.w * pixel_size);
+
+  agg::int8u* dd = m_rbuf.row_ptr(r.y) + r.x * pixel_size;
+ // m_img_data + (m_img_width * (m_img_height - r.y - 1) + r.x) * pixel_size;
+  agg::rendering_buffer src;
+  src.attach(dd, r.w, r.h, m_rbuf.stride());
+
+  dest.copy_from(src);
+
+  img.create();
+
+  FXDCWindow dc(this);
+  dc.drawImage(&img, r.x, r.y);
+}
+
 void fx_plot_canvas::attach(plot_type* p)
 {
   m_plot = p;
