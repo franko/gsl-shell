@@ -2,13 +2,13 @@
 Welcome to GSL shell documentation
 ##################################
 
-GSL shell is an interactive command line interface that gives easy access
+GSL shell is an interactive command line interface that provides easy access
 to the GNU Scientific Library (GSL) collection of mathematical methods for
 numerical computations.
 
 GSL shell can be used interactively to perform calculations with matrices or
-vectors but it does allow also to write complex user defined functions with
-the Lua scripting interpreter.
+vectors but it also allows for complex user-defined functions with the Lua 
+scripting interpreter.
 
 Lua is a very interesting and easy to learn scripting language that features
 advanced functionalities like closures and metamethods. Lua is very

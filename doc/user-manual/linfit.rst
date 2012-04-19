@@ -8,17 +8,17 @@ Linear Least Squares fit
 Overview
 --------
 
-This chapter describes routines for performing least squares fits to experimental data using linear combinations of functions.  The data may be weighted or unweighted, i.e. with known or unknown errors.  For weighted data the functions compute the best fit parameters and their associated covariance matrix.  For unweighted data the covariance matrix is estimated from the scatter of the points, giving a variance-covariance matrix.
+This chapter describes routines for performing least squares fits to experimental data using linear combinations of functions.  The data may be weighted or unweighted, i.e. with known or unknown errors.  For weighted data, the functions compute the best fit parameters and their associated covariance matrix.  For unweighted data, the covariance matrix is estimated from the scatter of the points, giving a variance-covariance matrix.
 
 Linear Fit Functions
 --------------------
 
 .. function:: linfit(X, y[, w])
 
-    Perform a linear fit for the observations ``y`` using the model matrix ``X``. It does return a vector with the coefficients of the fit, the residual chi square and the covariance matrix. You can optionally provides the weights ``w`` of the observations to obtain a weighted linear fit. The argument ``y`` should be a column matrix of length N while the model ``X`` should be a N x M matrix where M is the number of basis in the linear model.
+    Perform a linear fit for the observations ``y`` using the model matrix ``X``. It returns a vector with the coefficients of the fit, the residual chi square and the covariance matrix. You can optionally provide the weights ``w`` of the observations to obtain a weighted linear fit. The argument ``y`` should be a column matrix of length N while the model ``X`` should be a N x M matrix where M is the number of basis in the linear model.
 
     *Example*
-       Let us suppose that we have two column matrix, x and y, and we want to make a linear fit of y versus x. We build first the model matrix and then we use it to make the linear fit::
+       Let us suppose that we have two column matrices, x and y, and we want to make a linear fit of y versus x. We first build the model matrix and then we use it to perform the linear fit::
 
           X = matrix.new(n, 2, |i,j| j == 1 and 1 or x[i])
           c, chisq, cov = linfit(X, y)

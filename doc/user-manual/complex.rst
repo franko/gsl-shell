@@ -17,7 +17,7 @@ Complex Functions
 In this section we describe the mathematical functions on complex numbers.
 
 .. note::
-   Please note that the standard functions from the :mod:`math` does *not* accept complex numbers.
+   Please note that the standard functions from the :mod:`math` do *not* accept complex numbers.
 
 Basic Functions
 ~~~~~~~~~~~~~~~
@@ -37,12 +37,12 @@ Basic Functions
 .. function:: abs(z)
 
    Returns the norm of the complex number ``z`` calculated as :math:`\sqrt{z \, z^\star}`.
-   This function accept real or complex number as argument.
+   This function accepts a real or complex number as argument.
 
 .. function:: norm2(z)
 
    Returns the square norm of the complex number ``z`` calculated as :math:`z \, z^\star`.
-   This function accept real or complex number as argument.
+   This function accepts a real or complex number as argument.
 
 .. function:: rect(z)
 
@@ -195,10 +195,6 @@ Inverse Complex Hyperbolic Functions
    This function returns the complex hyperbolic arccosine of the complex number z, :math:`\textrm{acosh}(z)`.
    The branch cut is on the real axis, less than 1.
    Note that in this case we use the negative square root in formula 4.6.21 of Abramowitz & Stegun giving :math:`\textrm{acosh}(z)=\log(z-\sqrt{z^2-1})`.
-
-.. function:: real(z)
-
-   This function returns the complex hyperbolic arccosine of the real number z, :math:`\textrm{acosh}(z)`.
 
 .. function:: atanh(z)
 

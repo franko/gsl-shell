@@ -13,7 +13,7 @@ FORTRAN code for QUADPACK is available on Netlib.
 Currently only two integration methods are available in GSL Shell.
 Both of them are based on Gauss-Kronrod integration rules.
 The first method is non-adaptive and is called QNG while the seconde one, QAG, is adaptive.
-The adaptive method QAG is suitable as a general purpose integrator and the QNG method should be used only in particular cases where the function has a simple known smooth behavior.
+The adaptive method QAG is suitable as a general-purpose integrator, whereas the QNG method should be used only in particular cases where the function has a simple known smooth behavior.
 
 Introduction
 ------------
@@ -29,8 +29,8 @@ which specify the following accuracy requirement,
 .. math::
      | \textrm{Result} - I |  \le \max(\epsilon_{\textrm{abs}}, \epsilon_{\textrm{abs}} |I|)
 
-where RESULT is the numerical approximation obtained by the
-algorithm. The algorithms attempt to estimate the absolute error
+where Result is the numerical approximation obtained by the
+algorithm. The algorithm attempts to estimate the absolute error
 AbsErr = | Result - I | in such a way that the following inequality
 holds,
 
@@ -55,12 +55,12 @@ Functions
 .. function:: integ(f, a, b, epsabs, epsrel)
 
    Compute the definite integral of the function ``f`` in the interval specified by ``a`` and ``b`` within the requested precision given by ``epsabs`` and ``epsrel``.
-   This function always use internally the adaptive QAG algorithm.
+   This function always use the adaptive QAG algorithm internally.
 
 .. function:: quad_prepare(spec)
 
    Returns a function that can perform a numeric integration based on the options ``spec``.
-   The argument ``spec`` is used to choose the quadrature algorithm the order and the limits for the adaptive search if applicable.
+   The argument ``spec`` is used to choose the quadrature algorithm, the order and the limits for the adaptive search if applicable.
    The fields of ``spec`` that you should give are:
 
    *method*
