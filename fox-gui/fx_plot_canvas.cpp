@@ -1,4 +1,5 @@
 #include "fx_plot_canvas.h"
+#include "fatal.h"
 
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]={
   FXMAPFUNC(SEL_PAINT,  0, fx_plot_canvas::on_cmd_paint),
@@ -70,30 +71,31 @@ void fx_plot_canvas::draw(FXEvent* event)
   m_dirty_flag = false;
 }
 
-void fx_plot_canvas::update_region(const FXRectangle& r)
+void fx_plot_canvas::update_region(const agg::rect_base<short>& r)
 {
   if (!m_canvas || !m_plot)
     return;
 
-  FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, r.w, r.h);
+  FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
+  FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
   const unsigned bpp = 32;
   const unsigned pixel_size = bpp / 8;
 
   agg::rendering_buffer dest;
-  dest.attach((agg::int8u*) img.getData(), r.w, r.h, -r.w * pixel_size);
+  dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * pixel_size);
 
-  agg::int8u* dd = m_rbuf.row_ptr(r.y) + r.x * pixel_size;
+  agg::int8u* dd = m_rbuf.row_ptr(r.y1) + r.x1 * pixel_size;
  // m_img_data + (m_img_width * (m_img_height - r.y - 1) + r.x) * pixel_size;
   agg::rendering_buffer src;
-  src.attach(dd, r.w, r.h, m_rbuf.stride());
+  src.attach(dd, ww, hh, m_rbuf.stride());
 
   dest.copy_from(src);
 
   img.create();
 
   FXDCWindow dc(this);
-  dc.drawImage(&img, r.x, r.y);
+  dc.drawImage(&img, r.x1, getHeight() - r.y2);
 }
 
 void fx_plot_canvas::attach(plot_type* p)
@@ -102,6 +104,21 @@ void fx_plot_canvas::attach(plot_type* p)
   m_dirty_flag = true;
 }
 
+opt_rect<double> fx_plot_canvas::incremental_draw()
+{
+  if (!m_plot) fatal_exception("Incremental draw on NULL plot");
+
+  int ww = getWidth(), hh = getHeight();
+  opt_rect<double> r, draw_rect;
+  
+  agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
+  m_plot->draw_queue(*m_canvas, m, draw_rect);
+  r.add<rect_union>(draw_rect);
+  r.add<rect_union>(m_dirty_rect);
+  m_dirty_rect = draw_rect;
+
+  return r;
+}
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {

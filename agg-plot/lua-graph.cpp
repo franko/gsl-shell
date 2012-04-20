@@ -37,6 +37,8 @@ extern "C" {
 
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
+pthread_mutex_t agg_mutex[1];
+
 void
 graph_close_windows (lua_State *L)
 {
@@ -46,6 +48,8 @@ graph_close_windows (lua_State *L)
 void
 register_graph (lua_State *L)
 {
+  pthread_mutex_init (agg_mutex, NULL);
+
   window_registry_prepare (L);
 
   luaL_register (L, MLUA_GRAPHLIBNAME, methods_dummy);

@@ -7,6 +7,7 @@
 #include "sg_object.h"
 #include "plot-auto.h"
 #include "canvas.h"
+#include "rect.h"
 
 class fx_plot_canvas : public FXCanvas {
   FXDECLARE(fx_plot_canvas)
@@ -22,7 +23,8 @@ public:
 
   void attach(plot_type* p);
   void draw(FXEvent* event);
-  void update_region(const FXRectangle& r);
+  opt_rect<double> incremental_draw();
+  void update_region(const agg::rect_base<short>& r);
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
   long on_update(FXObject *, FXSelector, void *);
@@ -40,6 +42,7 @@ private:
   plot_type* m_plot;
   canvas* m_canvas;
   bool m_dirty_flag;
+  opt_rect<double> m_dirty_rect;
 };
 
 #endif

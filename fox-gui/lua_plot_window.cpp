@@ -9,6 +9,7 @@ extern "C" {
 #include "window_registry.h"
 #include "fx_plot_window.h"
 #include "lua-cpp-utils.h"
+#include "lua-graph.h"
 #include "gs-types.h"
 #include "plot.h"
 
@@ -18,6 +19,7 @@ static int fox_window_new             (lua_State *L);
 static int fox_window_free            (lua_State *L);
 static int fox_window_close           (lua_State *L);
 static int fox_window_attach          (lua_State *L);
+static int fox_window_slot_refresh    (lua_State *L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"window",         fox_window_new},
@@ -27,6 +29,7 @@ static const struct luaL_Reg fox_window_functions[] = {
 static const struct luaL_Reg fox_window_methods[] = {
   {"attach",         fox_window_attach        },
   {"close",          fox_window_close        },
+  {"refresh",        fox_window_slot_refresh        },
   {"__gc",           fox_window_free       },
   {NULL, NULL}
 };
@@ -75,6 +78,27 @@ fox_window_attach (lua_State *L)
 int
 fox_window_close (lua_State *L)
 {
+  return 0;
+}
+
+int
+fox_window_slot_refresh (lua_State *L)
+{
+  fx_plot_window *win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_canvas& canvas = win->canvas();
+
+  AGG_LOCK();
+  opt_rect<double> rect = canvas.incremental_draw();
+  AGG_UNLOCK();
+
+  if (rect.is_defined())
+    {
+      const int m = 4;
+      const agg::rect_base<double>& r = rect.rect();
+      const agg::rect_base<short> ri(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
+      canvas.update_region(ri);
+    }
+
   return 0;
 }
 

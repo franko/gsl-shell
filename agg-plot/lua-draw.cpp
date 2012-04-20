@@ -26,14 +26,13 @@ extern "C" {
 }
 
 #include "lua-draw.h"
+#include "lua-graph.h"
 #include "text-shape.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
 #include "trans.h"
 #include "colors.h"
 #include "sg_marker.h"
-
-pthread_mutex_t agg_mutex[1];
 
 enum path_cmd_e {
   CMD_ERROR = -1,
@@ -312,8 +311,6 @@ marker_free (lua_State *L)
 void
 draw_register (lua_State *L)
 {
-  pthread_mutex_init (agg_mutex, NULL);
-
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
   luaL_register (L, NULL, agg_path_methods);
   lua_pop (L, 1);

@@ -8,6 +8,7 @@ extern "C" {
 #include "window-cpp.h"
 #include "window_registry.h"
 #include "lua-draw.h"
+#include "lua-graph.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
 #include "colors.h"
