@@ -87,17 +87,29 @@ fox_window_slot_refresh (lua_State *L)
   fx_plot_window *win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
   fx_plot_canvas& canvas = win->canvas();
 
-  AGG_LOCK();
-  opt_rect<double> rect = canvas.incremental_draw();
-  AGG_UNLOCK();
+  gsl_shell_app* app = (gsl_shell_app*) win->getApp();
 
-  if (rect.is_defined())
+  bool interrupted = app->interrupt();
+
+  if (canvas.is_ready())
     {
-      const int m = 4;
-      const agg::rect_base<double>& r = rect.rect();
-      const agg::rect_base<short> ri(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
-      canvas.update_region(ri);
+      int ww = canvas.getWidth(), hh = canvas.getHeight();
+      agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
+
+      AGG_LOCK();
+      opt_rect<double> rect = canvas.incremental_draw(m);
+      AGG_UNLOCK();
+
+      if (rect.is_defined())
+	{
+	  const int m = 4;
+	  const agg::rect_base<double>& r = rect.rect();
+	  const agg::rect_base<int> ri(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
+	  canvas.update_region(ri);
+	}
     }
+
+  app->resume(interrupted);
 
   return 0;
 }

@@ -1,4 +1,5 @@
 #include "fx_plot_canvas.h"
+#include "rendering_buffer_utils.h"
 #include "fatal.h"
 
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]={
@@ -71,11 +72,8 @@ void fx_plot_canvas::draw(FXEvent* event)
   m_dirty_flag = false;
 }
 
-void fx_plot_canvas::update_region(const agg::rect_base<short>& r)
+void fx_plot_canvas::update_region(const agg::rect_base<int>& r)
 {
-  if (!m_canvas || !m_plot)
-    return;
-
   FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
   FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
@@ -85,10 +83,8 @@ void fx_plot_canvas::update_region(const agg::rect_base<short>& r)
   agg::rendering_buffer dest;
   dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * pixel_size);
 
-  agg::int8u* dd = m_rbuf.row_ptr(r.y1) + r.x1 * pixel_size;
- // m_img_data + (m_img_width * (m_img_height - r.y - 1) + r.x) * pixel_size;
-  agg::rendering_buffer src;
-  src.attach(dd, ww, hh, m_rbuf.stride());
+  rendering_buffer_ro src;
+  rendering_buffer_get_const_view(src, m_rbuf, r, pixel_size, true);
 
   dest.copy_from(src);
 
@@ -104,14 +100,10 @@ void fx_plot_canvas::attach(plot_type* p)
   m_dirty_flag = true;
 }
 
-opt_rect<double> fx_plot_canvas::incremental_draw()
+opt_rect<double> fx_plot_canvas::incremental_draw(agg::trans_affine& m)
 {
-  if (!m_plot) fatal_exception("Incremental draw on NULL plot");
-
-  int ww = getWidth(), hh = getHeight();
   opt_rect<double> r, draw_rect;
-  
-  agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
+
   m_plot->draw_queue(*m_canvas, m, draw_rect);
   r.add<rect_union>(draw_rect);
   r.add<rect_union>(m_dirty_rect);

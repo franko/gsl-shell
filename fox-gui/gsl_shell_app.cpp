@@ -81,8 +81,7 @@ long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
 
 void gsl_shell_app::resume(bool signal_end)
 {
-  FXMutex& app_mutex = mutex();
   if (signal_end)
     m_lua_int.signal();
-  app_mutex.unlock();
+  mutex().unlock();
 }

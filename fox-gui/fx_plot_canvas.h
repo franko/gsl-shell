@@ -23,8 +23,10 @@ public:
 
   void attach(plot_type* p);
   void draw(FXEvent* event);
-  opt_rect<double> incremental_draw();
-  void update_region(const agg::rect_base<short>& r);
+  opt_rect<double> incremental_draw(agg::trans_affine& m);
+  void update_region(const agg::rect_base<int>& r);
+
+  bool is_ready() const { return m_canvas && m_plot; }
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
   long on_update(FXObject *, FXSelector, void *);
