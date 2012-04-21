@@ -6,6 +6,10 @@
 #ifndef _LJ_DISPATCH_H
 #define _LJ_DISPATCH_H
 
+#ifdef GSL_SHELL
+#include <pthread.h>
+#endif
+
 #include "lj_obj.h"
 #include "lj_bc.h"
 #if LJ_HASJIT
@@ -66,6 +70,13 @@ typedef uint16_t HotCount;
 #define GG_LEN_SDISP	BC_FUNCF
 #define GG_LEN_DISP	(GG_LEN_DDISP + GG_LEN_SDISP)
 
+#ifdef GSL_SHELL
+struct lj_gsl_shell_state {
+  pthread_mutex_t agg_mutex;
+  void *app;
+};
+#endif
+
 /* Global state, main thread and extra fields are allocated together. */
 typedef struct GG_State {
   lua_State L;				/* Main thread. */
@@ -79,7 +90,14 @@ typedef struct GG_State {
 #endif
   ASMFunction dispatch[GG_LEN_DISP];	/* Instruction dispatch tables. */
   BCIns bcff[GG_NUM_ASMFF];		/* Bytecode for ASM fast functions. */
+#ifdef GSL_SHELL
+  struct lj_gsl_shell_state gsl_shell;
+#endif
 } GG_State;
+
+#ifdef GSL_SHELL
+LUA_API struct lj_gsl_shell_state* lj_gsl_shell_state_get(lua_State *L);
+#endif
 
 #define GG_OFS(field)	((int)offsetof(GG_State, field))
 #define G2GG(gl)	((GG_State *)((char *)(gl) - GG_OFS(g)))

@@ -6,6 +6,7 @@ extern "C" {
 
 #include "lua_plot_window.h"
 #include "gsl_shell_app.h"
+#include "lj_gsl_shell.h"
 #include "window_registry.h"
 #include "fx_plot_window.h"
 #include "lua-cpp-utils.h"
@@ -41,12 +42,8 @@ typedef plot<sg_object, manage_owner> sg_plot;
 int
 fox_window_new (lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, "__fox_app");
-  gsl_shell_app* app = (gsl_shell_app*) lua_touserdata(L, -1);
-  lua_pop(L, 1);
-
-  if (unlikely(app == NULL))
-    return luaL_error(L, "cannot create window: FOX application not found");
+  lj_gsl_shell_state* gss = lj_gsl_shell_state_get(L);
+  gsl_shell_app* app = gss->app;
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 640, 480);
 

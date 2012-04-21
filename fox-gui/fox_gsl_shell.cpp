@@ -2,14 +2,12 @@
 #include "fox_gsl_shell.h"
 #include "lua_plot_window.h"
 #include "window_registry.h"
+#include "lj_gsl_shell.h"
 
 void fox_gsl_shell::init()
 {
   gsl_shell_thread::init();
-
-  lua_pushlightuserdata(L, (void*) m_app);
-  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
-
+  lj_gsl_shell_init(this->L, (gsl_shell_app*) m_app);
   fox_window_register(L);
 }
 

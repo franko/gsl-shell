@@ -221,6 +221,15 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   return L;
 }
 
+#ifdef GSL_SHELL
+LUA_API struct lj_gsl_shell_state *
+lj_gsl_shell_state_get(lua_State *L)
+{
+  GG_State *gg = (GG_State *) L;
+  return &gg->gsl_shell;
+}
+#endif
+
 static TValue *cpfinalize(lua_State *L, lua_CFunction dummy, void *ud)
 {
   UNUSED(dummy);
