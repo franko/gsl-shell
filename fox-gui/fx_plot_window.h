@@ -3,6 +3,7 @@
 
 #include <fx.h>
 
+#include "gsl_shell_app.h"
 #include "fx_plot_canvas.h"
 
 class fx_plot_window : public FXMainWindow {
@@ -12,7 +13,8 @@ public:
 
   ~fx_plot_window();
 
-  fx_plot_canvas& canvas() { return *m_canvas; }
+  fx_plot_canvas* canvas() { return m_canvas; }
+  gsl_shell_app* get_app() { return (gsl_shell_app*) getApp(); }
 
   int lua_id; // the following is used by Lua to keep trace of the window
 

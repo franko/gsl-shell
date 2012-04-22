@@ -15,6 +15,9 @@ public:
   bool interrupt();
   void resume(bool signal_end);
 
+  void lock() { mutex().lock(); }
+  void unlock() { mutex().unlock(); }
+
   void window_create_request(FXMainWindow* win);
 
   long on_lua_interrupt(FXObject*,FXSelector,void*);
