@@ -41,6 +41,8 @@
 #include "gsl-shell.h"
 #include "completion.h"
 #include "lua-graph.h"
+#include "window_hooks.h"
+#include "window.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -100,6 +102,13 @@ static void my_freeline (lua_State *L, char *b) { }
 lua_State *globalL = NULL;
 struct gsl_shell_state gsl_shell[1];
 static const char *progname = LUA_PROGNAME;
+
+struct window_hooks app_window_hooks[1] = {{
+    window_new, window_attach,
+    window_slot_update, window_slot_refresh,
+    window_save_slot_image, window_restore_slot_image,
+  }
+};
 
 static void gsl_shell_openlibs(lua_State *L)
 {

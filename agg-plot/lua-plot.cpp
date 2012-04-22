@@ -25,10 +25,10 @@ extern "C" {
 
 #include "lua-plot.h"
 #include "lua-plot-cpp.h"
+#include "window_hooks.h"
 #include "lua-graph.h"
 #include "lua-cpp-utils.h"
 #include "bitmap-plot.h"
-#include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
 #include "window_registry.h"
@@ -440,7 +440,7 @@ plot_newindex (lua_State *L)
 void
 plot_update_raw (lua_State *L, sg_plot *p, int plot_index)
 {
-  window_refs_lookup_apply (L, plot_index, window_slot_update);
+  window_refs_lookup_apply (L, plot_index, app_window_hooks->update);
   p->commit_pending_draw();
 }
 
@@ -456,7 +456,7 @@ int
 plot_flush (lua_State *L)
 {
   sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
-  window_refs_lookup_apply (L, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, app_window_hooks->refresh);
   p->commit_pending_draw();
   return 0;
 }
@@ -464,8 +464,8 @@ plot_flush (lua_State *L)
 int
 plot_show (lua_State *L)
 {
-  lua_pushcfunction (L, window_attach);
-  window_new (L);
+  lua_pushcfunction (L, app_window_hooks->attach);
+  (*app_window_hooks->create)(L);
   lua_pushvalue (L, 1);
   lua_pushstring (L, "");
   lua_call (L, 3, 0);
@@ -495,13 +495,13 @@ plot_push_layer (lua_State *L)
 {
   sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
 
-  window_refs_lookup_apply (L, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, app_window_hooks->refresh);
 
   AGG_LOCK();
   p->push_layer();
   AGG_UNLOCK();
 
-  window_refs_lookup_apply (L, 1, window_save_slot_image);
+  window_refs_lookup_apply (L, 1, app_window_hooks->save_image);
 
   return 0;
 }
@@ -541,7 +541,7 @@ plot_clear (lua_State *L)
   p->clear_current_layer();
   AGG_UNLOCK();
 
-  window_refs_lookup_apply (L, 1, window_restore_slot_image);
+  window_refs_lookup_apply (L, 1, app_window_hooks->restore_image);
 
   if (p->sync_mode())
     plot_update_raw (L, p, 1);
