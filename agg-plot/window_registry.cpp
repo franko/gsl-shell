@@ -18,14 +18,11 @@ window_registry_prepare (lua_State *L)
 int
 window_index_add(lua_State *L, int index)
 {
-  int n;
-
-  if (index < 0)
-    index = lua_gettop (L) - (index+1);
+  INDEX_SET_ABS(L, index);
 
   lua_getfield (L, LUA_REGISTRYINDEX, registry_tname);
 
-  n = lua_objlen (L, -1);
+  int n = lua_objlen (L, -1);
 
   lua_pushvalue (L, index);
   lua_rawseti (L, -2, n+1);
