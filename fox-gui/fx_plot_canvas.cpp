@@ -12,38 +12,24 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
   FXCanvas(p, tgt, sel, opts, x, y, w, h),
-  m_img_data(0), m_plot(0), m_canvas(0), m_dirty_flag(true)
+  m_plot(0), m_canvas(0), m_dirty_flag(true)
 {
 }
 
 fx_plot_canvas::~fx_plot_canvas()
 {
-  delete[] m_img_data;
   delete m_canvas;
 }
 
-void fx_plot_canvas::prepare_image_buffer(int ww, int hh)
+void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
 {
-  delete[] m_img_data;
-
-  const unsigned bpp = 32;
-  const unsigned pixel_size = bpp / 8;
-
-  m_img_data = new agg::int8u[ww * hh * pixel_size];
-
-  m_img_width = ww;
-  m_img_height = hh;
-
-  unsigned width = ww, height = hh;
-  unsigned stride = - width * pixel_size;
-
-  m_rbuf.attach(m_img_data, width, height, stride);
-  m_canvas = new canvas(m_rbuf, width, height, colors::white);
+  m_img.resize(ww, hh);
+  m_canvas = new canvas(m_img, ww, hh, colors::white);
 }
 
-void fx_plot_canvas::ensure_canvas_size(int ww, int hh)
+void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 {
-  if (!m_img_data || m_img_width != ww || m_img_height != hh)
+  if (m_img.width() != ww || m_img.height() != hh)
     {
       m_area_mtx.sx = ww;
       m_area_mtx.sy = hh;
@@ -70,7 +56,7 @@ void fx_plot_canvas::plot_draw(agg::trans_affine& m)
     {
       plot_render(m);
 
-      const FXColor* data = (const FXColor*) m_img_data;
+      const FXColor* data = (const FXColor*) m_img.buf();
       FXImage img(getApp(), data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
       img.create();
       dc.drawImage(&img, 0, 0);
@@ -96,7 +82,7 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& r)
   dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * pixel_size);
 
   rendering_buffer_ro src;
-  rendering_buffer_get_const_view(src, m_rbuf, r, pixel_size, true);
+  rendering_buffer_get_const_view(src, m_img, r, pixel_size, true);
 
   dest.copy_from(src);
 

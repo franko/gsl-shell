@@ -1,6 +1,8 @@
 #ifndef FOXGUI_FX_PLOT_CANVAS_H
 #define FOXGUI_FX_PLOT_CANVAS_H
 
+#include <new>
+
 #include <fx.h>
 #include <agg_rendering_buffer.h>
 
@@ -8,6 +10,38 @@
 #include "plot-auto.h"
 #include "canvas.h"
 #include "rect.h"
+
+template <unsigned PixelSize, bool FlipY>
+struct image_gen : agg::rendering_buffer {
+  image_gen() { }
+  image_gen(unsigned w, unsigned h) { init(w, h); }
+
+  ~image_gen() { dispose(); }
+
+  bool defined() const { return (buf() != 0); }
+
+  void resize(unsigned w, unsigned h)
+  {
+    dispose();
+    init(w, h);
+  }
+
+private:
+  void init(unsigned w, unsigned h)
+  {
+    agg::int8u* data = new(std::nothrow) agg::int8u[w * h * PixelSize];
+    int stride = (FlipY ? - w * PixelSize : w * PixelSize);
+    attach(data, w, h, stride);
+  }
+
+  void dispose()
+  {
+    agg::int8u* data = buf();
+    delete[] data;
+  }
+};
+
+typedef image_gen<4, true> image;
 
 class fx_plot_canvas : public FXCanvas {
   FXDECLARE(fx_plot_canvas)
@@ -41,12 +75,11 @@ protected:
   fx_plot_canvas() {}
 
 private:
-  void prepare_image_buffer(int ww, int hh);
-  void ensure_canvas_size(int ww, int hh);
+  void prepare_image_buffer(unsigned ww, unsigned hh);
+  void ensure_canvas_size(unsigned ww, unsigned hh);
 
-  agg::int8u* m_img_data;
-  int m_img_width, m_img_height;
-  agg::rendering_buffer m_rbuf;
+  image m_img;
+  image m_save_img;
   plot_type* m_plot;
   canvas* m_canvas;
   bool m_dirty_flag;
