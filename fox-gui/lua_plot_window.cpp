@@ -20,6 +20,7 @@ static int fox_window_free            (lua_State *L);
 static int fox_window_close           (lua_State *L);
 static int fox_window_attach          (lua_State *L);
 static int fox_window_slot_refresh    (lua_State *L);
+static int fox_window_slot_update     (lua_State *L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"window",         fox_window_new},
@@ -30,6 +31,7 @@ static const struct luaL_Reg fox_window_methods[] = {
   {"attach",         fox_window_attach        },
   {"close",          fox_window_close        },
   {"refresh",        fox_window_slot_refresh        },
+  {"update",         fox_window_slot_update },
   {"__gc",           fox_window_free       },
   {NULL, NULL}
 };
@@ -97,20 +99,33 @@ fox_window_slot_refresh (lua_State *L)
 
   if (canvas->is_ready())
     {
-      int ww = canvas->getWidth(), hh = canvas->getHeight();
-      agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
+      agg::trans_affine& m = canvas->plot_matrix();
 
-      AGG_LOCK();
-      opt_rect<double> rect = canvas->incremental_draw(m);
-      AGG_UNLOCK();
+      if (canvas->get_plot()->need_redraw())
+	canvas->plot_render(m);
 
-      if (rect.is_defined())
-	{
-	  const int m = 4;
-	  const agg::rect_base<double>& r = rect.rect();
-	  const agg::rect_base<int> ri(r.x1 - m, r.y1 - m, r.x2 + m, r.y2 + m);
-	  canvas->update_region(ri);
-	}
+      canvas->plot_draw_queue(m);
+    }
+
+  app->resume(interrupted);
+
+  return 0;
+}
+
+int
+fox_window_slot_update (lua_State *L)
+{
+  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_canvas* canvas = win->canvas();
+  gsl_shell_app* app = win->get_app();
+
+  bool interrupted = app->interrupt();
+
+  if (canvas->is_ready())
+    {
+      agg::trans_affine& m = canvas->plot_matrix();
+      canvas->plot_render(m);
+      canvas->plot_draw_queue(m);
     }
 
   app->resume(interrupted);

@@ -1,6 +1,7 @@
 #include "fx_plot_canvas.h"
 #include "rendering_buffer_utils.h"
 #include "fatal.h"
+#include "lua-graph.h"
 
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]={
   FXMAPFUNC(SEL_PAINT,  0, fx_plot_canvas::on_cmd_paint),
@@ -44,29 +45,40 @@ void fx_plot_canvas::ensure_canvas_size(int ww, int hh)
 {
   if (!m_img_data || m_img_width != ww || m_img_height != hh)
     {
+      m_area_mtx.sx = ww;
+      m_area_mtx.sy = hh;
       prepare_image_buffer(ww, hh);
     }
 }
 
-void fx_plot_canvas::draw(FXEvent* event)
+void fx_plot_canvas::plot_render(agg::trans_affine& m)
 {
+  m_canvas->clear();
+  AGG_LOCK();
+  m_plot->draw(*m_canvas, m);
+  AGG_UNLOCK();
+}
+
+void fx_plot_canvas::plot_draw(agg::trans_affine& m)
+{
+  FXDCWindow dc(this);
   int ww = getWidth(), hh = getHeight();
 
   ensure_canvas_size(ww, hh);
 
   if (m_canvas && m_plot)
     {
-      agg::trans_affine m(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
-      m_canvas->clear();
-      m_plot->draw<canvas>(*m_canvas, m);
+      plot_render(m);
 
       const FXColor* data = (const FXColor*) m_img_data;
       FXImage img(getApp(), data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
       img.create();
-
-      FXDCWindow *dc = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
-      dc->drawImage(&img, 0, 0);
-      delete dc;
+      dc.drawImage(&img, 0, 0);
+    }
+  else
+    {
+      dc.setForeground(FXRGB(255,255,255));
+      dc.fillRectangle(0, 0, ww, hh);
     }
 
   m_dirty_flag = false;
@@ -100,22 +112,37 @@ void fx_plot_canvas::attach(plot_type* p)
   m_dirty_flag = true;
 }
 
-opt_rect<double> fx_plot_canvas::incremental_draw(agg::trans_affine& m)
+opt_rect<double> fx_plot_canvas::plot_render_queue(agg::trans_affine& m)
 {
   opt_rect<double> r, draw_rect;
-
+  AGG_LOCK();
   m_plot->draw_queue(*m_canvas, m, draw_rect);
+  AGG_UNLOCK();
   r.add<rect_union>(draw_rect);
   r.add<rect_union>(m_dirty_rect);
   m_dirty_rect = draw_rect;
-
   return r;
+}
+
+void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m)
+{
+  if (!m_canvas || !m_plot) return;
+
+  opt_rect<double> rect = plot_render_queue(m);
+
+  if (rect.is_defined())
+    {
+      const int pd = 4;
+      const agg::rect_base<double>& r = rect.rect();
+      const agg::rect_base<int> ri(r.x1 - pd, r.y1 - pd, r.x2 + pd, r.y2 + pd);
+      update_region(ri);
+    }
 }
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
   FXEvent* ev = (FXEvent*) ptr;
-  draw(m_dirty_flag ? NULL : ev);
+  plot_draw(m_area_mtx);
   return 1;
 }
 
@@ -123,6 +150,6 @@ long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
   bool need_upd = m_dirty_flag;
   if (need_upd)
-    draw(NULL);
+    plot_draw(m_area_mtx);
   return (need_upd ? 1 : 0);
 }

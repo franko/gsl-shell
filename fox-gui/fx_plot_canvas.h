@@ -22,10 +22,16 @@ public:
   ~fx_plot_canvas();
 
   void attach(plot_type* p);
-  void draw(FXEvent* event);
-  opt_rect<double> incremental_draw(agg::trans_affine& m);
   void update_region(const agg::rect_base<int>& r);
 
+  plot_type* get_plot() { return m_plot; }
+
+  void plot_render(agg::trans_affine& m);
+  void plot_draw(agg::trans_affine& m);
+  opt_rect<double> plot_render_queue(agg::trans_affine& m);
+  void plot_draw_queue(agg::trans_affine& m);
+
+  agg::trans_affine& plot_matrix() { return m_area_mtx; }
   bool is_ready() const { return m_canvas && m_plot; }
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
@@ -45,6 +51,7 @@ private:
   canvas* m_canvas;
   bool m_dirty_flag;
   opt_rect<double> m_dirty_rect;
+  agg::trans_affine m_area_mtx;
 };
 
 #endif
