@@ -20,18 +20,19 @@ struct image_gen : agg::rendering_buffer {
 
   bool defined() const { return (buf() != 0); }
 
-  void resize(unsigned w, unsigned h)
+  bool resize(unsigned w, unsigned h)
   {
     dispose();
-    init(w, h);
+    return init(w, h);
   }
 
 private:
-  void init(unsigned w, unsigned h)
+  bool init(unsigned w, unsigned h)
   {
     agg::int8u* data = new(std::nothrow) agg::int8u[w * h * PixelSize];
     int stride = (FlipY ? - w * PixelSize : w * PixelSize);
     attach(data, w, h, stride);
+    return (data != 0);
   }
 
   void dispose()
@@ -67,6 +68,9 @@ public:
 
   agg::trans_affine& plot_matrix() { return m_area_mtx; }
   bool is_ready() const { return m_canvas && m_plot; }
+
+  bool save_image();
+  bool restore_image();
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
   long on_update(FXObject *, FXSelector, void *);

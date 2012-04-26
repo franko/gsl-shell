@@ -125,6 +125,22 @@ void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m)
     }
 }
 
+bool fx_plot_canvas::save_image()
+{
+  int ww = getWidth(), hh = getHeight();
+  if (!m_save_img.resize(ww, hh)) return false;
+  m_save_img.copy_from(m_img);
+  return true;
+}
+
+bool fx_plot_canvas::restore_image()
+{
+  if (!m_save_img.defined())
+    return false;
+  m_img.copy_from(m_save_img);
+  return true;
+}
+
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
   FXEvent* ev = (FXEvent*) ptr;

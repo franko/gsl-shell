@@ -15,12 +15,8 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int fox_window_new             (lua_State *L);
 static int fox_window_free            (lua_State *L);
 static int fox_window_close           (lua_State *L);
-static int fox_window_attach          (lua_State *L);
-static int fox_window_slot_refresh    (lua_State *L);
-static int fox_window_slot_update     (lua_State *L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"window",         fox_window_new},
@@ -130,6 +126,35 @@ fox_window_slot_update (lua_State *L)
 
   app->resume(interrupted);
 
+  return 0;
+}
+
+int
+fox_window_save_slot_image (lua_State *L)
+{
+  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_canvas* canvas = win->canvas();
+  gsl_shell_app* app = win->get_app();
+  app->lock();
+  canvas->save_image();
+  app->unlock();
+  return 0;
+}
+
+int
+fox_window_restore_slot_image (lua_State *L)
+{
+  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_canvas* canvas = win->canvas();
+  gsl_shell_app* app = win->get_app();
+  app->lock();
+  if (!canvas->restore_image())
+    {
+      agg::trans_affine& m = canvas->plot_matrix();
+      canvas->plot_render(m);
+      canvas->save_image();
+    }
+  app->unlock();
   return 0;
 }
 
