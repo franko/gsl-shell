@@ -34,7 +34,7 @@ private:
   fox_gsl_shell m_engine;
   FXGUISignal* m_event_loop;
   FXGUISignal* m_lua_request;
-  FXMainWindow* m_lua_request_win;
+  agg::pod_bvector<FXMainWindow*> m_win_queue;
   FXCondition m_lua_int;
   bool m_waiting_lua;
 };

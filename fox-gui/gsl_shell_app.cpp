@@ -57,17 +57,19 @@ bool gsl_shell_app::interrupt()
 
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 {
-  FXMainWindow* win = m_lua_request_win;
-
-  win->create();
-  win->show(PLACEMENT_SCREEN);
-
+  for (unsigned k = 0; k < m_win_queue.size(); k++)
+    {
+      FXMainWindow* win = m_win_queue[k];
+      win->create();
+      win->show(PLACEMENT_SCREEN);
+    }
+  m_win_queue.clear();
   return 1;
 }
 
 void gsl_shell_app::window_create_request(FXMainWindow* win)
 {
-  m_lua_request_win = win;
+  m_win_queue.add(win);
   m_lua_request->signal();
 }
 

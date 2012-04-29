@@ -46,12 +46,16 @@ fox_window_new (lua_State *L)
   if (unlikely(app == NULL))
     return luaL_error(L, "cannot create window: FOX application not found");
 
-  fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 640, 480);
+  app->lock();
 
-  win->lua_id = window_index_add (L, -1);
+  fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
 
   win->setTarget(app);
   app->window_create_request(win);
+
+  win->lua_id = window_index_add (L, -1);
+
+  app->unlock();
 
   return 1;
 }
