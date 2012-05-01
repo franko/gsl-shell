@@ -84,8 +84,6 @@ void x_connection::close()
 }
 
 class buffer_image {
-  x_connection *  m_x_connection;
-
   unsigned        m_width;
   unsigned        m_height;
 
@@ -105,7 +103,6 @@ public:
         m_img->data = 0;
         XDestroyImage(m_img);
       }
-    m_x_connection = 0;
   };
 
   void attach(agg::rendering_buffer& rbuf, bool flip_y);
