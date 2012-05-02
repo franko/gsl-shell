@@ -12,9 +12,6 @@ public:
   gsl_shell_app();
   ~gsl_shell_app();
 
-  bool interrupt();
-  void resume(bool signal_end);
-
   void lock() { mutex().lock(); }
   void unlock() { mutex().unlock(); }
 

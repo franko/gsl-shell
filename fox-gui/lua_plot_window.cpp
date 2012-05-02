@@ -88,7 +88,7 @@ fox_window_slot_refresh (lua_State *L)
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
 
-  bool interrupted = app->interrupt();
+  app->lock();
 
   if (canvas->is_ready())
     {
@@ -100,8 +100,7 @@ fox_window_slot_refresh (lua_State *L)
       canvas->plot_draw_queue(m);
     }
 
-  app->resume(interrupted);
-
+  app->unlock();
   return 0;
 }
 
@@ -112,7 +111,7 @@ fox_window_slot_update (lua_State *L)
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
 
-  bool interrupted = app->interrupt();
+  app->lock();
 
   if (canvas->is_ready())
     {
@@ -121,8 +120,7 @@ fox_window_slot_update (lua_State *L)
       canvas->plot_draw_queue(m);
     }
 
-  app->resume(interrupted);
-
+  app->unlock();
   return 0;
 }
 

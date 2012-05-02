@@ -44,21 +44,6 @@ long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
   return 1;
 }
 
-bool gsl_shell_app::interrupt()
-{
-  FXMutex& app_mutex = mutex();
-  app_mutex.lock();
-
-  if (!m_waiting_lua)
-    {
-      m_event_loop->signal();
-      m_lua_int.wait(app_mutex);
-      return true;
-    }
-
-  return false;
-}
-
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 {
   for (unsigned k = 0; k < m_win_queue.size(); k++)
@@ -83,11 +68,4 @@ long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
   m_engine.window_close_notify(win->lua_id);
   win->hide();
   return 1;
-}
-
-void gsl_shell_app::resume(bool signal_end)
-{
-  if (signal_end)
-    m_lua_int.signal();
-  mutex().unlock();
 }
