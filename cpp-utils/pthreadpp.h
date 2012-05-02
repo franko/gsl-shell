@@ -20,6 +20,9 @@ namespace pthread {
     pthread_mutex_t* mutex_ptr() { return &m_mutex; }
 
   private:
+    mutex(const mutex&);
+    mutex& operator= (const mutex&);
+
     pthread_mutex_t m_mutex;
   };
 
