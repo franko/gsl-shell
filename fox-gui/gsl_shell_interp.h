@@ -14,7 +14,12 @@ class gsl_shell : public gsl_shell_state {
 public:
   enum eval_result_e { eval_success, eval_error, incomplete_input, exit_request };
 
-  gsl_shell() { gsl_shell_open(this); }
+  gsl_shell()
+  {
+    gsl_shell_init(this);
+    gsl_shell_open(this);
+  }
+
   ~gsl_shell() { gsl_shell_free(this); }
 
   virtual void init();
