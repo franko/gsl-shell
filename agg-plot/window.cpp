@@ -424,14 +424,7 @@ void window::start (lua_State *L, gslshell::ret_status& st)
 int
 window_new (lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, "__gsl_shell");
-  gsl_shell_state* gs = (gsl_shell_state*) lua_touserdata(L, -1);
-  lua_pop(L, 1);
-
-  if (unlikely(gs == NULL))
-    return luaL_error(L, "cannot create window: not a GSL Shell state");
-
-  window *win = push_new_object<window>(L, GS_WINDOW, gs);
+  window *win = push_new_object<window>(L, GS_WINDOW, global_state);
   const char *spec = lua_tostring (L, 1);
 
   gslshell::ret_status st;

@@ -39,13 +39,7 @@ typedef plot<sg_object, manage_owner> sg_plot;
 int
 fox_window_new (lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, "__fox_app");
-  gsl_shell_app* app = (gsl_shell_app*) lua_touserdata(L, -1);
-  lua_pop(L, 1);
-
-  if (unlikely(app == NULL))
-    return luaL_error(L, "cannot create window: FOX application not found");
-
+  gsl_shell_app* app = global_app;
   app->lock();
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
@@ -56,7 +50,6 @@ fox_window_new (lua_State *L)
   win->lua_id = window_index_add (L, -1);
 
   app->unlock();
-
   return 1;
 }
 

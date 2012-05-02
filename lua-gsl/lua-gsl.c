@@ -29,6 +29,8 @@
 #include "lua-utils.h"
 #include "fatal.h"
 
+struct gsl_shell_state* global_state;
+
 void
 gsl_shell_open (struct gsl_shell_state *gs)
 {
@@ -37,8 +39,7 @@ gsl_shell_open (struct gsl_shell_state *gs)
   if (unlikely(gs->L == NULL))
     fatal_exception("cannot create state: not enough memory");
 
-  lua_pushlightuserdata(gs->L, (void*) gs);
-  lua_setfield(gs->L, LUA_REGISTRYINDEX, "__gsl_shell");
+  global_state = gs;
 
   gsl_shell_init(gs);
 }

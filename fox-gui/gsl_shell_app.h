@@ -39,4 +39,6 @@ private:
   bool m_waiting_lua;
 };
 
+extern gsl_shell_app* global_app;
+
 #endif

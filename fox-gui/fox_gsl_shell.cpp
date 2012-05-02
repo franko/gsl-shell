@@ -6,10 +6,6 @@
 void fox_gsl_shell::init()
 {
   gsl_shell_thread::init();
-
-  lua_pushlightuserdata(L, (void*) m_app);
-  lua_setfield(L, LUA_REGISTRYINDEX, "__fox_app");
-
   fox_window_register(L);
 }
 

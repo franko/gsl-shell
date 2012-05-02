@@ -13,11 +13,15 @@ FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]={
 
 FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map))
 
+gsl_shell_app* global_app;
+
 gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
   m_engine(this), m_waiting_lua(false)
 {
   m_event_loop  = new FXGUISignal(this, this, ID_LUA_INTERRUPT);
   m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
+
+  global_app = this;
 
   m_engine.start();
 
