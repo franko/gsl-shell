@@ -26,6 +26,20 @@ struct image_gen : agg::rendering_buffer {
     return init(w, h);
   }
 
+  void clear()
+  {
+    dispose();
+    attach(NULL, 0, 0, 0);
+  }
+
+  static bool match(const image_gen& a, const image_gen& b)
+  {
+    if (!a.defined() || !b.defined())
+      return false;
+    return (a.width() == b.width() && a.height() == b.height());
+  }
+
+
 private:
   bool init(unsigned w, unsigned h)
   {
@@ -64,7 +78,7 @@ public:
   void plot_render(agg::trans_affine& m);
   void plot_draw(agg::trans_affine& m);
   opt_rect<double> plot_render_queue(agg::trans_affine& m);
-  void plot_draw_queue(agg::trans_affine& m);
+  void plot_draw_queue(agg::trans_affine& m, bool draw_all);
 
   agg::trans_affine& plot_matrix() { return m_area_mtx; }
   bool is_ready() const { return m_canvas && m_plot; }

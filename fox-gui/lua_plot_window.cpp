@@ -49,6 +49,12 @@ fox_window_new (lua_State *L)
 
   win->lua_id = window_index_add (L, -1);
 
+  fprintf(stderr, "LUA: waiting window mapping...\n");
+  do
+    app->wait_window_mapping();
+  while (!win->shown());
+  fprintf(stderr, "LUA: window mapping done.\n");
+
   app->unlock();
   return 1;
 }
@@ -93,11 +99,10 @@ fox_window_slot_refresh (lua_State *L)
   if (canvas->is_ready())
     {
       agg::trans_affine& m = canvas->plot_matrix();
-
-      if (canvas->get_plot()->need_redraw())
+      bool redraw = canvas->get_plot()->need_redraw();
+      if (redraw)
 	canvas->plot_render(m);
-
-      canvas->plot_draw_queue(m);
+      canvas->plot_draw_queue(m, redraw);
     }
 
   app->unlock();
@@ -117,7 +122,7 @@ fox_window_slot_update (lua_State *L)
     {
       agg::trans_affine& m = canvas->plot_matrix();
       canvas->plot_render(m);
-      canvas->plot_draw_queue(m);
+      canvas->plot_draw_queue(m, true);
     }
 
   app->unlock();

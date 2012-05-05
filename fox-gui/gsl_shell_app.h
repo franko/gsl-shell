@@ -16,6 +16,7 @@ public:
   void unlock() { mutex().unlock(); }
 
   void window_create_request(FXMainWindow* win);
+  void wait_window_mapping();
 
   long on_lua_interrupt(FXObject*,FXSelector,void*);
   long on_lua_request(FXObject*,FXSelector,void*);
@@ -33,6 +34,7 @@ private:
   FXGUISignal* m_lua_request;
   agg::pod_bvector<FXMainWindow*> m_win_queue;
   FXCondition m_lua_int;
+  FXCondition m_window_mapping;
   bool m_waiting_lua;
 };
 

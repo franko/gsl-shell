@@ -53,6 +53,7 @@ long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
       win->show(PLACEMENT_SCREEN);
     }
   m_win_queue.clear();
+  m_window_mapping.signal();
   return 1;
 }
 
@@ -68,4 +69,10 @@ long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
   m_engine.window_close_notify(win->lua_id);
   win->hide();
   return 1;
+}
+
+void gsl_shell_app::wait_window_mapping()
+{
+  FXMutex& app_mutex = mutex();
+  m_window_mapping.wait(app_mutex);
 }

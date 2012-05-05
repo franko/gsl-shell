@@ -70,8 +70,12 @@ void fx_plot_canvas::plot_draw(agg::trans_affine& m)
   m_dirty_flag = false;
 }
 
-void fx_plot_canvas::update_region(const agg::rect_base<int>& r)
+void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
 {
+  int iw = m_img.width(), ih = m_img.height();
+  const agg::rect_base<int> b(0, 0, iw, ih);
+  agg::rect_base<int> r = agg::intersect_rectangles(_r, b);
+
   FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
   FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
@@ -110,13 +114,18 @@ opt_rect<double> fx_plot_canvas::plot_render_queue(agg::trans_affine& m)
   return r;
 }
 
-void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m)
+void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m, bool draw_all)
 {
   if (!m_canvas || !m_plot) return;
 
   opt_rect<double> rect = plot_render_queue(m);
 
-  if (rect.is_defined())
+  if (draw_all)
+    {
+      const agg::rect_base<int> ri(0, 0, getWidth(), getHeight());
+      update_region(ri);
+    }
+  else if (rect.is_defined())
     {
       const int pd = 4;
       const agg::rect_base<double>& r = rect.rect();
@@ -128,14 +137,14 @@ void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m)
 bool fx_plot_canvas::save_image()
 {
   int ww = getWidth(), hh = getHeight();
-  if (!m_save_img.resize(ww, hh)) return false;
+  if (!m_img.defined() || !m_save_img.resize(ww, hh)) return false;
   m_save_img.copy_from(m_img);
   return true;
 }
 
 bool fx_plot_canvas::restore_image()
 {
-  if (!m_save_img.defined())
+  if (!image::match(m_img, m_save_img))
     return false;
   m_img.copy_from(m_save_img);
   return true;
