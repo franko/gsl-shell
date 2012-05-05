@@ -96,6 +96,8 @@ long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
 	}
     }
   appendText(m_lua_io_buffer);
+  makePositionVisible(getCursorPos());
+
   m_lua_io_buffer.clear();
   m_lua_io_mutex.unlock();
 
