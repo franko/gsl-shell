@@ -6,7 +6,6 @@
 #include "fatal.h"
 
 FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]={
-  FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_INTERRUPT, gsl_shell_app::on_lua_interrupt),
   FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_REQUEST, gsl_shell_app::on_lua_request),
   FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
 };
@@ -16,13 +15,10 @@ FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map)
 gsl_shell_app* global_app;
 
 gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
-  m_engine(this), m_waiting_lua(false)
+  m_engine(this)
 {
-  m_event_loop  = new FXGUISignal(this, this, ID_LUA_INTERRUPT);
   m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
-
   global_app = this;
-
   m_engine.start();
 
   new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
@@ -30,18 +26,7 @@ gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
 
 gsl_shell_app::~gsl_shell_app()
 {
-  delete m_event_loop;
   delete m_lua_request;
-}
-
-long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
-{
-  FXMutex& app_mutex = mutex();
-  m_waiting_lua = true;
-  m_lua_int.signal();
-  m_lua_int.wait(app_mutex);
-  m_waiting_lua = false;
-  return 1;
 }
 
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
