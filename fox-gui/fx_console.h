@@ -2,26 +2,11 @@
 #define FOXGUI_FX_CONSOLE_H
 
 #include <new>
-
 #include <fx.h>
 #include <FXArray.h>
 
 #include "gsl_shell_thread.h"
-
-class lua_io_thread : public FXThread {
-public:
-  lua_io_thread(gsl_shell_thread* eng, FXGUISignal* sig, FXMutex* mut, FXString* buf):
-    m_engine(eng), m_io_ready(sig), m_io_protect(mut), m_io_buffer(buf)
-  { }
-
-  virtual FXint run();
-
-private:
-  gsl_shell_thread* m_engine;
-  FXGUISignal* m_io_ready;
-  FXMutex* m_io_protect;
-  FXString* m_io_buffer;
-};
+#include "io_thread.h"
 
 class fx_console : public FXText {
   FXDECLARE(fx_console)
