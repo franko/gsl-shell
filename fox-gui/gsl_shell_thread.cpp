@@ -50,7 +50,6 @@ gsl_shell_thread::run()
       m_status = ready;
 
       this->unlock();
-      fprintf(stderr, "GSL SHELL LOOP: waiting EVAL signal...\n");
       m_eval.wait();
       this->lock();
 
@@ -63,9 +62,7 @@ gsl_shell_thread::run()
 	}
 
       m_status = busy;
-      fprintf(stderr, "GSL SHELL LOOP: unlocking EVAL mutex...\n");
       m_eval.unlock();
-      fprintf(stderr, "GSL SHELL LOOP: unlocked.\n");
 
       // here m_line_pending cannot be modified by the other thread
       // because we declared above m_status to "busy" befor unlocking m_eval
@@ -97,9 +94,7 @@ gsl_shell_thread::input(const char* line)
   if (m_status == ready)
     {
       m_line_pending = line;
-      fprintf(stderr, "GSL SHELL INPUT: sending EVAL signal...\n");
       m_eval.signal();
-      fprintf(stderr, "GSL SHELL INPUT: EVAL signal sent.\n");
     }
 }
 

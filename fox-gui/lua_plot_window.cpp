@@ -43,17 +43,14 @@ fox_window_new (lua_State *L)
   app->lock();
 
   fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
-
   win->setTarget(app);
   app->window_create_request(win);
 
   win->lua_id = window_index_add (L, -1);
 
-  fprintf(stderr, "LUA: waiting window mapping...\n");
   do
     app->wait_window_mapping();
   while (!win->shown());
-  fprintf(stderr, "LUA: window mapping done.\n");
 
   app->unlock();
   return 1;
