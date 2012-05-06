@@ -46,6 +46,7 @@ void fx_console::show_errors()
       appendText("Error reported: ");
       appendText(m_engine->error_msg());
       appendText("\n");
+      makePositionVisible(getCursorPos());
     }
 }
 
