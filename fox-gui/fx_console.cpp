@@ -2,6 +2,8 @@
 #include <errno.h>
 #include <fxkeys.h>
 
+#include "luajit.h"
+
 #include "fx_console.h"
 #include "gsl_shell_app.h"
 #include "gsl_shell_thread.h"
@@ -51,7 +53,12 @@ void fx_console::show_errors()
 void fx_console::create()
 {
   FXText::create();
-  init("Welcome to GSL Shell 2.1\n");
+  FXString msg;
+  msg.format("GSL Shell %s, Copyright (C) 2009-2012 Francesco Abbate\n"
+	     "GNU Scientific Library, Copyright (C) The GSL Team\n"
+	     "%s -- %s\n",
+	     GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
+  init(msg);
   setFocus();
   m_lua_io_thread->start();
 }
