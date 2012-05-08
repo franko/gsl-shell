@@ -2,64 +2,19 @@
 #define FOXGUI_FX_PLOT_CANVAS_H
 
 #include <new>
-
 #include <fx.h>
 #include <agg_rendering_buffer.h>
 
+#include "image_buf.h"
 #include "sg_object.h"
 #include "plot-auto.h"
 #include "canvas.h"
 #include "rect.h"
 
-template <unsigned PixelSize, bool FlipY>
-struct image_gen : agg::rendering_buffer {
-  image_gen() { }
-  image_gen(unsigned w, unsigned h) { init(w, h); }
-
-  ~image_gen() { dispose(); }
-
-  bool defined() const { return (buf() != 0); }
-
-  bool resize(unsigned w, unsigned h)
-  {
-    dispose();
-    return init(w, h);
-  }
-
-  void clear()
-  {
-    dispose();
-    attach(NULL, 0, 0, 0);
-  }
-
-  static bool match(const image_gen& a, const image_gen& b)
-  {
-    if (!a.defined() || !b.defined())
-      return false;
-    return (a.width() == b.width() && a.height() == b.height());
-  }
-
-
-private:
-  bool init(unsigned w, unsigned h)
-  {
-    agg::int8u* data = new(std::nothrow) agg::int8u[w * h * PixelSize];
-    int stride = (FlipY ? - w * PixelSize : w * PixelSize);
-    attach(data, w, h, stride);
-    return (data != 0);
-  }
-
-  void dispose()
-  {
-    agg::int8u* data = buf();
-    delete[] data;
-  }
-};
-
-typedef image_gen<4, true> image;
-
 class fx_plot_canvas : public FXCanvas {
   FXDECLARE(fx_plot_canvas)
+
+  typedef image_gen<4, true> image;
 
 public:
   typedef plot<sg_object, manage_owner> plot_type;
