@@ -289,20 +289,17 @@ bool
 window::split(const char *spec)
 {
   ::split<ref>::lexer lexbuf(spec);
-  tree::node<ref, direction_e> *new_tree = ::split<ref>::parse(lexbuf);
+  tree::node<ref, direction_e> *parse_tree = ::split<ref>::parse(lexbuf);
+  delete m_tree;
 
-  if (new_tree)
-    {
-      if (m_tree)
-	delete m_tree;
+  if (parse_tree)
+    m_tree = parse_tree;
+  else
+    m_tree = new tree::leaf<ref, direction_e>();
 
-      m_tree = new_tree;
-      bmatrix m0;
-      ref::calculate(m_tree, m0, 0);
-      return true;
-    }
-
-  return false;
+  bmatrix m0;
+  ref::calculate(m_tree, m0, 0);
+  return (parse_tree != NULL);
 }
 
 static const char *
@@ -433,7 +430,10 @@ window_new (lua_State *L)
     return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
 
   if (spec)
-    win->split(spec);
+    {
+      if (!win->split(spec))
+	return luaL_error(L, "invalid layout specification");
+    }
 
   return 1;
 }
