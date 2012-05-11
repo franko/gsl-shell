@@ -1,5 +1,6 @@
 
-use 'stdlib'
+use 'math'
+use 'graph'
 
 local function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
@@ -11,7 +12,7 @@ local function demo2()
    local r = rng.new()
    local f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
    local p = plot('Simulated Gaussian Distribution')
-   local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
+   local b = ibars(iter.sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
    p:addline(b, rgba(0, 0, 0, 0.6))
    p:addline(fxline(f, -4, 4), 'red')
@@ -25,7 +26,7 @@ local function vonkoch(n)
    local sy = {0, 1,  1,  0, -1, -1}
    local sh = {1, -2, 1}
    local a, x, y = 0, 0, 0
-   local w = ilist(|| 0, n+1)
+   local w = iter.ilist(|| 0, n+1)
 
    local s = 1 / (3^n)
    for k=1, 6 do
@@ -90,12 +91,12 @@ local function demo4()
 
    pt:addline(filine(|i| v[i], n), 'black')
 
-   local ft = fft(v, true)
+   local ft = num.fft(v, true)
 
-   pf:add(ibars(isample(|i| complex.abs(ft[i]), 0, n/2)), 'black')
+   pf:add(ibars(iter.isample(|i| complex.abs(ft[i]), 0, n/2)), 'black')
    for k=ncut, n/2 do ft[k] = 0 end
 
-   fftinv(ft, true)
+   num.fftinv(ft, true)
 
    pt:addline(filine(|i| v[i], n), 'red')
 

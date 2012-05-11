@@ -1,5 +1,5 @@
 
-use 'stdlib'
+use 'math'
 
 local function star(r)
    local a, ae = 54*pi/180, 72*pi/180
@@ -7,7 +7,7 @@ local function star(r)
    local he = li*tan(ae)
    local xv, yv = 0, - hi - he
    local xb, yb = - li, - hi
-   local p = path(xv, yv)
+   local p = graph.path(xv, yv)
    p:line_to(xb, yb)
    for k=1, 4 do
       local th = 2*pi*k/5
@@ -19,58 +19,61 @@ local function star(r)
 end
 
 local function demo1()
-   local plt = canvas 'rotating star'
+   local plt = graph.canvas 'rotating star'
    plt.units = false
    plt:show()
    local a = 15.0
    plt:limits(-a, -a, a, a)
    local r = rng.new()
+   local gray1, gray2 = graph.rgb(0.9, 0.9, 0.9), graph.rgb(0.6, 0.6, 0.6)
    for k = 1, 50 do
       local x, y = (2*r:get()-1)*a, (2*r:get()-1)*a
       local d = rnd.gaussian(r, 0.015*a) + 0.03*a
       local s = star(d)
-      plt:add(s, rgb(0.9, 0.9, 0.9), {}, {{'translate', x=x, y=y}})
-      plt:addline(s, rgb(0.6, 0.6, 0.6), {}, {{'translate', x=x, y=y}})
+      plt:add(s, gray1, {}, {{'translate', x=x, y=y}})
+      plt:addline(s, gray2, {}, {{'translate', x=x, y=y}})
    end
    plt:pushlayer()
    local N, R, nc = 128, 5.0, 8
+   local yellow, dark = graph.rgba(1, 1, 0, 0.7), graph.rgb(0.5, 0.5, 0)
    for k = 0, N * nc do
       local r = R * cos(pi*k/N)^2
       local th = 2*pi*(k/(N*nc*10))
       local s= star(r)
       plt:clear()
-      plt:add(s, rgba(1, 1, 0, 0.7), {}, {{'rotate', angle=th}})
-      plt:addline(s, rgb(0.5, 0.5, 0), {}, {{'rotate', angle=th}})
+      plt:add(s, yellow, {}, {{'rotate', angle=th}})
+      plt:addline(s, dark, {}, {{'rotate', angle=th}})
       plt:flush()
    end
 end
 
 local function demo2()
    local f = |x| exp(-0.1*x) * cos(x)
-   local p = plot 'y = f(x)'
+   local p = graph.plot 'y = f(x)'
    local x0, x1 = 0, 10*pi
-   local cc = fxline(f, x0, x1, k)
+   local cc = graph.fxline(f, x0, x1, k)
    p.sync = false
    p:pushlayer()
    p:show()
 
    local N = 256
+   local yellow = graph.rgba(1,1,0,0.6)
    for k= 2, N do
       local x = x0 + k * (x1-x0) / N
-      local ca = fxline(f, x0, x, k)
+      local ca = graph.fxline(f, x0, x, k)
       ca:line_to(x, 0); ca:line_to(0, 0); ca:close()
       p:clear()
-      p:add(ca, rgba(1,1,0,0.6))
+      p:add(ca, yellow)
       p:addline(cc)
       p:flush()
    end
 end
 
 local function demo3()
-   local p = plot 'box plot'
+   local p = graph.plot 'box plot'
    local r = rng.new()
    r:set(os.time())
-   p:addline(rect(-10, -10, 10, 10), 'blue', {{'dash', 7, 3}})
+   p:addline(graph.rect(-10, -10, 10, 10), 'blue', {{'dash', 7, 3}})
    p.sync = false
    p:pushlayer()
    p:show()
@@ -83,8 +86,8 @@ local function demo3()
       p:clear()
       for j=1, 4 do
 	 local x, y, rad = get(), get(), 5 + r:get() * L/2
-	 local rt = circle(x, y, rad)
-	 p:add(rt, rgba(r:get(), r:get(),r:get(), 0.5))
+	 local rt = graph.circle(x, y, rad)
+	 p:add(rt, graph.rgba(r:get(), r:get(),r:get(), 0.5))
 	 p:addline(rt, 'black')
       end
       p:flush()

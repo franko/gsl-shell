@@ -26,9 +26,9 @@ local function sincos()
    end
 
    local f = fsincos(0.1, 0.3)
-   local p1 = contour.plot(f, 0, 0, 4*pi, 4*pi, {gridx=60, gridy=60})
+   local p1 = contour.plot(f, 0, 0, 4*pi, 4*pi, {gridx=60, gridy=60, show= false})
    add_box_title(p1, 0, 4*pi, 0, 4*pi, 'f(x,y) = cos(x) + cos(y) + 0.1x + 0.3y')
-
+   p1:show()
    return p1
 end
 

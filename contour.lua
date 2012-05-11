@@ -18,7 +18,7 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
 
-use 'stdlib'
+use 'math'
 
 local insert = table.insert
 
@@ -570,8 +570,8 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 		 function(ia, ib) return #curves[ia] < #curves[ib] end)
 
       local function make_col_iter(j)
-	 return sequence(function(i) return segment_index_i(i, j, i+1, j) end,
-			  0, ny-1)
+	 return iter.sequence(function(i) return segment_index_i(i, j, i+1, j) end,
+			      0, ny-1)
       end
 
       local order_tree, treated = {}, {}
