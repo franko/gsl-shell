@@ -336,28 +336,27 @@ eigen.SORT_NONE     = gsl.GSL_EIGEN_SORT_NONE
 --Calculates the eigenvalues/eigenvectors of the symmetric matrix m
 --the order can be used to determine the sorting of the eigenvalues according to their value
 function eigen.symm(m, order)
-	local size = m.size1
-	local A = matrix.copy(m)
+   local size = m.size1
+   local A = matrix.copy(m)
    local eval = matrix.alloc(size, 1)
    local evec = matrix.alloc (size, size)
-	local xeval = gsl.gsl_matrix_column(eval, 0)
-	order = order or eigen.SORT_VAL_DESC
+   local xeval = gsl.gsl_matrix_column(eval, 0)
+   order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_symmv_alloc (size), gsl.gsl_eigen_symmv_free)
+   local w = gsl.gsl_eigen_symmv_alloc (size)
    gsl_check(gsl.gsl_eigen_symmv (A, xeval, evec, w))
+   gsl.gsl_eigen_symmv_free (w)
 
    if order ~= eigen.SORT_NONE then
-   	gsl.gsl_eigen_symmv_sort (xeval, evec, order)
+      gsl.gsl_eigen_symmv_sort (xeval, evec, order)
    end
 
    return eval,evec
-
 end
 
 --Calculates the eigenvalues/eigenvectors of the real nonsymmetric matrix m
 --the order can be used to determine the sorting of the eigenvalues according to their value
 function eigen.non_symm(m, order)
-
    local size = m.size1
    local A = matrix.copy(m)
    local eval = matrix.calloc(size, 1)
@@ -365,15 +364,15 @@ function eigen.non_symm(m, order)
    local xeval = gsl.gsl_matrix_complex_column(eval, 0)
    order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_nonsymmv_alloc (size), gsl.gsl_eigen_nonsymmv_free)
+   local w = gsl.gsl_eigen_nonsymmv_alloc (size)
    gsl_check(gsl.gsl_eigen_nonsymmv (A, xeval, evec, w))
+   gsl.gsl_eigen_nonsymmv_free (w)
 
    if order ~= eigen.SORT_NONE then
       gsl.gsl_eigen_nonsymmv_sort (xeval, evec, order)
    end
 
    return eval,evec
-
 end
 
 function eigen.herm(m, order, eigenvalues_only)
@@ -384,8 +383,9 @@ function eigen.herm(m, order, eigenvalues_only)
    local evec = matrix.calloc (size, size)
    order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_hermv_alloc (size), gsl.gsl_eigen_hermv_free)
+   local w = gsl.gsl_eigen_hermv_alloc (size)
    gsl_check(gsl.gsl_eigen_hermv(A, xeval, evec, w))
+   gsl.gsl_eigen_hermv_free (w)
 
    if order ~= eigen.SORT_NONE then
       gsl.gsl_eigen_hermv_sort (xeval, evec, order)
@@ -404,8 +404,9 @@ function eigen.gensymm(a, b)
    local evec = matrix.alloc (size, size)
    order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_gensymmv_alloc (size), gsl.gsl_eigen_gensymmv_free)
+   local w = gsl.gsl_eigen_gensymmv_alloc (size)
    gsl_check(gsl.gsl_eigen_gensymmv(A,B, xeval, evec, w))
+   gsl.gsl_eigen_gensymmv_free (w)
 
    if order ~= eigen.SORT_NONE then
       gsl.gsl_eigen_gensymmv_sort (xeval, evec, order)
@@ -423,8 +424,9 @@ function eigen.genherm(a, b)
    local evec = matrix.calloc (size, size)
    order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_genhermv_alloc (size), gsl.gsl_eigen_genhermv_free)
+   local w = gsl.gsl_eigen_genhermv_alloc (size)
    gsl_check(gsl.gsl_eigen_genhermv(A,B, xeval, evec, w))
+   gsl.gsl_eigen_genhermv_free (w)
 
    if order ~= eigen.SORT_NONE then
       gsl.gsl_eigen_genhermv_sort (xeval, evec, order)
@@ -446,8 +448,9 @@ function eigen.gen(a, b)
    local evec = matrix.calloc (size, size)
    order = order or eigen.SORT_VAL_DESC
 
-   local w = ffi.gc(gsl.gsl_eigen_genv_alloc (size), gsl.gsl_eigen_genv_free)
+   local w = gsl.gsl_eigen_genv_alloc (size)
    gsl_check(gsl.gsl_eigen_genv(A,B, alpha_vec, beta_vec, evec, w))
+   gsl.gsl_eigen_genv_free (w)
 
    if order ~= eigen.SORT_NONE then
       gsl.gsl_eigen_genv_sort (alpha_vec, beta_vec, evec, order)
