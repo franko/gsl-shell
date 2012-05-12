@@ -18,6 +18,7 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
 
+use 'strict'
 use 'math'
 
 local insert = table.insert
@@ -74,7 +75,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    local g = {z= {}, zmin= f(lx1, ly1), zmax= f(rx2, ry2)}
    local dx, dy = (rx2 - lx1) / nx, (ry2 - ly1) / ny
    local ds = sqrt(dx^2 + dy^2)
-   local zlevels, zstep, z_eps
+   local zlevels, nlevels, zstep, z_eps
    local order_tree
 
    local function get_root(id, si)
@@ -561,7 +562,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function order_curves()
-      searchlist = {}
+      local searchlist = {}
       for id, _ in ipairs(curves) do
 	 if curves[id].closed then insert(searchlist, id) end
       end
