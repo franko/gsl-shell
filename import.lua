@@ -58,8 +58,10 @@ local function new_env()
 
    local mt = {__index = index, __newindex = newindex}
 
-   local function loader(module_names)
-      for module_name in module_names:gmatch("[^ ,]+") do
+   local function loader(...)
+      local n = select('#', ...)
+      for i = 1, n do
+	 local module_name = select(i, ...)
          if module_name == 'strict' then
              use_strict = true
          else
@@ -85,9 +87,9 @@ function restore_env()
    setfenv(0, _G)
 end
 
-function use(module_names)
+function use(...)
    local level = debug.getinfo(3, "") and 2 or 0
    local env = new_env()
-   env.use(module_names)
+   env.use(...)
    setfenv(level, env)
 end
