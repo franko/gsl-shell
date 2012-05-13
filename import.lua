@@ -4,14 +4,19 @@
 -- Implement the 'use' function to make functions visible in the global
 -- environment.
 --
+-- Strict mode can be enabled with use'strict'.
+-- In this mode, uses of undeclared global variables are checked.
+-- All global variables must be 'declared' through a regular assignment
+-- (even assigning nil will do) in a main chunk before being used
+-- anywhere or assigned to inside a function.
+--
 -- Copyright (C) 2009-2012 Francesco Abbate
 --
 -- Contributions made by Lesley De Cruz.
--- Some parts are adapted from 'strict' module included in LuaJIT2 of
--- Mike Pall.
+-- Some parts are adapted from the 'strict' module included in Lua 5.1.
 --
 
-local _G, rawget, rawset, error, getinfo = _G, rawget, rawset, error
+local _G, rawget, rawset, error = _G, rawget, rawset, error
 local getinfo = debug.getinfo
 
 local function what ()
@@ -24,13 +29,13 @@ local function new_env()
    local declared = {}
    local use_strict = false
 
-   local function check_declared(t, n)
+   local function check_declared(n)
       if not declared[n] and what() ~= "C" then
 	 error("variable '"..n.."' is not declared", 3)
       end
    end
 
-   local function check_assign(t, n, v)
+   local function check_assign(n)
       if not declared[n] then
 	 local w = what()
 	 if w ~= "main" and w ~= "C" then
@@ -42,29 +47,31 @@ local function new_env()
 
    local function index(t, n)
       local v = rawget(_G, n)
-      if use_strict and not v then check_declared(t, n) end
+      if use_strict and not v then check_declared(n) end
       return v
    end
 
    local function newindex(t, n, v)
-      if use_strict and not rawget(_G, n) then check_assign(t, n, v) end
+      if use_strict and not rawget(_G, n) then check_assign(n) end
       rawset(_G, n, v)
    end
 
    local mt = {__index = index, __newindex = newindex}
 
-   local function loader(module_name)
-      if module_name == 'strict' then
-	 use_strict = true
-      else
-	 local m = rawget(_G, module_name)
-	 if m and type(m) == 'table' then
-	    for k, v in pairs(m) do
-	       if k ~= 'use' then rawset(lookup_env, k, v) end
-	    end
-	 else
-	    error('module ' .. module_name .. ' not found')
-	 end
+   local function loader(module_names)
+      for module_name in module_names:gmatch("[^ ,]+") do
+         if module_name == 'strict' then
+             use_strict = true
+         else
+            local m = rawget(_G, module_name)
+            if m and type(m) == 'table' then
+               for k, v in pairs(m) do
+                  if k ~= 'use' then rawset(lookup_env, k, v) end
+               end
+            else
+               error('module ' .. module_name .. ' not found')
+            end
+         end
       end
    end
 
@@ -78,9 +85,9 @@ function restore_env()
    setfenv(0, _G)
 end
 
-function use(modname)
+function use(module_names)
    local level = debug.getinfo(3, "") and 2 or 0
    local env = new_env()
-   env.use(modname)
+   env.use(module_names)
    setfenv(level, env)
 end
