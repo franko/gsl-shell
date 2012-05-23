@@ -24,7 +24,7 @@ function num.ode(spec)
    local ode = template.load(method, spec)
 
    local mt = {
-      __index = {evolve = ode.evolve, init = ode.init}
+      __index = {step = ode.step, init = ode.init, evolve = ode.evolve}
    }
 
    return setmetatable(ode.new(), mt)

@@ -74,7 +74,7 @@ and here the code that we can write to implement it::
 
    -- the ODE solver is iterated till the time t1 is reached
    while s.t < t1 do
-      s:evolve(odef, t1)
+      s:step(t1)
    end
 
 In alternative you may want to make a plot of the curve that you obtain. Here an example, we create a "path" to describe the curve that we want to plot and then we iterate with the ODE solver and we add all the points with the "line_to" method. The we create an empty plot and we add the line that we have just created::
@@ -82,7 +82,7 @@ In alternative you may want to make a plot of the curve that you obtain. Here an
    -- we create a line and add the points obtained by integrating the ODE
    ln = graph.path(x0, y0)
    while s.t < t1 do
-      s:evolve(odef, t1)
+      s:step(t1)
       ln:line_to(s.y[1], s.y[2])
    end
 
@@ -96,6 +96,30 @@ And here the plot that you will obtain:
 .. figure:: ode-integration-quasi-spiral.png
 
    Curve obtained by integration of the above ODE system.
+
+A Slightly Improved Example
+---------------------------
+
+In the example given above we have used the :meth:`~ODE.step` method to advance the ODE integrator.
+When you use :meth:`ODE.step` the ODE integrator will adapt at each step the step size in order to respect the maximum absolute and relative error that you requested.
+This is a quite convenient behaviour but it can have a drawback since the sampling points can be very tightly packed or very largely spaced depending on the ODE system and the integration method.
+In some cases this is undesirable and you may want to obtain the values with a fixed sampling size.
+In this case you can use the :meth:`~ODE.evolve` method to obtain the values with a given sampling step.
+
+So, in the example above you can change the while loop and use the :meth:`~ODE.evolve` method instead::
+
+   -- we create a line and add the points obtained by integrating the ODE
+   ln = graph.path(x0, y0)
+   for t, y1, y2 in s:evolve(t1, 0.1) do
+      ln:line_to(y1, y2)
+   end
+
+to obtain values sampled with a spacing of 0.1 for the t values.
+
+You can see that the :meth:`~ODE.evolve` method works actually as a Lua iterator.
+
+You may also note that the :meth:`~ODE.evolve` iterator provides at each iteration the value t and each of the system variables in the standard order.
+
 
 ODE Solver Class Definition
 ---------------------------
@@ -130,9 +154,22 @@ ODE Solver Class Definition
       It will be called like ``f(t, y_1, y_2, ..., y_N)`` where ``t`` is the time and ``y_1, y_2, ...`` are the values of the N independent values conventionally denoted here by 'y'.
       The function ``f`` should return N values that correspond to values ``f_i(t, y_1, ..., y_N)`` for each component ``f_i`` of the ODE system function.
 
-   .. method:: evolve(f, t1)
+   .. method:: step(t1)
 
       Advance the solution of the system by a step chosen adaptively based on the previous step size.
       The new values (t, y) are stored internally by the solver and can be retrieved as properties with the name ``t`` and ``y`` where the latter is a column matrix of size N.
       The new values of t will be less than or equal to the value given ``t1``.
       If the value ``s.t`` is less then ``t1`` then the function evolve should be called again by the user.
+
+   .. method:: evolve(t1, t_step)
+
+      Returns a Lua iterator that advance the ODE system at each iteration of a step ``t_step`` until the value ``t1`` is reached.
+      The iterators returns the value ``t`` itself and all the system variables ``y0``, ``y1``, ... in the standard order.
+
+      Example::
+
+         -- we suppose an ODE system 's' is already defined and initialized
+         local t1 = 50
+         for t, y1, y2 in s:evolve(t1, 0.5) do
+            print(t, y1, y2)
+         end
