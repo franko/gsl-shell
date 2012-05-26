@@ -724,6 +724,17 @@ local matrix_mt = {
 
 ffi.metatype(gsl_matrix, matrix_mt)
 
+matrix_complex = {
+   alloc = matrix_calloc,
+   col   = matrix_complex_col,
+   row   = matrix_complex_row,
+   get   = matrix_complex_get,
+   set   = matrix_complex_set,
+   copy  = matrix_complex_copy,
+   norm  = matrix_complex_norm,
+   slice = matrix_complex_slice
+}
+
 local matrix_complex_methods = {
    alloc = matrix_calloc,
    col   = matrix_complex_col,
@@ -732,7 +743,7 @@ local matrix_complex_methods = {
    set   = matrix_complex_set,
    copy  = matrix_complex_copy,
    norm  = matrix_complex_norm,
-   slice = matrix_complex_slice,
+   slice = matrix_complex_slice
 }
 
 local function matrix_complex_index(m, i)
@@ -942,8 +953,6 @@ function matrix.svd(a)
    gsl_check(gsl.gsl_linalg_SV_decomp (u, v, sv, wv))
    return u, s, v
 end
-
-matrix.sv_decomp = matrix_sv_decomp
 
 matrix.diag = function(d)
 		 local n = #d
