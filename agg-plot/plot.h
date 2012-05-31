@@ -644,7 +644,8 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 
 	  if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
 	    {
-	      agg::trans_affine mtx(dx, 0.0, 0.0, dy, px, py);
+	      const double tx = canvas_mtx.tx, ty = canvas_mtx.ty;
+	      agg::trans_affine mtx(dx, 0.0, 0.0, dy, tx + px, ty + py);
 	      mp->before_draw();
 	      mp->draw_axis(canvas, mtx);
 	      mp->draw_elements(canvas, mtx);
