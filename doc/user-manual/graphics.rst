@@ -546,6 +546,11 @@ You can add elements to a plot in any moments even when it is already shown. GSL
 
       The plot legend is drawn on the screen using an area that is equal, in pixal, to the logical size of the plot legend itself.
 
+   .. method:: get_legend([placement])
+
+      Return the plot legend stored in the given ``placement``.
+      The placement parameter is interpreted as in the :meth:`~Plot.set_legend` method.
+
    .. method:: set_categories(axis, categories)
 
       Configure the given ``axis`` (a letter, 'x' or 'y') to use a custom set of labels specified by ``categories``.

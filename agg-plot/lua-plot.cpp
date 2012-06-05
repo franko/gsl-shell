@@ -69,6 +69,7 @@ static int plot_ylab_angle_set (lua_State *L);
 static int plot_ylab_angle_get (lua_State *L);
 static int plot_set_categories (lua_State *L);
 static int plot_set_legend     (lua_State *L);
+static int plot_get_legend     (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -109,6 +110,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"save_svg",    plot_save_svg   },
   {"set_categories", plot_set_categories},
   {"set_legend",  plot_set_legend},
+  {"get_legend",  plot_get_legend},
   {NULL, NULL}
 };
 
@@ -228,6 +230,7 @@ objref_mref_add (lua_State *L, int table_index, int index, int value_index)
   lua_rawseti (L, -2, n+1);
   lua_pop (L, 1);
 }
+
 
 void
 plot_lua_add_ref (lua_State* L, int plot_index, int ref_index)
@@ -671,15 +674,12 @@ plot_set_categories (lua_State *L)
   return 0;
 }
 
-int
-plot_set_legend(lua_State *L)
+static sg_plot::placement_e
+char_to_placement_enum(lua_State* L, const char *s)
 {
-  sg_plot* p = object_check<sg_plot>(L, 1, GS_PLOT);
-  sg_plot* mp = object_check<sg_plot>(L, 2, GS_PLOT);
-  const char* placement = luaL_optstring(L, 3, "r");
   sg_plot::placement_e pos;
 
-  char letter = placement[0];
+  char letter = s[0];
   if (letter == 'r')
     pos = sg_plot::right;
   else if (letter == 'l')
@@ -689,11 +689,23 @@ plot_set_legend(lua_State *L)
   else if (letter == 't')
     pos = sg_plot::top;
   else
-    return luaL_error (L, "invalid legend placement specification.");
+    luaL_error (L, "invalid legend placement specification.");
+
+  return pos;
+}
+
+int
+plot_set_legend(lua_State *L)
+{
+  sg_plot* p = object_check<sg_plot>(L, 1, GS_PLOT);
+  sg_plot* mp = object_check<sg_plot>(L, 2, GS_PLOT);
+  const char* placement = luaL_optstring(L, 3, "r");
+  sg_plot::placement_e pos = char_to_placement_enum(L, placement);
 
   int ref_index = (1 << 16) + (int)pos;
-  lua_getfenv (L, 1);
-  objref_mref_add (L, -1, ref_index, 2);
+  lua_getfenv(L, 1);
+  lua_pushvalue(L, 2);
+  lua_rawseti(L, -2, ref_index);
 
   AGG_LOCK();
   p->add_legend(mp, pos);
@@ -702,6 +714,18 @@ plot_set_legend(lua_State *L)
   plot_update_raw (L, p, 1);
 
   return 0;
+}
+
+int
+plot_get_legend(lua_State *L)
+{
+  object_check<sg_plot>(L, 1, GS_PLOT);
+  const char* placement = luaL_optstring(L, 2, "r");
+  sg_plot::placement_e pos = char_to_placement_enum(L, placement);
+  int ref_index = (1 << 16) + (int)pos;
+  lua_getfenv(L, 1);
+  lua_rawgeti(L, -1, ref_index);
+  return 1;
 }
 
 void

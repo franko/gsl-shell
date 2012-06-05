@@ -156,10 +156,8 @@ public:
   str& x_axis_title() { return m_x_axis.title; }
   str& y_axis_title() { return m_y_axis.title; }
 
-  void add_legend(plot* p, placement_e where)
-  {
-    m_legend[where] = p;
-  }
+  void add_legend(plot* p, placement_e where) { m_legend[where] = p; }
+  plot* get_legend(placement_e where) { return m_legend[where]; }
 
   axis& get_axis(axis_e axis_dir)
   {
