@@ -68,7 +68,7 @@ static int plot_xlab_angle_get (lua_State *L);
 static int plot_ylab_angle_set (lua_State *L);
 static int plot_ylab_angle_get (lua_State *L);
 static int plot_set_categories (lua_State *L);
-static int plot_set_mini       (lua_State *L);
+static int plot_set_legend     (lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -108,7 +108,7 @@ static const struct luaL_Reg plot_methods[] = {
   {"save",        bitmap_save_image },
   {"save_svg",    plot_save_svg   },
   {"set_categories", plot_set_categories},
-  {"set_mini",    plot_set_mini},
+  {"set_legend",  plot_set_legend},
   {NULL, NULL}
 };
 
@@ -672,7 +672,7 @@ plot_set_categories (lua_State *L)
 }
 
 int
-plot_set_mini(lua_State *L)
+plot_set_legend(lua_State *L)
 {
   sg_plot* p = object_check<sg_plot>(L, 1, GS_PLOT);
   sg_plot* mp = object_check<sg_plot>(L, 2, GS_PLOT);
@@ -689,14 +689,14 @@ plot_set_mini(lua_State *L)
   else if (letter == 't')
     pos = sg_plot::top;
   else
-    return luaL_error (L, "invalid mini plot placement specification.");
+    return luaL_error (L, "invalid legend placement specification.");
 
   int ref_index = (1 << 16) + (int)pos;
   lua_getfenv (L, 1);
   objref_mref_add (L, -1, ref_index, 2);
 
   AGG_LOCK();
-  p->add_mini_plot(mp, pos);
+  p->add_legend(mp, pos);
   AGG_UNLOCK();
 
   plot_update_raw (L, p, 1);

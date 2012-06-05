@@ -824,7 +824,7 @@ function contour.plot(f, x1, y1, x2, y2, options)
 
    if opt 'legend' then
       local lgd = g.create_legend()
-      p:set_mini(lgd)
+      p:set_legend(lgd)
    end
 
    if opt 'show' then p:show() end
@@ -845,7 +845,7 @@ function contour.polar_plot(f, R, options)
 
    if opt 'legend' then
       local lgd = g.create_legend()
-      p:set_mini(lgd)
+      p:set_legend(lgd)
    end
 
    if opt 'lines' then g.draw_lines(p, 'black') end

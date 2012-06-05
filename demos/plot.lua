@@ -137,7 +137,7 @@ local function legend_demo()
    mp.title = 'Plot example'
    mp.xtitle = 'x axis title'
 
-   mp:set_mini(p)
+   mp:set_legend(p)
    mp:save_svg('demo.svg', 600, 400)
    p:save_svg('legend.svg', 400, 200)
 

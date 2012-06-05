@@ -138,7 +138,7 @@ public:
   {
     compute_user_trans();
     for (unsigned k = 0; k < 4; k++)
-      m_mini_plot[k] = 0;
+      m_legend[k] = 0;
   };
 
   virtual ~plot()
@@ -156,9 +156,9 @@ public:
   str& x_axis_title() { return m_x_axis.title; }
   str& y_axis_title() { return m_y_axis.title; }
 
-  void add_mini_plot(plot* p, placement_e where)
+  void add_legend(plot* p, placement_e where)
   {
-    m_mini_plot[where] = p;
+    m_legend[where] = p;
   }
 
   axis& get_axis(axis_e axis_dir)
@@ -256,7 +256,7 @@ protected:
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m, agg::rect_base<int>* clip = 0);
 
-  agg::trans_affine draw_mini_plots(canvas_type& canvas,
+  agg::trans_affine draw_legends(canvas_type& canvas,
 				    agg::trans_affine& canvas_mtx);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
@@ -295,7 +295,7 @@ private:
   bool m_sync_mode;
 
   axis m_x_axis, m_y_axis;
-  plot* m_mini_plot[4];
+  plot* m_legend[4];
 };
 
 static double compute_scale(agg::trans_affine& m)
@@ -368,7 +368,7 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affin
 
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
 
-  agg::trans_affine area_mtx = draw_mini_plots(canvas, canvas_mtx);
+  agg::trans_affine area_mtx = draw_legends(canvas, canvas_mtx);
 
   if (area_is_valid(area_mtx))
     {
@@ -572,7 +572,7 @@ static inline double approx_text_height(double text_size)
 }
 
 template <class VS, class RM>
-agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
+agg::trans_affine plot<VS,RM>::draw_legends(canvas_type& canvas,
 					       agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
@@ -607,7 +607,7 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 
   for (int k = 0; k < 4; k++)
     {
-      plot* mp = m_mini_plot[k];
+      plot* mp = m_legend[k];
 
       if (mp)
 	{
