@@ -118,6 +118,7 @@ end
 
 function graph.barplot(t)
    local nr, nc = #t, #t[1] - 1
+   local legend_text = t.legend
    local pad = 0.1
    local dx = (1-2*pad)/nc
    local cat = {}
@@ -134,6 +135,13 @@ function graph.barplot(t)
 	 local rect = graph.rect(x, 0, x+dx, y)
 	 p:add(rect, graph.webcolor(j))
 	 p:add(rect, 'black', {{'stroke', width= 0.5}})
+      end
+
+   end
+
+   if legend_text then
+      for j = 1, nc do
+	 p:legend(legend_text[j], graph.webcolor(j), 'square')
       end
    end
 
@@ -282,34 +290,48 @@ end
 local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
       return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
-   elseif sym == 'circle' then
-      return graph.ellipse(10+dx, 10+dy, 5, 5)
    elseif sym == 'line' then
-      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
+      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {{'stroke'}}
    else
-      error('invalid legend symbol: ' .. sym)
+      return graph.marker(10+dx, 10+dy, sym, 8)
    end
 end
 
-function graph.legend(entries)
-   local n = #entries
-   local p = graph.plot()
-   p.units, p.clip = false, false
-   for k= 1, n do
-      local text, color, symspec, trans = unpack(entries[k])
-      local y = (k-1) * 20
-      local sym, symtr = legend_symbol(symspec, 0, y)
-      local tr
-      if symtr then
-	 tr = { symtr }
-	 if trans then
-	    for j, xtr in ipairs(trans) do tr[#tr+1] = xtr end
-	 end
-      else
-	 tr = trans
-      end
-      p:add(sym, color, tr)
-      p:add(graph.textshape(25, y + 6, text, 10), 'black')
+local function plot_legend(self, text, color, symspec, trans)
+   local lg = self:get_legend()
+   local env = debug.getfenv(self)
+
+   if not lg then
+      lg = graph.plot()
+      lg.units = false
+      self:set_legend(lg)
    end
-   return p
+
+   local k = env.__lg_count or 0
+   local y = -k * 20
+
+   local sym, symtr = legend_symbol(symspec, 0, y)
+
+   local tr = (trans and trans or symtr)
+
+   lg:add(sym, color, tr)
+   lg:add(graph.textshape(25, y + 6, text, 10), 'black')
+
+   env.__lg_count = k+1
+   self:update()
 end
+
+local function redirect_plot()
+   local reg = debug.getregistry()
+   local mt = reg['GSL.plot']
+   local plot_index = mt.__index
+
+   local function index_redirect(t, k)
+      if k == 'legend' then return plot_legend end
+      return plot_index(t, k)
+   end
+
+   mt.__index = index_redirect
+end
+
+redirect_plot()
