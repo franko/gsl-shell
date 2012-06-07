@@ -142,13 +142,25 @@ static const struct luaL_Reg plot_properties_set[] = {
 
 __END_DECLS
 
+static void
+configure_plot_env(lua_State* L, int index)
+{
+  INDEX_SET_ABS(L, index);
+  lua_newtable(L); /* create a new table for the environment */
+
+  lua_pushstring(L, "__legend");
+  lua_newtable(L);
+  lua_rawset(L, -3); /* set the field __legend to a new table in the env */
+
+  lua_setfenv (L, index);
+}
+
 int
 plot_new (lua_State *L)
 {
   sg_plot *p = push_new_object<sg_plot_auto>(L, GS_PLOT);
 
-  lua_newtable (L);
-  lua_setfenv (L, -2);
+  configure_plot_env(L, -1);
 
   if (lua_isstring (L, 1))
     {
@@ -165,8 +177,7 @@ canvas_new (lua_State *L)
 {
   sg_plot *p = push_new_object<sg_plot>(L, GS_PLOT);
 
-  lua_newtable (L);
-  lua_setfenv (L, -2);
+  configure_plot_env(L, -1);
 
   p->sync_mode(false);
 
@@ -694,6 +705,18 @@ char_to_placement_enum(lua_State* L, const char *s)
   return pos;
 }
 
+static void set_legend_ref(lua_State* L, sg_plot::placement_e pos,
+			   int plot_index, int legend_index)
+{
+  INDEX_SET_ABS_2(L, plot_index, legend_index);
+  lua_getfenv(L, plot_index); /* env = getfenv(plot) */
+  lua_pushstring(L, "__legend");
+  lua_rawget(L, -2); /* leg_table = env.__legend */
+  lua_pushvalue(L, legend_index);
+  lua_rawseti(L, -2, pos);  /* leg_table[pos] = legend */
+  lua_pop(L, 1); /* pop environment table */
+}
+
 int
 plot_set_legend(lua_State *L)
 {
@@ -702,10 +725,7 @@ plot_set_legend(lua_State *L)
   const char* placement = luaL_optstring(L, 3, "r");
   sg_plot::placement_e pos = char_to_placement_enum(L, placement);
 
-  int ref_index = (1 << 16) + (int)pos;
-  lua_getfenv(L, 1);
-  lua_pushvalue(L, 2);
-  lua_rawseti(L, -2, ref_index);
+  set_legend_ref(L, pos, 1, 2);
 
   AGG_LOCK();
   p->add_legend(mp, pos);
@@ -722,9 +742,12 @@ plot_get_legend(lua_State *L)
   object_check<sg_plot>(L, 1, GS_PLOT);
   const char* placement = luaL_optstring(L, 2, "r");
   sg_plot::placement_e pos = char_to_placement_enum(L, placement);
-  int ref_index = (1 << 16) + (int)pos;
-  lua_getfenv(L, 1);
-  lua_rawgeti(L, -1, ref_index);
+
+  lua_getfenv(L, 1); /* env = getfenv(plot) */
+  lua_pushstring(L, "__legend");
+  lua_rawget(L, -2); /* leg_table = env.__legend */
+  lua_rawgeti(L, -1, pos);  /* push leg_table[pos] */
+
   return 1;
 }
 
