@@ -256,7 +256,7 @@ end
 
 local color_schema = {
    bluish    = {0.91, 0.898, 0.85, 0.345, 0.145, 0.6},
-   redyellow = {1, 1, 0, 1, 0, 0},
+   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
    darkgreen = {0.9, 0.9, 0, 0, 0.4, 0}
 }
 
@@ -270,47 +270,6 @@ function graph.color_function(schema, alpha)
 end
 
 graph.hue_color = hue_color
-
-local function HueToRgb(m1, m2, hue)
-   local v
-   hue = hue % 1
-
-   if 6 * hue < 1 then
-      v = m1 + (m2 - m1) * hue * 6
-   elseif 2 * hue < 1 then
-      v = m2
-   elseif 3 * hue < 2 then
-      v = m1 + (m2 - m1) * (2/3 - hue) * 6
-   else
-      v = m1
-   end
-
-   return v
-end
-
-function graph.hsl2rgb(h, s, l)
-   local m1, m2, hue
-   local r, g, b
-
-   if s == 0 then
-      r, g, b = l, l, l
-   else
-      if l <= 0.5 then
-	 m2 = l * (s + 1);
-      else
-	 m2 = l + s - l * s
-      end
-      m1 = l * 2 - m2
-      r = HueToRgb(m1, m2, h + 1/3)
-      g = HueToRgb(m1, m2, h)
-      b = HueToRgb(m1, m2, h - 1/3)
-   end
-   return graph.rgb(r, g, b)
-end
-
-function graph.hue(a)
-   return graph.hsl2rgb((1-a)*0.7, 1, 0.6)
-end
 
 function graph.plot_lines(ln, title)
    local p = graph.plot(title)
