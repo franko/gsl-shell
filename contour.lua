@@ -23,7 +23,7 @@ use 'math'
 
 local insert = table.insert
 
-local default_color_map = graph.color_function('redyellow', 0.9)
+local default_color_map = graph.color_function('redyellow', 1)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -819,6 +819,8 @@ function contour.plot(f, x1, y1, x2, y2, options)
    g.find_curves()
 
    local p = graph.plot()
+   p:add(graph.rect(x1, y1, x2, y2), 'black')
+
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
 
@@ -841,6 +843,8 @@ function contour.polar_plot(f, R, options)
    g.find_curves()
 
    local p = graph.plot()
+   p:add(graph.ellipse(0, 0, R, R), 'black')
+
    g.draw_regions(p)
 
    if opt 'legend' then

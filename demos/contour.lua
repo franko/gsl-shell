@@ -3,7 +3,7 @@ use 'math'
 local function rosenbrock()
    -- rosenbrock function
    local f = function(x, y) return 100*(y-x^2)^2 + (1-x)^2 end
-   local N = 7
+   local N = 9
    local function frbeval(k) return f(1, 1 - 2 * (k/N)^2) end
    local ls = iter.ilist(frbeval, N)
    local p = contour.plot(f, -1.5, -0.5, 1.5, 2, {gridx= 80, gridy= 80, levels= ls})
@@ -18,16 +18,9 @@ local function sincos()
 			     end
 		   end
 
-   local function add_box_title(p, x1, x2, y1, y2, title)
-      local box = graph.rect(x1, y1, x2, y2)
-      p:addline(box, 'black')
-      p.units = false
-      p.title = title
-   end
-
    local f = fsincos(0.1, 0.3)
-   local p1 = contour.plot(f, 0, 0, 4*pi, 4*pi, {gridx=60, gridy=60, show= false})
-   add_box_title(p1, 0, 4*pi, 0, 4*pi, 'f(x,y) = cos(x) + cos(y) + 0.1x + 0.3y')
+   local p1 = contour.plot(f, -2*pi, -2*pi, 6*pi, 6*pi, {gridx=120, gridy=120, levels= 12, show= false})
+   p1.title = 'f(x,y) = cos(x) + cos(y) + 0.1x + 0.3y'
    p1:show()
    return p1
 end
