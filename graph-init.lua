@@ -156,6 +156,13 @@ function graph.rect(x1, y1, x2, y2)
    return p
 end
 
+local function rgba8(r, g, b, a)
+   local rb = band(lshift(r, 24), 0xff000000)
+   local gb = band(lshift(g, 16), 0xff0000  )
+   local bb = band(lshift(b, 8 ), 0xff00    )
+   return bor(rb, gb, bb, a and band(a, 0xff) or 0xff)
+end
+
 local function rgba(r, g, b, a)
    local rb = band(lshift(r*255, 24), 0xff000000)
    local gb = band(lshift(g*255, 16), 0xff0000  )
@@ -204,6 +211,39 @@ local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
 -- colors from a popular spreadsheet application
 local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38}
 
+local hue_map = {
+   {231, 0,   0  },
+   {231, 113, 0  },
+   {231, 211, 0  },
+   {156, 231, 0  },
+   {0,   231, 33 },
+   {0,   231, 156},
+   {0,   195, 231},
+   {0,   113, 231},
+   {0,   0,   231},
+   {132, 0,   231}
+}
+
+local function hue_choose(k)
+   local e = hue_map[k]
+   local r, g, b = e[1], e[2], e[3]
+   return rgba8(r, g, b, 255)
+end
+
+local function hue_color(p)
+   local x = 10 - p * 9
+   local i = floor(x)
+   if i < 1 or i+1 > 10 then
+      return i < 1 and hue_choose(1) or hue_choose(10)
+   else
+      local e1, e2 = hue_map[i], hue_map[i+1]
+      local r = floor(e1[1] + (e2[1] - e1[1])*(x-i))
+      local g = floor(e1[2] + (e2[2] - e1[2])*(x-i))
+      local b = floor(e1[3] + (e2[3] - e1[3])*(x-i))
+      return rgba8(r, g, b, 255)
+   end
+end
+
 function graph.rainbow(n)
    local p = #bcolors
    return graph.color[bcolors[(n-1) % p + 1]]
@@ -228,6 +268,8 @@ function graph.color_function(schema, alpha)
 			     c[3] + a*(c[6]-c[3]), alpha)
 	  end
 end
+
+graph.hue_color = hue_color
 
 local function HueToRgb(m1, m2, hue)
    local v
@@ -267,7 +309,7 @@ function graph.hsl2rgb(h, s, l)
 end
 
 function graph.hue(a)
-   return graph.hsl2rgb(a*0.7, 1, 0.6)
+   return graph.hsl2rgb((1-a)*0.7, 1, 0.6)
 end
 
 function graph.plot_lines(ln, title)
