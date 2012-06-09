@@ -82,7 +82,7 @@ local function testcompare(t1,t2,ignore_mt)
   local ty1,ty2 = type(t1),type(t2)
 --  if (ty1=="string" or ty1=="cdata") and (ty2=="string" or ty2=="cdata") then
   if ty1=="cdata" or ty2=="cdata" then
-    local cty1 = tostring(ffi.typeof(t1))
+    local cty1,cty2 = tostring(ffi.typeof(t1)),tostring(ffi.typeof(t2))
     if cty1=="ctype<complex>" and cty2=="ctype<complex>" then
       local dist = complex.abs(t2-t1)
       return numbercompare(dist,0)

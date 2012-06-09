@@ -1,3 +1,4 @@
+-- tests for linalg functions
 use'matrix'
 local t = {}
 local d=10

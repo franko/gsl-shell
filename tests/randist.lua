@@ -1,3 +1,4 @@
+-- tests for module randist
 use'randist'
 local t = {}
 
