@@ -1,22 +1,18 @@
+local rng=require"rng"
 -- tests for module rng
-use'rng'
 local tt = {}
-
-local n=1
-local seed=1
-local instance = function(name) return new(name) end -- initialize instance!
+local instance = rng.new
+local seed = 1234567890
 
 -- function tests
-
-tt.list = function(test) test{list()} end
-
+tt.list = function() return rng.list() end
 
 -- method tests
-for i,name in ipairs(list()) do
+for i,name in ipairs(rng.list()) do
   local r = instance(name)
-  tt[name] = function(test)
-    r:set(1234567890)
-    test{r:get(),r:getint(2^32-1),r:getint(2^24-1),r:getint(2^16-1),r:getint(1024),r:get()}
+  tt[name] = function()
+    r:set(seed)
+    return {r:get(),r:getint(2^32-1),r:getint(2^24-1),r:getint(2^16-1),r:getint(1024),r:get()}
   end
 end
 

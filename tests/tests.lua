@@ -17,69 +17,86 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
 -- USA.
 -- 
--- 
 -- This is a test suite for GSL Shell. 
 -- 
 -- To add tests, drop a lua file in the tests/ dir which returns a table of 
--- functions. These functions should take a single argument, i.e. the 
--- callback function ("test" below) which logs the output and optional 
--- expected output.
--- In the function, the callback should be invoked like
---  test(t,e)
--- t being (a table of) the output you want to test, and
--- e (optional) the expected output.
+-- functions. These functions should return the test output as a first 
+-- value (this can be a table) and, optionally, the expected output as a 
+-- second value. Note that if the latter is not defined, the previously
+-- recorded value will be used.
 -- 
 -- For example, tests/foobar.lua could read:
 -- 
 --  local t ={}
---  t.regressiontest = function(test) test{foo(1,2,3),foo(4,5),foo(6)} end
---  t.simpleregressiontest = function(test) test(bar(100)) end
---  t.expectedtest = function(test) test({foo(7),foo(8,9)},{49,145}) end
---  t.anothertest = function(test) test(bar(25),5) end
+--  t.regressiontest = function() return {foo(1,2,3), foo(4,5), foo(6)} end
+--  t.simpleregressiontest = function() return bar(100) end 
+--  t.expectedtest = function() return {foo(7), foo(8,9)}, {49,145} end
+--  t.anothertest = function() return bar(25), 5 end
 --  return t
 -- 
 -- After adding tests, log the expected output:
---  gsl-shell tests/tests.lua recreate foobar
+--  gsl-shell tests/tests.lua record foobar
 -- This will serialize the (expected) output to tests/expected/foobar.lua.
 -- 
--- Run tests:
+-- Run tests as follows:
 --  gsl-shell tests/tests.lua foobar baz etc
 -- 
--- Tests can also be added to existing routines to assert that the outcome 
--- doesn't change over time (due to e.g. changes in LuaJIT, GSL Shell or the
--- libraries used therein). See for example the demos below.
+-- Or just run:
+--  make test TESTS="baz etc"
 -- 
 
 ---- Utility functions and parameters ----
 -- adapted from lua-users.org & luacode.org
 
+local ffi = require"ffi"
+
 local quiet = false 
 local fuzzy = false -- do a fuzzy number compare 
 local log = function(...) return io.stderr:write(...) end 
-if quiet then log = function(...) return end end
+if quiet then log = function() return end end
 
-local sort,pairs,ipairs = table.sort,pairs,ipairs
+local abs, max = math.abs, math.max
+local sort, pairs, ipairs = table.sort, pairs, ipairs
+local sformat = string.format
 
 local function numbercompare(a,b) return a==b end
 
--- fuzzy compare
-if fuzzy then 
-  numbercompare = function (a,b)
-    local scale = (a~=0 and a) or (b~=0 and b) or 1
-    return (a-b)/scale < 1e-13
+local eps_rel, eps_machine = 1e-8, 2.2250738585072014e-308
+
+local function fuzzycompare(a,b)
+  if a==b then return true
+  else 
+    local m = max(abs(a), abs(b))
+    local diff = abs(a-b) 
+    if diff < eps_rel * m + eps_machine then
+      return diff/m
+    else
+      return false
+    end
   end
 end
 
 -- compare two arbitrary objects
+-- t2 is the serialised object
 local function testcompare(t1,t2,ignore_mt)
   local ty1,ty2 = type(t1),type(t2)
-  if (ty1=='string' or ty1=='cdata') and (ty2=='string' or ty2=='cdata') then 
-    return tostring(t1)==tostring(t2)
+--  if (ty1=="string" or ty1=="cdata") and (ty2=="string" or ty2=="cdata") then
+  if ty1=="cdata" or ty2=="cdata" then
+    local cty1 = tostring(ffi.typeof(t1))
+    if cty1=="ctype<complex>" and cty2=="ctype<complex>" then
+      local dist = complex.abs(t2-t1)
+      return numbercompare(dist,0)
+    elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" 
+        or cty2=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
+      local n1,n2 = tonumber(t1), tonumber(t2)
+      if n1 and n2 then return numbercompare(n1,n2) end
+    else return tostring(t1)==tostring(t2) 
+    end
   end
   if ty1 ~= ty2 then return false end
   -- non-table types can be directly compared
-  if ty1 ~= 'table' then 
-    if ty1=='number' then
+  if ty1 ~= "table" then 
+    if ty1=="number" then
       return numbercompare(t1,t2)
     else
       return t1 == t2 
@@ -100,28 +117,28 @@ end
 -- deterministic pairs, sorted by key
 local function keysortedpairs(t, f)
   local a = {}
-    for n in pairs(t) do a[#a+1]=n end
-    sort(a, f)
-    local i = 0  -- iterator variable
-    local iter = function ()   -- iterator function
-      i = i + 1
-      if a[i] == nil then return nil
-      else return a[i], t[a[i]]
-      end
+  for n in pairs(t) do a[#a+1]=n end
+  sort(a, f)
+  local i = 0  -- iterator variable
+  local it = function ()   -- iterator function
+    i = i + 1
+    if a[i] == nil then return nil
+    else return a[i], t[a[i]]
     end
-  return iter
+  end
+  return it
 end
 
 -- table serializer
 local function serialize (f, o, indent)
   indent = indent or 1
   local otype = type(o)
-  if otype == "string" then f:write(string.format("%q", o))
+  if otype == "string" then f:write(sformat("%q", o))
   elseif otype == "number" then
     if o~=o then f:write("0/0") -- nan
     elseif o==math.huge then f:write("math.huge") -- inf
     elseif o==-math.huge then f:write("-math.huge") -- -inf
-    else f:write(string.format("%.16e",o)) end -- other numbers
+    else f:write(sformat("%.17e",o)) end -- other numbers
   elseif otype == "boolean" then
     f:write(tostring(o))
   elseif otype == "table" then 
@@ -143,8 +160,14 @@ local function serialize (f, o, indent)
     if simpleList and moreThan1 then f:write("\n",string.rep("\t",indent-1)) end
     f:write("}")
   elseif otype == "function" then f:write(string.dump(o))
-  elseif otype == "cdata" then f:write(string.format("%q",tostring(o)))
-  else f:write('nil')
+  elseif otype == "cdata" then
+    local cotype = tostring(ffi.typeof(o))
+    if cotype=="ctype<uint64_t>" or cotype=="ctype<int64_t>" then 
+      -- boxed (u)int64
+      o = tonumber(o)
+      f:write(sformat("%.17e",o))
+    else f:write(sformat("%q",tostring(o))) end
+  else f:write("nil")
   end
 end
 
@@ -152,77 +175,80 @@ end
 
 ---- Test functions ----
 
--- tables with output
-local expected,produced,testresult = {},{},{}
+-- Tables with the test output.
+local expected,produced= {},{}
 
--- callback function to pass to each of the tests
-local function gettest(recreate,category,name)
-  return function (t,goal)
-    if recreate then -- recreate the expected test results
-      expected[category][name] = goal or t
-      testresult[category][name] = "RECORD"
+-- Execute the test and record or check the result.
+local function dotest(testf, record, category, name)
+  local ok, outcome, goal = pcall(testf)
+  if not ok then
+    return "EXCEPTION", outcome
+  elseif record then -- record the expected test results
+    if goal or outcome then 
+      expected[category][name] = goal or outcome
+      return "RECORD"
     else
-      local expect = goal or expected[category][name]
-      produced[category][name] = t
-      if expect then -- expected test result is present?
-        testresult[category][name]= testcompare(t,expect) and "PASS" or "FAIL"
-      else
-        testresult[category][name]= "MISSING"
+      return "NO_TEST"
+    end
+  else
+    local expect = goal or expected[category][name]
+    produced[category][name] = outcome
+    if expect then -- expected test result is present?
+      local comp = testcompare(outcome,expect) 
+      if tonumber(comp) then return "APPROX", sformat("%.2e",comp)
+      else return comp and "PASS" or "FAIL" 
       end
+    elseif outcome then -- outcome is present but expected result is missing
+      return "MISSING"
+    else -- neither outcome nor expected output present
+      return "NO_TEST"
     end
   end
 end
 
--- results and result counts
+-- Results and result counts, both "automagical" tables.
 local r, rc 
 local function reset()
-  r =  setmetatable({}, {__index = function(t,k) local z={}; t[k]=z; return z end})
+  r =  setmetatable({}, {__index = function(t,k) local z={}; t[k]=z; return z end}) 
   rc = setmetatable({}, {__index = function() return 0 end})
 end
 reset()
 
-local function logoutcome(category,name,outcome)
-  log(outcome)
-  rc[outcome]=rc[outcome] +1
-  r[outcome][rc[outcome]] = category.."."..name
+-- Call dotest and log the results.
+local function logresult(testf,record,category,name,description)
+  local result, msg = dotest(testf,record, category, name)
+  rc[result] = rc[result] + 1
+  r[result][rc[result]] = category.."."..name
+  log(result, "\t", name , description and ": "..description or "",
+    msg and "\n\t\t"..msg or "","\n")
 end
 
--- Pass the test function as a callback to the function f
--- and log the results
-  local function logresult(f,recreate,category,name,description)
-  local ok, err= pcall(f,gettest(recreate,category,name))
-  logoutcome(category,name,testresult[category][name] or "NO_TEST")
-  if not ok then 
-    log(" / ")
-    logoutcome(category,name,"EXCEPTION")
-    description = err
-  end
-  log("\t", name , description and ": "..description or "" ,"\n")
-end
-
--- table of all the test categories
--- contains the functions that run the tests in that category. 
+-- Table of all the test categories, each entry of this table
+-- contains a function that runs all tests in that category. 
+-- By default, the functions in the tests/category file are used.
 local mytests = setmetatable({},{
   __index = function (t,category)
-    return function(recreate)
-      local testtab = require("tests/"..category) 
-      for name,f in keysortedpairs(testtab) do logresult(f,recreate,category,name) end
+    local function fun(record)
+      local testtab = require("tests/"..category)
+      for name,f in keysortedpairs(testtab) do logresult(f,record,category,name) end
     end
+    rawset(t,category,fun)
+    return fun
   end
 })
 
--- special case for the demos
-mytests.demos = function(recreate)
-  local demomod = require 'demo-init' 
+-- Special case for the demos.
+mytests.demos = function(record)
+  local demomod = require "demo-init" 
   for group,section in keysortedpairs(demomod.demo_list) do
     for i,entry in ipairs(section) do
-      logresult(entry.f,recreate,"demos",entry.name,entry.description)
+      logresult(entry.f,record,"demos",entry.name,entry.description)
     end
   end
 end
 
--- finalize by writing the expected or produced output to file
-local function summary(recreate)
+-- Finalize by writing the expected or produced output to file.
+local function summary(record)
   for k,v in keysortedpairs(r) do
     if #v>0 and k~="PASS" and k~="RECORD" then 
       log("------------------------------------------------\n")
@@ -235,10 +261,10 @@ local function summary(recreate)
     rc.EXCEPTION," exceptions.\n",
     rc.FAIL+rc.PASS+rc.MISSING+rc.RECORD," tests: \n")
   -- write diagnostics output
-  if recreate then
+  if record then
     log(
-      '\t',rc.RECORD, " tests recorded\n",
-      '\t',rc.EXCEPTION, " exceptions\n",
+      "\t",rc.RECORD, " tests recorded\n",
+      "\t",rc.EXCEPTION, " exceptions\n",
       rc.NO_TEST, " functions without tests\n")      
     for cat,tab in pairs(expected) do
       local f = io.open("tests/expected/"..cat..".lua","w")
@@ -248,13 +274,13 @@ local function summary(recreate)
     end
   else
     log(
-      '\t',rc.PASS, " tests passed\n",
-      '\t',rc.FAIL, " tests failed\n",
-      '\t',rc.MISSING," tests with missing expected output\n",
-      '\t',rc.EXCEPTION," exceptions\n",
+      "\t",rc.PASS, " tests passed\n",
+      "\t",rc.FAIL, " tests failed\n",
+      "\t",rc.MISSING," tests with missing expected output\n",
+      "\t",rc.EXCEPTION," exceptions\n",
       rc.NO_TEST, " items without test\n")
     if rc.MISSING > 0 then 
-      log"Please run make recreate-test after adding tests.\n"
+      log"Please run make record-test after adding tests.\n"
     end
     for cat,tab in pairs(produced) do
       local f = io.open("tests/produced/"..cat..".lua","w")
@@ -269,32 +295,25 @@ end
 -- create tables and run tests for a given category
 local function testcategory(category,options)
   fuzzy = options.fuzzy
-  expected[category] = options.recreate and {} or require('tests/expected/'..category)
-  testresult[category],produced[category] = {},{}
+  expected[category] = options.record and {} or require("tests/expected/"..category)
+  produced[category] = {}
   log("---- ",category," ----\n")
-  mytests[category](options.recreate)
+  mytests[category](options.record)
 end
 
 local function runtests(options,t)
-  -- run only the given test categories
-  if t[1] then
-    for i,cat in ipairs(t) do
-      testcategory(cat,options)
-    end
-  else
-  -- if none are given, run tests for all categories
-    for cat in keysortedpairs(mytests) do
-      testcategory(cat,options)
-    end  
+  for i,cat in ipairs(t) do
+    testcategory(cat,options)
   end
-  summary(options.recreate)
+  summary(options.record)
 end
 
 if arg then 
   local options={
-    recreate = (arg[1]=="recreate" and (table.remove(arg, 1) and true ) or false),
+    record = (arg[1]=="record" and (table.remove(arg, 1) and true ) or false),
     fuzzy = (arg[1]=="fuzzy" and (table.remove(arg,1) and true) or false)
     }
+  if options.fuzzy then numbercompare=fuzzycompare end
   runtests(options,arg)
   os.exit(rc.FAIL+rc.MISSING+rc.NO_TEST+rc.EXCEPTION)
 else 

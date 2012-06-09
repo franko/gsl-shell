@@ -29,7 +29,7 @@ local function c_generator(n, n_angle, len_frac, g)
 	  end
 end
 
-local function levyc(n)
+local function levy_curve_demo(n)
    n = n or 6
    local p = plot('Levy\'s C curve')
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
@@ -68,8 +68,6 @@ local function von_koch_demo()
    pl:show()
 end
 
-local levy_curve_demo = function(...) return levyc(6,...) end 
-
 local function pitag_tree_symm_demo()
    local rdsd = sqrt(2)/2
    local ubox = rect(0, 0, 1, 1)
@@ -97,7 +95,7 @@ local function pitag_tree_symm_demo()
    pl:show()
 end
 
-local function pitag_tree_asym(n,f)
+local function pitag_tree_asym_demo(n)
    local ubox = rect(0, 0, 1, 1)
    n = n or 10
    local col, coln
@@ -131,8 +129,6 @@ local function pitag_tree_asym(n,f)
       pl:flush()
    end
 end
-
-local pitag_tree_asym_demo = function(...) return pitag_tree_asym(10,...) end
 
 return {'Fractals', {
   {

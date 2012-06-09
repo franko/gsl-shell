@@ -1,11 +1,11 @@
 -- tests for module ode
-use'num'
 local tt = {}
+local ode=num.ode
 
 local methods={'rk8pd','rkf45'}
 
 local function odef(t, x, y)
-   return -y^2, 2*x - y^3
+   return -y^2, 2*x - y*y*y
 end
 
 -- we define initial values
@@ -14,7 +14,7 @@ local x0, y0 = 1, 1
 
 -- function tests
 for i,method in ipairs(methods) do
-  tt[method] = function(test) 
+  tt[method] = function() 
     local s = ode{N= 2, eps_abs= 1e-8, method=method}
     s:init(t0, h0, odef, x0, y0)
     local function f(i)
@@ -24,7 +24,7 @@ for i,method in ipairs(methods) do
       end
       return {s.y[1],s.y[2]}
     end
-    test{iter.ilist(f,10)}
+    return iter.ilist(f,10)
   end
 end
 

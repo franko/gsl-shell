@@ -313,7 +313,7 @@ local function anim(pcs)
    end
 end
 
-local function wave_demo(test)
+local function wave_demo()
    info 'Finding energy eigenvalues (roots)...'
    roots = root_grid_search(energy_limit)
    echo 'done'
@@ -367,7 +367,7 @@ local function wave_demo(test)
    pcs:pushlayer()
 
    echo 'READY: press enter'
-   if not test then io.read '*l' end
+   io.read '*l'
 
    anim(pcs)
 end
