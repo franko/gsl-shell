@@ -8,6 +8,10 @@ local M = {}
 
 local rng_type = ffi.typeof('gsl_rng')
 
+local function rng_limits(r)
+   return gsl.gsl_rng_min(r), gsl.gsl_rng_max(r)
+end
+
 local rng_mt = {
    __tostring = function(s)
                    return format("<random number generator: %p>", s)
@@ -16,7 +20,9 @@ local rng_mt = {
    __index = {
       getint = gsl.gsl_rng_uniform_int,
       get    = gsl.gsl_rng_uniform,
+      int    = gsl.gsl_rng_get,
       set    = gsl.gsl_rng_set,
+      limits = rng_limits
    },
 }
 

@@ -87,6 +87,12 @@ So, if you want to generate random numbers the first step is to use the :func:`r
      generators compute this ratio internally so that they can provide
      floating point numbers with more than 32 bits of randomness.
 
+   .. method:: int()
+
+     This function returns a random integer from the generator.
+     The minimum and maximum values depend on the algorithm used, but all integers in the range [MIN,MAX] are equally likely.
+     The values of MIN and MAX can determined using the auxiliary function :meth:`~Rng.limits`.
+
    .. method:: getint(n)
 
      This function returns a random integer from 0 to n-1 inclusive by
@@ -96,6 +102,10 @@ So, if you want to generate random numbers the first step is to use the :func:`r
    .. method:: set(seed)
 
      This method set the seed of the generator to the given integer value.
+
+   .. method:: limits()
+
+     Returns two values, the minimum and maximum values that the generator can return.
 
 .. function:: list()
 
