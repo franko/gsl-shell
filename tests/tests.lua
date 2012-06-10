@@ -16,43 +16,43 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
 -- USA.
--- 
--- This is a test suite for GSL Shell. 
--- 
--- To add tests, drop a lua file in the tests/ dir which returns a table of 
--- functions. These functions should return the test output as a first 
--- value (this can be a table) and, optionally, the expected output as a 
+--
+-- This is a test suite for GSL Shell.
+--
+-- To add tests, drop a lua file in the tests/ dir which returns a table of
+-- functions. These functions should return the test output as a first
+-- value (this can be a table) and, optionally, the expected output as a
 -- second value. Note that if the latter is not defined, the previously
 -- recorded value will be used.
--- 
+--
 -- For example, tests/foobar.lua could read:
--- 
+--
 --  local t ={}
 --  t.regressiontest = function() return {foo(1,2,3), foo(4,5), foo(6)} end
---  t.simpleregressiontest = function() return bar(100) end 
+--  t.simpleregressiontest = function() return bar(100) end
 --  t.expectedtest = function() return {foo(7), foo(8,9)}, {49,145} end
 --  t.anothertest = function() return bar(25), 5 end
 --  return t
--- 
+--
 -- After adding tests, log the expected output:
 --  gsl-shell tests/tests.lua record foobar
 -- This will serialize the (expected) output to tests/expected/foobar.lua.
--- 
+--
 -- Run tests as follows:
 --  gsl-shell tests/tests.lua foobar baz etc
--- 
+--
 -- Or just run:
 --  make test TESTS="baz etc"
--- 
+--
 
 ---- Utility functions and parameters ----
 -- adapted from lua-users.org & luacode.org
 
 local ffi = require"ffi"
 
-local quiet = false 
-local fuzzy = false -- do a fuzzy number compare 
-local log = function(...) return io.stderr:write(...) end 
+local quiet = false
+local fuzzy = false -- do a fuzzy number compare
+local log = function(...) return io.stderr:write(...) end
 if quiet then log = function() return end end
 
 local abs, max = math.abs, math.max
@@ -65,9 +65,9 @@ local eps_rel, eps_machine = 1e-8, 2.2250738585072014e-308
 
 local function fuzzycompare(a,b)
   if a==b then return true
-  else 
+  else
     local m = max(abs(a), abs(b))
-    local diff = abs(a-b) 
+    local diff = abs(a-b)
     if diff < eps_rel * m + eps_machine then
       return diff/m
     else
@@ -89,16 +89,16 @@ local function testcompare(t1,t2,ignore_mt)
     elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
       local n1,n2 = tonumber(t1), tonumber(t2)
       if n1 and n2 then return numbercompare(n1,n2) end
-    else return tostring(t1)==tostring(t2) 
+    else return tostring(t1)==tostring(t2)
     end
   end
   if ty1 ~= ty2 then return false end
   -- non-table types can be directly compared
-  if ty1 ~= "table" then 
+  if ty1 ~= "table" then
     if ty1=="number" then
       return numbercompare(t1,t2)
     else
-      return t1 == t2 
+      return t1 == t2
     end
   end
   -- as well as tables which have the metamethod __eq
@@ -140,18 +140,18 @@ local function serialize (f, o, indent)
     else f:write(sformat("%.17e",o)) end -- other numbers
   elseif otype == "boolean" then
     f:write(tostring(o))
-  elseif otype == "table" then 
+  elseif otype == "table" then
     f:write("{")
     local comma,counter,moreThan1,simpleList="",1,next(o,next(o))
     for k,v in keysortedpairs(o) do
       f:write(comma)
       if counter ~= k then
         if moreThan1 then f:write("\n",string.rep("\t",indent)) end
-        f:write("[") 
-        serialize(f,k) 
+        f:write("[")
+        serialize(f,k)
         f:write("]=")
         simpleList = true
-      else counter = counter + 1 
+      else counter = counter + 1
       end
       serialize(f,v,indent+1)
       comma=","
@@ -161,7 +161,7 @@ local function serialize (f, o, indent)
   elseif otype == "function" then f:write(string.dump(o))
   elseif otype == "cdata" then
     local cotype = tostring(ffi.typeof(o))
-    if cotype=="ctype<uint64_t>" or cotype=="ctype<int64_t>" then 
+    if cotype=="ctype<uint64_t>" or cotype=="ctype<int64_t>" then
       -- boxed (u)int64
       o = tonumber(o)
       f:write(sformat("%.17e",o))
@@ -185,7 +185,7 @@ local function dotest(testf, record, category, name)
   if not ok then
     return "EXCEPTION", outcome
   elseif record then -- record the expected test results
-    if goal or outcome then 
+    if goal or outcome then
       expected[category][name] = goal or outcome
       return "RECORD"
     else
@@ -195,9 +195,9 @@ local function dotest(testf, record, category, name)
     local expect = goal or expected[category][name]
     produced[category][name] = outcome
     if expect then -- expected test result is present?
-      local comp = testcompare(outcome,expect) 
+      local comp = testcompare(outcome,expect)
       if tonumber(comp) then return "APPROX", sformat("%.2e",comp)
-      else return comp and "PASS" or "FAIL" 
+      else return comp and "PASS" or "FAIL"
       end
     elseif outcome then -- outcome is present but expected result is missing
       return "MISSING"
@@ -208,9 +208,9 @@ local function dotest(testf, record, category, name)
 end
 
 -- Results and result counts, both "automagical" tables.
-local r, rc 
+local r, rc
 local function reset()
-  r =  setmetatable({}, {__index = function(t,k) local z={}; t[k]=z; return z end}) 
+  r =  setmetatable({}, {__index = function(t,k) local z={}; t[k]=z; return z end})
   rc = setmetatable({}, {__index = function() return 0 end})
 end
 reset()
@@ -225,7 +225,7 @@ local function logresult(testf,record,category,name,description)
 end
 
 -- Table of all the test categories, each entry of this table
--- contains a function that runs all tests in that category. 
+-- contains a function that runs all tests in that category.
 -- By default, the functions in the tests/category file are used.
 local mytests = setmetatable({},{
   __index = function (t,category)
@@ -240,7 +240,7 @@ local mytests = setmetatable({},{
 
 -- Special case for the demos.
 mytests.demos = function(record)
-  local demomod = require "demo-init" 
+  local demomod = require "demo-init"
   for group,section in keysortedpairs(demomod.demo_list) do
     for i,entry in ipairs(section) do
       logresult(entry.f,record,"demos",entry.name,entry.description)
@@ -251,9 +251,9 @@ end
 -- Finalize by writing the expected or produced output to file.
 local function summary(record)
   for k,v in keysortedpairs(r) do
-    if #v>0 and k~="PASS" and k~="RECORD" then 
+    if #v>0 and k~="PASS" and k~="RECORD" then
       log("------------------------------------------------\n")
-      log(k," (",rc[k],"): ",table.concat(v," "),"\n") 
+      log(k," (",rc[k],"): ",table.concat(v," "),"\n")
     end
   end
   log("------------------------------------------------\n",
@@ -266,7 +266,7 @@ local function summary(record)
     log(
       "\t",rc.RECORD, " tests recorded\n",
       "\t",rc.EXCEPTION, " exceptions\n",
-      rc.NO_TEST, " functions without tests\n")      
+      rc.NO_TEST, " functions without tests\n")
     for cat,tab in pairs(expected) do
       local f = io.open("tests/expected/"..cat..".lua","w")
       f:write("return ")
@@ -280,7 +280,7 @@ local function summary(record)
       "\t",rc.MISSING," tests with missing expected output\n",
       "\t",rc.EXCEPTION," exceptions\n",
       rc.NO_TEST, " items without test\n")
-    if rc.MISSING > 0 then 
+    if rc.MISSING > 0 then
       log"Please run make record-test after adding tests.\n"
     end
     for cat,tab in pairs(produced) do
@@ -309,7 +309,7 @@ local function runtests(options,t)
   summary(options.record)
 end
 
-if arg then 
+if arg then
   local options={
     record = (arg[1]=="record" and (table.remove(arg, 1) and true ) or false),
     fuzzy = (arg[1]=="fuzzy" and (table.remove(arg,1) and true) or false)
@@ -317,10 +317,10 @@ if arg then
   if options.fuzzy then numbercompare=fuzzycompare end
   runtests(options,arg)
   os.exit(rc.FAIL+rc.MISSING+rc.NO_TEST+rc.EXCEPTION)
-else 
+else
   return {
     runtests = runtests,
-    testcategory = testcategory, 
+    testcategory = testcategory,
     summary = summary,
     reset = reset,
     results = r, counts=rc

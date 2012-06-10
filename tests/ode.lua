@@ -14,7 +14,7 @@ local x0, y0 = 1, 1
 
 -- function tests
 for i,method in ipairs(methods) do
-  tt[method] = function() 
+  tt[method] = function()
     local s = ode{N= 2, eps_abs= 1e-8, method=method}
     s:init(t0, h0, odef, x0, y0)
     local function f(i)

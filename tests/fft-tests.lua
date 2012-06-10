@@ -164,9 +164,9 @@ local function test1_stride()
    end
 end
 
-return {test1= test1, 
-	test2= test1_radix2, 
-	test3= test1_ip_radix2, 
-	test4= test1_ip, 
-	test5= test2, 
+return {test1= test1,
+	test2= test1_radix2,
+	test3= test1_ip_radix2,
+	test4= test1_ip,
+	test5= test2,
 	test6= test1_stride}
