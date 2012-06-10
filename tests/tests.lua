@@ -58,7 +58,7 @@ local abs, max = math.abs, math.max
 local sort, pairs, ipairs = table.sort, pairs, ipairs
 local sformat = string.format
 
-local eps_rel, eps_machine = 1e-8, 2.2250738585072014e-308
+local eps_rel, eps_machine = 1e-12, 2.2250738585072014e-308
 
 local function number_compare(a,b)
    if a==b then
