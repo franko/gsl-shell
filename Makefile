@@ -117,7 +117,7 @@ record-test:
 	$(GSL_SHELL) tests/tests.lua record $(TESTS) > tests/stdout.txt
 
 test:
-	$(GSL_SHELL) tests/tests.lua fuzzy $(TESTS) > tests/stdout.txt
+	$(GSL_SHELL) tests/tests.lua $(TESTS) > tests/stdout.txt
 
 clean:
 	$(MAKE) -C agg-plot clean

@@ -51,7 +51,6 @@
 local ffi = require"ffi"
 
 local quiet = false
-local fuzzy = false -- do a fuzzy number compare
 local log = function(...) return io.stderr:write(...) end
 if quiet then log = function() return end end
 
@@ -59,21 +58,26 @@ local abs, max = math.abs, math.max
 local sort, pairs, ipairs = table.sort, pairs, ipairs
 local sformat = string.format
 
-local function numbercompare(a,b) return a==b end
-
 local eps_rel, eps_machine = 1e-8, 2.2250738585072014e-308
 
-local function fuzzycompare(a,b)
-  if a==b then return true
-  else
-    local m = max(abs(a), abs(b))
-    local diff = abs(a-b)
-    if diff < eps_rel * m + eps_machine then
-      return diff/m
-    else
-      return false
-    end
-  end
+local function number_compare(a,b)
+   if a==b then
+      return true
+   else
+      local m = max(abs(a), abs(b))
+      local diff = abs(a-b)
+      return (diff < eps_rel * m + eps_machine)
+   end
+end
+
+local function complex_compare(a,b)
+   if a==b then
+      return true
+   else
+      local m = max(complex.abs(a), complex.abs(b))
+      local diff = complex.abs(a-b)
+      return (diff < eps_rel * m + eps_machine)
+   end
 end
 
 -- compare two arbitrary objects
@@ -84,11 +88,10 @@ local function testcompare(t1,t2,ignore_mt)
     local cty1 = tostring(ffi.typeof(t1))
     if cty1=="ctype<complex>" then
       print(t1,t2)
-      local dist = complex.abs(t2-t1)
-      return numbercompare(dist,0)
+      return complex_compare(t1, t2)
     elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
       local n1,n2 = tonumber(t1), tonumber(t2)
-      if n1 and n2 then return numbercompare(n1,n2) end
+      if n1 and n2 then return number_compare(n1,n2) end
     else return tostring(t1)==tostring(t2)
     end
   end
@@ -96,7 +99,7 @@ local function testcompare(t1,t2,ignore_mt)
   -- non-table types can be directly compared
   if ty1 ~= "table" then
     if ty1=="number" then
-      return numbercompare(t1,t2)
+      return number_compare(t1,t2)
     else
       return t1 == t2
     end
@@ -196,9 +199,7 @@ local function dotest(testf, record, category, name)
     produced[category][name] = outcome
     if expect then -- expected test result is present?
       local comp = testcompare(outcome,expect)
-      if tonumber(comp) then return "APPROX", sformat("%.2e",comp)
-      else return comp and "PASS" or "FAIL"
-      end
+      return comp and "PASS" or "FAIL"
     elseif outcome then -- outcome is present but expected result is missing
       return "MISSING"
     else -- neither outcome nor expected output present
@@ -295,7 +296,6 @@ end
 
 -- create tables and run tests for a given category
 local function testcategory(category,options)
-  fuzzy = options.fuzzy
   expected[category] = options.record and {} or require("tests/expected/"..category)
   produced[category] = {}
   log("---- ",category," ----\n")
@@ -312,9 +312,7 @@ end
 if arg then
   local options={
     record = (arg[1]=="record" and (table.remove(arg, 1) and true ) or false),
-    fuzzy = (arg[1]=="fuzzy" and (table.remove(arg,1) and true) or false)
     }
-  if options.fuzzy then numbercompare=fuzzycompare end
   runtests(options,arg)
   os.exit(rc.FAIL+rc.MISSING+rc.NO_TEST+rc.EXCEPTION)
 else
