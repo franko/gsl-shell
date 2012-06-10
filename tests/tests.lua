@@ -80,14 +80,13 @@ end
 -- t2 is the serialised object
 local function testcompare(t1,t2,ignore_mt)
   local ty1,ty2 = type(t1),type(t2)
---  if (ty1=="string" or ty1=="cdata") and (ty2=="string" or ty2=="cdata") then
   if ty1=="cdata" or ty2=="cdata" then
-    local cty1,cty2 = tostring(ffi.typeof(t1)),tostring(ffi.typeof(t2))
-    if cty1=="ctype<complex>" and cty2=="ctype<complex>" then
+    local cty1 = tostring(ffi.typeof(t1))
+    if cty1=="ctype<complex>" then
+      print(t1,t2)
       local dist = complex.abs(t2-t1)
       return numbercompare(dist,0)
-    elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" 
-        or cty2=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
+    elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
       local n1,n2 = tonumber(t1), tonumber(t2)
       if n1 and n2 then return numbercompare(n1,n2) end
     else return tostring(t1)==tostring(t2) 
@@ -166,6 +165,8 @@ local function serialize (f, o, indent)
       -- boxed (u)int64
       o = tonumber(o)
       f:write(sformat("%.17e",o))
+    elseif cotype=="ctype<complex>" then
+      f:write(sformat("%.17e+%.17ei",complex.real(o),complex.imag(o)))
     else f:write(sformat("%q",tostring(o))) end
   else f:write("nil")
   end
