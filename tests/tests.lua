@@ -54,9 +54,27 @@ local quiet = false
 local log = function(...) return io.stderr:write(...) end
 if quiet then log = function() return end end
 
-local abs, max = math.abs, math.max
+local abs, max, sqrt = math.abs, math.max, math.sqrt
 local sort, pairs, ipairs = table.sort, pairs, ipairs
 local sformat = string.format
+
+local matrix_cname = tostring(ffi.typeof('gsl_matrix'))
+local matrix_complex_cname = tostring(ffi.typeof('gsl_matrix_complex'))
+
+local function format_number(x)
+   local xstr = tostring(x)
+   return tonumber(xstr) == x and xstr or string.format("%.17e", x)
+end
+
+local function format_complex(z)
+   local x, y = complex.rect(z)
+   local xstr, ystr = tostring(x), tostring(y)
+   if tonumber(xstr) == x and tonumber(ystr) == y then
+      return y == 0 and xstr or tostring(z)
+   else
+      return string.format("%.17e+%.17ei", x, y)
+   end
+end
 
 local eps_rel, eps_machine = 1e-12, 2.2250738585072014e-308
 
@@ -80,18 +98,34 @@ local function complex_compare(a,b)
    end
 end
 
+local function matrix_compare(a,b)
+   local ra, ca = matrix.dim(a)
+   local rb, cb = matrix.dim(b)
+   if ra ~= rb or ca ~= cb then
+      return false
+   else
+      local m = max(sqrt(a:norm()), sqrt(b:norm()))
+      local diff = sqrt((a - b):norm())
+      print('diff: ' .. diff .. ', m: ' .. m)
+      return (diff < eps_rel * m + eps_machine)
+   end
+end
+
 -- compare two arbitrary objects
 -- t2 is the serialised object
 local function testcompare(t1,t2,ignore_mt)
   local ty1,ty2 = type(t1),type(t2)
   if ty1=="cdata" or ty2=="cdata" then
     local cty1 = tostring(ffi.typeof(t1))
+    print('ctype: ', cty1)
     if cty1=="ctype<complex>" then
       print(t1,t2)
       return complex_compare(t1, t2)
     elseif cty1=="ctype<uint64_t>" or cty1=="ctype<int64_t>" then
       local n1,n2 = tonumber(t1), tonumber(t2)
       if n1 and n2 then return number_compare(n1,n2) end
+    elseif cty1==matrix_cname or cty1==matrix_complex_cname then
+       return matrix_compare(t1,t2)
     else return tostring(t1)==tostring(t2)
     end
   end
@@ -170,6 +204,18 @@ local function serialize (f, o, indent)
       f:write(sformat("%.17e",o))
     elseif cotype=="ctype<complex>" then
       f:write(sformat("%.17e+%.17ei",complex.real(o),complex.imag(o)))
+   elseif cotype==matrix_cname or cotype==matrix_complex_cname then
+      local is_real = (cotype==matrix_cname)
+      local format_element = (is_real and format_number or format_complex)
+      local ctor = (is_real and 'matrix.def' or 'matrix.cdef')
+      local r, c = matrix.dim(o)
+      local lines = {}
+      for i = 1, r do
+	 local row = {}
+	 for j = 1, c do row[j] = format_element(o:get(i,j)) end
+	 lines[i] = '{' .. table.concat(row, ',') .. '}'
+      end
+      f:write(ctor .. '{' .. table.concat(lines, ',') .. '}')
     else f:write(sformat("%q",tostring(o))) end
   else f:write("nil")
   end

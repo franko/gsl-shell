@@ -8,7 +8,6 @@ local b= function() return vec(iter.ilist(|x| x%4+1,d)) end
 t.m = function() return m() end
 t.b = function() return b() end
 t.inv = function() return inv(m()) end
-t.inv2 = function() return m()*inv(m()), unit(d) end
 t.solve = function() return solve(m(), b()) end
 t.svd = function() return {svd(m())} end
 return t
