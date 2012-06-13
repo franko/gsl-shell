@@ -1,9 +1,6 @@
 use 'math'
 
-function number_differ(result, expected, tol_rel, tol_abs)
-   local del = abs(result - expected)
-   return not (del / abs(expected) < tol_rel or del < tol_abs)
-end
+local cmp = require('tests/num_compare')
 
 local epsabs, epsrel = 1e-6, 1e-6
 
@@ -24,7 +21,7 @@ local function bessel_qag_test(order)
       for x = 0, 30*pi, 0.1 do
 	 local y_res, y_exp = J_test(x), pi * sf.besselJ(order, x)
 
-	 if number_differ(y_res, y_exp, epsrel, epsabs) then
+	 if cmp.number_differ(y_res, y_exp, epsrel, epsabs) then
 	    local fmt = "expected: %g at x=%g, obtained: %g"
 	    return string.format(fmt, y_exp, x, y_res)
 	 end
