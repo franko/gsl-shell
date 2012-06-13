@@ -5,8 +5,8 @@ for k = 1, test_nb do
    local tests = assert(dofile('tests/' .. module_name .. '.lua'))
    echo('------ ' .. module_name .. ' ------')
    for name, test in pairs(tests) do
-      local fail, errmsg = test()
-      if fail then
+      local errmsg = test()
+      if errmsg then
 	 echo('FAIL', name, errmsg)
       else
 	 echo('PASS', name)

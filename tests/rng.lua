@@ -7,7 +7,7 @@ local function rng_test(name, seed, n, expected)
 		k = r:int()
 	     end
 	     if k ~= expected then
-		return true, "expected: " .. expected .. ", got: " .. k
+		return "expected: " .. expected .. ", got: " .. k
 	     end
 	  end
 end
