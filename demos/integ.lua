@@ -1,6 +1,6 @@
 use 'math'
 
-local qag = num.quad_prepare({methdo='qag', limit=64, order=21})
+local qag = num.quad_prepare({method='qag', limit=64, order=21})
 
 local epsabs, epsrel = 1e-6, 0.01
 
