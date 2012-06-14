@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "sg_object.h"
+
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
 #include "agg_rasterizer_scanline_aa.h"
@@ -86,18 +88,16 @@ public:
 
   void reset_clipping() { this->rb.reset_clipping(true); };
 
-  template<class VertexSource>
-  void draw(VertexSource& vs, agg::rgba8 c)
+  void draw(sg_object& vs, agg::rgba8 c)
   {
     this->ras.add_path(vs);
     this->rs.color(c);
     agg::render_scanlines(this->ras, this->sl, this->rs);
   };
 
-  template<class VertexSource>
-  void draw_outline(VertexSource& vs, agg::rgba8 c)
+  void draw_outline(sg_object& vs, agg::rgba8 c)
   {
-    agg::conv_stroke<VertexSource> line(vs);
+    agg::conv_stroke<sg_object> line(vs);
     line.width(pixel::line_width / 100.0);
     line.line_cap(agg::round_cap);
 
@@ -107,10 +107,9 @@ public:
   };
 };
 
-template <class VertexSource>
 struct virtual_canvas {
-  virtual void draw(VertexSource& vs, agg::rgba8 c) = 0;
-  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) = 0;
+  virtual void draw(sg_object& vs, agg::rgba8 c) = 0;
+  virtual void draw_outline(sg_object& vs, agg::rgba8 c) = 0;
 
   virtual void clip_box(const agg::rect_base<int>& clip) = 0;
   virtual void reset_clipping() = 0;
