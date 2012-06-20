@@ -80,7 +80,9 @@ public:
 	if (glyph)
 	  {
 	    m_font_man.add_kerning(&x, &y);
-	    m_font_man.init_embedded_adaptors(glyph, 0, 0);
+	    /* We suppose that the embedded adaptors doesn't play to
+	       determine the text width. */
+	    /* m_font_man.init_embedded_adaptors(glyph, 0, 0); */
 	    x += glyph->advance_x;
 	  }
       }
