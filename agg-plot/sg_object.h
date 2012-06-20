@@ -24,6 +24,10 @@
 #include "agg_trans_affine.h"
 #include "agg_bounding_rect.h"
 #include "agg_conv_transform.h"
+#include "agg_rendering_buffer.h"
+#include "agg_scanline_p.h"
+#include "agg_rasterizer_scanline_aa.h"
+
 #include "draw_svg.h"
 #include "utils.h"
 #include "resource-manager.h"
@@ -40,6 +44,11 @@ struct sg_object : public vertex_source {
 
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
+
+  virtual bool render(agg::rendering_buffer& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
+  {
+    return false;
+  }
 
   virtual bool affine_compose(agg::trans_affine& m) { return false; }
 
@@ -197,6 +206,11 @@ public:
   }
 
   virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
+
+  virtual bool render(agg::rendering_buffer& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
+  {
+    return m_source->render(ren_buf, ras, sl, c);
+  }
 
 private:
   sg_object* m_source;

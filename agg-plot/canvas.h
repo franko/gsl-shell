@@ -61,12 +61,14 @@ class canvas_gen : private pixel {
   double m_width;
   double m_height;
 
+  agg::rendering_buffer& m_rbuf;
+
 public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
 	     agg::rgba bgcol):
     pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
-    m_width(width), m_height(height)
+    m_width(width), m_height(height), m_rbuf(ren_buf)
   {
   };
 
@@ -90,9 +92,14 @@ public:
 
   void draw(sg_object& vs, agg::rgba8 c)
   {
-    this->ras.add_path(vs);
-    this->rs.color(c);
-    agg::render_scanlines(this->ras, this->sl, this->rs);
+    bool direct_render = vs.render(m_rbuf, this->ras, this->sl, c);
+
+    if (!direct_render)
+      {
+	this->ras.add_path(vs);
+	this->rs.color(c);
+	agg::render_scanlines(this->ras, this->sl, this->rs);
+      }
   };
 
   void draw_outline(sg_object& vs, agg::rgba8 c)
