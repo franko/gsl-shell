@@ -28,7 +28,8 @@ public:
   template <class Rasterizer, class Scanline, class RenSolid>
   void draw_text(Rasterizer& ras, Scanline& sl, RenSolid& ren_solid,
 		 const agg::trans_affine& user_matrix,
-		 double x, double y, const char* text, int text_length)
+		 double x, double y, const char* text, int text_length,
+		 agg::rgba8 color)
   {
     typedef agg::conv_curve<font_manager_type::path_adaptor_type> curve_type;
 
@@ -58,7 +59,6 @@ public:
 
 	    user_matrix.transform(&mtx.tx, &mtx.ty);
 
-	    agg::rgba8 color(0, 0, 0);
 	    ras.add_path(trans);
 	    ren_solid.color(color);
 	    agg::render_scanlines(ras, sl, ren_solid);

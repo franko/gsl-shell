@@ -114,7 +114,8 @@ namespace draw {
     double x = -m_hjustif * text_width;
     double y = -m_vjustif * m_text_height;
 
-    m_font_ren.draw_text(ras, sl, ren_solid, m_matrix, x, y, text, text_length);
+    m_font_ren.draw_text(ras, sl, ren_solid, m_matrix, x, y,
+			 text, text_length, c);
 
     return true;
   }
