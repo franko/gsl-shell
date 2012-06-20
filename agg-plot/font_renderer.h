@@ -32,14 +32,15 @@ public:
   {
     typedef agg::conv_curve<font_manager_type::path_adaptor_type> curve_type;
 
-    x *= subpixel_scale;
-    const double start_x = x;
-
+    agg::trans_affine mtx = user_matrix;
     agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);
+    trans_affine_compose (mtx, scale_mtx);
 
     curve_type curves(m_font_man.path_adaptor());
-    agg::conv_transform<curve_type> trans1(curves, scale_mtx);
-    agg::conv_transform<agg::conv_transform<curve_type> > trans2(trans1, user_matrix);
+    agg::conv_transform<curve_type> trans(curves, mtx);
+
+    x *= subpixel_scale;
+    const double start_x = x;
 
     for (const char* p = text; p < text + text_length; p++)
       {
@@ -52,13 +53,13 @@ public:
 	m_font_man.init_embedded_adaptors(glyph, 0, 0);
 	if(glyph->data_type == agg::glyph_data_outline)
 	  {
-	    double ty = floor(y + 0.5);
+	    mtx.tx = start_x + x / scale_x;
+	    mtx.ty = floor(y + 0.5);
 
-	    scale_mtx.tx = start_x + x / scale_x;
-	    scale_mtx.ty = ty;
+	    user_matrix.transform(&mtx.tx, &mtx.ty);
 
 	    agg::rgba8 color(0, 0, 0);
-	    ras.add_path(trans2);
+	    ras.add_path(trans);
 	    ren_solid.color(color);
 	    agg::render_scanlines(ras, sl, ren_solid);
 	  }
