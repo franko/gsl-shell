@@ -1,4 +1,7 @@
 
+#include "agg_rendering_buffer.h"
+#include "agg_rasterizer_scanline_aa.h"
+#include "agg_pixfmt_rgb.h"
 #include "agg_trans_affine.h"
 
 #include "text.h"
