@@ -93,4 +93,27 @@ namespace draw {
 
     return s;
   }
+
+  bool text::render(agg::rendering_buffer& ren_buf,
+		    agg::rasterizer_scanline_aa<>& ras,
+		    agg::scanline_p8& sl, agg::rgba8 c)
+  {
+    typedef agg::pixfmt_bgr24 pixfmt_type;
+    typedef agg::renderer_base<pixfmt_type> renderer_type;
+
+    pixfmt_type pf(ren_buf);
+    renderer_type ren_base(pf);
+    agg::renderer_scanline_aa_solid<renderer_type> ren_solid(ren_base);
+
+    const char *text = m_text_buf.cstr();
+    unsigned text_length = m_text_buf.len();
+    double text_width = m_font_ren.text_width(text, text_length);
+    double x = -m_hjustif * text_width;
+    double y = -m_vjustif * m_text_height;
+
+    m_font_ren.draw_text(ras, sl, ren_solid, m_matrix, x, y, text, text_length);
+
+    return true;
+  }
+
 }
