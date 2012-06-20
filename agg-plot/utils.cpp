@@ -2,6 +2,8 @@
 
 agg::trans_affine identity_matrix;
 
+/* Mnemonic: a.premultiply(b) means a * b in terms of matrix multiplication */
+
 void
 trans_affine_compose (agg::trans_affine& a, const agg::trans_affine& b)
 {
