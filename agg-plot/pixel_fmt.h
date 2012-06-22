@@ -15,10 +15,10 @@ public:
   pixel_fmt pixfmt;
 
   pixel_gamma_corr(agg::rendering_buffer& ren_buf):
-    m_gamma(2.2), pixfmt(ren_buf, m_gamma)
+    m_gamma(1.5), pixfmt(ren_buf, m_gamma)
   { };
 
-  enum { line_width = 150 };
+  enum { line_width = 120 };
 };
 
 struct pixel_simple {
