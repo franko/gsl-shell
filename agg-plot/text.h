@@ -88,7 +88,7 @@ namespace draw {
 
     virtual str write_svg(int id, agg::rgba8 c, double h);
 
-    virtual bool render(agg::rendering_buffer& ren_buf,
+    virtual bool render(pixel_type::fmt& ren_buf,
 			agg::rasterizer_scanline_aa<>& ras,
 			agg::scanline_p8& sl, agg::rgba8 c);
 

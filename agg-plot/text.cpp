@@ -97,15 +97,13 @@ namespace draw {
     return s;
   }
 
-  bool text::render(agg::rendering_buffer& ren_buf,
+  bool text::render(pixel_type::fmt& pixbuf,
 		    agg::rasterizer_scanline_aa<>& ras,
 		    agg::scanline_p8& sl, agg::rgba8 c)
   {
-    typedef agg::pixfmt_bgr24 pixfmt_type;
-    typedef agg::renderer_base<pixfmt_type> renderer_type;
+    typedef agg::renderer_base<pixel_type::fmt> renderer_type;
 
-    pixfmt_type pf(ren_buf);
-    renderer_type ren_base(pf);
+    renderer_type ren_base(pixbuf);
     agg::renderer_scanline_aa_solid<renderer_type> ren_solid(ren_base);
 
     const char *text = m_text_buf.cstr();
