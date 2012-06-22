@@ -16,9 +16,9 @@
 #include "agg_trans_viewport.h"
 #include "agg_conv_stroke.h"
 
-template <class pixel>
-class canvas_gen : private pixel {
-  typedef agg::renderer_base<typename pixel::fmt> renderer_base;
+template <class Pixel>
+class canvas_gen : private Pixel {
+  typedef agg::renderer_base<typename Pixel::fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
 
   renderer_base rb;
@@ -35,7 +35,7 @@ class canvas_gen : private pixel {
 public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
 	     agg::rgba bgcol):
-    pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
+    Pixel(ren_buf), rb(Pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
@@ -74,7 +74,7 @@ public:
   void draw_outline(sg_object& vs, agg::rgba8 c)
   {
     agg::conv_stroke<sg_object> line(vs);
-    line.width(pixel::line_width / 100.0);
+    line.width(Pixel::line_width / 100.0);
     line.line_cap(agg::round_cap);
 
     this->ras.add_path(line);
