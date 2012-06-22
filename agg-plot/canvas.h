@@ -5,45 +5,16 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "pixel_fmt.h"
 #include "sg_object.h"
 
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
 #include "agg_rasterizer_scanline_aa.h"
-#include "agg_pixfmt_rgb.h"
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
 #include "agg_conv_stroke.h"
-
-#include "agg_gamma_lut.h"
-
-class pixel_gamma_corr {
-  typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
-  typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
-
-  gamma_type m_gamma;
-public:
-  typedef pixel_fmt fmt;
-
-  pixel_fmt pixfmt;
-
-  pixel_gamma_corr(agg::rendering_buffer& ren_buf):
-    m_gamma(2.2), pixfmt(ren_buf, m_gamma)
-  { };
-
-  enum { line_width = 150 };
-};
-
-struct pixel_simple {
-  agg::pixfmt_bgr24 pixfmt;
-
-  typedef agg::pixfmt_bgr24 fmt;
-
-  pixel_simple(agg::rendering_buffer& ren_buf): pixfmt(ren_buf) { };
-
-  enum { line_width = 100 };
-};
 
 template <class pixel>
 class canvas_gen : private pixel {
@@ -124,10 +95,6 @@ struct virtual_canvas {
   virtual ~virtual_canvas() { }
 };
 
-#ifdef DISABLE_GAMMA_CORR
-typedef canvas_gen<pixel_simple> canvas;
-#else
-typedef canvas_gen<pixel_gamma_corr> canvas;
-#endif
+typedef canvas_gen<pixel_type> canvas;
 
 #endif
