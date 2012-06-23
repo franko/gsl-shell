@@ -6,7 +6,7 @@
 
 class pixel_gamma_corr {
   typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 12> gamma_type;
-  typedef agg::pixfmt_bgr24_gamma<gamma_type> pixel_fmt;
+  typedef agg::pixfmt_rgb24_gamma<gamma_type> pixel_fmt;
 
   gamma_type m_gamma;
 public:
@@ -22,9 +22,9 @@ public:
 };
 
 struct pixel_simple {
-  agg::pixfmt_bgr24 pixfmt;
+  agg::pixfmt_rgb24 pixfmt;
 
-  typedef agg::pixfmt_bgr24 fmt;
+  typedef agg::pixfmt_rgb24 fmt;
 
   pixel_simple(agg::rendering_buffer& ren_buf): pixfmt(ren_buf) { };
 

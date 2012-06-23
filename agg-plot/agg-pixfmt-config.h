@@ -5,7 +5,7 @@
 
 namespace gslshell
 {
-  const agg::pix_format_e pixel_format = agg::pix_format_bgr24;
+  const agg::pix_format_e pixel_format = agg::pix_format_rgb24;
   const bool flip_y = true;
 
   extern unsigned      bpp;
