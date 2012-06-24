@@ -61,7 +61,7 @@ public:
 
   void draw(sg_object& vs, agg::rgba8 c)
   {
-    bool direct_render = vs.render(this->pixfmt, this->ras, this->sl, c);
+    bool direct_render = vs.render(this->pixfmt_lcd, this->ras, this->sl, c);
 
     if (!direct_render)
       {

@@ -97,11 +97,11 @@ namespace draw {
     return s;
   }
 
-  bool text::render(pixel_type::fmt& pixbuf,
+  bool text::render(pixel_type::lcd_fmt& pixbuf,
 		    agg::rasterizer_scanline_aa<>& ras,
 		    agg::scanline_p8& sl, agg::rgba8 c)
   {
-    typedef agg::renderer_base<pixel_type::fmt> renderer_type;
+    typedef agg::renderer_base<pixel_type::lcd_fmt> renderer_type;
 
     renderer_type ren_base(pixbuf);
     agg::renderer_scanline_aa_solid<renderer_type> ren_solid(ren_base);

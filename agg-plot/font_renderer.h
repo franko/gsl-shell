@@ -11,7 +11,7 @@ class font_renderer {
   typedef agg::font_engine_freetype_int32 font_engine_type;
   typedef agg::font_cache_manager<font_engine_type> font_manager_type;
 
-  enum { scale_x = 100, subpixel_scale = 1 };
+  enum { scale_x = 100, subpixel_scale = 3 };
 
 public:
   font_renderer(const char *font_name, double text_height):
@@ -26,12 +26,15 @@ public:
   }
 
   template <class Rasterizer, class Scanline, class RenSolid>
-  void draw_text(Rasterizer& ras, Scanline& sl, RenSolid& ren_solid,
+  void draw_text(Rasterizer& _ras, Scanline& _sl, RenSolid& ren_solid,
 		 const agg::trans_affine& user_matrix,
 		 double x, double y, const char* text, int text_length,
 		 agg::rgba8 color)
   {
     typedef agg::conv_curve<font_manager_type::path_adaptor_type> curve_type;
+
+    agg::scanline_u8 sl;
+    agg::rasterizer_scanline_aa<> ras;
 
     agg::trans_affine mtx = user_matrix;
     agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);

@@ -44,7 +44,7 @@ namespace draw {
       m_x(0.0), m_y(0.0), m_angle(0.0),
       m_text_width(0.0), m_text_height(size),
       m_hjustif(hjustif), m_vjustif(vjustif),
-      m_font_ren("georgia.ttf", 1.4*size)
+      m_font_ren("LiberationSans-Regular.ttf", 1.4*size)
     {
       m_text.text(m_text_buf.cstr());
       m_text.size(size);
@@ -88,7 +88,7 @@ namespace draw {
 
     virtual str write_svg(int id, agg::rgba8 c, double h);
 
-    virtual bool render(pixel_type::fmt& ren_buf,
+    virtual bool render(pixel_type::lcd_fmt& ren_buf,
 			agg::rasterizer_scanline_aa<>& ras,
 			agg::scanline_p8& sl, agg::rgba8 c);
 

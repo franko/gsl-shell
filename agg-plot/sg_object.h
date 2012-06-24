@@ -46,7 +46,7 @@ struct sg_object : public vertex_source {
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
 
-  virtual bool render(pixel_type::fmt& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
+  virtual bool render(pixel_type::lcd_fmt& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
   {
     return false;
   }
@@ -208,7 +208,7 @@ public:
 
   virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
 
-  virtual bool render(pixel_type::fmt& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
+  virtual bool render(pixel_type::lcd_fmt& ren_buf, agg::rasterizer_scanline_aa<>& ras, agg::scanline_p8& sl, agg::rgba8 c)
   {
     return m_source->render(ren_buf, ras, sl, c);
   }

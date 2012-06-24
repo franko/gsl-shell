@@ -2,6 +2,7 @@
 #define AGGPLOT_PIXEL_FMT_H
 
 #include "agg_pixfmt_rgb.h"
+#include "agg_pixfmt_rgb24_lcd.h"
 #include "agg_gamma_lut.h"
 
 class pixel_gamma_corr {
@@ -9,13 +10,17 @@ class pixel_gamma_corr {
   typedef agg::pixfmt_rgb24_gamma<gamma_type> pixel_fmt;
 
   gamma_type m_gamma;
+  agg::lcd_distribution_lut m_lut;
 public:
   typedef pixel_fmt fmt;
+  typedef agg::pixfmt_rgb24_lcd lcd_fmt;
 
   pixel_fmt pixfmt;
+  agg::pixfmt_rgb24_lcd pixfmt_lcd;
 
   pixel_gamma_corr(agg::rendering_buffer& ren_buf):
-    m_gamma(1.5), pixfmt(ren_buf, m_gamma)
+    m_gamma(1.5), m_lut(1./3., 2./9., 1./9.),
+    pixfmt(ren_buf, m_gamma), pixfmt_lcd(ren_buf, m_lut)
   { };
 
   enum { line_width = 120 };
