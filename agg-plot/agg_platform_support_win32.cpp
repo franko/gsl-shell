@@ -95,7 +95,7 @@ namespace agg
 
   //------------------------------------------------------------------------
   platform_specific::platform_specific(pix_format_e format, bool flip_y) :
-    m_format(gslshell::sys_pixel_format),
+    m_format(gslshell::pixel_format),
     m_sys_format(gslshell::sys_pixel_format),
     m_flip_y(gslshell::flip_y),
     m_bpp(gslshell::bpp),
@@ -172,7 +172,17 @@ namespace agg
         rendering_buffer_ro src_view;
         rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-	rbuf_tmp.copy_from(src_view);
+	if (m_format == m_sys_format)
+	  {
+	    rbuf_tmp.copy_from(src_view);
+	  }
+	else
+	  {
+	    if (m_sys_format == pix_format_bgr24 && m_format == pix_format_rgb24)
+	      {
+		my_color_conv(&rbuf_tmp, &src_view, color_conv_rgb24_to_bgr24());
+	      }
+	  }
 
         unsigned int wh = m_pmap_window.height();
         RECT wrect;
