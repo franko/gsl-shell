@@ -27,9 +27,9 @@ public:
 
   template <class Rasterizer, class Scanline, class RenSolid>
   void draw_text(Rasterizer& _ras, Scanline& _sl, RenSolid& ren_solid,
-		 const agg::trans_affine& user_matrix,
-		 double x, double y, const char* text, int text_length,
-		 agg::rgba8 color)
+                 const agg::trans_affine& user_matrix,
+                 double x, double y, const char* text, int text_length,
+                 agg::rgba8 color)
   {
     typedef agg::conv_curve<font_manager_type::path_adaptor_type> curve_type;
 
@@ -48,28 +48,28 @@ public:
 
     for (const char* p = text; p < text + text_length; p++)
       {
-	const agg::glyph_cache* glyph = m_font_man.glyph(*p);
+        const agg::glyph_cache* glyph = m_font_man.glyph(*p);
 
-	if (!glyph) continue;
+        if (!glyph) continue;
 
-	m_font_man.add_kerning(&x, &y);
+        m_font_man.add_kerning(&x, &y);
 
-	m_font_man.init_embedded_adaptors(glyph, 0, 0);
-	if(glyph->data_type == agg::glyph_data_outline)
-	  {
-	    mtx.tx = start_x + x / scale_x;
-	    mtx.ty = floor(y + 0.5);
+        m_font_man.init_embedded_adaptors(glyph, 0, 0);
+        if(glyph->data_type == agg::glyph_data_outline)
+          {
+            mtx.tx = start_x + x / scale_x;
+            mtx.ty = floor(y + 0.5);
 
-	    user_matrix.transform(&mtx.tx, &mtx.ty);
+            user_matrix.transform(&mtx.tx, &mtx.ty);
 
-	    ras.add_path(trans);
-	    ren_solid.color(color);
-	    agg::render_scanlines(ras, sl, ren_solid);
-	  }
+            ras.add_path(trans);
+            ren_solid.color(color);
+            agg::render_scanlines(ras, sl, ren_solid);
+          }
 
-	// increment pen position
-	x += glyph->advance_x;
-	y += glyph->advance_y;
+        // increment pen position
+        x += glyph->advance_x;
+        y += glyph->advance_y;
       }
   }
 
@@ -79,16 +79,16 @@ public:
 
     for (const char* p = text; p < text + text_length; p++)
       {
-	const agg::glyph_cache* glyph = m_font_man.glyph(*p);
+        const agg::glyph_cache* glyph = m_font_man.glyph(*p);
 
-	if (glyph)
-	  {
-	    m_font_man.add_kerning(&x, &y);
-	    /* We suppose that the embedded adaptors doesn't play to
-	       determine the text width. */
-	    /* m_font_man.init_embedded_adaptors(glyph, 0, 0); */
-	    x += glyph->advance_x;
-	  }
+        if (glyph)
+          {
+            m_font_man.add_kerning(&x, &y);
+            /* We suppose that the embedded adaptors doesn't play to
+               determine the text width. */
+            /* m_font_man.init_embedded_adaptors(glyph, 0, 0); */
+            x += glyph->advance_x;
+          }
       }
 
     return x / double(scale_x * subpixel_scale);
