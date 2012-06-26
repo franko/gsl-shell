@@ -5,20 +5,20 @@
 // Contact: mcseem@antigrain.com
 //          mcseemagg@yahoo.com
 //          http://antigrain.com
-// 
+//
 // AGG is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
 // as published by the Free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
-// 
+//
 // AGG is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with AGG; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@
 
 namespace agg
 {
- 
+
 
     //=====================================================lcd_distribution_lut
     class lcd_distribution_lut
@@ -46,20 +46,34 @@ namespace agg
             tert   *= norm;
             for(unsigned i = 0; i < 256; i++)
             {
-                m_primary[i]   = (unsigned char)floor(prim   * i);
-                m_secondary[i] = (unsigned char)floor(second * i);
-                m_tertiary[i]  = (unsigned char)floor(tert   * i);
+	      unsigned char s = round(second * i);
+	      unsigned char t = round(tert   * i);
+	      unsigned char p = i - (2*s + 2*t);
+
+	      m_data[3*i + 1] = s; /* secondary */
+	      m_data[3*i + 2] = t; /* tertiary */
+	      m_data[3*i    ] = p; /* primary */
             }
         }
 
-        unsigned primary(unsigned v)   const { return m_primary[v];   }
-        unsigned secondary(unsigned v) const { return m_secondary[v]; }
-        unsigned tertiary(unsigned v)  const { return m_tertiary[v];  }
+      unsigned convolution(const int8u* covers, int i0, int i_min, int i_max) const
+      {
+	unsigned sum = 0;
+	int k_min = (i0 >= i_min + 2 ? -2 : i_min - i0);
+	int k_max = (i0 <= i_max - 2 ?  2 : i_max - i0);
+	for (int k = k_min; k <= k_max; k++)
+	  {
+	    /* select the primary, secondary or tertiary channel */
+	    int channel = abs(k) % 3;
+	    int8u c = covers[i0 + k];
+	    sum += m_data[3*c + channel];
+	  }
+
+	return sum;
+      }
 
     private:
-        unsigned char m_primary[256];
-        unsigned char m_secondary[256];
-        unsigned char m_tertiary[256];
+	unsigned char m_data[256*3];
     };
 
 
@@ -89,7 +103,7 @@ namespace agg
 
         //--------------------------------------------------------------------
         void blend_hline(int x, int y,
-                         unsigned len, 
+                         unsigned len,
                          const color_type& c,
                          int8u cover)
         {
@@ -105,62 +119,40 @@ namespace agg
             while(--len);
         }
 
-
         //--------------------------------------------------------------------
         void blend_solid_hspan(int x, int y,
-                               unsigned len, 
+                               unsigned len,
                                const color_type& c,
                                const int8u* covers)
         {
-            int8u c3[2048*3];
-            memset(c3, 0, len+4);
+	  unsigned rowlen = m_rbuf->width();
+	  int cx = (x - 2 >= 0 ? -2 : -x);
+	  int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
 
-            int i;
-            for(i = 0; i < int(len); i++)
-            {
-                c3[i+0] += m_lut->tertiary(covers[i]);
-                c3[i+1] += m_lut->secondary(covers[i]);
-                c3[i+2] += m_lut->primary(covers[i]);
-                c3[i+3] += m_lut->secondary(covers[i]);
-                c3[i+4] += m_lut->tertiary(covers[i]);
-            }
+	  int i = (x + cx) % 3;
 
-            x -= 2;
-            len += 4;
+	  int8u rgb[3] = { c.r, c.g, c.b };
+	  int8u* p = m_rbuf->row_ptr(y) + (x + cx);
 
-            if(x < 0)
-            {
-                len -= x;
-                x = 0;
-            }
+	  for (/* */; cx <= cx_max; cx++)
+	    {
+	      int alpha = m_lut->convolution(covers, cx, 0, len - 1) * c.a;
+	      if (alpha)
+		{
+		  if (alpha == 255*255)
+		    {
+		      *p = (int8u)rgb[i];
+		    }
+		  else
+		    {
+		      *p = (int8u)((((rgb[i] - *p) * alpha) + (*p << 16)) >> 16);
+		    }
+		}
 
-            covers = c3;
-            i = x % 3;
-
-            int8u rgb[3] = { c.r, c.g, c.b };
-            int8u* p = m_rbuf->row_ptr(y) + x;
-
-            do 
-            {
-                int alpha = int(*covers++) * c.a;
-                if(alpha)
-                {
-                    if(alpha == 255*255)
-                    {
-                        *p = (int8u)rgb[i];
-                    }
-                    else
-                    {
-                        *p = (int8u)((((rgb[i] - *p) * alpha) + (*p << 16)) >> 16);
-                    }
-                }
-                ++p;
-                ++i;
-                if(i >= 3) i = 0;
-            }
-            while(--len);
-        }
-
+	      p ++;
+	      i = (i + 1) % 3;
+	    }
+	}
 
     private:
         rendering_buffer* m_rbuf;
