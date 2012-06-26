@@ -22,7 +22,7 @@ public:
     m_font_eng.hinting(true);
 
     m_font_eng.height(text_height);
-    m_font_eng.width(text_height * scale_x * subpixel_scale);
+    m_font_eng.width(text_height * scale_x);
   }
 
   template <class Rasterizer, class Scanline, class RenSolid>
@@ -43,7 +43,9 @@ public:
     curve_type curves(m_font_man.path_adaptor());
     agg::conv_transform<curve_type> trans(curves, mtx);
 
-    x *= subpixel_scale;
+    agg::trans_affine_scaling subpixel_mtx(subpixel_scale, 1.0);
+    agg::conv_transform<agg::conv_transform<curve_type> > subpixel_trans(trans, subpixel_mtx);
+
     const double start_x = x;
 
     for (const char* p = text; p < text + text_length; p++)
@@ -62,7 +64,7 @@ public:
 
             user_matrix.transform(&mtx.tx, &mtx.ty);
 
-            ras.add_path(trans);
+            ras.add_path(subpixel_trans);
             ren_solid.color(color);
             agg::render_scanlines(ras, sl, ren_solid);
           }
@@ -91,7 +93,7 @@ public:
           }
       }
 
-    return x / double(scale_x * subpixel_scale);
+      return x / double(scale_x);
   }
 
 private:
