@@ -11,7 +11,7 @@
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
 #include "agg_rasterizer_scanline_aa.h"
-#include "agg_scanline_p.h"
+#include "agg_scanline_u.h"
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
 #include "agg_conv_stroke.h"
@@ -25,7 +25,7 @@ class canvas_gen : private Pixel {
   renderer_solid rs;
 
   agg::rasterizer_scanline_aa<> ras;
-  agg::scanline_p8 sl;
+  agg::scanline_u8 sl;
 
   agg::rgba bg_color;
 

@@ -99,7 +99,7 @@ namespace draw {
 
   bool text::render(pixel_type::lcd_fmt& pixbuf,
                     agg::rasterizer_scanline_aa<>& ras,
-                    agg::scanline_p8& sl, agg::rgba8 c)
+                    agg::scanline_u8& sl, agg::rgba8 c)
   {
     typedef agg::renderer_base<pixel_type::lcd_fmt> renderer_type;
 

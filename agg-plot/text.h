@@ -90,7 +90,7 @@ namespace draw {
 
     virtual bool render(pixel_type::lcd_fmt& ren_buf,
                         agg::rasterizer_scanline_aa<>& ras,
-                        agg::scanline_p8& sl, agg::rgba8 c);
+                        agg::scanline_u8& sl, agg::rgba8 c);
 
     const vs_text& self() const { return m_text; };
           vs_text& self()       { return m_text; };
