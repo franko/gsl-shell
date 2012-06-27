@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "agg_basics.h"
 #include "agg_color_rgba.h"
@@ -138,18 +139,10 @@ namespace agg
 
 	  for (/* */; cx <= cx_max; cx++)
 	    {
-	      int alpha = m_lut->convolution(covers, cx, 0, len - 1) * c.a;
-	      if (alpha)
-		{
-		  if (alpha == 255*255)
-		    {
-		      *p = (int8u)rgb[i];
-		    }
-		  else
-		    {
-		      *p = (int8u)((((rgb[i] - *p) * alpha) + (*p << 16)) >> 16);
-		    }
-		}
+          unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
+          unsigned alpha = (c_conv + 1) * (c.a + 1);
+          unsigned dst_col = rgb[i], src_col = (*p);
+          *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
 
 	      p ++;
 	      i = (i + 1) % 3;
