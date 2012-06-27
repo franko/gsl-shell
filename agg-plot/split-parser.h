@@ -23,24 +23,24 @@ public:
     {
       char c = *m_ptr;
       if (c != '\0')
-	m_ptr++;
+        m_ptr++;
       return c;
     };
 
     void push()
     {
       if (m_ptr > m_content)
-	m_ptr--;
+        m_ptr--;
     };
 
     bool checknext(char reqchar)
     {
       char c = *m_ptr;
       if (c == reqchar)
-	{
-	  m_ptr++;
-	  return true;
-	}
+        {
+          m_ptr++;
+          return true;
+        }
       return false;
     };
   };
@@ -54,10 +54,10 @@ public:
 
     for (int c = 0; ; c++)
       {
-	node_type* child = parse(lex);
-	if (! child)
-	  break;
-	t->add(child);
+        node_type* child = parse(lex);
+        if (! child)
+          break;
+        t->add(child);
       }
 
     return t;
@@ -71,23 +71,23 @@ public:
     switch (t)
       {
       case '.':
-	return new tree::leaf<base_type, direction_e>();
+        return new tree::leaf<base_type, direction_e>();
       case 'h':
-	return exprlist(lex, along_x);
+        return exprlist(lex, along_x);
       case 'v':
-	return exprlist(lex, along_y);
+        return exprlist(lex, along_y);
       case '(':
-	{
-	  node_type *nd = parse(lex);
-	  if (! lex.checknext(')'))
-	    return 0;
-	  return nd;
-	}
+        {
+          node_type *nd = parse(lex);
+          if (! lex.checknext(')'))
+            return 0;
+          return nd;
+        }
       case ')':
-	lex.push();
-	return 0;
+        lex.push();
+        return 0;
       default:
-	return 0;
+        return 0;
       }
 
     return 0;

@@ -120,19 +120,19 @@ agg_text_justif_set (lua_State *L)
       char ch = justif[0];
       double hjf;
       switch (ch)
-	{
-	case 'l':
-	  hjf = 0.0;
-	  break;
-	case 'c':
-	  hjf = 0.5;
-	  break;
-	case 'r':
-	  hjf = 1.0;
-	  break;
-	default:
-	  return luaL_error (L, "invalid text justification");
-	}
+        {
+        case 'l':
+          hjf = 0.0;
+          break;
+        case 'c':
+          hjf = 0.5;
+          break;
+        case 'r':
+          hjf = 1.0;
+          break;
+        default:
+          return luaL_error (L, "invalid text justification");
+        }
 
       t->hjustif(hjf);
     }
@@ -142,19 +142,19 @@ agg_text_justif_set (lua_State *L)
       char ch = justif[1];
       double vjf;
       switch (ch)
-	{
-	case 'b':
-	  vjf = 0.0;
-	  break;
-	case 'c':
-	  vjf = 0.5;
-	  break;
-	case 't':
-	  vjf = 1.0;
-	  break;
-	default:
-	  return luaL_error (L, "invalid text justification");
-	}
+        {
+        case 'b':
+          vjf = 0.0;
+          break;
+        case 'c':
+          vjf = 0.5;
+          break;
+        case 't':
+          vjf = 1.0;
+          break;
+        default:
+          return luaL_error (L, "invalid text justification");
+        }
 
       t->vjustif(vjf);
     }

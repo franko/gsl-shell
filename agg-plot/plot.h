@@ -146,9 +146,9 @@ public:
     layer_dispose_elements(m_root_layer);
     for (unsigned k = 0; k < m_layers.size(); k++)
       {
-	item_list *layer = m_layers[k];
-	layer_dispose_elements(*layer);
-	delete layer;
+        item_list *layer = m_layers[k];
+        layer_dispose_elements(*layer);
+        delete layer;
       }
   };
 
@@ -222,9 +222,9 @@ public:
   {
     if (req != m_pad_units)
       {
-	m_pad_units = req;
-	m_need_redraw = true;
-	compute_user_trans();
+        m_pad_units = req;
+        m_need_redraw = true;
+        compute_user_trans();
       }
   };
 
@@ -247,15 +247,15 @@ public:
 
 protected:
   double draw_axis_m(axis_e dir, units& u, agg::trans_affine& user_mtx,
-		     ptr_list<draw::text>& labels, double scale,
-		     agg::path_storage& mark, agg::path_storage& ln);
+                     ptr_list<draw::text>& labels, double scale,
+                     agg::path_storage& mark, agg::path_storage& ln);
 
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m, agg::rect_base<int>* clip = 0);
 
   agg::trans_affine draw_legends(canvas_type& canvas,
-				    agg::trans_affine& canvas_mtx);
+                                    agg::trans_affine& canvas_mtx);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
@@ -421,9 +421,9 @@ void plot<RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
     {
       item_list& layer = *(m_layers[k]);
       for (unsigned j = 0; j < layer.size(); j++)
-	{
-	  draw_element(layer[j], canvas, m);
-	}
+        {
+          draw_element(layer[j], canvas, m);
+        }
     }
 
   canvas.reset_clipping();
@@ -451,7 +451,7 @@ template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, agg::trans_af
       bool not_empty = agg::bounding_rect_single(d.content(), 0, &ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
 
       if (not_empty)
-	bb.add<rect_union>(ebb);
+        bb.add<rect_union>(ebb);
     }
 
   canvas.reset_clipping();
@@ -486,9 +486,9 @@ void plot<RM>::compute_user_trans()
 
 template <class RM>
 double plot<RM>::draw_axis_m(axis_e dir, units& u,
-			     agg::trans_affine& user_mtx,
-			     ptr_list<draw::text>& labels, double scale,
-			     agg::path_storage& mark, agg::path_storage& ln)
+                             agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln)
 {
   const double ppad = double(axis_label_prop_space) / 1000.0;
   const double eps = 1.0e-3;
@@ -519,7 +519,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
       double q = (isx ? x : y);
 
       if (q < -eps || q > 1.0 + eps)
-	continue;
+        continue;
 
       draw::text* label = new draw::text(text, 10.0*scale, line_width, hj, vj);
 
@@ -544,10 +544,10 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
       double q = (isx ? x : y);
 
       if (q >= -eps && q <= 1.0 + eps)
-	{
-	  ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
-	  ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
-	}
+        {
+          ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
+          ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
+        }
     }
 
   double label_size;
@@ -571,7 +571,7 @@ static inline double approx_text_height(double text_size)
 
 template <class RM>
 agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
-					       agg::trans_affine& canvas_mtx)
+                                               agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double ppad = double(canvas_margin_prop_space) / 1000.0;
@@ -608,47 +608,47 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
       plot* mp = m_legend[k];
 
       if (mp)
-	{
-	  agg::rect_base<double> bb;
-	  mp->get_bounding_rect(bb);
+        {
+          agg::rect_base<double> bb;
+          mp->get_bounding_rect(bb);
 
-	  double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
-	  double px, py;
-	  switch (k)
-	    {
-	    case right:
-	      px = sx - dx - ppad * sx - dxr;
-	      py = (sy - dy) / 2;
-	      dxr += dx + 2 * ppad * sx;
-	      break;
-	    case left:
-	      px = ppad * sx + dxr;
-	      py = (sy - dy) / 2;
-	      dxl += dx + 2 * ppad * sx;
-	      break;
-	    case bottom:
-	      py = ppad * sy + dyb;
-	      px = (sx - dx) / 2;
-	      dyb += dy + 2 * ppad * sy;
-	      break;
-	    case top:
-	      py = sy - dy - ppad * sy - dyt;
-	      px = (sx - dx) / 2;
-	      dyt += dy + 2 * ppad * sy;
-	      break;
-	    default:
-	      /* */;
-	    }
+          double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
+          double px, py;
+          switch (k)
+            {
+            case right:
+              px = sx - dx - ppad * sx - dxr;
+              py = (sy - dy) / 2;
+              dxr += dx + 2 * ppad * sx;
+              break;
+            case left:
+              px = ppad * sx + dxr;
+              py = (sy - dy) / 2;
+              dxl += dx + 2 * ppad * sx;
+              break;
+            case bottom:
+              py = ppad * sy + dyb;
+              px = (sx - dx) / 2;
+              dyb += dy + 2 * ppad * sy;
+              break;
+            case top:
+              py = sy - dy - ppad * sy - dyt;
+              px = (sx - dx) / 2;
+              dyt += dy + 2 * ppad * sy;
+              break;
+            default:
+              /* */;
+            }
 
-	  if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
-	    {
-	      const double tx = canvas_mtx.tx, ty = canvas_mtx.ty;
-	      agg::trans_affine mtx(dx, 0.0, 0.0, dy, tx + px, ty + py);
-	      mp->before_draw();
-	      mp->draw_axis(canvas, mtx);
-	      mp->draw_elements(canvas, mtx);
-	    }
-	}
+          if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
+            {
+              const double tx = canvas_mtx.tx, ty = canvas_mtx.ty;
+              agg::trans_affine mtx(dx, 0.0, 0.0, dy, tx + px, ty + py);
+              mp->before_draw();
+              mp->draw_axis(canvas, mtx);
+              mp->draw_elements(canvas, mtx);
+            }
+        }
     }
 
   double cpx = canvas_mtx.tx, cpy = canvas_mtx.ty;
@@ -658,7 +658,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
 
 template <class RM>
 void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
-			 agg::rect_base<int>* clip)
+                         agg::rect_base<int>* clip)
 {
   agg::trans_affine& m = m_area_mtx;
 

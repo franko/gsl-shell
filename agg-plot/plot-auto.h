@@ -87,18 +87,18 @@ void plot_auto<RM>::check_bounding_box()
 
     if (this->m_rect.is_defined())
       {
-	const agg::rect_base<double>& bb = this->m_rect.rect();
-	this->m_ux = units(bb.x1, bb.x2);
-	this->m_uy = units(bb.y1, bb.y2);
+        const agg::rect_base<double>& bb = this->m_rect.rect();
+        this->m_ux = units(bb.x1, bb.x2);
+        this->m_uy = units(bb.y1, bb.y2);
 
-	this->compute_user_trans();
-	this->m_bbox_updated = true;
+        this->compute_user_trans();
+        this->m_bbox_updated = true;
       }
   }
 
 template<class RM>
 void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list& layer,
-					       opt_rect<double>& rect)
+                                               opt_rect<double>& rect)
 {
   for (unsigned j = 0; j < layer.size(); j++)
     {

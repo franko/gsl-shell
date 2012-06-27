@@ -43,7 +43,7 @@ public:
     ~ref() { if (layer_buf) delete layer_buf; };
 
     void save_image (agg::rendering_buffer& winbuf, agg::rect_base<int>& r,
-		     int bpp, bool flip_y);
+                     int bpp, bool flip_y);
 
     static void compose(bmatrix& a, const bmatrix& b);
     static int calculate(node *t, const bmatrix& m, int id);

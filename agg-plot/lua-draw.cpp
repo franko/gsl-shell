@@ -159,9 +159,9 @@ path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
       break;
     case CMD_LINE_TO:
       if (ps.total_vertices() == 0)
-	ps.move_to (s->f[0], s->f[1]);
+        ps.move_to (s->f[0], s->f[1]);
       else
-	ps.line_to (s->f[0], s->f[1]);
+        ps.line_to (s->f[0], s->f[1]);
       break;
     case CMD_CLOSE:
       ps.close_polygon ();
@@ -193,16 +193,16 @@ agg_path_cmd (lua_State *L)
   for (fc = signature; fc[0]; fc++)
     {
       switch (fc[0])
-	{
-	case 'f':
-	  s->f[f_count++] = gs_check_number (L, argc++, FP_CHECK_NORMAL);
-	  break;
-	case 'b':
-	  if (lua_isboolean (L, argc))
-	    s->b[b_count++] = lua_toboolean (L, argc++);
-	  else
-	    return luaL_error (L, "expected boolean for argument #%i", argc);
-	}
+        {
+        case 'f':
+          s->f[f_count++] = gs_check_number (L, argc++, FP_CHECK_NORMAL);
+          break;
+        case 'b':
+          if (lua_isboolean (L, argc))
+            s->b[b_count++] = lua_toboolean (L, argc++);
+          else
+            return luaL_error (L, "expected boolean for argument #%i", argc);
+        }
     }
 
   pthread_mutex_lock (agg_mutex);
@@ -224,7 +224,7 @@ agg_path_index (lua_State *L)
   for (r = cmd_table; r->cmd; r++)
     {
       if (strcmp (key, r->cmd) == 0)
-	break;
+        break;
     }
 
   if (r->cmd)

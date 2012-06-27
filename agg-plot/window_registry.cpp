@@ -154,16 +154,16 @@ window_refs_lookup_apply (lua_State *L, int value_index, lua_CFunction func)
       lua_pushnil (L);
 
       while (lua_next (L, -2) != 0)
-	{
-	  if (lua_rawequal (L, -1, value_index))
-	    {
-	      lua_pushcfunction (L, func);
-	      lua_pushvalue (L, -5);
-	      lua_pushvalue (L, -4);
-	      lua_call (L, 2, 0);
-	    }
-	  lua_pop (L, 1);
-	}
+        {
+          if (lua_rawequal (L, -1, value_index))
+            {
+              lua_pushcfunction (L, func);
+              lua_pushvalue (L, -5);
+              lua_pushvalue (L, -4);
+              lua_call (L, 2, 0);
+            }
+          lua_pop (L, 1);
+        }
 
       lua_pop (L, 1);
     }

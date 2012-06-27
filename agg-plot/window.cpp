@@ -44,8 +44,8 @@ struct dispose_buffer {
     ref.valid_rect = false;
     if (ref.layer_buf)
       {
-	delete [] ref.layer_buf;
-	ref.layer_buf = 0;
+        delete [] ref.layer_buf;
+        ref.layer_buf = 0;
       }
   }
 };
@@ -73,21 +73,21 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
       direction_e dir;
       ref::node::list *ls = t->tree(dir);
       if (ls)
-	{
-	  bmatrix lm;
+        {
+          bmatrix lm;
 
-	  double* p = (dir == along_x ? &lm.tx : &lm.ty);
-	  double* s = (dir == along_x ? &lm.sx : &lm.sy);
+          double* p = (dir == along_x ? &lm.tx : &lm.ty);
+          double* s = (dir == along_x ? &lm.sx : &lm.sy);
 
-	  *s = frac;
+          *s = frac;
 
-	  for ( ; ls; ls = ls->next(), *p += frac)
-	    {
-	      bmatrix sm(lm);
-	      window::ref::compose(sm, m);
-	      id = window::ref::calculate (ls->content(), sm, id);
-	    }
-	}
+          for ( ; ls; ls = ls->next(), *p += frac)
+            {
+              bmatrix sm(lm);
+              window::ref::compose(sm, m);
+              id = window::ref::calculate (ls->content(), sm, id);
+            }
+        }
     }
 
   return id;
@@ -95,8 +95,8 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 
 void
 window::ref::save_image (agg::rendering_buffer& win_buf,
-			 agg::rect_base<int>& r,
-			 int img_bpp, bool flip_y)
+                         agg::rect_base<int>& r,
+                         int img_bpp, bool flip_y)
 {
   int w = r.x2 - r.x1, h = r.y2 - r.y1;
   int row_len = w * (img_bpp / 8);
@@ -135,14 +135,14 @@ window::ref* window::ref_lookup (ref::node *p, int slot_id)
     {
       ref *ref = window::ref_lookup(t->content(), slot_id);
       if (ref)
-	return ref;
+        return ref;
     }
 
   ref *ref = p->content();
   if (ref)
     {
       if (ref->slot_id == slot_id)
-	return ref;
+        return ref;
     }
 
   return NULL;
@@ -159,7 +159,7 @@ void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
   if (ref.plot)
     {
       AGG_LOCK();
-	  ref.plot->draw(*m_canvas, mtx);
+          ref.plot->draw(*m_canvas, mtx);
       AGG_UNLOCK();
     }
 
@@ -176,10 +176,10 @@ window::draw_slot(int slot_id, bool clean_req)
       bool redraw = clean_req || ref->plot->need_redraw();
 
       if (redraw)
-	{
-	  draw_slot_by_ref(*ref, false);
-	  dispose_buffer::func(*ref);
-	}
+        {
+          draw_slot_by_ref(*ref, false);
+          dispose_buffer::func(*ref);
+        }
 
       refresh_slot_by_ref(*ref, redraw);
       ref->valid_rect = true;
@@ -212,17 +212,17 @@ window::restore_slot_image(int slot_id)
       agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
 
       if (ref->layer_buf == 0)
-	{
-	  m_canvas->clear_box(r);
-	  draw_slot_by_ref (*ref, false);
-	  ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
-	}
+        {
+          m_canvas->clear_box(r);
+          draw_slot_by_ref (*ref, false);
+          ref->save_image(this->rbuf_window(), r, this->bpp(), this->flip_y());
+        }
       else
-	{
-	  agg::rendering_buffer& img = ref->layer_img;
-	  agg::rendering_buffer& win = this->rbuf_window();
-	  rendering_buffer_put_region (win, img, r, this->bpp() / 8);
-	}
+        {
+          agg::rendering_buffer& img = ref->layer_img;
+          agg::rendering_buffer& win = this->rbuf_window();
+          rendering_buffer_put_region (win, img, r, this->bpp() / 8);
+        }
     }
 }
 
@@ -281,7 +281,7 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
   if (ref)
     {
       if (ref->plot)
-	window_refs_remove (L, ref->slot_id, window_index);
+        window_refs_remove (L, ref->slot_id, window_index);
     }
 }
 
@@ -335,14 +335,14 @@ int window::attach(sg_plot* plot, const char *spec)
       ref::node::list* list = n->tree();
 
       if (! list)
-	return -1;
+        return -1;
 
       for (int j = 1; j < k; j++)
-	{
-	  list = list->next();
-	  if (! list)
-	    return -1;
-	}
+        {
+          list = list->next();
+          if (! list)
+            return -1;
+        }
 
       n = list->content();
     }
@@ -375,8 +375,8 @@ int window_generic_oper (lua_State *L, window_slot_method_type method)
 
 template <class param_type>
 int window_generic_oper_ext (lua_State *L,
-			     void (window::*method)(int, param_type),
-			     param_type param)
+                             void (window::*method)(int, param_type),
+                             param_type param)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
   int slot_id = luaL_checkinteger (L, 2);
@@ -404,11 +404,11 @@ void window::start (lua_State *L, gslshell::ret_status& st)
       inf->window_id = this->window_id;
 
       if (! this->start_new_thread (inf))
-	{
-	  window_index_remove (L, this->window_id);
-	  this->unlock();
-	  st.error("error during thread initialization", "window creation");
-	}
+        {
+          window_index_remove (L, this->window_id);
+          this->unlock();
+          st.error("error during thread initialization", "window creation");
+        }
     }
   else
     {
@@ -432,7 +432,7 @@ window_new (lua_State *L)
   if (spec)
     {
       if (!win->split(spec))
-	return luaL_error(L, "invalid layout specification");
+        return luaL_error(L, "invalid layout specification");
     }
 
   return 1;
@@ -484,7 +484,7 @@ window_split (lua_State *L)
   if (! win->split(spec))
     {
       if (win->status == canvas_window::running)
-	win->do_window_update();
+        win->do_window_update();
       win->unlock();
       return luaL_error(L, "invalid window subdivision specification");
     }
@@ -513,7 +513,7 @@ window_attach (lua_State *L)
   if (slot_id >= 0)
     {
       if (win->status == canvas_window::running)
-	win->draw_slot(slot_id, true);
+        win->draw_slot(slot_id, true);
       win->unlock();
       window_refs_add (L, slot_id, 1, 2);
     }

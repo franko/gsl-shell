@@ -126,7 +126,7 @@ new_marker_symbol_raw(const char *req_name, bool& stroke)
   for (reg = builder_table; reg->name != NULL; reg++)
     {
       if (strcmp (reg->name, req_name) == 0)
-	return reg->builder(stroke);
+        return reg->builder(stroke);
     }
 
   return builder_table[0].builder(stroke);

@@ -37,15 +37,15 @@ static str gen_path_element(str& content, str& style, int id)
 }
 
 str svg_stroke_path(str& path_coords, double width, int id, agg::rgba8 c,
-		    svg_property_list* properties)
+                    svg_property_list* properties)
 {
   char rgbstr[8];
   format_rgb(rgbstr, c);
 
   str s = str::print("fill:none;stroke:%s;"
-		     "stroke-width:%g;stroke-linecap:butt;"
-		     "stroke-linejoin:miter",
-		     rgbstr, width);
+                     "stroke-width:%g;stroke-linecap:butt;"
+                     "stroke-linejoin:miter",
+                     rgbstr, width);
 
   property_append_alpha(s, "stroke-opacity", c);
   append_properties(s, properties);
@@ -61,7 +61,7 @@ str svg_marker_path(str& path_coords, double sw, int id, svg_property_list* prop
 }
 
 str svg_fill_path(str& path_coords, int id, agg::rgba8 c,
-		  svg_property_list* properties)
+                  svg_property_list* properties)
 {
   char rgbstr[8];
   format_rgb(rgbstr, c);

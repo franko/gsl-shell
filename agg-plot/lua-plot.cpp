@@ -154,7 +154,7 @@ plot_new (lua_State *L)
     {
       const char *title = lua_tostring (L, 1);
       if (title)
-	p->title() = title;
+        p->title() = title;
     }
 
   return 1;
@@ -174,7 +174,7 @@ canvas_new (lua_State *L)
     {
       const char *title = lua_tostring (L, 1);
       if (title)
-	p->title() = title;
+        p->title() = title;
     }
 
   return 1;
@@ -188,7 +188,7 @@ plot_free (lua_State *L)
 
 void
 plot_add_gener_cpp (lua_State *L, sg_plot* p, bool as_line,
-		    gslshell::ret_status& st)
+                    gslshell::ret_status& st)
 {
   agg::rgba8 color;
   int layer_index = p->current_layer_index();
@@ -430,8 +430,8 @@ int
 plot_index (lua_State *L)
 {
   return mlua_index_with_properties (L,
-				     plot_properties_get,
-				     plot_methods, false);
+                                     plot_properties_get,
+                                     plot_methods, false);
 }
 
 int
@@ -645,26 +645,26 @@ plot_set_categories (lua_State *L)
       int k, n;
 
       if (!lua_istable(L, 3))
-	{
-	  AGG_UNLOCK();
-	  return luaL_error(L, "invalid categories, should be a table or nil");
-	}
+        {
+          AGG_UNLOCK();
+          return luaL_error(L, "invalid categories, should be a table or nil");
+        }
 
       p->enable_categories(dir);
 
       n = lua_objlen(L, 3);
       for (k = 1; k+1 <= n; k += 2)
-	{
-	  lua_rawgeti(L, 3, k);
-	  lua_rawgeti(L, 3, k+1);
-	  if (lua_isnumber(L, -2) && lua_isstring(L, -1))
-	    {
-	      double v = lua_tonumber(L, -2);
-	      const char* s = lua_tostring(L, -1);
-	      p->add_category_entry(dir, v, s);
-	    }
-	  lua_pop(L, 2);
-	}
+        {
+          lua_rawgeti(L, 3, k);
+          lua_rawgeti(L, 3, k+1);
+          if (lua_isnumber(L, -2) && lua_isstring(L, -1))
+            {
+              double v = lua_tonumber(L, -2);
+              const char* s = lua_tostring(L, -1);
+              p->add_category_entry(dir, v, s);
+            }
+          lua_pop(L, 2);
+        }
     }
 
   AGG_UNLOCK();

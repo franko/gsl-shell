@@ -34,7 +34,7 @@ class canvas_gen : private Pixel {
 
 public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
-	     agg::rgba bgcol):
+             agg::rgba bgcol):
     Pixel(ren_buf), rb(Pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
@@ -65,9 +65,9 @@ public:
 
     if (!direct_render)
       {
-	this->ras.add_path(vs);
-	this->rs.color(c);
-	agg::render_scanlines(this->ras, this->sl, this->rs);
+        this->ras.add_path(vs);
+        this->rs.color(c);
+        agg::render_scanlines(this->ras, this->sl, this->rs);
       }
   };
 

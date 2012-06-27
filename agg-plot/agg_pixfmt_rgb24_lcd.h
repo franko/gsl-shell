@@ -49,34 +49,34 @@ namespace agg
             tert   *= norm;
             for(unsigned i = 0; i < 256; i++)
             {
-	      unsigned char s = round(second * i);
-	      unsigned char t = round(tert   * i);
-	      unsigned char p = i - (2*s + 2*t);
+              unsigned char s = round(second * i);
+              unsigned char t = round(tert   * i);
+              unsigned char p = i - (2*s + 2*t);
 
-	      m_data[3*i + 1] = s; /* secondary */
-	      m_data[3*i + 2] = t; /* tertiary */
-	      m_data[3*i    ] = p; /* primary */
+              m_data[3*i + 1] = s; /* secondary */
+              m_data[3*i + 2] = t; /* tertiary */
+              m_data[3*i    ] = p; /* primary */
             }
         }
 
       unsigned convolution(const int8u* covers, int i0, int i_min, int i_max) const
       {
-	unsigned sum = 0;
-	int k_min = (i0 >= i_min + 2 ? -2 : i_min - i0);
-	int k_max = (i0 <= i_max - 2 ?  2 : i_max - i0);
-	for (int k = k_min; k <= k_max; k++)
-	  {
-	    /* select the primary, secondary or tertiary channel */
-	    int channel = abs(k) % 3;
-	    int8u c = covers[i0 + k];
-	    sum += m_data[3*c + channel];
-	  }
+        unsigned sum = 0;
+        int k_min = (i0 >= i_min + 2 ? -2 : i_min - i0);
+        int k_max = (i0 <= i_max - 2 ?  2 : i_max - i0);
+        for (int k = k_min; k <= k_max; k++)
+          {
+            /* select the primary, secondary or tertiary channel */
+            int channel = abs(k) % 3;
+            int8u c = covers[i0 + k];
+            sum += m_data[3*c + channel];
+          }
 
-	return sum;
+        return sum;
       }
 
     private:
-	unsigned char m_data[256*3];
+        unsigned char m_data[256*3];
     };
 
 
@@ -128,26 +128,26 @@ namespace agg
                                const color_type& c,
                                const int8u* covers)
         {
-	  unsigned rowlen = m_rbuf->width();
-	  int cx = (x - 2 >= 0 ? -2 : -x);
-	  int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
+          unsigned rowlen = m_rbuf->width();
+          int cx = (x - 2 >= 0 ? -2 : -x);
+          int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
 
-	  int i = (x + cx) % 3;
+          int i = (x + cx) % 3;
 
-	  int8u rgb[3] = { c.r, c.g, c.b };
-	  int8u* p = m_rbuf->row_ptr(y) + (x + cx);
+          int8u rgb[3] = { c.r, c.g, c.b };
+          int8u* p = m_rbuf->row_ptr(y) + (x + cx);
 
-	  for (/* */; cx <= cx_max; cx++)
-	    {
+          for (/* */; cx <= cx_max; cx++)
+            {
           unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
           unsigned alpha = (c_conv + 1) * (c.a + 1);
           unsigned dst_col = rgb[i], src_col = (*p);
           *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
 
-	      p ++;
-	      i = (i + 1) % 3;
-	    }
-	}
+              p ++;
+              i = (i + 1) % 3;
+            }
+        }
 
     private:
         rendering_buffer* m_rbuf;

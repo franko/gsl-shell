@@ -79,17 +79,17 @@ namespace draw {
     }
 
     const char* cont = m_text_buf.cstr();
-    str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
-			 " style=\"font-size:%i%s\">"			\
-			 " <tspan id=\"tspan%i\">%s</tspan>" \
-			 "</text>",
-			 x, y, id, txt_size, style.cstr(),
-			 id, cont);
+    str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
+                         " style=\"font-size:%i%s\">"                        \
+                         " <tspan id=\"tspan%i\">%s</tspan>" \
+                         "</text>",
+                         x, y, id, txt_size, style.cstr(),
+                         id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-		     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
-		     txt.cstr());
+                     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
+                     txt.cstr());
     } else {
       s = txt;
     }
@@ -98,8 +98,8 @@ namespace draw {
   }
 
   bool text::render(pixel_type::lcd_fmt& pixbuf,
-		    agg::rasterizer_scanline_aa<>& ras,
-		    agg::scanline_p8& sl, agg::rgba8 c)
+                    agg::rasterizer_scanline_aa<>& ras,
+                    agg::scanline_p8& sl, agg::rgba8 c)
   {
     typedef agg::renderer_base<pixel_type::lcd_fmt> renderer_type;
 
@@ -113,7 +113,7 @@ namespace draw {
     double y = -m_vjustif * m_text_height;
 
     m_font_ren.draw_text(ras, sl, ren_solid, m_matrix, x, y,
-			 text, text_length, c);
+                         text, text_length, c);
 
     return true;
   }

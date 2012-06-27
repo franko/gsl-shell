@@ -12,7 +12,7 @@ namespace draw {
   class text_shape : public sg_object  {
   public:
     text_shape(double x, double y, const char* text,
-	       double _size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
+               double _size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
       m_sg_text(), m_x(x), m_y(y), m_text(text), m_size(_size),
       m_scaling(0), m_trans(m_sg_text, identity_matrix), m_stroke(m_trans)
     {
@@ -62,23 +62,23 @@ namespace draw {
       const double dx = m.tx, dy = svg_y_coord(m.ty, h);
 
       if (is_unit_matrix(m))
-	{
-	  x += dx;
-	  y += dy;
-	}
+        {
+          x += dx;
+          y += dy;
+        }
 
-      str svgtext = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
-			       " style=\"font-size:%i\">"		\
-			       " <tspan id=\"tspan%i\">%s</tspan>"	\
-			       "</text>",
-			       x, y, id, txt_size, id, text);
+      str svgtext = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
+                               " style=\"font-size:%i\">"                \
+                               " <tspan id=\"tspan%i\">%s</tspan>"        \
+                               "</text>",
+                               x, y, id, txt_size, id, text);
 
       str s;
       if (is_unit_matrix(m))
-	s = svgtext;
+        s = svgtext;
       else
-	s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-		       m.sx, m.shx, m.shy, m.sy, dx, dy, svgtext.cstr());
+        s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
+                       m.sx, m.shx, m.shy, m.sy, dx, dy, svgtext.cstr());
 
       return s;
     }
