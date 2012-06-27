@@ -26,6 +26,8 @@
 #define AGG_PIXFMT_RGB24_LCD_INCLUDED
 
 #include <string.h>
+#include <stdlib.h>
+
 #include "agg_basics.h"
 #include "agg_color_rgba.h"
 #include "agg_rendering_buffer.h"
