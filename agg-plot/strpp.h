@@ -19,6 +19,8 @@ public:
   const char* cstr() const { return CSTR(this); }
   unsigned len() const { return this->length; }
 
+  char operator [] (unsigned j) const { return (j < len() ? heap[j] : 0); }
+
   void append(const str& s, int sep = 0) { str_append(this, &s, sep); }
   void append(const char* s, int sep = 0) { str_append_c(this, s, sep); }
 

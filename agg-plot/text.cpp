@@ -8,6 +8,7 @@
 
 namespace draw {
 
+#if 0
   void
   text::rewind(unsigned path_id)
   {
@@ -20,6 +21,7 @@ namespace draw {
   {
     return m_stroke.vertex(x, y);
   }
+#endif
 
   void
   text::apply_transform(const agg::trans_affine& m, double as)
@@ -97,6 +99,7 @@ namespace draw {
     return s;
   }
 
+#if 0
   bool text::render(pixel_type::lcd_fmt& pixbuf,
                     agg::rasterizer_scanline_aa<>& ras,
                     agg::scanline_u8& sl, agg::rgba8 c)
@@ -117,5 +120,5 @@ namespace draw {
 
     return true;
   }
-
+#endif
 }
