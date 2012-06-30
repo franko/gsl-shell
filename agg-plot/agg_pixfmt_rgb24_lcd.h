@@ -22,6 +22,8 @@
 // MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
+// Modified for GSL Shell by Francesco Abbate, 2012.
+
 #ifndef AGG_PIXFMT_RGB24_LCD_INCLUDED
 #define AGG_PIXFMT_RGB24_LCD_INCLUDED
 
@@ -139,10 +141,10 @@ namespace agg
 
           for (/* */; cx <= cx_max; cx++)
             {
-          unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
-          unsigned alpha = (c_conv + 1) * (c.a + 1);
-          unsigned dst_col = rgb[i], src_col = (*p);
-          *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
+              unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
+              unsigned alpha = (c_conv + 1) * (c.a + 1);
+              unsigned dst_col = rgb[i], src_col = (*p);
+              *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
 
               p ++;
               i = (i + 1) % 3;
