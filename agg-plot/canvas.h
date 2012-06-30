@@ -18,11 +18,17 @@
 
 template <class Pixel>
 class canvas_gen : private Pixel {
+
+  enum { subpixel_scale = 3 };
+
   typedef agg::renderer_base<typename Pixel::fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
 
   renderer_base rb;
   renderer_solid rs;
+
+  agg::renderer_base<typename Pixel::lcd_fmt> rb_subpixel;
+  agg::renderer_scanline_aa_solid<agg::renderer_base<typename Pixel::lcd_fmt> > rs_subpixel;
 
   agg::rasterizer_scanline_aa<> ras;
   agg::scanline_u8 sl;
@@ -36,6 +42,7 @@ public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
              agg::rgba bgcol):
     Pixel(ren_buf), rb(Pixel::pixfmt), rs(rb),
+    rb_subpixel(Pixel::pixfmt_lcd), rs_subpixel(rb_subpixel),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
@@ -61,9 +68,15 @@ public:
 
   void draw(sg_object& vs, agg::rgba8 c)
   {
-    bool direct_render = vs.render(this->pixfmt_lcd, this->ras, this->sl, c);
-
-    if (!direct_render)
+    if (vs.use_subpixel())
+      {
+        agg::trans_affine_scaling subpixel_mtx(double(subpixel_scale), 1.0);
+        agg::conv_transform<sg_object> trans(vs, subpixel_mtx);
+        this->ras.add_path(trans);
+        this->rs_subpixel.color(c);
+        agg::render_scanlines(this->ras, this->sl, this->rs_subpixel);
+      }
+    else
       {
         this->ras.add_path(vs);
         this->rs.color(c);

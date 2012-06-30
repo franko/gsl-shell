@@ -15,7 +15,7 @@ namespace draw {
 
   class text : public sg_object {
 
-    enum { scale_x = 100, subpixel_scale = 3 };
+    enum { scale_x = 100 };
 
     typedef agg::font_engine_freetype_int32 font_engine_type;
     typedef agg::font_cache_manager<font_engine_type> font_manager_type;
@@ -169,18 +169,12 @@ namespace draw {
     void hjustif(double hj) { m_hjustif = hj; }
     void vjustif(double vj) { m_vjustif = vj; }
 
-//    virtual void rewind(unsigned path_id);
-//    virtual unsigned vertex(double* x, double* y);
     virtual void apply_transform(const agg::trans_affine& m, double as);
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
 
     virtual str write_svg(int id, agg::rgba8 c, double h);
 
-#if 0
-    virtual bool render(pixel_type::lcd_fmt& ren_buf,
-                        agg::rasterizer_scanline_aa<>& ras,
-                        agg::scanline_u8& sl, agg::rgba8 c);
-#endif
+    virtual bool use_subpixel() { return true; }
 
     const vs_text& self() const { return m_text; };
           vs_text& self()       { return m_text; };

@@ -8,21 +8,6 @@
 
 namespace draw {
 
-#if 0
-  void
-  text::rewind(unsigned path_id)
-  {
-    m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
-    m_stroke.rewind(path_id);
-  }
-
-  unsigned
-  text::vertex(double* x, double* y)
-  {
-    return m_stroke.vertex(x, y);
-  }
-#endif
-
   void
   text::apply_transform(const agg::trans_affine& m, double as)
   {
@@ -98,27 +83,4 @@ namespace draw {
 
     return s;
   }
-
-#if 0
-  bool text::render(pixel_type::lcd_fmt& pixbuf,
-                    agg::rasterizer_scanline_aa<>& ras,
-                    agg::scanline_u8& sl, agg::rgba8 c)
-  {
-    typedef agg::renderer_base<pixel_type::lcd_fmt> renderer_type;
-
-    renderer_type ren_base(pixbuf);
-    agg::renderer_scanline_aa_solid<renderer_type> ren_solid(ren_base);
-
-    const char *text = m_text_buf.cstr();
-    unsigned text_length = m_text_buf.len();
-    double text_width = m_font_ren.text_width(text, text_length);
-    double x = -m_hjustif * text_width;
-    double y = -m_vjustif * m_text_height;
-
-    m_font_ren.draw_text(ras, sl, ren_solid, m_matrix, x, y,
-                         text, text_length, c);
-
-    return true;
-  }
-#endif
 }
