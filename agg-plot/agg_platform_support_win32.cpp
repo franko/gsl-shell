@@ -590,7 +590,8 @@ unsigned gslshell::bpp = 24;
 unsigned gslshell::sys_bpp = 24;
 
 bool
-platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn)
+platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn,
+                                       agg::pix_format_e src_pixfmt_tag)
 {
   unsigned slen = strlen (fn);
   agg::pod_array<char> fnext(slen+5);
@@ -602,7 +603,14 @@ platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *f
   agg::rendering_buffer rbuf_tmp;
   pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
 
-  rbuf_tmp.copy_from(src);
+  if (src_pixfmt_tag == agg::pix_format_bgr24)
+    {
+      rbuf_tmp.copy_from(src);
+    }
+  else if (src_pixfmt_tag == agg::pix_format_rgb24)
+    {
+      my_color_conv(&rbuf_tmp, &src, agg::color_conv_rgb24_to_bgr24());
+    }
 
   return pmap.save_as_bmp (fnext.data());
 }

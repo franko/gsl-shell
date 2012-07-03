@@ -38,7 +38,7 @@ bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
 
   p->draw(can, mtx);
 
-  bool success = platform_support_ext::save_image_file (rbuf_tmp, fn);
+  bool success = platform_support_ext::save_image_file (rbuf_tmp, fn, gslshell::pixel_format);
 
   if (! success)
     st.error("cannot save image file", "plot save");
