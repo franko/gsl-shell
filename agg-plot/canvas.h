@@ -66,23 +66,31 @@ public:
 
   void reset_clipping() { this->rb.reset_clipping(true); };
 
+  template <class VertexSource>
+  void draw_solid(VertexSource& vs, agg::rgba8 c)
+  {
+    this->ras.add_path(vs);
+    this->rs.color(c);
+    agg::render_scanlines(this->ras, this->sl, this->rs);
+  }
+
+  template <class VertexSource>
+  void draw_solid_subpixel(VertexSource& vs, agg::rgba8 c)
+  {
+    agg::trans_affine_scaling subpixel_mtx(double(subpixel_scale), 1.0);
+    agg::conv_transform<VertexSource> trans(vs, subpixel_mtx);
+    this->ras.add_path(trans);
+    this->rs_subpixel.color(c);
+    agg::render_scanlines(this->ras, this->sl, this->rs_subpixel);
+  }
+
   void draw(sg_object& vs, agg::rgba8 c)
   {
     if (vs.use_subpixel())
-      {
-        agg::trans_affine_scaling subpixel_mtx(double(subpixel_scale), 1.0);
-        agg::conv_transform<sg_object> trans(vs, subpixel_mtx);
-        this->ras.add_path(trans);
-        this->rs_subpixel.color(c);
-        agg::render_scanlines(this->ras, this->sl, this->rs_subpixel);
-      }
+      draw_solid_subpixel(vs, c);
     else
-      {
-        this->ras.add_path(vs);
-        this->rs.color(c);
-        agg::render_scanlines(this->ras, this->sl, this->rs);
-      }
-  };
+      draw_solid(vs, c);
+  }
 
   void draw_outline(sg_object& vs, agg::rgba8 c)
   {
@@ -90,10 +98,11 @@ public:
     line.width(Pixel::line_width / 100.0);
     line.line_cap(agg::round_cap);
 
-    this->ras.add_path(line);
-    this->rs.color(c);
-    agg::render_scanlines(this->ras, this->sl, this->rs);
-  };
+    if (vs.use_subpixel())
+      draw_solid_subpixel(line, c);
+    else
+      draw_solid(line, c);
+  }
 };
 
 struct virtual_canvas {
