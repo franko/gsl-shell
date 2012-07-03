@@ -130,7 +130,7 @@ namespace agg
                                const color_type& c,
                                const int8u* covers)
         {
-          unsigned rowlen = m_rbuf->width();
+          unsigned rowlen = width();
           int cx = (x - 2 >= 0 ? -2 : -x);
           int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
 
