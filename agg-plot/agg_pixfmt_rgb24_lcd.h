@@ -51,9 +51,10 @@ namespace agg
             tert   *= norm;
             for(unsigned i = 0; i < 256; i++)
             {
-              unsigned char s = round(second * i);
-              unsigned char t = round(tert   * i);
-              unsigned char p = i - (2*s + 2*t);
+              unsigned b = (i << 8);
+              unsigned s = round(second * b);
+              unsigned t = round(tert   * b);
+              unsigned p = b - (2*s + 2*t);
 
               m_data[3*i + 1] = s; /* secondary */
               m_data[3*i + 2] = t; /* tertiary */
@@ -74,13 +75,11 @@ namespace agg
             sum += m_data[3*c + channel];
           }
 
-        // Even if unlikey this can be a few units > 255 due to rounding effects.
-        // We need to make sure it does fit into a int8u.
-        return (sum < 256 ? sum : 255);
+        return (sum + 128) >> 8;
       }
 
     private:
-        unsigned char m_data[256*3];
+        unsigned short m_data[256*3];
     };
 
 
