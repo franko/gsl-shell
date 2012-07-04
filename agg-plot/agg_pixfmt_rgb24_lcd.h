@@ -88,7 +88,6 @@ namespace agg
 
 
     //========================================================pixfmt_rgb24_lcd
-    template <class Gamma>
     class pixfmt_rgb24_lcd
     {
     public:
@@ -98,7 +97,77 @@ namespace agg
         typedef color_type::calc_type calc_type;
 
         //--------------------------------------------------------------------
-        pixfmt_rgb24_lcd(rendering_buffer& rb, const lcd_distribution_lut& lut, const Gamma& gamma)
+        pixfmt_rgb24_lcd(rendering_buffer& rb, const lcd_distribution_lut& lut)
+            : m_rbuf(&rb), m_lut(&lut)
+        {
+        }
+
+        //--------------------------------------------------------------------
+        unsigned width()  const { return m_rbuf->width() * 3;  }
+        unsigned height() const { return m_rbuf->height(); }
+
+
+        //--------------------------------------------------------------------
+        void blend_hline(int x, int y,
+                         unsigned len,
+                         const color_type& c,
+                         int8u cover)
+        {
+            int8u* p = m_rbuf->row_ptr(y) + x + x + x;
+            int alpha = int(cover) * c.a;
+            do
+            {
+                p[0] = (int8u)((((c.r - p[0]) * alpha) + (p[0] << 16)) >> 16);
+                p[1] = (int8u)((((c.g - p[1]) * alpha) + (p[1] << 16)) >> 16);
+                p[2] = (int8u)((((c.b - p[2]) * alpha) + (p[2] << 16)) >> 16);
+                p += 3;
+            }
+            while(--len);
+        }
+
+        //--------------------------------------------------------------------
+        void blend_solid_hspan(int x, int y,
+                               unsigned len,
+                               const color_type& c,
+                               const int8u* covers)
+        {
+          unsigned rowlen = width();
+          int cx = (x - 2 >= 0 ? -2 : -x);
+          int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
+
+          int i = (x + cx) % 3;
+
+          int8u rgb[3] = { c.r, c.g, c.b };
+          int8u* p = m_rbuf->row_ptr(y) + (x + cx);
+
+          for (/* */; cx <= cx_max; cx++)
+            {
+              unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
+              unsigned alpha = (c_conv + 1) * (c.a + 1);
+              unsigned dst_col = rgb[i], src_col = (*p);
+              *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
+
+              p ++;
+              i = (i + 1) % 3;
+            }
+        }
+
+    private:
+        rendering_buffer* m_rbuf;
+        const lcd_distribution_lut* m_lut;
+    };
+
+    template <class Gamma>
+    class pixfmt_rgb24_lcd_gamma
+    {
+    public:
+        typedef rgba8 color_type;
+        typedef rendering_buffer::row_data row_data;
+        typedef color_type::value_type value_type;
+        typedef color_type::calc_type calc_type;
+
+        //--------------------------------------------------------------------
+        pixfmt_rgb24_lcd_gamma(rendering_buffer& rb, const lcd_distribution_lut& lut, const Gamma& gamma)
             : m_rbuf(&rb), m_lut(&lut), m_gamma(gamma)
         {
         }

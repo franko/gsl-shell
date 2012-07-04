@@ -8,16 +8,15 @@
 
 class pixel_gamma_corr {
   typedef gslshell::gamma_type gamma_type;
-  typedef agg::pixfmt_rgb24_gamma<gamma_type> pixel_fmt;
 
   gamma_type& m_gamma;
   agg::lcd_distribution_lut m_lut;
 public:
-  typedef pixel_fmt fmt;
-  typedef agg::pixfmt_rgb24_lcd<gamma_type> lcd_fmt;
+  typedef agg::pixfmt_rgb24_gamma<gamma_type> pixfmt_type;
+  typedef agg::pixfmt_rgb24_lcd_gamma<gamma_type> pixfmt_lcd_type;
 
-  fmt pixfmt;
-  lcd_fmt pixfmt_lcd;
+  pixfmt_type pixfmt;
+  pixfmt_lcd_type pixfmt_lcd;
 
   pixel_gamma_corr(agg::rendering_buffer& ren_buf):
     m_gamma(gslshell::gamma), m_lut(1./3., 2./9., 1./9.),
@@ -27,12 +26,19 @@ public:
   enum { line_width = 120 };
 };
 
-struct pixel_simple {
-  agg::pixfmt_rgb24 pixfmt;
+class pixel_simple {
+  agg::lcd_distribution_lut m_lut;
 
-  typedef agg::pixfmt_rgb24 fmt;
+public:
+  typedef agg::pixfmt_rgb24 pixfmt_type;
+  typedef agg::pixfmt_rgb24_lcd pixfmt_lcd_type;
 
-  pixel_simple(agg::rendering_buffer& ren_buf): pixfmt(ren_buf) { };
+  pixfmt_type pixfmt;
+  pixfmt_lcd_type pixfmt_lcd;
+
+  pixel_simple(agg::rendering_buffer& ren_buf):
+    m_lut(1./3., 2./9., 1./9.), pixfmt(ren_buf), pixfmt_lcd(ren_buf, m_lut)
+  { };
 
   enum { line_width = 100 };
 };

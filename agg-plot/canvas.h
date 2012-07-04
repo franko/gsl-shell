@@ -21,14 +21,14 @@ class canvas_gen : private Pixel {
 
   enum { subpixel_scale = 3 };
 
-  typedef agg::renderer_base<typename Pixel::fmt> renderer_base;
+  typedef agg::renderer_base<typename Pixel::pixfmt_type> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
 
   renderer_base rb;
   renderer_solid rs;
 
-  agg::renderer_base<typename Pixel::lcd_fmt> rb_subpixel;
-  agg::renderer_scanline_aa_solid<agg::renderer_base<typename Pixel::lcd_fmt> > rs_subpixel;
+  agg::renderer_base<typename Pixel::pixfmt_lcd_type> rb_subpixel;
+  agg::renderer_scanline_aa_solid<agg::renderer_base<typename Pixel::pixfmt_lcd_type> > rs_subpixel;
 
   agg::rasterizer_scanline_aa<> ras;
   agg::scanline_u8 sl;
