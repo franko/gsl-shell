@@ -3,6 +3,7 @@
 
 #include "platform/agg_platform_support.h"
 #include "agg_gamma_lut.h"
+#include "agg_pixfmt_rgb24_lcd.h"
 
 namespace gslshell
 {
@@ -16,6 +17,7 @@ namespace gslshell
   extern unsigned      sys_bpp;
 
   extern gamma_type gamma;
+  extern agg::lcd_distribution_lut subpixel_lut;
 }
 
 #endif
