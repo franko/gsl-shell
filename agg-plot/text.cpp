@@ -17,9 +17,6 @@ namespace draw {
     m.transform(&m_user_matrix.tx, &m_user_matrix.ty);
 
     m_matrix = m_user_matrix;
-
-    m_trans.transformer(m_matrix);
-    m_stroke.approximation_scale(as);
   }
 
   void

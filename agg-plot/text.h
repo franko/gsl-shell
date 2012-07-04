@@ -1,7 +1,6 @@
 #ifndef AGGPLOT_TEXT_H
 #define AGGPLOT_TEXT_H
 
-#include "agg_gsv_text.h"
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
 #include "agg_conv_stroke.h"
@@ -20,17 +19,10 @@ namespace draw {
     typedef agg::font_engine_freetype_int32 font_engine_type;
     typedef agg::font_cache_manager<font_engine_type> font_manager_type;
 
-    typedef agg::gsv_text vs_text;
-    typedef agg::conv_transform<vs_text> vs_trans_text;
-    typedef agg::conv_stroke<vs_trans_text> vs_stroked_text;
-
     agg::trans_affine m_matrix;
     agg::trans_affine m_user_matrix;
 
     str m_text_buf;
-    vs_text m_text;
-    vs_trans_text m_trans;
-    vs_stroked_text m_stroke;
 
     double m_x, m_y;
     double m_angle;
@@ -42,11 +34,8 @@ namespace draw {
     double m_vjustif;
 
     unsigned m_text_pos;
-    // double m_text_start_x;
     double m_text_x, m_text_y;
     double m_advance_x, m_advance_y;
-    // const agg::glyph_cache* m_glyph;
-    // font_renderer::font_engine_type::path_adaptor_type m_text_path;
 
     font_engine_type m_font_eng;
     font_manager_type m_font_man;
@@ -54,35 +43,26 @@ namespace draw {
     agg::trans_affine m_text_mtx;
     agg::conv_curve<font_manager_type::path_adaptor_type> m_text_curve;
     agg::conv_transform<agg::conv_curve<font_manager_type::path_adaptor_type> > m_text_trans;
-//    font_renderer m_font_ren;
 
   public:
     text(const char* text, double size = 10.0, double width = 1.0,
          double hjustif = 0.0, double vjustif = 0.0):
       m_matrix(), m_user_matrix(), m_text_buf(text),
-      m_text(), m_trans(m_text, m_user_matrix), m_stroke(m_trans),
       m_x(0.0), m_y(0.0), m_angle(0.0),
       m_text_width(0.0), m_text_height(size),
       m_hjustif(hjustif), m_vjustif(vjustif), m_text_pos(0),
       m_font_eng(), m_font_man(m_font_eng),
       m_text_mtx(), m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
-      // m_font_ren("LiberationSans-Regular.ttf", 1.4*size)
     {
-      m_text.text(m_text_buf.cstr());
-      m_text.size(size);
-      m_text_width = m_text.text_width();
-
-      m_stroke.width(width);
-      m_stroke.line_cap(agg::round_cap);
-      m_stroke.line_join(agg::round_join);
-
       agg::glyph_rendering gren = agg::glyph_ren_outline;
-      m_font_eng.load_font("LiberationSans-Regular.ttf", 0, gren);
+      m_font_eng.load_font("trebuc.ttf", 0, gren);
       m_font_eng.hinting(true);
 
       double text_height = 1.4 * size;
       m_font_eng.height(text_height);
       m_font_eng.width(text_height * scale_x);
+
+      m_text_width = get_text_width();
     }
 
     bool load_glyph()
@@ -175,9 +155,6 @@ namespace draw {
     virtual str write_svg(int id, agg::rgba8 c, double h);
 
     virtual bool use_subpixel() { return true; }
-
-    const vs_text& self() const { return m_text; };
-          vs_text& self()       { return m_text; };
 
   protected:
     double get_text_width()
