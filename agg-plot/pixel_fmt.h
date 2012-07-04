@@ -13,14 +13,14 @@ class pixel_gamma_corr {
   agg::lcd_distribution_lut m_lut;
 public:
   typedef pixel_fmt fmt;
-  typedef agg::pixfmt_rgb24_lcd lcd_fmt;
+  typedef agg::pixfmt_rgb24_lcd<gamma_type> lcd_fmt;
 
-  pixel_fmt pixfmt;
-  agg::pixfmt_rgb24_lcd pixfmt_lcd;
+  fmt pixfmt;
+  lcd_fmt pixfmt_lcd;
 
   pixel_gamma_corr(agg::rendering_buffer& ren_buf):
     m_gamma(1.5), m_lut(1./3., 2./9., 1./9.),
-    pixfmt(ren_buf, m_gamma), pixfmt_lcd(ren_buf, m_lut)
+    pixfmt(ren_buf, m_gamma), pixfmt_lcd(ren_buf, m_lut, m_gamma)
   { };
 
   enum { line_width = 120 };

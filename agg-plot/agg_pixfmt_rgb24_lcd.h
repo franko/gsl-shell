@@ -74,7 +74,9 @@ namespace agg
             sum += m_data[3*c + channel];
           }
 
-        return sum;
+        // Even if unlikey this can be a few units > 255 due to rounding effects.
+        // We need to make sure it does fit into a int8u.
+        return (sum < 256 ? sum : 255);
       }
 
     private:
@@ -86,6 +88,7 @@ namespace agg
 
 
     //========================================================pixfmt_rgb24_lcd
+    template <class Gamma>
     class pixfmt_rgb24_lcd
     {
     public:
@@ -95,9 +98,8 @@ namespace agg
         typedef color_type::calc_type calc_type;
 
         //--------------------------------------------------------------------
-        pixfmt_rgb24_lcd(rendering_buffer& rb, const lcd_distribution_lut& lut)
-            : m_rbuf(&rb),
-              m_lut(&lut)
+        pixfmt_rgb24_lcd(rendering_buffer& rb, const lcd_distribution_lut& lut, const Gamma& gamma)
+            : m_rbuf(&rb), m_lut(&lut), m_gamma(gamma)
         {
         }
 
@@ -143,8 +145,8 @@ namespace agg
             {
               unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
               unsigned alpha = (c_conv + 1) * (c.a + 1);
-              unsigned dst_col = rgb[i], src_col = (*p);
-              *p = (int8u)((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
+              unsigned dst_col = m_gamma.dir(rgb[i]), src_col = m_gamma.dir(*p);
+              *p = m_gamma.inv((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
 
               p ++;
               i = (i + 1) % 3;
@@ -154,6 +156,7 @@ namespace agg
     private:
         rendering_buffer* m_rbuf;
         const lcd_distribution_lut* m_lut;
+        const Gamma& m_gamma;
     };
 
 
