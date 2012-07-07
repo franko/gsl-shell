@@ -493,8 +493,6 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
   const double ppad = double(axis_label_prop_space) / 1000.0;
   const double eps = 1.0e-3;
 
-  const double line_width = std_line_width(scale);
-
   opt_rect<double> bb;
   agg::rect_base<double> r;
 
@@ -521,7 +519,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
       if (q < -eps || q > 1.0 + eps)
         continue;
 
-      draw::text* label = new draw::text(text, 10.0*scale, line_width, hj, vj);
+      draw::text* label = new draw::text(text, 10.0*scale, hj, vj);
 
       label->set_point(isx ? q : -ppad, isx ? -ppad : q);
       label->angle(langle);
@@ -585,7 +583,6 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
   if (!str_is_null(&m_title))
     {
       const double scale = compute_scale(canvas_mtx);
-      const double line_width = std_line_width(scale);
       const double ptpad = double(axis_title_prop_space) / 1000.0;
       const double title_text_size = 12.0 * scale;
       const double th = approx_text_height(title_text_size);
@@ -594,7 +591,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
       canvas_mtx.transform(&x, &y);
       y -= ptpad + dyt + title_text_size;
 
-      draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
+      draw::text title(m_title.cstr(), title_text_size, 0.5, 0.0);
       title.set_point(x, y);
       title.apply_transform(identity_matrix, 1.0);
 
@@ -692,7 +689,6 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
   trans::dash_a lndash(&ln_tr);
   trans::stroke_a lns(&lndash);
 
-  const double line_width = std_line_width(scale);
   const double label_text_size = 11.0 * scale;
   const double plpad = double(axis_label_prop_space) / 1000.0;
   const double ptpad = double(axis_title_prop_space) / 1000.0;
@@ -744,13 +740,13 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
 
   lndash.add_dash(7.0, 3.0);
 
-  lns.width(std_line_width(scale, 0.25));
+  lns.width(std_line_width(scale, 0.15));
   canvas.draw(lns, colors::black);
 
   mark_stroke.width(std_line_width(scale, 0.75));
   canvas.draw(mark_stroke, colors::black);
 
-  boxvs.width(std_line_width(scale));
+  boxvs.width(std_line_width(scale, 0.75));
   canvas.draw(boxvs, colors::black);
 
   if (!str_is_null(&m_x_axis.title))
@@ -759,7 +755,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       double laby = canvas_mtx.ty;
 
       const char* text = m_x_axis.title.cstr();
-      draw::text xlabel(text, label_text_size, line_width, 0.5, 0.0);
+      draw::text xlabel(text, label_text_size, 0.5, 0.0);
       xlabel.set_point(labx, laby);
       xlabel.apply_transform(identity_matrix, 1.0);
 
@@ -772,7 +768,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       double laby = m.sy * 0.5 + m.ty;
 
       const char* text = m_y_axis.title.cstr();
-      draw::text ylabel(text, label_text_size, line_width, 0.5, 1.0);
+      draw::text ylabel(text, label_text_size, 0.5, 1.0);
       ylabel.set_point(labx, laby);
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);

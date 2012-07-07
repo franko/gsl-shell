@@ -6,6 +6,33 @@
 
 #include "text.h"
 
+agg::font_engine_freetype_int32 global_font_eng;
+agg::font_cache_manager<agg::font_engine_freetype_int32> global_font_man(global_font_eng);
+
+static bool font_engine_initialized = false;
+
+static void font_engine_initialize()
+{
+    agg::glyph_rendering gren = agg::glyph_ren_outline;
+    global_font_eng.load_font("trebuc.ttf", 0, gren);
+    global_font_eng.hinting(true);
+    font_engine_initialized = true;
+}
+
+agg::font_engine_freetype_int32& gslshell::font_engine()
+{
+    if (!font_engine_initialized)
+        font_engine_initialize();
+    return global_font_eng;
+}
+
+agg::font_cache_manager<agg::font_engine_freetype_int32>& gslshell::font_manager()
+{
+    if (!font_engine_initialized)
+        font_engine_initialize();
+    return global_font_man;
+}
+
 namespace draw {
 
   void
@@ -33,7 +60,8 @@ namespace draw {
     const double eps = 1.0e-6;
     str s;
 
-    if (str_is_null(&m_text_buf))
+    const str& content = m_text_label.text();
+    if (str_is_null(&content))
       return s;
 
     str style;
@@ -51,9 +79,9 @@ namespace draw {
 
     bool need_rotate = !is_unit_matrix(m, eps);
 
-    int txt_size = (int)(m_text_height * 1.5);
+    int txt_size = (int)(text_height() * 1.5);
 
-    double x = 0.0, y = - m_vjustif * m_text_height * 1.2;
+    double x = 0.0, y = - m_vjustif * text_height() * 1.2;
 
     if (!need_rotate) {
       x = x + m.tx;
@@ -62,7 +90,7 @@ namespace draw {
       y = -y;
     }
 
-    const char* cont = m_text_buf.cstr();
+    const char* cont = get_text();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
                          " style=\"font-size:%i%s\">"                        \
                          " <tspan id=\"tspan%i\">%s</tspan>" \
