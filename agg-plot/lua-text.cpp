@@ -66,7 +66,7 @@ agg_text_new (lua_State *L)
   double x = luaL_checknumber (L, 1);
   double y = luaL_checknumber (L, 2);
   const char *text = luaL_checkstring (L, 3);
-  double size  = luaL_optnumber (L, 4, 10.0);
+  double size  = luaL_optnumber (L, 4, 14.0);
   draw::text* t = new(L, GS_DRAW_TEXT) draw::text(text, size);
   t->set_point(x, y);
   return 1;

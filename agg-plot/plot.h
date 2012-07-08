@@ -519,7 +519,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
       if (q < -eps || q > 1.0 + eps)
         continue;
 
-      draw::text* label = new draw::text(text, 10.0*scale, hj, vj);
+      draw::text* label = new draw::text(text, 14.0*scale, hj, vj);
 
       label->set_point(isx ? q : -ppad, isx ? -ppad : q);
       label->angle(langle);
@@ -584,7 +584,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
     {
       const double scale = compute_scale(canvas_mtx);
       const double ptpad = double(axis_title_prop_space) / 1000.0;
-      const double title_text_size = 12.0 * scale;
+      const double title_text_size = 18.0 * scale;
       const double th = approx_text_height(title_text_size);
 
       double x = 0.5, y = 1.0;
@@ -689,7 +689,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
   trans::dash_a lndash(&ln_tr);
   trans::stroke_a lns(&lndash);
 
-  const double label_text_size = 11.0 * scale;
+  const double label_text_size = 15.0 * scale;
   const double plpad = double(axis_label_prop_space) / 1000.0;
   const double ptpad = double(axis_title_prop_space) / 1000.0;
 

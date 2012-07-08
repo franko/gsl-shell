@@ -24,7 +24,7 @@ class text : public sg_object
   public:
     text(const char* text, double size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
     m_matrix(), m_user_matrix(), m_x(0.0), m_y(0.0), m_angle(0.0),
-    m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, 1.4*size)
+    m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, size)
     { }
 
     virtual void rewind(unsigned path_id)
@@ -54,7 +54,7 @@ class text : public sg_object
 
     const char * get_text() const { return m_text_label.text().cstr(); }
 
-    double text_height() const { return 1.4 * m_text_label.text_height(); }
+    double text_height() const { return m_text_label.text_height(); }
 
     void set_point(double x, double y)
     {

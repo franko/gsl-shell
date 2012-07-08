@@ -79,7 +79,7 @@ namespace draw {
 
     bool need_rotate = !is_unit_matrix(m, eps);
 
-    int txt_size = (int)(text_height() * 1.5);
+    int txt_size = text_height();
 
     double x = 0.0, y = - m_vjustif * text_height() * 1.2;
 

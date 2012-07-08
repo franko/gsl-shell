@@ -310,7 +310,7 @@ function graph.legend(entries)
 	 tr = trans
       end
       p:add(sym, color, tr)
-      p:add(graph.textshape(25, y + 6, text, 10), 'black')
+      p:add(graph.textshape(25, y + 6, text, 14), 'black')
    end
    return p
 end

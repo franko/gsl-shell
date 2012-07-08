@@ -87,7 +87,7 @@ class text_label
     void rewind(double hjustif, double vjustif)
     {
         m_text_x = scale_x * (- hjustif * m_text_width);
-        m_text_y = - 0.6 * vjustif * m_text_height;
+        m_text_y = - 0.86 * vjustif * m_text_height;
         m_advance_x = 0;
         m_advance_y = 0;
         m_text_pos = 0;
