@@ -19,11 +19,11 @@ class text_label
 
     str m_text_buf;
 
-    double m_text_width;
-    double m_text_height;
+    double m_width;
+    double m_height;
 
-    unsigned m_text_pos;
-    double m_text_x, m_text_y;
+    unsigned m_pos;
+    double m_x, m_y;
     double m_advance_x, m_advance_y;
 
     font_engine_type& m_font_eng;
@@ -36,43 +36,43 @@ class text_label
 
   public:
     text_label(const char* text, double size):
-    m_text_buf(text), m_text_height(size), m_text_pos(0),
+    m_text_buf(text), m_height(size), m_pos(0),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
     m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
     {
         set_font_size();
-        m_text_width = get_text_width();
+        m_width = get_text_width();
     }
 
     void model_mtx(const agg::trans_affine& m) { m_model_mtx = m; }
 
     void set_font_size()
     {
-        m_font_eng.height(m_text_height);
-        m_font_eng.width(m_text_height * scale_x);
+        m_font_eng.height(m_height);
+        m_font_eng.width(m_height * scale_x);
     }
 
-    double text_height() const { return m_text_height; }
+    double text_height() const { return m_height; }
 
     const str& text() const { return m_text_buf; }
 
     bool load_glyph()
     {
-        m_text_x += m_advance_x;
-        m_text_y += m_advance_y;
+        m_x += m_advance_x;
+        m_y += m_advance_y;
 
-        if (m_text_pos >= m_text_buf.len())
+        if (m_pos >= m_text_buf.len())
             return false;
 
-        char c = m_text_buf[m_text_pos];
+        char c = m_text_buf[m_pos];
         const agg::glyph_cache *glyph = m_font_man.glyph(c);
-        m_font_man.add_kerning(&m_text_x, &m_text_y);
+        m_font_man.add_kerning(&m_x, &m_y);
         m_font_man.init_embedded_adaptors(glyph, 0, 0);
 
         if(glyph->data_type == agg::glyph_data_outline)
         {
-            m_text_mtx.tx = m_text_x / scale_x;
-            m_text_mtx.ty = floor(m_text_y + 0.5);
+            m_text_mtx.tx = m_x / scale_x;
+            m_text_mtx.ty = floor(m_y + 0.5);
             m_model_mtx.transform(&m_text_mtx.tx, &m_text_mtx.ty);
 
             m_advance_x = glyph->advance_x;
@@ -86,11 +86,11 @@ class text_label
 
     void rewind(double hjustif, double vjustif)
     {
-        m_text_x = scale_x * (- hjustif * m_text_width);
-        m_text_y = - 0.86 * vjustif * m_text_height;
+        m_x = scale_x * (- hjustif * m_width);
+        m_y = - 0.86 * vjustif * m_height;
         m_advance_x = 0;
         m_advance_y = 0;
-        m_text_pos = 0;
+        m_pos = 0;
 
         m_text_mtx = m_model_mtx;
         agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);
@@ -105,7 +105,7 @@ class text_label
         unsigned cmd = m_text_trans.vertex(x, y);
         if (agg::is_stop(cmd))
         {
-            m_text_pos++;
+            m_pos++;
             if (load_glyph())
             {
                 return vertex(x, y);
@@ -117,7 +117,7 @@ class text_label
 
     void approximation_scale(double as) { m_text_curve.approximation_scale(as); }
 
-    double get_text_height() const { return m_text_height; }
+    double get_text_height() const { return m_height; }
 
     double get_text_width()
     {
