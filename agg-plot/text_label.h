@@ -36,7 +36,7 @@ class text_label
 
   public:
     text_label(const char* text, double size):
-    m_text_buf(text), m_text_width(0.0), m_text_height(size), m_text_pos(0),
+    m_text_buf(text), m_text_height(size), m_text_pos(0),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
     m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
     {
@@ -86,7 +86,7 @@ class text_label
 
     void rewind(double hjustif, double vjustif)
     {
-        m_text_x = scale_x * (- hjustif * get_text_width());
+        m_text_x = scale_x * (- hjustif * m_text_width);
         m_text_y = - 0.6 * vjustif * m_text_height;
         m_advance_x = 0;
         m_advance_y = 0;
@@ -115,7 +115,10 @@ class text_label
         return cmd;
     }
 
-  protected:
+    void approximation_scale(double as) { m_text_curve.approximation_scale(as); }
+
+    double get_text_height() const { return m_text_height; }
+
     double get_text_width()
     {
         unsigned text_length = m_text_buf.len();
