@@ -78,6 +78,21 @@ namespace agg
         return (sum + 128) >> 8;
       }
 
+      unsigned conv_hline(int8u cover, int i0, int i_min, int i_max) const
+      {
+        unsigned sum = 0;
+        int k_min = (i0 >= i_min + 2 ? -2 : i_min - i0);
+        int k_max = (i0 <= i_max - 2 ?  2 : i_max - i0);
+        for (int k = k_min; k <= k_max; k++)
+          {
+            /* select the primary, secondary or tertiary channel */
+            int channel = abs(k) % 3;
+            sum += m_data[3*cover + channel];
+          }
+
+        return (sum + 128) >> 8;
+      }
+
     private:
         unsigned short m_data[256*3];
     };
@@ -112,16 +127,18 @@ namespace agg
                          const color_type& c,
                          int8u cover)
         {
-            int8u* p = m_rbuf->row_ptr(y) + x + x + x;
-            int alpha = int(cover) * c.a;
-            do
+            unsigned rowlen = width();
+            int cx = (x - 2 >= 0 ? -2 : -x);
+            int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
+            int8u* p = m_rbuf->row_ptr(y) + (x + cx);
+            int8u rgb[3] = { c.r, c.g, c.b };
+            for (int i = (x + cx) % 3; cx <= cx_max; p++, cx++, i = (i + 1) % 3)
             {
-                p[0] = (int8u)((((c.r - p[0]) * alpha) + (p[0] << 16)) >> 16);
-                p[1] = (int8u)((((c.g - p[1]) * alpha) + (p[1] << 16)) >> 16);
-                p[2] = (int8u)((((c.b - p[2]) * alpha) + (p[2] << 16)) >> 16);
-                p += 3;
+                unsigned c_conv = m_lut->conv_hline(cover, cx, 0, len - 1);
+                unsigned alpha = (c_conv + 1) * (c.a + 1);
+                unsigned d0 = rgb[i], s0 = p[0];
+                p[0] = (((d0 - s0) * alpha) + (s0 << 16)) >> 16;
             }
-            while(--len);
         }
 
         //--------------------------------------------------------------------
@@ -182,16 +199,18 @@ namespace agg
                          const color_type& c,
                          int8u cover)
         {
-            int8u* p = m_rbuf->row_ptr(y) + x + x + x;
-            int alpha = int(cover) * c.a;
-            do
+            unsigned rowlen = width();
+            int cx = (x - 2 >= 0 ? -2 : -x);
+            int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
+            int8u* p = m_rbuf->row_ptr(y) + (x + cx);
+            int8u rgb[3] = { c.r, c.g, c.b };
+            for (int i = (x + cx) % 3; cx <= cx_max; p++, cx++, i = (i + 1) % 3)
             {
-                p[0] = (int8u)((((c.r - p[0]) * alpha) + (p[0] << 16)) >> 16);
-                p[1] = (int8u)((((c.g - p[1]) * alpha) + (p[1] << 16)) >> 16);
-                p[2] = (int8u)((((c.b - p[2]) * alpha) + (p[2] << 16)) >> 16);
-                p += 3;
+                unsigned c_conv = m_lut->conv_hline(cover, cx, 0, len - 1);
+                unsigned alpha = (c_conv + 1) * (c.a + 1);
+                unsigned d0 = m_gamma.dir(rgb[i]), s0 = m_gamma.dir(p[0]);
+                p[0] = m_gamma.inv((((d0 - s0) * alpha) + (s0 << 16)) >> 16);
             }
-            while(--len);
         }
 
         //--------------------------------------------------------------------
