@@ -68,6 +68,7 @@ private:
     agg::rgba m_bgcol;
 };
 
+template <class Pixel>
 class renderer_subpixel_aa
 {
     enum { subpixel_scale = 3 };
@@ -77,7 +78,7 @@ public:
     m_bgcol(bg_color)
     { }
 
-    typedef pixel_gamma_lcd pixfmt_type;
+    typedef Pixel pixfmt_type;
 
     agg::renderer_base<pixfmt_type>& renderer_base() { return m_ren_base; }
 
@@ -168,7 +169,10 @@ struct virtual_canvas {
   virtual ~virtual_canvas() { }
 };
 
-//typedef canvas_gen<renderer_gray_aa<pixel_type> > canvas;
-typedef canvas_gen<renderer_subpixel_aa> canvas;
+#ifdef DISABLE_SUBPIXEL_AA
+typedef canvas_gen<renderer_gray_aa<pixel_type> > canvas;
+#else
+typedef canvas_gen<renderer_subpixel_aa<pixel_lcd_type> > canvas;
+#endif
 
 #endif
