@@ -78,6 +78,8 @@ namespace agg
         return (sum + 128) >> 8;
       }
 
+      unsigned channel(int k, int n) const { return m_data[3*n + k]; }
+
     private:
         unsigned short m_data[256*3];
     };
@@ -161,6 +163,7 @@ namespace agg
     template <class Gamma>
     class pixfmt_rgb24_lcd_gamma
     {
+        enum { max_direct_cover = 64 };
     public:
         typedef rgba8 color_type;
         typedef rendering_buffer::row_data row_data;
@@ -198,22 +201,65 @@ namespace agg
             }
         }
 
+        void blend_solid_hspan_dir(int x, int y,
+                                   unsigned len,
+                                   const color_type& c,
+                                   const int8u* covers)
+        {
+          unsigned c3[max_direct_cover];
+
+          for (unsigned i = 0; i < len+4; i++)
+            c3[i] = 0;
+
+          for (unsigned i = 0; i < len; i++)
+          {
+            int8u xc = covers[i];
+            c3[i+0] += m_lut->channel(2, xc);
+            c3[i+1] += m_lut->channel(1, xc);
+            c3[i+2] += m_lut->channel(0, xc);
+            c3[i+3] += m_lut->channel(1, xc);
+            c3[i+4] += m_lut->channel(2, xc);
+          }
+
+          unsigned rowlen = width();
+          int k0 = (x - 2 >= 0 ? -2 : -x);
+          x = x + k0;
+          len = (len + 2 <= rowlen ? len + 2 : rowlen);
+
+          int i = x % 3;
+
+          int8u rgb[3] = { c.r, c.g, c.b };
+          int8u* p = m_rbuf->row_ptr(y) + x;
+
+          for (int k = k0; k < int(len); p++, i = (i + 1) % 3, k++)
+            {
+              unsigned c_conv = (c3[k - k0] + 128) >> 8;
+              unsigned alpha = (c_conv + 1) * (c.a + 1);
+              unsigned dst_col = m_gamma.dir(rgb[i]), src_col = m_gamma.dir(*p);
+              *p = m_gamma.inv((((dst_col - src_col) * alpha) + (src_col << 16)) >> 16);
+            }
+        }
+
         //--------------------------------------------------------------------
         void blend_solid_hspan(int x, int y,
                                unsigned len,
                                const color_type& c,
                                const int8u* covers)
         {
-          unsigned rowlen = width();
-          int cx = (x - 2 >= 0 ? -2 : -x);
-          int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
+          if (len+4 <= max_direct_cover)
+            blend_solid_hspan_dir(x, y, len, c, covers);
+          else
+          {
+            unsigned rowlen = width();
+            int cx = (x - 2 >= 0 ? -2 : -x);
+            int cx_max = (len + 2 <= rowlen ? len + 1 : rowlen - 1);
 
-          int i = (x + cx) % 3;
+            int i = (x + cx) % 3;
 
-          int8u rgb[3] = { c.r, c.g, c.b };
-          int8u* p = m_rbuf->row_ptr(y) + (x + cx);
+            int8u rgb[3] = { c.r, c.g, c.b };
+            int8u* p = m_rbuf->row_ptr(y) + (x + cx);
 
-          for (/* */; cx <= cx_max; cx++)
+            for (/* */; cx <= cx_max; cx++)
             {
               unsigned c_conv = m_lut->convolution(covers, cx, 0, len - 1);
               unsigned alpha = (c_conv + 1) * (c.a + 1);
@@ -223,6 +269,7 @@ namespace agg
               p ++;
               i = (i + 1) % 3;
             }
+          }
         }
 
     private:
