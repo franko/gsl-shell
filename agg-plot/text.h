@@ -72,8 +72,6 @@ class text : public sg_object
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
 
     virtual str write_svg(int id, agg::rgba8 c, double h);
-
-    virtual bool use_subpixel() { return true; }
   };
 }
 

@@ -45,7 +45,6 @@ struct sg_object : public vertex_source {
 
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
-  virtual bool use_subpixel() { return false; }
 
   virtual bool affine_compose(agg::trans_affine& m) { return false; }
 
@@ -203,8 +202,6 @@ public:
   }
 
   virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
-
-  virtual bool use_subpixel() { return m_source->use_subpixel(); }
 
 private:
   sg_object* m_source;

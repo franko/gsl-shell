@@ -174,6 +174,18 @@ namespace agg
                          const color_type& c, int8u cover)
         { }
 
+        void copy_hline(int x, int y, unsigned len, const color_type& c)
+        {
+            int xr = x / 3;
+            int8u* p = m_rbuf->row_ptr(x, y, len) + xr;
+            for (int ilen = len; ilen > 0; p += 3, ilen -= 3)
+            {
+                p[0] = c.r;
+                p[1] = c.g;
+                p[2] = c.b;
+            }
+        }
+
         //--------------------------------------------------------------------
         void blend_solid_hspan(int x, int y,
                                unsigned len,
