@@ -72,6 +72,12 @@ template <class Pixel>
 class renderer_subpixel_aa
 {
     enum { subpixel_scale = 3 };
+
+    struct subpixel_scale_trans
+    {
+        void transform(double* x, double* y) const { *x = subpixel_scale * (*x); }
+    };
+
 public:
     renderer_subpixel_aa(agg::rendering_buffer& ren_buf, agg::rgba bg_color):
     m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
@@ -105,8 +111,8 @@ public:
     template <class Rasterizer, class VertexSource>
     static void add_path(Rasterizer& ras, VertexSource& vs)
     {
-        agg::trans_affine_scaling subpixel_mtx(double(subpixel_scale), 1.0);
-        agg::conv_transform<VertexSource> scaled_vs(vs, subpixel_mtx);
+        subpixel_scale_trans tr;
+        agg::conv_transform<VertexSource, subpixel_scale_trans> scaled_vs(vs, tr);
         ras.add_path(scaled_vs);
     }
 
