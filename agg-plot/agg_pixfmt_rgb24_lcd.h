@@ -106,23 +106,13 @@ namespace agg
         unsigned height() const { return m_rbuf->height(); }
 
 
-        //--------------------------------------------------------------------
-        void blend_hline(int x, int y,
-                         unsigned len,
-                         const color_type& c,
-                         int8u cover)
-        {
-            int8u* p = m_rbuf->row_ptr(y) + x + x + x;
-            int alpha = int(cover) * c.a;
-            do
-            {
-                p[0] = (int8u)((((c.r - p[0]) * alpha) + (p[0] << 16)) >> 16);
-                p[1] = (int8u)((((c.g - p[1]) * alpha) + (p[1] << 16)) >> 16);
-                p[2] = (int8u)((((c.b - p[2]) * alpha) + (p[2] << 16)) >> 16);
-                p += 3;
-            }
-            while(--len);
-        }
+        // This method should never be called when using the scanline_u8.
+        // The use of scanline_p8 should be avoided because if does not works
+        // properly for rendering fonts because single hspan are split in many
+        // hline/hspan elements and pixel whitening happens.
+        void blend_hline(int x, int y, unsigned len,
+                         const color_type& c, int8u cover)
+        { }
 
         //--------------------------------------------------------------------
         void blend_solid_hspan(int x, int y,
@@ -176,23 +166,13 @@ namespace agg
         unsigned height() const { return m_rbuf->height(); }
 
 
-        //--------------------------------------------------------------------
-        void blend_hline(int x, int y,
-                         unsigned len,
-                         const color_type& c,
-                         int8u cover)
-        {
-            int8u* p = m_rbuf->row_ptr(y) + x + x + x;
-            int alpha = int(cover) * c.a;
-            do
-            {
-                p[0] = (int8u)((((c.r - p[0]) * alpha) + (p[0] << 16)) >> 16);
-                p[1] = (int8u)((((c.g - p[1]) * alpha) + (p[1] << 16)) >> 16);
-                p[2] = (int8u)((((c.b - p[2]) * alpha) + (p[2] << 16)) >> 16);
-                p += 3;
-            }
-            while(--len);
-        }
+        // This method should never be called when using the scanline_u8.
+        // The use of scanline_p8 should be avoided because if does not works
+        // properly for rendering fonts because single hspan are split in many
+        // hline/hspan elements and pixel whitening happens.
+        void blend_hline(int x, int y, unsigned len,
+                         const color_type& c, int8u cover)
+        { }
 
         //--------------------------------------------------------------------
         void blend_solid_hspan(int x, int y,
