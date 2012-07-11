@@ -6,33 +6,6 @@
 
 #include "text.h"
 
-agg::font_engine_freetype_int32 global_font_eng;
-agg::font_cache_manager<agg::font_engine_freetype_int32> global_font_man(global_font_eng);
-
-static bool font_engine_initialized = false;
-
-static void font_engine_initialize()
-{
-    agg::glyph_rendering gren = agg::glyph_ren_outline;
-    global_font_eng.load_font("trebuc.ttf", 0, gren);
-    global_font_eng.hinting(true);
-    font_engine_initialized = true;
-}
-
-agg::font_engine_freetype_int32& gslshell::font_engine()
-{
-    if (!font_engine_initialized)
-        font_engine_initialize();
-    return global_font_eng;
-}
-
-agg::font_cache_manager<agg::font_engine_freetype_int32>& gslshell::font_manager()
-{
-    if (!font_engine_initialized)
-        font_engine_initialize();
-    return global_font_man;
-}
-
 namespace draw {
 
   void
