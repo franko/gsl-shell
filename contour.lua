@@ -770,7 +770,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	 tk:line_to(bs+5, y)
 
 	 local txt = string.format("%g", zlevels[k])
-	 p:add(graph.textshape(bs+10, y - 3, txt, 8), 'black')
+	 p:add(graph.textshape(bs+10, y - 3, txt, 12), 'black')
       end
 
       p:addline(ln, 'black')
