@@ -37,7 +37,7 @@ void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functo
 
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
-				  unsigned pixel_width)
+                                  unsigned pixel_width)
 {
   int w = r.x2 - r.x1, h = r.y2 - r.y1;
   for (int y = 0; y < h; y++)
@@ -51,8 +51,8 @@ void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base
 
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
-				      const agg::rect_base<int>& r,
-				      unsigned pixel_width, bool flip_y)
+                                      const agg::rect_base<int>& r,
+                                      unsigned pixel_width, bool flip_y)
 {
   int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
   const unsigned char *buf_start = src.row_ptr(y);
@@ -63,8 +63,8 @@ void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
 
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src,
-				const agg::rect_base<int>& r,
-				unsigned pixel_width, bool flip_y)
+                                const agg::rect_base<int>& r,
+                                unsigned pixel_width, bool flip_y)
 {
   int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
   unsigned char *buf_start = src.row_ptr(y);
@@ -75,7 +75,7 @@ void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src,
 
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_put_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,
-				  unsigned pixel_width)
+                                  unsigned pixel_width)
 {
   int w = r.x2 - r.x1, h = r.y2 - r.y1;
   for (int y = 0; y < h; y++)
@@ -110,7 +110,7 @@ public:
     m_stride = stride;
     if(stride < 0)
       {
-	m_start = m_buf - int(height - 1) * stride;
+        m_start = m_buf - int(height - 1) * stride;
       }
   };
 

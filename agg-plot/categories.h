@@ -23,7 +23,7 @@ public:
     virtual bool next(double& val, const char*& text)
     {
       if (m_index >= m_cat.size())
-	return false;
+        return false;
 
       item* it = m_cat[m_index];
       val = it->value;

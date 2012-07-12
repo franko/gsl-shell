@@ -76,17 +76,17 @@ namespace draw {
     }
 
     const char* cont = m_text_buf.cstr();
-    str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""	\
-			 " style=\"font-size:%i%s\">"			\
-			 " <tspan id=\"tspan%i\">%s</tspan>" \
-			 "</text>",
-			 x, y, id, txt_size, style.cstr(),
-			 id, cont);
+    str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
+                         " style=\"font-size:%i%s\">"                        \
+                         " <tspan id=\"tspan%i\">%s</tspan>" \
+                         "</text>",
+                         x, y, id, txt_size, style.cstr(),
+                         id, cont);
 
     if (need_rotate) {
       s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-		     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
-		     txt.cstr());
+                     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
+                     txt.cstr());
     } else {
       s = txt;
     }

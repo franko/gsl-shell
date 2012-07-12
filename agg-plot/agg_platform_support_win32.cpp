@@ -172,7 +172,7 @@ namespace agg
         rendering_buffer_ro src_view;
         rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
 
-	rbuf_tmp.copy_from(src_view);
+        rbuf_tmp.copy_from(src_view);
 
         unsigned int wh = m_pmap_window.height();
         RECT wrect;
@@ -474,7 +474,7 @@ namespace agg
                 ::TranslateMessage(&msg);
                 if(msg.message == WM_QUIT)
                   {
-		    m_specific->m_is_mapped = false;
+                    m_specific->m_is_mapped = false;
                     break;
                   }
                 ::DispatchMessage(&msg);

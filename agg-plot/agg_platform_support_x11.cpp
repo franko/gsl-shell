@@ -723,7 +723,7 @@ namespace agg
             ps->m_update_flag = false;
           }
 
-	xc->busy(true);
+        xc->busy(true);
 
         XEvent x_event;
         if (ps->m_is_mapped)
@@ -737,7 +737,7 @@ namespace agg
             XNextEvent(xc->display, &x_event);
           }
 
-	xc->busy(false);
+        xc->busy(false);
 
         switch(x_event.type)
           {
@@ -766,8 +766,8 @@ namespace agg
 
                   if (ps->m_main_img == 0 || ps->m_draw_img == 0)
                     {
-		      if (ps->m_main_img) delete ps->m_main_img;
-		      if (ps->m_draw_img) delete ps->m_draw_img;
+                      if (ps->m_main_img) delete ps->m_main_img;
+                      if (ps->m_draw_img) delete ps->m_draw_img;
                       quit = true;
                       ret = 1;
                       break;
@@ -783,11 +783,11 @@ namespace agg
             break;
 
           case Expose:
-	    xc->busy(true);
+            xc->busy(true);
             ps->put_image(&m_rbuf_window);
             XFlush(xc->display);
             XSync(xc->display, false);
-	    xc->busy(false);
+            xc->busy(false);
             break;
 
           case ClientMessage:
@@ -1138,40 +1138,40 @@ platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *
     {
       const unsigned char* src = rbuf.row_ptr(gslshell::flip_y ? h - 1 - y : y);
       switch(gslshell::pixel_format)
-	{
-	default: break;
-	case agg::pix_format_rgb555:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb555_to_rgb24());
-	  break;
+        {
+        default: break;
+        case agg::pix_format_rgb555:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb555_to_rgb24());
+          break;
 
-	case agg::pix_format_rgb565:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb565_to_rgb24());
-	  break;
+        case agg::pix_format_rgb565:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb565_to_rgb24());
+          break;
 
-	case agg::pix_format_bgr24:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgr24_to_rgb24());
-	  break;
+        case agg::pix_format_bgr24:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgr24_to_rgb24());
+          break;
 
-	case agg::pix_format_rgb24:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb24_to_rgb24());
-	  break;
+        case agg::pix_format_rgb24:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgb24_to_rgb24());
+          break;
 
-	case agg::pix_format_rgba32:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgba32_to_rgb24());
-	  break;
+        case agg::pix_format_rgba32:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_rgba32_to_rgb24());
+          break;
 
-	case agg::pix_format_argb32:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_argb32_to_rgb24());
-	  break;
+        case agg::pix_format_argb32:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_argb32_to_rgb24());
+          break;
 
-	case agg::pix_format_bgra32:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgra32_to_rgb24());
-	  break;
+        case agg::pix_format_bgra32:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_bgra32_to_rgb24());
+          break;
 
-	case agg::pix_format_abgr32:
-	  agg::color_conv_row(tmp_buf, src, w, agg::color_conv_abgr32_to_rgb24());
-	  break;
-	}
+        case agg::pix_format_abgr32:
+          agg::color_conv_row(tmp_buf, src, w, agg::color_conv_abgr32_to_rgb24());
+          break;
+        }
       fwrite(tmp_buf, 1, w * 3, fd);
     }
 

@@ -31,10 +31,10 @@ extern pthread_mutex_t agg_mutex[1];
 #define AGG_LOCK() pthread_mutex_lock (agg_mutex);
 #define AGG_UNLOCK() pthread_mutex_unlock (agg_mutex);
 
-#define AGG_PROTECT(op) {				\
-    pthread_mutex_lock (agg_mutex);			\
-    op;							\
-    pthread_mutex_unlock (agg_mutex);			\
+#define AGG_PROTECT(op) {                                \
+    pthread_mutex_lock (agg_mutex);                        \
+    op;                                                        \
+    pthread_mutex_unlock (agg_mutex);                        \
   }
 
 extern void draw_register (lua_State *L);

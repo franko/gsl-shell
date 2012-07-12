@@ -48,11 +48,11 @@ namespace tree {
     {
       node_list *n;
       for (node_list *p = m_head; p; p = n)
-	{
-	  n = p->next();
-	  delete p->content();
-	  delete p;
-	}
+        {
+          n = p->next();
+          delete p->content();
+          delete p;
+        }
     };
 
     virtual node_list* tree() { return m_head; };
@@ -82,8 +82,8 @@ namespace tree {
     typename node<base_type, tree_data_type>::list *ls = t->tree();
     if (ls)
       {
-	for ( ; ls; ls = ls->next())
-	  walk_rec<base_type, tree_data_type, f> (ls->content());
+        for ( ; ls; ls = ls->next())
+          walk_rec<base_type, tree_data_type, f> (ls->content());
       }
   }
 }

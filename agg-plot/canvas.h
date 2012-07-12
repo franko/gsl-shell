@@ -61,7 +61,7 @@ class canvas_gen : private pixel {
 
 public:
   canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
-	     agg::rgba bgcol):
+             agg::rgba bgcol):
     pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
