@@ -29,8 +29,8 @@
 
 template<class resource_manager>
 class plot_auto : public plot<resource_manager> {
-  typedef plot_item item;
-  typedef agg::pod_bvector<item> item_list;
+  typedef typename plot<resource_manager>::item item;
+  typedef typename plot<resource_manager>::item_list item_list;
 
 public:
   plot_auto() :
@@ -48,9 +48,11 @@ public:
   };
 
   virtual bool pop_layer();
+  virtual void clear_current_layer();
 
 private:
-  void calc_layer_bounding_box(item_list& layer, opt_rect<double>& rect);
+  void calc_layer_bounding_box(item_list* layer, opt_rect<double>& rect);
+  void set_opt_limits(const opt_rect<double>& r);
 
   void check_bounding_box();
   void calc_bounding_box();
@@ -97,12 +99,12 @@ void plot_auto<RM>::check_bounding_box()
   }
 
 template<class RM>
-void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list& layer,
+void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list* layer,
                                                opt_rect<double>& rect)
 {
-  for (unsigned j = 0; j < layer.size(); j++)
+  for (unsigned j = 0; j < layer->size(); j++)
     {
-      item& d = layer[j];
+      item& d = (*layer)[j];
       agg::rect_base<double> r;
 
       d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
@@ -115,10 +117,9 @@ void plot_auto<RM>::calc_bounding_box()
 {
   opt_rect<double> box;
 
-  calc_layer_bounding_box(this->m_root_layer, box);
-  for (unsigned j = 0; j < this->m_layers.size(); j++)
+  for (unsigned j = 0; j < this->nb_layers(); j++)
     {
-      calc_layer_bounding_box(*(this->m_layers[j]), box);
+      calc_layer_bounding_box(this->get_layer(j), box);
     }
 
   for (pod_list<item> *t = this->m_drawing_queue; t; t = t->next())
@@ -146,11 +147,33 @@ bool plot_auto<RM>::fit_inside(sg_object* obj) const
 }
 
 template<class RM>
+void plot_auto<RM>::set_opt_limits(const opt_rect<double>& r)
+{
+  if (r.is_defined())
+    this->set_limits(r.rect());
+  else
+    this->unset_limits();
+}
+
+template<class RM>
 bool plot_auto<RM>::pop_layer()
 {
   bool retval = this->plot<RM>::pop_layer();
-  this->m_bbox_updated = false;
+  set_opt_limits(this->current_layer()->bounding_box());
+  this->m_bbox_updated = true;
   return retval;
+}
+
+template<class RM>
+void plot_auto<RM>::clear_current_layer()
+{
+  this->plot<RM>::clear_current_layer();
+  item_list* parent = this->parent_layer();
+  if (parent)
+    set_opt_limits(parent->bounding_box());
+  else
+    this->unset_limits();
+  this->m_bbox_updated = true;
 }
 
 #endif

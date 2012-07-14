@@ -79,8 +79,6 @@ struct plot_item {
 
 template<class ResourceManager>
 class plot {
-  typedef plot_item item;
-  typedef agg::pod_bvector<item> item_list;
 
   static const unsigned max_layers = 8;
 
@@ -89,6 +87,22 @@ class plot {
     axis_title_prop_space = 30,
     canvas_margin_prop_space = 15,
     canvas_margin_fixed_space = 4,
+  };
+
+protected:
+  typedef plot_item item;
+
+  class item_list : public agg::pod_bvector<item>
+  {
+  public:
+    item_list(): agg::pod_bvector<item>() { }
+
+    const opt_rect<double>& bounding_box() const { return m_bbox; }
+    void set_bounding_box(const agg::rect_base<double>& r) { m_bbox.set(r); }
+    void clear_bounding_box() { m_bbox.clear(); }
+
+  private:
+    opt_rect<double> m_bbox;
   };
 
 public:
@@ -130,12 +144,12 @@ public:
   };
 
   plot(bool use_units = true) :
-    m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title(),
     m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis)
   {
+    m_layers.add(&m_root_layer);
     compute_user_trans();
     for (unsigned k = 0; k < 4; k++)
       m_legend[k] = 0;
@@ -143,12 +157,12 @@ public:
 
   virtual ~plot()
   {
-    layer_dispose_elements(m_root_layer);
     for (unsigned k = 0; k < m_layers.size(); k++)
       {
         item_list *layer = m_layers[k];
-        layer_dispose_elements(*layer);
-        delete layer;
+        layer_dispose_elements(layer);
+        if (k > 0)
+          delete layer;
       }
   };
 
@@ -180,6 +194,7 @@ public:
   bool use_units() const { return m_use_units; };
 
   void set_limits(const agg::rect_base<double>& r);
+  void unset_limits();
 
   virtual void add(sg_object* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { }
@@ -199,11 +214,11 @@ public:
 
   virtual bool push_layer();
   virtual bool pop_layer();
+  virtual void clear_current_layer();
 
   /* drawing queue related methods */
   void push_drawing_queue();
   void clear_drawing_queue();
-  void clear_current_layer();
   int current_layer_index();
 
   bool clip_is_active() const { return m_clip_flag; };
@@ -265,13 +280,18 @@ protected:
 
   bool fit_inside(sg_object *obj) const;
 
-  void layer_dispose_elements (item_list& layer);
+  void layer_dispose_elements (item_list* layer);
 
-  item_list& current_layer() { return *m_current_layer; };
+  unsigned nb_layers() const { return m_layers.size(); }
+  item_list* get_layer(unsigned j) { return m_layers[j]; }
 
-  item_list m_root_layer;
-  agg::pod_auto_vector<item_list*, max_layers> m_layers;
-  item_list *m_current_layer;
+  item_list* current_layer() { return m_layers[m_layers.size() - 1]; };
+
+  item_list* parent_layer()
+  {
+    unsigned n = m_layers.size();
+    return (n > 1 ? m_layers[n-2] : 0);
+  }
 
   agg::trans_affine m_trans;
   pod_list<item> *m_drawing_queue;
@@ -285,6 +305,9 @@ protected:
   units m_ux, m_uy;
 
 private:
+  item_list m_root_layer;
+  agg::pod_auto_vector<item_list*, max_layers> m_layers;
+
   bool m_pad_units;
 
   str m_title;
@@ -332,9 +355,10 @@ void plot<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
 template <class RM>
 void plot<RM>::push_drawing_queue()
 {
+  item_list* layer = current_layer();
   for (pod_list<item> *c = m_drawing_queue; c != 0; c = c->next())
     {
-      m_current_layer->add(c->content());
+      layer->add(c->content());
     }
 
   while (m_drawing_queue)
@@ -411,11 +435,6 @@ void plot<RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
   this->clip_plot_area(canvas, canvas_mtx);
-
-  for (unsigned j = 0; j < m_root_layer.size(); j++)
-    {
-      draw_element(m_root_layer[j], canvas, m);
-    }
 
   for (unsigned k = 0; k < m_layers.size(); k++)
     {
@@ -810,12 +829,22 @@ void plot<RM>::set_limits(const agg::rect_base<double>& r)
 }
 
 template<class RM>
-void plot<RM>::layer_dispose_elements(plot<RM>::item_list& layer)
+void plot<RM>::unset_limits()
 {
-  unsigned n = layer.size();
+  m_rect.clear();
+  m_ux = units();
+  m_uy = units();
+  m_need_redraw = true;
+  compute_user_trans();
+}
+
+template<class RM>
+void plot<RM>::layer_dispose_elements(plot<RM>::item_list* layer)
+{
+  unsigned n = layer->size();
   for (unsigned k = 0; k < n; k++)
     {
-      RM::dispose(layer[k].vs);
+      RM::dispose(layer->at(k).vs);
     }
 }
 
@@ -830,8 +859,10 @@ bool plot<RM>::push_layer()
     return false;
 
   commit_pending_draw();
+  if (m_rect.is_defined())
+    current_layer()->set_bounding_box(m_rect.rect());
+
   m_layers.add(new_layer);
-  m_current_layer = new_layer;
 
   return true;
 }
@@ -839,21 +870,17 @@ bool plot<RM>::push_layer()
 template<class RM>
 bool plot<RM>::pop_layer()
 {
-  unsigned n = m_layers.size();
-
-  if (n == 0)
+  if (m_layers.size() <= 1)
     return false;
 
-  item_list *layer = m_layers[n-1];
-  layer_dispose_elements (*layer);
-  delete layer;
-
+  unsigned n = m_layers.size();
+  item_list* layer = m_layers[n-1];
   m_layers.inc_size(-1);
-  n--;
+  layer_dispose_elements(layer);
+  delete layer;
 
   clear_drawing_queue();
   m_need_redraw = true;
-  m_current_layer = (n > 0 ? m_layers[n-1] : &m_root_layer);
 
   return true;
 }
@@ -861,9 +888,10 @@ bool plot<RM>::pop_layer()
 template <class RM>
 void plot<RM>::clear_current_layer()
 {
+  item_list* current = current_layer();
   clear_drawing_queue();
-  layer_dispose_elements (current_layer());
-  m_current_layer->clear();
+  layer_dispose_elements(current);
+  current->clear();
 }
 
 template <class RM>
