@@ -35,7 +35,7 @@ class plot_auto : public plot<resource_manager> {
 public:
   plot_auto() :
     plot<resource_manager>(true),
-    m_bbox_updated(true)
+    m_bbox_updated(true), m_enlarged_layer(false)
   { };
 
   virtual ~plot_auto() { };
@@ -44,9 +44,11 @@ public:
   virtual void before_draw()
   {
     plot<resource_manager>::before_draw();
-    check_bounding_box();
+    if (!m_bbox_updated)
+      check_bounding_box();
   };
 
+  virtual bool push_layer();
   virtual bool pop_layer();
   virtual void clear_current_layer();
 
@@ -60,6 +62,7 @@ private:
 
   // bounding box
   bool m_bbox_updated;
+  bool m_enlarged_layer;
 };
 
 template <class RM>
@@ -71,6 +74,7 @@ void plot_auto<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
     {
       this->m_bbox_updated = false;
       this->m_need_redraw = true;
+      this->m_enlarged_layer = true;
     }
 
   pod_list<item> *nn = new pod_list<item>(d);
@@ -82,9 +86,6 @@ void plot_auto<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
 template<class RM>
 void plot_auto<RM>::check_bounding_box()
   {
-    if (this->m_bbox_updated)
-      return;
-
     this->calc_bounding_box();
 
     if (this->m_rect.is_defined())
@@ -117,10 +118,13 @@ void plot_auto<RM>::calc_bounding_box()
 {
   opt_rect<double> box;
 
-  for (unsigned j = 0; j < this->nb_layers(); j++)
+  unsigned n = this->nb_layers();
+  for (unsigned j = 0; j < n-1; j++)
     {
-      calc_layer_bounding_box(this->get_layer(j), box);
+      box.add<rect_union>(this->get_layer(j)->bounding_box());
     }
+
+  calc_layer_bounding_box(this->get_layer(n-1), box);
 
   for (pod_list<item> *t = this->m_drawing_queue; t; t = t->next())
     {
@@ -156,11 +160,24 @@ void plot_auto<RM>::set_opt_limits(const opt_rect<double>& r)
 }
 
 template<class RM>
+bool plot_auto<RM>::push_layer()
+{
+  bool retval = this->plot<RM>::push_layer();
+  if (this->m_rect.is_defined())
+    this->parent_layer()->set_bounding_box(this->m_rect.rect());
+  this->m_bbox_updated = true;
+  this->m_enlarged_layer = false;
+  return retval;
+}
+
+template<class RM>
 bool plot_auto<RM>::pop_layer()
 {
   bool retval = this->plot<RM>::pop_layer();
-  set_opt_limits(this->current_layer()->bounding_box());
+  if (this->m_enlarged_layer)
+    set_opt_limits(this->current_layer()->bounding_box());
   this->m_bbox_updated = true;
+  this->m_enlarged_layer = false;
   return retval;
 }
 
@@ -168,12 +185,16 @@ template<class RM>
 void plot_auto<RM>::clear_current_layer()
 {
   this->plot<RM>::clear_current_layer();
-  item_list* parent = this->parent_layer();
-  if (parent)
-    set_opt_limits(parent->bounding_box());
-  else
-    this->unset_limits();
+  if (this->m_enlarged_layer)
+  {
+    item_list* parent = this->parent_layer();
+    if (parent)
+      set_opt_limits(parent->bounding_box());
+    else
+      this->unset_limits();
+  }
   this->m_bbox_updated = true;
+  this->m_enlarged_layer = false;
 }
 
 #endif

@@ -855,16 +855,15 @@ bool plot<RM>::push_layer()
     return false;
 
   item_list *new_layer = new(std::nothrow) item_list();
-  if (new_layer == 0)
-    return false;
+  if (new_layer)
+  {
+    before_draw();
+    push_drawing_queue();
+    m_layers.add(new_layer);
+    return true;
+  }
 
-  commit_pending_draw();
-  if (m_rect.is_defined())
-    current_layer()->set_bounding_box(m_rect.rect());
-
-  m_layers.add(new_layer);
-
-  return true;
+  return false;
 }
 
 template<class RM>

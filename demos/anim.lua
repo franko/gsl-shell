@@ -53,9 +53,9 @@ local function demo2()
    local x0, x1 = 0, 10*pi
    local cc = graph.fxline(f, x0, x1, k)
    p.sync = false
+   p:limits(0, -1, 10*pi, 1)
    p:pushlayer()
    p:show()
-
    local N = 256
    local yellow = graph.rgba(1,1,0,0.6)
    for k= 2, N do
