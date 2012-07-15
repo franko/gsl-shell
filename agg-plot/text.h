@@ -11,7 +11,6 @@ namespace draw {
 class text : public sg_object
 {
     agg::trans_affine m_matrix;
-    agg::trans_affine m_user_matrix;
 
     double m_x, m_y;
     double m_angle;
@@ -23,13 +22,14 @@ class text : public sg_object
 
   public:
     text(const char* text, double size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
-    m_matrix(), m_user_matrix(), m_x(0.0), m_y(0.0), m_angle(0.0),
+    m_x(0.0), m_y(0.0), m_angle(0.0),
     m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, size)
-    { }
+    {
+        m_text_label.model_mtx(m_matrix);
+    }
 
     virtual void rewind(unsigned path_id)
     {
-        m_text_label.model_mtx(m_matrix);
         m_text_label.rewind(m_hjustif, m_vjustif);
     }
 
@@ -44,10 +44,10 @@ class text : public sg_object
 
         m_angle = th;
 
-        m_user_matrix.sx  =  c;
-        m_user_matrix.shx = -s;
-        m_user_matrix.shy =  s;
-        m_user_matrix.sy  =  c;
+        m_matrix.sx  =  c;
+        m_matrix.shx = -s;
+        m_matrix.shy =  s;
+        m_matrix.sy  =  c;
     }
 
     double angle() const { return m_angle; };
@@ -61,8 +61,8 @@ class text : public sg_object
         m_x = x;
         m_y = y;
 
-        m_user_matrix.tx = m_x;
-        m_user_matrix.ty = m_y;
+        m_matrix.tx = m_x;
+        m_matrix.ty = m_y;
     }
 
     void hjustif(double hj) { m_hjustif = hj; }

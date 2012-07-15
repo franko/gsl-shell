@@ -29,7 +29,7 @@ class text_label
     font_engine_type& m_font_eng;
     font_manager_type& m_font_man;
 
-    agg::trans_affine m_model_mtx;
+    const agg::trans_affine* m_model_mtx;
     agg::trans_affine m_text_mtx;
     agg::conv_curve<font_manager_type::path_adaptor_type> m_text_curve;
     agg::conv_transform<agg::conv_curve<font_manager_type::path_adaptor_type> > m_text_trans;
@@ -38,13 +38,14 @@ class text_label
     text_label(const char* text, double size):
     m_text_buf(text), m_height(size), m_pos(0),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
+    m_model_mtx(&identity_matrix),
     m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
     {
         set_font_size();
         m_width = get_text_width();
     }
 
-    void model_mtx(const agg::trans_affine& m) { m_model_mtx = m; }
+    void model_mtx(const agg::trans_affine& m) { m_model_mtx = &m; }
 
     void set_font_size()
     {
@@ -73,7 +74,7 @@ class text_label
         {
             m_text_mtx.tx = m_x / scale_x;
             m_text_mtx.ty = floor(m_y + 0.5);
-            m_model_mtx.transform(&m_text_mtx.tx, &m_text_mtx.ty);
+            m_model_mtx->transform(&m_text_mtx.tx, &m_text_mtx.ty);
 
             m_advance_x = glyph->advance_x;
             m_advance_y = glyph->advance_y;
@@ -92,7 +93,7 @@ class text_label
         m_advance_y = 0;
         m_pos = 0;
 
-        m_text_mtx = m_model_mtx;
+        m_text_mtx = (*m_model_mtx);
         agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);
         trans_affine_compose (m_text_mtx, scale_mtx);
 

@@ -11,12 +11,10 @@ namespace draw {
   void
   text::apply_transform(const agg::trans_affine& m, double as)
   {
-    m_user_matrix.tx = m_x;
-    m_user_matrix.ty = m_y;
+    m_matrix.tx = m_x;
+    m_matrix.ty = m_y;
 
-    m.transform(&m_user_matrix.tx, &m_user_matrix.ty);
-
-    m_matrix = m_user_matrix;
+    m.transform(&m_matrix.tx, &m_matrix.ty);
   }
 
   void
@@ -29,7 +27,8 @@ namespace draw {
   str
   text::write_svg(int id, agg::rgba8 c, double h)
   {
-    const agg::trans_affine& m = m_user_matrix;
+    const agg::trans_affine& m = m_matrix;
+
     const double eps = 1.0e-6;
     str s;
 
