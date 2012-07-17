@@ -85,19 +85,11 @@ void plot_auto<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
 
 template<class RM>
 void plot_auto<RM>::check_bounding_box()
-  {
-    this->calc_bounding_box();
-
-    if (this->m_rect.is_defined())
-      {
-        const agg::rect_base<double>& bb = this->m_rect.rect();
-        this->m_ux = units(bb.x1, bb.x2);
-        this->m_uy = units(bb.y1, bb.y2);
-
-        this->compute_user_trans();
-        this->m_bbox_updated = true;
-      }
-  }
+{
+  this->calc_bounding_box();
+  this->update_units();
+  this->m_bbox_updated = true;
+}
 
 template<class RM>
 void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list* layer,
@@ -175,9 +167,8 @@ bool plot_auto<RM>::pop_layer()
 {
   bool retval = this->plot<RM>::pop_layer();
   if (this->m_enlarged_layer)
-    set_opt_limits(this->current_layer()->bounding_box());
-  this->m_bbox_updated = true;
-  this->m_enlarged_layer = false;
+    this->m_bbox_updated = false;
+  this->m_enlarged_layer = true;
   return retval;
 }
 

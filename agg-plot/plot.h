@@ -193,6 +193,7 @@ public:
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
 
+  void update_units();
   void set_limits(const agg::rect_base<double>& r);
   void unset_limits();
 
@@ -819,23 +820,37 @@ void plot<RM>::set_units(bool use_units)
 }
 
 template<class RM>
+void plot<RM>::update_units()
+{
+  if (m_rect.is_defined())
+  {
+    const rect_base<double>& r = m_rect.rect();
+    m_ux = units(r.x1, r.x2);
+    m_uy = units(r.y1, r.y2);
+  }
+  else
+  {
+    m_ux = units();
+    m_uy = units();
+  }
+
+  compute_user_trans();
+}
+
+template<class RM>
 void plot<RM>::set_limits(const agg::rect_base<double>& r)
 {
   m_rect.set(r);
-  m_ux = units(r.x1, r.x2);
-  m_uy = units(r.y1, r.y2);
+  update_units();
   m_need_redraw = true;
-  compute_user_trans();
 }
 
 template<class RM>
 void plot<RM>::unset_limits()
 {
   m_rect.clear();
-  m_ux = units();
-  m_uy = units();
+  update_units();
   m_need_redraw = true;
-  compute_user_trans();
 }
 
 template<class RM>
