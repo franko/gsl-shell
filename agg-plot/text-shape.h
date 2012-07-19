@@ -43,28 +43,22 @@ namespace draw {
     virtual str write_svg(int id, agg::rgba8 c, double h)
     {
         const str& text = m_text_label.text();
-        int txt_size = m_size;
+        double txt_size = m_size;
 
-        const agg::trans_affine* m = m_scaling;
+        const agg::trans_affine& m = m_matrix;
 
-        double x = m_matrix.tx, y = -m_matrix.ty;
-        const double dx = (m ? m->tx : 0.0), dy = svg_y_coord(m ? m->ty : 0.0, h);
+        double x = m.tx, y = m.ty;
+        if (m_scaling)
+        {
+            m_scaling->transform(&x, &y);
+            txt_size *= m_scaling->sy;
+        }
 
-        x += dx;
-        y += dy;
-
-        str svgtext = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
-                                 " style=\"font-size:%i\">"                \
-                                 " <tspan id=\"tspan%i\">%s</tspan>"        \
-                                 "</text>",
-                                 x, y, id, txt_size, id, text.cstr());
-
-        str s;
-        if (!m || is_unit_matrix(*m))
-            s = svgtext;
-        else
-            s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-                           m->sx, m->shx, m->shy, m->sy, dx, dy, svgtext.cstr());
+        str s = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\"" \
+                           " style=\"font-size:%i\">" \
+                           " <tspan id=\"tspan%i\">%s</tspan>" \
+                           "</text>",
+                           x, svg_y_coord(y, h), id, int(txt_size), id, text.cstr());
 
         return s;
     }
