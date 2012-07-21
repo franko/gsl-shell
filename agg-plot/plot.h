@@ -589,11 +589,12 @@ static inline double approx_text_height(double text_size)
 
 template <class RM>
 agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
-                                               agg::trans_affine& canvas_mtx)
+                                         agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double ppad = double(canvas_margin_prop_space) / 1000.0;
   const double fpad = double(canvas_margin_fixed_space);
+  const double size_frac_x = 0.125, size_frac_y = 0.05;
 
   double dxl, dxr, dyb, dyt;
 
@@ -629,26 +630,35 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
           agg::rect_base<double> bb;
           mp->get_bounding_rect(bb);
 
-          double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
+          double bb_dx = bb.x2 - bb.x1, bb_dy = bb.y2 - bb.y1;
+          double dx, dy;
           double px, py;
           switch (k)
             {
             case right:
+              dx = sx * size_frac_x;
+              dy = dx * bb_dy / bb_dx;
               px = sx - dx - ppad * sx - dxr;
               py = (sy - dy) / 2;
               dxr += dx + 2 * ppad * sx;
               break;
             case left:
+              dx = sx * size_frac_x;
+              dy = dx * bb_dy / bb_dx;
               px = ppad * sx + dxr;
               py = (sy - dy) / 2;
               dxl += dx + 2 * ppad * sx;
               break;
             case bottom:
+              dy = sy * size_frac_y;
+              dx = dy * bb_dx / bb_dy;
               py = ppad * sy + dyb;
               px = (sx - dx) / 2;
               dyb += dy + 2 * ppad * sy;
               break;
             case top:
+              dy = sy * size_frac_y;
+              dx = dy * bb_dx / bb_dy;
               py = sy - dy - ppad * sy - dyt;
               px = (sx - dx) / 2;
               dyt += dy + 2 * ppad * sy;
