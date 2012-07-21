@@ -133,7 +133,6 @@ function graph.barplot(t)
 	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
 	 local rect = graph.rect(x, 0, x+dx, y)
 	 p:add(rect, graph.webcolor(j))
-	 p:add(rect, 'black', {{'stroke', width= 0.5}})
       end
    end
 
