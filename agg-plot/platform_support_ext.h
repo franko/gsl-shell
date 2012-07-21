@@ -21,7 +21,8 @@ public:
 
   static void prepare();
 
-  static bool save_image_file (agg::rendering_buffer& src, const char *fn);
+  static bool save_image_file (agg::rendering_buffer& src, const char *fn,
+                               agg::pix_format_e src_pixfmt_tag);
 };
 
 #endif

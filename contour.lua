@@ -18,11 +18,12 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
 
-use 'stdlib'
+use 'strict'
+use 'math'
 
 local insert = table.insert
 
-local default_color_map = graph.color_function('redyellow', 0.9)
+local default_color_map = graph.color_function('redyellow', 1)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -74,7 +75,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    local g = {z= {}, zmin= f(lx1, ly1), zmax= f(rx2, ry2)}
    local dx, dy = (rx2 - lx1) / nx, (ry2 - ly1) / ny
    local ds = sqrt(dx^2 + dy^2)
-   local zlevels, zstep, z_eps
+   local zlevels, nlevels, zstep, z_eps
    local order_tree
 
    local function get_root(id, si)
@@ -561,7 +562,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function order_curves()
-      searchlist = {}
+      local searchlist = {}
       for id, _ in ipairs(curves) do
 	 if curves[id].closed then insert(searchlist, id) end
       end
@@ -570,8 +571,8 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 		 function(ia, ib) return #curves[ia] < #curves[ib] end)
 
       local function make_col_iter(j)
-	 return sequence(function(i) return segment_index_i(i, j, i+1, j) end,
-			  0, ny-1)
+	 return iter.sequence(function(i) return segment_index_i(i, j, i+1, j) end,
+			      0, ny-1)
       end
 
       local order_tree, treated = {}, {}
@@ -769,7 +770,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
 	 tk:line_to(bs+5, y)
 
 	 local txt = string.format("%g", zlevels[k])
-	 p:add(graph.textshape(bs+10, y - 3, txt, 8), 'black')
+	 p:add(graph.textshape(bs+10, y - 3, txt, 12), 'black')
       end
 
       p:addline(ln, 'black')
@@ -818,12 +819,14 @@ function contour.plot(f, x1, y1, x2, y2, options)
    g.find_curves()
 
    local p = graph.plot()
+   p:add(graph.rect(x1, y1, x2, y2), 'black')
+
    g.draw_regions(p)
    if opt 'lines' then g.draw_lines(p, 'black') end
 
    if opt 'legend' then
       local lgd = g.create_legend()
-      p:set_mini(lgd)
+      p:set_legend(lgd)
    end
 
    if opt 'show' then p:show() end
@@ -840,11 +843,13 @@ function contour.polar_plot(f, R, options)
    g.find_curves()
 
    local p = graph.plot()
+   p:add(graph.ellipse(0, 0, R, R), 'black')
+
    g.draw_regions(p)
 
    if opt 'legend' then
       local lgd = g.create_legend()
-      p:set_mini(lgd)
+      p:set_legend(lgd)
    end
 
    if opt 'lines' then g.draw_lines(p, 'black') end

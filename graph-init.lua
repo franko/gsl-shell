@@ -118,6 +118,7 @@ end
 
 function graph.barplot(t)
    local nr, nc = #t, #t[1] - 1
+   local legend_text = t.legend
    local pad = 0.1
    local dx = (1-2*pad)/nc
    local cat = {}
@@ -134,6 +135,13 @@ function graph.barplot(t)
 	 local rect = graph.rect(x, 0, x+dx, y)
 	 p:add(rect, graph.webcolor(j))
 	 p:add(rect, 'black', {{'stroke', width= 0.5}})
+      end
+
+   end
+
+   if legend_text then
+      for j = 1, nc do
+	 p:legend(legend_text[j], graph.webcolor(j), 'square')
       end
    end
 
@@ -154,6 +162,13 @@ function graph.rect(x1, y1, x2, y2)
    local p = graph.path()
    add_square(p, x1, y1, x2, y2)
    return p
+end
+
+local function rgba8(r, g, b, a)
+   local rb = band(lshift(r, 24), 0xff000000)
+   local gb = band(lshift(g, 16), 0xff0000  )
+   local bb = band(lshift(b, 8 ), 0xff00    )
+   return bor(rb, gb, bb, a and band(a, 0xff) or 0xff)
 end
 
 local function rgba(r, g, b, a)
@@ -204,6 +219,39 @@ local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
 -- colors from a popular spreadsheet application
 local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38}
 
+local hue_map = {
+   {231, 0,   0  },
+   {231, 113, 0  },
+   {231, 211, 0  },
+   {156, 231, 0  },
+   {0,   231, 33 },
+   {0,   231, 156},
+   {0,   195, 231},
+   {0,   113, 231},
+   {0,   0,   231},
+   {132, 0,   231}
+}
+
+local function hue_choose(k)
+   local e = hue_map[k]
+   local r, g, b = e[1], e[2], e[3]
+   return rgba8(r, g, b, 255)
+end
+
+local function hue_color(p)
+   local x = 10 - p * 9
+   local i = floor(x)
+   if i < 1 or i+1 > 10 then
+      return i < 1 and hue_choose(1) or hue_choose(10)
+   else
+      local e1, e2 = hue_map[i], hue_map[i+1]
+      local r = floor(e1[1] + (e2[1] - e1[1])*(x-i))
+      local g = floor(e1[2] + (e2[2] - e1[2])*(x-i))
+      local b = floor(e1[3] + (e2[3] - e1[3])*(x-i))
+      return rgba8(r, g, b, 255)
+   end
+end
+
 function graph.rainbow(n)
    local p = #bcolors
    return graph.color[bcolors[(n-1) % p + 1]]
@@ -216,7 +264,7 @@ end
 
 local color_schema = {
    bluish    = {0.91, 0.898, 0.85, 0.345, 0.145, 0.6},
-   redyellow = {1, 1, 0, 1, 0, 0},
+   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
    darkgreen = {0.9, 0.9, 0, 0, 0.4, 0}
 }
 
@@ -229,46 +277,7 @@ function graph.color_function(schema, alpha)
 	  end
 end
 
-local function HueToRgb(m1, m2, hue)
-   local v
-   hue = hue % 1
-
-   if 6 * hue < 1 then
-      v = m1 + (m2 - m1) * hue * 6
-   elseif 2 * hue < 1 then
-      v = m2
-   elseif 3 * hue < 2 then
-      v = m1 + (m2 - m1) * (2/3 - hue) * 6
-   else
-      v = m1
-   end
-
-   return v
-end
-
-function graph.hsl2rgb(h, s, l)
-   local m1, m2, hue
-   local r, g, b
-
-   if s == 0 then
-      r, g, b = l, l, l
-   else
-      if l <= 0.5 then
-	 m2 = l * (s + 1);
-      else
-	 m2 = l + s - l * s
-      end
-      m1 = l * 2 - m2
-      r = HueToRgb(m1, m2, h + 1/3)
-      g = HueToRgb(m1, m2, h)
-      b = HueToRgb(m1, m2, h - 1/3)
-   end
-   return graph.rgb(r, g, b)
-end
-
-function graph.hue(a)
-   return graph.hsl2rgb(a*0.7, 1, 0.6)
-end
+graph.hue_color = hue_color
 
 function graph.plot_lines(ln, title)
    local p = graph.plot(title)
@@ -282,34 +291,48 @@ end
 local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
       return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
-   elseif sym == 'circle' then
-      return graph.ellipse(10+dx, 10+dy, 5, 5)
    elseif sym == 'line' then
-      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
+      return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {{'stroke'}}
    else
-      error('invalid legend symbol: ' .. sym)
+      return graph.marker(10+dx, 10+dy, sym, 8)
    end
 end
 
-function graph.legend(entries)
-   local n = #entries
-   local p = graph.plot()
-   p.units, p.clip = false, false
-   for k= 1, n do
-      local text, color, symspec, trans = unpack(entries[k])
-      local y = (k-1) * 20
-      local sym, symtr = legend_symbol(symspec, 0, y)
-      local tr
-      if symtr then
-	 tr = { symtr }
-	 if trans then
-	    for j, xtr in ipairs(trans) do tr[#tr+1] = xtr end
-	 end
-      else
-	 tr = trans
-      end
-      p:add(sym, color, tr)
-      p:add(graph.textshape(25, y + 6, text, 10), 'black')
+local function plot_legend(self, text, color, symspec, trans)
+   local lg = self:get_legend()
+   local env = debug.getfenv(self)
+
+   if not lg then
+      lg = graph.plot()
+      lg.units = false
+      self:set_legend(lg)
    end
-   return p
+
+   local k = env.__lg_count or 0
+   local y = -k * 20
+
+   local sym, symtr = legend_symbol(symspec, 0, y)
+
+   local tr = (trans and trans or symtr)
+
+   lg:add(sym, color, tr)
+   lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+
+   env.__lg_count = k+1
+   self:update()
 end
+
+local function redirect_plot()
+   local reg = debug.getregistry()
+   local mt = reg['GSL.plot']
+   local plot_index = mt.__index
+
+   local function index_redirect(t, k)
+      if k == 'legend' then return plot_legend end
+      return plot_index(t, k)
+   end
+
+   mt.__index = index_redirect
+end
+
+redirect_plot()

@@ -28,6 +28,7 @@ Contents:
    matrices.rst
    lua-base.rst
    linalg.rst
+   eigen.rst
    random.rst
    randist.rst
    pdf.rst

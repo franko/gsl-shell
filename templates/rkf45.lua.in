@@ -55,14 +55,15 @@ $(include 'ode-defs')
 
 # y_err_only = (a_dydt == 0)
 
-local function rkf45_evolve(s, f, t1)
-   local t, h, s_y, s_dydt = s.t, s.h, s.y, s.dydt
+local function rkf45_step(s, t1)
+   local t, h, f = s.t, s.h, s.f
+   local s_y, s_dydt = s.y, s.dydt
    local hadj, inc
 
    local $(VL'y')
    local $(VL'k1') = $(AL's_dydt.data')
 
-   if t + h > t1 then h = t1 - t end
+   if t < t1 and t + h > t1 then h = t1 - t end
 
    while h > 0 do
       $(VL'y') = $(AL's_y.data')
@@ -124,8 +125,6 @@ local function rkf45_evolve(s, f, t1)
 #  end
    s.t = t + h
    s.h = hadj
-
-   return h
 end
 
-return {new= ode_new, init= ode_init, evolve= rkf45_evolve}
+return {new= ode_new, init= ode_init, evolve= ode_evolve, step= rkf45_step}

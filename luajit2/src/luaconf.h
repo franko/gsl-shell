@@ -30,12 +30,12 @@
 #define LUA_LDIR	LUA_ROOT "share/" LUA_VERSION_DIR "/"
 #define LUA_CDIR	LUA_ROOT "lib/" LUA_VERSION_DIR "/"
 #ifdef LUA_XROOT
-#define LUA_JDIR	LUA_XROOT "share/luajit-2.0.0-beta9/"
+#define LUA_JDIR	LUA_XROOT "share/luajit-2.0.0-beta10/"
 #define LUA_XPATH \
   ";" LUA_XROOT "share/" LUA_VERSION_DIR "/?.lua;" LUA_XROOT "share/" LUA_VERSION_DIR "/?/init.lua"
 #define LUA_XCPATH	LUA_XROOT "lib/" LUA_VERSION_DIR "/?.so;"
 #else
-#define LUA_JDIR	LUA_ROOT "share/luajit-2.0.0-beta9/"
+#define LUA_JDIR	LUA_ROOT "share/luajit-2.0.0-beta10/"
 #define LUA_XPATH
 #define LUA_XCPATH
 #endif

@@ -1,3 +1,5 @@
+#include "util/agg_color_conv_rgb8.h"
+
 #include "fx_plot_canvas.h"
 #include "rendering_buffer_utils.h"
 #include "fatal.h"
@@ -39,7 +41,7 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 
 void fx_plot_canvas::plot_render(agg::trans_affine& m)
 {
-  m_canvas->clear();
+  m_canvas->clear(colors::white);
   AGG_LOCK();
   m_plot->draw(*m_canvas, m);
   AGG_UNLOCK();
@@ -56,9 +58,12 @@ void fx_plot_canvas::plot_draw(agg::trans_affine& m)
     {
       plot_render(m);
 
-      const FXColor* data = (const FXColor*) m_img.buf();
-      FXImage img(getApp(), data, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      agg::int8u* data = (agg::int8u*) img.getData();
+      agg::rendering_buffer rbuf_tmp(data, ww, hh, - ww * 4);
+      my_color_conv(&rbuf_tmp, &m_img, color_conv_rgb24_to_rgba32());
       img.create();
+
       dc.drawImage(&img, 0, 0);
     }
   else
@@ -88,7 +93,7 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
   rendering_buffer_ro src;
   rendering_buffer_get_const_view(src, m_img, r, pixel_size, true);
 
-  dest.copy_from(src);
+  my_color_conv(&dest, &src, color_conv_rgb24_to_rgba32());
 
   img.create();
 

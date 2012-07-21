@@ -20,6 +20,9 @@ ifeq ($(HOST_SYS),Windows)
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
+  FREETYPE_INCLUDES =
+  FREETYPE_LIBS = -lfreetype
+
   PTHREADS_LIBS = -lpthreadGCE2
 else
   AGG_INCLUDES = -I/usr/include/agg2
@@ -30,6 +33,9 @@ else
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
+
+  FREETYPE_INCLUDES = -I/usr/include/freetype2
+  FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthread
 endif

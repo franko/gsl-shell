@@ -1,5 +1,6 @@
 
-use 'stdlib'
+use 'math'
+use 'graph'
 
 use_cgsl = true
 

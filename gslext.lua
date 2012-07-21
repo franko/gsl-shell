@@ -2,6 +2,7 @@
 
 require('iter')
 require('matrix')
+require('eigen')
 require('num')
 require('rng')
 require('rnd')

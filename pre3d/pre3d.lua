@@ -89,7 +89,8 @@
 -- object creations, there are some "IP" versions of these functions.  This
 -- stands for "in place", and they write the result to one of the arguments.
 
-use 'stdlib'
+use 'math'
+use 'graph'
 
 local function crossProduct(a, b)
    -- a1b2 - a2b1, a2b0 - a0b2, a0b1 - a1b0
@@ -895,7 +896,7 @@ function RendererMT.drawPath(this, path, opts)
      this:projectPointToCanvas(transformPoint(t, {x= 0, y= 0, z= 0})) or
      screen_points[path.starting_point])
 
-   local line = path(start_point.x, start_point.y)
+   local line = graph.path(start_point.x, start_point.y)
 
    local curves = path.curves
    for j, curve in ipairs(curves) do

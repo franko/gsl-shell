@@ -1,5 +1,6 @@
 
-use 'stdlib'
+use 'math'
+use 'graph'
 
 local function demo1()
    local f = |t| exp(-0.3*t) * sin(2*pi*t)
@@ -11,7 +12,7 @@ local function demo2()
    local r = rng.new()
    local f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
    local p = plot('Simulated Gaussian Distribution')
-   local b = ibars(sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
+   local b = ibars(iter.sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
    p:addline(b, rgba(0, 0, 0, 0.6))
    p:addline(fxline(f, -4, 4), 'red')
@@ -25,7 +26,7 @@ local function vonkoch(n)
    local sy = {0, 1,  1,  0, -1, -1}
    local sh = {1, -2, 1}
    local a, x, y = 0, 0, 0
-   local w = ilist(|| 0, n+1)
+   local w = iter.ilist(|| 0, n+1)
 
    local s = 1 / (3^n)
    for k=1, 6 do
@@ -90,12 +91,12 @@ local function demo4()
 
    pt:addline(filine(|i| v[i], n), 'black')
 
-   local ft = fft(v, true)
+   local ft = num.fft(v, true)
 
-   pf:add(ibars(isample(|i| complex.abs(ft[i]), 0, n/2)), 'black')
+   pf:add(ibars(iter.isample(|i| complex.abs(ft[i]), 0, n/2)), 'black')
    for k=ncut, n/2 do ft[k] = 0 end
 
-   fftinv(ft, true)
+   num.fftinv(ft, true)
 
    pt:addline(filine(|i| v[i], n), 'red')
 
@@ -113,34 +114,28 @@ local function demo_plot()
 end
 
 local function barplot_demo()
-   local t = {{'ode', 14, 17, 8}, {'integ', 21, 19, 7}, {'nlfit', 8,12,6}}
+   local t = {{'ode', 14, 17, 8}, {'integ', 21, 19, 7}, {'nlfit', 8,12,6}, legend={'Case A', 'Case B', 'Case C'}}
    local p = barplot(t)
    p.xtitle = 'Test'
    p.ytitle = 'Execution time, ms'
    p.title = 'Benchmark results'
+   p:save_svg('barplot.svg', 600, 400)
    return p
 end
 
 local function legend_demo()
-   local p = graph.legend {
-      {'sinus', 'red', 'line'},
-      {'cosinus', 'blue', 'line', {{'dash', 7, 3}}},
-   }
-   p:show()
-
-   local pi = math.pi
    local NS = 64
 
-   local mp = graph.fxplot(math.sin, 0, 2*pi, 'red', 32)
-   mp:addline(graph.fxline(math.cos, 0, 2*pi, 32), 'blue', {{'dash', 7,3}})
-   mp.title = 'Plot example'
-   mp.xtitle = 'x axis title'
+   local p = graph.fxplot(sin, 0, 2*pi, 'red', 32)
+   p:legend('sin', 'red', 'line')
+   p:addline(graph.fxline(cos, 0, 2*pi, 32), 'blue', {{'dash', 7,3}})
+   p:legend('cos', 'blue', 'line', {{'stroke'},{'dash',7,3}})
+   p.title = 'Plot example'
+   p.xtitle = 'x axis title'
 
-   mp:set_mini(p)
-   mp:save_svg('demo.svg', 600, 400)
-   p:save_svg('legend.svg', 400, 200)
+   p:save_svg('demo.svg', 600, 400)
 
-   echo('Plot saved in "demo.svg" and "legend.svg".')
+   echo('Plot saved in "demo.svg".')
 end
 
 return {'Plotting', {

@@ -59,6 +59,8 @@ register_graph (lua_State *L)
   window_register (L);
   plot_register (L);
 
+  initialize_fonts (L);
+
   lua_pop(L, 1);
 }
 

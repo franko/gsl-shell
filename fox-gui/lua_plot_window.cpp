@@ -34,7 +34,7 @@ static const struct luaL_Reg fox_window_methods[] = {
 
 __END_DECLS
 
-typedef plot<sg_object, manage_owner> sg_plot;
+typedef plot<manage_owner> sg_plot;
 
 int
 fox_window_new (lua_State *L)

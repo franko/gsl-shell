@@ -80,6 +80,10 @@ td.compatno {
 <a href="http://luajit.org/performance.html">Performance <span class="ext">&raquo;</span></a>
 </li><li>
 <a href="http://luajit.org/download.html">Download <span class="ext">&raquo;</span></a>
+</li><li>
+<a href="http://wiki.luajit.org/">Wiki <span class="ext">&raquo;</span></a>
+</li><li>
+<a href="http://luajit.org/list.html">Mailing List <span class="ext">&raquo;</span></a>
 </li></ul>
 </div>
 <div id="main">
@@ -104,7 +108,7 @@ operating systems, CPUs and compilers:
 <td class="compatcpu">CPU / OS</td>
 <td class="compatos"><a href="#posix">Linux</a> or<br><a href="#android">Android</a></td>
 <td class="compatos"><a href="#posix">*BSD, Other</a></td>
-<td class="compatos"><a href="#posix">OSX 10.3+</a> or<br><a href="#ios">iOS 3.0+</a></td>
+<td class="compatos"><a href="#posix">OSX 10.4+</a> or<br><a href="#ios">iOS 3.0+</a></td>
 <td class="compatos"><a href="#windows">Windows<br>XP/Vista/7</a></td>
 </tr>
 <tr class="odd separate">
@@ -185,8 +189,8 @@ open a terminal window and change to this directory. Now unpack the archive
 and change to the newly created directory:
 </p>
 <pre class="code">
-tar zxf LuaJIT-2.0.0-beta9.tar.gz
-cd LuaJIT-2.0.0-beta9</pre>
+tar zxf LuaJIT-2.0.0-beta10.tar.gz
+cd LuaJIT-2.0.0-beta10</pre>
 <h3>Building LuaJIT</h3>
 <p>
 The supplied Makefiles try to auto-detect the settings needed for your
@@ -210,8 +214,8 @@ You can add an extra prefix to the search paths by appending the
 make PREFIX=/home/myself/lj2
 </pre>
 <p>
-Note for OSX: <tt>MACOSX_DEPLOYMENT_TARGET</tt> is set to <tt>10.4</tt>
-in <tt>src/Makefile</tt>. Change it, if you want to build on an older version.
+Note for OSX: if the <tt>MACOSX_DEPLOYMENT_TARGET</tt> environment
+variable is not set, then it's forced to <tt>10.4</tt>.
 </p>
 <h3>Installing LuaJIT</h3>
 <p>
@@ -236,11 +240,11 @@ Obviously the prefixes given during build and installation need to be the same.
 <p style="color: #c00000;">
 Note: to avoid overwriting a previous version, the beta test releases
 only install the LuaJIT executable under the versioned name (i.e.
-<tt>luajit-2.0.0-beta9</tt>). You probably want to create a symlink
+<tt>luajit-2.0.0-beta10</tt>). You probably want to create a symlink
 for convenience, with a command like this:
 </p>
 <pre class="code" style="color: #c00000;">
-sudo ln -sf luajit-2.0.0-beta9&nbsp;/usr/local/bin/luajit
+sudo ln -sf luajit-2.0.0-beta10&nbsp;/usr/local/bin/luajit
 </pre>
 
 <h2 id="windows">Windows Systems</h2>

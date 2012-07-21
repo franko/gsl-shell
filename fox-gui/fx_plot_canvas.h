@@ -17,7 +17,7 @@ class fx_plot_canvas : public FXCanvas {
   typedef image_gen<4, true> image;
 
 public:
-  typedef plot<sg_object, manage_owner> plot_type;
+  typedef plot<manage_owner> plot_type;
 
   fx_plot_canvas(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0,
 		 FXuint opts=FRAME_NORMAL,

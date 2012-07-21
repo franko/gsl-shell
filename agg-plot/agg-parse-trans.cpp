@@ -109,7 +109,7 @@ sg_object* build_marker (lua_State *L, int specindex, sg_object* src, int li)
         {
           sg_object* obj = (sg_object*) lua_touserdata(L, -1);
           sym = new trans::scaling_a(obj);
-	  plot_lua_add_ref (L, 1, li);
+          plot_lua_add_ref (L, 1, li);
         }
       else
         {
@@ -142,19 +142,19 @@ sg_object* build_dash (lua_State *L, int specindex, sg_object* src, int li)
       lua_rawgeti (L, specindex, j);
 
       if (lua_isnumber (L, -1))
-	{
-	  double a = lua_tonumber (L, -1);
-	  lua_pop (L, 1);
+        {
+          double a = lua_tonumber (L, -1);
+          lua_pop (L, 1);
 
-	  lua_rawgeti (L, specindex, j+1);
+          lua_rawgeti (L, specindex, j+1);
 
-	  double b = (lua_isnumber (L, -1) ? lua_tonumber (L, -1) : a);
+          double b = (lua_isnumber (L, -1) ? lua_tonumber (L, -1) : a);
 
-	  d->add_dash(a, b);
-	  lua_pop (L,1);
-	}
+          d->add_dash(a, b);
+          lua_pop (L,1);
+        }
       else
-	break;
+        break;
     }
   lua_pop (L, 1);
 
@@ -233,8 +233,8 @@ public:
     const reg *p;
     for (p = builder_table; p->name != NULL; p++)
       {
-	if (strcmp (p->name, key) == 0)
-	  return p->func;
+        if (strcmp (p->name, key) == 0)
+          return p->func;
       }
 
     return NULL;

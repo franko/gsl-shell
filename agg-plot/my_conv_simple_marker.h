@@ -24,10 +24,10 @@ namespace my {
 
     enum status_e
       {
-	initial,
-	markers,
-	polygon,
-	stop
+        initial,
+        markers,
+        polygon,
+        stop
       };
 
     MarkerLocator* m_marker_locator;
@@ -63,38 +63,38 @@ namespace my {
 
     while(!is_stop(cmd))
       {
-	switch(m_status)
-	  {
-	  case initial:
-	    m_marker_locator->rewind(0);
-	    m_status = markers;
+        switch(m_status)
+          {
+          case initial:
+            m_marker_locator->rewind(0);
+            m_status = markers;
 
-	  case markers:
-	    if(is_stop(m_marker_locator->vertex(&m_x1, &m_y1)))
-	      {
-		cmd = path_cmd_stop;
-		m_status = stop;
-		break;
-	      }
-	    m_marker_shapes->rewind(0);
-	    m_status = polygon;
+          case markers:
+            if(is_stop(m_marker_locator->vertex(&m_x1, &m_y1)))
+              {
+                cmd = path_cmd_stop;
+                m_status = stop;
+                break;
+              }
+            m_marker_shapes->rewind(0);
+            m_status = polygon;
 
-	  case polygon:
-	    cmd = m_marker_shapes->vertex(x, y);
-	    if(is_stop(cmd))
-	      {
-		cmd = path_cmd_move_to;
-		m_status = markers;
-		break;
-	      }
-	    *x += m_x1;
-	    *y += m_y1;
-	    return cmd;
+          case polygon:
+            cmd = m_marker_shapes->vertex(x, y);
+            if(is_stop(cmd))
+              {
+                cmd = path_cmd_move_to;
+                m_status = markers;
+                break;
+              }
+            *x += m_x1;
+            *y += m_y1;
+            return cmd;
 
-	  case stop:
-	    cmd = path_cmd_stop;
-	    break;
-	  }
+          case stop:
+            cmd = path_cmd_stop;
+            break;
+          }
       }
     return cmd;
   }

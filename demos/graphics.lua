@@ -1,5 +1,5 @@
 
-use 'stdlib'
+use 'math'
 
 local function set_contour(a)
    a:move_to(28.47, 6.45)
@@ -54,12 +54,12 @@ local function save_svg(p, name)
 end
 
 local function demo1()
-   local a = path()
+   local a = graph.path()
    local n = 12
    local t = {{}, {{'curve'}}, {{'stroke'}, {'curve'}}, 
 	      {{'stroke'}, {'dash', 6, 3}, {'curve'}}, {{'marker', mark='cross'}}}
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'magenta', 'cyan'}
-   local p = plot()
+   local p = graph.plot()
    local R = 120
    set_contour(a)
    for k=0, n-1 do
@@ -78,11 +78,11 @@ end
 local function demo2()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
-   local p = plot()
+   local p = graph.plot()
    local R = 40
    for k=0, n-1 do
       local a = 2*pi*k/n - pi/2
-      local txt = text(R*cos(a), R*sin(a), 'Hello world')
+      local txt = graph.text(R*cos(a), R*sin(a), 'Hello world')
       local ch = |t| t[(k % #t)+1]
       txt.angle = a - pi
       p:add(txt, ch(color))
@@ -95,8 +95,8 @@ end
 local function demo3()
    local n = 24
    local color = {'red', 'yellow', 'blue', 'darkgreen', 'cyan'}
-   local p = canvas 'Rotating text'
-   local txt = text(0, 0, 'Hello world!')
+   local p = graph.canvas 'Rotating text'
+   local txt = graph.text(0, 0, 'Hello world!')
 
    p:limits(-1, -1, 1, 1)
    p:show()

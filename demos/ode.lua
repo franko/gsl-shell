@@ -20,39 +20,13 @@
 
 use 'math'
 
-function f_vanderpol_gen(mu)
-   return function(t, x, y) return y, -x + mu * y * (1-x^2) end
-end
-
-local function xyodeplot(f, t0, t1, x0, y0, h0, tsmp)
-   local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
-   local ln = graph.path(x0, y0)
-   s:init(t0, h0, f, x0, y0)
-   for t = tsmp, t1, tsmp do
-      while s.t < t do
-	 evol(s, f, t)
-      end
-      ln:line_to(s.y[1], s.y[2])
-   end
-
-   local p = graph.plot('ODE integration example')
-   p:addline(ln)
-   p:show()
-   return p
-end
-
 -- T is the period for the Poincare section
 local function poincareplot(f, t0, t1, x0, y0, h0, tsmp, T)
    local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
    s:init(t0, h0, f, x0, y0)
    local ln = graph.path(x0, y0)
-   for t = t0, t1, tsmp do
-      while s.t < t do
-         evol(s, f, t)
-      end
-      if t % T <= tsmp then ln:line_to(s.y[1], s.y[2]) end
+   for t, y1, y2 in s:evolve(t1, tsmp) do
+      if t % T <= tsmp then ln:line_to(y1, y2) end
    end
 
    local p = graph.plot('Poincare section')
@@ -61,56 +35,54 @@ local function poincareplot(f, t0, t1, x0, y0, h0, tsmp, T)
    return p
 end
 
-local function modeplot(s, f, t0, y0, t1, tsmp)
-   local n = #y0
-   local t = {}
-   for k=1, n do t[k] = graph.path(t0, y0[k]) end
-   local evol = s.evolve
+local function demo1()
+   local f = function(t, x, y)
+		   return -y-x^2, 2*x - y^3
+		end
 
-   if tsmp then
-      for t = tsmp, t1, tsmp do
-	 while s.t < t do
-	    evol(s, f, t)
-	 end
-	 for k=1, n do
-	    t[k]:line_to(s.t, s.y[k])
-	 end
-      end
-   else
-      while s.t < t1 do
-	 evol(s, f, t1)
-	 for k=1, n do
-	    t[k]:line_to(s.t, s.y[k])
-	 end
-      end
+   local x0, y0 = 1, 1
+   local t0, t1 = 0, 30
+
+   local s = num.ode {N= 2, eps_abs= 1e-8, method='rk8pd'}
+   local ln = graph.path(x0, y0)
+
+   s:init(t0, 1e-3, f, x0, y0)
+   for t, y1, y2 in s:evolve(t1, 0.04) do
+      ln:line_to(y1, y2)
    end
 
    local p = graph.plot('ODE integration example')
-   for k=1, n do p:addline(t[k], graph.rainbow(k)) end
+   p:addline(ln)
    p:show()
    return p
 end
 
-local function demo1()
-   local odef = function(t, x, y)
-		   return -y-x^2, 2*x - y^3
-		end
-
-   local x, y = 1, 1
-
-   return xyodeplot(odef, 0, 30, x, y, 1e-3, 0.04)
+function f_vanderpol_gen(mu)
+   return function(t, x, y) return y, -x + mu * y * (1-x^2) end
 end
 
 local function demo2()
    local f = f_vanderpol_gen(10.0)
 
    local t0, t1, h = 0, 50, 0.01
-   local y0 = {1, 0}
+   local x0, y0 = 1, 0
 
-   local s = num.ode {N= 2, eps_abs= 1e-8}
-   s:init(t0, h, f, y0[1], y0[2])
+   local s = num.ode {N= 2, eps_abs= 1e-8, methdo='rk8pd'}
+   s:init(t0, h, f, x0, y0)
 
-   return modeplot(s, f, t0, y0, t1)
+   local ln1, ln2 = graph.path(t0, x0), graph.path(t0, y0)
+
+   while s.t <= t1 do
+      s:step(t1)
+      ln1:line_to(s.t, s.y[1])
+      ln2:line_to(s.t, s.y[2])
+   end
+
+   local p = graph.plot('ODE integration example')
+   p:addline(ln1, 'red')
+   p:addline(ln2, 'blue')
+   p:show()
+   return p
 end
 
 local function f_sincos_damp(damp_f)
@@ -124,14 +96,11 @@ local function demo3()
    local x, y = 1, 0
    local s = num.ode {N= 2, eps_abs= 1e-8}
    local f  = f_sincos_damp(damp_f)
-   local t0, t1, h0, hsamp = 0, 100, 1e-6, 0.5
+   local t0, t1, h0, tsmp = 0, 100, 1e-6, 0.5
    s:init(t0, h0, f, x, y)
    local ln = graph.path(t0, x)
-   for t= hsamp, t1, hsamp do
-      while s.t < t do
-	 s:evolve(f, t)
-      end
-      ln:line_to(s.t, s.y[1])
+   for t, y1 in s:evolve(t1, tsmp) do
+      ln:line_to(t, y1)
    end
    local p = graph.plot()
    p:addline(ln)
@@ -164,20 +133,16 @@ local function demo5()
    local ln1 = graph.path(t0, x0)
    local ln2 = graph.path(t0, y0)
 
-   local evol = s.evolve
    s:init(t0, h0, f, x0, y0)
-   for t = tsmp, t1, tsmp do
-      while s.t < t do
-	 evol(s, f, t)
-      end
-      ln1:line_to(s.t, s.y[1])
-      ln2:line_to(s.t, s.y[2])
+   for t, y1, y2 in s:evolve(t1, tsmp) do
+      ln1:line_to(t, y1)
+      ln2:line_to(t, y2)
    end
 
    local p = graph.plot('Lotka-Volterra ODE integration')
    p.clip = false
 
-   p:add(graph.marker(0, x0, 'cross', 8), 'red')
+   p:add(graph.marker(0, x0, 'circle', 8), 'red')
    p:add(graph.marker(0, y0, 'circle', 8), 'blue')
 
    p:add(graph.text(0.5, x0, 'Preys'), 'black')
@@ -203,22 +168,19 @@ local function demo6()
    end
 
    local x0, y0, z0 = -1, 3, 4
-   local t0, t1, h0, tsmp = 0, 30, 1e-3, 1e-3
+   local t0, t1, h0 = 0, 30, 1e-3
    local s = num.ode {N= 3, eps_abs= 1e-8, method='rk8pd'}
-   local evol = s.evolve
+   local step = s.step
    local lnxy = graph.path(x0, y0)
    local lnxz = graph.path(x0, z0)
    local lnyz = graph.path(y0, z0)
-   --local ln2 = graph.path(t0, y0)
 
    s:init(t0, h0, f, x0, y0, z0)
-   for t = tsmp, t1, tsmp do
-      while s.t < t do
-	 evol(s, f, t)
-      end
-      lnxy:line_to(s.y[1], s.y[2])
-      lnxz:line_to(s.y[1], s.y[3])
-      lnyz:line_to(s.y[2], s.y[3])
+
+   for t, y1, y2, y3 in s:evolve(t1, 1e-3) do
+      lnxy:line_to(y1, y2)
+      lnxz:line_to(y1, y3)
+      lnyz:line_to(y2, y3)
    end
 
    local w = graph.window("v...")

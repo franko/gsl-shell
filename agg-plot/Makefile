@@ -29,14 +29,14 @@ LUADIR = $(GSH_BASE_DIR)/luajit2
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
-  PLATSUP_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
+  PLATSUP_SRC_FILES = support_win32.cpp agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
   PLATSUP_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
-INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
+INCLUDES += $(FREETYPE_INCLUDES) $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) fonts.cpp gamma.cpp agg_font_freetype.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 

@@ -537,15 +537,38 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       Two optional parameters can be given to specify the width and height of the drawing area.
 
 
-   .. method:: set_mini(p[, placement])
+   .. method:: set_legend(p[, placement])
 
-      Add the plot ``p`` as a small plot is the side area of the main plot.
+      Add the plot ``p`` as a legend is the side area of the main plot.
       The argument ``placement`` is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
       They stands for "left", "right", "bottom" and "top" respectively.
       By default the placement of the mini plot is on the right side.
 
-      The mini plot is shown using an region of the drawing area are equal to the bounding box of the mini plot itself.
-      When rendered as a mini plot the plot coordinates and the screen coordinates are therefore in a one-to-one scale rapport.
+      The plot legend is drawn on the screen using an area that is equal, in pixal, to the logical size of the plot legend itself.
+
+   .. method:: get_legend([placement])
+
+      Return the plot legend stored in the given ``placement``.
+      The placement parameter is interpreted as in the :meth:`~Plot.set_legend` method.
+
+   .. method:: legend(text, color, symbol[, trans])
+
+      Add to the plot a new legend item with the given ``text``.
+      The symbol used is determinated by the string ``symbol``.
+      Possible values are 'line', 'square' or anything accepted by :func:`graph.marker`.
+      The optional ``trans`` parameter should be a :ref:`graphical transform <graphics-transforms>`.
+      If omitted the appropriate default is chosen based on the symbol type.
+
+      Example::
+
+         use 'math'
+
+         p = graph.plot('plot example')
+         p:addline(graph.fxline(sin, 0, 2*pi), 'red')
+         p:legend('sinus', 'red', 'line')
+         p:addline(graph.fxline(cos, 0, 2*pi), 'blue', {{'dash',7,3}})
+         p:legend('cosinus', 'blue', 'line', {{'stroke'},{'dash',7,3}})
+         p:show()
 
    .. method:: set_categories(axis, categories)
 

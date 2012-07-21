@@ -35,6 +35,7 @@
 #include "trans.h"
 #include "text.h"
 #include "categories.h"
+#include "sg_object.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -47,13 +48,13 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 
-template <class Canvas, class VertexSource>
-class canvas_adapter : public virtual_canvas<VertexSource> {
+template <class Canvas>
+class canvas_adapter : public virtual_canvas {
 public:
   canvas_adapter(Canvas* c) : m_canvas(c) {}
 
-  virtual void draw(VertexSource& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
-  virtual void draw_outline(VertexSource& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
+  virtual void draw(sg_object& vs, agg::rgba8 c) { m_canvas->draw(vs, c); }
+  virtual void draw_outline(sg_object& vs, agg::rgba8 c) { m_canvas->draw_outline(vs, c); }
 
   virtual void clip_box(const agg::rect_base<int>& clip) { m_canvas->clip_box(clip);  }
   virtual void reset_clipping() { m_canvas->reset_clipping(); }
@@ -62,25 +63,22 @@ private:
   Canvas* m_canvas;
 };
 
-template<class VertexSource>
 struct plot_item {
-  VertexSource* vs;
+  sg_object* vs;
   agg::rgba8 color;
   bool outline;
 
   plot_item() : vs(0) {};
 
-  plot_item(VertexSource* vs, agg::rgba8& c, bool as_outline):
+  plot_item(sg_object* vs, agg::rgba8& c, bool as_outline):
     vs(vs), color(c), outline(as_outline)
   {};
 
-  VertexSource& content() { return *vs; };
+  sg_object& content() { return *vs; };
 };
 
-template<class VertexSource, class ResourceManager>
+template<class ResourceManager>
 class plot {
-  typedef plot_item<VertexSource> item;
-  typedef agg::pod_bvector<item> item_list;
 
   static const unsigned max_layers = 8;
 
@@ -91,9 +89,25 @@ class plot {
     canvas_margin_fixed_space = 4,
   };
 
+protected:
+  typedef plot_item item;
+
+  class item_list : public agg::pod_bvector<item>
+  {
+  public:
+    item_list(): agg::pod_bvector<item>() { }
+
+    const opt_rect<double>& bounding_box() const { return m_bbox; }
+    void set_bounding_box(const agg::rect_base<double>& r) { m_bbox.set(r); }
+    void clear_bounding_box() { m_bbox.clear(); }
+
+  private:
+    opt_rect<double> m_bbox;
+  };
+
 public:
   typedef list<item> iterator;
-  typedef virtual_canvas<VertexSource> canvas_type;
+  typedef virtual_canvas canvas_type;
 
   enum axis_e { x_axis, y_axis };
   enum placement_e { right = 0, left = 1, bottom = 2, top = 3 };
@@ -130,25 +144,25 @@ public:
   };
 
   plot(bool use_units = true) :
-    m_root_layer(), m_layers(), m_current_layer(&m_root_layer),
     m_drawing_queue(0), m_clip_flag(true),
     m_need_redraw(true), m_rect(),
     m_use_units(use_units), m_pad_units(false), m_title(),
     m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis)
   {
+    m_layers.add(&m_root_layer);
     compute_user_trans();
     for (unsigned k = 0; k < 4; k++)
-      m_mini_plot[k] = 0;
+      m_legend[k] = 0;
   };
 
   virtual ~plot()
   {
-    layer_dispose_elements(m_root_layer);
     for (unsigned k = 0; k < m_layers.size(); k++)
       {
-	item_list *layer = m_layers[k];
-	layer_dispose_elements(*layer);
-	delete layer;
+        item_list *layer = m_layers[k];
+        layer_dispose_elements(layer);
+        if (k > 0)
+          delete layer;
       }
   };
 
@@ -156,10 +170,8 @@ public:
   str& x_axis_title() { return m_x_axis.title; }
   str& y_axis_title() { return m_y_axis.title; }
 
-  void add_mini_plot(plot* p, placement_e where)
-  {
-    m_mini_plot[where] = p;
-  }
+  void add_legend(plot* p, placement_e where) { m_legend[where] = p; }
+  plot* get_legend(placement_e where) { return m_legend[where]; }
 
   axis& get_axis(axis_e axis_dir)
   {
@@ -181,9 +193,11 @@ public:
   void set_units(bool use_units);
   bool use_units() const { return m_use_units; };
 
+  void update_units();
   void set_limits(const agg::rect_base<double>& r);
+  void unset_limits();
 
-  virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
+  virtual void add(sg_object* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { }
 
   void get_bounding_rect(agg::rect_base<double>& bb)
@@ -201,11 +215,11 @@ public:
 
   virtual bool push_layer();
   virtual bool pop_layer();
+  virtual void clear_current_layer();
 
   /* drawing queue related methods */
   void push_drawing_queue();
   void clear_drawing_queue();
-  void clear_current_layer();
   int current_layer_index();
 
   bool clip_is_active() const { return m_clip_flag; };
@@ -224,9 +238,9 @@ public:
   {
     if (req != m_pad_units)
       {
-	m_pad_units = req;
-	m_need_redraw = true;
-	compute_user_trans();
+        m_pad_units = req;
+        m_need_redraw = true;
+        compute_user_trans();
       }
   };
 
@@ -249,15 +263,15 @@ public:
 
 protected:
   double draw_axis_m(axis_e dir, units& u, agg::trans_affine& user_mtx,
-		     ptr_list<draw::text>& labels, double scale,
-		     agg::path_storage& mark, agg::path_storage& ln);
+                     ptr_list<draw::text>& labels, double scale,
+                     agg::path_storage& mark, agg::path_storage& ln);
 
   void draw_elements(canvas_type &canvas, agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
   void draw_axis(canvas_type& can, agg::trans_affine& m, agg::rect_base<int>* clip = 0);
 
-  agg::trans_affine draw_mini_plots(canvas_type& canvas,
-				    agg::trans_affine& canvas_mtx);
+  agg::trans_affine draw_legends(canvas_type& canvas,
+                                    agg::trans_affine& canvas_mtx);
 
   agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
 
@@ -265,15 +279,20 @@ protected:
 
   void compute_user_trans();
 
-  bool fit_inside(VertexSource *obj) const;
+  bool fit_inside(sg_object *obj) const;
 
-  void layer_dispose_elements (item_list& layer);
+  void layer_dispose_elements (item_list* layer);
 
-  item_list& current_layer() { return *m_current_layer; };
+  unsigned nb_layers() const { return m_layers.size(); }
+  item_list* get_layer(unsigned j) { return m_layers[j]; }
 
-  item_list m_root_layer;
-  agg::pod_auto_vector<item_list*, max_layers> m_layers;
-  item_list *m_current_layer;
+  item_list* current_layer() { return m_layers[m_layers.size() - 1]; };
+
+  item_list* parent_layer()
+  {
+    unsigned n = m_layers.size();
+    return (n > 1 ? m_layers[n-2] : 0);
+  }
 
   agg::trans_affine m_trans;
   list<item> *m_drawing_queue;
@@ -287,6 +306,9 @@ protected:
   units m_ux, m_uy;
 
 private:
+  item_list m_root_layer;
+  agg::pod_auto_vector<item_list*, max_layers> m_layers;
+
   bool m_pad_units;
 
   str m_title;
@@ -295,7 +317,7 @@ private:
   bool m_sync_mode;
 
   axis m_x_axis, m_y_axis;
-  plot* m_mini_plot[4];
+  plot* m_legend[4];
 };
 
 static double compute_scale(agg::trans_affine& m)
@@ -315,15 +337,15 @@ std_line_width(double scale, double w = 1.0)
 #endif
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::commit_pending_draw()
+template <class RM>
+void plot<RM>::commit_pending_draw()
 {
   push_drawing_queue();
   m_need_redraw = false;
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
+template <class RM>
+void plot<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
 {
   item d(vs, color, outline);
   list<item> *new_node = new list<item>(d);
@@ -331,20 +353,21 @@ void plot<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
   RM::acquire(vs);
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::push_drawing_queue()
+template <class RM>
+void plot<RM>::push_drawing_queue()
 {
+  item_list* layer = current_layer();
   for (list<item> *c = m_drawing_queue; c != 0; c = c->next())
     {
-      m_current_layer->add(c->content());
+      layer->add(c->content());
     }
 
   while (m_drawing_queue)
     m_drawing_queue = list<item>::pop(m_drawing_queue);
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::clear_drawing_queue()
+template <class RM>
+void plot<RM>::clear_drawing_queue()
 {
   while (m_drawing_queue)
     {
@@ -360,15 +383,15 @@ static bool area_is_valid(const agg::trans_affine& b)
   return (b.sx > thresold && b.sy > thresold);
 }
 
-template <class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
+template <class RM>
+template <class Canvas> void plot<RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
 {
-  canvas_adapter<Canvas, VS>  canvas(&_canvas);
+  canvas_adapter<Canvas>  canvas(&_canvas);
   before_draw();
 
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
 
-  agg::trans_affine area_mtx = draw_mini_plots(canvas, canvas_mtx);
+  agg::trans_affine area_mtx = draw_legends(canvas, canvas_mtx);
 
   if (area_is_valid(area_mtx))
     {
@@ -377,10 +400,10 @@ template <class Canvas> void plot<VS,RM>::draw(Canvas& _canvas, agg::trans_affin
     }
 };
 
-template <class VS, class RM>
-void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
+template <class RM>
+void plot<RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
 {
-  VS& vs = c.content();
+  sg_object& vs = c.content();
   vs.apply_transform(m, 1.0);
 
   if (c.outline)
@@ -389,16 +412,16 @@ void plot<VS,RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& 
     canvas.draw(vs, c.color);
 }
 
-template <class VS, class RM>
-agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
+template <class RM>
+agg::trans_affine plot<RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
   trans_affine_compose (m, m_area_mtx);
   return m;
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx)
+template<class RM>
+void plot<RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   if (this->clip_is_active())
     {
@@ -407,36 +430,31 @@ void plot<VS,RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_
     }
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
+template <class RM>
+void plot<RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
   this->clip_plot_area(canvas, canvas_mtx);
 
-  for (unsigned j = 0; j < m_root_layer.size(); j++)
-    {
-      draw_element(m_root_layer[j], canvas, m);
-    }
-
   for (unsigned k = 0; k < m_layers.size(); k++)
     {
       item_list& layer = *(m_layers[k]);
       for (unsigned j = 0; j < layer.size(); j++)
-	{
-	  draw_element(layer[j], canvas, m);
-	}
+        {
+          draw_element(layer[j], canvas, m);
+        }
     }
 
   canvas.reset_clipping();
 }
 
-template <class VS, class RM>
-template <class Canvas> void plot<VS,RM>::draw_queue(Canvas& _canvas, agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
+template <class RM>
+template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
 {
-  canvas_adapter<Canvas, VS>  canvas(&_canvas);
+  canvas_adapter<Canvas>  canvas(&_canvas);
 
-  typedef typename plot<VS,RM>::iterator iter_type;
+  typedef typename plot<RM>::iterator iter_type;
 
   before_draw();
 
@@ -453,14 +471,14 @@ template <class Canvas> void plot<VS,RM>::draw_queue(Canvas& _canvas, agg::trans
       bool not_empty = agg::bounding_rect_single(d.content(), 0, &ebb.x1, &ebb.y1, &ebb.x2, &ebb.y2);
 
       if (not_empty)
-	bb.add<rect_union>(ebb);
+        bb.add<rect_union>(ebb);
     }
 
   canvas.reset_clipping();
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::compute_user_trans()
+template <class RM>
+void plot<RM>::compute_user_trans()
 {
   agg::rect_base<double> r;
 
@@ -486,16 +504,14 @@ void plot<VS,RM>::compute_user_trans()
   this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -r.x1 * fx, -r.y1 * fy);
 }
 
-template <class VS, class RM>
-double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
-				agg::trans_affine& user_mtx,
-				ptr_list<draw::text>& labels, double scale,
-				agg::path_storage& mark, agg::path_storage& ln)
+template <class RM>
+double plot<RM>::draw_axis_m(axis_e dir, units& u,
+                             agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln)
 {
   const double ppad = double(axis_label_prop_space) / 1000.0;
   const double eps = 1.0e-3;
-
-  const double line_width = std_line_width(scale);
 
   opt_rect<double> bb;
   agg::rect_base<double> r;
@@ -521,9 +537,9 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
       double q = (isx ? x : y);
 
       if (q < -eps || q > 1.0 + eps)
-	continue;
+        continue;
 
-      draw::text* label = new draw::text(text, 10.0*scale, line_width, hj, vj);
+      draw::text* label = new draw::text(text, 14.0*scale, hj, vj);
 
       label->set_point(isx ? q : -ppad, isx ? -ppad : q);
       label->angle(langle);
@@ -546,10 +562,10 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
       double q = (isx ? x : y);
 
       if (q >= -eps && q <= 1.0 + eps)
-	{
-	  ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
-	  ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
-	}
+        {
+          ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
+          ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
+        }
     }
 
   double label_size;
@@ -571,9 +587,9 @@ static inline double approx_text_height(double text_size)
   return text_size * 1.5;
 }
 
-template <class VS, class RM>
-agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
-					       agg::trans_affine& canvas_mtx)
+template <class RM>
+agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
+                                               agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double ppad = double(canvas_margin_prop_space) / 1000.0;
@@ -587,16 +603,15 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
   if (!str_is_null(&m_title))
     {
       const double scale = compute_scale(canvas_mtx);
-      const double line_width = std_line_width(scale);
       const double ptpad = double(axis_title_prop_space) / 1000.0;
-      const double title_text_size = 12.0 * scale;
+      const double title_text_size = 18.0 * scale;
       const double th = approx_text_height(title_text_size);
 
       double x = 0.5, y = 1.0;
       canvas_mtx.transform(&x, &y);
       y -= ptpad + dyt + title_text_size;
 
-      draw::text title(m_title.cstr(), title_text_size, line_width, 0.5, 0.0);
+      draw::text title(m_title.cstr(), title_text_size, 0.5, 0.0);
       title.set_point(x, y);
       title.apply_transform(identity_matrix, 1.0);
 
@@ -607,49 +622,50 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
 
   for (int k = 0; k < 4; k++)
     {
-      plot* mp = m_mini_plot[k];
+      plot* mp = m_legend[k];
 
       if (mp)
-	{
-	  agg::rect_base<double> bb;
-	  mp->get_bounding_rect(bb);
+        {
+          agg::rect_base<double> bb;
+          mp->get_bounding_rect(bb);
 
-	  double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
-	  double px, py;
-	  switch (k)
-	    {
-	    case right:
-	      px = sx - dx - ppad * sx - dxr;
-	      py = (sy - dy) / 2;
-	      dxr += dx + 2 * ppad * sx;
-	      break;
-	    case left:
-	      px = ppad * sx + dxr;
-	      py = (sy - dy) / 2;
-	      dxl += dx + 2 * ppad * sx;
-	      break;
-	    case bottom:
-	      py = ppad * sy + dyb;
-	      px = (sx - dx) / 2;
-	      dyb += dy + 2 * ppad * sy;
-	      break;
-	    case top:
-	      py = sy - dy - ppad * sy - dyt;
-	      px = (sx - dx) / 2;
-	      dyt += dy + 2 * ppad * sy;
-	      break;
-	    default:
-	      /* */;
-	    }
+          double dx = bb.x2 - bb.x1, dy = bb.y2 - bb.y1;
+          double px, py;
+          switch (k)
+            {
+            case right:
+              px = sx - dx - ppad * sx - dxr;
+              py = (sy - dy) / 2;
+              dxr += dx + 2 * ppad * sx;
+              break;
+            case left:
+              px = ppad * sx + dxr;
+              py = (sy - dy) / 2;
+              dxl += dx + 2 * ppad * sx;
+              break;
+            case bottom:
+              py = ppad * sy + dyb;
+              px = (sx - dx) / 2;
+              dyb += dy + 2 * ppad * sy;
+              break;
+            case top:
+              py = sy - dy - ppad * sy - dyt;
+              px = (sx - dx) / 2;
+              dyt += dy + 2 * ppad * sy;
+              break;
+            default:
+              /* */;
+            }
 
-	  if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
-	    {
-	      agg::trans_affine mtx(dx, 0.0, 0.0, dy, px, py);
-	      mp->before_draw();
-	      mp->draw_axis(canvas, mtx);
-	      mp->draw_elements(canvas, mtx);
-	    }
-	}
+          if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
+            {
+              const double tx = canvas_mtx.tx, ty = canvas_mtx.ty;
+              agg::trans_affine mtx(dx, 0.0, 0.0, dy, tx + px, ty + py);
+              mp->before_draw();
+              mp->draw_axis(canvas, mtx);
+              mp->draw_elements(canvas, mtx);
+            }
+        }
     }
 
   double cpx = canvas_mtx.tx, cpy = canvas_mtx.ty;
@@ -657,9 +673,9 @@ agg::trans_affine plot<VS,RM>::draw_mini_plots(canvas_type& canvas,
   return agg::trans_affine(ssx, 0.0, 0.0, ssy, cpx + dxl, cpy + dyb);
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
-			    agg::rect_base<int>* clip)
+template <class RM>
+void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
+                         agg::rect_base<int>* clip)
 {
   agg::trans_affine& m = m_area_mtx;
 
@@ -693,8 +709,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
   trans::dash_a lndash(&ln_tr);
   trans::stroke_a lns(&lndash);
 
-  const double line_width = std_line_width(scale);
-  const double label_text_size = 11.0 * scale;
+  const double label_text_size = 15.0 * scale;
   const double plpad = double(axis_label_prop_space) / 1000.0;
   const double ptpad = double(axis_title_prop_space) / 1000.0;
 
@@ -745,13 +760,13 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
 
   lndash.add_dash(7.0, 3.0);
 
-  lns.width(std_line_width(scale, 0.25));
+  lns.width(std_line_width(scale, 0.15));
   canvas.draw(lns, colors::black);
 
   mark_stroke.width(std_line_width(scale, 0.75));
   canvas.draw(mark_stroke, colors::black);
 
-  boxvs.width(std_line_width(scale));
+  boxvs.width(std_line_width(scale, 0.75));
   canvas.draw(boxvs, colors::black);
 
   if (!str_is_null(&m_x_axis.title))
@@ -760,7 +775,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       double laby = canvas_mtx.ty;
 
       const char* text = m_x_axis.title.cstr();
-      draw::text xlabel(text, label_text_size, line_width, 0.5, 0.0);
+      draw::text xlabel(text, label_text_size, 0.5, 0.0);
       xlabel.set_point(labx, laby);
       xlabel.apply_transform(identity_matrix, 1.0);
 
@@ -773,7 +788,7 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       double laby = m.sy * 0.5 + m.ty;
 
       const char* text = m_y_axis.title.cstr();
-      draw::text ylabel(text, label_text_size, line_width, 0.5, 1.0);
+      draw::text ylabel(text, label_text_size, 0.5, 1.0);
       ylabel.set_point(labx, laby);
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);
@@ -785,16 +800,16 @@ void plot<VS,RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
     canvas.reset_clipping();
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::set_axis_labels_angle(axis_e axis_dir, double angle)
+template<class RM>
+void plot<RM>::set_axis_labels_angle(axis_e axis_dir, double angle)
 {
   get_axis(axis_dir).set_labels_angle(angle);
   m_need_redraw = true;
   compute_user_trans();
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::set_units(bool use_units)
+template<class RM>
+void plot<RM>::set_units(bool use_units)
 {
   if (m_use_units != use_units)
     {
@@ -804,75 +819,97 @@ void plot<VS,RM>::set_units(bool use_units)
     }
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::set_limits(const agg::rect_base<double>& r)
+template<class RM>
+void plot<RM>::update_units()
 {
-  m_rect.set(r);
-  m_ux = units(r.x1, r.x2);
-  m_uy = units(r.y1, r.y2);
-  m_need_redraw = true;
+  if (m_rect.is_defined())
+  {
+    const rect_base<double>& r = m_rect.rect();
+    m_ux = units(r.x1, r.x2);
+    m_uy = units(r.y1, r.y2);
+  }
+  else
+  {
+    m_ux = units();
+    m_uy = units();
+  }
+
   compute_user_trans();
 }
 
-template<class VS, class RM>
-void plot<VS,RM>::layer_dispose_elements(plot<VS,RM>::item_list& layer)
+template<class RM>
+void plot<RM>::set_limits(const agg::rect_base<double>& r)
 {
-  unsigned n = layer.size();
+  m_rect.set(r);
+  update_units();
+  m_need_redraw = true;
+}
+
+template<class RM>
+void plot<RM>::unset_limits()
+{
+  m_rect.clear();
+  update_units();
+  m_need_redraw = true;
+}
+
+template<class RM>
+void plot<RM>::layer_dispose_elements(plot<RM>::item_list* layer)
+{
+  unsigned n = layer->size();
   for (unsigned k = 0; k < n; k++)
     {
-      RM::dispose(layer[k].vs);
+      RM::dispose(layer->at(k).vs);
     }
 }
 
-template<class VS, class RM>
-bool plot<VS,RM>::push_layer()
+template<class RM>
+bool plot<RM>::push_layer()
 {
   if (m_layers.size() >= max_layers)
     return false;
 
   item_list *new_layer = new(std::nothrow) item_list();
-  if (new_layer == 0)
-    return false;
+  if (new_layer)
+  {
+    before_draw();
+    push_drawing_queue();
+    m_layers.add(new_layer);
+    return true;
+  }
 
-  commit_pending_draw();
-  m_layers.add(new_layer);
-  m_current_layer = new_layer;
-
-  return true;
+  return false;
 }
 
-template<class VS, class RM>
-bool plot<VS,RM>::pop_layer()
+template<class RM>
+bool plot<RM>::pop_layer()
 {
-  unsigned n = m_layers.size();
-
-  if (n == 0)
+  if (m_layers.size() <= 1)
     return false;
 
-  item_list *layer = m_layers[n-1];
-  layer_dispose_elements (*layer);
-  delete layer;
-
+  unsigned n = m_layers.size();
+  item_list* layer = m_layers[n-1];
   m_layers.inc_size(-1);
-  n--;
+  layer_dispose_elements(layer);
+  delete layer;
 
   clear_drawing_queue();
   m_need_redraw = true;
-  m_current_layer = (n > 0 ? m_layers[n-1] : &m_root_layer);
 
   return true;
 }
 
-template <class VS, class RM>
-void plot<VS,RM>::clear_current_layer()
+template <class RM>
+void plot<RM>::clear_current_layer()
 {
+  item_list* current = current_layer();
   clear_drawing_queue();
-  layer_dispose_elements (current_layer());
-  m_current_layer->clear();
+  layer_dispose_elements(current);
+  current->clear();
 }
 
-template <class VS, class RM>
-int plot<VS,RM>::current_layer_index()
+template <class RM>
+int plot<RM>::current_layer_index()
 {
   return m_layers.size();
 }
