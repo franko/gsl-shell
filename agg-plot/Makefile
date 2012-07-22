@@ -31,7 +31,7 @@ ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   PLATSUP_SRC_FILES = support_win32.cpp agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
-  PLATSUP_SRC_FILES = agg_platform_support_x11.cpp
+  PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
 endif
 
 INCLUDES += $(AGG_INCLUDES) $(FREETYPE_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
