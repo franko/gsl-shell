@@ -9,6 +9,7 @@ extern "C" {
 #include "pthreadpp.h"
 #include "lua-gsl.h"
 #include "strpp.h"
+#include "fatal.h"
 
 class gsl_shell : public gsl_shell_state {
 public:
@@ -17,10 +18,14 @@ public:
   gsl_shell()
   {
     gsl_shell_init(this);
-    gsl_shell_open(this);
   }
 
-  ~gsl_shell() { gsl_shell_free(this); }
+  ~gsl_shell()
+  {
+    if (unlikely(this->L == NULL))
+      fatal_exception("Attempt to dispose an open Lua state");
+    gsl_shell_free(this);
+  }
 
   virtual void init();
   virtual void close();

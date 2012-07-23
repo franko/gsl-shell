@@ -40,8 +40,6 @@ gsl_shell_open (struct gsl_shell_state *gs)
     fatal_exception("cannot create state: not enough memory");
 
   global_state = gs;
-
-  gsl_shell_init(gs);
 }
 
 void
@@ -50,6 +48,7 @@ gsl_shell_init (struct gsl_shell_state *gs)
   pthread_mutex_init (&gs->exec_mutex, NULL);
   pthread_mutex_init (&gs->shutdown_mutex, NULL);
   gs->is_shutting_down = 0;
+  gs->L = NULL;
 }
 
 void

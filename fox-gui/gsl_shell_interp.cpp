@@ -128,6 +128,8 @@ static int incomplete(lua_State *L, int status)
 
 void gsl_shell::init()
 {
+  gsl_shell_open(this);
+
   int status = lua_cpcall(this->L, pinit, NULL);
 
   if (unlikely(stderr_report(this->L, status)))
@@ -140,6 +142,7 @@ void gsl_shell::init()
 void gsl_shell::close()
 {
   lua_close(this->L);
+  this->L = NULL;
 }
 
 int gsl_shell::error_report(int status)

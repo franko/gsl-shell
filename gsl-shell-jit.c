@@ -661,6 +661,7 @@ int main(int argc, char **argv)
 #ifdef USE_READLINE
   initialize_readline();
 #endif
+  gsl_shell_init(gsl_shell);
   gsl_shell_open(gsl_shell);
 
   pthread_mutex_lock(&gsl_shell->exec_mutex);
