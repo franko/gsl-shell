@@ -305,6 +305,7 @@ local function plot_legend(self, text, color, symspec, trans)
    if not lg then
       lg = graph.plot()
       lg.units = false
+      lg.clip = false
       self:set_legend(lg)
    end
 
