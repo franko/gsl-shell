@@ -14,7 +14,7 @@
 class fx_plot_canvas : public FXCanvas {
   FXDECLARE(fx_plot_canvas)
 
-  typedef image_gen<4, true> image;
+  typedef image_gen<3, true> image;
 
 public:
   typedef plot<manage_owner> plot_type;

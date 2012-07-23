@@ -91,7 +91,7 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
   dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * pixel_size);
 
   rendering_buffer_ro src;
-  rendering_buffer_get_const_view(src, m_img, r, pixel_size, true);
+  rendering_buffer_get_const_view(src, m_img, r, gslshell::bpp / 8, true);
 
   my_color_conv(&dest, &src, color_conv_rgb24_to_rgba32());
 
