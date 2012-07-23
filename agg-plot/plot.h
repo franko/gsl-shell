@@ -636,14 +636,14 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
           switch (k)
             {
             case right:
-              dx = sx * size_frac_x;
+              dx = max(sx * size_frac_x, bb_dx);
               dy = dx * bb_dy / bb_dx;
               px = sx - dx - ppad * sx - dxr;
               py = (sy - dy) / 2;
               dxr += dx + 2 * ppad * sx;
               break;
             case left:
-              dx = sx * size_frac_x;
+              dx = max(sx * size_frac_x, bb_dx);
               dy = dx * bb_dy / bb_dx;
               px = ppad * sx + dxr;
               py = (sy - dy) / 2;
