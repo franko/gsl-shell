@@ -15,7 +15,6 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int fox_window_free            (lua_State *L);
 static int fox_window_close           (lua_State *L);
 
 static const struct luaL_Reg fox_window_functions[] = {
@@ -28,8 +27,13 @@ static const struct luaL_Reg fox_window_methods[] = {
   {"close",          fox_window_close        },
   {"refresh",        fox_window_slot_refresh        },
   {"update",         fox_window_slot_update },
-  {"__gc",           fox_window_free       },
   {NULL, NULL}
+};
+
+
+struct lua_fox_window
+{
+  fx_plot_window* window;
 };
 
 __END_DECLS
@@ -42,7 +46,10 @@ fox_window_new (lua_State *L)
   gsl_shell_app* app = global_app;
   app->lock();
 
-  fx_plot_window* win = new(L, GS_FOX_WINDOW) fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
+  lua_fox_window* bwin = new(L, GS_FOX_WINDOW) lua_fox_window();
+  fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
+  bwin->window = win;
+
   win->setTarget(app);
   app->window_create_request(win);
 
@@ -57,17 +64,9 @@ fox_window_new (lua_State *L)
 }
 
 int
-fox_window_free (lua_State *L)
-{
-  fx_plot_window *win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
-  win->~fx_plot_window();
-  return 0;
-}
-
-int
 fox_window_attach (lua_State *L)
 {
-  fx_plot_window *win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
   sg_plot* p = object_check<sg_plot>(L, 2, GS_PLOT);
   gsl_shell_app* app = win->get_app();
   app->lock();
@@ -87,7 +86,7 @@ fox_window_close (lua_State *L)
 int
 fox_window_slot_refresh (lua_State *L)
 {
-  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
 
@@ -109,7 +108,7 @@ fox_window_slot_refresh (lua_State *L)
 int
 fox_window_slot_update (lua_State *L)
 {
-  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
 
@@ -129,7 +128,7 @@ fox_window_slot_update (lua_State *L)
 int
 fox_window_save_slot_image (lua_State *L)
 {
-  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
   app->lock();
@@ -141,7 +140,7 @@ fox_window_save_slot_image (lua_State *L)
 int
 fox_window_restore_slot_image (lua_State *L)
 {
-  fx_plot_window* win = object_check<fx_plot_window>(L, 1, GS_FOX_WINDOW);
+  fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
   fx_plot_canvas* canvas = win->canvas();
   gsl_shell_app* app = win->get_app();
   app->lock();
