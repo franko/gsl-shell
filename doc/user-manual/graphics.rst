@@ -586,6 +586,15 @@ You can add elements to a plot in any moments even when it is already shown. GSL
       A rotation angle to be used for the text of the labels in the x or y axis.
       The default angle is zero so that text is shown without rotations.
 
+   .. attribute:: xlab_format
+                  ylab_format
+
+      Choose a format for the numeric labels in the x or y axis.
+      It does accept the same strings used by the C function printf.
+      For example, if you give '%.3f' the numbers will be formatted using the
+      floating point notation with three digits after the point.
+      If you give something like '%03d' the number will be formatted like an integer using three spaces and padding with zeroes from the left..
+
    .. attribute:: units
 
       A boolean value that define if the axis and grids should be

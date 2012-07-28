@@ -65,6 +65,8 @@ static int plot_clear      (lua_State *L);
 static int plot_save_svg   (lua_State *L);
 static int plot_xlab_angle_set (lua_State *L);
 static int plot_xlab_angle_get (lua_State *L);
+static int plot_xlab_format (lua_State *L);
+static int plot_ylab_format (lua_State *L);
 static int plot_ylab_angle_set (lua_State *L);
 static int plot_ylab_angle_get (lua_State *L);
 static int plot_set_categories (lua_State *L);
@@ -133,6 +135,8 @@ static const struct luaL_Reg plot_properties_set[] = {
   {"ytitle",       plot_ytitle_set  },
   {"xlab_angle",   plot_xlab_angle_set  },
   {"ylab_angle",   plot_ylab_angle_set  },
+  {"xlab_format",  plot_xlab_format  },
+  {"ylab_format",  plot_ylab_format  },
   {"units",        plot_units_set  },
   {"sync",         plot_sync_mode_set  },
   {"pad",          plot_pad_mode_set  },
@@ -361,6 +365,36 @@ plot_axis_label_angle_get (lua_State *L, sg_plot::axis_e axis)
 
   lua_pushnumber(L, angle);
   return 1;
+}
+
+static int
+plot_axis_label_format (lua_State *L, sg_plot::axis_e axis)
+{
+  sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+  const char* fmt = luaL_optstring(L, 2, NULL);
+
+  AGG_LOCK();
+  bool success = p->enable_label_format(axis, fmt);
+  AGG_UNLOCK();
+
+  if (success)
+    plot_update_raw (L, p, 1);
+  else
+    luaL_error(L, "got invalid label format: %s", fmt); 
+
+  return 0;
+}
+
+int
+plot_xlab_format (lua_State* L)
+{
+  return plot_axis_label_format(L, sg_plot::x_axis);
+}
+
+int
+plot_ylab_format (lua_State* L)
+{
+  return plot_axis_label_format(L, sg_plot::y_axis);
 }
 
 int

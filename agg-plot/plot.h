@@ -103,13 +103,28 @@ public:
     axis_e dir;
     bool use_categories;
     category_map categories;
+    units::format_e format_tag;
 
     axis(axis_e _dir, const char* _title = 0):
       title(_title ? _title : ""), dir(_dir), use_categories(false),
+      format_tag(units::format_invalid),
       m_labels_angle(0.0),
       m_labels_hjustif(_dir == x_axis ? 0.5 : 1.0),
       m_labels_vjustif(_dir == x_axis ? 1.0 : 0.5)
     { }
+
+    const char* label_format() const
+    {
+      return (format_tag == units::format_invalid ? 0 : m_label_format);
+    }
+
+    void set_label_format(units::format_e tag, const char* fmt)
+    {
+      format_tag = tag;
+      memcpy(m_label_format, fmt, strlen(fmt) + 1);
+    }
+
+    void clear_label_format() { format_tag = units::format_invalid; }
 
     void set_labels_angle(double angle)
     {
@@ -127,6 +142,7 @@ public:
   private:
     double m_labels_angle;
     double m_labels_hjustif, m_labels_vjustif;
+    char m_label_format[units::label_format_max_size];
   };
 
   plot(bool use_units = true) :
@@ -229,6 +245,21 @@ public:
   };
 
   bool pad_mode() const { return m_pad_units; }
+
+  bool enable_label_format(axis_e dir, const char* fmt)
+  {
+    if (!fmt)
+    {
+      get_axis(dir).clear_label_format();
+      return true;
+    }
+
+    units::format_e tag = units::parse_label_format(fmt);
+    if (tag == units::format_invalid)
+      return false;
+    get_axis(dir).set_label_format(tag, fmt);
+    return true;
+  }
 
   void enable_categories(axis_e dir) { get_axis(dir).use_categories = true; }
 
@@ -505,7 +536,7 @@ double plot<VS,RM>::draw_axis_m(axis_e dir, units& u,
   double langle = ax.labels_angle();
 
   category_map::iterator clabels(ax.categories);
-  units_iterator ulabels(u);
+  units_iterator ulabels(u, ax.format_tag, ax.label_format());
 
   label_iterator* ilabels = (ax.use_categories ? (label_iterator*) &clabels : (label_iterator*) &ulabels);
 

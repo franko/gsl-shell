@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <printf.h>
 
 #include "utils.h"
 #include "units.h"
@@ -84,4 +85,47 @@ double units::mark_scale (double x)
 {
   double xinf = m_inf * dmajor, xsup = m_sup * dmajor;
   return (x - xinf) / (xsup - xinf);
+}
+
+void units::fmt_label(char* label, unsigned size, format_e tag, const char* fmt, int mark) const
+{
+  double val = mark_value(mark);
+  switch (tag)
+  {
+    case format_int:
+    {
+      unsigned nchars = snprintf(label, size, fmt, int(val));
+      if (nchars >= size)
+        label[size-1] = 0;
+      break;
+    }
+    case format_float:
+    {
+      unsigned nchars = snprintf(label, size, fmt, val);
+      if (nchars >= size)
+        label[size-1] = 0;
+      break;
+    }
+    default:
+    memcpy(label, "*", 2);
+  }
+}
+
+units::format_e units::parse_label_format(const char* fmt)
+{
+  if (strlen(fmt) >= label_format_max_size)
+    return format_invalid;
+
+  int arg;
+  int nwanted = parse_printf_format(fmt, 1, &arg);
+  const int nope = PA_FLAG_PTR|PA_FLAG_SHORT|PA_FLAG_LONG_LONG|PA_FLAG_LONG_DOUBLE;
+  if (nwanted != 1 || (arg & nope))
+    return format_invalid;
+  int arg_type = (arg & ~PA_FLAG_MASK);
+  if (arg_type == PA_INT)
+    return format_int;
+  else if (arg_type == PA_DOUBLE)
+    return format_float;
+
+  return format_invalid;
 }
