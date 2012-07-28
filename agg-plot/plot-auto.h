@@ -27,41 +27,46 @@
 #include "agg_array.h"
 #include "agg_basics.h"
 
-template<class VertexSource, class resource_manager>
-class plot_auto : public plot<VertexSource, resource_manager> {
-  typedef plot_item<VertexSource> item;
-  typedef agg::pod_bvector<item> item_list;
+template<class resource_manager>
+class plot_auto : public plot<resource_manager> {
+  typedef typename plot<resource_manager>::item item;
+  typedef typename plot<resource_manager>::item_list item_list;
 
 public:
   plot_auto() :
-    plot<VertexSource, resource_manager>(true),
-    m_bbox_updated(true)
+    plot<resource_manager>(true),
+    m_bbox_updated(true), m_enlarged_layer(false)
   { };
 
   virtual ~plot_auto() { };
 
-  virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
+  virtual void add(sg_object* vs, agg::rgba8& color, bool outline);
   virtual void before_draw()
   {
-    plot<VertexSource, resource_manager>::before_draw();
-    check_bounding_box();
+    plot<resource_manager>::before_draw();
+    if (!m_bbox_updated)
+      check_bounding_box();
   };
 
+  virtual bool push_layer();
   virtual bool pop_layer();
+  virtual void clear_current_layer();
 
 private:
-  void calc_layer_bounding_box(item_list& layer, opt_rect<double>& rect);
+  void calc_layer_bounding_box(item_list* layer, opt_rect<double>& rect);
+  void set_opt_limits(const opt_rect<double>& r);
 
   void check_bounding_box();
   void calc_bounding_box();
-  bool fit_inside(VertexSource *obj) const;
+  bool fit_inside(sg_object *obj) const;
 
   // bounding box
   bool m_bbox_updated;
+  bool m_enlarged_layer;
 };
 
-template <class VS, class RM>
-void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
+template <class RM>
+void plot_auto<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
 {
   item d(vs, color, outline);
 
@@ -69,6 +74,7 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
     {
       this->m_bbox_updated = false;
       this->m_need_redraw = true;
+      this->m_enlarged_layer = true;
     }
 
   pod_list<item> *nn = new pod_list<item>(d);
@@ -77,32 +83,21 @@ void plot_auto<VS,RM>::add(VS* vs, agg::rgba8& color, bool outline)
   RM::acquire(vs);
 }
 
-template<class VS, class RM>
-void plot_auto<VS,RM>::check_bounding_box()
-  {
-    if (this->m_bbox_updated)
-      return;
+template<class RM>
+void plot_auto<RM>::check_bounding_box()
+{
+  this->calc_bounding_box();
+  this->update_units();
+  this->m_bbox_updated = true;
+}
 
-    this->calc_bounding_box();
-
-    if (this->m_rect.is_defined())
-      {
-        const agg::rect_base<double>& bb = this->m_rect.rect();
-        this->m_ux = units(bb.x1, bb.x2);
-        this->m_uy = units(bb.y1, bb.y2);
-
-        this->compute_user_trans();
-        this->m_bbox_updated = true;
-      }
-  }
-
-template<class VS, class RM>
-void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer,
+template<class RM>
+void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list* layer,
                                                opt_rect<double>& rect)
 {
-  for (unsigned j = 0; j < layer.size(); j++)
+  for (unsigned j = 0; j < layer->size(); j++)
     {
-      item& d = layer[j];
+      item& d = (*layer)[j];
       agg::rect_base<double> r;
 
       d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
@@ -110,16 +105,18 @@ void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& laye
     }
 }
 
-template<class VS, class RM>
-void plot_auto<VS,RM>::calc_bounding_box()
+template<class RM>
+void plot_auto<RM>::calc_bounding_box()
 {
   opt_rect<double> box;
 
-  calc_layer_bounding_box(this->m_root_layer, box);
-  for (unsigned j = 0; j < this->m_layers.size(); j++)
+  unsigned n = this->nb_layers();
+  for (unsigned j = 0; j < n-1; j++)
     {
-      calc_layer_bounding_box(*(this->m_layers[j]), box);
+      box.add<rect_union>(this->get_layer(j)->bounding_box());
     }
+
+  calc_layer_bounding_box(this->get_layer(n-1), box);
 
   for (pod_list<item> *t = this->m_drawing_queue; t; t = t->next())
     {
@@ -132,8 +129,8 @@ void plot_auto<VS,RM>::calc_bounding_box()
   this->m_rect = box;
 }
 
-template<class VS, class RM>
-bool plot_auto<VS,RM>::fit_inside(VS* obj) const
+template<class RM>
+bool plot_auto<RM>::fit_inside(sg_object* obj) const
 {
   if (!this->m_bbox_updated || !this->m_rect.is_defined())
     return false;
@@ -145,12 +142,50 @@ bool plot_auto<VS,RM>::fit_inside(VS* obj) const
   return bb.hit_test(r.x1, r.y1) && bb.hit_test(r.x2, r.y2);
 }
 
-template<class VS, class RM>
-bool plot_auto<VS,RM>::pop_layer()
+template<class RM>
+void plot_auto<RM>::set_opt_limits(const opt_rect<double>& r)
 {
-  bool retval = this->plot<VS,RM>::pop_layer();
-  this->m_bbox_updated = false;
+  if (r.is_defined())
+    this->set_limits(r.rect());
+  else
+    this->unset_limits();
+}
+
+template<class RM>
+bool plot_auto<RM>::push_layer()
+{
+  bool retval = this->plot<RM>::push_layer();
+  if (this->m_rect.is_defined())
+    this->parent_layer()->set_bounding_box(this->m_rect.rect());
+  this->m_bbox_updated = true;
+  this->m_enlarged_layer = false;
   return retval;
+}
+
+template<class RM>
+bool plot_auto<RM>::pop_layer()
+{
+  bool retval = this->plot<RM>::pop_layer();
+  if (this->m_enlarged_layer)
+    this->m_bbox_updated = false;
+  this->m_enlarged_layer = true;
+  return retval;
+}
+
+template<class RM>
+void plot_auto<RM>::clear_current_layer()
+{
+  this->plot<RM>::clear_current_layer();
+  if (this->m_enlarged_layer)
+  {
+    item_list* parent = this->parent_layer();
+    if (parent)
+      set_opt_limits(parent->bounding_box());
+    else
+      this->unset_limits();
+  }
+  this->m_bbox_updated = true;
+  this->m_enlarged_layer = false;
 }
 
 #endif

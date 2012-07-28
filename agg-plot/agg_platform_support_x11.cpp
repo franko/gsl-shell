@@ -1116,7 +1116,8 @@ platform_support_ext::do_window_update()
 }
 
 bool
-platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *fn)
+platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *fn,
+                                       agg::pix_format_e src_pixfmt_tag)
 {
   unsigned slen = strlen (fn);
   agg::pod_array<char> fnext(slen+5);
@@ -1137,7 +1138,7 @@ platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *
   for(y = 0; y < rbuf.height(); y++)
     {
       const unsigned char* src = rbuf.row_ptr(gslshell::flip_y ? h - 1 - y : y);
-      switch(gslshell::pixel_format)
+      switch(src_pixfmt_tag)
         {
         default: break;
         case agg::pix_format_rgb555:

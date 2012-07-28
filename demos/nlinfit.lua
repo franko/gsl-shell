@@ -83,6 +83,7 @@ local function demo2()
 
    local pl = graph.plot('Non-linear fit / A * exp(a t) sin(w t)') 
    pl:addline(graph.xyline(x, y), 'blue', {{'marker', size= 5, mark="triangle"}})
+   pl:legend('data', 'blue', 'triangle', {{'stroke'}})
 
    local s = num.nlinfit {n= n, p= #p0}
 
@@ -90,6 +91,7 @@ local function demo2()
    print(s.x, s.chisq)
 
    pl:addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red', {{'dash', 7, 3, 3, 3}})
+   pl:legend('seed', 'red', 'line', {{'stroke'},{'dash',7,3}})
 
    for i=1, 10 do
       s:iterate()
@@ -98,6 +100,7 @@ local function demo2()
    end
 
    pl:addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red')
+   pl:legend('best fit', 'red', 'line')
    pl.pad = true
    pl:show()
 

@@ -16,6 +16,9 @@ ifeq ($(HOST_SYS),Windows)
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
+  FREETYPE_INCLUDES = -Ic:/fra/src/freetype2/include
+  FREETYPE_LIBS = c:/fra/src/freetype2/objs/freetype.a
+
   PTHREADS_LIBS = -lpthreadGCE2
 else
   AGG_INCLUDES = -I/usr/include/agg2
@@ -23,6 +26,9 @@ else
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
+
+  FREETYPE_INCLUDES = -I/usr/include/freetype2
+  FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthread
 endif

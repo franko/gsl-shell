@@ -25,8 +25,6 @@ static int agg_text_angle_get  (lua_State *L);
 
 static draw::text* check_agg_text  (lua_State *L, int index);
 
-static const double text_line_width = 1.7;
-
 static const struct luaL_Reg text_functions[] = {
   {"text",     agg_text_new},
   {NULL, NULL}
@@ -68,8 +66,8 @@ agg_text_new (lua_State *L)
   double x = luaL_checknumber (L, 1);
   double y = luaL_checknumber (L, 2);
   const char *text = luaL_checkstring (L, 3);
-  double size  = luaL_optnumber (L, 4, 10.0);
-  draw::text* t = new(L, GS_DRAW_TEXT) draw::text(text, size, text_line_width);
+  double size  = luaL_optnumber (L, 4, 14.0);
+  draw::text* t = new(L, GS_DRAW_TEXT) draw::text(text, size);
   t->set_point(x, y);
   return 1;
 }

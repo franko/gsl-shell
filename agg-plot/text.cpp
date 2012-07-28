@@ -1,4 +1,7 @@
 
+#include "agg_rendering_buffer.h"
+#include "agg_rasterizer_scanline_aa.h"
+#include "agg_pixfmt_rgb.h"
 #include "agg_trans_affine.h"
 
 #include "text.h"
@@ -6,30 +9,12 @@
 namespace draw {
 
   void
-  text::rewind(unsigned path_id)
-  {
-    m_text.start_point (-m_hjustif * m_text_width, -m_vjustif * m_text_height);
-    m_stroke.rewind(path_id);
-  }
-
-  unsigned
-  text::vertex(double* x, double* y)
-  {
-    return m_stroke.vertex(x, y);
-  }
-
-  void
   text::apply_transform(const agg::trans_affine& m, double as)
   {
-    m_user_matrix.tx = m_x;
-    m_user_matrix.ty = m_y;
+    m_matrix.tx = m_x;
+    m_matrix.ty = m_y;
 
-    m.transform(&m_user_matrix.tx, &m_user_matrix.ty);
-
-    m_matrix = m_user_matrix;
-
-    m_trans.transformer(m_matrix);
-    m_stroke.approximation_scale(as);
+    m.transform(&m_matrix.tx, &m_matrix.ty);
   }
 
   void
@@ -42,11 +27,13 @@ namespace draw {
   str
   text::write_svg(int id, agg::rgba8 c, double h)
   {
-    const agg::trans_affine& m = m_user_matrix;
+    const agg::trans_affine& m = m_matrix;
+
     const double eps = 1.0e-6;
     str s;
 
-    if (str_is_null(&m_text_buf))
+    const str& content = m_text_label.text();
+    if (str_is_null(&content))
       return s;
 
     str style;
@@ -64,9 +51,9 @@ namespace draw {
 
     bool need_rotate = !is_unit_matrix(m, eps);
 
-    int txt_size = (int)(m_text_height * 1.5);
+    int txt_size = text_height();
 
-    double x = 0.0, y = - m_vjustif * m_text_height * 1.2;
+    double x = 0.0, y = - m_vjustif * text_height() * 1.2;
 
     if (!need_rotate) {
       x = x + m.tx;
@@ -75,7 +62,7 @@ namespace draw {
       y = -y;
     }
 
-    const char* cont = m_text_buf.cstr();
+    const char* cont = get_text();
     str txt = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\""        \
                          " style=\"font-size:%i%s\">"                        \
                          " <tspan id=\"tspan%i\">%s</tspan>" \

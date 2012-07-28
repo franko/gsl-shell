@@ -24,6 +24,11 @@
 #include "agg_trans_affine.h"
 #include "agg_bounding_rect.h"
 #include "agg_conv_transform.h"
+#include "agg_rendering_buffer.h"
+#include "agg_scanline_u.h"
+#include "agg_rasterizer_scanline_aa.h"
+
+#include "pixel_fmt.h"
 #include "draw_svg.h"
 #include "utils.h"
 #include "resource-manager.h"
