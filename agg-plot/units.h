@@ -37,7 +37,7 @@ private:
   void init(double min, double max, double spacefact);
 
 public:
-  enum { label_format_max_size = 12 };
+  enum { label_format_max_size = 16 };
   enum format_e { format_int, format_float, format_invalid };
 
   units(): m_major(1), order(0), dmajor(1), m_inf(0), m_sup(1), nb_decimals(0) {};

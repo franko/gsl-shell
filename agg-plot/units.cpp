@@ -20,10 +20,10 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <printf.h>
 
 #include "utils.h"
 #include "units.h"
+#include "printf_check.h"
 
 void units::init(double yinf, double ysup, double spacefact)
 {
@@ -116,16 +116,18 @@ units::format_e units::parse_label_format(const char* fmt)
   if (strlen(fmt) >= label_format_max_size)
     return format_invalid;
 
-  int arg;
-  int nwanted = parse_printf_format(fmt, 1, &arg);
-  const int nope = PA_FLAG_PTR|PA_FLAG_SHORT|PA_FLAG_LONG_LONG|PA_FLAG_LONG_DOUBLE;
-  if (nwanted != 1 || (arg & nope))
+  arg_type_e arg_type;
+  const char* tail;
+  int n = check_printf_argument(fmt, tail, arg_type);
+  if (n != 1)
     return format_invalid;
-  int arg_type = (arg & ~PA_FLAG_MASK);
-  if (arg_type == PA_INT)
-    return format_int;
-  else if (arg_type == PA_DOUBLE)
-    return format_float;
+  else
+  {
+    const char* tt;
+    arg_type_e aa;
+    if (check_printf_argument(tail, tt, aa) != 0)
+      return format_invalid;
+  }
 
-  return format_invalid;
+  return (arg_type == argument_int ? format_int : format_float);
 }

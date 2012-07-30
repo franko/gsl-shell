@@ -36,7 +36,7 @@ endif
 
 INCLUDES += $(AGG_INCLUDES) $(FREETYPE_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) fonts.cpp gamma.cpp agg_font_freetype.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) printf_check.cpp fonts.cpp gamma.cpp agg_font_freetype.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
