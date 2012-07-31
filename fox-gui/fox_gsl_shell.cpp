@@ -5,26 +5,26 @@
 
 void fox_gsl_shell::init()
 {
-  gsl_shell_thread::init();
-  fox_window_register(L);
+    gsl_shell_thread::init();
+    fox_window_register(L);
 }
 
 void
 fox_gsl_shell::before_eval()
 {
-  unsigned n = m_window_close_queue.size();
-  for (unsigned k = 0; k < n; k++)
+    unsigned n = m_window_close_queue.size();
+    for (unsigned k = 0; k < n; k++)
     {
-      window_index_remove (L, m_window_close_queue[k]);
+        window_index_remove (L, m_window_close_queue[k]);
     }
-  m_window_close_queue.clear();
+    m_window_close_queue.clear();
 }
 
 void
 fox_gsl_shell::window_close_notify(int window_id)
 {
-  pthread::mutex& eval = eval_mutex();
-  eval.lock();
-  m_window_close_queue.add(window_id);
-  eval.unlock();
+    pthread::mutex& eval = eval_mutex();
+    eval.lock();
+    m_window_close_queue.add(window_id);
+    eval.unlock();
 }

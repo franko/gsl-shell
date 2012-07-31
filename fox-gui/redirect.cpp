@@ -18,44 +18,44 @@
 
 stdout_redirect::~stdout_redirect()
 {
-  close(fd_stdout);
-  close(fd_pipe[WRITE_FD]);
-  close(fd_pipe[READ_FD]);
+    close(fd_stdout);
+    close(fd_pipe[WRITE_FD]);
+    close(fd_pipe[READ_FD]);
 }
 
 stdout_redirect::stdout_redirect(int bufferSize)
 {
-  int status;
+    int status;
 
 #ifdef WIN32
-  status = _pipe(fd_pipe, bufferSize, O_TEXT);
+    status = _pipe(fd_pipe, bufferSize, O_TEXT);
 #else
-  status = pipe(fd_pipe);
+    status = pipe(fd_pipe);
 #endif
 
-  assert(status == 0);
+    assert(status == 0);
 
-  fd_stdout = dup(fileno(stdout));
+    fd_stdout = dup(fileno(stdout));
 }
 
 int stdout_redirect::start()
 {
-  fflush(stdout);
-  CHECK(dup2(fd_pipe[WRITE_FD], fileno(stdout)));
-  //        ios::sync_with_stdio();
-  setvbuf( stdout, NULL, _IONBF, 0 ); // absolutely needed
-  return 0;
+    fflush(stdout);
+    CHECK(dup2(fd_pipe[WRITE_FD], fileno(stdout)));
+    //        ios::sync_with_stdio();
+    setvbuf( stdout, NULL, _IONBF, 0 ); // absolutely needed
+    return 0;
 }
 
 int stdout_redirect::stop()
 {
-  CHECK(dup2(fd_stdout, fileno(stdout)));
-  //        ios::sync_with_stdio();
-  return 0;
+    CHECK(dup2(fd_stdout, fileno(stdout)));
+    //        ios::sync_with_stdio();
+    return 0;
 }
 
 int stdout_redirect::read(char *buffer, int size)
 {
-  int nOutRead = ::read(fd_pipe[READ_FD], buffer, size);
-  return nOutRead;
+    int nOutRead = ::read(fd_pipe[READ_FD], buffer, size);
+    return nOutRead;
 }

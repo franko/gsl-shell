@@ -5,9 +5,10 @@
 #include "lua_plot_window.h"
 #include "fatal.h"
 
-FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]={
-  FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_REQUEST, gsl_shell_app::on_lua_request),
-  FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
+FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]=
+{
+    FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_REQUEST, gsl_shell_app::on_lua_request),
+    FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
 };
 
 FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map))
@@ -15,48 +16,48 @@ FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map)
 gsl_shell_app* global_app;
 
 gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
-  m_engine(this)
+    m_engine(this)
 {
-  m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
-  global_app = this;
-  m_engine.start();
+    m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
+    global_app = this;
+    m_engine.start();
 
-  new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
+    new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
 }
 
 gsl_shell_app::~gsl_shell_app()
 {
-  delete m_lua_request;
+    delete m_lua_request;
 }
 
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 {
-  for (unsigned k = 0; k < m_win_queue.size(); k++)
+    for (unsigned k = 0; k < m_win_queue.size(); k++)
     {
-      FXMainWindow* win = m_win_queue[k];
-      win->create();
-      win->show(PLACEMENT_SCREEN);
+        FXMainWindow* win = m_win_queue[k];
+        win->create();
+        win->show(PLACEMENT_SCREEN);
     }
-  m_win_queue.clear();
-  m_window_mapping.signal();
-  return 1;
+    m_win_queue.clear();
+    m_window_mapping.signal();
+    return 1;
 }
 
 void gsl_shell_app::window_create_request(FXMainWindow* win)
 {
-  m_win_queue.add(win);
-  m_lua_request->signal();
+    m_win_queue.add(win);
+    m_lua_request->signal();
 }
 
 long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
 {
-  fx_plot_window* win = (fx_plot_window*) sender;
-  m_engine.window_close_notify(win->lua_id);
-  return 0;
+    fx_plot_window* win = (fx_plot_window*) sender;
+    m_engine.window_close_notify(win->lua_id);
+    return 0;
 }
 
 void gsl_shell_app::wait_window_mapping()
 {
-  FXMutex& app_mutex = mutex();
-  m_window_mapping.wait(app_mutex);
+    FXMutex& app_mutex = mutex();
+    m_window_mapping.wait(app_mutex);
 }
