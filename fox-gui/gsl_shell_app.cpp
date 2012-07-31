@@ -8,6 +8,7 @@
 FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]=
 {
     FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_REQUEST, gsl_shell_app::on_lua_request),
+    FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE, gsl_shell_app::on_console_close),
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
 };
 
@@ -47,6 +48,12 @@ void gsl_shell_app::window_create_request(FXMainWindow* win)
 {
     m_win_queue.add(win);
     m_lua_request->signal();
+}
+
+long gsl_shell_app::on_console_close(FXObject* sender, FXSelector, void*)
+{
+    m_engine.stop();
+    return 1;
 }
 
 long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)

@@ -1,4 +1,5 @@
 #include "gsl_shell_window.h"
+#include "gsl_shell_app.h"
 
 #ifdef WIN32
 #define CONSOLE_FONT "lucida console"
@@ -42,6 +43,8 @@ void gsl_shell_window::create()
 
 long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //  m_text->stop();
-    return FXMainWindow::close(FALSE);
+    FXApp* app = getApp();
+    app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
+    app->handle(this, FXSEL(SEL_COMMAND, FXApp::ID_QUIT), NULL);
+    return 0;
 }
