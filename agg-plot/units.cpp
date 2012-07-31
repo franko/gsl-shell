@@ -65,7 +65,7 @@ void units::mark_label (char *lab, unsigned size, int mark) const
 
   if (nb_decimals == 0)
     {
-      snprintf (lab, size, "%d", int(mark * dmajor));
+      snprintf (lab, size, "%.0f", mark * dmajor);
       lab[size-1] = '\0';
     }
   else
