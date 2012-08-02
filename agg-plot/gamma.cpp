@@ -1,7 +1,7 @@
 #include "agg-pixfmt-config.h"
 
 #ifndef DISABLE_GAMMA_CORR
-gslshell::gamma_type gslshell::gamma(1.5);
+gslshell::gamma_type gslshell::gamma(2.2);
 #endif
 // Original values for the subpixel color filter. These are quite conservative
 // to avoid color fringes.

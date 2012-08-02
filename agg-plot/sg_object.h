@@ -46,6 +46,8 @@ struct sg_object : public vertex_source {
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
 
+  virtual bool render_nogamma() const { return false; }
+
   virtual bool affine_compose(agg::trans_affine& m) { return false; }
 
   virtual str write_svg(int id, agg::rgba8 c, double h) {
@@ -192,6 +194,8 @@ public:
   virtual void apply_transform(const agg::trans_affine& m, double as) { this->m_source->apply_transform(m, as); }
 
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) { this->m_source->bounding_box(x1, y1, x2, y2); }
+
+  virtual bool render_nogamma() const { return this->m_source->render_nogamma(); }
 
   virtual str write_svg(int id, agg::rgba8 c, double h) {
     return this->m_source->write_svg(id, c, h);

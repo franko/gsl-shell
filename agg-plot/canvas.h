@@ -131,37 +131,52 @@ private:
     agg::rgba m_bgcol;
 };
 
-template <class Renderer>
+template <class Renderer, class RendererNoGamma>
 class canvas_gen : public Renderer {
 
     typedef typename Renderer::pixfmt_type pixfmt_type;
 
-    enum { line_width = 120 };
+    enum { line_width = 150 };
 
-    agg::rasterizer_scanline_aa<> ras;
-    agg::scanline_u8 sl;
+    agg::rasterizer_scanline_aa<> m_ras;
+    agg::scanline_u8 m_scanline;
+
+    RendererNoGamma m_ren_nogamma;
 
 public:
     canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
                agg::rgba bgcol):
-    Renderer(ren_buf, bgcol), ras(), sl()
+    Renderer(ren_buf, bgcol), m_ren_nogamma(ren_buf, bgcol)
     { }
-
-  void draw(sg_object& vs, agg::rgba8 c)
-  {
-    this->add_path(this->ras, vs);
-    this->color(c);
-    this->render_scanlines(this->ras, this->sl);
-  }
 
   void draw_outline(sg_object& vs, agg::rgba8 c)
   {
     agg::conv_stroke<sg_object> line(vs);
     line.width(line_width / 100.0);
     line.line_cap(agg::round_cap);
-    this->add_path(this->ras, line);
+    this->add_path(this->m_ras, line);
     this->color(c);
-    this->render_scanlines(this->ras, this->sl);
+    this->render_scanlines(this->m_ras, this->m_scanline);
+  }
+
+  void draw_nogamma(sg_object& vs, agg::rgba8 c)
+  {
+    RendererNoGamma& ren = this->m_ren_nogamma;
+    ren.add_path(this->m_ras, vs);
+    ren.color(c);
+    ren.render_scanlines(this->m_ras, this->m_scanline);
+  }
+
+  void draw(sg_object& vs, agg::rgba8 c)
+  {
+    if (vs.render_nogamma())
+        this->draw_nogamma(vs, c);
+    else
+    {
+        this->add_path(this->m_ras, vs);
+        this->color(c);
+        this->render_scanlines(this->m_ras, this->m_scanline);
+    }
   }
 };
 
@@ -176,9 +191,9 @@ struct virtual_canvas {
 };
 
 #ifdef DISABLE_SUBPIXEL_AA
-typedef canvas_gen<renderer_gray_aa<pixel_type> > canvas;
+typedef canvas_gen<renderer_gray_aa<pixel_type>, renderer_gray_aa<pixel_simple> > canvas;
 #else
-typedef canvas_gen<renderer_subpixel_aa<pixel_lcd_type> > canvas;
+typedef canvas_gen<renderer_subpixel_aa<pixel_lcd_type>, renderer_subpixel_aa<pixel_lcd> > canvas;
 #endif
 
 #endif

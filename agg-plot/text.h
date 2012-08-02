@@ -38,6 +38,8 @@ class text : public sg_object
         return m_text_label.vertex(x, y);
     }
 
+    virtual bool render_nogamma() const { return true; }
+
     void angle(double th)
     {
         double c = cos(th), s = sin(th);

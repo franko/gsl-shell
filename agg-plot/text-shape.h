@@ -30,6 +30,8 @@ namespace draw {
         return cmd;
     }
 
+    virtual bool render_nogamma() const { return true; }
+
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
         const double pad = 1.0;
