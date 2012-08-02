@@ -10,10 +10,9 @@
 
 #include "sg_object.h"
 
-class text_label
+template <unsigned ScaleX>
+class text_label_gen
 {
-    enum { scale_x = 100 };
-
     typedef agg::font_engine_freetype_int32 font_engine_type;
     typedef agg::font_cache_manager<font_engine_type> font_manager_type;
 
@@ -35,7 +34,7 @@ class text_label
     agg::conv_transform<agg::conv_curve<font_manager_type::path_adaptor_type> > m_text_trans;
 
   public:
-    text_label(const char* text, double size):
+    text_label_gen(const char* text, double size):
     m_text_buf(text), m_height(size), m_pos(0),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
     m_model_mtx(&identity_matrix),
@@ -50,7 +49,7 @@ class text_label
     void set_font_size()
     {
         m_font_eng.height(m_height);
-        m_font_eng.width(m_height * scale_x);
+        m_font_eng.width(m_height * ScaleX);
     }
 
     double text_height() const { return m_height; }
@@ -72,7 +71,7 @@ class text_label
 
         if(glyph->data_type == agg::glyph_data_outline)
         {
-            m_text_mtx.tx = m_x / scale_x;
+            m_text_mtx.tx = m_x / double(ScaleX);
             m_text_mtx.ty = floor(m_y + 0.5);
             m_model_mtx->transform(&m_text_mtx.tx, &m_text_mtx.ty);
 
@@ -87,15 +86,18 @@ class text_label
 
     void rewind(double hjustif, double vjustif)
     {
-        m_x = scale_x * (- hjustif * m_width);
+        m_x = double(ScaleX) * (- hjustif * m_width);
         m_y = - 0.86 * vjustif * m_height;
         m_advance_x = 0;
         m_advance_y = 0;
         m_pos = 0;
 
         m_text_mtx = (*m_model_mtx);
-        agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);
-        trans_affine_compose (m_text_mtx, scale_mtx);
+        if (ScaleX > 1)
+        {
+            agg::trans_affine_scaling scale_mtx(1.0 / double(ScaleX), 1.0);
+            trans_affine_compose (m_text_mtx, scale_mtx);
+        }
 
         set_font_size();
         load_glyph();
@@ -137,8 +139,12 @@ class text_label
             }
         }
 
-        return x / double(scale_x);
+        return x / double(ScaleX);
     }
 };
+
+enum { font_scale_x = 100 };
+
+typedef text_label_gen<font_scale_x> text_label;
 
 #endif
