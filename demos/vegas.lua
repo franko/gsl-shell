@@ -68,7 +68,9 @@ local function demo2()
   local p = graph.plot('Volume of a unit n-sphere')
   p.clip, p.pad = false, true
   p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
-  p:add(ln, "blue", {{'marker', size=8}})
+  p:legend('exact value', 'red', 'line')
+  p:addline(ln, "blue", {{'marker', size=6}})
+  p:legend('calculated', 'blue', 'circle', {{'stroke'}})
   p.xtitle="n"
   p.ytitle="V"
   p:show()

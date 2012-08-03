@@ -134,7 +134,6 @@ function graph.barplot(t)
 	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
 	 local rect = graph.rect(x, 0, x+dx, y)
 	 p:add(rect, graph.webcolor(j))
-	 p:add(rect, 'black', {{'stroke', width= 0.5}})
       end
 
    end
@@ -305,6 +304,7 @@ local function plot_legend(self, text, color, symspec, trans)
    if not lg then
       lg = graph.plot()
       lg.units = false
+      lg.clip = false
       self:set_legend(lg)
    end
 

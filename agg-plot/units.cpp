@@ -23,6 +23,7 @@
 
 #include "utils.h"
 #include "units.h"
+#include "printf_check.h"
 
 void units::init(double yinf, double ysup, double spacefact)
 {
@@ -64,7 +65,7 @@ void units::mark_label (char *lab, unsigned size, int mark) const
 
   if (nb_decimals == 0)
     {
-      snprintf (lab, size, "%d", int(mark * dmajor));
+      snprintf (lab, size, "%.0f", mark * dmajor);
       lab[size-1] = '\0';
     }
   else
@@ -84,4 +85,49 @@ double units::mark_scale (double x)
 {
   double xinf = m_inf * dmajor, xsup = m_sup * dmajor;
   return (x - xinf) / (xsup - xinf);
+}
+
+void units::fmt_label(char* label, unsigned size, format_e tag, const char* fmt, int mark) const
+{
+  double val = mark_value(mark);
+  switch (tag)
+  {
+    case format_int:
+    {
+      unsigned nchars = snprintf(label, size, fmt, int(val));
+      if (nchars >= size)
+        label[size-1] = 0;
+      break;
+    }
+    case format_float:
+    {
+      unsigned nchars = snprintf(label, size, fmt, val);
+      if (nchars >= size)
+        label[size-1] = 0;
+      break;
+    }
+    default:
+    memcpy(label, "*", 2);
+  }
+}
+
+units::format_e units::parse_label_format(const char* fmt)
+{
+  if (strlen(fmt) >= label_format_max_size)
+    return format_invalid;
+
+  arg_type_e arg_type;
+  const char* tail;
+  int n = check_printf_argument(fmt, tail, arg_type);
+  if (n != 1)
+    return format_invalid;
+  else
+  {
+    const char* tt;
+    arg_type_e aa;
+    if (check_printf_argument(tail, tt, aa) != 0)
+      return format_invalid;
+  }
+
+  return (arg_type == argument_int ? format_int : format_float);
 }

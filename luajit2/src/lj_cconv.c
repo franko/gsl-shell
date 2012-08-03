@@ -38,7 +38,7 @@ LJ_NORET static void cconv_err_convtv(CTState *cts, CType *d, TValue *o,
 				      CTInfo flags)
 {
   const char *dst = strdata(lj_ctype_repr(cts->L, ctype_typeid(cts, d), NULL));
-  const char *src = typename(o);
+  const char *src = lj_typename(o);
   if (CCF_GETARG(flags))
     lj_err_argv(cts->L, CCF_GETARG(flags), LJ_ERR_FFI_BADCONV, src, dst);
   else
@@ -374,7 +374,6 @@ int lj_cconv_tv_ct(CTState *cts, CType *s, CTypeID sid,
 		   TValue *o, uint8_t *sp)
 {
   CTInfo sinfo = s->info;
-  lua_assert(!ctype_isenum(sinfo));
   if (ctype_isnum(sinfo)) {
     if (!ctype_isbool(sinfo)) {
       if (ctype_isinteger(sinfo) && s->size > 4) goto copyval;
@@ -547,7 +546,7 @@ void lj_cconv_ct_tv(CTState *cts, CType *d,
     flags |= CCF_FROMTV;
   } else if (tviscdata(o)) {
     sp = cdataptr(cdataV(o));
-    sid = cdataV(o)->typeid;
+    sid = cdataV(o)->ctypeid;
     s = ctype_get(cts, sid);
     if (ctype_isref(s->info)) {  /* Resolve reference for value. */
       lua_assert(s->size == CTSIZE_PTR);

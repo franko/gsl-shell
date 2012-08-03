@@ -149,6 +149,7 @@ ERRDEF(FFI_BADSCL,	"bad storage class")
 ERRDEF(FFI_DECLSPEC,	"declaration specifier expected")
 ERRDEF(FFI_BADTAG,	"undeclared or implicit tag " LUA_QS)
 ERRDEF(FFI_REDEF,	"attempt to redefine " LUA_QS)
+ERRDEF(FFI_NUMPARAM,	"wrong number of type parameters")
 ERRDEF(FFI_INITOV,	"too many initializers for " LUA_QS)
 ERRDEF(FFI_BADCONV,	"cannot convert " LUA_QS " to " LUA_QS)
 ERRDEF(FFI_BADLEN,	"attempt to get length of " LUA_QS)
@@ -162,7 +163,11 @@ ERRDEF(FFI_BADIDX,	LUA_QS " cannot be indexed")
 ERRDEF(FFI_WRCONST,	"attempt to write to constant location")
 ERRDEF(FFI_NODECL,	"missing declaration for symbol " LUA_QS)
 ERRDEF(FFI_BADCBACK,	"bad callback")
+#if LJ_OS_NOJIT
+ERRDEF(FFI_CBACKOV,	"no support for callbacks on this OS")
+#else
 ERRDEF(FFI_CBACKOV,	"too many callbacks")
+#endif
 ERRDEF(FFI_NYIPACKBIT,	"NYI: packed bit fields")
 ERRDEF(FFI_NYICALL,	"NYI: cannot call this C function (yet)")
 #endif

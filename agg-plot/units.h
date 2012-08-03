@@ -37,6 +37,9 @@ private:
   void init(double min, double max, double spacefact);
 
 public:
+  enum { label_format_max_size = 16 };
+  enum format_e { format_int, format_float, format_invalid };
+
   units(): m_major(1), order(0), dmajor(1), m_inf(0), m_sup(1), nb_decimals(0) {};
   units (double min, double max, double spacefact = 4.0)
   { init(min, max, spacefact); };
@@ -52,21 +55,33 @@ public:
   };
 
   void   mark_label (char *label, unsigned size, int mark) const;
+  void   fmt_label(char* label, unsigned size, format_e tag, const char* fmt, int mark) const;
   double mark_value (int mark) const { return dmajor * mark; };
   double mark_scale(double x);
+
+  static format_e parse_label_format(const char* fmt);
 };
 
 class units_iterator : public label_iterator {
 public:
-  units_iterator(const units& u) : m_units(u) { m_index = u.begin(); }
+  units_iterator(const units& u, units::format_e tag, const char* fmt):
+  m_units(u), m_fmt_tag(tag), m_fmt(fmt)
+  {
+    m_index = u.begin();
+  }
 
   virtual bool next(double& val, const char*& text)
   {
     if (m_index > m_units.end())
       return false;
 
+    if (m_fmt)
+      m_units.fmt_label(m_buffer, 32, m_fmt_tag, m_fmt, m_index);
+    else
+      m_units.mark_label(m_buffer, 32, m_index);
+
     val = m_units.mark_value(m_index);
-    m_units.mark_label(m_buffer, 32, m_index);
+    text = m_buffer;
     text = m_buffer;
     m_index ++;
     return true;
@@ -76,6 +91,8 @@ private:
   char m_buffer[32];
   int m_index;
   const units& m_units;
+  units::format_e m_fmt_tag;
+  const char* m_fmt;
 };
 
 #endif

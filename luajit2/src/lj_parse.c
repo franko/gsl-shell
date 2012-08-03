@@ -39,8 +39,8 @@ typedef enum {
   VKLAST = VKNUM,
   VKCDATA,	/* nval = cdata value, not treated as a constant expression */
   /* Non-constant expressions follow: */
-  VLOCAL,	/* info = local register */
-  VUPVAL,	/* info = upvalue index */
+  VLOCAL,	/* info = local register, aux = vstack index */
+  VUPVAL,	/* info = upvalue index, aux = vstack index */
   VGLOBAL,	/* sval = string value */
   VINDEXED,	/* info = table register, aux = index reg/byte/string const */
   VJMP,		/* info = instruction PC */
@@ -104,6 +104,8 @@ typedef struct FuncScope {
 /* Index into variable stack. */
 typedef uint16_t VarIndex;
 #define LJ_MAX_VSTACK		65536
+
+#define VSTACK_VAR_RW		0x80000000	/* In endpc: R/W variable. */
 
 /* Upvalue map. */
 typedef struct UVMap {
@@ -608,10 +610,12 @@ static void bcemit_store(FuncState *fs, ExpDesc *var, ExpDesc *e)
 {
   BCIns ins;
   if (var->k == VLOCAL) {
+    fs->ls->vstack[var->u.s.aux].endpc |= VSTACK_VAR_RW;
     expr_free(fs, e);
     expr_toreg(fs, e, var->u.s.info);
     return;
   } else if (var->k == VUPVAL) {
+    fs->ls->vstack[var->u.s.aux].endpc |= VSTACK_VAR_RW;
     expr_toval(fs, e);
     if (e->k <= VKTRUE)
       ins = BCINS_AD(BC_USETP, var->u.s.info, const_pri(e));
@@ -938,7 +942,7 @@ static void bcemit_unop(FuncState *fs, BCOp op, ExpDesc *e)
       if (e->k == VKCDATA) {  /* Fold in-place since cdata is not interned. */
 	GCcdata *cd = cdataV(&e->u.nval);
 	int64_t *p = (int64_t *)cdataptr(cd);
-	if (cd->typeid == CTID_COMPLEX_DOUBLE)
+	if (cd->ctypeid == CTID_COMPLEX_DOUBLE)
 	  p[1] ^= (int64_t)U64x(80000000,00000000);
 	else
 	  *p = -*p;
@@ -1046,8 +1050,11 @@ static void var_add(LexState *ls, BCReg nvars)
 {
   FuncState *fs = ls->fs;
   fs->nactvar = (uint8_t)(fs->nactvar + nvars);
-  for (; nvars; nvars--)
-    var_get(ls, fs, fs->nactvar - nvars).startpc = fs->pc;
+  for (; nvars; nvars--) {
+    VarInfo *v = &var_get(ls, fs, fs->nactvar - nvars);
+    v->startpc = fs->pc;
+    v->endpc = 0;
+  }
 }
 
 /* Remove local variables. */
@@ -1055,7 +1062,7 @@ static void var_remove(LexState *ls, BCReg tolevel)
 {
   FuncState *fs = ls->fs;
   while (fs->nactvar > tolevel)
-    var_get(ls, fs, --fs->nactvar).endpc = fs->pc;
+    var_get(ls, fs, --fs->nactvar).endpc |= fs->pc;
 }
 
 /* Lookup local variable name. */
@@ -1080,7 +1087,8 @@ static MSize var_lookup_uv(FuncState *fs, MSize vidx, ExpDesc *e)
   checklimit(fs, fs->nuv, LJ_MAX_UPVAL, "upvalues");
   lua_assert(e->k == VLOCAL || e->k == VUPVAL);
   fs->uvloc[n].vidx = (uint16_t)vidx;
-  fs->uvloc[n].slot = (uint16_t)(e->u.s.info | (e->k == VLOCAL ? 0x8000 : 0));
+  fs->uvloc[n].slot = (uint16_t)(e->u.s.info |
+				 (e->k == VLOCAL ? PROTO_UV_LOCAL : 0));
   fs->nuv = n+1;
   return n;
 }
@@ -1097,7 +1105,7 @@ static MSize var_lookup_(FuncState *fs, GCstr *name, ExpDesc *e, int first)
       expr_init(e, VLOCAL, reg);
       if (!first)
 	scope_uvmark(fs, reg);  /* Scope now has an upvalue. */
-      return (MSize)fs->varmap[reg];
+      return (MSize)(e->u.s.aux = (uint32_t)fs->varmap[reg]);
     } else {
       MSize vidx = var_lookup_(fs->prev, name, e, 0);  /* Var in outer func? */
       if ((int32_t)vidx >= 0) {  /* Yes, make it an upvalue here. */
@@ -1185,11 +1193,20 @@ static void fs_fixup_k(FuncState *fs, GCproto *pt, void *kptr)
 /* Fixup upvalues for prototype. */
 static void fs_fixup_uv(FuncState *fs, GCproto *pt, uint16_t *uv)
 {
+  VarInfo *vstack;
+  UVMap *uvloc;
   MSize i, n = fs->nuv;
   setmref(pt->uv, uv);
   pt->sizeuv = n;
-  for (i = 0; i < n; i++)
-    uv[i] = fs->uvloc[i].slot;
+  vstack = fs->ls->vstack;
+  uvloc = fs->uvloc;
+  for (i = 0; i < n; i++) {
+    uint16_t slot = uvloc[i].slot;
+    uint16_t vidx = uvloc[i].vidx;
+    if ((slot & PROTO_UV_LOCAL) && !(vstack[vidx].endpc & VSTACK_VAR_RW))
+      slot |= PROTO_UV_IMMUTABLE;
+    uv[i] = slot;
+  }
 }
 
 #ifndef LUAJIT_DISABLE_DEBUGINFO
@@ -1287,7 +1304,8 @@ static size_t fs_prep_var(LexState *ls, FuncState *fs, size_t *ofsvar)
   /* Store local variable names and compressed ranges. */
   for (i = 0, n = ls->vtop - fs->vbase; i < n; i++) {
     GCstr *s = strref(vstack[i].name);
-    BCPos startpc = vstack[i].startpc, endpc = vstack[i].endpc;
+    BCPos startpc = vstack[i].startpc;
+    BCPos endpc = vstack[i].endpc & ~VSTACK_VAR_RW;
     if ((uintptr_t)s < VARNAME__MAX) {
       fs_buf_need(ls, 1 + 2*5);
       ls->sb.buf[ls->sb.n++] = (uint8_t)(uintptr_t)s;
@@ -1529,8 +1547,8 @@ static void expr_table(LexState *ls, ExpDesc *e)
   FuncState *fs = ls->fs;
   BCLine line = ls->linenumber;
   GCtab *t = NULL;
-  int vcall = 0, needarr = 0;
-  int32_t narr = 1;  /* First array index. */
+  int vcall = 0, needarr = 0, fixt = 0;
+  uint32_t narr = 1;  /* First array index. */
   uint32_t nhash = 0;  /* Number of hash entries. */
   BCReg freg = fs->freereg;
   BCPos pc = bcemit_AD(fs, BC_TNEW, freg, 0);
@@ -1552,24 +1570,33 @@ static void expr_table(LexState *ls, ExpDesc *e)
       nhash++;
     } else {
       expr_init(&key, VKNUM, 0);
-      setintV(&key.u.nval, narr);
+      setintV(&key.u.nval, (int)narr);
       narr++;
       needarr = vcall = 1;
     }
     expr(ls, &val);
-    if (expr_isk_nojump(&val) && expr_isk(&key) && key.k != VKNIL) {
-      TValue k;
+    if (expr_isk(&key) && key.k != VKNIL &&
+	(key.k == VKSTR || expr_isk_nojump(&val))) {
+      TValue k, *v;
       if (!t) {  /* Create template table on demand. */
 	BCReg kidx;
-	t = lj_tab_new(fs->L, 0, 0);
+	t = lj_tab_new(fs->L, narr, hsize2hbits(nhash));
 	kidx = const_gc(fs, obj2gco(t), LJ_TTAB);
 	fs->bcbase[pc].ins = BCINS_AD(BC_TDUP, freg-1, kidx);
       }
       vcall = 0;
       expr_kvalue(&k, &key);
-      expr_kvalue(lj_tab_set(fs->L, t, &k), &val);
+      v = lj_tab_set(fs->L, t, &k);
       lj_gc_anybarriert(fs->L, t);
+      if (expr_isk_nojump(&val)) {  /* Add const key/value to template table. */
+	expr_kvalue(v, &val);
+      } else {  /* Otherwise create dummy string key (avoids lj_tab_newkey). */
+	settabV(fs->L, v, t);  /* Preserve key with table itself as value. */
+	fixt = 1;   /* Fix this later, after all resizes. */
+	goto nonconst;
+      }
     } else {
+    nonconst:
       if (val.k != VCALL) { expr_toanyreg(fs, &val); vcall = 0; }
       if (expr_isk(&key)) expr_index(fs, e, &key);
       bcemit_store(fs, e, &val);
@@ -1602,7 +1629,21 @@ static void expr_table(LexState *ls, ExpDesc *e)
     if (!needarr) narr = 0;
     else if (narr < 3) narr = 3;
     else if (narr > 0x7ff) narr = 0x7ff;
-    setbc_d(ip, (uint32_t)narr|(hsize2hbits(nhash)<<11));
+    setbc_d(ip, narr|(hsize2hbits(nhash)<<11));
+  } else {
+    if (needarr && t->asize < narr)
+      lj_tab_reasize(fs->L, t, narr-1);
+    if (fixt) {  /* Fix value for dummy keys in template table. */
+      Node *node = noderef(t->node);
+      uint32_t i, hmask = t->hmask;
+      for (i = 0; i <= hmask; i++) {
+	Node *n = &node[i];
+	if (tvistab(&n->val)) {
+	  lua_assert(tabV(&n->val) == t);
+	  setnilV(&n->val);  /* Turn value into nil. */
+	}
+      }
+    }
   }
 }
 
@@ -2208,6 +2249,7 @@ static void parse_local(LexState *ls)
     FuncState *fs = ls->fs;
     var_new(ls, 0, lex_str(ls));
     expr_init(&v, VLOCAL, fs->freereg);
+    v.u.s.aux = fs->varmap[fs->freereg];
     bcreg_reserve(fs, 1);
     var_add(ls, 1);
     parse_body(ls, &b, 0, ls->linenumber);

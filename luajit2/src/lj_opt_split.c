@@ -78,8 +78,7 @@
 ** 0105    int HIOP   0103  +0
 ** 0106    p32 ADD    base  +16
 ** 0107    int XSTORE 0106  0104
-** 0108    p32 ADD    base  +20
-** 0109    int XSTORE 0108  0105
+** 0108    int HIOP   0106  0105
 **
 **         mov eax, [esi+0x8]
 **         mov ecx, [esi+0xc]
@@ -328,19 +327,9 @@ static void split_ir(jit_State *J)
 #endif
 	break;
 	}
-      case IR_ASTORE: case IR_HSTORE: case IR_USTORE:
+      case IR_ASTORE: case IR_HSTORE: case IR_USTORE: case IR_XSTORE:
 	split_emit(J, IRT(IR_HIOP, IRT_SOFTFP), nir->op1, hisubst[ir->op2]);
 	break;
-      case IR_XSTORE: {
-#if LJ_LE
-	IRRef hiref = hisubst[ir->op2];
-#else
-	IRRef hiref = nir->op2; nir->op2 = hisubst[ir->op2];
-#endif
-	split_emit(J, IRT(IR_XSTORE, IRT_SOFTFP),
-		   split_ptr(J, oir, ir->op1), hiref);
-	break;
-	}
       case IR_CONV: {  /* Conversion to number. Others handled below. */
 	IRType st = (IRType)(ir->op2 & IRCONV_SRCMASK);
 	UNUSED(st);
@@ -375,6 +364,11 @@ static void split_ir(jit_State *J)
 	if (hisubst[ir->op1] != hisubst[ir->op2])
 	  split_emit(J, IRT(IR_PHI, IRT_SOFTFP),
 		     hisubst[ir->op1], hisubst[ir->op2]);
+	break;
+      case IR_HIOP:
+	J->cur.nins--;  /* Drop joining HIOP. */
+	ir->prev = nir->op1;
+	hi = nir->op2;
 	break;
       default:
 	lua_assert(ir->o <= IR_NE || ir->o == IR_MIN || ir->o == IR_MAX);
@@ -434,12 +428,7 @@ static void split_ir(jit_State *J)
 #endif
 	break;
       case IR_XSTORE:
-#if LJ_LE
-	hiref = hisubst[ir->op2];
-#else
-	hiref = nir->op2; nir->op2 = hisubst[ir->op2];
-#endif
-	split_emit(J, IRTI(IR_XSTORE), split_ptr(J, oir, ir->op1), hiref);
+	split_emit(J, IRTI(IR_HIOP), nir->op1, hisubst[ir->op2]);
 	break;
       case IR_CONV: {  /* Conversion to 64 bit integer. Others handled below. */
 	IRType st = (IRType)(ir->op2 & IRCONV_SRCMASK);
@@ -485,6 +474,11 @@ static void split_ir(jit_State *J)
 	  split_emit(J, IRTI(IR_PHI), hiref, hiref2);
 	break;
 	}
+      case IR_HIOP:
+	J->cur.nins--;  /* Drop joining HIOP. */
+	ir->prev = nir->op1;
+	hi = nir->op2;
+	break;
       default:
 	lua_assert(ir->o <= IR_NE);  /* Comparisons. */
 	split_emit(J, IRTGI(IR_HIOP), hiref, hisubst[ir->op2]);
@@ -689,6 +683,8 @@ static int split_needsplit(jit_State *J)
     for (ref = J->chain[IR_SLOAD]; ref; ref = IR(ref)->prev)
       if ((IR(ref)->op2 & IRSLOAD_CONVERT))
 	return 1;
+    if (J->chain[IR_TOBIT])
+      return 1;
   }
   for (ref = J->chain[IR_CONV]; ref; ref = IR(ref)->prev) {
     IRType st = (IR(ref)->op2 & IRCONV_SRCMASK);
