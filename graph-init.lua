@@ -188,6 +188,8 @@ end
 graph.rgba = rgba
 graph.rgb = function(r, g, b) return rgba(r, g, b, 1) end
 
+graph.font_color = rgba8(0x32, 0x32, 0x32)
+
 local lum_std = 0.75
 
 graph.color = {
@@ -316,7 +318,7 @@ local function plot_legend(self, text, color, symspec, trans)
    local tr = (trans and trans or symtr)
 
    lg:add(sym, color, tr)
-   lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+   lg:add(graph.textshape(25, y + 6, text, 14), graph.font_color)
 
    env.__lg_count = k+1
    self:update()

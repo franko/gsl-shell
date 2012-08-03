@@ -2,7 +2,7 @@
 
 #include "agg-pixfmt-config.h"
 
-const char *ttf_names[] = {"freefont/FreeSans.ttf", "ttf-dejavu/DejaVuSans.ttf", 0};
+const char *ttf_names[] = {"ubuntu-font-family/Ubuntu-R.ttf", "msttcorefonts/arial.ttf", "liberation/LiberationSans-Regular.ttf", 0};
 
 const char *gslshell::get_font_name()
 {

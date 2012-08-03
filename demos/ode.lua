@@ -145,8 +145,8 @@ local function demo5()
    p:add(graph.marker(0, x0, 'circle', 8), 'red')
    p:add(graph.marker(0, y0, 'circle', 8), 'blue')
 
-   p:add(graph.text(0.5, x0, 'Preys'), 'black')
-   p:add(graph.text(0.5, y0, 'Predators'), 'black')
+   p:add(graph.text(0.5, x0, 'Preys'), graph.font_color)
+   p:add(graph.text(0.5, y0, 'Predators'), graph.font_color)
 
    p:addline(ln1)
    p:addline(ln2, 'blue')
