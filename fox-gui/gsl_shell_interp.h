@@ -23,8 +23,8 @@ public:
 
     ~gsl_shell()
     {
-        if (unlikely(this->L == NULL))
-            fatal_exception("Attempt to dispose an open Lua state");
+        if (unlikely(this->L != NULL))
+            fatal_exception("warning: attempt to dispose an open Lua state");
         gsl_shell_free(this);
     }
 
