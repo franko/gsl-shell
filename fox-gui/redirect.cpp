@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-// #include <io.h>
 #include <assert.h>
 
 #include "redirect.h"
@@ -35,7 +34,6 @@ int stdout_redirect::start()
 {
     fflush(stdout);
     CHECK(dup2(fd_pipe[WRITE_FD], fileno(stdout)));
-    //        ios::sync_with_stdio();
     setvbuf( stdout, NULL, _IONBF, 0 ); // absolutely needed
     return 0;
 }
@@ -46,7 +44,6 @@ int stdout_redirect::stop()
     close(fd_stdout);
     close(fd_pipe[WRITE_FD]);
     close(fd_pipe[READ_FD]);
-    //        ios::sync_with_stdio();
     return 0;
 }
 
