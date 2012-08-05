@@ -5,7 +5,6 @@ class stdout_redirect
 {
 public:
     stdout_redirect(int buffer_size);
-    ~stdout_redirect();
 
     int start();
     int stop();

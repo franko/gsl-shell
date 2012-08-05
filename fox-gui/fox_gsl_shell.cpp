@@ -21,6 +21,13 @@ fox_gsl_shell::before_eval()
 }
 
 void
+fox_gsl_shell::quit_callback()
+{
+    if (m_close)
+        m_close->signal();
+}
+
+void
 fox_gsl_shell::window_close_notify(int window_id)
 {
     pthread::mutex& eval = eval_mutex();

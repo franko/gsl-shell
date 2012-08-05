@@ -16,13 +16,6 @@
 
 #define CHECK(a) if ((a)!= 0) return -1;
 
-stdout_redirect::~stdout_redirect()
-{
-    close(fd_stdout);
-    close(fd_pipe[WRITE_FD]);
-    close(fd_pipe[READ_FD]);
-}
-
 stdout_redirect::stdout_redirect(int bufferSize)
 {
     int status;
@@ -50,6 +43,9 @@ int stdout_redirect::start()
 int stdout_redirect::stop()
 {
     CHECK(dup2(fd_stdout, fileno(stdout)));
+    close(fd_stdout);
+    close(fd_pipe[WRITE_FD]);
+    close(fd_pipe[READ_FD]);
     //        ios::sync_with_stdio();
     return 0;
 }

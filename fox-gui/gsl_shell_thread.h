@@ -25,6 +25,7 @@ public:
     void stop();
 
     virtual void before_eval() { }
+    virtual void quit_callback() { }
 
     void lock()
     {

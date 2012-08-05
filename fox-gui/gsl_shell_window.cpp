@@ -10,7 +10,7 @@
 FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]=
 {
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_window::on_close),
-
+    FXMAPFUNC(SEL_COMMAND, FXTopWindow::ID_CLOSE, gsl_shell_window::on_close),
 };
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
@@ -22,7 +22,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXStr
     m_status_bar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
 
     m_file_menu = new FXMenuPane(this);
-    new FXMenuCommand(m_file_menu, "&Quit\tCtl-Q", NULL, app, FXApp::ID_QUIT);
+    new FXMenuCommand(m_file_menu, "&Quit\tCtl-Q", NULL, this, FXTopWindow::ID_CLOSE);
     new FXMenuTitle(m_menu_bar, "&File", NULL, m_file_menu);
 
     FXVerticalFrame* frame = new FXVerticalFrame(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -45,6 +45,5 @@ long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXApp* app = getApp();
     app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
-    app->handle(this, FXSEL(SEL_COMMAND, FXApp::ID_QUIT), NULL);
     return 0;
 }

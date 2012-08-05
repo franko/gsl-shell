@@ -44,7 +44,7 @@ void gsl_shell_thread::start()
 void
 gsl_shell_thread::run()
 {
-    while (1)
+    while (!m_exit_request)
     {
         m_eval.lock();
         m_status = ready;
@@ -74,16 +74,17 @@ gsl_shell_thread::run()
     }
 
     this->unlock();
-    this->close();
+    quit_callback();
 }
 
 void
 gsl_shell_thread::stop()
 {
-    pthread::auto_lock lock(m_eval);
+    m_eval.lock();
     m_exit_request = true;
     m_eval.signal();
-    pthread_join(m_thread, NULL);
+    m_eval.unlock();
+    pthread_yield();
 }
 
 void

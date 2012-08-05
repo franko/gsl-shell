@@ -28,11 +28,13 @@ public:
     long on_lua_request(FXObject*,FXSelector,void*);
     long on_window_close(FXObject*,FXSelector,void*);
     long on_console_close(FXObject*,FXSelector,void*);
+    long on_lua_quit(FXObject*,FXSelector,void*);
 
     enum
     {
         ID_LUA_REQUEST = FXApp::ID_LAST,
         ID_CONSOLE_CLOSE,
+        ID_LUA_QUIT,
         ID_LAST
     };
 
