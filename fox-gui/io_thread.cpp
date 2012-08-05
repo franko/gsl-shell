@@ -1,8 +1,16 @@
+#include <pthread.h>
 #include <errno.h>
 
 #include "io_thread.h"
 
-FXint lua_io_thread::run()
+static void* io_thread_run(void* data)
+{
+    lua_io_thread* thread = (lua_io_thread*) data;
+    thread->run();
+    return 0;
+}
+
+void lua_io_thread::run()
 {
     char buffer[128];
 
@@ -25,6 +33,17 @@ FXint lua_io_thread::run()
 
         m_io_ready->signal();
     }
+}
 
-    return 0;
+void lua_io_thread::start()
+{
+    pthread_attr_t attr[1];
+
+    pthread_attr_init (attr);
+    pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+    if (pthread_create (&m_thread, attr, io_thread_run, (void*)this))
+    {
+        fprintf(stderr, "error creating thread");
+    }
 }

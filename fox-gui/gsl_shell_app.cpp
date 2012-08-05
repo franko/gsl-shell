@@ -54,7 +54,7 @@ long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 long gsl_shell_app::on_lua_quit(FXObject*, FXSelector, void*)
 {
     m_engine.close();
-    _exit(0);
+    exit(0);
     return 1;
 }
 

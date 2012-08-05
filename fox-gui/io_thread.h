@@ -5,16 +5,17 @@
 
 #include "gsl_shell_thread.h"
 
-class lua_io_thread : public FXThread
-{
+class lua_io_thread {
 public:
     lua_io_thread(gsl_shell_thread* eng, FXGUISignal* sig, FXMutex* mut, FXString* buf):
         m_engine(eng), m_io_ready(sig), m_io_protect(mut), m_io_buffer(buf)
     { }
 
-    virtual FXint run();
+    void run();
+    void start();
 
 private:
+    pthread_t m_thread;
     gsl_shell_thread* m_engine;
     FXGUISignal* m_io_ready;
     FXMutex* m_io_protect;
