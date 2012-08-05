@@ -30,6 +30,7 @@ extern "C" {
 #include "lua-text.h"
 #include "window.h"
 #include "lua-plot.h"
+#include "window_hooks.h"
 
 #ifndef MLUA_GRAPHLIBNAME
 #define MLUA_GRAPHLIBNAME "graph"
@@ -56,7 +57,7 @@ register_graph (lua_State *L)
 
   draw_register (L);
   text_register (L);
-  window_register (L);
+  app_window_hooks->register_module (L);
   plot_register (L);
 
   initialize_fonts (L);

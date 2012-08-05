@@ -14,6 +14,8 @@ struct window_hooks {
   int (*refresh)(lua_State* L);
   int (*save_image)(lua_State* L);
   int (*restore_image)(lua_State* L);
+
+  void (*register_module)(lua_State* L);
 };
 
 extern struct window_hooks app_window_hooks[1];

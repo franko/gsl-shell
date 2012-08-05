@@ -156,7 +156,7 @@ fox_window_restore_slot_image (lua_State *L)
     return 0;
 }
 
-int
+void
 fox_window_register (lua_State *L)
 {
     luaL_newmetatable (L, GS_METATABLE(GS_FOX_WINDOW));
@@ -165,7 +165,5 @@ fox_window_register (lua_State *L)
     luaL_register (L, NULL, fox_window_methods);
     lua_pop (L, 1);
 
-    luaL_register (L, "fox", fox_window_functions);
-    lua_pop (L, 1);
-    return 0;
+    luaL_register (L, NULL, fox_window_functions);
 }

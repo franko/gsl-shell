@@ -7,7 +7,7 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
-extern int fox_window_register (lua_State *L);
+extern void fox_window_register (lua_State *L);
 
 extern int fox_window_new                 (lua_State *L);
 extern int fox_window_attach              (lua_State *L);

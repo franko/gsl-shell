@@ -6,7 +6,6 @@
 void fox_gsl_shell::init()
 {
     gsl_shell_thread::init();
-    fox_window_register(L);
 }
 
 void
