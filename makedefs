@@ -45,6 +45,8 @@ ifeq ($(HOST_SYS),Windows)
   EXE_EXT = .exe
 else
   EXE_EXT =
+  DEFS += -pthread
+  LIBS += -pthread
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
