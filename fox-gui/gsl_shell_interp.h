@@ -21,7 +21,7 @@ public:
         gsl_shell_init(this);
     }
 
-    ~gsl_shell()
+    virtual ~gsl_shell()
     {
         if (unlikely(this->L != NULL))
             fatal_exception("warning: attempt to dispose an open Lua state");
