@@ -15,7 +15,7 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
     FXCanvas(p, tgt, sel, opts, x, y, w, h),
-    m_plot(0), m_canvas(0), m_dirty_flag(true)
+    m_plot(0), m_canvas(0), m_dirty_flag(true), m_dirty_img(true)
 {
 }
 
@@ -28,6 +28,7 @@ void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
 {
     m_img.resize(ww, hh);
     m_canvas = new canvas(m_img, ww, hh, colors::white);
+    m_dirty_img = true;
 }
 
 void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
@@ -46,6 +47,7 @@ void fx_plot_canvas::plot_render(agg::trans_affine& m)
     AGG_LOCK();
     m_plot->draw(*m_canvas, m);
     AGG_UNLOCK();
+    m_dirty_img = false;
 }
 
 void fx_plot_canvas::plot_draw(agg::trans_affine& m)
@@ -57,7 +59,8 @@ void fx_plot_canvas::plot_draw(agg::trans_affine& m)
 
     if (m_canvas && m_plot)
     {
-        plot_render(m);
+        if (m_dirty_img)
+            plot_render(m);
 
         FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
         agg::int8u* data = (agg::int8u*) img.getData();
@@ -102,12 +105,6 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
     dc.drawImage(&img, r.x1, getHeight() - r.y2);
 }
 
-void fx_plot_canvas::attach(plot_type* p)
-{
-    m_plot = p;
-    m_dirty_flag = true;
-}
-
 opt_rect<double> fx_plot_canvas::plot_render_queue(agg::trans_affine& m)
 {
     opt_rect<double> r, draw_rect;
@@ -144,6 +141,8 @@ bool fx_plot_canvas::save_image()
 {
     int ww = getWidth(), hh = getHeight();
     if (!m_img.defined() || !m_save_img.resize(ww, hh)) return false;
+    if (m_dirty_img)
+        plot_render(m_area_mtx);
     m_save_img.copy_from(m_img);
     return true;
 }
@@ -154,6 +153,13 @@ bool fx_plot_canvas::restore_image()
         return false;
     m_img.copy_from(m_save_img);
     return true;
+}
+
+void fx_plot_canvas::attach(plot_type* p)
+{
+    m_plot = p;
+    m_dirty_flag = true;
+    m_dirty_img = true;
 }
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)

@@ -65,7 +65,7 @@ private:
     image m_save_img;
     plot_type* m_plot;
     canvas* m_canvas;
-    bool m_dirty_flag;
+    bool m_dirty_flag, m_dirty_img;
     opt_rect<double> m_dirty_rect;
     agg::trans_affine m_area_mtx;
 };
