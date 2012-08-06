@@ -84,7 +84,7 @@ gsl_shell_thread::stop()
     m_exit_request = true;
     m_eval.signal();
     m_eval.unlock();
-    pthread_yield();
+    sched_yield();
 }
 
 void
