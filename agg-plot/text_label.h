@@ -10,6 +10,12 @@
 
 #include "sg_object.h"
 
+struct grid_fit_y_only {
+    static void adjust(double& x, double& y) { y = round(y); }
+};
+
+typedef grid_fit_y_only grid_fit;
+
 class text_label
 {
     enum { scale_x = 100 };
@@ -72,8 +78,10 @@ class text_label
         if(glyph->data_type == agg::glyph_data_outline)
         {
             m_text_mtx.tx = m_x / scale_x;
-            m_text_mtx.ty = floor(m_y + 0.5);
+            m_text_mtx.ty = m_y;
             m_model_mtx->transform(&m_text_mtx.tx, &m_text_mtx.ty);
+
+            grid_fit::adjust(m_text_mtx.tx, m_text_mtx.ty);
 
             m_advance_x = glyph->advance_x;
             m_advance_y = glyph->advance_y;
@@ -87,7 +95,7 @@ class text_label
     void rewind(double hjustif, double vjustif)
     {
         m_x = scale_x * (- hjustif * m_width);
-        m_y = round(- 0.86 * vjustif * m_font_height);
+        m_y = - 0.86 * vjustif * m_font_height;
         m_advance_x = 0;
         m_advance_y = 0;
         m_pos = 0;

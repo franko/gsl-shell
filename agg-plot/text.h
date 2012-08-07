@@ -62,7 +62,7 @@ class text : public sg_object
         m_y = y;
 
         m_matrix.tx = m_x;
-        m_matrix.ty = round(m_y);
+        m_matrix.ty = m_y;
     }
 
     void hjustif(double hj) { m_hjustif = hj; }

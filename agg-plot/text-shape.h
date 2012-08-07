@@ -13,7 +13,7 @@ namespace draw {
     m_text_label(text, round(_size)), m_x(x), m_y(y), m_font_size(_size), m_size(_size)
     {
         m_matrix.tx = m_x;
-        m_matrix.ty = round(m_y);
+        m_matrix.ty = m_y;
         m_text_label.model_mtx(m_matrix);
         compute_bounding_box();
     }
@@ -71,7 +71,7 @@ namespace draw {
         double x = m_x, y = m_y;
         m.transform(&x, &y);
         m_matrix.tx = x;
-        m_matrix.ty = round(y);
+        m_matrix.ty = y;
 
         m_text_label.approximation_scale(m.scale());
     }
