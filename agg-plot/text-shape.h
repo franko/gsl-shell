@@ -10,10 +10,10 @@ namespace draw {
   public:
     text_shape(double x, double y, const char* text,
                double _size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
-    m_text_label(text, _size), m_scaling(0), m_size(_size)
+    m_text_label(text, _size), m_x(x), m_y(y), m_size(_size)
     {
-        m_matrix.tx = x;
-        m_matrix.ty = y;
+        m_matrix.tx = m_x;
+        m_matrix.ty = round(m_y);
         m_text_label.model_mtx(m_matrix);
         compute_bounding_box();
     }
@@ -25,10 +25,7 @@ namespace draw {
 
     virtual unsigned vertex(double* x, double* y)
     {
-        unsigned cmd = m_text_label.vertex(x, y);
-        if (m_scaling && agg::is_vertex(cmd))
-            m_scaling->transform(x, y);
-        return cmd;
+        return m_text_label.vertex(x, y);
     }
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
@@ -57,11 +54,6 @@ namespace draw {
         const agg::trans_affine& m = m_matrix;
 
         double x = m.tx, y = m.ty;
-        if (m_scaling)
-        {
-            m_scaling->transform(&x, &y);
-            txt_size *= m_scaling->sy;
-        }
 
         str s = str::print("<text x=\"%g\" y=\"%g\" id=\"text%i\"" \
                            " style=\"font-size:%i\">" \
@@ -74,14 +66,20 @@ namespace draw {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-        m_scaling = &m;
+        m_text_label.scale_font(m.sx, m.sy);
+
+        double x = m_x, y = m_y;
+        m.transform(&x, &y);
+        m_matrix.tx = x;
+        m_matrix.ty = round(y);
+
         m_text_label.approximation_scale(m.scale());
     }
 
   private:
     text_label m_text_label;
+    double m_x, m_y;
     agg::trans_affine m_matrix;
-    const agg::trans_affine* m_scaling;
     double m_size;
     agg::rect_base<double> m_bbox;
   };
