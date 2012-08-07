@@ -10,7 +10,7 @@ namespace draw {
   public:
     text_shape(double x, double y, const char* text,
                double _size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
-    m_text_label(text, _size), m_x(x), m_y(y), m_size(_size)
+    m_text_label(text, round(_size)), m_x(x), m_y(y), m_font_size(_size), m_size(_size)
     {
         m_matrix.tx = m_x;
         m_matrix.ty = round(m_y);
@@ -66,7 +66,7 @@ namespace draw {
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-        m_text_label.scale_font(m.sx, m.sy);
+        m_text_label.font_size(m.sx * m_font_size, round(m.sy * m_font_size));
 
         double x = m_x, y = m_y;
         m.transform(&x, &y);
@@ -79,6 +79,7 @@ namespace draw {
   private:
     text_label m_text_label;
     double m_x, m_y;
+    double m_font_size;
     agg::trans_affine m_matrix;
     double m_size;
     agg::rect_base<double> m_bbox;
