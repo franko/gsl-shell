@@ -15,6 +15,7 @@ namespace draw {
         m_matrix.tx = x;
         m_matrix.ty = y;
         m_text_label.model_mtx(m_matrix);
+        compute_bounding_box();
     }
 
     virtual void rewind(unsigned path_id)
@@ -32,12 +33,20 @@ namespace draw {
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
     {
+        *x1 = m_bbox.x1;
+        *y1 = m_bbox.y1;
+        *x2 = m_bbox.x2;
+        *y2 = m_bbox.y2;
+    }
+
+    void compute_bounding_box()
+    {
         const double pad = 1.0;
         const double tx = m_matrix.tx, ty = m_matrix.ty;
-        *x1 = tx - pad;
-        *y1 = ty - pad;
-        *x2 = tx + m_text_label.get_text_width() + pad;
-        *y2 = ty + m_text_label.get_text_height() + pad;
+        m_bbox.x1 = tx - pad;
+        m_bbox.y1 = ty - pad;
+        m_bbox.x2 = tx + m_text_label.get_text_width() + pad;
+        m_bbox.y2 = ty + m_text_label.get_text_height() + pad;
     }
 
     virtual str write_svg(int id, agg::rgba8 c, double h)
@@ -74,6 +83,7 @@ namespace draw {
     agg::trans_affine m_matrix;
     const agg::trans_affine* m_scaling;
     double m_size;
+    agg::rect_base<double> m_bbox;
   };
 }
 

@@ -54,7 +54,7 @@ class text : public sg_object
 
     const char * get_text() const { return m_text_label.text().cstr(); }
 
-    double text_height() const { return m_text_label.text_height(); }
+    double text_height() const { return m_text_label.get_text_height(); }
 
     void set_point(double x, double y)
     {

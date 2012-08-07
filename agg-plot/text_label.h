@@ -22,6 +22,8 @@ class text_label
     double m_width;
     double m_height;
 
+    double m_scale_x, m_scale_y;
+
     unsigned m_pos;
     double m_x, m_y;
     double m_advance_x, m_advance_y;
@@ -36,7 +38,7 @@ class text_label
 
   public:
     text_label(const char* text, double size):
-    m_text_buf(text), m_height(size), m_pos(0),
+    m_text_buf(text), m_height(size), m_scale_x(1), m_scale_y(1), m_pos(0),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
     m_model_mtx(&identity_matrix),
     m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
@@ -49,11 +51,15 @@ class text_label
 
     void set_font_size()
     {
-        m_font_eng.height(m_height);
-        m_font_eng.width(m_height * scale_x);
+        m_font_eng.height(m_scale_y * m_height);
+        m_font_eng.width(m_scale_x * m_height * scale_x);
     }
 
-    double text_height() const { return m_height; }
+    void scale_font(double f_scale_x, double f_scale_y)
+    {
+        m_scale_x = f_scale_x;
+        m_scale_y = f_scale_y;
+    }
 
     const str& text() const { return m_text_buf; }
 
