@@ -21,7 +21,7 @@ extern "C" {
 class canvas_window : public platform_support_ext {
 protected:
   canvas *m_canvas;
-  agg::rgba m_bgcolor;
+  agg::rgba8 m_bgcolor;
 
   agg::trans_affine m_matrix;
 
@@ -41,7 +41,7 @@ public:
 
   enum win_status_e status;
 
-  canvas_window(agg::rgba& bgcol) :
+  canvas_window(agg::rgba8 bgcol) :
     platform_support_ext(gslshell::pixel_format, true),
     m_canvas(NULL), m_bgcolor(bgcol), m_matrix(), status(not_ready)
   { };

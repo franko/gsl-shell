@@ -20,7 +20,7 @@ template <class Pixel>
 class renderer_gray_aa
 {
 public:
-    renderer_gray_aa(agg::rendering_buffer& ren_buf, agg::rgba bg_color):
+    renderer_gray_aa(agg::rendering_buffer& ren_buf, agg::rgba8 bg_color):
     m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
     m_bgcol(bg_color)
     { }
@@ -40,7 +40,7 @@ public:
 
     void color(agg::rgba8 c) { m_ren_solid.color(c); }
 
-    void clear(agg::rgba c) { m_ren_base.clear(c); }
+    void clear(agg::rgba8 c) { m_ren_base.clear(c); }
 
     void clear_box(const agg::rect_base<int>& r)
     {
@@ -64,7 +64,7 @@ private:
     Pixel m_pixbuf;
     agg::renderer_base<Pixel> m_ren_base;
     agg::renderer_scanline_aa_solid<agg::renderer_base<Pixel> > m_ren_solid;
-    agg::rgba m_bgcol;
+    agg::rgba8 m_bgcol;
 };
 
 template <class Pixel>
@@ -78,7 +78,7 @@ class renderer_subpixel_aa
     };
 
 public:
-    renderer_subpixel_aa(agg::rendering_buffer& ren_buf, agg::rgba bg_color):
+    renderer_subpixel_aa(agg::rendering_buffer& ren_buf, agg::rgba8 bg_color):
     m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
     m_bgcol(bg_color)
     { }
@@ -90,7 +90,7 @@ public:
     double width()  const { return m_pixbuf.width() / subpixel_scale; };
     double height() const { return m_pixbuf.height(); };
 
-    void clear(agg::rgba c) { m_ren_base.clear(c); }
+    void clear(agg::rgba8 c) { m_ren_base.clear(c); }
 
     void clear_box(const agg::rect_base<int>& r)
     {
@@ -127,7 +127,7 @@ private:
     pixfmt_type m_pixbuf;
     agg::renderer_base<pixfmt_type> m_ren_base;
     agg::renderer_scanline_aa_solid<agg::renderer_base<pixfmt_type> > m_ren_solid;
-    agg::rgba m_bgcol;
+    agg::rgba8 m_bgcol;
 };
 
 template <class Renderer>
@@ -142,7 +142,7 @@ class canvas_gen : public Renderer {
 
 public:
     canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
-               agg::rgba bgcol):
+               agg::rgba8 bgcol):
     Renderer(ren_buf, bgcol), ras(), sl()
     { }
 

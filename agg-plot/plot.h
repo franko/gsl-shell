@@ -796,7 +796,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
     {
       draw::text* label = labels[j];
       label->apply_transform(m, 1.0);
-      canvas.draw(*label, agg::rgba(0, 0, 0));
+      canvas.draw(*label, colors::black);
     }
 
   lndash.add_dash(7.0, 3.0);
