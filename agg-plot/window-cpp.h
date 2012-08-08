@@ -60,7 +60,7 @@ private:
   ref::node* m_tree;
 
 public:
-  window(agg::rgba& bgcol) : canvas_window(bgcol), m_tree(0)
+  window(agg::rgba8 bgcol) : canvas_window(bgcol), m_tree(0)
   {
     this->split(".");
   };

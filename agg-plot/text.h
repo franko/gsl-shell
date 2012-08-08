@@ -23,7 +23,7 @@ class text : public sg_object
   public:
     text(const char* text, double size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
     m_x(0.0), m_y(0.0), m_angle(0.0),
-    m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, size)
+    m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, round(size))
     {
         m_text_label.model_mtx(m_matrix);
     }
@@ -54,7 +54,7 @@ class text : public sg_object
 
     const char * get_text() const { return m_text_label.text().cstr(); }
 
-    double text_height() const { return m_text_label.text_height(); }
+    double text_height() const { return m_text_label.get_text_height(); }
 
     void set_point(double x, double y)
     {

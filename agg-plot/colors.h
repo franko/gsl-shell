@@ -12,8 +12,8 @@ extern agg::rgba8 color_arg_lookup   (lua_State *L, int index);
 
 namespace colors {
 
-  extern agg::rgba white;
-  extern agg::rgba black;
+  extern agg::rgba8 white;
+  extern agg::rgba8 black;
 
   extern agg::rgba8 cdefault;
 };
