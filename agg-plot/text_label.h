@@ -77,11 +77,16 @@ class text_label
 
         if(glyph->data_type == agg::glyph_data_outline)
         {
-            m_text_mtx.tx = m_x / scale_x;
-            m_text_mtx.ty = m_y;
-            m_model_mtx->transform(&m_text_mtx.tx, &m_text_mtx.ty);
+            agg::trans_affine& m = m_text_mtx;
 
-            grid_fit::adjust(m_text_mtx.tx, m_text_mtx.ty);
+            m.tx = m_x / scale_x;
+            m.ty = m_y;
+            m_model_mtx->transform(&m.tx, &m.ty);
+
+            if (fabs(m.sx * m.sy) > fabs(m.shx * m.shy))
+                grid_fit::adjust(m.tx, m.ty);
+            else
+                grid_fit::adjust(m.ty, m.tx);
 
             m_advance_x = glyph->advance_x;
             m_advance_y = glyph->advance_y;
