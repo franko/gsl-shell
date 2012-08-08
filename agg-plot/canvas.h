@@ -44,9 +44,8 @@ public:
 
     void clear_box(const agg::rect_base<int>& r)
     {
-        unsigned len = r.x2 - r.x1;
         for (int y = r.y1; y < r.y2; y++)
-            m_ren_base.copy_hline (r.x1, y, len, m_bgcol);
+            m_ren_base.copy_hline (r.x1, y, r.x2, m_bgcol);
     }
 
     void clip_box(const agg::rect_base<int>& clip)
@@ -95,9 +94,9 @@ public:
 
     void clear_box(const agg::rect_base<int>& r)
     {
-        unsigned len = subpixel_scale * (r.x2 - r.x1);
+        int x1 = subpixel_scale * r.x1, x2 = subpixel_scale * r.x2;
         for (int y = r.y1; y < r.y2; y++)
-            m_ren_base.copy_hline (subpixel_scale * r.x1, y, len, m_bgcol);
+            m_ren_base.copy_hline (x1, y, x2, m_bgcol);
     }
 
     void clip_box(const agg::rect_base<int>& clip)
