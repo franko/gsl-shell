@@ -8,16 +8,19 @@
 ##############################################################################
 
 ifeq ($(HOST_SYS),Windows)
-  AGG_HOME = c:/fra/src/agg-2.5
+  USER_LIBS_HOME = C:/fra/sviluppo
 
-  AGG_INCLUDES = -I$(AGG_HOME)/include
-  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32
+  INCLUDES += -I$(USER_LIBS_HOME)/include
+  LIBS += -L$(USER_LIBS_HOME)/lib
+
+  AGG_INCLUDES = -I$(USER_LIBS_HOME)/include/agg2
+  AGG_LIBS = -lagg -lgdi32
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas -lm
 
-  FREETYPE_INCLUDES = -Ic:/fra/src/freetype2/include
-  FREETYPE_LIBS = c:/fra/src/freetype2/objs/freetype.a
+  FREETYPE_INCLUDES =
+  FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthreadGCE2
 else
