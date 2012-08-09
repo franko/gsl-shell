@@ -909,7 +909,7 @@ namespace agg
         m_glyph_index = FT_Get_Char_Index(m_cur_face, glyph_code);
         m_last_error = FT_Load_Glyph(m_cur_face, 
                                      m_glyph_index, 
-                                     m_hinting ? (FT_LOAD_TARGET_LIGHT|FT_LOAD_TARGET_LCD|FT_LOAD_FORCE_AUTOHINT) : FT_LOAD_NO_HINTING);
+                                     m_hinting ? (FT_LOAD_TARGET_LCD|FT_LOAD_FORCE_AUTOHINT) : FT_LOAD_NO_HINTING);
         if(m_last_error == 0)
         {
             switch(m_glyph_rendering)
