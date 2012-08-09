@@ -8,18 +8,13 @@ GSL Shell introduction
 GSL Shell is an interactive interface that gives access to the GSL numerical routines by using Lua, an easy to learn and powerful programming language.
 With GSL Shell you can access very easily the functions provided by the GSL library without the need of writing and compile a stand-alone C application.
 In addition the power and expressiveness of the Lua language make easy to develop and tests complex procedures to treat your data and use effectively the GSL routines.
-You will be also able to create plots in real-time by using the powerful built-in graphical module.
+You will be also able to create plots interactively by using the integrated graphical module.
 
-.. note::
-  GSL Shell is still a young project and it is currently not widely used.
-  It still lacks some important features but the author believe that it is very promising because it is built on top of three outstanding free software projects: the GSL library, LuaJIT2 and the AGG library.
+The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
+In addition the LuaJIT2 implementation provides excellent execution speed that can be very competitive with compiled C or C++ code.
 
-  By using and combining together these software components GSL Shell provides the possibility of doing advanced numerical calculations and produce beautiful plot of the data or mathematical functions.
-
-  The underlying programming language, Lua, itself a very cleverly designed programming language it is therefore an excellent platform for programming.
-  In addition the LuaJIT2 implementation provides excellent execution speed that can be very close to C compiled code.
-
-GSL Shell also introduces some extensions to the Lua language that will be explained in the following sections. Those features include :ref:`complex numbers<complex_numbers>`, easy-to-use :ref:`vector/matrix<matrices>` implementations, :ref:`short function syntax<short-func-notation>` and :ref:`iterators<lua_base>`. They are designed to facilitate the work with numbers and mathematical algorithms.
+Since GSL Shell is oriented toward mathematics it does use an optional simplified syntax to express simple mathematical functions (see :ref:`short function syntax<short-func-notation>`).
+Otherwise the syntax and the semantic of the Lua programming language is completely ensured.
 
 First steps
 -----------
@@ -30,6 +25,69 @@ Sometimes we will refer to these kind of number as *real* number in opposition t
 
 For integer numbers GSL Shell differs from many other programming environment because it does not have a distinct type to represent them.
 In other words integer numbers are treated just like *real* number with all the implications that follows.
+
+To give the flavor of GSL Shell let us suppose that we want to plot a simple quadratic function like :math:`y = x^2 - 1`.
+You can define the function very easily:
+
+  >>> f = |x| x^2 - 1
+  >>> f(2)
+  3
+
+So the first line means: let f be a function that given a value x returns :math:`f(x) = x^2 - 1`.
+
+This kind of notation for simple functions is an extension to the Lua syntax and is explained in a specific section about the :ref:`short function notation <short-func-notation>`.
+
+Now you may want to plot the function f.
+This is done very easily:
+
+   >>> p = graph.fxplot(f, -3, 3)
+
+To obtain the following plot:
+
+.. figure:: intro-first-step-plot-1.png
+
+Since the plot looks a little bit empty we can try to add at least a title:
+
+   >>> p.title = 'Function plot example'
+
+You have probably noted that we have kept a reference to the plot in a variable named "p".
+It is actually important to keep a reference to the plot to be able to make further modifications.
+
+In case you forgot the assignement to a variable you can still retrieve the last returned expression using the special variable name "_".
+So for example if you type:
+
+   >>> graph.fxplot(f, -3, 3)
+   <plot: 0xb770eed8>
+
+The plot is still available using the special variable "_":
+
+   >>> _
+   <plot: 0xb770eed8>
+
+Now let us suppose that we want to add to the same plot another curve to represent the function :math:`y = 1/x`.
+In this case we don't want to create another plot, but we need to create a "curve".
+We can do that by using the function :func:`graph.fxline` that works eaxctly like :func:`graph.fxplot` but it does return a graphical object instead of a plot.
+Once the curve is created we add it to the plot using the method :meth:`~Plot.addline`.
+
+   >>> line = graph.fxline(|x| 1/x, 1/8, 3)
+   >>> p:addline(line, 'blue')
+
+If you bother to add also the other side of the hyperbole you will obtain the following plot:
+
+.. figure:: intro-first-step-plot-2.png
+
+At this point you can also add a legend.
+This can be done with a couple of more commands:
+
+   >>> p:legend('parabola', 'red', 'line')
+   >>> p:legend('hyperbole', 'blue', 'line')
+
+To obtain the following plot:
+
+.. figure:: intro-first-step-plot-3.png
+
+As you can see the graphical system is very flexible and it does offer a lot of possibilities.
+If you want to learn more about the graphical system you can read the chapter about :ref:`graphics <graphics-chapter>`.
 
 .. _complex_numbers:
 
@@ -82,7 +140,6 @@ In the first case you should use the :func:`matrix.def` like in the following ex
 
 You can remark that we have used the :func:`matrix.def` function without parentheses to enclose its arguments.
 The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing parentheses.
-In this case we have therefore omitted the parenthesize because :func:`matrix.def` has a single argument that is a literal table.
 
 Note that in our snippet of code we have used the function :func:`use` to make the function available in the module :mod:`math` available.
 If you don't use :func:`use` the function :func:`math.sin` and :func:`math.cos` should be accessed by specifying the explicitly the ``math`` namespace.
@@ -98,7 +155,6 @@ Let as see an example to illustrate how it works::
    -- define a matrix whose (i, j) elements is 1/(i + j)
    m = matrix.new(4, 4, |i,j| 1/(i + j))
 
-In this example the third argument is a function expressed with the :ref:`short function notation <short-func-notation>`.
 This function takes two arguments, respectively the row and column number, and returns the value that should be assigned to the corresponding matrix element.
 Of course you are not forced to define the function in the same line, you can define it before and use it later with the :func:`matrix.new` function like in the following example::
 
@@ -232,7 +288,7 @@ So, to continue the example above, we can define b as a complex vector as follow
 and then we can use the function :func:`matrix.solve` as above and we will obtain a complex matrix that solve the linear system.
 
 Please note that above we have used the function :func:`matrix.cnew` to create a new complex matrix.
-The reason is that we need to inform GSL Shell in advance if we want a real or a complex matrix.
+The reason is that we need to inform GSL Shell in advance if we want a complex matrix.
 
 In general GSL Shell tries to ensure that all the common matrix operations are handle to transparently handle real or complex matrices.
 
