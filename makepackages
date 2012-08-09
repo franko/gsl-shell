@@ -8,10 +8,13 @@
 ##############################################################################
 
 ifeq ($(HOST_SYS),Windows)
-  AGG_HOME = c:/fra/src/agg-2.5
+  USER_LIBS_HOME = C:/fra/sviluppo
 
-  AGG_INCLUDES = -I$(AGG_HOME)/include
-  AGG_LIBS = -L$(AGG_HOME)/src -lagg -lgdi32
+  INCLUDES += -I$(USER_LIBS_HOME)/include
+  LIBS += -L$(USER_LIBS_HOME)/lib
+
+  AGG_INCLUDES = -I$(USER_LIBS_HOME)/include/agg2
+  AGG_LIBS = -lagg -lgdi32
 
   FOX_HOME = c:/fra/src/fox-1.6.43
   FOX_INCLUDES = -I$(FOX_HOME)/include
