@@ -13,6 +13,7 @@ require('randist')
 require('import')
 require('contour')
 require('sf')
+require('help')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
