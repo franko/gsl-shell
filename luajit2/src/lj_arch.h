@@ -121,7 +121,6 @@
 #define LJ_ARCH_NAME		"x86"
 #define LJ_ARCH_BITS		32
 #define LJ_ARCH_ENDIAN		LUAJIT_LE
-#define LJ_ARCH_HASFPU		1
 #if LJ_TARGET_WINDOWS || __CYGWIN__
 #define LJ_ABI_WIN		1
 #else
@@ -139,7 +138,6 @@
 #define LJ_ARCH_NAME		"x64"
 #define LJ_ARCH_BITS		64
 #define LJ_ARCH_ENDIAN		LUAJIT_LE
-#define LJ_ARCH_HASFPU		1
 #define LJ_ABI_WIN		LJ_TARGET_WINDOWS
 #define LJ_TARGET_X64		1
 #define LJ_TARGET_X86ORX64	1
@@ -154,8 +152,12 @@
 #define LJ_ARCH_NAME		"arm"
 #define LJ_ARCH_BITS		32
 #define LJ_ARCH_ENDIAN		LUAJIT_LE
+#if !defined(LJ_ARCH_HASFPU) && __SOFTFP__
 #define LJ_ARCH_HASFPU		0
+#endif
+#if !defined(LJ_ABI_SOFTFP) && !__ARM_PCS_VFP
 #define LJ_ABI_SOFTFP		1
+#endif
 #define LJ_ABI_EABI		1
 #define LJ_TARGET_ARM		1
 #define LJ_TARGET_EHRETREG	0
@@ -184,7 +186,6 @@
 #define LJ_ARCH_BITS		32
 #endif
 #define LJ_ARCH_ENDIAN		LUAJIT_BE
-#define LJ_ARCH_HASFPU		1
 #define LJ_TARGET_PPC		1
 #define LJ_TARGET_EHRETREG	3
 #define LJ_TARGET_JUMPRANGE	25	/* +-2^25 = +-32MB */
@@ -228,8 +229,9 @@
 #define LJ_ARCH_NAME		"ppcspe"
 #define LJ_ARCH_BITS		32
 #define LJ_ARCH_ENDIAN		LUAJIT_BE
-#define LJ_ARCH_HASFPU		1
+#ifndef LJ_ABI_SOFTFP
 #define LJ_ABI_SOFTFP		1
+#endif
 #define LJ_ABI_EABI		1
 #define LJ_TARGET_PPCSPE	1
 #define LJ_TARGET_EHRETREG	3
@@ -251,7 +253,6 @@
 #define LJ_ARCH_ENDIAN		LUAJIT_BE
 #endif
 #define LJ_ARCH_BITS		32
-#define LJ_ARCH_HASFPU		1
 #define LJ_TARGET_MIPS		1
 #define LJ_TARGET_EHRETREG	4
 #define LJ_TARGET_JUMPRANGE	27	/* 2*2^27 = 256MB-aligned region */
@@ -300,9 +301,6 @@
 #if LJ_TARGET_ARM
 #if defined(__ARMEB__)
 #error "No support for big-endian ARM"
-#endif
-#if defined(__ARM_PCS_VFP)
-#error "No support for ARM hard-float ABI (yet)"
 #endif
 #if __ARM_ARCH_6M__ || __ARM_ARCH_7M__ || __ARM_ARCH_7EM__
 #error "No support for Cortex-M CPUs"
@@ -358,6 +356,12 @@
 #define LJ_HASFFI		1
 #endif
 
+#ifndef LJ_ARCH_HASFPU
+#define LJ_ARCH_HASFPU		1
+#endif
+#ifndef LJ_ABI_SOFTFP
+#define LJ_ABI_SOFTFP		0
+#endif
 #define LJ_SOFTFP		(!LJ_ARCH_HASFPU)
 
 #if LJ_ARCH_ENDIAN == LUAJIT_BE

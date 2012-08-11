@@ -10,6 +10,12 @@
 
 #include "sg_object.h"
 
+struct grid_fit_y_only {
+    static void adjust(double& x, double& y) { y = round(y); }
+};
+
+typedef grid_fit_y_only grid_fit;
+
 class text_label
 {
     enum { scale_x = 100 };
@@ -20,7 +26,8 @@ class text_label
     str m_text_buf;
 
     double m_width;
-    double m_height;
+    double m_font_height;
+    double m_font_width;
 
     unsigned m_pos;
     double m_x, m_y;
@@ -36,24 +43,22 @@ class text_label
 
   public:
     text_label(const char* text, double size):
-    m_text_buf(text), m_height(size), m_pos(0),
+    m_text_buf(text), m_font_height(size), m_font_width(size),
     m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
     m_model_mtx(&identity_matrix),
     m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
     {
-        set_font_size();
+        update_font_size();
         m_width = get_text_width();
     }
 
     void model_mtx(const agg::trans_affine& m) { m_model_mtx = &m; }
 
-    void set_font_size()
+    void font_size(double height, double width)
     {
-        m_font_eng.height(m_height);
-        m_font_eng.width(m_height * scale_x);
+        m_font_height = height;
+        m_font_width = width;
     }
-
-    double text_height() const { return m_height; }
 
     const str& text() const { return m_text_buf; }
 
@@ -72,9 +77,16 @@ class text_label
 
         if(glyph->data_type == agg::glyph_data_outline)
         {
-            m_text_mtx.tx = m_x / scale_x;
-            m_text_mtx.ty = floor(m_y + 0.5);
-            m_model_mtx->transform(&m_text_mtx.tx, &m_text_mtx.ty);
+            agg::trans_affine& m = m_text_mtx;
+
+            m.tx = m_x / scale_x;
+            m.ty = m_y;
+            m_model_mtx->transform(&m.tx, &m.ty);
+
+            if (fabs(m.sx * m.sy) > fabs(m.shx * m.shy))
+                grid_fit::adjust(m.tx, m.ty);
+            else
+                grid_fit::adjust(m.ty, m.tx);
 
             m_advance_x = glyph->advance_x;
             m_advance_y = glyph->advance_y;
@@ -88,7 +100,7 @@ class text_label
     void rewind(double hjustif, double vjustif)
     {
         m_x = scale_x * (- hjustif * m_width);
-        m_y = - 0.86 * vjustif * m_height;
+        m_y = - 0.86 * vjustif * m_font_height;
         m_advance_x = 0;
         m_advance_y = 0;
         m_pos = 0;
@@ -97,7 +109,7 @@ class text_label
         agg::trans_affine_scaling scale_mtx(1.0 / double(scale_x), 1.0);
         trans_affine_compose (m_text_mtx, scale_mtx);
 
-        set_font_size();
+        update_font_size();
         load_glyph();
     }
 
@@ -118,7 +130,7 @@ class text_label
 
     void approximation_scale(double as) { m_text_curve.approximation_scale(as); }
 
-    double get_text_height() const { return m_height; }
+    double get_text_height() const { return m_font_height; }
 
     double get_text_width()
     {
@@ -138,6 +150,13 @@ class text_label
         }
 
         return x / double(scale_x);
+    }
+
+private:
+    void update_font_size()
+    {
+        m_font_eng.height(m_font_height);
+        m_font_eng.width(m_font_width * scale_x);
     }
 };
 

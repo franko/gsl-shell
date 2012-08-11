@@ -45,7 +45,7 @@ B-Splines functions
 .. function:: bspline(a, b, N[, order])
               bspline(knots[, order])
 
-   Create an object of type :class:`BSpline`. In the first form it will create a basis splines in the interval from ``a`` to ``b`` with ``N`` uniformly spaced breaks. The ``order`` is 4 if unspecified, it does correspond to cubic splines. In the second form you should provide a non-decreasing list ``knots`` with all the points.
+   Create an object of type :class:`BSpline`. In the first form it will create a basis splines in the interval from ``a`` to ``b`` with ``N`` uniformly spaced breaks. The ``order`` is 4 if unspecified, it corresponds to cubic splines. In the second form you should provide a non-decreasing list ``knots`` with all the points.
 
 .. class:: BSpline
 

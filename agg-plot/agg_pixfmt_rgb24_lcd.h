@@ -116,8 +116,8 @@ namespace agg
 
         void copy_hline(int x, int y, unsigned len, const color_type& c)
         {
-            int xr = x / 3;
-            int8u* p = m_rbuf->row_ptr(x, y, len) + xr;
+            int xr = x - (x % 3);
+            int8u* p = m_rbuf->row_ptr(y) + xr;
             for (int ilen = len; ilen > 0; p += 3, ilen -= 3)
             {
                 p[0] = c.r;
@@ -188,8 +188,8 @@ namespace agg
 
         void copy_hline(int x, int y, unsigned len, const color_type& c)
         {
-            int xr = x / 3;
-            int8u* p = m_rbuf->row_ptr(x, y, len) + xr;
+            int xr = x - (x % 3);
+            int8u* p = m_rbuf->row_ptr(y) + xr;
             for (int ilen = len; ilen > 0; p += 3, ilen -= 3)
             {
                 p[0] = c.r;

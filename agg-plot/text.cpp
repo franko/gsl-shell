@@ -11,10 +11,10 @@ namespace draw {
   void
   text::apply_transform(const agg::trans_affine& m, double as)
   {
-    m_matrix.tx = m_x;
-    m_matrix.ty = m_y;
-
-    m.transform(&m_matrix.tx, &m_matrix.ty);
+    double x = m_x, y = m_y;
+    m.transform(&x, &y);
+    m_matrix.tx = x;
+    m_matrix.ty = round(y);
   }
 
   void
