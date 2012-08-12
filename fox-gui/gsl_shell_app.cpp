@@ -12,6 +12,7 @@ FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]=
     FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_REQUEST, gsl_shell_app::on_lua_request),
     FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_QUIT, gsl_shell_app::on_lua_quit),
     FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE, gsl_shell_app::on_console_close),
+    FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_LUA_RESTART, gsl_shell_app::on_restart_lua_request),
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
 };
 
@@ -22,7 +23,7 @@ gsl_shell_app* global_app;
 gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
     m_engine(this)
 {
-    m_lua_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
+    m_signal_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
 
     FXGUISignal* quit = new FXGUISignal(this, this, ID_LUA_QUIT);
     m_engine.set_closing_signal(quit);
@@ -35,41 +36,58 @@ gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
 
 gsl_shell_app::~gsl_shell_app()
 {
-    delete m_lua_request;
+    delete m_signal_request;
+}
+
+void gsl_shell_app::window_create_request(FXMainWindow* win)
+{
+    m_request.cmd = create_window_rq;
+    m_request.win = win;
+
+    m_signal_request->signal();
+}
+
+// this is called when Lua ask to close a window
+void gsl_shell_app::window_close_request(FXMainWindow* win)
+{
+    m_request.cmd = close_window_rq;
+    m_request.win = win;
+
+    m_signal_request->signal();
 }
 
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 {
-    for (unsigned k = 0; k < m_win_queue.size(); k++)
+    if (m_request.cmd == create_window_rq)
     {
-        FXMainWindow* win = m_win_queue[k];
+        FXMainWindow* win = m_request.win;
         win->create();
         win->show(PLACEMENT_SCREEN);
+        m_request.signal_done();
     }
-    m_win_queue.clear();
-    m_window_mapping.signal();
+    else if (m_request.cmd == close_window_rq)
+    {
+        FXMainWindow* win = m_request.win;
+        win->close(TRUE);
+        m_request.signal_done();
+    }
+    m_request.cmd = no_rq;
     return 1;
 }
 
 long gsl_shell_app::on_lua_quit(FXObject*, FXSelector, void*)
 {
-    m_engine.close();
     exit(0);
     return 1;
 }
 
-void gsl_shell_app::window_create_request(FXMainWindow* win)
-{
-    m_win_queue.add(win);
-    m_lua_request->signal();
-}
-
 long gsl_shell_app::on_console_close(FXObject* sender, FXSelector, void*)
 {
-    m_engine.stop();
+    m_engine.set_request(gsl_shell_thread::exit_request);
     return 1;
 }
 
+// this is called when the user press the button to close the window.
 long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
 {
     fx_plot_window* win = (fx_plot_window*) sender;
@@ -77,8 +95,18 @@ long gsl_shell_app::on_window_close(FXObject* sender, FXSelector, void*)
     return 0;
 }
 
-void gsl_shell_app::wait_window_mapping()
+void gsl_shell_app::wait_action()
 {
     FXMutex& app_mutex = mutex();
-    m_window_mapping.wait(app_mutex);
+    do
+    {
+        m_request.wait(app_mutex);
+    }
+    while (m_request.cmd != no_rq);
+}
+
+long gsl_shell_app::on_restart_lua_request(FXObject*, FXSelector, void*)
+{
+    m_engine.set_request(gsl_shell_thread::restart_request);
+    return 0;
 }

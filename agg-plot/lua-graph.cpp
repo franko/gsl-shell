@@ -43,7 +43,7 @@ pthread_mutex_t agg_mutex[1];
 void
 graph_close_windows (lua_State *L)
 {
-  window_index_apply_all (L, window_close_wait);
+  window_index_apply_all (L, app_window_hooks->close);
 }
 
 void

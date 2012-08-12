@@ -2,10 +2,17 @@
 #include "fox_gsl_shell.h"
 #include "lua_plot_window.h"
 #include "window_registry.h"
+#include "lua-graph.h"
 
 void fox_gsl_shell::init()
 {
     gsl_shell_thread::init();
+}
+
+void fox_gsl_shell::close()
+{
+    graph_close_windows(L);
+    gsl_shell_thread::close();
 }
 
 void

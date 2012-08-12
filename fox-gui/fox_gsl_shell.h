@@ -14,7 +14,10 @@ public:
     ~fox_gsl_shell() { delete m_close; }
 
     virtual void init();
+    virtual void close();
+
     virtual void before_eval();
+    // virtual void restart_callback();
     virtual void quit_callback();
 
     void set_closing_signal(FXGUISignal* s) { m_close = s; }

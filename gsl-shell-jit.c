@@ -106,6 +106,7 @@ static const char *progname = LUA_PROGNAME;
 struct window_hooks app_window_hooks[1] = {{
     window_new, window_attach,
     window_slot_update, window_slot_refresh,
+    window_close_wait,
     window_save_slot_image, window_restore_slot_image,
     window_register,
   }

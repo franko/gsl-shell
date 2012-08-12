@@ -12,6 +12,7 @@ struct window_hooks {
   int (*attach)(lua_State* L);
   int (*update)(lua_State* L);
   int (*refresh)(lua_State* L);
+  int (*close)(lua_State* L);
   int (*save_image)(lua_State* L);
   int (*restore_image)(lua_State* L);
 

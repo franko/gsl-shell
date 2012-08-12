@@ -15,8 +15,6 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int fox_window_close           (lua_State *L);
-
 static const struct luaL_Reg fox_window_functions[] =
 {
     {"window",         fox_window_new},
@@ -53,13 +51,10 @@ fox_window_new (lua_State *L)
     bwin->window = win;
 
     win->setTarget(app);
+
     app->window_create_request(win);
-
     win->lua_id = window_index_add (L, -1);
-
-    do
-        app->wait_window_mapping();
-    while (!win->shown());
+    app->wait_action();
 
     app->unlock();
     return 1;
@@ -82,6 +77,14 @@ fox_window_attach (lua_State *L)
 int
 fox_window_close (lua_State *L)
 {
+    fx_plot_window *win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW)->window;
+    gsl_shell_app* app = win->get_app();
+
+    app->lock();
+    app->window_close_request(win);
+    app->wait_action();
+    app->unlock();
+
     return 0;
 }
 
