@@ -12,6 +12,7 @@ extern "C" {
 
 class gsl_shell_thread : public gsl_shell
 {
+    enum thread_cmd_e { thread_cmd_exec, thread_cmd_exit, thread_cmd_continue };
 public:
     enum engine_status_e { starting, ready, busy, terminated };
     enum request_e { no_request = 0, exit_request, restart_request };
@@ -45,12 +46,15 @@ public:
     {
         return m_eval_status;
     }
+
     pthread::mutex& eval_mutex()
     {
         return m_eval;
     }
 
 private:
+    thread_cmd_e process_request();
+
     pthread_t m_thread;
     engine_status_e m_status;
     stdout_redirect m_redirect;

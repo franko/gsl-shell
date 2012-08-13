@@ -44,7 +44,6 @@ void gsl_shell_app::window_create_request(FXMainWindow* win)
 {
     m_request.cmd = create_window_rq;
     m_request.win = win;
-
     m_signal_request->signal();
 }
 
@@ -53,26 +52,44 @@ void gsl_shell_app::window_close_request(FXMainWindow* win)
 {
     m_request.cmd = close_window_rq;
     m_request.win = win;
-
     m_signal_request->signal();
 }
 
+void gsl_shell_app::reset_console_request()
+{
+    m_request.cmd = clear_console_rq;
+    m_signal_request->signal();
+}
+
+
 long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void*)
 {
-    if (m_request.cmd == create_window_rq)
+    switch (m_request.cmd)
+    {
+    case create_window_rq:
     {
         FXMainWindow* win = m_request.win;
         win->create();
         win->show(PLACEMENT_SCREEN);
-        m_request.signal_done();
+        break;
     }
-    else if (m_request.cmd == close_window_rq)
+    case close_window_rq:
     {
         FXMainWindow* win = m_request.win;
         win->close(TRUE);
-        m_request.signal_done();
+        break;
+    }
+    case clear_console_rq:
+    {
+        m_console->init();
+        break;
+    }
+    default:
+        m_request.cmd = no_rq;
+        return 1;
     }
     m_request.cmd = no_rq;
+    m_request.signal_done();
     return 1;
 }
 
@@ -110,10 +127,4 @@ long gsl_shell_app::on_restart_lua_request(FXObject*, FXSelector, void*)
 {
     m_engine.set_request(gsl_shell_thread::restart_request);
     return 0;
-}
-
-void
-gsl_shell_app::reset_console()
-{
-    m_console->init();
 }

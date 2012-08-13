@@ -41,10 +41,37 @@ void gsl_shell_thread::start()
     }
 }
 
+gsl_shell_thread::thread_cmd_e
+gsl_shell_thread::process_request()
+{
+    thread_cmd_e cmd;
+
+    if (m_request == gsl_shell_thread::exit_request)
+    {
+        cmd = thread_cmd_exit;
+    }
+    else if (m_request == gsl_shell_thread::restart_request)
+    {
+        this->close();
+        this->init();
+        restart_callback();
+        cmd = thread_cmd_continue;
+    }
+    else
+    {
+        cmd = thread_cmd_exec;
+    }
+
+    m_request = gsl_shell_thread::no_request;
+    return cmd;
+}
+
 void
 gsl_shell_thread::run()
 {
-    while (m_request != gsl_shell_thread::exit_request)
+    thread_cmd_e cmd = thread_cmd_continue;
+
+    while (cmd != thread_cmd_exit)
     {
         m_eval.lock();
         m_status = ready;
@@ -55,23 +82,12 @@ gsl_shell_thread::run()
 
         before_eval();
 
-        if (m_request == gsl_shell_thread::exit_request)
-        {
-            m_eval.unlock();
-            break;
-        }
-
         m_status = busy;
         m_eval.unlock();
 
-        if (m_request == gsl_shell_thread::restart_request)
-        {
-            this->close();
-            this->init();
-            restart_callback();
-            m_request = gsl_shell_thread::no_request;
-        }
-        else
+        cmd = process_request();
+
+        if (cmd == thread_cmd_exec)
         {
             // here m_line_pending cannot be modified by the other thread
             // because we declared above m_status to "busy" befor unlocking m_eval
@@ -80,6 +96,8 @@ gsl_shell_thread::run()
 
             fputc(eot_character, stdout);
             fflush(stdout);
+
+            cmd = process_request();
         }
     }
 

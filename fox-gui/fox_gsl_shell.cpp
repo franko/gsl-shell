@@ -36,7 +36,10 @@ fox_gsl_shell::quit_callback()
 void
 fox_gsl_shell::restart_callback()
 {
-    m_app->reset_console();
+    m_app->lock();
+    m_app->reset_console_request();
+    m_app->wait_action();
+    m_app->unlock();
 }
 
 void

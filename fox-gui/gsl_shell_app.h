@@ -11,7 +11,12 @@ class gsl_shell_app : public FXApp
 {
     FXDECLARE(gsl_shell_app)
 
-    enum lua_request_e { no_rq = 0, create_window_rq, close_window_rq };
+    enum lua_request_e {
+        no_rq = 0,
+        create_window_rq,
+        close_window_rq,
+        clear_console_rq,
+    };
 
     struct lua_request {
         lua_request_e cmd;
@@ -41,8 +46,9 @@ public:
 
     void window_create_request(FXMainWindow* win);
     void window_close_request(FXMainWindow* win);
+    void reset_console_request();
+
     void wait_action();
-    void reset_console();
 
     long on_lua_request(FXObject*,FXSelector,void*);
     long on_window_close(FXObject*,FXSelector,void*);

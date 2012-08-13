@@ -55,7 +55,6 @@ void fx_console::create()
 {
     FXText::create();
     init();
-    setFocus();
     m_lua_io_thread->start();
 }
 
@@ -70,6 +69,7 @@ void fx_console::init()
     setText(msg);
     FXint pos = getLength();
     setCursorPos(pos);
+    setFocus();
     prepare_input();
 }
 
