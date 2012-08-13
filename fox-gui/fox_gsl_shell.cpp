@@ -1,5 +1,6 @@
 
 #include "fox_gsl_shell.h"
+#include "gsl_shell_app.h"
 #include "lua_plot_window.h"
 #include "window_registry.h"
 #include "lua-graph.h"
@@ -31,6 +32,11 @@ fox_gsl_shell::quit_callback()
 {
     if (m_close)
         m_close->signal();
+}
+void
+fox_gsl_shell::restart_callback()
+{
+    m_app->reset_console();
 }
 
 void

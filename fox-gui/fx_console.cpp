@@ -54,19 +54,22 @@ void fx_console::show_errors()
 void fx_console::create()
 {
     FXText::create();
+    init();
+    setFocus();
+    m_lua_io_thread->start();
+}
+
+void fx_console::init()
+{
     FXString msg;
     msg.format("GSL Shell %s, Copyright (C) 2009-2012 Francesco Abbate\n"
                "GNU Scientific Library, Copyright (C) The GSL Team\n"
                "%s -- %s\n",
                GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
-    init(msg);
-    setFocus();
-    m_lua_io_thread->start();
-}
 
-void fx_console::init(const FXString& greeting)
-{
-    appendText(greeting);
+    setText(msg);
+    FXint pos = getLength();
+    setCursorPos(pos);
     prepare_input();
 }
 

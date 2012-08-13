@@ -18,6 +18,8 @@ public:
         delete m_text_font;
     }
 
+    fx_console* console() { return m_text; }
+
     virtual void create();
 
     long on_close(FXObject* obj, FXSelector sel, void* ptr);

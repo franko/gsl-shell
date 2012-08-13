@@ -5,6 +5,7 @@
 
 #include "agg_array.h"
 #include "fox_gsl_shell.h"
+#include "fx_console.h"
 
 class gsl_shell_app : public FXApp
 {
@@ -41,6 +42,7 @@ public:
     void window_create_request(FXMainWindow* win);
     void window_close_request(FXMainWindow* win);
     void wait_action();
+    void reset_console();
 
     long on_lua_request(FXObject*,FXSelector,void*);
     long on_window_close(FXObject*,FXSelector,void*);
@@ -61,6 +63,7 @@ private:
     fox_gsl_shell m_engine;
     FXGUISignal* m_signal_request;
     lua_request m_request;
+    fx_console* m_console;
 };
 
 extern gsl_shell_app* global_app;

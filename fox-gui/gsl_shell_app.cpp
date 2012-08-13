@@ -31,7 +31,8 @@ gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
     global_app = this;
     m_engine.start();
 
-    new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
+    m_console = gsw->console();
 }
 
 gsl_shell_app::~gsl_shell_app()
@@ -109,4 +110,10 @@ long gsl_shell_app::on_restart_lua_request(FXObject*, FXSelector, void*)
 {
     m_engine.set_request(gsl_shell_thread::restart_request);
     return 0;
+}
+
+void
+gsl_shell_app::reset_console()
+{
+    m_console->init();
 }

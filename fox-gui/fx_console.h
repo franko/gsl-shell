@@ -23,7 +23,7 @@ public:
     ~fx_console();
 
     // prepare to accept input
-    void init(const FXString& greeting);
+    void init();
     void prepare_input();
     void show_errors();
 
