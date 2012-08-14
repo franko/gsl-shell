@@ -68,7 +68,7 @@ TARGETS = $(GSL_SHELL)
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
-SUBDIRS += agg-plot
+SUBDIRS += agg-plot fox-gui
 LUAGSL_LIBS += agg-plot/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
