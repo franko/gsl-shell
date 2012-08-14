@@ -78,9 +78,13 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
     FXEvent* event = (FXEvent*)ptr;
     if (event->code == KEY_Return && m_status == input_mode)
     {
-        FXint pos = getCursorPos();
-        FXint line_end = lineEnd(pos), line_start = m_input_begin;
-        extractText(m_input, line_start, line_end - line_start);
+        if (getCursorPos() < m_input_begin)
+            return 1;
+
+        FXint buf_len = getLength();
+        FXint line_len = buf_len - m_input_begin;
+        extractText(m_input, m_input_begin, line_len);
+        setCursorPos(buf_len);
         appendText("\n");
 
         this->m_status = output_mode;
