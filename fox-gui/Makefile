@@ -29,8 +29,10 @@ GSL_SHELL_GUI = gsl-shell-fox.exe
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
+GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a
+
 INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
-LIBS += $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++
+LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++
 
 INCLUDES += $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS)
@@ -48,7 +50,7 @@ TARGETS = $(GSL_SHELL_GUI)
 
 all: $(TARGETS)
 
-$(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES)
+$(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES) $(GSL_SHELL_LIBS)
 	@echo Linking $@
 	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
 
