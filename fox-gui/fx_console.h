@@ -14,8 +14,9 @@ class fx_console : public FXText
 
 private:
     enum status_e { not_ready, input_mode, output_mode };
+    enum text_style_e { plain_style = 0, prompt_style = 1, error_style = 2};
 
-    static char const * const prompt;
+    static const FXchar* prompt;
 
 public:
     fx_console(gsl_shell_thread* gs, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2);
@@ -27,7 +28,6 @@ public:
     void prepare_input();
     void show_errors();
 
-public:
     virtual void create();
 
     long on_key_press(FXObject*,FXSelector,void*);
@@ -44,6 +44,9 @@ protected:
     fx_console() {}
 
 private:
+    void init_styles();
+
+private:
     FXint m_input_begin;
     FXString m_input;
     status_e m_status;
@@ -53,6 +56,8 @@ private:
     FXGUISignal* m_lua_io_signal;
     FXMutex m_lua_io_mutex;
     FXString m_lua_io_buffer;
+
+    static FXHiliteStyle m_styles[2];
 };
 
 #endif

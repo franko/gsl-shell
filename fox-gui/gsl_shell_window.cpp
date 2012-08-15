@@ -34,13 +34,6 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXStr
     m_text_font = new FXFont(app, CONSOLE_FONT, 10);
     m_text = new fx_console(gs, textbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
-
-    FXColor bgcol = FXRGB(0x27, 0x28, 0x22);
-    FXColor fgcol = FXRGB(0xe4, 0xe4, 0xc0);
-
-    m_text->setBackColor(bgcol);
-    m_text->setTextColor(fgcol);
-    m_text->setCursorColor(fgcol);
 }
 
 void gsl_shell_window::create()

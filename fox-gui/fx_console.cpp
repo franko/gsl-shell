@@ -8,6 +8,8 @@
 #include "gsl_shell_thread.h"
 #include "fx_plot_window.h"
 
+FXHiliteStyle fx_console::m_styles[2];
+
 FXDEFMAP(fx_console) fx_console_map[]=
 {
     FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
@@ -16,7 +18,7 @@ FXDEFMAP(fx_console) fx_console_map[]=
 
 FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 
-char const * const fx_console::prompt = "> ";
+const FXchar * fx_console::prompt = "> ";
 
 fx_console::fx_console(gsl_shell_thread* gs, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
     FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
@@ -25,6 +27,8 @@ fx_console::fx_console(gsl_shell_thread* gs, FXComposite *p, FXObject* tgt, FXSe
     FXApp* app = getApp();
     m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
     m_lua_io_thread = new lua_io_thread(m_engine, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
+
+    init_styles();
 }
 
 fx_console::~fx_console()
@@ -33,9 +37,43 @@ fx_console::~fx_console()
     delete m_lua_io_signal;
 }
 
+void fx_console::init_styles()
+{
+    FXColor bgcol   = FXRGB(0x27, 0x28, 0x22);
+    FXColor bgcol_a = FXRGB(0x10, 0x10, 0x42);
+    FXColor fgcol   = FXRGB(0xe4, 0xe4, 0xc0);
+    FXColor fgcol_a = FXRGB(0x66, 0xd9, 0xef);
+    FXColor fgcol_e = FXRGB(0xc0, 0x10, 0x10);
+
+    setBackColor(bgcol);
+    setTextColor(fgcol);
+    setCursorColor(fgcol);
+
+    m_styles[0].normalForeColor = fgcol_a;
+    m_styles[0].normalBackColor = 0;
+    m_styles[0].selectForeColor = fgcol_a;
+    m_styles[0].selectBackColor = 0;
+    m_styles[0].hiliteForeColor = fgcol_a;
+    m_styles[0].hiliteBackColor = 0;
+    m_styles[0].activeBackColor = bgcol_a;
+    m_styles[0].style = STYLE_TEXT;
+
+    m_styles[1].normalForeColor = fgcol_e;
+    m_styles[1].normalBackColor = 0;
+    m_styles[1].selectForeColor = fgcol_e;
+    m_styles[1].selectBackColor = 0;
+    m_styles[1].hiliteForeColor = fgcol_e;
+    m_styles[1].hiliteBackColor = 0;
+    m_styles[1].activeBackColor = 0;
+    m_styles[1].style = STYLE_TEXT;
+
+    setStyled();
+    setHiliteStyles(m_styles);
+}
+
 void fx_console::prepare_input()
 {
-    appendText(prompt, strlen(prompt));
+    appendStyledText(prompt, strlen(prompt), prompt_style);
     m_status = input_mode;
     m_input_begin = getCursorPos();
 }
@@ -44,7 +82,8 @@ void fx_console::show_errors()
 {
     if (m_engine->eval_status() == gsl_shell::eval_error)
     {
-        appendText("Error reported: ");
+        FXchar const * const em = "error reported: ";
+        appendStyledText(em, strlen(em), error_style);
         appendText(m_engine->error_msg());
         appendText("\n");
         makePositionVisible(getCursorPos());
