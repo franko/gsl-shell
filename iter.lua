@@ -21,10 +21,13 @@
 local cat = table.concat
 local fmt = string.format
 
-local gsl_type
 do
    local reg = debug.getregistry()
-   gsl_typename = reg.__gsl_type
+
+   gsl_type = function(t)
+      local s = reg.__gsl_type(t)
+      return (s == "cdata" and reg.__gsl_ffi_type(t) or s)
+   end
 end
 
 function math.divmod(n, p)
@@ -42,46 +45,52 @@ local function key_tos(k)
    end
 end
 
-tos = function (t, maxdepth)
+local max_depth = 3
+
+tos = function (t, depth)
    local tp = type(t)
    if tp == 'table' then
-      if maxdepth <= 0 then return '<table>' end
+      if depth >= max_depth then return fmt('<table: %p>', t) end
       local ls, n = {}, #t
       local skip = {}
       for i, v in ipairs(t) do 
          skip[i] = true
-         ls[i] = tos(v, maxdepth-1)
+         ls[i] = tos(v, depth + 1)
       end
       for k, v in pairs(t) do
          if not skip[k] then
-            ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1)
+            ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, depth + 1)
          end
       end
       return '{' .. cat(ls, ', ') .. '}'
    elseif tp == 'function' then
       return '<function>'
    elseif tp == 'string' then
-      return fmt('%q', t)
+      return (depth == 0 and t or fmt('%q', t))
    elseif tp == 'userdata' then
       local mt = getmetatable(t)
       local ftostr = mt and mt.__tostring
       if ftostr then return ftostr(t) else
-         if gsl_typename then
-            return fmt('<%s: %p>', gsl_typename(t), t)
+         if gsl_type then
+            return fmt('<%s: %p>', gsl_type(t), t)
          else
             return fmt('<userdata: %p>', t)
          end
       end
-   else
-      return tostring(t)
+   elseif tp == 'cdata' then
+      local tpext = gsl_type and gsl_type(t) or tp
+      if tpext == 'matrix' or tpext == 'complex matrix' then
+         return (depth == 0 and t:show() or fmt("<%s: %p>", tpext, t))
+      end
    end
+   return tostring(t)
 end
 
 local function myprint(...)
    local n = select('#', ...)
    for i=1, n do
       if i > 1 then io.write(', ') end
-      io.write(tos(select(i, ...), 3))
+      io.write(tos(select(i, ...), 0))
    end
    io.write('\n')
 end

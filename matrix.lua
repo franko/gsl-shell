@@ -239,7 +239,7 @@ local function concat_pad(t, pad)
    return row
 end
 
-local function matrix_tostring_gen(sel)
+local function matrix_display_gen(sel)
    return function(m)
              local n1, n2 = matrix_dim(m)
              local sq = 0
@@ -668,6 +668,7 @@ local matrix_methods = {
    copy  = matrix_copy,
    norm  = matrix_norm,
    slice = matrix_slice,
+   show  = matrix_display_gen(mat_real_get),
 }
 
 local function matrix_index(m, i)
@@ -718,8 +719,6 @@ local matrix_mt = {
 
    __index    = matrix_index,
    __newindex = matrix_newindex,
-
-   __tostring = matrix_tostring_gen(mat_real_get),
 }
 
 ffi.metatype(gsl_matrix, matrix_mt)
@@ -743,7 +742,8 @@ local matrix_complex_methods = {
    set   = matrix_complex_set,
    copy  = matrix_complex_copy,
    norm  = matrix_complex_norm,
-   slice = matrix_complex_slice
+   slice = matrix_complex_slice,
+   show  = matrix_display_gen(mat_complex_get),
 }
 
 local function matrix_complex_index(m, i)
@@ -798,8 +798,6 @@ local matrix_complex_mt = {
 
    __index    = matrix_complex_index,
    __newindex = matrix_complex_newindex,
-
-   __tostring = matrix_tostring_gen(mat_complex_get),
 }
 
 ffi.metatype(gsl_matrix_complex, matrix_complex_mt)
@@ -981,5 +979,14 @@ matrix.tr = function(a)
 
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
+
+local reg = debug.getregistry()
+
+function reg.__gsl_ffi_type(a)
+   if     ffi.istype(gsl_complex, a)        then return "complex"
+   elseif ffi.istype(gsl_matrix, a)         then return "matrix"
+   elseif ffi.istype(gsl_matrix_complex, a) then return "complex matrix" end
+   return "cdata"
+end
 
 return matrix
