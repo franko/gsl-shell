@@ -22,3 +22,10 @@ Overview
 .. function:: restore_env()
 
    This function restores the original environment by removing the effect of all the :func:`use` calls made before.
+
+.. function:: gsl_type(x)
+
+   This function is an extension of the standard Lua function "type".
+   It does returns the same string of the "type" function except when the argument is a GSL object.
+   When this happens it does return a string corresponding to its actual type instead of "userdata" or "cdata".
+   For complex number and real or complex matrix it does return respectively "complex", "matrix" and "complex matrix".
