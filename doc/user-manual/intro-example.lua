@@ -21,13 +21,13 @@ for d=2, max_dim do
    --Obtaining monte carlo vegas callback
    local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
    local fmt = "Volume = %.3f +/- %.3f "
-   echo(string.format(fmt,res*2^d,sig*2^d))
+   print(string.format(fmt,res*2^d,sig*2^d))
 
    --Increasing the number of calls to reach a satisfying result
    while(sig/res > 0.005) do
-      echo("Increasing accuracy, doubling number of calls...")
+      print("Increasing accuracy, doubling number of calls...")
       res,sig,num = cont(calls*(2^n))
-      echo(string.format(fmt,res*2^d,sig*2^d))
+      print(string.format(fmt,res*2^d,sig*2^d))
       n=n+1
    end
    ln:line_to(d,res*2^d)

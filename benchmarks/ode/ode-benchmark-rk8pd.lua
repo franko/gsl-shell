@@ -25,5 +25,5 @@ for k=1, 10 do
 end
 
 for i, line in ipairs(results) do
-   echo(i, line)
+   print(i, line)
 end

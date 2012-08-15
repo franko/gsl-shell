@@ -95,7 +95,6 @@ local function myprint(...)
    io.write('\n')
 end
 
-echo = print
 print = myprint
 
 local function sequence(f, a, b)

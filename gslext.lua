@@ -26,7 +26,7 @@ function demo(name)
    if not entry then
       demomod.list()
    else
-      echo(entry.description)
+      print(entry.description)
       entry.f()
    end
 end

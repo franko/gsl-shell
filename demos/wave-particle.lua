@@ -316,11 +316,11 @@ end
 local function wave_demo()
    info 'Finding energy eigenvalues (roots)...'
    roots = root_grid_search(energy_limit)
-   echo 'done'
+   print 'done'
 
    info 'Calculating energy eigenstates...'
    As_mat = As_mat_compute(roots)
-   echo 'done'
+   print 'done'
 
    initstate = {x0= -14, p0= 8, sigma= 1.5}
 
@@ -335,7 +335,7 @@ local function wave_demo()
       coeffs.data[2*i  ] = cr
       coeffs.data[2*i+1] = ci
    end
-   echo 'done'
+   print 'done'
 
    plot_coeffs()
 
@@ -356,7 +356,7 @@ local function wave_demo()
 	 fxv.data[2*n*k + 2*i + 1] = fi
       end
    end
-   echo 'done'
+   print 'done'
 
    local pcs = graph.canvas()
    pcs:limits(x1, 0, x2, 1.4)
@@ -366,7 +366,7 @@ local function wave_demo()
 
    pcs:pushlayer()
 
-   echo 'READY: press enter'
+   print 'READY: press enter'
    io.read '*l'
 
    anim(pcs)

@@ -135,7 +135,7 @@ local function legend_demo()
 
    p:save_svg('demo.svg', 600, 400)
 
-   echo('Plot saved in "demo.svg".')
+   print('Plot saved in "demo.svg".')
 end
 
 return {'Plotting', {

@@ -13,7 +13,7 @@ local function check_sampling(n)
       if n <= 1 then
          error('sampling points should be > 1')
       elseif n > n_sampling_max then
-         echo('warning: too many sampling points requested, ' ..
+         print('warning: too many sampling points requested, ' ..
               'limiting to ' .. n_sampling_max)
          n = n_sampling_max
       end

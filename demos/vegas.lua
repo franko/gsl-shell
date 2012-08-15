@@ -10,10 +10,10 @@ local function testdim(n)
      return s
   end
   local a, b = ilist(|| lo, n), ilist(|| hi, n)
-  echo("Integrating SUM_(k=1,"..n..") k*x[k]^2")
+  print("Integrating SUM_(k=1,"..n..") k*x[k]^2")
   local calls = 1e4*n
   local result,sigma,runs,cont=monte_vegas(integrand,a,b,calls)
-  echo( string.format([[
+  print( string.format([[
 result = %.6f
 sigma  = %.6f
 exact  = %.6f
@@ -50,17 +50,17 @@ local function demo2()
   local ln = graph.path(1, 2) -- 1-sphere = [-1, 1] (length 2)
   local max_dim = 14
   for d=2, max_dim do
-    echo("==========================================")
-    echo("Calculating the volume of a unit ",d,"-sphere.")
+    print("==========================================")
+    print("Calculating the volume of a unit ",d,"-sphere.")
     local a, b = ilist(|| 0, d), ilist(|| 1, d)
     local calls, n = d*1e4,1
     local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
     local fmt = "Volume = %.3f +/- %.3f "
-    echo(string.format(fmt,res*2^d,sig*2^d))
+    print(string.format(fmt,res*2^d,sig*2^d))
     while(sig/res > 0.005) do
-      echo("Increasing accuracy, doubling number of calls...")
+      print("Increasing accuracy, doubling number of calls...")
       res,sig,num = cont(calls*(2^n))
-      echo(string.format(fmt,res*2^d,sig*2^d))
+      print(string.format(fmt,res*2^d,sig*2^d))
       n=n+1
     end
     ln:line_to(d,res*2^d)

@@ -21,13 +21,13 @@ local function nist_test(data_name, model_name)
 
    for i=1, 200 do
       s:iterate()
-      echo(i, ':', ' chisq=', s.chisq)
+      print(i, ':', ' chisq=', s.chisq)
       if s:test(0, 1e-8) then break end
    end
 
-   echo 'Solution:'
-   for j=1, p do echo(string.format('x[%i] = %14g ', j, s.x[j])) end
-   echo('chisq= ', s.chisq)
+   print 'Solution:'
+   for j=1, p do print(string.format('x[%i] = %14g ', j, s.x[j])) end
+   print('chisq= ', s.chisq)
 
    local p = plot()
    local pts = ipath(dataset.iter())

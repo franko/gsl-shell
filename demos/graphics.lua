@@ -50,7 +50,7 @@ end
 
 local function save_svg(p, name)
    p:save_svg(name, 400, 400)
-   echo('Plot saved in file \"' .. name .. '\".')
+   print('Plot saved in file \"' .. name .. '\".')
 end
 
 local function demo1()

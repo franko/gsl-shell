@@ -27,10 +27,10 @@ local function nist_test(data_name, model_name)
    return s, iter
 end
 
-echo 'starting benchmark'
+print 'starting benchmark'
 local t0 = time.ms()
 for k= 1, 80 do
    local s, iter = nist_test('hahn1', 'rat43')
-   echo(k, ':', 'iter=', iter, 'chisq=', s.chisq)
+   print(k, ':', 'iter=', iter, 'chisq=', s.chisq)
 end
-echo('benchmark terminated, execution time= ', time.ms() - t0, 'ms')
+print('benchmark terminated, execution time= ', time.ms() - t0, 'ms')

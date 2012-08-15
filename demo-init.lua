@@ -24,11 +24,11 @@ end
 
 local function print_demos_list()
    for group, t in pairs(demo_list) do
-      echo('*** ', group)
+      print('*** ', group)
       for k, v in ipairs(t) do
-	 echo(v.name .. ' - ' .. v.description)
+	 print(v.name .. ' - ' .. v.description)
       end
-      echo ''
+      print ''
    end
 end
 

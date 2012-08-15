@@ -70,7 +70,7 @@ end
 
 local save_svg = function(p)
 		    p:save_svg('demo.svg', 600, 400)
-		    echo 'Plot saved in SVG format in file "demo.svg".'
+		    print 'Plot saved in SVG format in file "demo.svg".'
 		 end
 
 -- create a plot and save in SVG format
@@ -78,7 +78,7 @@ local function demo1()
    local p = do_plot(save_svg, 'circle', 5, true)
 
    p:save('demo', 600, 400)
-   echo 'Plot saved in BMP format in demo.bmp (demo.ppm on linuex).'
+   print 'Plot saved in BMP format in demo.bmp (demo.ppm on linuex).'
 
    p:show()
 end
