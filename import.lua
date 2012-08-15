@@ -31,17 +31,17 @@ local function new_env()
 
    local function check_declared(n)
       if not declared[n] and what() ~= "C" then
-	 error("variable '"..n.."' is not declared", 3)
+         error("variable '"..n.."' is not declared", 3)
       end
    end
 
    local function check_assign(n)
       if not declared[n] then
-	 local w = what()
-	 if w ~= "main" and w ~= "C" then
-	    error("assign to undeclared variable '"..n.."'", 3)
-	 end
-	 declared[n] = true
+         local w = what()
+         if w ~= "main" and w ~= "C" then
+            error("assign to undeclared variable '"..n.."'", 3)
+         end
+         declared[n] = true
       end
    end
 
@@ -61,7 +61,7 @@ local function new_env()
    local function loader(...)
       local n = select('#', ...)
       for i = 1, n do
-	 local module_name = select(i, ...)
+         local module_name = select(i, ...)
          if module_name == 'strict' then
              use_strict = true
          else

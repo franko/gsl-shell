@@ -72,10 +72,10 @@ local function matrix_new(n1, n2, f)
    local m = matrix_alloc(n1, n2)
    if f then
       for i=0, n1-1 do
-	 for j=0, n2-1 do
-	    local x = check_real(f(i+1, j+1))
-	    m.data[i*n2+j] = x
-	 end
+         for j=0, n2-1 do
+            local x = check_real(f(i+1, j+1))
+            m.data[i*n2+j] = x
+         end
       end
    else
       ffi.fill(m.data, n1 * n2 * ffi.sizeof('double'), 0)
@@ -87,12 +87,12 @@ local function matrix_cnew(n1, n2, f)
    local m = matrix_calloc(n1, n2)
    if f then
       for i=0, n1-1 do
-	 for j=0, n2-1 do
-	    local z = f(i+1, j+1)
-	    local x, y = cartesian(z)
-	    m.data[2*i*n2+2*j  ] = x
-	    m.data[2*i*n2+2*j+1] = y
-	 end
+         for j=0, n2-1 do
+            local z = f(i+1, j+1)
+            local x, y = cartesian(z)
+            m.data[2*i*n2+2*j  ] = x
+            m.data[2*i*n2+2*j+1] = y
+         end
       end
    else
       ffi.fill(m.data, 2 * n1 * n2 * ffi.sizeof('double'), 0)
@@ -105,8 +105,8 @@ local function matrix_free(m)
       local b = m.block
       b.ref_count = b.ref_count - 1
       if b.ref_count == 0 then
-	 ffi.C.free(b.data)
-	 ffi.C.free(b)
+         ffi.C.free(b.data)
+         ffi.C.free(b)
       end
    end
 end
@@ -220,9 +220,9 @@ local function recttostr(x, y, eps)
       local sign = x+eps < 0 and '-' or ''
       local ax = abs(x)
       if y_sub then
-	 return format('%s'..fmt, sign, ax)
+         return format('%s'..fmt, sign, ax)
       else
-	 return format('%s'..fmt..'%s', sign, ax, itostr(y, eps, fmt, true))
+         return format('%s'..fmt..'%s', sign, ax, itostr(y, eps, fmt, true))
       end
    else
       return (y_sub and '0' or itostr(y, eps, fmt, false))
@@ -241,37 +241,37 @@ end
 
 local function matrix_tostring_gen(sel)
    return function(m)
-	     local n1, n2 = matrix_dim(m)
-	     local sq = 0
-	     for i=0, n1-1 do
-		for j=0, n2-1 do
-		   local x, y = sel(m, i, j)
-		   sq = sq + x*x + y*y
-		end
-	     end
-	     local eps = sqrt(sq) * 1e-8
-	     eps = eps > 0 and eps or 1
+             local n1, n2 = matrix_dim(m)
+             local sq = 0
+             for i=0, n1-1 do
+                for j=0, n2-1 do
+                   local x, y = sel(m, i, j)
+                   sq = sq + x*x + y*y
+                end
+             end
+             local eps = sqrt(sq) * 1e-8
+             eps = eps > 0 and eps or 1
 
-	     lsrow = {}
-	     local lmax = 0
-	     for i=0, n1-1 do
-		local row = {}
-		for j=0, n2-1 do
-		   local x, y = sel(m, i, j)
-		   local s = recttostr(x, y, eps)
-		   if #s > lmax then lmax = #s end
-		   row[j+1] = s
-		end
-		lsrow[i+1] = row
-	     end
+             lsrow = {}
+             local lmax = 0
+             for i=0, n1-1 do
+                local row = {}
+                for j=0, n2-1 do
+                   local x, y = sel(m, i, j)
+                   local s = recttostr(x, y, eps)
+                   if #s > lmax then lmax = #s end
+                   row[j+1] = s
+                end
+                lsrow[i+1] = row
+             end
 
-	     local ss = {}
-	     for i=0, n1-1 do
-		ss[i+1] = '[ ' .. concat_pad(lsrow[i+1], lmax) .. ' ]'
-	     end
+             local ss = {}
+             for i=0, n1-1 do
+                ss[i+1] = '[ ' .. concat_pad(lsrow[i+1], lmax) .. ' ]'
+             end
 
-	     return table.concat(ss, '\n')
-	  end
+             return table.concat(ss, '\n')
+          end
 end
 
 local function matrix_col(m, j)
@@ -345,23 +345,23 @@ local function matrix_vect_def(t)
    local isr = true
    for i=1,n do
       if not is_real(t[i]) then
-	 isr = false
-	 break
+         isr = false
+         break
       end
    end
 
    if isr then
       local m = matrix_alloc(n, 1)
       for i=0, n-1 do
-	 m.data[i] = t[i+1]
+         m.data[i] = t[i+1]
       end
       return m
    else
       local m = matrix_calloc(n, 1)
       for i=0, n-1 do
-	 local x, y = cartesian(t[i+1])
-	 m.data[2*i  ] = x
-	 m.data[2*i+1] = y
+         local x, y = cartesian(t[i+1])
+         m.data[2*i  ] = x
+         m.data[2*i+1] = y
       end
       return m
    end
@@ -371,9 +371,9 @@ local function mat_op_gen(n1, n2, opa, a, opb, b, oper)
    local c = matrix_alloc(n1, n2)
    for i = 0, n1-1 do
       for j = 0, n2-1 do
-	 local ar = opa(a,i,j)
-	 local br = opb(b,i,j)
-	 c.data[i*n2+j] = oper(ar, br)
+         local ar = opa(a,i,j)
+         local br = opb(b,i,j)
+         c.data[i*n2+j] = oper(ar, br)
       end
    end
    return c
@@ -383,11 +383,11 @@ local function mat_comp_op_gen(n1, n2, opa, a, opb, b, oper)
    local c = matrix_calloc(n1, n2)
    for i = 0, n1-1 do
       for j = 0, n2-1 do
-	 local ar, ai = opa(a,i,j)
-	 local br, bi = opb(b,i,j)
-	 local zr, zi = oper(ar, br, ai, bi)
-	 c.data[2*i*n2+2*j  ] = zr
-	 c.data[2*i*n2+2*j+1] = zi
+         local ar, ai = opa(a,i,j)
+         local br, bi = opb(b,i,j)
+         local zr, zi = oper(ar, br, ai, bi)
+         c.data[2*i*n2+2*j  ] = zr
+         c.data[2*i*n2+2*j+1] = zi
       end
    end
    return c
@@ -415,8 +415,8 @@ local function mat_complex_of_real(m)
    local mc = matrix_calloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
-	 mc.data[2*i*n2+2*j  ] = m.data[i*n2+j]
-	 mc.data[2*i*n2+2*j+1] = 0
+         mc.data[2*i*n2+2*j  ] = m.data[i*n2+j]
+         mc.data[2*i*n2+2*j+1] = 0
       end
    end
    return mc
@@ -445,43 +445,43 @@ end
 
 local function vector_op(scalar_op, element_wise, no_inverse)
    return function(a, b)
-	     local ra, sa = get_typeid(a)
-	     local rb, sb = get_typeid(b)
-	     if not sb and no_inverse then
-		error 'invalid operation on matrix'
-	     end
-	     if sa and sb then
-		local ar, ai = cartesian(a)
-		local br, bi = cartesian(b)
-		local zr, zi = scalar_op(ar, br, ai, bi)
-		return gsl_complex(zr, zi)
-	     elseif element_wise or sa or sb then
-		local sela, selb = selector(ra, sa), selector(rb, sb)
-		local n1 = (sa and tonumber(b.size1) or tonumber(a.size1))
-		local n2 = (sa and tonumber(b.size2) or tonumber(a.size2))
-		if ra and rb then
-		   return mat_op_gen(n1, n2, sela, a, selb, b, scalar_op)
-		else
-		   return mat_comp_op_gen(n1, n2, sela, a, selb, b, scalar_op)
-		end
-	     else
-		if ra and rb then
-		   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
-		   local c = matrix_new(n1, n2)
-		   local NT = gsl.CblasNoTrans
-		   gsl_check(gsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
-		   return c
-		else
-		   if ra then a = mat_complex_of_real(a) end
-		   if rb then b = mat_complex_of_real(b) end
-		   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
-		   local c = matrix_cnew(n1, n2)
-		   local NT = gsl.CblasNoTrans
-		   gsl_check(gsl.gsl_blas_zgemm(NT, NT, 1, a, b, 1, c))
-		   return c
-		end
-	     end
-	  end
+             local ra, sa = get_typeid(a)
+             local rb, sb = get_typeid(b)
+             if not sb and no_inverse then
+                error 'invalid operation on matrix'
+             end
+             if sa and sb then
+                local ar, ai = cartesian(a)
+                local br, bi = cartesian(b)
+                local zr, zi = scalar_op(ar, br, ai, bi)
+                return gsl_complex(zr, zi)
+             elseif element_wise or sa or sb then
+                local sela, selb = selector(ra, sa), selector(rb, sb)
+                local n1 = (sa and tonumber(b.size1) or tonumber(a.size1))
+                local n2 = (sa and tonumber(b.size2) or tonumber(a.size2))
+                if ra and rb then
+                   return mat_op_gen(n1, n2, sela, a, selb, b, scalar_op)
+                else
+                   return mat_comp_op_gen(n1, n2, sela, a, selb, b, scalar_op)
+                end
+             else
+                if ra and rb then
+                   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
+                   local c = matrix_new(n1, n2)
+                   local NT = gsl.CblasNoTrans
+                   gsl_check(gsl.gsl_blas_dgemm(NT, NT, 1, a, b, 1, c))
+                   return c
+                else
+                   if ra then a = mat_complex_of_real(a) end
+                   if rb then b = mat_complex_of_real(b) end
+                   local n1, n2 = tonumber(a.size1), tonumber(b.size2)
+                   local c = matrix_cnew(n1, n2)
+                   local NT = gsl.CblasNoTrans
+                   gsl_check(gsl.gsl_blas_zgemm(NT, NT, 1, a, b, 1, c))
+                   return c
+                end
+             end
+          end
 end
 
 local function complex_unm(a)
@@ -494,7 +494,7 @@ local function matrix_unm(a)
    local m = matrix_alloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
-	 m.data[n2*i+j] = -a.data[n2*i+j]
+         m.data[n2*i+j] = -a.data[n2*i+j]
       end
    end
    return m
@@ -505,8 +505,8 @@ local function matrix_complex_unm(a)
    local m = matrix_calloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
-	 m.data[2*n2*i+2*j  ] = -a.data[2*n2*i+2*j  ]
-	 m.data[2*n2*i+2*j+1] = -a.data[2*n2*i+2*j+1]
+         m.data[2*n2*i+2*j  ] = -a.data[2*n2*i+2*j  ]
+         m.data[2*n2*i+2*j+1] = -a.data[2*n2*i+2*j+1]
       end
    end
    return m
@@ -518,8 +518,8 @@ local function matrix_norm(m)
    local ssq, idx = 0, 0
    for i = 0, r-1 do
       for j = 0, c-1 do
-	 local x = m.data[idx + j]
-	 ssq = ssq + x*x
+         local x = m.data[idx + j]
+         ssq = ssq + x*x
       end
       idx = idx + tda
    end
@@ -532,8 +532,8 @@ local function matrix_complex_norm(m)
    local ssq, idx = 0, 0
    for i = 0, r-1 do
       for j = 0, c-1 do
-	 local x, y = m.data[idx+2*j], m.data[idx+2*j+1]
-	 ssq = ssq + x*x + y*y
+         local x, y = m.data[idx+2*j], m.data[idx+2*j+1]
+         ssq = ssq + x*x + y*y
       end
       idx = idx + 2*tda
    end
@@ -565,19 +565,19 @@ local complex_mt = {
    __unm = complex_unm,
 
    __eq = function(a, b)
-	     local ar, ai = cartesian(a)
-	     local br, bi = cartesian(b)
-	     return (ar == br) and (ai == bi)
-	  end,
+             local ar, ai = cartesian(a)
+             local br, bi = cartesian(b)
+             return (ar == br) and (ai == bi)
+          end,
 
    __pow = function(z,n)
-	      if is_real(n) then
-		 return gsl.gsl_complex_pow_real (z, n)
-	      else
-		 if is_real(z) then z = gsl_complex(z,0) end
-		 return gsl.gsl_complex_pow (z, n)
-	      end
-	   end,
+              if is_real(n) then
+                 return gsl.gsl_complex_pow_real (z, n)
+              else
+                 if is_real(z) then z = gsl_complex(z,0) end
+                 return gsl.gsl_complex_pow (z, n)
+              end
+           end,
 }
 
 ffi.metatype(gsl_complex, complex_mt)
@@ -586,7 +586,7 @@ local function matrix_new_unit(n)
    local m = matrix_alloc(n, n)
    for i=0, n-1 do
       for j=0, n-1 do
-	 m.data[i*n+j] = (i == j and 1 or 0)
+         m.data[i*n+j] = (i == j and 1 or 0)
       end
    end
    return m
@@ -596,7 +596,7 @@ local function matrix_fset(m, f)
    local n1, n2 = matrix_dim(m)
    for i=1, n1 do
       for j=1, n2 do
-	 m:set(i, j, f(i,j))
+         m:set(i, j, f(i,j))
       end
    end
 end
@@ -611,7 +611,7 @@ local function matrix_set_equal(a, b)
 
    for i=1, n1b do
       for j=1, n2b do
-	 a:set(i, j, b:get(i,j))
+         a:set(i, j, b:get(i,j))
       end
    end
 end
@@ -621,7 +621,7 @@ local function matrix_new_transpose(a)
    local b = a.alloc(n2, n1)
    for i=1, n2 do
       for j=1, n1 do
-	 b:set(i, j, a:get(j,i))
+         b:set(i, j, a:get(j,i))
       end
    end
    return b
@@ -632,7 +632,7 @@ local function matrix_new_hc(a)
    local b = a.alloc(n2, n1)
    for i=1, n2 do
       for j=1, n1 do
-	 b:set(i, j, complex.conj(a:get(j,i)))
+         b:set(i, j, complex.conj(a:get(j,i)))
       end
    end
    return b
@@ -673,10 +673,10 @@ local matrix_methods = {
 local function matrix_index(m, i)
    if is_integer(i) then
       if m.size2 == 1 then
-	 i = check_row_index (m, i)
-	 return m.data[i * m.tda]
+         i = check_row_index (m, i)
+         return m.data[i * m.tda]
       else
-	 return matrix_row_as_column(m, i)
+         return matrix_row_as_column(m, i)
       end
    end
    return matrix_methods[i]
@@ -689,16 +689,16 @@ local function matrix_newindex(m, k, v)
       k = check_row_index (m, k)
       if not isr then error('cannot assign element to a complex value') end
       if nc == 1 then
-	 if not iss then error('invalid assignment: expecting a scalar') end
-	 m.data[k*m.tda] = v
+         if not iss then error('invalid assignment: expecting a scalar') end
+         m.data[k*m.tda] = v
       else
-	 if iss then error('invalid assignment: expecting a row matrix') end
-	 if v.size1 ~= nc or v.size2 ~= 1 then
-	    error('incompatible matrix dimensions in assignment')
-	 end
-	 for j = 0, nc-1 do
-	    m.data[k*m.tda+j] = v.data[v.tda*j]
-	 end
+         if iss then error('invalid assignment: expecting a row matrix') end
+         if v.size1 ~= nc or v.size2 ~= 1 then
+            error('incompatible matrix dimensions in assignment')
+         end
+         for j = 0, nc-1 do
+            m.data[k*m.tda+j] = v.data[v.tda*j]
+         end
       end
    else
       error 'cannot set a matrix field'
@@ -749,10 +749,10 @@ local matrix_complex_methods = {
 local function matrix_complex_index(m, i)
    if is_integer(i) then
       if m.size2 == 1 then
-	 i = check_row_index (m, i)
-	 return gsl_complex(m.data[2*i*m.tda], m.data[2*i*m.tda+1])
+         i = check_row_index (m, i)
+         return gsl_complex(m.data[2*i*m.tda], m.data[2*i*m.tda+1])
       else
-	 return matrix_complex_row_as_column(m, i)
+         return matrix_complex_row_as_column(m, i)
       end
    end
    return matrix_complex_methods[i]
@@ -764,21 +764,21 @@ local function matrix_complex_newindex(m, k, v)
       local isr, iss = check_typeid(v)
       k = check_row_index (m, k)
       if nc == 1 then
-	 if not iss then error('invalid assignment: expecting a scalar') end
-	 local vx, vy = cartesian(v)
-	 m.data[2*k*m.tda  ] = vx
-	 m.data[2*k*m.tda+1] = vy
+         if not iss then error('invalid assignment: expecting a scalar') end
+         local vx, vy = cartesian(v)
+         m.data[2*k*m.tda  ] = vx
+         m.data[2*k*m.tda+1] = vy
       else
-	 if iss then error('invalid assignment: expecting a row matrix') end
-	 if v.size1 ~= nc or v.size2 ~= 1 then
-	    error('incompatible matrix dimensions in assignment')
-	 end
-	 local sel = selector(isr, iss)
-	 for j = 0, nc-1 do
-	    local vx, vy = sel(v, j, 0)
-	    m.data[2*k*m.tda+2*j  ] = vx
-	    m.data[2*k*m.tda+2*j+1] = vy
-	 end
+         if iss then error('invalid assignment: expecting a row matrix') end
+         if v.size1 ~= nc or v.size2 ~= 1 then
+            error('incompatible matrix dimensions in assignment')
+         end
+         local sel = selector(isr, iss)
+         for j = 0, nc-1 do
+            local vx, vy = sel(v, j, 0)
+            m.data[2*k*m.tda+2*j  ] = vx
+            m.data[2*k*m.tda+2*j+1] = vy
+         end
       end
    else
       error 'cannot set a matrix field'
@@ -843,9 +843,9 @@ local function matrix_def(t)
    for i= 0, r-1 do
       local row = t[i+1]
       for j = 0, c-1 do
-	 local x = row[j+1]
-	 if not is_real(x) then error('expected real number') end
-	 m.data[i*c+j] = x
+         local x = row[j+1]
+         if not is_real(x) then error('expected real number') end
+         m.data[i*c+j] = x
       end
    end
    return m
@@ -857,9 +857,9 @@ local function matrix_cdef(t)
    for i= 0, r-1 do
       local row = t[i+1]
       for j = 0, c-1 do
-	 local x, y = cartesian(row[j+1])
-	 m.data[2*i*c+2*j  ] = x
-	 m.data[2*i*c+2*j+1] = y
+         local x, y = cartesian(row[j+1])
+         m.data[2*i*c+2*j  ] = x
+         m.data[2*i*c+2*j+1] = y
       end
    end
    return m
@@ -955,29 +955,29 @@ function matrix.svd(a)
 end
 
 matrix.diag = function(d)
-		 local n = #d
-		 local m = d.alloc(n, n)
-		 local mset, dget = m.set, d.get
-		 for i=1, n do
-		    for j= 1, n do
-		       local x = (i ~= j and 0 or dget(d, i, 1))
-		       mset(m, i, j, x)
-		    end
-		 end
-		 return m
-	      end
+                 local n = #d
+                 local m = d.alloc(n, n)
+                 local mset, dget = m.set, d.get
+                 for i=1, n do
+                    for j= 1, n do
+                       local x = (i ~= j and 0 or dget(d, i, 1))
+                       mset(m, i, j, x)
+                    end
+                 end
+                 return m
+              end
 
 matrix.tr = function(a)
-	       local m, n = matrix_dim(a)
-	       local b = a.alloc(n, m)
-	       local bset, aget = b.set, a.get
-		 for i=1, n do
-		    for j= 1, m do
-		       bset(b, i, j, aget(a, j, i))
-		    end
-		 end
-		 return b
-	      end
+               local m, n = matrix_dim(a)
+               local b = a.alloc(n, m)
+               local bset, aget = b.set, a.get
+                 for i=1, n do
+                    for j= 1, m do
+                       bset(b, i, j, aget(a, j, i))
+                    end
+                 end
+                 return b
+              end
 
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef

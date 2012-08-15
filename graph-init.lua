@@ -11,11 +11,11 @@ local n_sampling_default = 256
 local function check_sampling(n)
    if n then
       if n <= 1 then
-	 error('sampling points should be > 1')
+         error('sampling points should be > 1')
       elseif n > n_sampling_max then
-	 echo('warning: too many sampling points requested, ' ..
-	      'limiting to ' .. n_sampling_max)
-	 n = n_sampling_max
+         echo('warning: too many sampling points requested, ' ..
+              'limiting to ' .. n_sampling_max)
+         n = n_sampling_max
       end
    else
       n = n_sampling_default
@@ -37,8 +37,8 @@ function graph.ipathp(f)
    local function next(op)
       local x, y = f()
       if x and y then
-	 op(ln, x, y)
-	 return true
+         op(ln, x, y)
+         return true
       end
    end
    local success
@@ -131,16 +131,16 @@ function graph.barplot(t)
       cat[#cat+1] = k - 0.5
       cat[#cat+1] = label
       for j = 1, nc do
-	 local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
-	 local rect = graph.rect(x, 0, x+dx, y)
-	 p:add(rect, graph.webcolor(j))
+         local x, y = (k-1) + pad + (j-1)*dx, row[j+1]
+         local rect = graph.rect(x, 0, x+dx, y)
+         p:add(rect, graph.webcolor(j))
       end
 
    end
 
    if legend_text then
       for j = 1, nc do
-	 p:legend(legend_text[j], graph.webcolor(j), 'square')
+         p:legend(legend_text[j], graph.webcolor(j), 'square')
       end
    end
 
@@ -204,14 +204,14 @@ graph.color = {
    decode = rgba_decode,
 
    combine = function(f1, c1, f2, c2)
-		local r1, g1, b1 = rgba_decode(c1)
-		if f2 and c2 then
-		   local r2, g2, b2 = rgba_decode(c2)
-		   return rgba(f1*r1+f2*r2, f1*g1+f2*g2, f1*b1+f2*b2)
-		else
-		   return rgba(f1*r1, f1*g1, f1*b1)
-		end
-	     end
+                local r1, g1, b1 = rgba_decode(c1)
+                if f2 and c2 then
+                   local r2, g2, b2 = rgba_decode(c2)
+                   return rgba(f1*r1+f2*r2, f1*g1+f2*g2, f1*b1+f2*b2)
+                else
+                   return rgba(f1*r1, f1*g1, f1*b1)
+                end
+             end
 }
 
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
@@ -270,10 +270,10 @@ local color_schema = {
 function graph.color_function(schema, alpha)
    local c = color_schema[schema]
    return function(a)
-	     return graph.rgba(c[1] + a*(c[4]-c[1]),
-			     c[2] + a*(c[5]-c[2]),
-			     c[3] + a*(c[6]-c[3]), alpha)
-	  end
+             return graph.rgba(c[1] + a*(c[4]-c[1]),
+                             c[2] + a*(c[5]-c[2]),
+                             c[3] + a*(c[6]-c[3]), alpha)
+          end
 end
 
 graph.hue_color = hue_color

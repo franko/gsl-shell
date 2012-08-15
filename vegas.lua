@@ -19,7 +19,7 @@ local spec = {
 -- @param calls number of function calls (will be rounded down to fit grid) (optional)
 -- @param r random number generator (optional)
 -- @param chidev deviation tolerance for the integrals' chi^2 value (optional)
--- 	  integration will be repeated until chi^2 < chidev
+--           integration will be repeated until chi^2 < chidev
 -- @return result the result of the integration
 -- @return sigma the estimated error or standard deviation
 -- @return num_int the number of runs required to calculate the integral

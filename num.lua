@@ -10,7 +10,7 @@ function num.ode(spec)
 
    for k, tp in pairs(required) do
       if type(spec[k]) ~= tp then
-	 error(string.format('parameter %s should be a %s', k, tp))
+         error(string.format('parameter %s should be a %s', k, tp))
       end
    end
    for k, v in pairs(defaults) do
@@ -32,12 +32,12 @@ end
 
 local NLINFIT = {
    __index = function(t, k)
-		if k == 'chisq' then
-		   return t.lm.chisq()
-		else
-		   if t.lm[k] then return t.lm[k] end
-		end
-	     end
+                if k == 'chisq' then
+                   return t.lm.chisq()
+                else
+                   if t.lm[k] then return t.lm[k] end
+                end
+             end
 }
 
 function num.nlinfit(spec)

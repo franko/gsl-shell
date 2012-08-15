@@ -14,7 +14,7 @@ local function get_workspace(n, p)
       ws = workspace
    else
       ws = ffi.gc(gsl.gsl_multifit_linear_alloc(n, p),
-		  gsl.gsl_multifit_linear_free)
+                  gsl.gsl_multifit_linear_free)
 
       workspace_n = n
       workspace_p = p

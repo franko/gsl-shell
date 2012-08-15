@@ -71,8 +71,8 @@ ffi.cdef [[
                                            size_t stride, size_t n);
 
    int gsl_fft_real_transform (double data[], const size_t stride, const size_t n,
-			       const gsl_fft_real_wavetable * wavetable,
-			       gsl_fft_real_workspace * work);
+                               const gsl_fft_real_wavetable * wavetable,
+                               gsl_fft_real_workspace * work);
 
    int gsl_fft_halfcomplex_inverse (double data[], const size_t stride, const size_t n,
                                  const gsl_fft_halfcomplex_wavetable * wavetable,
@@ -103,8 +103,8 @@ local function res_allocator(name)
    local alloc = gsl['gsl_fft_' .. name .. '_alloc']
    local free  = gsl['gsl_fft_' .. name .. '_free']
    return function(n)
-	     return ffi.gc(alloc(n), free)
-	  end
+             return ffi.gc(alloc(n), free)
+          end
 end
 
 local cache_allocator = {
@@ -278,19 +278,19 @@ local function hc_free(hc)
 end
 
 ffi.metatype(fft_hc, {
-		__gc       = hc_free,
-		__index    = hc_index,
-		__newindex = hc_newindex,
-		__len      = hc_length,
-		__tostring = hc_tostring,
-	     }
-	  )
+                __gc       = hc_free,
+                __index    = hc_index,
+                __newindex = hc_newindex,
+                __len      = hc_length,
+                __tostring = hc_tostring,
+             }
+          )
 
 ffi.metatype(fft_radix2_hc, {
-		__gc       = hc_free,
-		__index    = hc_radix2_index,
-		__newindex = hc_radix2_newindex,
-		__len      = hc_length,
-		__tostring = hc_tostring,
-	     }
-	  )
+                __gc       = hc_free,
+                __index    = hc_radix2_index,
+                __newindex = hc_radix2_newindex,
+                __len      = hc_length,
+                __tostring = hc_tostring,
+             }
+          )

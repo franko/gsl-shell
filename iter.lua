@@ -49,13 +49,13 @@ tos = function (t, maxdepth)
       local ls, n = {}, #t
       local skip = {}
       for i, v in ipairs(t) do 
-	 skip[i] = true
-	 ls[i] = tos(v, maxdepth-1)
+         skip[i] = true
+         ls[i] = tos(v, maxdepth-1)
       end
       for k, v in pairs(t) do
-	 if not skip[k] then
-	    ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1)
-	 end
+         if not skip[k] then
+            ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1)
+         end
       end
       return '{' .. cat(ls, ', ') .. '}'
    elseif tp == 'function' then
@@ -66,11 +66,11 @@ tos = function (t, maxdepth)
       local mt = getmetatable(t)
       local ftostr = mt and mt.__tostring
       if ftostr then return ftostr(t) else
-	 if gsl_typename then
-	    return fmt('<%s: %p>', gsl_typename(t), t)
-	 else
-	    return fmt('<userdata: %p>', t)
-	 end
+         if gsl_typename then
+            return fmt('<%s: %p>', gsl_typename(t), t)
+         else
+            return fmt('<userdata: %p>', t)
+         end
       end
    else
       return tostring(t)
@@ -93,11 +93,11 @@ local function sequence(f, a, b)
    a, b = (b and a or 1), (b and b or a)
    local k = a
    return function()
-	     if k <= b then
-		k = k+1
-		return f(k-1)
-	     end
-	  end
+             if k <= b then
+                k = k+1
+                return f(k-1)
+             end
+          end
 end
 
 -- take the function f and return an iterator that gives the couple (x, f(x))
@@ -106,12 +106,12 @@ local function sample(f, xi, xs, n)
    local c = (xs-xi)/n
    local k = 0
    return function()
-	     if k <= n then
-		local x = xi+k*c
-		k = k+1
-		return x, f(x)
-	     end
-	  end
+             if k <= n then
+                local x = xi+k*c
+                k = k+1
+                return x, f(x)
+             end
+          end
 end
 
 local function ilist(f, a, b)
