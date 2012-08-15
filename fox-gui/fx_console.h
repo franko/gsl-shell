@@ -7,6 +7,7 @@
 
 #include "gsl_shell_thread.h"
 #include "io_thread.h"
+#include "history.h"
 
 class fx_console : public FXText
 {
@@ -56,6 +57,9 @@ private:
     FXGUISignal* m_lua_io_signal;
     FXMutex m_lua_io_mutex;
     FXString m_lua_io_buffer;
+
+    FXString m_saved_line;
+    history m_history;
 
     static FXHiliteStyle m_styles[2];
 };
