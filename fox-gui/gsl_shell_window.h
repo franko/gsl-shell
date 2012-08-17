@@ -24,10 +24,12 @@ public:
 
     long on_close(FXObject* obj, FXSelector sel, void* ptr);
     long on_change_console(FXObject* obj, FXSelector sel, void* ptr);
+    long on_cmd_about(FXObject* obj, FXSelector sel, void* ptr);
 
     enum
     {
         ID_CONSOLE = FXMainWindow::ID_LAST,
+        ID_ABOUT,
     };
 
 protected:
@@ -38,6 +40,7 @@ private:
     FXStatusBar* m_status_bar;
     FXMenuBar* m_menu_bar;
     FXMenuPane* m_file_menu;
+    FXMenuPane* m_help_menu;
     FXFont* m_text_font;
 };
 
