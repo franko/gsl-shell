@@ -1,5 +1,6 @@
 
 #include "fx_plot_window.h"
+#include "lua_plot_window.h"
 
 FXDEFMAP(fx_plot_window) fx_plot_window_map[]=
 {
@@ -8,7 +9,8 @@ FXDEFMAP(fx_plot_window) fx_plot_window_map[]=
 FXIMPLEMENT(fx_plot_window,FXMainWindow,fx_plot_window_map,ARRAYNUMBER(fx_plot_window_map))
 
 fx_plot_window::fx_plot_window(FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
-    FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h)
+    FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h),
+    m_lua_window(0)
 {
     m_menu_bar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
@@ -28,4 +30,7 @@ fx_plot_window::~fx_plot_window()
 {
     delete m_canvas;
     delete m_plot_menu;
+
+    if (m_lua_window)
+        lua_window_set_closed(m_lua_window);
 }

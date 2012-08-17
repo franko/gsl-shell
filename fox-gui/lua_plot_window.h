@@ -17,6 +17,8 @@ extern int fox_window_slot_update         (lua_State *L);
 extern int fox_window_save_slot_image     (lua_State *L);
 extern int fox_window_restore_slot_image  (lua_State *L);
 
+extern void lua_window_set_closed         (void* lua_window);
+
 __END_DECLS
 
 #endif

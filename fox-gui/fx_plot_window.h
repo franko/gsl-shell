@@ -6,6 +6,8 @@
 #include "gsl_shell_app.h"
 #include "fx_plot_canvas.h"
 
+struct lua_fox_window;
+
 class fx_plot_window : public FXMainWindow
 {
     FXDECLARE(fx_plot_window)
@@ -23,6 +25,8 @@ public:
         return (gsl_shell_app*) getApp();
     }
 
+    void set_lua_window(lua_fox_window* w) { m_lua_window = w; }
+
     int lua_id; // the following is used by Lua to keep trace of the window
 
 protected:
@@ -32,6 +36,7 @@ private:
     FXMenuBar* m_menu_bar;
     FXMenuPane* m_plot_menu;
     fx_plot_canvas* m_canvas;
+    lua_fox_window* m_lua_window;
 };
 
 #endif
