@@ -30,6 +30,7 @@ public:
     void show_errors();
 
     FXint get_input_length();
+    long update_editable();
 
     virtual void create();
 

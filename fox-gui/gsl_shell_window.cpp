@@ -11,6 +11,7 @@ FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]=
 {
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_window::on_close),
     FXMAPFUNC(SEL_COMMAND, FXTopWindow::ID_CLOSE, gsl_shell_window::on_close),
+    FXMAPFUNC(SEL_CHANGED, gsl_shell_window::ID_CONSOLE, gsl_shell_window::on_change_console),
 };
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
@@ -32,7 +33,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXStr
     FXHorizontalFrame *textbox = new FXHorizontalFrame(frame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
     m_text_font = new FXFont(app, CONSOLE_FONT, 10);
-    m_text = new fx_console(gs, textbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_text = new fx_console(gs, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
 }
 
@@ -47,4 +48,9 @@ long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
     FXApp* app = getApp();
     app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
     return 0;
+}
+
+long gsl_shell_window::on_change_console(FXObject*, FXSelector, void*)
+{
+    return m_text->update_editable();
 }

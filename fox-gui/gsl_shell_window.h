@@ -23,6 +23,12 @@ public:
     virtual void create();
 
     long on_close(FXObject* obj, FXSelector sel, void* ptr);
+    long on_change_console(FXObject* obj, FXSelector sel, void* ptr);
+
+    enum
+    {
+        ID_CONSOLE = FXMainWindow::ID_LAST,
+    };
 
 protected:
     gsl_shell_window() {}

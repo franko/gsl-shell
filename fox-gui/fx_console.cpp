@@ -123,6 +123,21 @@ FXint fx_console::get_input_length()
     return (-1);
 }
 
+long fx_console::update_editable()
+{
+    if (getCursorPos() < m_input_begin && isEditable())
+    {
+        setEditable(false);
+        return 1;
+    }
+    else if (getCursorPos() >= m_input_begin && !isEditable())
+    {
+        setEditable(true);
+        return 1;
+    }
+    return 0;
+}
+
 long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event = (FXEvent*)ptr;
