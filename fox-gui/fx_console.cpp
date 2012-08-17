@@ -170,6 +170,15 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         replaceText(m_input_begin, line_len, line, strlen(line));
         return 1;
     }
+    else if (event->code == KEY_Home)
+    {
+        FXint line_len = get_input_length();
+        if (line_len >= 0)
+        {
+            setCursorPos(m_input_begin);
+            return 1;
+        }
+    }
 
     return FXText::onKeyPress(obj, sel, ptr);
 }
