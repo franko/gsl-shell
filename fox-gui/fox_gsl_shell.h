@@ -5,6 +5,7 @@
 #include "agg_array.h"
 
 #include "gsl_shell_thread.h"
+#include "shared_vector.h"
 
 class gsl_shell_app;
 
@@ -29,7 +30,7 @@ public:
 private:
     gsl_shell_app* m_app;
     FXGUISignal* m_close;
-    agg::pod_bvector<int> m_window_close_queue;
+    shared_vector<int> m_window_close_queue;
 };
 
 #endif

@@ -14,16 +14,15 @@ class gsl_shell_thread : public gsl_shell
 {
     enum thread_cmd_e { thread_cmd_exec, thread_cmd_exit, thread_cmd_continue };
 public:
-    enum engine_status_e { starting, ready, busy, terminated };
-    enum request_e { no_request = 0, exit_request, restart_request };
+    enum engine_status_e { starting, waiting, busy, terminated };
+    enum request_e { no_request = 0, exit_request, restart_request, execute_request };
     enum { eot_character = 0x04 };
 
     gsl_shell_thread();
     ~gsl_shell_thread();
 
-    void set_request(request_e req);
+    void set_request(request_e req, const char* line = 0);
 
-    void input(const char* line);
     void start();
     void run();
 

@@ -112,60 +112,62 @@ void fx_console::init()
     prepare_input();
 }
 
+FXint fx_console::get_input_length()
+{
+    if (m_status == input_mode && getCursorPos() >= m_input_begin)
+    {
+        FXint buf_len = getLength();
+        FXint line_len = buf_len - m_input_begin;
+        return line_len;
+    }
+    return (-1);
+}
+
 long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event = (FXEvent*)ptr;
-    if (event->code == KEY_Return && m_status == input_mode)
+    if (event->code == KEY_Return)
     {
-        if (getCursorPos() < m_input_begin)
-            return 1;
+        FXint line_len = get_input_length();
+        if (line_len < 0) return 1;
 
-        FXint buf_len = getLength();
-        FXint line_len = buf_len - m_input_begin;
         extractText(m_input, m_input_begin, line_len);
-        setCursorPos(buf_len);
+        setCursorPos(m_input_begin + line_len);
         appendText("\n");
 
         const char* input_line = m_input.text();
         m_history.add(input_line);
 
         this->m_status = output_mode;
-        m_engine->input(input_line);
+        m_engine->set_request(gsl_shell_thread::execute_request, input_line);
 
         return 1;
     }
-    else if (event->code == KEY_Up && m_status == input_mode)
+    else if (event->code == KEY_Up)
     {
-        if (getCursorPos() < m_input_begin)
-            return 1;
-
-        FXint buf_len = getLength();
-        FXint line_len = buf_len - m_input_begin;
+        FXint line_len = get_input_length();
+        if (line_len < 0) return 1;
 
         if (m_history.is_first())
             extractText(m_saved_line, m_input_begin, line_len);
 
         const char* line = m_history.previous();
-
         if (line)
             replaceText(m_input_begin, line_len, line, strlen(line));
 
         return 1;
     }
-    else if (event->code == KEY_Down && m_status == input_mode)
+    else if (event->code == KEY_Down)
     {
+        FXint line_len = get_input_length();
+        if (line_len < 0) return 1;
+
         const char* line = m_history.next();
 
-        if (getCursorPos() < m_input_begin)
-            return 1;
-
-        if (!line)
+        if (m_history.is_first())
             line = m_saved_line.text();
 
-        FXint buf_len = getLength();
-        FXint line_len = buf_len - m_input_begin;
         replaceText(m_input_begin, line_len, line, strlen(line));
-
         return 1;
     }
 

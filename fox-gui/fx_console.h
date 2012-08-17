@@ -29,6 +29,8 @@ public:
     void prepare_input();
     void show_errors();
 
+    FXint get_input_length();
+
     virtual void create();
 
     long on_key_press(FXObject*,FXSelector,void*);

@@ -57,9 +57,13 @@ gsl_shell_thread::process_request()
         restart_callback();
         cmd = thread_cmd_continue;
     }
-    else
+    else if (m_request == gsl_shell_thread::execute_request)
     {
         cmd = thread_cmd_exec;
+    }
+    else
+    {
+        cmd = thread_cmd_continue;
     }
 
     m_request = gsl_shell_thread::no_request;
@@ -69,35 +73,39 @@ gsl_shell_thread::process_request()
 void
 gsl_shell_thread::run()
 {
-    thread_cmd_e cmd = thread_cmd_continue;
+    str line;
 
-    while (cmd != thread_cmd_exit)
+    while (true)
     {
-        m_eval.lock();
-        m_status = ready;
-
         this->unlock();
-        m_eval.wait();
-        this->lock();
+        m_eval.lock();
+        m_status = waiting;
 
+        while (!m_request)
+        {
+            m_eval.wait();
+        }
+
+        this->lock();
         before_eval();
 
+        thread_cmd_e cmd = process_request();
+        if (cmd == thread_cmd_exit)
+        {
+            m_status = terminated;
+            m_eval.unlock();
+            break;
+        }
+
+        line = m_line_pending;
         m_status = busy;
         m_eval.unlock();
 
-        cmd = process_request();
-
         if (cmd == thread_cmd_exec)
         {
-            // here m_line_pending cannot be modified by the other thread
-            // because we declared above m_status to "busy" befor unlocking m_eval
-            const char* line = m_line_pending.cstr();
-            m_eval_status = this->exec(line);
-
+            m_eval_status = this->exec(line.cstr());
             fputc(eot_character, stdout);
             fflush(stdout);
-
-            cmd = process_request();
         }
     }
 
@@ -107,25 +115,17 @@ gsl_shell_thread::run()
 }
 
 void
-gsl_shell_thread::set_request(gsl_shell_thread::request_e req)
+gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
 {
     m_eval.lock();
     m_request = req;
-    m_eval.signal();
-    m_eval.unlock();
-    sched_yield();
-}
-
-void
-gsl_shell_thread::input(const char* line)
-{
-    pthread::auto_lock lock(m_eval);
-
-    if (m_status == ready)
+    m_line_pending = line;
+    if (m_status == waiting)
     {
-        m_line_pending = line;
         m_eval.signal();
     }
+    m_eval.unlock();
+    sched_yield();
 }
 
 int

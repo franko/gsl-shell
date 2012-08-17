@@ -19,12 +19,14 @@ void fox_gsl_shell::close()
 void
 fox_gsl_shell::before_eval()
 {
+    m_window_close_queue.lock();
     unsigned n = m_window_close_queue.size();
     for (unsigned k = 0; k < n; k++)
     {
         window_index_remove (L, m_window_close_queue[k]);
     }
     m_window_close_queue.clear();
+    m_window_close_queue.unlock();
 }
 
 void
@@ -45,8 +47,7 @@ fox_gsl_shell::restart_callback()
 void
 fox_gsl_shell::window_close_notify(int window_id)
 {
-    pthread::mutex& eval = eval_mutex();
-    eval.lock();
+    m_window_close_queue.lock();
     m_window_close_queue.add(window_id);
-    eval.unlock();
+    m_window_close_queue.unlock();
 }
