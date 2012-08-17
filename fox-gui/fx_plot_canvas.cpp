@@ -27,7 +27,7 @@ fx_plot_canvas::~fx_plot_canvas()
 void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
 {
     m_img.resize(ww, hh);
-    m_canvas = new canvas(m_img, ww, hh, colors::white);
+    m_canvas = new canvas(m_img, ww, hh, colors::background);
     m_dirty_img = true;
 }
 
@@ -43,7 +43,7 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 
 void fx_plot_canvas::plot_render(agg::trans_affine& m)
 {
-    m_canvas->clear(colors::white);
+    m_canvas->clear(colors::background);
     AGG_LOCK();
     m_plot->draw(*m_canvas, m);
     AGG_UNLOCK();

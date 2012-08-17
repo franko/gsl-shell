@@ -73,4 +73,8 @@ color_arg_lookup (lua_State *L, int index)
 agg::rgba8 colors::white(0xff, 0xff, 0xff);
 agg::rgba8 colors::black(0, 0, 0);
 
+agg::rgba8 colors::background(254, 253, 251);
+agg::rgba8 colors::foreground(66, 63, 55);
+agg::rgba8 colors::foreground_b(128, 125, 116);
+
 agg::rgba8 colors::cdefault(180, 0, 0, 255);

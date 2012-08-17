@@ -647,7 +647,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
       title.set_point(x, y);
       title.apply_transform(identity_matrix, 1.0);
 
-      canvas.draw(title, colors::black);
+      canvas.draw(title, colors::foreground);
 
       dyt += 2 * ptpad + th;
     }
@@ -796,19 +796,19 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
     {
       draw::text* label = labels[j];
       label->apply_transform(m, 1.0);
-      canvas.draw(*label, colors::black);
+      canvas.draw(*label, colors::foreground);
     }
 
   lndash.add_dash(7.0, 3.0);
 
   lns.width(std_line_width(scale, 0.15));
-  canvas.draw(lns, colors::black);
+  canvas.draw(lns, colors::foreground_b);
 
   mark_stroke.width(std_line_width(scale, 0.75));
-  canvas.draw(mark_stroke, colors::black);
+  canvas.draw(mark_stroke, colors::foreground_b);
 
   boxvs.width(std_line_width(scale, 0.75));
-  canvas.draw(boxvs, colors::black);
+  canvas.draw(boxvs, colors::foreground_b);
 
   if (!str_is_null(&m_x_axis.title))
     {
@@ -820,7 +820,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       xlabel.set_point(labx, laby);
       xlabel.apply_transform(identity_matrix, 1.0);
 
-      canvas.draw(xlabel, colors::black);
+      canvas.draw(xlabel, colors::foreground);
     }
 
   if (!str_is_null(&m_y_axis.title))
@@ -834,7 +834,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
       ylabel.angle(M_PI/2.0);
       ylabel.apply_transform(identity_matrix, 1.0);
 
-      canvas.draw(ylabel, colors::black);
+      canvas.draw(ylabel, colors::foreground);
     }
 
   if (clip)

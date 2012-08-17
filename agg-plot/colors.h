@@ -16,6 +16,10 @@ namespace colors {
   extern agg::rgba8 black;
 
   extern agg::rgba8 cdefault;
+
+  extern agg::rgba8 background;
+  extern agg::rgba8 foreground;
+  extern agg::rgba8 foreground_b;
 };
 
 #endif
