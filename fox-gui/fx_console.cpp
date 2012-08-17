@@ -141,7 +141,10 @@ long fx_console::update_editable()
 long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event = (FXEvent*)ptr;
-    if (event->code == KEY_Return)
+    switch (event->code)
+    {
+    case KEY_Return:
+    case KEY_KP_Enter:
     {
         FXint line_len = get_input_length();
         if (line_len < 0) return 1;
@@ -158,10 +161,11 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 
         return 1;
     }
-    else if (event->code == KEY_Up)
+    case KEY_Up:
+    case KEY_KP_Up:
     {
         FXint line_len = get_input_length();
-        if (line_len < 0) return 1;
+        if (line_len < 0) break;
 
         if (m_history.is_first())
             extractText(m_saved_line, m_input_begin, line_len);
@@ -172,10 +176,11 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 
         return 1;
     }
-    else if (event->code == KEY_Down)
+    case KEY_Down:
+    case KEY_KP_Down:
     {
         FXint line_len = get_input_length();
-        if (line_len < 0) return 1;
+        if (line_len < 0) break;
 
         const char* line = m_history.next();
 
@@ -185,14 +190,15 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         replaceText(m_input_begin, line_len, line, strlen(line));
         return 1;
     }
-    else if (event->code == KEY_Home)
+    case KEY_Home:
+    case KEY_KP_Home:
     {
         FXint line_len = get_input_length();
-        if (line_len >= 0)
-        {
-            setCursorPos(m_input_begin);
-            return 1;
-        }
+        if (line_len < 0) break;
+
+        setCursorPos(m_input_begin);
+        return 1;
+    }
     }
 
     return FXText::onKeyPress(obj, sel, ptr);
