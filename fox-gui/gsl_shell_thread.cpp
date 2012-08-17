@@ -97,7 +97,8 @@ gsl_shell_thread::run()
             break;
         }
 
-        line = m_line_pending;
+        if (cmd == thread_cmd_exec)
+            line = m_line_pending;
         m_status = busy;
         m_eval.unlock();
 
@@ -119,7 +120,7 @@ gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
 {
     m_eval.lock();
     m_request = req;
-    m_line_pending = line;
+    if (line) m_line_pending = line;
     if (m_status == waiting)
     {
         m_eval.signal();
