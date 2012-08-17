@@ -2,7 +2,7 @@
 #include "gsl_shell_app.h"
 
 #ifdef WIN32
-#define CONSOLE_FONT "lucida console"
+#define CONSOLE_FONT "consolas"
 #else
 #define CONSOLE_FONT "monospace"
 #endif
@@ -32,7 +32,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXStr
     // Sunken border for text widget
     FXHorizontalFrame *textbox = new FXHorizontalFrame(frame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
-    m_text_font = new FXFont(app, CONSOLE_FONT, 10);
+    m_text_font = new FXFont(app, CONSOLE_FONT, 11);
     m_text = new fx_console(gs, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
 }
