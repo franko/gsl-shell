@@ -5,6 +5,7 @@ local gsl = require 'gsl'
 local min, max, abs, sqrt = math.min, math.max, math.abs, math.sqrt
 local cabs = complex.abs
 local rshift = bit.rshift
+local format = string.format
 
 -- return the elapsed time in ms
 local function elapsed(f)
@@ -20,7 +21,7 @@ local function timeit(f, name)
         local tx = elapsed(f)
         t = t and min(t, tx) or tx
     end
-    print(string.format("gsl_shell, %s, %g", name, t))
+    print(format("gsl_shell, %s, %g", name, t))
 end
 
 local function fib(n)
@@ -31,15 +32,14 @@ local function fib(n)
     end
 end
 
-print('fib(20): ', fib(20))
 timeit(|| fib(20), "fib")
 
 local function parseint()
-    local r = rng.new()
+    local r = rng.new('rand')
     local lmt = 2^32 - 1
     for i = 1, 1000 do
         local n = r:getint(lmt)
-        local s = string.format('0x%x', n)
+        local s = format('0x%x', n)
         local m = tonumber(s)
         -- assert(m == n)
     end
@@ -106,7 +106,7 @@ end
 
 local function sortperf()
     local n = 5000
-	local r = rng.new()
+	local r = rng.new('rand')
 	local v = iter.ilist(|| r:get(), n)
     qsort(v, 1, n)
 end
@@ -147,7 +147,7 @@ local function randmatstat(t)
 
     local get, set = A[1].get, A[1].set
 
-    local r = rng.new()
+    local r = rng.new('rand')
     local randn = || rnd.gaussian(r, 1)
 
     local function hstackf(i, j)
@@ -163,7 +163,7 @@ local function randmatstat(t)
 
     local Tr, NT = gsl.CblasTrans, gsl.CblasNoTrans
 
-    local v, w = iter.ilist(|| 0, t), iter.ilist(|| 0, t)
+    local v, w = {}, {}
 
     for i = 1, t do
         matrix.fset(A[1], randn)
@@ -178,29 +178,41 @@ local function randmatstat(t)
         gsl.gsl_blas_dgemm(NT, NT, 1.0, PtP1, PtP1, 0.0, PtP2)
         gsl.gsl_blas_dgemm(NT, NT, 1.0, PtP2, PtP2, 0.0, PtP1)
 
-        for j = 1, n do v[i] = v[i] + get(PtP1, j, j) end
+        local vi = 0
+        for j = 1, n do vi = vi + get(PtP1, j, j) end
+        v[i] = vi
 
         gsl.gsl_blas_dgemm(Tr, NT, 1.0, Q, Q, 0.0, QtQ1)
         gsl.gsl_blas_dgemm(NT, NT, 1.0, QtQ1, QtQ1, 0.0, QtQ2)
         gsl.gsl_blas_dgemm(NT, NT, 1.0, QtQ2, QtQ2, 0.0, QtQ1)
 
-        for j = 1, 2*n do w[i] = w[i] + get(QtQ1, j, j) end
+        local wi = 0
+        for j = 1, 2*n do wi = wi + get(QtQ1, j, j) end
+        w[i] = wi
     end
 
     return stat(v), stat(w)
 end
 
 local function randmatmult(n)
-    local r = rng.new()
-    local a = matrix.new(n, n, || r:get())
-    local b = matrix.new(n, n, || r:get())
---    local c = matrix.alloc(n, n)
---    local Tr, NT = gsl.CblasTrans, gsl.CblasNoTrans
---    return gsl.gsl_blas_dgemm(NT, NT, 1.0, a, b, 0.0, c)
+    local r = rng.new('rand')
+    local rand = || r:get()
+    local a = matrix.new(n, n, rand)
+    local b = matrix.new(n, n, rand)
     return a*b
 end
+
+local function printfd(n)
+    local f = io.open("/dev/null","w")
+    for i = 1, n do
+        f:write(format("%d %d\n", i, i+1))
+    end
+    f:close()
+end
+
 
 timeit(sortperf, "quicksort")
 timeit(pisum, "pi_sum")
 timeit(|| randmatstat(1000), "rand_mat_stat")
 timeit(|| randmatmult(1000), "rand_mat_mul")
+timeit(|| printfd(100000), "printfd")
