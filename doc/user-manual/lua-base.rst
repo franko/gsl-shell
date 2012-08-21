@@ -7,18 +7,18 @@
 Iterators
 ============================
 
-GSL Shell provides some simple functions to perform some common tasks related to iterators.
-The utilization of these functions allows to write more simple and compact code and to improve the readability.
-The functions describes below are available in the module :mod:`iter`.
+GSL Shell provides a number of simple functions to perform some common tasks related to iterators.
+These functions allow you to write more simple and compact code and to improve the readability.
+The functions described below are available in the module :mod:`iter`.
 
 .. module:: iter
 
 .. function:: sequence(f, a, b)
               sequence(f, b)
 
-   Return an "iterator" that gives the value (or the values) returned by the evaluation of ``f(i)`` where ``i`` is an integer that goes from ``a`` to ``b``. In the second form the generated values start from one.
+   Return an "iterator" that gives the value (or the values) returned by the evaluation of ``f(i)`` where ``i`` is an integer that goes from ``a`` to ``b``. In the second form, the generated values start from one.
 
-   Generally, an iterator is a function that, each time that it is called, return one value from a sequence. The sequence is considered to be terminated when the iterator returns ``nil``. An iterator can be used directly in a ``for`` loop with the following syntax::
+   Generally, an iterator is a function that, each time that it is called, returns one value from a sequence. The sequence is considered to be terminated when the iterator returns ``nil``. An iterator can be used directly in a ``for`` loop with the following syntax::
 
       for a, b, ... in f do
          -- [ some code here]
@@ -28,7 +28,7 @@ The functions describes below are available in the module :mod:`iter`.
 
 .. function:: sample(f, xi, xs, n)
 
-   Return an iterators that gives the couple ``x, f(x)`` for ``x`` going from ``xi`` to ``xs`` with ``n`` uniformly spaced intervals. If ``f`` returns multiple values only the first one is retained.
+   Return an iterator that gives the couple ``x, f(x)`` for ``x`` going from ``xi`` to ``xs`` with ``n`` uniformly spaced intervals. If ``f`` returns multiple values, only the first one is retained.
 
    Example::
 
@@ -40,19 +40,19 @@ The functions describes below are available in the module :mod:`iter`.
 .. function:: isample(f, a, b)
               isample(f, b)
 
-   Return an iterators that gives the couple ``i, f(i)`` where ``i`` is an integer going from ``a`` to ``b``. In the second form the sequence will start from one. If ``f`` returns multiple values only the first one is retained.
+   Return an iterator that gives the couple ``i, f(i)`` where ``i`` is an integer going from ``a`` to ``b``. In the second form, the sequence will start from one. If ``f`` returns multiple values, only the first one is retained.
 
 .. function:: ilist(f, a, b)
               ilist(f, b)
 
    Returns a list with the elements ``f(i)`` where ``i`` is an integer going from a to b.
-   In the second form the sequence will start from one.
+   In the second form, the sequence will start from one.
 
 .. function:: isum(f, a, b)
               isum(f, b)
 
    Returns the sum of ``f(i)`` for all integers ``i`` from a to b.
-   In the second form the sequence will start from one.
+   In the second form, the sequence will start from one.
 
 
 
@@ -65,7 +65,7 @@ Actually the more general form of an iterator is the following::
        -- [ some code here]
     end
 
-In this latter form the iterator f is called in the form ``f(s, i)`` where ``s`` is the value provided in the ``for`` loop. The value of ``i`` changes every time, the value taken is the the first value returned by the function ``f`` the last times it was called or, for the first time only, ``i0``.
+In this latter form, the iterator f is called in the form ``f(s, i)``, where ``s`` is the value provided in the ``for`` loop. The value of ``i`` changes every time, the value taken is the first value returned by the function ``f`` the last times it was called or, for the first time only, ``i0``.
 
 We give an example to build a stateless row "iterator" over the rows of a matrix.::
 

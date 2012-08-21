@@ -19,7 +19,7 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
 .. function:: solve(A, b)
 
    Solve the square system A x = b where A is a square matrix, b
-   is a column matrix. It does return the solution x of the system.
+   is a column matrix. It returns the solution x of the system.
 
 .. function:: svd(m)
 
@@ -57,6 +57,6 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
    M-by-N diagonal matrix (with additional rows of zeros).
 
    This function returns three values, in the order, U, |Sgr|, V. So you can
-   write something like that::
+   write something like this::
 
       u, s, v = svd(m)

@@ -7,12 +7,12 @@
 GSL Shell Examples
 ==================
 
-In this chapter we gives some examples about the usage of GSL Shell.
+In this chapter we give some usage examples of GSL Shell.
 
 Home-made Bessel Functions
 --------------------------
 
-The Bessel's function J\ :sub:`n` for integer values of n can be defined with the following integral:
+The Bessel function J\ :sub:`n` for integer values of n can be defined with the following integral:
 
 .. math::
    J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau
@@ -29,7 +29,7 @@ This is easy like eating a piece of cake::
       return 1/pi * num.integ(f, 0, pi, epsabs, epsrel)
    end
 
-The definition of ``bessJ`` takes x and n as arguments and calculate the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
+The definition of ``bessJ`` takes x and n as arguments and calculates the definite integral between 0 and |pgr|. Then we can plot the results for various values of n::
 
    p = graph.plot('Bessel Functions Jn, n=0 ... 5')
    for n=0, 5 do
@@ -41,7 +41,7 @@ to obtain the following result:
 
 .. figure:: example-bessJ-plot.png
 
-Then we can also calculate a matrix with the tabulated values. For examples we can use the columns of the matrix to span different values of n. We write then::
+Then we can also calculate a matrix with the tabulated values. For example, we can use the columns of the matrix to span different values of n. We write::
 
    m = matrix.new(200, 6, |k,n| bessJ((k-1)/10, n-1))
 
@@ -100,7 +100,7 @@ Here an example to plot it with GSL Shell. First we need a function to produce t
    	  end
    end
 
-Then we need to produce the plot. Since we want to make something cool we produce a closed Von Koch triangle by using always the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here the code::
+Then we need to produce the plot. Since we want to make something cool, we produce a closed Von Koch triangle by always using the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here is the code::
 
    p = graph.plot()
 
@@ -125,37 +125,37 @@ Then we need to produce the plot. Since we want to make something cool we produc
 
    p:show()
 
-And here the result:
+And this the result:
 
 .. figure:: examples-von-koch-complete.png
 
-With a similar procedure, the code is in ``demos/fractals.lua`` we can produce  beautiful Levy C curve:
+With a similar procedure, for which the code is in ``demos/fractals.lua``, we can produce the beautiful Levy C curve:
 
 .. figure:: examples-levy-c-curve-1.png
 
 Reading and plotting data from files
 ------------------------------------
 
-In this example we show how to load some data stored in a file in CSV format and to make some plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just a plain text with several lines where each line consists of a comma-separated list of numbers or strings.
+In this example we show how to load some data stored in a file in CSV format and use it to make a plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just plain text with several lines where each line consists of a comma-separated list of numbers or strings.
 
-In order to load the data you need to charge the module :mod:`csv` and the to use the function :func:`~csv.read`. In this example we will use the data stored in the file ``examples/data/sige-sims-prof.csv`` this set of data contains just two columns, the first one is the x and the second column represent the y. Here the simple code to load the data::
+In order to load the data, you need to load the module :mod:`csv` and use the function :func:`~csv.read`. In this example, we will use the data stored in the file ``examples/data/sige-sims-prof.csv``. This set of data contains just two columns, of which the first one is the x and the second column represents the y. Here is the simple code to load the data::
 
    csv = require 'csv'
    t = csv.read('examples/data/sige-sims-prof.csv')
 
-we can then print the number of lines in the table:
+We can then print the number of lines in the table:
 
    >>> #t
    316
 
-If you want to plot the data in the table there isn't actually any function that will do that right way but you can do it by using a few functions::
+If you want to plot the data in the table, there is actually no function that will do that right away, but you can do it by using a few functions::
 
   p = graph.plot()
   dget = function(i) return t[i][1], t[i][2] end
   p:addline(graph.ipath(iter.sequence(dget, #t)))
   p:show()
 
-the idea is that, in order to plot the curve we need to *build* the curve before.
+The idea is that, in order to plot the curve, we need to *build* the curve beforehand.
 What we want is actually a line that connects the points ``(x[i], y[i])`` where ``x[i]`` and ``y[i]`` are taken from the rows of the table ``t``.
 The last resort to obtain that would be to create a :class:`Path` object and to give all the points in a procedural way like this::
 
@@ -166,9 +166,9 @@ The last resort to obtain that would be to create a :class:`Path` object and to 
     ln:line_to(t[i][1], t[i][2])
   end
 
-but it can be more handy to use the :func:`ipath` function to build the curve. This latter function build a curve using an iterator that returns values in the form ``(x, y)``. Then to obtain the iterator we use the :func:`sequence` function that let us easily build an iterator over a sequence of integer numbers.
+but it can be more handy to use the :func:`ipath` function to build the curve. This latter function builds a curve using an iterator that returns values in the form ``(x, y)``. To obtain the iterator, we use the :func:`sequence` function that lets us easily build an iterator over a sequence of integer numbers.
 
-So to make more clear the code given above we can separate the curve and the iterator instantiations like in the following example::
+So to clarify the code given above, we can separate the curve and the iterator instantiations as in the following example::
 
   p = graph.plot()
 
@@ -218,11 +218,11 @@ For m = 0, the even definition is used which reduces to R\ :sub:`n`\ :sup:`0`\ (
 Implementation
 ~~~~~~~~~~~~~~
 
-The above formula can be implemented quite straightforwardly in GSL shell with only a subtle point about the factorials in the denominator. The problem is that in same cases you can have the factorial of negative number and if you feed a negative number to the :func:`fact` function you will get an error.
+The above formula can be implemented quite straightforwardly in GSL Shell with only a subtle point about the factorials in the denominator. The problem is that in some cases you can have the factorial of a negative number and if you feed a negative number to the :func:`fact` function, you will get an error.
 
-Actually the meaning of the formula is that the factorial of a negative number if :math:`\infty` and so, since it does appear in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that return the inverse of the factorial and zero when the argument is negative.
+Actually the meaning of the formula is that the factorial of a negative number if :math:`\infty` and so, since it appears in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that returns the inverse of the factorial and zero when the argument is negative.
 
-So here the code for the radial part::
+So here is the code for the radial part::
 
   use 'math'
 
@@ -242,14 +242,14 @@ So here the code for the radial part::
      return z
   end
 
-and the we define the Zernike's function completed with the angular part::
+Next, we define Zernike's function completed with the angular part::
 
   function zernicke(n, m, p, phi, even)
      local pf = even and cos(m*phi) or sin(-m*phi)
      return zerR(n, m, p) * pf
   end
 
-Now we are just ready to draw our function, the only missing piece is the relation between ρ, φ and the Cartesian coordinates but this is trivial:
+Now we are ready to draw our function. The only missing piece is the relation between ρ, φ and the Cartesian coordinates but this is trivial:
 
 .. math::
    \begin{array}{ll}
@@ -257,7 +257,7 @@ Now we are just ready to draw our function, the only missing piece is the relati
      \phi = & \tan^{-1}(y, x)
    \end{array}
 
-let us therefore define our sample function in term of x and y and use it to call the function :func:`polar_contour`::
+Let us therefore define our sample function in term of x and y and use it to call the function :func:`polar_contour`::
 
   require 'contour'
   N, M = 8, -2
