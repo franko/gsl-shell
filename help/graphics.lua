@@ -1,6 +1,8 @@
 
 local REG = debug.getregistry()
 local Window = REG['GSL.window'].__index
+local plot_index = REG['GSL.plot'].__index
+local Plot = function(k) return plot_index(nil, k) end
 
 local M = {
   [graph.fxplot] = [[
@@ -19,7 +21,6 @@ graph.fiplot(f, b)
    variable going from a to b. In the second abbreviated form
    a take the default value of one. The function returns the plot
    itself.
-
 ]],
   [graph.fibars] = [[
 graph.fibars(f, a, b[, color, fill_ratio])
@@ -104,165 +105,152 @@ graph.window([layout])
 ]],
 
   [Window.attach] = [[
-<window>::attach(plot, slot)
+<window>:attach(plot, slot)
   
    Attach the given plot to the window's slot specified by the string
    slot. The string should be a list of comma separated integer number
    in the form 'n1,n2,...,nk'. For each of the mentioned integer the
    corresponding window partition will be chosen recursively.
-]]
+]],
 
---[[
-Plot
-----
-
-We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods :meth:`~Plot.add` and :meth:`~Plot.addline`. The method :meth:`~Plot.addline` is just a shortcut to add elements with a 'stroke' post transform of unitary width.
-
-You can add elements to a plot in any moments even when it is already shown. GSL Shell will automatically calculate the bounding box so that every elements is shown on the window.
-
-.. function:: plot([title])
+  [graph.plot] = [[
+graph.plot([title])
 
    Create a new empty plot with an optional title. The plot is not
    attached to any window and is therefore not visible. To show the
    plot on the screen use either the :func:`show` plot's method or
    use the :meth:`~Window.attach` window's method to attach the plot to a
    specific window.
+]],
 
-   This kind of plot automatically update its limits when the
-   graphical objects that are added. The sync property is also
-   initialized to a true value so that every operation triggers
-   an update of all the windows that shows the plot. If you want to
-   perform animations you may want to set the sync property to
-   false and use the :meth:`~Plot.flush` method to update the windows
-   when all the drawing operations have been done.
+  [graph.canvas] = [[
+graph.canvas([title])
 
-.. function:: canvas([title])
+   Like the function above it does create a new empty plot with fixed
+   limits. This latter kind of plot differs in that it will not update
+   automatically its limits to fit the graphical objects. The method
+   :func:`limits` should be used instead to set the logical limits of
+   plotting area. The other difference with the :func:`graph.plot`
+   function is that the property sync will be initialized to false.
+   This kind of plot is generally better suited for animations.
+]],
 
-   Like the function above it does create a new empty plot with
-   fixed logical limits. This latter kind of plot differs in that
-   it will not update automatically its limits to fit the graphical
-   objects. The method :func:`limits` should be used instead to set
-   the logical limits of plotting area. The other difference with
-   the :func:`graph.plot` function is that the property sync will be
-   initialized to false. This kind of plot is generally better
-   suited for animations.
-
-.. class:: Plot
-
-   .. method:: add(obj, color[, post_trans, pre_trans])
+  [Plot'add'] = [[
+<plot>:add(obj, color[, post_trans, pre_trans])
 
       Add the :ref:`graphical object <graphics-objects>` obj to
       the plot with the given color.  The optional arguments
       post_trans and pre_trans should be a table of
       :ref:`graphical transformations <graphics-transforms>`.
+]],
 
-   .. method:: addline(obj, color[, post_trans, pre_trans])
+  [Plot'addline'] = [[
+<plot>:addline(obj, color[, post_trans, pre_trans])
 
       Add the :ref:`graphical object <graphics-objects>` obj to
       the plot by performing automatically a stroke of it. It is
       useful because you often need to draw lines and not filled
       polygons. It is equivalent to add a 'stroke' operations of
       unitary size in the viewport coordinates system.
+]],
 
-   .. method:: limits(x1, y1, x2, y2)
+  [Plot'limits'] = [[
+<plot>:limits(x1, y1, x2, y2)
 
       Set the logical limits of the area displayed by the plot to the
       rectangle with lower-left corner (x1, y1) and upper-right corner
       (x2, y2). This method is used for plots with fixed limits
       obtained with the function :func:`canvas`.
+]],
 
-   .. method:: show()
+  [Plot'show'] = [[
+<plot>:show()
 
       Create a new window to show the plot on the screen.
+]],
 
-   .. method:: clear()
+  [Plot'clear'] = [[
+<plot>:clear()
 
       Remove all the graphical elements into the current
       :ref:`graphical layer <graphical-layer>`.
+]],
 
-   .. method:: flush()
+  [Plot'flush'] = [[
+<plot>:flush()
 
       All the pending operations on a plot are processed and all the
       windows attached to the plot are updated. This method is only
       useful when the attribute sync is set to false.
-
-   .. method:: pushlayer()
+]],
+  [Plot'pushlayer'] = [[
+<plot>:pushlayer()
 
       Add a new :ref:`graphical layer <graphical-layer>` and into the
       plot so that it becomes the current one and all the elements
       added with methods :meth:`~Plot.add` or :meth:`~Plot.addline`
       are associated with this new layer.
-
-   .. method:: poplayer()
+]],
+  [Plot'poplayer'] = [[
+<plot>:poplayer()
 
       Remove the current :ref:`graphical layer <graphical-layer>` and
       all its graphical elements and make the previous level the
       current one.
-
-   .. method:: save(filename[, w, h])
+]],
+  [Plot'save'] = [[
+<plot>:save(filename[, w, h])
 
       Save the plot in a file in a bitmap image format. The first
       argument is the file name without extension while the other
       optional arguments are the width and the height in pixel of the
       image. The format used is BMP on windows and PPM on Linux.
+]],
+  [Plot'save_svg'] = [[
+<plot>:save_svg(filename[, w, h])
 
-   .. method:: save_svg(filename[, w, h])
-
-      Save the plot in the given filename in SVG format.
-      Two optional parameters can be given to specify the width and height of the drawing area.
-
-
-   .. method:: set_legend(p[, placement])
+      Save the plot in the given filename in SVG format. Two optional
+      parameters can be given to specify the width and height of the
+      drawing area.
+]],
+  [Plot'set_legend'] = [[
+<plot>:set_legend(p[, placement])
 
       Add the plot p as a legend is the side area of the main plot.
-      The argument placement is used to give the placement of the mini plot and should be on of the letters 'l', 'r', 'b', 't'.
-      They stands for "left", "right", "bottom" and "top" respectively.
-      By default the placement of the mini plot is on the right side.
+      The argument placement is used to give the placement of the mini
+      plot and should be on of the letters 'l', 'r', 'b', 't'. They
+      stands for "left", "right", "bottom" and "top" respectively. By
+      default the placement of the mini plot is on the right side.
+]],
 
-      The plot legend is drawn on the screen using an area that is equal, in pixal, to the logical size of the plot legend itself.
-
-   .. method:: get_legend([placement])
+  [Plot'get_legend'] = [[
+<plot>:get_legend([placement])
 
       Return the plot legend stored in the given placement.
       The placement parameter is interpreted as in the :meth:`~Plot.set_legend` method.
+]],
+  [Plot'legend'] = [[
+<plot>:legend(text, color, symbol[, trans])
 
-   .. method:: legend(text, color, symbol[, trans])
+      Add to the plot a new legend item with the given text. The
+      symbol used is determinated by the string symbol. Possible
+      values are 'line', 'square' or anything accepted by
+      :func:`graph.marker`. The optional trans parameter should be a
+      :ref:`graphical transform <graphics-transforms>`. If omitted the
+      appropriate default is chosen based on the symbol type.
+]],
 
-      Add to the plot a new legend item with the given text.
-      The symbol used is determinated by the string symbol.
-      Possible values are 'line', 'square' or anything accepted by :func:`graph.marker`.
-      The optional trans parameter should be a :ref:`graphical transform <graphics-transforms>`.
-      If omitted the appropriate default is chosen based on the symbol type.
+  [Plot'set_categories'] = [[
+<plot>:set_categories(axis, categories)
 
-      Example::
+      Configure the given axis (a letter, 'x' or 'y') to use a custom
+      set of labels specified by categories. This latter should be a
+      list of that gives in a sequence, the values where the label
+      should be placed and the label text itself. The coordinate
+      refers to the plot system of coordinates.
+]],
 
-         use 'math'
-
-         p = graph.plot('plot example')
-         p:addline(graph.fxline(sin, 0, 2*pi), 'red')
-         p:legend('sinus', 'red', 'line')
-         p:addline(graph.fxline(cos, 0, 2*pi), 'blue', {{'dash',7,3}})
-         p:legend('cosinus', 'blue', 'line', {{'stroke'},{'dash',7,3}})
-         p:show()
-
-   .. method:: set_categories(axis, categories)
-
-      Configure the given axis (a letter, 'x' or 'y') to use a custom set of labels specified by categories.
-      This latter should be a list of that gives in a sequence, the values where the label should be placed and the label text itself.
-      The coordinate refers to the plot system of coordinates.
-
-      Example::
-
-        use 'math'
-
-        p = graph.fxplot(sin, 0, 2*pi)
-        p:set_categories('x', {0, '0', pi, 'pi', 2*pi, '2 pi'})
-        p.title = 'Sin function'
-
-      will produce the following plot:
-
-      .. figure:: graphics-categories-example.png
-
+--[[
    .. attribute:: title
 
       The title of the plot. You can change or set the title using
