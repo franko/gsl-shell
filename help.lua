@@ -1,5 +1,5 @@
 
-local help_files = {'graphics'}
+local help_files = {'graphics', 'matrix'}
 local help_cache = {}
 
 local function cache_function(func, help_text)
