@@ -6,6 +6,7 @@
 #include "fx_plot_window.h"
 #include "lua_plot_window.h"
 #include "fatal.h"
+#include "icons.h"
 
 FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]=
 {
@@ -31,13 +32,28 @@ gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
     global_app = this;
     m_engine.start();
 
-    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, this, "GSL Shell Console", NULL, NULL, 600, 500);
+    gsl_shell_icon = new FXGIFIcon(this, gsl_shell_icon_data);
+    gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
+    plot_icon = new FXGIFIcon(this, plot_icon_data);
+
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, this, "GSL Shell Console", gsl_shell_icon, gsl_shell_mini, 600, 500);
     m_console = gsw->console();
 }
 
 gsl_shell_app::~gsl_shell_app()
 {
     delete m_signal_request;
+    delete gsl_shell_icon;
+    delete gsl_shell_mini;
+    delete plot_icon;
+}
+
+void gsl_shell_app::create()
+{
+    FXApp::create();
+    gsl_shell_icon->create();
+    gsl_shell_mini->create();
+    plot_icon->create();
 }
 
 void gsl_shell_app::window_create_request(FXMainWindow* win)

@@ -63,7 +63,7 @@ fox_window_new (lua_State *L)
     app->lock();
 
     lua_fox_window* bwin = new(L, GS_FOX_WINDOW) lua_fox_window();
-    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", NULL, NULL, 480, 480);
+    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
 
     bwin->window = win;
     bwin->app    = app;

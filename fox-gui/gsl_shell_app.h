@@ -35,6 +35,8 @@ public:
     gsl_shell_app();
     ~gsl_shell_app();
 
+    virtual void create();
+
     void lock()
     {
         mutex().lock();
@@ -55,6 +57,10 @@ public:
     long on_console_close(FXObject*,FXSelector,void*);
     long on_lua_quit(FXObject*,FXSelector,void*);
     long on_restart_lua_request(FXObject*,FXSelector,void*);
+
+    FXIcon* gsl_shell_icon;
+    FXIcon* gsl_shell_mini;
+    FXIcon* plot_icon;
 
     enum
     {

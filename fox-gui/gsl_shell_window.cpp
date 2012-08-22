@@ -1,6 +1,7 @@
 #include "gsl_shell_window.h"
 #include "gsl_shell_app.h"
 #include "luajit.h"
+#include "icons.h"
 
 #ifdef WIN32
 #define CONSOLE_FONT "consolas"
@@ -66,6 +67,8 @@ long
 gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
 {
   FXDialogBox about(this,"About GSL Shell",DECOR_TITLE|DECOR_BORDER,0,0,0,0, 0,0,0,0, 0,0);
+  FXGIFIcon picture(getApp(),gsl_shell_icon_data);
+  new FXLabel(&about,FXString::null,&picture,LAYOUT_SIDE_LEFT|LAYOUT_CENTER_Y|JUSTIFY_CENTER_X|JUSTIFY_CENTER_Y,0,0,0,0, 0,0,0,0);
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"G S L   S h e l l",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
