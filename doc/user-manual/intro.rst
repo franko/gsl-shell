@@ -89,6 +89,16 @@ To obtain the following plot:
 As you can see the graphical system is very flexible and it does offer a lot of possibilities.
 If you want to learn more about the graphical system you can read the chapter about :ref:`graphics <graphics-chapter>`.
 
+Getting Help
+~~~~~~~~~~~~
+
+When you are using GSL Shell interactively you get easily help about any function by using the function::
+
+  help(some_function)
+
+to obtain a short text that explain what the function does and the arguments that it gets.
+If the arguments are enclosed in square bracket it means that these arguments are optional.
+
 .. _complex_numbers:
 
 Complex numbers

@@ -22,3 +22,9 @@ Overview
 .. function:: restore_env()
 
    This function restores the original environment by removing the effect of all the :func:`use` calls made before.
+
+.. function:: help(f)
+
+    Print some help, if available, about the function "f".
+    In the first line it will be shown how the function should be called.
+    If the function have some optional parameters these will be shown inside square brackets.
