@@ -9,11 +9,10 @@ num.integ(f, a, b[, epsabs, epsrel])
 ]],
 
    [num.quad_prepare] = [[
-num.quad_prepare(spec)
+num.quad_prepare {method= <string>, order= <int>, limits= <int>}
 
    Returns a function that can perform a numeric integration based on
-   the method and parameters indicated with the table "spec". This
-   latter should have the following fields:
+   the method and parameters specified.
 
    *method*
       The quadrature algorithm. Available algorithms are "qng" and
