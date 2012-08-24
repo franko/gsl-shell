@@ -1,5 +1,5 @@
 
-local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode', 'nlfit'}
+local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode', 'nlfit', 'vegas'}
 
 local function help_init( ... )
 	local REG = debug.getregistry()
