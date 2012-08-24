@@ -1,5 +1,5 @@
 
-local help_files = {'graphics', 'matrix'}
+local help_files = {'graphics', 'matrix', 'iter'}
 
 local function open_module(modname)
 	local fullname = string.format('help/%s.lua', modname)
