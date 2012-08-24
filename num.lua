@@ -23,6 +23,9 @@ function num.ode(spec)
 
    local ode = template.load(method, spec)
 
+   local REG = debug.getregistry()
+   REG['GSL.help_hook'].ODE = ode
+
    local mt = {
       __index = {step = ode.step, init = ode.init, evolve = ode.evolve}
    }

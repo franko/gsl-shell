@@ -1,5 +1,10 @@
 
-local help_files = {'graphics', 'matrix', 'iter'}
+local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode'}
+
+local function help_init( ... )
+	local REG = debug.getregistry()
+	REG['GSL.help_hook'] = {}
+end
 
 local function open_module(modname)
 	local fullname = string.format('help/%s.lua', modname)
@@ -16,6 +21,8 @@ local function search_help(func)
 		end
 	end
 end
+
+help_init()
 
 -- declare a global function
 function help(func)
