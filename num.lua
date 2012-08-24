@@ -1,6 +1,8 @@
 
 local template = require 'template'
 
+local REG = debug.getregistry()
+
 num = {}
 
 function num.ode(spec)
@@ -23,7 +25,6 @@ function num.ode(spec)
 
    local ode = template.load(method, spec)
 
-   local REG = debug.getregistry()
    REG['GSL.help_hook'].ODE = ode
 
    local mt = {
@@ -48,6 +49,8 @@ local NLINFIT = {
       end
    end
 }
+
+REG['GSL.NLINFIT'] = NLINFIT_METHODS
 
 function num.nlinfit(spec)
    if not spec.n then error 'number of points "n" not specified' end
