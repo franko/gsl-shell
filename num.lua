@@ -33,14 +33,20 @@ function num.ode(spec)
    return setmetatable(ode.new(), mt)
 end
 
+local NLINFIT_METHODS = {
+   set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end,
+   iterate = function(ss) return ss.lm.iterate() end,
+   test    = function(ss, epsabs, epsrel) return ss.lm.test(epsabs, epsrel) end,
+}
+
 local NLINFIT = {
    __index = function(t, k)
-		if k == 'chisq' then
-		   return t.lm.chisq()
-		else
-		   if t.lm[k] then return t.lm[k] end
-		end
-	     end
+      if k == 'chisq' then
+         return t.lm.chisq()
+      else
+         return NLINFIT_METHODS[k] or t.lm[k]
+      end
+   end
 }
 
 function num.nlinfit(spec)
@@ -53,10 +59,6 @@ function num.nlinfit(spec)
 
    local n, p = spec.n, spec.p
    local s = { lm = template.load('lmfit', {N= n, P= p}) }
-
-   s.set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end
-   s.iterate = function(ss) return ss.lm.iterate() end
-   s.test    = function(ss, epsabs, epsrel) return ss.lm.test(epsabs, epsrel) end
 
    setmetatable(s, NLINFIT)
 
