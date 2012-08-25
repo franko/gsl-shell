@@ -166,9 +166,6 @@ int gsl_shell::exec(const char *line)
     lua_State* L = this->L;
     size_t len = strlen(line);
 
-    if (strcmp (line, "exit") == 0)
-        return exit_request;
-
     /* try to load the string as an expression */
     int status = yield_expr(L, line, len);
 
