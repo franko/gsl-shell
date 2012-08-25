@@ -49,14 +49,14 @@ local function von_koch_demo()
    t:close()
 
    local v = ipath(c_generator(4, 6, 1/3, {0,1,-1,0}))
-   local c = rgba(0,0,0.7,0.2)
+   local c = rgba(0,0,180,50)
    pl:add(v, c)
    pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
    pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
 		     {'rotate', angle=-2*2*pi/3}})
    pl:add(t, c)
 
-   c = rgb(0,0,0.7)
+   c = rgb(0,0,180)
 
    pl:addline(v, c)
    pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
@@ -88,7 +88,7 @@ local function pitag_tree_symm_demo()
    end
 
    local depth = 12
-   local cfgen = color_function('darkgreen', 1)
+   local cfgen = color_function('darkgreen', 255)
    cf = |d| cfgen(1-d/depth)
    local pl = plot()
    pl.units = false
@@ -117,7 +117,7 @@ local function pitag_tree_demo(n)
       end
    end
 
-   local cfgen = color_function('darkgreen', 1)
+   local cfgen = color_function('darkgreen', 255)
 
    local pl = plot()
    pl.sync = false

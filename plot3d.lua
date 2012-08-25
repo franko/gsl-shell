@@ -25,9 +25,9 @@ local function render_shape(shape, plt, stroke)
 
    renderer.draw_overdraw = true 
    renderer.draw_backfaces = true
-   renderer.fill_rgba = rgb(0x4A/255, 0x92/255, 0xBF/255)
-   renderer.fill_rgba_backside = rgb(0xBF/255, 0x92/255, 0x4A/255)
-   if stroke then renderer.stroke_rgba = rgb(0.2, 0.2, 0.2) end
+   renderer.fill_rgba = rgb(0x4A, 0x92, 0xBF)
+   renderer.fill_rgba_backside = rgb(0xBF, 0x92, 0x4A)
+   if stroke then renderer.stroke_rgba = rgb(50, 50, 50) end
    renderer.set_light_intensity = true
 
    renderer.camera.focal_length = 30;

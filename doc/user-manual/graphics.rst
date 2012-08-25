@@ -200,7 +200,7 @@ In this section, we give an overview and a description of all the higher level p
 	 -- then we use ipath to create a path from the iterator
 	 line = graph.ipath(circle(1, 1, 2.5, 256))
 	 p = graph.plot('circle at (1,1) with R= 2.5')
-	 p:add(line, graph.rgba(1,1,0,0.6))
+	 p:add(line, graph.rgba(255,255,0,150))
 	 p:addline(line)
 	 p:show()
 
@@ -224,7 +224,7 @@ In this section, we give an overview and a description of all the higher level p
          cs = iter.sequence(circle(1, 1, 2.5, n), 0, n-1)
 	 line = graph.ipath(cs)
 	 p = graph.plot('circle at (1,1) with R= 2.5')
-	 p:add(line, graph.rgba(1,1,0,0.6))
+	 p:add(line, graph.rgba(255,255,0,150))
 	 p:addline(line)
 	 p:show()
 
@@ -256,9 +256,9 @@ In this section, we give an overview and a description of all the higher level p
               rgba(r, g, b, a)
 
    Returns a color specified by the given ``r``, ``g``, ``b`` values.
-   These values should be numbers in the interval [0, 1].
+   These values should be integer numbers in the interval 0, 255.
    The second variant of the function lets you specify an alpha value.
-   This value can range from 0 (completely transparent) to 1 (completely opaque).
+   This value can range from 0 (completely transparent) to 255 (completely opaque).
 
    In GSL Shell, a color is encoded as an integer number with 8 bit per channel and 4 channels, R, G, B, A in the given order.
    For example, to express a pure green color, you can write::

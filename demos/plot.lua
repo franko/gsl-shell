@@ -14,7 +14,7 @@ local function demo2()
    local p = plot('Simulated Gaussian Distribution')
    local b = ibars(iter.sample(|x| rnd.poisson(r, floor(f(x)*N)) / N, -3, 3, 25))
    p:add(b, 'darkgreen')
-   p:addline(b, rgba(0, 0, 0, 0.6))
+   p:addline(b, rgba(0, 0, 0, 150))
    p:addline(fxline(f, -4, 4), 'red')
    p.xtitle, p.ytitle = 'x', 'Frequency'
    p:show()
@@ -62,14 +62,14 @@ local function demo3()
    t:close()
 
    local v = ipath(vonkoch(4))
-   local c = rgba(0,0,0.7,0.2)
+   local c = rgba(0,0,180,50)
    pl:add(v, c)
    pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
    pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2},
 		     {'rotate', angle=-2*2*pi/3}})
    pl:add(t, c)
 
-   c = rgb(0,0,0.7)
+   c = rgb(0,0,180)
 
    pl:addline(v, c)
    pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})

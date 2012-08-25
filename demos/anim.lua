@@ -25,7 +25,7 @@ local function demo1()
    local a = 15.0
    plt:limits(-a, -a, a, a)
    local r = rng.new()
-   local gray1, gray2 = graph.rgb(0.9, 0.9, 0.9), graph.rgb(0.6, 0.6, 0.6)
+   local gray1, gray2 = graph.rgb(230, 230, 230), graph.rgb(155, 155, 155)
    for k = 1, 50 do
       local x, y = (2*r:get()-1)*a, (2*r:get()-1)*a
       local d = rnd.gaussian(r, 0.015*a) + 0.03*a
@@ -35,7 +35,7 @@ local function demo1()
    end
    plt:pushlayer()
    local N, R, nc = 128, 5.0, 8
-   local yellow, dark = graph.rgba(1, 1, 0, 0.7), graph.rgb(0.5, 0.5, 0)
+   local yellow, dark = graph.rgba(255, 255, 0, 180), graph.rgb(128, 128, 0)
    for k = 0, N * nc do
       local r = R * cos(pi*k/N)^2
       local th = 2*pi*(k/(N*nc*10))
@@ -57,7 +57,7 @@ local function demo2()
    p:pushlayer()
    p:show()
    local N = 256
-   local yellow = graph.rgba(1,1,0,0.6)
+   local yellow = graph.rgba(255,255,0,155)
    for k= 2, N do
       local x = x0 + k * (x1-x0) / N
       local ca = graph.fxline(f, x0, x, k)
@@ -87,7 +87,7 @@ local function demo3()
       for j=1, 4 do
 	 local x, y, rad = get(), get(), 5 + r:get() * L/2
 	 local rt = graph.circle(x, y, rad)
-	 p:add(rt, graph.rgba(r:get(), r:get(),r:get(), 0.5))
+	 p:add(rt, graph.rgba(r:getint(255), r:getint(255),r:getint(255), 128))
 	 p:addline(rt, 'black')
       end
       p:flush()

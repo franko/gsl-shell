@@ -303,7 +303,7 @@ local function y_samp(i)
 end
 
 local function anim(pcs)
-   local col = graph.rgba(0, 0.7, 0, 0.9)
+   local col = graph.rgba(0, 180, 0, 230)
    for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
       pcs:clear()

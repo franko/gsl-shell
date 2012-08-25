@@ -598,7 +598,7 @@ function Renderer(plt)
    this.draw_backfaces = false
 
    -- this.texture = nil
-   this.fill_rgba = rgba(1, 0, 0, 1)
+   this.fill_rgba = rgb(255, 0, 0)
 
    -- this.stroke_rgba = nil
 

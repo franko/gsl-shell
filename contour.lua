@@ -23,7 +23,7 @@ use 'math'
 
 local insert = table.insert
 
-local default_color_map = graph.color_function('redyellow', 1)
+local default_color_map = graph.color_function('redyellow', 255)
 
 local function reverse(ls)
    local k, n = 1, #ls

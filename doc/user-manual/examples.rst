@@ -111,13 +111,13 @@ Then we need to produce the plot. Since we want to make something cool, we produ
    t:close()
 
    v = graph.ipath(vonkoch(4))
-   c = graph.rgba(0,0,0.7,0.2)
+   c = graph.rgba(0,0,180,50)
    p:add(v, c)
    p:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
    p:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, {'rotate', angle=-2*2*pi/3}})
    p:add(t, c)
 
-   c = graph.rgb(0,0,0.7)
+   c = graph.rgb(0,0,180)
 
    p:add(v, c, {{'stroke'}})
    p:add(v, c, {{'stroke'}}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})

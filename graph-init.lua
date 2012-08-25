@@ -163,32 +163,40 @@ function graph.rect(x1, y1, x2, y2)
    return p
 end
 
-local function rgba8(r, g, b, a)
+local function rgba(r, g, b, a)
    local rb = band(lshift(r, 24), 0xff000000)
    local gb = band(lshift(g, 16), 0xff0000  )
    local bb = band(lshift(b, 8 ), 0xff00    )
    return bor(rb, gb, bb, a and band(a, 0xff) or 0xff)
 end
 
-local function rgba(r, g, b, a)
-   local rb = band(lshift(r*255, 24), 0xff000000)
-   local gb = band(lshift(g*255, 16), 0xff0000  )
-   local bb = band(lshift(b*255, 8 ), 0xff00    )
-   return bor(rb, gb, bb, a and band(a*255, 0xff) or 0xff)
-end
-
 local function rgba_decode(col)
-   local r = rshift(band(col, 0xff000000), 24) / 255
-   local g = rshift(band(col, 0xff0000), 16) / 255
-   local b = rshift(band(col, 0xff00), 8) / 255
-   local a = band(col, 0xff) / 255
+   local r = rshift(band(col, 0xff000000), 24)
+   local g = rshift(band(col, 0xff0000), 16)
+   local b = rshift(band(col, 0xff00), 8)
+   local a = band(col, 0xff)
    return r, g, b, a
 end
 
 graph.rgba = rgba
-graph.rgb = function(r, g, b) return rgba(r, g, b, 1) end
+graph.rgb = rgba
 
-local lum_std = 0.75
+local function gamma(a)
+   return (a / 255)^2.2
+end
+
+local function gamma_inv(a)
+   return 255 * a^(1/2.2)
+end
+
+local function color_blend(f1, r1, g1, b1, f2, r2, g2, b2, alpha)
+   local r = gamma_inv(f1 * gamma(r1) + f2 * gamma(r2))
+   local g = gamma_inv(f1 * gamma(g1) + f2 * gamma(g2))
+   local b = gamma_inv(f1 * gamma(b1) + f2 * gamma(b2))
+   return rgba(r, g, b, alpha)
+end
+
+local lum_std = 190
 
 graph.color = {
    red     = rgba(lum_std, 0, 0),
@@ -199,7 +207,7 @@ graph.color = {
    yellow  = rgba(lum_std, lum_std, 0),
 
    black   = rgba(0, 0, 0),
-   white   = rgba(1, 1, 1),
+   white   = rgba(0xff, 0xff, 0xff),
 
    decode = rgba_decode,
 
@@ -207,7 +215,7 @@ graph.color = {
                 local r1, g1, b1 = rgba_decode(c1)
                 if f2 and c2 then
                    local r2, g2, b2 = rgba_decode(c2)
-                   return rgba(f1*r1+f2*r2, f1*g1+f2*g2, f1*b1+f2*b2)
+                   return color_blend(f1, r1, g1, b1, f2, r2, g2, b2)
                 else
                    return rgba(f1*r1, f1*g1, f1*b1)
                 end
@@ -234,7 +242,7 @@ local hue_map = {
 local function hue_choose(k)
    local e = hue_map[k]
    local r, g, b = e[1], e[2], e[3]
-   return rgba8(r, g, b, 255)
+   return rgba(r, g, b, 255)
 end
 
 local function hue_color(p)
@@ -244,10 +252,8 @@ local function hue_color(p)
       return i < 1 and hue_choose(1) or hue_choose(10)
    else
       local e1, e2 = hue_map[i], hue_map[i+1]
-      local r = floor(e1[1] + (e2[1] - e1[1])*(x-i))
-      local g = floor(e1[2] + (e2[2] - e1[2])*(x-i))
-      local b = floor(e1[3] + (e2[3] - e1[3])*(x-i))
-      return rgba8(r, g, b, 255)
+      local f2 = x-i
+      return color_blend(1 - f2, e1[1], e1[2], e1[3], f2, e2[1], e2[2], e2[3])
    end
 end
 
@@ -262,18 +268,16 @@ function graph.webcolor(n)
 end
 
 local color_schema = {
-   bluish    = {0.91, 0.898, 0.85, 0.345, 0.145, 0.6},
-   redyellow = {0.9, 0.9, 0, 0.9, 0, 0},
-   darkgreen = {0.9, 0.9, 0, 0, 0.4, 0}
+   bluish    = {232, 229, 217, 88, 37, 153},
+   redyellow = {229, 229, 0, 229, 0, 0},
+   darkgreen = {229, 229, 0, 0, 102, 0}
 }
 
 function graph.color_function(schema, alpha)
    local c = color_schema[schema]
    return function(a)
-             return graph.rgba(c[1] + a*(c[4]-c[1]),
-                             c[2] + a*(c[5]-c[2]),
-                             c[3] + a*(c[6]-c[3]), alpha)
-          end
+      return color_blend(1-a, c[1], c[2], c[3], a, c[4], c[5], c[6], alpha)
+   end
 end
 
 graph.hue_color = hue_color
