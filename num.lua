@@ -1,6 +1,8 @@
 
 local template = require 'template'
 
+local REG = debug.getregistry()
+
 num = {}
 
 function num.ode(spec)
@@ -23,6 +25,8 @@ function num.ode(spec)
 
    local ode = template.load(method, spec)
 
+   REG['GSL.help_hook'].ODE = ode
+
    local mt = {
       __index = {step = ode.step, init = ode.init, evolve = ode.evolve}
    }
@@ -30,15 +34,23 @@ function num.ode(spec)
    return setmetatable(ode.new(), mt)
 end
 
+local NLINFIT_METHODS = {
+   set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end,
+   iterate = function(ss) return ss.lm.iterate() end,
+   test    = function(ss, epsabs, epsrel) return ss.lm.test(epsabs, epsrel) end,
+}
+
 local NLINFIT = {
    __index = function(t, k)
-                if k == 'chisq' then
-                   return t.lm.chisq()
-                else
-                   if t.lm[k] then return t.lm[k] end
-                end
-             end
+      if k == 'chisq' then
+         return t.lm.chisq()
+      else
+         return NLINFIT_METHODS[k] or t.lm[k]
+      end
+   end
 }
+
+REG['GSL.NLINFIT'] = NLINFIT_METHODS
 
 function num.nlinfit(spec)
    if not spec.n then error 'number of points "n" not specified' end
@@ -50,10 +62,6 @@ function num.nlinfit(spec)
 
    local n, p = spec.n, spec.p
    local s = { lm = template.load('lmfit', {N= n, P= p}) }
-
-   s.set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end
-   s.iterate = function(ss) return ss.lm.iterate() end
-   s.test    = function(ss, epsabs, epsrel) return ss.lm.test(epsabs, epsrel) end
 
    setmetatable(s, NLINFIT)
 

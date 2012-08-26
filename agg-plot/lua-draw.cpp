@@ -19,6 +19,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 
 extern "C" {
 #include "lua.h"
@@ -35,13 +36,13 @@ extern "C" {
 #include "sg_marker.h"
 
 enum path_cmd_e {
-  CMD_ERROR = -1,
   CMD_MOVE_TO = 0,
   CMD_LINE_TO,
   CMD_CLOSE,
   CMD_ARC_TO,
   CMD_CURVE3,
   CMD_CURVE4,
+  CMD_ERROR,
 };
 
 struct cmd_call_stack {
@@ -50,13 +51,11 @@ struct cmd_call_stack {
 };
 
 struct path_cmd_reg {
-  enum path_cmd_e id;
   const char *cmd;
   const char *signature;
 };
 
 static int agg_path_free      (lua_State *L);
-static int agg_path_index     (lua_State *L);
 
 static int agg_ellipse_new    (lua_State *L);
 static int agg_circle_new     (lua_State *L);
@@ -71,13 +70,13 @@ static int marker_free        (lua_State *L);
 static void path_cmd (draw::path *p, int cmd, struct cmd_call_stack *stack);
 
 static struct path_cmd_reg cmd_table[] = {
-  {CMD_MOVE_TO,  "move_to",  "ff"},
-  {CMD_LINE_TO,  "line_to",  "ff"},
-  {CMD_CLOSE,    "close",    ""},
-  {CMD_ARC_TO,   "arc_to",   "fffbbff"},
-  {CMD_CURVE3,   "curve3",   "ffff"},
-  {CMD_CURVE4,   "curve4",   "ffffff"},
-  {CMD_ERROR,    NULL, NULL}
+  {"move_to",  "ff"},
+  {"line_to",  "ff"},
+  {"close",    ""},
+  {"arc_to",   "fffbbff"},
+  {"curve3",   "ffff"},
+  {"curve4",   "ffffff"},
+  {NULL, NULL}
 };
 
 static const struct luaL_Reg draw_functions[] = {
@@ -90,7 +89,6 @@ static const struct luaL_Reg draw_functions[] = {
 };
 
 static const struct luaL_Reg agg_path_methods[] = {
-  {"__index",     agg_path_index},
   {"__gc",        agg_path_free},
   {NULL, NULL}
 };
@@ -173,8 +171,8 @@ path_cmd (draw::path *p, int _cmd, struct cmd_call_stack *s)
     case CMD_CURVE4:
       ps.curve4 (s->f[0], s->f[1], s->f[2], s->f[3], s->f[4], s->f[5]);
       break;
-    case CMD_ERROR:
-      ;
+    default:
+      /* */;
     }
 }
 
@@ -183,7 +181,11 @@ agg_path_cmd (lua_State *L)
 {
   draw::path *p = check_agg_path (L, 1);
   int id = lua_tointeger (L, lua_upvalueindex(1));
-  const char *signature = lua_tostring (L, lua_upvalueindex(2));
+
+  assert(id >= 0 && id < CMD_ERROR);
+
+  path_cmd_reg* cmd = cmd_table + id;
+  const char *signature = cmd->signature;
   int argc = 2, f_count = 0, b_count = 0;
   struct cmd_call_stack s[1];
   const char *fc;
@@ -206,33 +208,6 @@ agg_path_cmd (lua_State *L)
   pthread_mutex_lock (agg_mutex);
   path_cmd (p, id, s);
   pthread_mutex_unlock (agg_mutex);
-  return 0;
-}
-
-int
-agg_path_index (lua_State *L)
-{
-  struct path_cmd_reg *r;
-  const char *key;
-
-  if (! lua_isstring (L, 2))
-    return 0;
-
-  key = lua_tostring (L, 2);
-  for (r = cmd_table; r->cmd; r++)
-    {
-      if (strcmp (key, r->cmd) == 0)
-        break;
-    }
-
-  if (r->cmd)
-    {
-      lua_pushinteger (L, (int) r->id);
-      lua_pushstring (L, r->signature);
-      lua_pushcclosure (L, agg_path_cmd, 2);
-      return 1;
-    }
-
   return 0;
 }
 
@@ -308,10 +283,29 @@ marker_free (lua_State *L)
   return object_free<sg_object>(L, 1, GS_DRAW_MARKER);
 }
 
+/* create a __index table with methods for agg_path */
+static void
+agg_path_create_index (lua_State* L)
+{
+  /* we assume that on top of the stack we have the metatable */
+  lua_pushstring(L, "__index");
+  lua_newtable(L); /* creata a new table to hold the methods */
+  for (int k = 0; cmd_table[k].cmd; k++) /* for each possible command */
+  {
+    path_cmd_reg* r = cmd_table + k;
+    lua_pushstring(L, r->cmd); /* push the name of the command */
+    lua_pushinteger(L, k); /* use the id of the command as an upvalue */
+    lua_pushcclosure(L, agg_path_cmd, 1); /* to create a closure, the actual method */
+    lua_rawset(L, -3); /* and associate the method to the command name */
+  }
+  lua_rawset(L, -3); /* bind the the new table to the __index key */
+}
+
 void
 draw_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_PATH));
+  agg_path_create_index(L);
   luaL_register (L, NULL, agg_path_methods);
   lua_pop (L, 1);
 

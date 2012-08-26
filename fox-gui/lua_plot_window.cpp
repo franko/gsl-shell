@@ -15,6 +15,8 @@ extern "C" {
 
 __BEGIN_DECLS
 
+static int fox_window_layout(lua_State* L);
+
 static const struct luaL_Reg fox_window_functions[] =
 {
     {"window",         fox_window_new},
@@ -23,6 +25,7 @@ static const struct luaL_Reg fox_window_functions[] =
 
 static const struct luaL_Reg fox_window_methods[] =
 {
+    {"layout",         fox_window_layout },
     {"attach",         fox_window_attach        },
     {"close",          fox_window_close        },
     {"refresh",        fox_window_slot_refresh        },
@@ -81,6 +84,13 @@ fox_window_new (lua_State *L)
 
     app->unlock();
     return 1;
+}
+
+int
+fox_window_layout(lua_State* L)
+{
+    return luaL_error(L, "window's layout method not yet implemented "
+        "in FOX client");
 }
 
 int

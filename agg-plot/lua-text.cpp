@@ -6,7 +6,7 @@ extern "C" {
 
 #include "lua-text.h"
 #include "gs-types.h"
-#include "lua-utils.h"
+#include "lua-properties.h"
 #include "lua-cpp-utils.h"
 
 #include "text.h"
@@ -14,8 +14,6 @@ extern "C" {
 static int agg_text_new       (lua_State *L);
 static int agg_text_free      (lua_State *L);
 static int agg_text_set_point (lua_State *L);
-static int agg_text_index     (lua_State *L);
-static int agg_text_newindex  (lua_State *L);
 
 static int agg_text_angle_set  (lua_State *L);
 static int agg_text_justif_set (lua_State *L);
@@ -32,8 +30,6 @@ static const struct luaL_Reg text_functions[] = {
 
 static const struct luaL_Reg text_metatable[] = {
   {"__gc",        agg_text_free},
-  {"__index",     agg_text_index},
-  {"__newindex",  agg_text_newindex},
   {NULL, NULL}
 };
 
@@ -170,22 +166,11 @@ agg_text_set_point (lua_State *L)
   return 0;
 }
 
-int
-agg_text_index (lua_State *L)
-{
-  return mlua_index_with_properties (L, text_properties_get, text_methods, false);
-}
-
-int
-agg_text_newindex (lua_State *L)
-{
-  return mlua_newindex_with_properties (L, text_properties_set);
-}
-
 void
 text_register (lua_State *L)
 {
   luaL_newmetatable (L, GS_METATABLE(GS_DRAW_TEXT));
+  register_properties_index(L, text_methods, text_properties_get, text_properties_set);
   luaL_register (L, NULL, text_metatable);
   lua_pop (L, 1);
 

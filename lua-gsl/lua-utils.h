@@ -27,23 +27,6 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
-extern void
-mlua_openlibs (lua_State *L);
-
-extern int
-mlua_get_property (lua_State *L, const struct luaL_Reg *p, bool use_cache);
-
-extern const struct luaL_Reg *
-mlua_find_method (const struct luaL_Reg *p, const char *key);
-
-extern int
-mlua_index_with_properties (lua_State *L, const struct luaL_Reg *properties,
-			    const struct luaL_Reg *methods,
-			    bool use_cache);
-
-extern int
-mlua_newindex_with_properties (lua_State *L, const struct luaL_Reg *properties);
-
 extern const char * mlua_named_optstring (lua_State *L, int index,
 					  const char *key,
 					  const char * default_value);

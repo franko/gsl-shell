@@ -30,7 +30,7 @@ extern "C" {
 #include "lua-cpp-utils.h"
 #include "bitmap-plot.h"
 #include "gs-types.h"
-#include "lua-utils.h"
+#include "lua-properties.h"
 #include "window_registry.h"
 #include "lua-cpp-utils.h"
 #include "lua-draw.h"
@@ -46,8 +46,6 @@ static int plot_add        (lua_State *L);
 static int plot_update     (lua_State *L);
 static int plot_flush      (lua_State *L);
 static int plot_add_line   (lua_State *L);
-static int plot_index      (lua_State *L);
-static int plot_newindex   (lua_State *L);
 static int plot_free       (lua_State *L);
 static int plot_show       (lua_State *L);
 static int plot_title_set  (lua_State *L);
@@ -92,8 +90,6 @@ static const struct luaL_Reg plot_functions[] = {
 };
 
 static const struct luaL_Reg plot_metatable[] = {
-  {"__index",     plot_index      },
-  {"__newindex",  plot_newindex   },
   {"__gc",        plot_free       },
   {NULL, NULL}
 };
@@ -471,20 +467,6 @@ plot_units_get (lua_State *L)
   return plot_bool_property_get(L, &sg_plot::use_units);
 }
 
-int
-plot_index (lua_State *L)
-{
-  return mlua_index_with_properties (L,
-                                     plot_properties_get,
-                                     plot_methods, false);
-}
-
-int
-plot_newindex (lua_State *L)
-{
-  return mlua_newindex_with_properties (L, plot_properties_set);
-}
-
 void
 plot_update_raw (lua_State *L, sg_plot *p, int plot_index)
 {
@@ -782,6 +764,7 @@ plot_register (lua_State *L)
 {
   /* plot declaration */
   luaL_newmetatable (L, GS_METATABLE(GS_PLOT));
+  register_properties_index(L, plot_methods, plot_properties_get, plot_properties_set);
   luaL_register (L, NULL, plot_metatable);
   lua_pop (L, 1);
 

@@ -29,3 +29,9 @@ Overview
    It does returns the same string of the "type" function except when the argument is a GSL object.
    When this happens it does return a string corresponding to its actual type instead of "userdata" or "cdata".
    For complex number and real or complex matrix it does return respectively "complex", "matrix" and "complex matrix".
+
+.. function:: help(f)
+
+   Print some help, if available, about the function "f".
+   In the first line it will be shown how the function should be called.
+   If the function have some optional parameters these will be shown inside square brackets.
