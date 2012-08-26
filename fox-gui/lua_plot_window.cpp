@@ -105,7 +105,7 @@ fox_window_attach (lua_State *L)
 
     fx_plot_canvas* canvas = win->canvas();
     canvas->attach(p);
-    agg::trans_affine& m = canvas->plot_matrix();
+    const agg::trans_affine& m = canvas->plot_matrix();
     canvas->plot_draw(m);
 
     app->unlock();
@@ -146,7 +146,7 @@ fox_window_slot_refresh (lua_State *L)
 
     if (canvas->is_ready())
     {
-        agg::trans_affine& m = canvas->plot_matrix();
+        const agg::trans_affine& m = canvas->plot_matrix();
         bool redraw = canvas->get_plot()->need_redraw();
         if (redraw)
             canvas->plot_render(m);
@@ -169,7 +169,7 @@ fox_window_slot_update (lua_State *L)
 
     if (canvas->is_ready())
     {
-        agg::trans_affine& m = canvas->plot_matrix();
+        const agg::trans_affine& m = canvas->plot_matrix();
         canvas->plot_render(m);
         canvas->plot_draw_queue(m, true);
     }
@@ -203,7 +203,7 @@ fox_window_restore_slot_image (lua_State *L)
     fx_plot_canvas* canvas = win->canvas();
     if (!canvas->restore_image())
     {
-        agg::trans_affine& m = canvas->plot_matrix();
+        const agg::trans_affine& m = canvas->plot_matrix();
         canvas->plot_render(m);
         canvas->save_image();
     }

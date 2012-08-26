@@ -41,7 +41,7 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
     }
 }
 
-void fx_plot_canvas::plot_render(agg::trans_affine& m)
+void fx_plot_canvas::plot_render(const agg::trans_affine& m)
 {
     m_canvas->clear(colors::white);
     AGG_LOCK();
@@ -50,7 +50,7 @@ void fx_plot_canvas::plot_render(agg::trans_affine& m)
     m_dirty_img = false;
 }
 
-void fx_plot_canvas::plot_draw(agg::trans_affine& m)
+void fx_plot_canvas::plot_draw(const agg::trans_affine& m)
 {
     FXDCWindow dc(this);
     int ww = getWidth(), hh = getHeight();
@@ -105,7 +105,7 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
     dc.drawImage(&img, r.x1, getHeight() - r.y2);
 }
 
-opt_rect<double> fx_plot_canvas::plot_render_queue(agg::trans_affine& m)
+opt_rect<double> fx_plot_canvas::plot_render_queue(const agg::trans_affine& m)
 {
     opt_rect<double> r, draw_rect;
     AGG_LOCK();
@@ -117,7 +117,7 @@ opt_rect<double> fx_plot_canvas::plot_render_queue(agg::trans_affine& m)
     return r;
 }
 
-void fx_plot_canvas::plot_draw_queue(agg::trans_affine& m, bool draw_all)
+void fx_plot_canvas::plot_draw_queue(const agg::trans_affine& m, bool draw_all)
 {
     if (!m_canvas || !m_plot) return;
 

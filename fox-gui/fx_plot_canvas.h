@@ -34,15 +34,16 @@ public:
         return m_plot;
     }
 
-    void plot_render(agg::trans_affine& m);
-    void plot_draw(agg::trans_affine& m);
-    opt_rect<double> plot_render_queue(agg::trans_affine& m);
-    void plot_draw_queue(agg::trans_affine& m, bool draw_all);
+    void plot_render(const agg::trans_affine& m);
+    void plot_draw(const agg::trans_affine& m);
+    opt_rect<double> plot_render_queue(const agg::trans_affine& m);
+    void plot_draw_queue(const agg::trans_affine& m, bool draw_all);
 
-    agg::trans_affine& plot_matrix()
+    const agg::trans_affine& plot_matrix() const
     {
         return m_area_mtx;
     }
+
     bool is_ready() const
     {
         return m_canvas && m_plot;

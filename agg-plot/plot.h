@@ -227,7 +227,7 @@ public:
   }
 
   template <class Canvas>
-  void draw(Canvas& canvas, agg::trans_affine& m);
+  void draw(Canvas& canvas, const agg::trans_affine& m);
 
   virtual bool push_layer();
   virtual bool pop_layer();
@@ -245,7 +245,7 @@ public:
   void commit_pending_draw();
 
   template <class Canvas>
-  void draw_queue(Canvas& canvas, agg::trans_affine& m, opt_rect<double>& bbox);
+  void draw_queue(Canvas& canvas, const agg::trans_affine& m, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -293,20 +293,20 @@ public:
   }
 
 protected:
-  double draw_axis_m(axis_e dir, units& u, agg::trans_affine& user_mtx,
+  double draw_axis_m(axis_e dir, units& u, const agg::trans_affine& user_mtx,
                      ptr_list<draw::text>& labels, double scale,
                      agg::path_storage& mark, agg::path_storage& ln);
 
-  void draw_elements(canvas_type &canvas, agg::trans_affine& m);
-  void draw_element(item& c, canvas_type &canvas, agg::trans_affine& m);
-  void draw_axis(canvas_type& can, agg::trans_affine& m, agg::rect_base<int>* clip = 0);
+  void draw_elements(canvas_type &canvas, const agg::trans_affine& m);
+  void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m);
+  void draw_axis(canvas_type& can, const agg::trans_affine& m, agg::rect_base<int>* clip = 0);
 
   agg::trans_affine draw_legends(canvas_type& canvas,
-                                    agg::trans_affine& canvas_mtx);
+                                    const agg::trans_affine& canvas_mtx);
 
-  agg::trans_affine get_scaled_matrix(agg::trans_affine& canvas_mtx);
+  agg::trans_affine get_scaled_matrix(const agg::trans_affine& canvas_mtx);
 
-  void clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx);
+  void clip_plot_area(canvas_type& canvas, const agg::trans_affine& canvas_mtx);
 
   void compute_user_trans();
 
@@ -351,7 +351,7 @@ private:
   plot* m_legend[4];
 };
 
-static double compute_scale(agg::trans_affine& m)
+static double compute_scale(const agg::trans_affine& m)
 {
   return m.scale() / 480.0;
 }
@@ -415,7 +415,7 @@ static bool area_is_valid(const agg::trans_affine& b)
 }
 
 template <class RM>
-template <class Canvas> void plot<RM>::draw(Canvas& _canvas, agg::trans_affine& canvas_mtx)
+template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::trans_affine& canvas_mtx)
 {
   canvas_adapter<Canvas>  canvas(&_canvas);
   before_draw();
@@ -432,7 +432,7 @@ template <class Canvas> void plot<RM>::draw(Canvas& _canvas, agg::trans_affine& 
 };
 
 template <class RM>
-void plot<RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
+void plot<RM>::draw_element(item& c, canvas_type& canvas, const agg::trans_affine& m)
 {
   sg_object& vs = c.content();
   vs.apply_transform(m, 1.0);
@@ -444,7 +444,7 @@ void plot<RM>::draw_element(item& c, canvas_type& canvas, agg::trans_affine& m)
 }
 
 template <class RM>
-agg::trans_affine plot<RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
+agg::trans_affine plot<RM>::get_scaled_matrix(const agg::trans_affine& canvas_mtx)
 {
   agg::trans_affine m = m_trans;
   trans_affine_compose (m, m_area_mtx);
@@ -452,7 +452,7 @@ agg::trans_affine plot<RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 }
 
 template<class RM>
-void plot<RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx)
+void plot<RM>::clip_plot_area(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
 {
   if (this->clip_is_active())
     {
@@ -462,9 +462,9 @@ void plot<RM>::clip_plot_area(canvas_type& canvas, agg::trans_affine& canvas_mtx
 }
 
 template <class RM>
-void plot<RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
+void plot<RM>::draw_elements(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
 {
-  agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+  const agg::trans_affine m = get_scaled_matrix(canvas_mtx);
 
   this->clip_plot_area(canvas, canvas_mtx);
 
@@ -481,7 +481,7 @@ void plot<RM>::draw_elements(canvas_type& canvas, agg::trans_affine& canvas_mtx)
 }
 
 template <class RM>
-template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
+template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, const agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
 {
   canvas_adapter<Canvas>  canvas(&_canvas);
 
@@ -537,7 +537,7 @@ void plot<RM>::compute_user_trans()
 
 template <class RM>
 double plot<RM>::draw_axis_m(axis_e dir, units& u,
-                             agg::trans_affine& user_mtx,
+                             const agg::trans_affine& user_mtx,
                              ptr_list<draw::text>& labels, double scale,
                              agg::path_storage& mark, agg::path_storage& ln)
 {
@@ -620,7 +620,7 @@ static inline double approx_text_height(double text_size)
 
 template <class RM>
 agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
-                                         agg::trans_affine& canvas_mtx)
+                                         const agg::trans_affine& canvas_mtx)
 {
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double ppad = double(canvas_margin_prop_space) / 1000.0;
@@ -715,7 +715,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
 }
 
 template <class RM>
-void plot<RM>::draw_axis(canvas_type& canvas, agg::trans_affine& canvas_mtx,
+void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mtx,
                          agg::rect_base<int>* clip)
 {
   agg::trans_affine& m = m_area_mtx;
