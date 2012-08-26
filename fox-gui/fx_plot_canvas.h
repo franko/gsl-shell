@@ -7,7 +7,7 @@
 
 #include "image_buf.h"
 #include "sg_object.h"
-#include "plot-auto.h"
+#include "lua-plot-cpp.h"
 #include "canvas.h"
 #include "rect.h"
 
@@ -18,18 +18,16 @@ class fx_plot_canvas : public FXCanvas
     typedef image_gen<3, true> image;
 
 public:
-    typedef plot<manage_owner> plot_type;
-
     fx_plot_canvas(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0,
                    FXuint opts=FRAME_NORMAL,
                    FXint x=0, FXint y=0, FXint w=0, FXint h=0);
 
     ~fx_plot_canvas();
 
-    void attach(plot_type* p);
+    void attach(sg_plot* p);
     void update_region(const agg::rect_base<int>& r);
 
-    plot_type* get_plot()
+    sg_plot* get_plot()
     {
         return m_plot;
     }
@@ -64,7 +62,7 @@ private:
 
     image m_img;
     image m_save_img;
-    plot_type* m_plot;
+    sg_plot* m_plot;
     canvas* m_canvas;
     bool m_dirty_flag, m_dirty_img;
     opt_rect<double> m_dirty_rect;

@@ -155,7 +155,7 @@ bool fx_plot_canvas::restore_image()
     return true;
 }
 
-void fx_plot_canvas::attach(plot_type* p)
+void fx_plot_canvas::attach(sg_plot* p)
 {
     m_plot = p;
     m_dirty_flag = true;
