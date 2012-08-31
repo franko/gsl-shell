@@ -7,8 +7,8 @@ local function help_init( ... )
 end
 
 local function open_module(modname)
-	local fullname = string.format('help/%s.lua', modname)
-	local m = dofile(fullname)
+	local fullname = string.format('help/%s', modname)
+	local m = require(fullname)
 	return m
 end
 
