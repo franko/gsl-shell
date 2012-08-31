@@ -5,6 +5,7 @@
 luajit2/lib/vmdef.lua
 *~
 gsl-shell
+gsl-shell.exe
 .deps
 .lib
 .trash
@@ -12,4 +13,3 @@ gsl-shell
 _build
 www
 doc/html
-

@@ -27,6 +27,7 @@ LUADIR = luajit2
 
 INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
 GSL_SHELL = gsl-shell$(EXE_EXT)
+GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
 LUA_CFLAGS = -I$(LUADIR)/src
 
 ifeq ($(HOST_SYS),Windows)
@@ -51,13 +52,15 @@ ifeq ($(strip $(USE_READLINE)),yes)
   C_SRC_FILES += completion.c
 endif
 
-LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua import.lua plot3d.lua sf.lua vegas.lua eigen.lua
+LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua roots.lua contour.lua gsl.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua import.lua plot3d.lua sf.lua vegas.lua eigen.lua help.lua
 
+HELP_FILES = graphics matrix iter integ ode nlfit vegas
 DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour svg graphics sf vegas
 LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-defs vegas-defs
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
+LUA_BASE_FILES += $(HELP_FILES:%=help/%.lua)
 
 LUAGSL_LIBS += $(LUADIR)/src/libluajit.a
 
@@ -97,7 +100,9 @@ $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 install: $(GSL_SHELL)
 	mkdir -p $(INSTALL_BIN_DIR)
 	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
+	cp fox-gui/$(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
+	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
 	cp --parents $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
 

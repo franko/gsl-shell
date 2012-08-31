@@ -25,7 +25,7 @@ include $(GSH_BASE_DIR)/make-system-detect
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
-GSL_SHELL_GUI = gsl-shell-fox.exe
+GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
