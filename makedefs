@@ -26,7 +26,7 @@ ifeq ($(strip $(LUA_BUILD)), yes)
   PACKAGE_VERSION = 5.1
 else
   PACKAGE_NAME = gsl-shell
-  PACKAGE_VERSION = 2.1
+  PACKAGE_VERSION = 2.2
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
