@@ -237,7 +237,7 @@ static void asm_fusexref(ASMState *as, ARMIns ai, Reg rd, IRRef ref,
 {
   IRIns *ir = IR(ref);
   Reg base;
-  if (ra_noreg(ir->r) && mayfuse(as, ref)) {
+  if (ra_noreg(ir->r) && canfuse(as, ir)) {
     int32_t lim = (!LJ_SOFTFP && (ai & 0x08000000)) ? 1024 :
 		   (ai & 0x04000000) ? 4096 : 256;
     if (ir->o == IR_ADD) {
@@ -339,17 +339,24 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
 {
   uint32_t n, nargs = CCI_NARGS(ci);
   int32_t ofs = 0;
+#if LJ_SOFTFP
   Reg gpr = REGARG_FIRSTGPR;
-#if !LJ_SOFTFP
-  Reg fpr = REGARG_FIRSTFPR, fprodd = 0;
+#else
+  Reg gpr, fpr = REGARG_FIRSTFPR, fprodd = 0;
 #endif
   if ((void *)ci->func)
     emit_call(as, (void *)ci->func);
+#if !LJ_SOFTFP
+  for (gpr = REGARG_FIRSTGPR; gpr <= REGARG_LASTGPR; gpr++)
+    as->cost[gpr] = REGCOST(~0u, 0u);
+  gpr = REGARG_FIRSTGPR;
+#endif
   for (n = 0; n < nargs; n++) {  /* Setup args. */
     IRRef ref = args[n];
     IRIns *ir = IR(ref);
 #if !LJ_SOFTFP
     if (irt_isfp(ir->t)) {
+      RegSet of = as->freeset;
       Reg src;
       if (!LJ_ABI_SOFTFP && !(ci->flags & CCI_VARARG)) {
 	if (irt_isnum(ir->t)) {
@@ -368,15 +375,22 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
 	  fprodd = fpr++;
 	  continue;
 	}
-	src = ra_alloc1(as, ref, RSET_FPR);
+	/* Workaround to protect argument GPRs from being used for remat. */
+	as->freeset &= ~RSET_RANGE(REGARG_FIRSTGPR, REGARG_LASTGPR+1);
+	src = ra_alloc1(as, ref, RSET_FPR);  /* May alloc GPR to remat FPR. */
+	as->freeset |= (of & RSET_RANGE(REGARG_FIRSTGPR, REGARG_LASTGPR+1));
 	fprodd = 0;
 	goto stackfp;
       }
-      src = ra_alloc1(as, ref, RSET_FPR);
+      /* Workaround to protect argument GPRs from being used for remat. */
+      as->freeset &= ~RSET_RANGE(REGARG_FIRSTGPR, REGARG_LASTGPR+1);
+      src = ra_alloc1(as, ref, RSET_FPR);  /* May alloc GPR to remat FPR. */
+      as->freeset |= (of & RSET_RANGE(REGARG_FIRSTGPR, REGARG_LASTGPR+1));
       if (irt_isnum(ir->t)) gpr = (gpr+1) & ~1u;
       if (gpr <= REGARG_LASTGPR) {
 	lua_assert(rset_test(as->freeset, gpr));  /* Must have been evicted. */
 	if (irt_isnum(ir->t)) {
+	  lua_assert(rset_test(as->freeset, gpr+1));  /* Ditto. */
 	  emit_dnm(as, ARMI_VMOV_RR_D, gpr, gpr+1, (src & 15));
 	  gpr += 2;
 	} else {
@@ -612,7 +626,7 @@ static void asm_conv64(ASMState *as, IRIns *ir)
 
 static void asm_strto(ASMState *as, IRIns *ir)
 {
-  const CCallInfo *ci = &lj_ir_callinfo[IRCALL_lj_str_tonum];
+  const CCallInfo *ci = &lj_ir_callinfo[IRCALL_lj_strscan_num];
   IRRef args[2];
   Reg rlo = 0, rhi = 0, tmp;
   int destused = ra_used(ir);
@@ -1560,8 +1574,9 @@ static void asm_callid(ASMState *as, IRIns *ir, IRCallID id)
 static void asm_callround(ASMState *as, IRIns *ir, int id)
 {
   /* The modified regs must match with the *.dasc implementation. */
-  RegSet drop = RID2RSET(RID_D1)|RID2RSET(RID_D2)|
+  RegSet drop = RID2RSET(RID_D0)|RID2RSET(RID_D1)|RID2RSET(RID_D2)|
 		RID2RSET(RID_R0)|RID2RSET(RID_R1);
+  if (ra_hasreg(ir->r)) rset_clear(drop, ir->r);
   ra_evictset(as, drop);
   ra_destreg(as, ir, RID_FPRET);
   emit_call(as, id == IRFPM_FLOOR ? (void *)lj_vm_floor_hf :
@@ -2087,9 +2102,12 @@ static RegSet asm_head_side_base(ASMState *as, IRIns *irp, RegSet allow)
   if (ra_hasspill(irp->s)) {
     rset_clear(allow, ra_dest(as, ir, allow));
   } else {
-    lua_assert(ra_hasreg(irp->r));
-    rset_clear(allow, irp->r);
-    ra_destreg(as, ir, irp->r);
+    Reg r = irp->r;
+    lua_assert(ra_hasreg(r));
+    rset_clear(allow, r);
+    if (r != ir->r && !rset_test(as->freeset, r))
+      ra_restore(as, regcost_ref(as->cost[r]));
+    ra_destreg(as, ir, r);
   }
   return allow;
 }
