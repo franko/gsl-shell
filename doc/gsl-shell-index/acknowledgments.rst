@@ -11,6 +11,8 @@ The AGG library is another outstanding free software library that does leverage 
 Last, but not least, the LuaJIT2 made a really big difference with its outstanding JIT code generator.
 Thanks to LuaJIT2 it is possible to easily write code in Lua and achieve performances close to optimized C code.
 
-Finally I would like to thanks the Lua mailing list, Mike Pall and the Lua authors for their advices and helps.
+Luckily some people have kindly contributed some valuable implementations for GSL Shell, so many thanks to Lesley and Benjamin for their previous help.
 
-Many tanks also to my wife, Gosia, for her patience and her support.
+Finally I would like to thanks the Lua and LuaJIT mailing list, Mike Pall and the Lua authors for their advices and helps.
+
+Many thanks also to my wife, Gosia, for her patience and her support.

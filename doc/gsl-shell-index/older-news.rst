@@ -3,6 +3,19 @@
 Older News
 ==========
 
+**February 2012**
+  *GSL Shell 2.1.0 released*.
+
+  This release introduces some new, interesting features.
+
+  * Added support to save plot in SVG format.
+  * Implemented support for plot legends and customized axis labels.
+  * Implementation of the VEGAS algorithm for Monte Carlo integration.
+  * Better and more complete implementation of the Special Functions modules using the FFI interface.
+  * Smart auto-complete for Lua global variables.
+
+  A new page to show benchmarks results is now published and `three new contributors <http:///www.nongnu.org/gsl-shell/authors.html>`_ have also joined the GSL Shell project.
+
 **November 2011**
   *GSL Shell 2.0.0 released*.
 

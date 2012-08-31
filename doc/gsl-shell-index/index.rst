@@ -26,17 +26,19 @@ You can download the latest release of GSL Shell in the :ref:`download section <
 You will find the source code and the binary packages for Windows and Linux.
 
 **NEW**
-  *GSL Shell 2.1.0 released*.
+  *GSL Shell 2.2.0-beta1 released*.
 
-  This release introduces some new, interesting features.
+  This new release introduce a more friendly graphical user interface.
+  This should greatly improve the user experience especially on Windows.
 
-  * Added support to save plot in SVG format.
-  * Implemented support for plot legends and customized axis labels.
-  * Implementation of the VEGAS algorithm for Monte Carlo integration.
-  * Better and more complete implementation of the Special Functions modules using the FFI interface.
-  * Smart auto-complete for Lua global variables.
+  In addition a much better font rendering system is now used to improve plot quality.
+  This latter is based on the FreeType library and on the AGG library already used to render graphics.
 
-  A new page to show benchmarks results is now published and `three new contributors <http:///www.nongnu.org/gsl-shell/authors.html>`_ have also joined the GSL Shell project.
+  Some usability improvements were made also on the system to add plot legends.
+
+  From the GSL point of view a new module for eigensystem was added by Benjamin Von Ardenne.
+
+  In addition a lot of improvements and bug fixes have been made by Mike Pall on LuaJIT itself.
 
 Donate
 ~~~~~~
@@ -54,9 +56,6 @@ GSL Shell User Manual
 GSL Shell comes with a quite complete `user manual <http://www.nongnu.org/gsl-shell/doc/>`_.
 If you want to learn more about GSL Shell you can read with the `introduction to GSL Shell <http://www.nongnu.org/gsl-shell/doc/intro.html>`_.
 You may also give a look to the `examples section <http://www.nongnu.org/gsl-shell/doc/examples.html>`_ to get a feeling of GSL Shell.
-
-.. note::
-   The manual GSL Shell 1.1 is still `available here <http://www.nongnu.org/gsl-shell/doc-v1/>`_.
 
 Contents:
 
