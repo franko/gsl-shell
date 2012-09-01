@@ -89,7 +89,7 @@ LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 INSTALL_BIN_DIR = $(DESTDIR)$(PREFIX)/bin
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
 
-LIBS += $(GSL_LIBS)
+LIBS += $(GSL_LIBS) -lm
 
 all: $(SUBDIRS) $(TARGETS)
 

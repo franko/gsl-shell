@@ -31,11 +31,10 @@ LUADIR = $(GSH_BASE_DIR)/luajit2
 
 GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a
 
-INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
-LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(PTHREADS_LIBS) -lsupc++
+INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
 
-INCLUDES += $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
-LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS)
+INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
+LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS) -lsupc++ -lm
 
 FOXGUI_SRC_FILES = io_thread.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp fox_gsl_shell.cpp gsl_shell_window.cpp fx_plot_canvas.cpp fx_plot_window.cpp lua_plot_window.cpp gsl_shell_app.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)

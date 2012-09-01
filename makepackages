@@ -21,7 +21,7 @@ ifeq ($(HOST_SYS),Windows)
   FOX_LIBS = -lfox -lgdi32
 
   GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lgslcblas -lm
+  GSL_LIBS = -lgsl -lblas
 
   FREETYPE_INCLUDES =
   FREETYPE_LIBS = -lfreetype
@@ -32,7 +32,7 @@ else
   AGG_LIBS = -lagg -lX11
 
   GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lgslcblas -lm
+  GSL_LIBS = -lgsl -lblas
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
