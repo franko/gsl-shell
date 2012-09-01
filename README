@@ -1,6 +1,6 @@
 
-* GSL shell 2.1
-* Copyright (C) 2009-2011 Francesco Abbate
+* GSL shell 2.2
+* Copyright (C) 2009-2012 Francesco Abbate
 * Author: Francesco Abbate
 * Published under GNU GENERAL PUBLIC LICENSE, version 3
 
@@ -14,6 +14,6 @@ shell is to give the user the power of easily access GSL functions
 without having to write a complete C application.
 
 GSL Shell is based on LuaJIT2.
-LuaJIT is Copyright © 2005-2011 Mike Pall.
+LuaJIT is Copyright © 2005-2012 Mike Pall.
 LuaJIT is open source software, released under the MIT license.
 More informations on the LuaJIT webpage http://luajit.org.

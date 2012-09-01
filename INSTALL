@@ -1,5 +1,5 @@
 
-GSL Shell 2.1
+GSL Shell 2.2
 
 ** BUILD INSTRUCTION
 
@@ -8,27 +8,23 @@ GSL Shell needs the following external libraries:
 - AGG library, version 2.5
 - GSL Library, version 1.14 or 1.15
 - GNU readline library (on Linux only)
+- Freetype2 library, version 2.4.10
+
+To build the Graphical user interface you will need also the FOX 1.6 library.
+
+Optionally you can install an optimized BLAS library like ATLAS or OPENBLAS. These can greatly improve the speed for operation on large matrices.
 
 Please note that the Lua implementation used in GSL Shell is included with
 the source code so that you don't need any external Lua library or
 executable.
 
-Once you are sure that the AGG and GSL libraries are properly installed
-edit the file "makepackages". For the Linux platform locate the part
-between the "else" and "endif" keyword and modify the following variables:
+On Linux you just need to make sure that the appropriate dev packages are included for each of the library given above.
 
-AGG_INCLUDES
-AGG_LIBS
-GSL_INCLUDES
-GSL_LIBS
+The main compilation options for GSL Shell are located in the file "makeconfig". You can modify this file to change some compilation options if you want. In particular you may want to change the PREFIX path to something else than "/usr/local".
 
-so that the AGG and GSL libraries can be located. Please note that if the
-libraries are installed in the standard locations you can leave empty the
-variables AGG_INCLUDES and GSL_INCLUDES.
+If you have troubles you can have a look to the "makepackages" files where the include and link flags for each library are defined. In the file "makedefs" you will have additional compiling options but normally you should not need to modify this file.
 
-Also make sure that PREFIX (default: /usr/local) is correctly set in "makeconfig".
-
-Once you have modified the files "makepackage" and "makeconfig" you can just give
+Once you have modified the file "makeconfig" you can just give:
 
 > make
 
@@ -52,3 +48,10 @@ The AGG library:
 
   http://www.antigrain.com/
 
+The FOX library:
+
+  http://www.fox-toolkit.org/
+
+The FreeType project:
+
+  http://www.freetype.org/
