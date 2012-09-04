@@ -35,6 +35,7 @@ public:
     virtual void create();
 
     long on_key_press(FXObject*,FXSelector,void*);
+    long on_cmd_delete(FXObject*,FXSelector,void*);
     long on_lua_output(FXObject*,FXSelector,void*);
 
     enum

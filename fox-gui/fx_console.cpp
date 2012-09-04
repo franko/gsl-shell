@@ -13,6 +13,9 @@ FXHiliteStyle fx_console::m_styles[2];
 FXDEFMAP(fx_console) fx_console_map[]=
 {
     FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, fx_console::on_cmd_delete),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, fx_console::on_cmd_delete),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_IO_READ, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
 
@@ -247,4 +250,35 @@ long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
     }
 
     return 1;
+}
+
+long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
+{
+    int pos = getCursorPos();
+
+    if (isPosSelected(pos))
+    {
+        if (getSelStartPos() < m_input_begin)
+            return 1;
+    }
+    else
+    {
+        int del_pos = pos;
+
+        switch (FXSELID(sel))
+        {
+        case ID_BACKSPACE:
+            del_pos = pos - 1;
+            break;
+        case ID_BACKSPACE_BOL:
+            del_pos = rowStart(pos);
+            break;
+        default:
+            /* */;
+        }
+        if (del_pos < m_input_begin)
+            return 1;
+    }
+
+    return this->FXText::handle(obj, sel, ptr);
 }
