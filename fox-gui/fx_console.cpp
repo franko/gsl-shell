@@ -15,6 +15,7 @@ FXDEFMAP(fx_console) fx_console_map[]=
     FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, fx_console::on_cmd_delete),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_IO_READ, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
@@ -271,6 +272,7 @@ long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
             del_pos = pos - 1;
             break;
         case ID_BACKSPACE_BOL:
+        case ID_BACKSPACE_WORD:
             del_pos = rowStart(pos);
             break;
         default:
