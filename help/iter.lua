@@ -4,10 +4,10 @@ local M = {
 iter.sequence(f, a, b)
 iter.sequence(f, b)
 
-   Return an "iterator" that gives the value (or the values) returned
-   by the evaluation of "f(i)" where "i" is an integer that goes from
-   "a" to "b". In the second form, the generated values start from
-   one.
+   Return an iterator that gives the value (or the values) returned
+   by the evaluation of "f(i)" where "i" is an integer that goes
+   from "a" to "b". In the second form, the generated values start
+   from one.
 ]],
 
   [iter.sample] = [[

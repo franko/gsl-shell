@@ -33,15 +33,15 @@ num.nlinfit {n= <int>, p= <int>}
    [NLFIT.iterate] = [[
 <nlfit>:iterate()
 
-    Advance the solver of a single step. It does return "continue" if
+    Advance the solver with a single step. It returns "continue" if
     it did not reach the optimal point and "success" otherwise.
 ]],
 
    [NLFIT.test] = [[
 <nlfit>:test(eps_abs, eps_err)
 
-    Check if the the search converged for the given absolute error
-    eps_abs and relative error eps_rel.
+    Check if the search converged for the given absolute error eps_abs
+    and relative error eps_rel.
 ]],
 }
 

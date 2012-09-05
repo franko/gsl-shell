@@ -12,9 +12,9 @@ local M = {
   [graph.fxplot] = [[
 graph.fxplot(f, xi, xs[, color, n])
 
-   Produces a plot of the function f(x) for x going from xi to
-   xs. The last optional parameter n is the number of sampling
-   point to use and, if not given, a default value will be used. The
+   Produces a plot of the function f(x) for x going from xi to xs. 
+   The last optional parameter n is the number of sampling points to
+   use and, if not given, a default value will be used.  The
    function returns the plot itself.
 ]],
   [graph.fiplot] = [[
@@ -22,58 +22,58 @@ graph.fiplot(f, a, b[, color])
 graph.fiplot(f, b)
 
    Produces a plot of the function f(i) where 'i' is an integer
-   variable going from a to b. In the second abbreviated form
-   a take the default value of one. The function returns the plot
+   variable going from a to b. In the second abbreviated form a
+   takes the default value of one. The function returns the plot
    itself.
 ]],
   [graph.fibars] = [[
 graph.fibars(f, a, b[, color, fill_ratio])
 
-   Produces a bar plot of the function f(i) where i is an
-   integer ranging from a to b. The parameter fill_ratio
-   determine the width of the bars and is by default equal to 1. When
-   a smaller value is provided for fill_ratio the bars will be
-   drawn with a smaller width along the x axis.
+   Produces a bar plot of the function f(i) where i is an integer
+   ranging from a to b. The parameter fill_ratio determines the
+   width of the bars and is equal to 1 by default. When a smaller
+   value is provided for fill_ratio, the bars will be drawn with a
+   smaller width along the x axis.
 ]],
 
 
   [graph.fxline] = [[
 graph.fxline(f, xi, xs[, n])
 
-   This function returns an graphical object of type Path
-   given by the points (x, f(x)) for x going from xi to xs
-   with n sampling point.
+   This function returns a graphical object of type Path given by
+   the points (x, f(x)) for x going from xi to xs with n sampling
+   points.
 ]],
   [graph.filine] = [[
 graph.filine(f, a, b)
 graph.filine(f, b)
 
-   This function returns an graphical object of type "Path"
-   given by the points (i, f(i)) where 'i' is an integer variable
-   going from a to b. It a is omitted values will be in
-   the interval 1 .. b.
+   This function returns a graphical object of type Path given by
+   the points (i, f(i)) where 'i' is an integer variable going from
+   a to b. If a is omitted, values will be in the interval 1 .. b.
 ]],
   [graph.xyline] = [[
 graph.xyline(x, y)
 
-   This function takes two column matrix of dimensions N as arguments
-   and returns a graphical object of type "Path" given by the
-   points (x[i], y[i]) where i goes from 1 to N.
+   This function takes two column matrices of dimension N as
+   arguments and returns a graphical object of type Path given by
+   the points (x[i], y[i]) where i goes from 1 to N.
 ]],
   [graph.ipath] = [[
 graph.ipath(f)
 
-   This function takes an iterator function f and returns a "Path" given
-   by the points (x, y) returned by the iterator f. The variant "ipathp"
-   is able to treat the case when the function f fails and it does
-   continue by calling the iterator again.
+   This function takes an iterator function f and returns a Path
+   given by the points (x, y) returned by the iterator f. The
+   variant "ipathp" can deal with the case where the function f
+   fails, in which case it continues by calling the iterator
+   function f again.
 ]],
   [graph.ibars] = [[
 graph.ibars(f)
 
    This function takes an iterator function f and returns a Path
-   object that draws many adjacent rectangular boxes corresponding to
-   the points (x, y) returned by the iterator f.
+   object that draws adjacent rectangular boxes corresponding to the
+   points (x, y) returned by the iterator f.  
 ]],
 
 [graph.rgb] = [[
@@ -81,9 +81,10 @@ graph.rgb(r, g, b)
 graph.rgba(r, g, b, a)
 
    Returns a color specified by the given r, g, b values. These
-   latters should be numbers in the interval [0, 1]. The second
-   variant of the function let you specify an alpha value. This latter
-   can range from 0 (completely transparent) to 1 (completely opaque).
+   values should be in the interval [0, 1]. The second variant of
+   the function lets you specify an alpha value. This alpha value
+   can range from 0 (completely transparent) to 1 (completely
+   opaque).
 ]],
 
   [graph.rainbow] = [[
@@ -99,7 +100,7 @@ webcolor(n)
 graph.window([layout])
 
    Create a new empty window with the layout given by the optional
-   layout string. If the argument is omitted the window will have a
+   layout string. If the argument is omitted, the window will have a
    single drawing area that will cover the whole window.
 ]],
 
@@ -113,10 +114,11 @@ graph.window([layout])
   [Window.attach] = [[
 <window>:attach(plot, slot)
   
-   Attach the given plot to the window's slot specified by the string
-   slot. The string should be a list of comma separated integer number
-   in the form 'n1,n2,...,nk'. For each of the mentioned integer the
-   corresponding window partition will be chosen recursively.
+   Attach the given plot to the window's slot specified by the
+   string slot. This string should be a list of comma-separated
+   integer numbers in the form 'n1,n2,...,nk'. For each of the
+   specified integers, the corresponding window partition will be
+   chosen recursively.
 ]],
 
   [graph.plot] = [[
@@ -124,21 +126,22 @@ graph.plot([title])
 
    Create a new empty plot with an optional title. The plot is not
    attached to any window and is therefore not visible. To show the
-   plot on the screen use either the "show" plot's method or
-   use the :meth:`~Window.attach` window's method to attach the plot to a
+   plot on the screen, one should either use the plot's "show"
+   method or the window's "attach" method to attach the plot to a
    specific window.
 ]],
 
   [graph.canvas] = [[
 graph.canvas([title])
 
-   Like the function above it does create a new empty plot with fixed
-   limits. This latter kind of plot differs in that it will not update
-   automatically its limits to fit the graphical objects. The method
-   "limits" should be used instead to set the logical limits of
-   plotting area. The other difference with the "graph.plot"
-   function is that the property sync will be initialized to false.
-   This kind of plot is generally better suited for animations.
+   Like the function graph.plot, this function creates a new empty
+   plot with fixed limits. It differs from "graph.plot" in that it
+   will not update its limits automatically to fit the graphical
+   objects. The method "limits" should be used instead to set the
+   logical limits of plotting area. The other difference with the
+   "graph.plot" function is that the property sync will be
+   initialized to false.  This kind of plot is generally better
+   suited for animations.
 ]],
 
   [Plot'add'] = [[
@@ -152,10 +155,10 @@ graph.canvas([title])
   [Plot'addline'] = [[
 <plot>:addline(obj, color[, post_trans, pre_trans])
 
-   Add the graphical object obj to the plot to be rendered by a stroke
-   transformation. In this way the object is shown as a line instead of
-   as a filled polygon. It is equivalent to add a 'stroke' operations of
-   one pixel size.
+   Add the graphical object obj to the plot to be rendered by a
+   stroke transformation. This way, the object is shown as a line
+   instead of as a filled polygon. It is equivalent to adding a
+   'stroke' operation of one pixel size.
 ]],
 
   [Plot'limits'] = [[
@@ -163,8 +166,8 @@ graph.canvas([title])
 
    Set the logical limits of the area displayed by the plot to the
    rectangle with lower-left corner (x1, y1) and upper-right corner
-   (x2, y2). This method is used for plots with fixed limits obtained
-   with the function "canvas".
+   (x2, y2). This method is used for plots with fixed limits,
+   obtained with the function "canvas".
 ]],
 
   [Plot'show'] = [[
@@ -176,22 +179,22 @@ graph.canvas([title])
   [Plot'clear'] = [[
 <plot>:clear()
 
-   Remove all the graphical elements into the current graphical layer.
+   Remove all the graphical elements from the current graphical layer.
 ]],
 
   [Plot'flush'] = [[
 <plot>:flush()
 
-   All the pending operations on a plot are processed and all the
-   windows attached to the plot are updated. This method is only
-   useful when the attribute sync is set to false.
+   All pending operations on a plot are processed and all windows
+   attached to the plot are updated. This method is only useful when
+   the attribute "sync" is set to false.
 ]],
 
   [Plot'pushlayer'] = [[
 <plot>:pushlayer()
 
-   Add a new graphical layer and into the plot so that it becomes the
-   current one and all the elements added with methods "add" or
+   Add a new graphical layer to the plot, so that it becomes the
+   current one. All elements added using the methods "add" or
    "addline" are associated with this new layer.
 ]],
 
@@ -206,8 +209,8 @@ graph.canvas([title])
 <plot>:save(filename[, w, h])
 
    Save the plot in a file in a bitmap image format. The first
-   argument is the file name without extension while the other
-   optional arguments are the width and the height in pixel of the
+   argument is the file name without extension, while the other
+   optional arguments are the width and the height in pixels of the
    image. The format used is BMP on windows and PPM on Linux.
 ]],
 
@@ -222,11 +225,11 @@ graph.canvas([title])
   [Plot'set_legend'] = [[
 <plot>:set_legend(p[, placement])
 
-   Add the plot p as a legend is the side area of the main plot.
-   The argument placement is used to give the placement of the mini
-   plot and should be on of the letters 'l', 'r', 'b', 't'. They
-   stands for "left", "right", "bottom" and "top" respectively. By
-   default the placement of the legend is on the right side.
+   Add the plot p as a legend in the side area of the main plot.
+   The argument placement indicates the placement of the mini plot
+   and should be one of the letters 'l', 'r', 'b', 't'. These stand
+   for "left", "right", "bottom" and "top" respectively. By default,
+   the placement of the legend is on the right side.
 ]],
 
   [Plot'get_legend'] = [[
@@ -240,20 +243,20 @@ graph.canvas([title])
 <plot>:legend(text, color, symbol[, trans])
 
    Add to the plot a new legend item with the given text. The symbol
-   used is determinated by the string symbol. Possible values are
+   used is determined by the string symbol. Possible values are
    'line', 'square' or anything accepted by "graph.marker". The
    optional trans parameter should be a graphical transform. If
-   omitted the appropriate default is chosen based on the symbol type.
+   omitted, the appropriate default is chosen based on the symbol type.
 ]],
 
   [Plot'set_categories'] = [[
 <plot>:set_categories(axis, categories)
 
-   Configure the given axis (a letter, 'x' or 'y') to use a custom set
-   of labels specified by categories. This latter should be a list of
-   that gives in a sequence, the values where the label should be
-   placed and the label text itself. The coordinate refers to the plot
-   system of coordinates.
+   Configure the given axis (a letter, 'x' or 'y') to use a custom
+   set of labels specified by categories. The latter should be a
+   table containing a sequence of the values where the label should
+   be placed and the label text itself. The coordinate refers to the
+   plot system of coordinates.
 ]],
 
 --[[

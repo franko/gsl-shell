@@ -5,14 +5,13 @@ local M = {
 rng.new([name])
 
    This function returns a "random number generator" object of the
-   specified type "name". If you do not specify a particular generator
-   the default "taus2" generator will be used.
+   specified type "name". If you do not specify a particular
+   generator, the default "taus2" generator will be used.
   ]],
 	[rng.list] = [[
 rng.list()
 
-   Return an array with all the list of all the supported generator
-   type.
+   Return an array with a list of all the supported generator types.
 ]],
  	[RNG.get] = [[
 <rng>:get()
@@ -32,7 +31,7 @@ rng.list()
  	[RNG.set] = [[
 <rng>:set(seed)
 
-   This method set the seed of the generator to the given integer
+   This method sets the seed of the generator to the given integer
    value.
 ]],
 }

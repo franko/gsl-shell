@@ -4,7 +4,7 @@ num.integ(f, a, b[, epsabs, epsrel])
 
    Compute the definite integral of the function "f" in the interval
    specified by "a" and "b" within the requested precision given by
-   "epsabs" and "epsrel". This function always use the adaptive QAG
+   "epsabs" and "epsrel". This function always uses the adaptive QAG
    algorithm internally.
 ]],
 
