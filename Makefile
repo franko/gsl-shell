@@ -71,7 +71,8 @@ TARGETS = $(GSL_SHELL)
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
-SUBDIRS += agg-plot fox-gui
+GUI_SUBDIR = fox-gui
+SUBDIRS += agg-plot $(GUI_SUBDIR)
 LUAGSL_LIBS += agg-plot/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
@@ -97,7 +98,7 @@ $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	@echo Linking $@
 	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
-install: $(GSL_SHELL)
+install: $(GSL_SHELL) $(GUI_SUBDIR)
 	mkdir -p $(INSTALL_BIN_DIR)
 	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
 	cp fox-gui/$(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
