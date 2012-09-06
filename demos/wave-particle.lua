@@ -326,8 +326,6 @@ local function wave_demo()
 
    fcs = coherent_state(initstate.x0, initstate.p0, initstate.sigma)
 
-   plot_roots()
-
    info 'Calculating initial state coefficients...'
    coeffs = matrix.alloc(2 * #roots, 1)
    for i = 0, #roots - 1 do
@@ -336,8 +334,6 @@ local function wave_demo()
       coeffs.data[2*i+1] = ci
    end
    print 'done'
-
-   plot_coeffs()
 
    n = #roots
    p = 512
@@ -366,10 +362,10 @@ local function wave_demo()
 
    pcs:pushlayer()
 
-   print 'READY: press enter'
-   io.read '*l'
-
    anim(pcs)
+
+   plot_roots()
+   plot_coeffs()
 end
 
 return {'Wave Packet', {
