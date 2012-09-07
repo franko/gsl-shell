@@ -33,8 +33,16 @@ stdout_redirect::stdout_redirect(int bufferSize)
 int stdout_redirect::start()
 {
     fflush(stdout);
-    CHECK(dup2(fd_pipe[WRITE_FD], fileno(stdout)));
-    setvbuf( stdout, NULL, _IONBF, 0 ); // absolutely needed
+    CHECK(dup2(fd_pipe[WRITE_FD], STDOUT_FILENO));
+
+    FILE* of = _fdopen(STDOUT_FILENO, "w");
+    *stdout = *of;
+
+    setvbuf(stdout, NULL, _IONBF, 0); // absolutely needed
+
+    HANDLE ofh = (HANDLE) _get_osfhandle(STDOUT_FILENO);
+    SetStdHandle(STD_OUTPUT_HANDLE, ofh);
+
     return 0;
 }
 
