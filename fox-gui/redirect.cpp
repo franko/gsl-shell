@@ -34,7 +34,7 @@ int stdout_redirect::start()
 {
     fflush(stdout);
     CHECK(dup2(fd_pipe[WRITE_FD], STDOUT_FILENO));
-
+#ifdef WIN32
     FILE* of = _fdopen(STDOUT_FILENO, "w");
     *stdout = *of;
 
@@ -42,7 +42,9 @@ int stdout_redirect::start()
 
     HANDLE ofh = (HANDLE) _get_osfhandle(STDOUT_FILENO);
     SetStdHandle(STD_OUTPUT_HANDLE, ofh);
-
+#else
+    setvbuf(stdout, NULL, _IONBF, 0); // absolutely needed
+#endif
     return 0;
 }
 
