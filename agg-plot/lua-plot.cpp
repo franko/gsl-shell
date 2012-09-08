@@ -590,6 +590,14 @@ plot_save_svg (lua_State *L)
   if (!filename)
     return gs_type_error(L, 2, "string");
 
+  unsigned fnlen = strlen(filename);
+  if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
+  {
+    const char* basename = (fnlen > 0 ? filename : "unnamed");
+    lua_pushfstring(L, "%s.svg", basename);
+    filename = lua_tostring(L, -1);
+  }
+
   FILE* f = fopen(filename, "w");
   if (!f)
     return luaL_error(L, "cannot open filename: %s", filename);

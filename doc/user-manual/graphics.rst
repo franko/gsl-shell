@@ -535,6 +535,7 @@ You can add elements to a plot at any time, even when it is already shown. GSL S
 
       Save the plot in the given filename in SVG format.
       Two optional parameters can be given to specify the width and height of the drawing area.
+      If the "svg" extension is not given it will be automatically added.
 
    .. method:: set_legend(p[, placement])
 

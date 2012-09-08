@@ -219,7 +219,8 @@ graph.canvas([title])
 
    Save the plot in the given filename in SVG format. Two optional
    parameters can be given to specify the width and height of the
-   drawing area.
+   drawing area. If the "svg" extension is not given it will be
+   automatically added.
 ]],
 
   [Plot'set_legend'] = [[
