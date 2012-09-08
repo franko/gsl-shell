@@ -75,7 +75,10 @@ gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
   new FXLabel(side, FXStringFormat(
     "GSL Shell %s, Copyright (C) 2009-2012 Francesco Abbate\n"
     "GNU Scientific Library, Copyright (C) The GSL Team\n"
-    "%s -- %s\n",
+    "%s -- %s\n"
+    "\n"
+    "With contribution of Lesley De Cruz, Benjamin Von Ardenne\n"
+    "and Jesus Romero Hebrero.",
     GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT),
     NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
