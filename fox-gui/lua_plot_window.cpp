@@ -49,7 +49,7 @@ typedef plot<manage_owner> sg_plot;
 static lua_fox_window*
 check_fox_window_lock(lua_State* L, int index)
 {
-    lua_fox_window *lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+    lua_fox_window *lwin = object_check<lua_fox_window>(L, 1, GS_WINDOW);
     lwin->app->lock();
     if (lwin->status != running)
     {
@@ -65,7 +65,7 @@ fox_window_new (lua_State *L)
     gsl_shell_app* app = global_app;
     app->lock();
 
-    lua_fox_window* bwin = new(L, GS_FOX_WINDOW) lua_fox_window();
+    lua_fox_window* bwin = new(L, GS_WINDOW) lua_fox_window();
     fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
 
     bwin->window = win;
@@ -220,7 +220,7 @@ void lua_window_set_closed(void* _win)
 void
 fox_window_register (lua_State *L)
 {
-    luaL_newmetatable (L, GS_METATABLE(GS_FOX_WINDOW));
+    luaL_newmetatable (L, GS_METATABLE(GS_WINDOW));
     lua_pushvalue (L, -1);
     lua_setfield (L, -2, "__index");
     luaL_register (L, NULL, fox_window_methods);
