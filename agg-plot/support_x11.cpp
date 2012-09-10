@@ -22,3 +22,8 @@ const char *gslshell::get_font_name()
 
     return 0;
 }
+
+const char* gslshell::get_fox_console_font_name()
+{
+    return "monospace";
+}
