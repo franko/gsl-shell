@@ -45,13 +45,15 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 CXXCOMPILE = $(CC) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
+LDFLAGS += -mwindows
+
 TARGETS = $(GSL_SHELL_GUI)
 
 all: $(TARGETS)
 
 $(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES) $(GSL_SHELL_LIBS)
 	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
+	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS) $(LDFLAGS)
 
 include $(GSH_BASE_DIR)/makerules
 
