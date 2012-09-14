@@ -15,7 +15,7 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
     FXCanvas(p, tgt, sel, opts, x, y, w, h),
-    m_plot(0), m_canvas(0), m_dirty_flag(true), m_dirty_img(true)
+    m_img(0), m_save_img(0), m_canvas(0)
 {
 }
 
@@ -24,40 +24,45 @@ fx_plot_canvas::~fx_plot_canvas()
     delete m_canvas;
 }
 
-void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
+void fx_plot_canvas::prepare_image_buffer(image& img, unsigned ww, unsigned hh)
 {
-    m_img.resize(ww, hh);
-    m_canvas = new canvas(m_img, ww, hh, colors::white);
-    m_dirty_img = true;
+#warning a check should be added to check for allocation fail
+    img.resize(ww, hh);
+    m_canvas = new canvas(img, ww, hh, colors::white);
+//    m_dirty_img = true;
 }
 
-void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
+void fx_plot_canvas::ensure_canvas_size(unsigned index, unsigned ww, unsigned hh)
 {
-    if (m_img.width() != ww || m_img.height() != hh)
+    image& img = m_img[index];
+    if (img.width() != ww || img.height() != hh)
     {
         m_area_mtx.sx = ww;
         m_area_mtx.sy = hh;
-        prepare_image_buffer(ww, hh);
+        prepare_image_buffer(img, ww, hh);
+        m_plots[index].is_image_dirty = true;
     }
 }
 
-void fx_plot_canvas::plot_render(const agg::trans_affine& m)
+void fx_plot_canvas::plot_render(unsigned index, const agg::trans_affine& m)
 {
-    m_canvas->clear(colors::white);
+    plot_ref& ref = m_plots[index];
+    const agg::rect_i& rect = m_part.rect(index);
+    m_canvas->clear_box(rect);
     AGG_LOCK();
-    m_plot->draw(*m_canvas, m);
+    ref.plot->draw(*m_canvas, m);
     AGG_UNLOCK();
-    m_dirty_img = false;
+    ref.is_image_dirty = false;
 }
 
-void fx_plot_canvas::plot_draw(const agg::trans_affine& m)
+void fx_plot_canvas::plot_draw(unsigned index, const agg::trans_affine& m)
 {
     FXDCWindow dc(this);
     int ww = getWidth(), hh = getHeight();
 
-    ensure_canvas_size(ww, hh);
+    ensure_canvas_size(index, ww, hh);
 
-    if (m_canvas && m_plot)
+    if (plot_is_defined(index))
     {
         if (m_dirty_img)
             plot_render(m);
@@ -155,9 +160,9 @@ bool fx_plot_canvas::restore_image()
     return true;
 }
 
-void fx_plot_canvas::attach(sg_plot* p)
+void fx_plot_canvas::attach(unsigned slot_id, sg_plot* p)
 {
-    m_plot = p;
+    m_plots[slot_id] = p;
     m_dirty_flag = true;
     m_dirty_img = true;
 }

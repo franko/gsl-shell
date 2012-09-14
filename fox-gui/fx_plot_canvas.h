@@ -6,10 +6,41 @@
 #include <agg_rendering_buffer.h>
 
 #include "image_buf.h"
+#include "window_part.h"
 #include "sg_object.h"
 #include "lua-plot-cpp.h"
 #include "canvas.h"
 #include "rect.h"
+
+#if 0
+template <class T>
+class my_array {
+public:
+    my_array(): m_data(0) {}
+    ~my_array() { delete[] m_data; }
+
+    void resize(unsigned n)
+    {
+        delete[] m_data;
+        m_data = new T[n];
+    }
+
+    const T& operator[](unsigned k) const { return m_data[k]; }
+          T& operator[](unsigned k)       { return m_data[k]; }
+
+private:
+    T* m_data;
+};
+#endif
+
+struct plot_ref {
+    plot_area(): plot(NULL) {}
+
+    sg_plot* plot;
+    bool is_dirty;
+    bool is_image_dirty;
+    opt_rect<double> m_dirty_rect;
+};
 
 class fx_plot_canvas : public FXCanvas
 {
@@ -37,9 +68,12 @@ public:
     opt_rect<double> plot_render_queue(const agg::trans_affine& m);
     void plot_draw_queue(const agg::trans_affine& m, bool draw_all);
 
-    const agg::trans_affine& plot_matrix() const
+    agg::trans_affine plot_matrix(unsigned slot_id) const
     {
-        return m_area_mtx;
+        const agg::rect_i& r = m_part.rect(k);
+        double dx = r.x2 - r.x1, dy = r.y2 - r.y1;
+        double tx = r.x1, ty = r.y1;
+        return agg::trans_affine(dx, 0.0, 0.0, dy, tx, ty);
     }
 
     bool is_ready() const
@@ -60,13 +94,16 @@ private:
     void prepare_image_buffer(unsigned ww, unsigned hh);
     void ensure_canvas_size(unsigned ww, unsigned hh);
 
+//    my_array<image> m_img;
+//    my_array<image> m_save_img;
     image m_img;
     image m_save_img;
-    sg_plot* m_plot;
+    window_part m_part;
+    agg::pod_bvector<plot_ref> m_plots;
     canvas* m_canvas;
-    bool m_dirty_flag, m_dirty_img;
-    opt_rect<double> m_dirty_rect;
-    agg::trans_affine m_area_mtx;
+//    bool m_dirty_flag, m_dirty_img;
+//    opt_rect<double> m_dirty_rect;
+//    agg::trans_affine m_area_mtx;
 };
 
 #endif
