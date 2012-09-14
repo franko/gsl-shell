@@ -63,10 +63,13 @@ int
 fox_window_new (lua_State *L)
 {
     gsl_shell_app* app = global_app;
+
+    const char* split = lua_tostring(L, 1);
+
     app->lock();
 
     lua_fox_window* bwin = new(L, GS_WINDOW) lua_fox_window();
-    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
+    fx_plot_window* win = new fx_plot_window(app, split, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
 
     bwin->window = win;
     bwin->app    = app;
@@ -103,14 +106,25 @@ fox_window_attach (lua_State *L)
     gsl_shell_app* app = lwin->app;
     sg_plot* p = object_check<sg_plot>(L, 2, GS_PLOT);
 
-    fx_plot_canvas* canvas = win->canvas();
-    canvas->attach(p);
-    const agg::trans_affine& m = canvas->plot_matrix();
-    canvas->plot_draw(m);
+    const char* slot_str = lua_tostring(L, 3);
 
-    app->unlock();
-    int slot_id = 1;
-    window_refs_add (L, slot_id, 1, 2);
+    if (!slot_str)
+        return luaL_error(L, "missing slot specification");
+
+    fx_plot_canvas* canvas = win->canvas();
+    int index = canvas->attach(p, slot_str);
+
+    if (index < 0)
+    {
+        app->unlock();
+        luaL_error(L, "invalid slot specification");
+    }
+    else
+    {
+        canvas->plot_draw(index);
+        app->unlock();
+        window_refs_add (L, index + 1, 1, 2);
+    }
     return 0;
 }
 
@@ -138,7 +152,9 @@ int
 fox_window_slot_refresh (lua_State *L)
 {
     lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return 0;
+    int slot_id = luaL_checkinteger (L, 2);
+
+    if (!lwin || slot_id <= 0) return 0;
 
     fx_plot_window* win = lwin->window;
     gsl_shell_app* app = lwin->app;
@@ -146,11 +162,11 @@ fox_window_slot_refresh (lua_State *L)
 
     if (canvas->is_ready())
     {
-        const agg::trans_affine& m = canvas->plot_matrix();
-        bool redraw = canvas->get_plot()->need_redraw();
+        unsigned index = slot_id - 1;
+        bool redraw = canvas->need_redraw(index);
         if (redraw)
-            canvas->plot_render(m);
-        canvas->plot_draw_queue(m, redraw);
+            canvas->plot_render(index);
+        canvas->plot_draw_queue(index, redraw);
     }
 
     app->unlock();
@@ -161,7 +177,9 @@ int
 fox_window_slot_update (lua_State *L)
 {
     lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return 0;
+    int slot_id = luaL_checkinteger (L, 2);
+
+    if (!lwin || slot_id <= 0) return 0;
 
     fx_plot_window* win = lwin->window;
     gsl_shell_app* app = lwin->app;
@@ -169,9 +187,9 @@ fox_window_slot_update (lua_State *L)
 
     if (canvas->is_ready())
     {
-        const agg::trans_affine& m = canvas->plot_matrix();
-        canvas->plot_render(m);
-        canvas->plot_draw_queue(m, true);
+        unsigned index = slot_id - 1;
+        canvas->plot_render(index);
+        canvas->plot_draw_queue(index, true);
     }
 
     app->unlock();
@@ -182,12 +200,17 @@ int
 fox_window_save_slot_image (lua_State *L)
 {
     lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return 0;
+    int slot_id = luaL_checkinteger (L, 2);
+
+    if (!lwin || slot_id <= 0) return 0;
 
     fx_plot_window* win = lwin->window;
     gsl_shell_app* app = lwin->app;
     fx_plot_canvas* canvas = win->canvas();
-    canvas->save_image();
+
+    unsigned index = slot_id - 1;
+    canvas->save_plot_image(index);
+
     app->unlock();
     return 0;
 }
@@ -196,17 +219,21 @@ int
 fox_window_restore_slot_image (lua_State *L)
 {
     lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return 0;
+    int slot_id = luaL_checkinteger (L, 2);
+
+    if (!lwin || slot_id <= 0) return 0;
 
     fx_plot_window* win = lwin->window;
     gsl_shell_app* app = lwin->app;
     fx_plot_canvas* canvas = win->canvas();
-    if (!canvas->restore_image())
+
+    unsigned index = slot_id - 1;
+    if (!canvas->restore_plot_image(index))
     {
-        const agg::trans_affine& m = canvas->plot_matrix();
-        canvas->plot_render(m);
-        canvas->save_image();
+        canvas->plot_render(index);
+        canvas->save_plot_image(index);
     }
+
     app->unlock();
     return 0;
 }

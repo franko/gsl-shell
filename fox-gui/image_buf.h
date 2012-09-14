@@ -34,6 +34,13 @@ struct image_gen : agg::rendering_buffer
         attach(NULL, 0, 0, 0);
     }
 
+    bool ensure_size(unsigned w, unsigned h)
+    {
+        if (!defined() || width() != w || height() != h)
+            return resize(w, h);
+        return true;
+    }
+
     static bool match(const image_gen& a, const image_gen& b)
     {
         if (!a.defined() || !b.defined())

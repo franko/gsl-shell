@@ -229,6 +229,9 @@ public:
   template <class Canvas>
   void draw(Canvas& canvas, const agg::trans_affine& m);
 
+  template <class Canvas>
+  void draw(Canvas& canvas, const agg::rect_i& r);
+
   virtual bool push_layer();
   virtual bool pop_layer();
   virtual void clear_current_layer();
@@ -299,7 +302,7 @@ protected:
 
   void draw_elements(canvas_type &canvas, const agg::trans_affine& m);
   void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m);
-  void draw_axis(canvas_type& can, const agg::trans_affine& m, agg::rect_base<int>* clip = 0);
+  void draw_axis(canvas_type& can, const agg::trans_affine& m, const agg::rect_i* clip = 0);
 
   agg::trans_affine draw_legends(canvas_type& canvas,
                                     const agg::trans_affine& canvas_mtx);
@@ -417,7 +420,7 @@ static bool area_is_valid(const agg::trans_affine& b)
 template <class RM>
 template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::trans_affine& canvas_mtx)
 {
-  canvas_adapter<Canvas>  canvas(&_canvas);
+  canvas_adapter<Canvas> canvas(&_canvas);
   before_draw();
 
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
@@ -427,6 +430,22 @@ template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::trans_af
   if (area_is_valid(area_mtx))
     {
       draw_axis(canvas, area_mtx, &clip);
+      draw_elements(canvas, area_mtx);
+    }
+};
+
+template <class RM>
+template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::rect_i& r)
+{
+  canvas_adapter<Canvas> canvas(&_canvas);
+  before_draw();
+
+  agg::trans_affine canvas_mtx = affine_matrix(r);
+  agg::trans_affine area_mtx = draw_legends(canvas, canvas_mtx);
+
+  if (area_is_valid(area_mtx))
+    {
+      draw_axis(canvas, area_mtx, &r);
       draw_elements(canvas, area_mtx);
     }
 };
@@ -716,7 +735,7 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
 
 template <class RM>
 void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mtx,
-                         agg::rect_base<int>* clip)
+                         const agg::rect_i* clip)
 {
   agg::trans_affine& m = m_area_mtx;
 

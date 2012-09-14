@@ -12,7 +12,7 @@ class fx_plot_window : public FXMainWindow
 {
     FXDECLARE(fx_plot_window)
 public:
-    fx_plot_window(FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
+    fx_plot_window(FXApp* a, const char* split, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
     ~fx_plot_window();
 
