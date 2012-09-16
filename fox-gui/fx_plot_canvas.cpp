@@ -24,61 +24,77 @@ fx_plot_canvas::~fx_plot_canvas()
     delete m_canvas;
 }
 
-void fx_plot_canvas::prepare_image_buffer(image& img, unsigned ww, unsigned hh)
+void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
 {
 #warning a check should be added to check for allocation fail
-    img.resize(ww, hh);
-    m_canvas = new canvas(img, ww, hh, colors::white);
+    m_img.resize(ww, hh);
+    m_canvas = new canvas(m_img, ww, hh, colors::white);
+    plots_set_to_dirty();
 //    m_dirty_img = true;
 }
 
-void fx_plot_canvas::ensure_canvas_size(unsigned index, unsigned ww, unsigned hh)
+void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 {
-    image& img = m_img[index];
-    if (img.width() != ww || img.height() != hh)
+    if (m_img.width() != ww || m_img.height() != hh)
     {
-        m_area_mtx.sx = ww;
-        m_area_mtx.sy = hh;
-        prepare_image_buffer(img, ww, hh);
-        m_plots[index].is_image_dirty = true;
+//        m_area_mtx.sx = ww;
+//        m_area_mtx.sy = hh;
+        prepare_image_buffer(ww, hh);
     }
 }
 
-void fx_plot_canvas::plot_render(unsigned index, const agg::trans_affine& m)
+void fx_plot_canvas::clear_plot_area(unsigned index)
 {
-    plot_ref& ref = m_plots[index];
     const agg::rect_i& rect = m_part.rect(index);
     m_canvas->clear_box(rect);
+}
+
+void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
+{
     AGG_LOCK();
     ref.plot->draw(*m_canvas, m);
     AGG_UNLOCK();
     ref.is_image_dirty = false;
 }
 
-void fx_plot_canvas::plot_draw(unsigned index, const agg::trans_affine& m)
+void fx_plot_canvas::plot_draw(unsigned index, const agg::trans_affine& area_mtx)
 {
     FXDCWindow dc(this);
-    int ww = getWidth(), hh = getHeight();
+//    int ww = getWidth(), hh = getHeight();
 
-    ensure_canvas_size(index, ww, hh);
+//    ensure_canvas_size(index, ww, hh);
+
+    agg::rect_i r = rect_of_slot_matrix<int>(m);
+    int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
+
+    plot_ref& ref = m_plots[index];
 
     if (plot_is_defined(index))
     {
+        agg::trans_affine plot_mtx = m_part.area_matrix(index, area_mtx);
+
         if (m_dirty_img)
-            plot_render(m);
+        {
+            clear_plot_area(index);
+            plot_render(ref, plot_mtx);
+        }
 
-        FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-        agg::int8u* data = (agg::int8u*) img.getData();
-        agg::rendering_buffer rbuf_tmp(data, ww, hh, - ww * 4);
-        my_color_conv(&rbuf_tmp, &m_img, color_conv_rgb24_to_rgba32());
-        img.create();
+        FXImage area_img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+        agg::int8u* data = (agg::int8u*) area_img.getData();
+        agg::rendering_buffer area_img_rbuf(data, ww, hh, - ww * 4);
 
-        dc.drawImage(&img, 0, 0);
+        rendering_buffer_ro src_rbuf;
+        rendering_buffer_get_const_view(src_rbuf, m_img, r, image_pixel_width, true);
+
+        my_color_conv(&area_img_rbuf, &src_rbuf, color_conv_rgb24_to_rgba32());
+        area_img.create();
+
+        dc.drawImage(&area_img, r.x1, r.y1);
     }
     else
     {
         dc.setForeground(FXRGB(255,255,255));
-        dc.fillRectangle(0, 0, ww, hh);
+        dc.fillRectangle(r.x1, r.y1, ww, hh);
     }
 
     m_dirty_flag = false;

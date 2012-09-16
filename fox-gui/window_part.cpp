@@ -53,29 +53,46 @@ window_part::parse_element(const char*& p)
 }
 
 void
-window_part::split(const agg::rect_i& r, unsigned& k)
+window_part::split_rec(const rect_type& r, unsigned& k)
 {
     const partition& p = m_index[k ++];
     if (p.split == horizontal)
     {
-        int dx = (r.x2 - r.x1) / p.number;
+        num_type dx = (r.x2 - r.x1) / p.number;
         for (unsigned j = 0; j < unsigned(p.number); j++)
         {
-            agg::rect_i rs(r.x1 + j * dx, r.y1, r.x1 + (j + 1) * dx, r.y2);
-            split(rs, k);
+            rect_type rs(r.x1 + j * dx, r.y1, r.x1 + (j + 1) * dx, r.y2);
+            split_rec(rs, k);
         }
     }
     else if (p.split == vertical)
     {
-        int dy = (r.y2 - r.y1) / p.number;
+        num_type dy = (r.y2 - r.y1) / p.number;
         for (unsigned j = 0; j < unsigned(p.number); j++)
         {
-            agg::rect_i rs(r.x1, r.y1 + j * dy, r.x2, r.y1 + (j + 1) * dy);
-            split(rs, k);
+            rect_type rs(r.x1, r.y1 + j * dy, r.x2, r.y1 + (j + 1) * dy);
+            split_rec(rs, k);
         }
     }
     else
     {
         m_rect.add(r);
     }
+}
+
+void
+window_part::split()
+{
+    rect_type r(0, 0, 1, 1);
+    split_rec(r, 0);
+}
+
+agg::trans_affine
+window_part::area_matrix(unsigned index, const agg::trans_affine& m)
+{
+    rect_type& r = m_rect[index];
+    agg::trans_affine mat(m);
+    agg::trans_affine bmat(r.x2 - r.x1, 0.0, 0.0, r.y2 - r.y1, r.x1, r.y1);
+    trans_affine_compose(mat, bmat);
+    return mat;
 }

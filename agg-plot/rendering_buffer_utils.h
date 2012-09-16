@@ -27,6 +27,7 @@ void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base
     }
 }
 
+#warning argument flip_y is unused
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
 				      const agg::rect_base<int>& r,

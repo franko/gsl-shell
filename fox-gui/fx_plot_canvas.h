@@ -46,7 +46,9 @@ class fx_plot_canvas : public FXCanvas
 {
     FXDECLARE(fx_plot_canvas)
 
-    typedef image_gen<3, true> image;
+    enum { image_pixel_width = 3 };
+
+    typedef image_gen<image_pixel_width, true> image;
 
 public:
     fx_plot_canvas(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0,
