@@ -88,11 +88,11 @@ window_part::split()
 }
 
 agg::trans_affine
-window_part::area_matrix(unsigned index, const agg::trans_affine& m)
+window_part::area_matrix(unsigned index, int canvas_width, int canvas_height)
 {
     rect_type& r = m_rect[index];
-    agg::trans_affine mat(m);
-    agg::trans_affine bmat(r.x2 - r.x1, 0.0, 0.0, r.y2 - r.y1, r.x1, r.y1);
-    trans_affine_compose(mat, bmat);
-    return mat;
+    double ww = canvas_width * (r.x2 - r.x1);
+    double hh = canvas_height * (r.y2 - r.y1);
+    double tx = canvas_width * r.x1, ty = canvas_height * r.y1;
+    return agg::trans_affine(ww, 0.0, 0.0, hh, tx, ty);
 }

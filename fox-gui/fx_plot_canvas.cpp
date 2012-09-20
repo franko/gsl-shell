@@ -57,23 +57,23 @@ void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
     ref.is_image_dirty = false;
 }
 
-void fx_plot_canvas::plot_draw(unsigned index, const agg::trans_affine& area_mtx)
+void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
     FXDCWindow dc(this);
-//    int ww = getWidth(), hh = getHeight();
+
+//    agg::trans_affine area_mtx(double(canvas_width), 0.0, 0.0, double(canvas_height), 0.0, 0.0);
 
 //    ensure_canvas_size(index, ww, hh);
 
-    agg::rect_i r = rect_of_slot_matrix<int>(m);
+    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
+    agg::rect_i r = rect_of_slot_matrix<int>(plot_mtx);
     int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
 
     plot_ref& ref = m_plots[index];
 
     if (plot_is_defined(index))
     {
-        agg::trans_affine plot_mtx = m_part.area_matrix(index, area_mtx);
-
-        if (m_dirty_img)
+        if (ref.is_image_dirty)
         {
             clear_plot_area(index);
             plot_render(ref, plot_mtx);
@@ -97,7 +97,7 @@ void fx_plot_canvas::plot_draw(unsigned index, const agg::trans_affine& area_mtx
         dc.fillRectangle(r.x1, r.y1, ww, hh);
     }
 
-    m_dirty_flag = false;
+    ref.is_dirty = false;
 }
 
 void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
@@ -186,14 +186,37 @@ void fx_plot_canvas::attach(unsigned slot_id, sg_plot* p)
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
     FXEvent* ev = (FXEvent*) ptr;
-    plot_draw(m_area_mtx);
+    int ww = getWidth(), hh = getHeight();
+    ensure_canvas_size(ww, hh);
+    for (unsigned k = 0; k < m_plots.size(); k++)
+    {
+        plot_draw(k, ww, hh);
+    }
     return 1;
 }
 
 long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
-    bool need_upd = m_dirty_flag;
-    if (need_upd)
-        plot_draw(m_area_mtx);
-    return (need_upd ? 1 : 0);
+    int ww = getWidth(), hh = getHeight();
+    ensure_canvas_size(ww, hh);
+    bool update_done = false;
+    for (unsigned k = 0; k < m_plots.size(); k++)
+    {
+        plot_ref& ref = m_plots[k];
+        if (ref.is_dirty)
+        {
+            plot_draw(k, ww, hh);
+            update_done = true;
+        }
+    }
+    return (update_done ? 1 : 0);
+}
+
+void fx_plot_canvas::plots_set_to_dirty()
+{
+    for (unsigned k = 0; k < m_plots.size(); k++)
+    {
+        plot_ref& ref = m_plots[k];
+        ref.is_image_dirty = true;
+    }    
 }

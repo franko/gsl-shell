@@ -12,27 +12,6 @@
 #include "canvas.h"
 #include "rect.h"
 
-#if 0
-template <class T>
-class my_array {
-public:
-    my_array(): m_data(0) {}
-    ~my_array() { delete[] m_data; }
-
-    void resize(unsigned n)
-    {
-        delete[] m_data;
-        m_data = new T[n];
-    }
-
-    const T& operator[](unsigned k) const { return m_data[k]; }
-          T& operator[](unsigned k)       { return m_data[k]; }
-
-private:
-    T* m_data;
-};
-#endif
-
 struct plot_ref {
     plot_area(): plot(NULL) {}
 
@@ -65,8 +44,8 @@ public:
         return m_plot;
     }
 
-    void plot_render(const agg::trans_affine& m);
-    void plot_draw(const agg::trans_affine& m);
+    void plot_render(plot_ref& ref, const agg::trans_affine& m);
+    void plot_draw(unsigned index);
     opt_rect<double> plot_render_queue(const agg::trans_affine& m);
     void plot_draw_queue(const agg::trans_affine& m, bool draw_all);
 
@@ -95,6 +74,7 @@ protected:
 private:
     void prepare_image_buffer(unsigned ww, unsigned hh);
     void ensure_canvas_size(unsigned ww, unsigned hh);
+    void plots_set_to_dirty();
 
 //    my_array<image> m_img;
 //    my_array<image> m_save_img;
