@@ -15,7 +15,7 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
     FXCanvas(p, tgt, sel, opts, x, y, w, h),
-    m_img(0), m_save_img(0), m_canvas(0)
+    m_img(), m_save_img(), m_canvas(0)
 {
 }
 
@@ -43,11 +43,11 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
     }
 }
 
-void fx_plot_canvas::clear_plot_area(unsigned index)
-{
-    const agg::rect_i& rect = m_part.rect(index);
-    m_canvas->clear_box(rect);
-}
+// void fx_plot_canvas::clear_plot_area(unsigned index, int canvas_width, int canvas_height)
+// {
+//     agg::rect_i rect = m_part.rect(index, canvas_width, canvas_height);
+//     m_canvas->clear_box(rect);
+// }
 
 void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
 {
@@ -66,7 +66,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
 //    ensure_canvas_size(index, ww, hh);
 
     agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
-    agg::rect_i r = rect_of_slot_matrix<int>(plot_mtx);
+    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
     int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
 
     plot_ref& ref = m_plots[index];
@@ -75,7 +75,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     {
         if (ref.is_image_dirty)
         {
-            clear_plot_area(index);
+            m_canvas->clear_box(r);
             plot_render(ref, plot_mtx);
         }
 
@@ -100,6 +100,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     ref.is_dirty = false;
 }
 
+#if 0
 void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
 {
     int iw = m_img.width(), ih = m_img.height();
@@ -182,6 +183,7 @@ void fx_plot_canvas::attach(unsigned slot_id, sg_plot* p)
     m_dirty_flag = true;
     m_dirty_img = true;
 }
+#endif
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {

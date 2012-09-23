@@ -14,13 +14,16 @@ class window_part {
     typedef agg::rect_base<num_type> rect_type;
 
 public:
-    window_part(const char* split);
+    window_part();
+
+    int parse(const char* split);
 
 //    const agg::rect_i& rect(unsigned k) { return m_rect[k]; }
 
     void split();
     // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
     agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);
+    agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 //    agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 
 private:

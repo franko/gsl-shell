@@ -1,8 +1,20 @@
+#include "agg_basics.h"
+#include "agg_trans_affine.h"
+
 #include "window_part.h"
 
-window_part::window_part(const char* split)
+window_part::window_part()
 {
-    parse_element(split);
+    const char* p = ".";
+    parse_element(p);
+}
+
+int
+window_part::parse(const char* str)
+{
+    const char* p = str;
+    parse_element(p);
+    return m_index.size();
 }
 
 bool
@@ -31,7 +43,7 @@ window_part::parse_element(const char*& p)
         {
             count ++;
         }
-        m_index[n].number = count;
+        m_index[n].childs_number = count;
         return true;
     }
     case '(':
@@ -58,8 +70,8 @@ window_part::split_rec(const rect_type& r, unsigned& k)
     const partition& p = m_index[k ++];
     if (p.split == horizontal)
     {
-        num_type dx = (r.x2 - r.x1) / p.number;
-        for (unsigned j = 0; j < unsigned(p.number); j++)
+        num_type dx = (r.x2 - r.x1) / p.childs_number;
+        for (unsigned j = 0; j < unsigned(p.childs_number); j++)
         {
             rect_type rs(r.x1 + j * dx, r.y1, r.x1 + (j + 1) * dx, r.y2);
             split_rec(rs, k);
@@ -67,8 +79,8 @@ window_part::split_rec(const rect_type& r, unsigned& k)
     }
     else if (p.split == vertical)
     {
-        num_type dy = (r.y2 - r.y1) / p.number;
-        for (unsigned j = 0; j < unsigned(p.number); j++)
+        num_type dy = (r.y2 - r.y1) / p.childs_number;
+        for (unsigned j = 0; j < unsigned(p.childs_number); j++)
         {
             rect_type rs(r.x1, r.y1 + j * dy, r.x2, r.y1 + (j + 1) * dy);
             split_rec(rs, k);
@@ -84,7 +96,8 @@ void
 window_part::split()
 {
     rect_type r(0, 0, 1, 1);
-    split_rec(r, 0);
+    unsigned pos;
+    split_rec(r, pos);
 }
 
 agg::trans_affine
@@ -95,4 +108,11 @@ window_part::area_matrix(unsigned index, int canvas_width, int canvas_height)
     double hh = canvas_height * (r.y2 - r.y1);
     double tx = canvas_width * r.x1, ty = canvas_height * r.y1;
     return agg::trans_affine(ww, 0.0, 0.0, hh, tx, ty);
+}
+
+agg::rect_i
+window_part::rect(unsigned index, int w, int h)
+{
+    rect_type& r = m_rect[index];
+    return agg::rect_i(w * r.x1, h * r.y1, w * r.x2, h * r.y2);
 }
