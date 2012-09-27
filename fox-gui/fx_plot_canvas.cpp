@@ -57,55 +57,24 @@ void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
     ref.is_image_dirty = false;
 }
 
-void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_height)
+opt_rect<double>
+fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::trans_affine& m)
 {
-    FXDCWindow dc(this);
-
-//    agg::trans_affine area_mtx(double(canvas_width), 0.0, 0.0, double(canvas_height), 0.0, 0.0);
-
-//    ensure_canvas_size(index, ww, hh);
-
-    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
-    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
-    int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
-
-    plot_ref& ref = m_plots[index];
-
-    if (plot_is_defined(index))
-    {
-        if (ref.is_image_dirty)
-        {
-            m_canvas->clear_box(r);
-            plot_render(ref, plot_mtx);
-        }
-
-        FXImage area_img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-        agg::int8u* data = (agg::int8u*) area_img.getData();
-        agg::rendering_buffer area_img_rbuf(data, ww, hh, - ww * 4);
-
-        rendering_buffer_ro src_rbuf;
-        rendering_buffer_get_const_view(src_rbuf, m_img, r, image_pixel_width, true);
-
-        my_color_conv(&area_img_rbuf, &src_rbuf, color_conv_rgb24_to_rgba32());
-        area_img.create();
-
-        dc.drawImage(&area_img, r.x1, r.y1);
-    }
-    else
-    {
-        dc.setForeground(FXRGB(255,255,255));
-        dc.fillRectangle(r.x1, r.y1, ww, hh);
-    }
-
-    ref.is_dirty = false;
+    opt_rect<double> r, draw_rect;
+    AGG_LOCK();
+    ref.plot->draw_queue(*m_canvas, m, draw_rect);
+    AGG_UNLOCK();
+    r.add<rect_union>(draw_rect);
+    r.add<rect_union>(ref.dirty_rect);
+    ref.dirty_rect = draw_rect;
+    return r;
 }
 
-#if 0
-void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
+void fx_plot_canvas::update_region(const agg::rect_i& r)
 {
-    int iw = m_img.width(), ih = m_img.height();
-    const agg::rect_base<int> b(0, 0, iw, ih);
-    agg::rect_base<int> r = agg::intersect_rectangles(_r, b);
+//    int iw = m_img.width(), ih = m_img.height();
+//    const agg::rect_i b(0, 0, iw, ih);
+//    agg::rect_i r = agg::intersect_rectangles(_r, b);
 
     FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
     FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
@@ -127,37 +96,66 @@ void fx_plot_canvas::update_region(const agg::rect_base<int>& _r)
     dc.drawImage(&img, r.x1, getHeight() - r.y2);
 }
 
-opt_rect<double> fx_plot_canvas::plot_render_queue(const agg::trans_affine& m)
+void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
-    opt_rect<double> r, draw_rect;
-    AGG_LOCK();
-    m_plot->draw_queue(*m_canvas, m, draw_rect);
-    AGG_UNLOCK();
-    r.add<rect_union>(draw_rect);
-    r.add<rect_union>(m_dirty_rect);
-    m_dirty_rect = draw_rect;
-    return r;
+//    agg::trans_affine area_mtx(double(canvas_width), 0.0, 0.0, double(canvas_height), 0.0, 0.0);
+
+//    ensure_canvas_size(index, ww, hh);
+
+    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
+    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
+    int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
+
+    plot_ref& ref = m_plots[index];
+
+    if (plot_is_defined(index))
+    {
+        if (ref.is_image_dirty)
+        {
+            m_canvas->clear_box(r);
+            plot_render(ref, plot_mtx);
+        }
+
+        update_region(r);
+    }
+    else
+    {
+        FXDCWindow dc(this);
+        dc.setForeground(FXRGB(255,255,255));
+        dc.fillRectangle(r.x1, r.y1, ww, hh);
+    }
+
+    ref.is_dirty = false;
 }
 
-void fx_plot_canvas::plot_draw_queue(const agg::trans_affine& m, bool draw_all)
+void
+fx_plot_canvas::plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all)
 {
-    if (!m_canvas || !m_plot) return;
+    plot_ref& ref = m_plots[index];
 
-    opt_rect<double> rect = plot_render_queue(m);
+    if (!ref.plot) return;
+
+    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
+
+    opt_rect<double> rect = plot_render_queue(ref, plot_mtx);
 
     if (draw_all)
     {
-        const agg::rect_base<int> ri(0, 0, getWidth(), getHeight());
+        agg::rect_i ri = m_part.rect(index, canvas_width, canvas_height);
         update_region(ri);
     }
     else if (rect.is_defined())
     {
         const int pd = 4;
-        const agg::rect_base<double>& r = rect.rect();
-        const agg::rect_base<int> ri(r.x1 - pd, r.y1 - pd, r.x2 + pd, r.y2 + pd);
+        const agg::rect_d& r = rect.rect();
+        const agg::rect_i box(0, 0, canvas_width, canvas_height);
+        agg::rect_i ri(r.x1 - pd, r.y1 - pd, r.x2 + pd, r.y2 + pd);
+        ri.clip(box);
         update_region(ri);
     }
 }
+
+#if 0
 
 bool fx_plot_canvas::save_image()
 {

@@ -113,6 +113,7 @@ window_part::area_matrix(unsigned index, int canvas_width, int canvas_height)
 agg::rect_i
 window_part::rect(unsigned index, int w, int h)
 {
+#warning TODO: enforce that rect is never bigger than canvas
     rect_type& r = m_rect[index];
     return agg::rect_i(w * r.x1, h * r.y1, w * r.x2, h * r.y2);
 }

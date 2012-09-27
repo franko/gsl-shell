@@ -21,7 +21,7 @@ struct plot_ref {
     sg_plot* plot;
     bool is_dirty;
     bool is_image_dirty;
-    opt_rect<double> m_dirty_rect;
+    opt_rect<double> dirty_rect;
 };
 
 class fx_plot_canvas : public FXCanvas
@@ -49,8 +49,8 @@ public:
 
     void plot_render(plot_ref& ref, const agg::trans_affine& m);
     void plot_draw(unsigned index, int canvas_width, int canvas_height);
-    opt_rect<double> plot_render_queue(const agg::trans_affine& m);
-    void plot_draw_queue(const agg::trans_affine& m, bool draw_all);
+    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::trans_affine& m);
+    void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
 
 #if 0
     agg::trans_affine plot_matrix(unsigned index) const
