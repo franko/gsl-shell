@@ -21,12 +21,17 @@ public:
 //    const agg::rect_i& rect(unsigned k) { return m_rect[k]; }
 
     void split();
+    bool get_slot_index(char* str, unsigned& index);
+
     // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
     agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);
     agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 //    agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 
 private:
+    bool skip_node(unsigned& index);
+    bool goto_child_index(unsigned& index, int child_index);
+
     void split_rec(const rect_type& r, unsigned& k);
     bool parse_element(const char*& p);
 

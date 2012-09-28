@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "agg_basics.h"
 #include "agg_trans_affine.h"
 
@@ -33,7 +35,7 @@ window_part::parse_element(const char*& p)
     case 'h':
     case 'v':
     {
-        partition pt0 = {(ch == 'h' ? horizontal : vertical)};
+        partition pt0 = {(ch == 'h' ? short(horizontal) : short(vertical))};
         unsigned n = m_index.size();
         m_index.add(pt0);
 
@@ -98,6 +100,71 @@ window_part::split()
     rect_type r(0, 0, 1, 1);
     unsigned pos;
     split_rec(r, pos);
+}
+
+static char* get_next_comma(char* p)
+{
+    while (*p && *p == ' ')
+        p++;
+    if (*p != ',')
+        return NULL;
+    p++;
+    return p;
+}
+
+bool
+window_part::skip_node(unsigned& index)
+{
+    const partition& p = m_index[index];
+    if (p.split == leaf)
+    {
+        index++;
+        return true;
+    }
+    for (int n = p.childs_number; n > 0; n--)
+    {
+        if (!skip_node(index)) return false;
+    }
+    return true;
+}
+
+bool
+window_part::goto_child_index(unsigned& index, int child_index)
+{
+    const partition& p = m_index[index];
+    if (p.split == leaf)
+        return false;
+    index ++;
+    for (/* */; child_index > 0; child_index --)
+    {
+        if (!skip_node(index)) return false;
+    }
+    return true;
+}
+
+bool
+window_part::get_slot_index(char* str, unsigned& index)
+{
+    index = 0;
+    for (;;)
+    {
+        char* tail;
+        long v = strtol(str, &tail, 10);
+
+        if (v < 0) return false;
+        if (tail == str) break;
+
+        if (!goto_child_index(index, v)) return false;
+
+        str = tail;
+        tail = get_next_comma(str);
+
+        if (!tail) break;
+        str = tail;
+    }
+
+    const partition& part = m_index[index];
+    return (part.split == leaf);
 }
 
 agg::trans_affine

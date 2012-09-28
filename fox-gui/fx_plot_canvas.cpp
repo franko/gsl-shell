@@ -7,8 +7,9 @@
 
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 {
-    FXMAPFUNC(SEL_PAINT,  0, fx_plot_canvas::on_cmd_paint),
-    FXMAPFUNC(SEL_UPDATE, 0, fx_plot_canvas::on_update),
+    FXMAPFUNC(SEL_PAINT,     0, fx_plot_canvas::on_cmd_paint),
+//    FXMAPFUNC(SEL_CONFIGURE, 0, fx_plot_canvas::on_configure),
+    FXMAPFUNC(SEL_UPDATE,    0, fx_plot_canvas::on_update),
 };
 
 FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canvas_map));
@@ -155,31 +156,70 @@ fx_plot_canvas::plot_draw_queue(unsigned index, int canvas_width, int canvas_hei
     }
 }
 
-#if 0
+void plot_ref::attach(sg_plot* p)
+{
+    plot = p;
+    is_dirty = true;
+    is_image_dirty = true;
+    dirty_rect.clear();
+}
 
-bool fx_plot_canvas::save_image()
+void fx_plot_canvas::attach(unsigned index, sg_plot* p)
+{
+    m_plots[index].attach(p);
+}
+
+bool fx_plot_canvas::save_plot_image(unsigned index)
 {
     int ww = getWidth(), hh = getHeight();
-    if (!m_img.defined() || !m_save_img.resize(ww, hh)) return false;
-    if (m_dirty_img)
-        plot_render(m_area_mtx);
-    m_save_img.copy_from(m_img);
+
+    if (!m_save_img.ensure_size(ww, hh)) return false;
+
+    plot_ref& ref = m_plots[index];
+    if (ref.is_image_dirty)
+    {
+        agg::trans_affine plot_mtx = m_part.area_matrix(index, ww, hh);
+        plot_render(ref, plot_mtx);
+    }
+
+    agg::rect_i r = m_part.rect(index, ww, hh);
+
+    rendering_buffer_ro src;
+    rendering_buffer_get_const_view(src, m_img, r, 4, true);
+
+    agg::rendering_buffer dest;
+    rendering_buffer_get_view(dest, m_save_img, r, 4, true);
+
+    dest.copy_from(src);
     return true;
 }
 
-bool fx_plot_canvas::restore_image()
+bool fx_plot_canvas::restore_plot_image(unsigned index)
 {
+    int ww = getWidth(), hh = getHeight();
+
     if (!image::match(m_img, m_save_img))
         return false;
-    m_img.copy_from(m_save_img);
+
+//    if (!image::match(m_img, m_save_img))
+//        return false;
+    agg::rect_i r = m_part.rect(index, ww, hh);
+
+    rendering_buffer_ro src;
+    rendering_buffer_get_const_view(src, m_save_img, r, 4, true);
+
+    agg::rendering_buffer dest;
+    rendering_buffer_get_view(dest, m_img, r, 4, true);
+
+    dest.copy_from(src);
     return true;
 }
 
-void fx_plot_canvas::attach(unsigned slot_id, sg_plot* p)
+#if 0
+long fx_plot_canvas::on_configure(FXObject* sender, FXSelector sel, void *ptr)
 {
-    m_plots[slot_id] = p;
-    m_dirty_flag = true;
-    m_dirty_img = true;
+    this->FXCanvas::onConfigure(sender, sel, ptr);
+
 }
 #endif
 

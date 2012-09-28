@@ -18,6 +18,8 @@
 struct plot_ref {
     plot_ref(): plot(NULL) {}
 
+    void attach(sg_plot* p);
+
     sg_plot* plot;
     bool is_dirty;
     bool is_image_dirty;
@@ -39,7 +41,7 @@ public:
 
     ~fx_plot_canvas();
 
-    void attach(sg_plot* p);
+    void attach(unsigned index, sg_plot* p);
     void update_region(const agg::rect_base<int>& r);
 
     // sg_plot* get_plot(unsigned index)
@@ -69,8 +71,8 @@ public:
     }
 #endif
 
-    bool save_image();
-    bool restore_image();
+    bool save_plot_image(unsigned index);
+    bool restore_plot_image(unsigned index);
 
     long on_cmd_paint(FXObject *, FXSelector, void *);
     long on_update(FXObject *, FXSelector, void *);
