@@ -21,7 +21,7 @@ public:
 //    const agg::rect_i& rect(unsigned k) { return m_rect[k]; }
 
     void split();
-    bool get_slot_index(char* str, unsigned& index);
+    bool get_slot_index(const char* str, unsigned& index);
 
     // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
     agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);

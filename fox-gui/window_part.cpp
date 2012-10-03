@@ -102,7 +102,7 @@ window_part::split()
     split_rec(r, pos);
 }
 
-static char* get_next_comma(char* p)
+static const char* get_next_comma(const char* p)
 {
     while (*p && *p == ' ')
         p++;
@@ -143,13 +143,14 @@ window_part::goto_child_index(unsigned& index, int child_index)
 }
 
 bool
-window_part::get_slot_index(char* str, unsigned& index)
+window_part::get_slot_index(const char* str, unsigned& index)
 {
     index = 0;
     for (;;)
     {
-        char* tail;
-        long v = strtol(str, &tail, 10);
+        char* _tail;
+        long v = strtol(str, &_tail, 10);
+        const char* tail = _tail;
 
         if (v < 0) return false;
         if (tail == str) break;

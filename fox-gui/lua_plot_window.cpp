@@ -103,10 +103,13 @@ fox_window_attach (lua_State *L)
     gsl_shell_app* app = lwin->app;
     sg_plot* p = object_check<sg_plot>(L, 2, GS_PLOT);
 
+    const char* slot_str = lua_tostring(L, 3);
+
+    if (!slot_str)
+        return luaL_error(L, "missing slot specification");
+
     fx_plot_canvas* canvas = win->canvas();
-    canvas->attach(p);
-    const agg::trans_affine& m = canvas->plot_matrix();
-    canvas->plot_draw(m);
+    canvas->attach(p, slot_str);
 
     app->unlock();
     int slot_id = 1;

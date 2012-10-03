@@ -41,7 +41,7 @@ public:
 
     ~fx_plot_canvas();
 
-    void attach(unsigned index, sg_plot* p);
+    void attach(sg_plot* p, const char* slot_str);
     void update_region(const agg::rect_base<int>& r);
 
     // sg_plot* get_plot(unsigned index)

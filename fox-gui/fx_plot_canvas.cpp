@@ -164,9 +164,14 @@ void plot_ref::attach(sg_plot* p)
     dirty_rect.clear();
 }
 
-void fx_plot_canvas::attach(unsigned index, sg_plot* p)
+void fx_plot_canvas::attach(sg_plot* p, const char* slot_str)
 {
+    unsigned index;
+    m_part.get_slot_index(slot_str, index);
     m_plots[index].attach(p);
+
+    int ww = getWidth(), hh = getHeight();
+    plot_draw(index, ww, hh);
 }
 
 bool fx_plot_canvas::save_plot_image(unsigned index)
@@ -234,6 +239,12 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
     }
     return 1;
 }
+
+// void fx_plot_canvas::plot_draw(unsigned index)
+// {
+//     int ww = getWidth(), hh = getHeight();
+//     plot_draw(index, ww, hh);
+// }
 
 long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
