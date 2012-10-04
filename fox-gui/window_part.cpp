@@ -5,12 +5,6 @@
 
 #include "window_part.h"
 
-window_part::window_part()
-{
-    const char* p = ".";
-    parse_element(p);
-}
-
 int
 window_part::parse(const char* str)
 {
@@ -98,7 +92,7 @@ void
 window_part::split()
 {
     rect_type r(0, 0, 1, 1);
-    unsigned pos;
+    unsigned pos = 0;
     split_rec(r, pos);
 }
 
@@ -112,40 +106,50 @@ static const char* get_next_comma(const char* p)
     return p;
 }
 
-bool
-window_part::skip_node(unsigned& index)
+int
+window_part::skip_node(int pindex, int& leaf_count)
 {
-    const partition& p = m_index[index];
+    if (unsigned(pindex) >= m_index.size()) return (-1);
+    const partition& p = m_index[pindex];
+
+    pindex++;
     if (p.split == leaf)
     {
-        index++;
-        return true;
+        leaf_count ++;
+        return pindex;
     }
+
     for (int n = p.childs_number; n > 0; n--)
     {
-        if (!skip_node(index)) return false;
+        pindex = skip_node(pindex, leaf_count);
+        if (pindex < 0) return (-1);
     }
-    return true;
+
+    return pindex;
 }
 
-bool
-window_part::goto_child_index(unsigned& index, int child_index)
+int
+window_part::goto_child_index(int pindex, int child_index, int& leaf_count)
 {
-    const partition& p = m_index[index];
-    if (p.split == leaf)
-        return false;
-    index ++;
-    for (/* */; child_index > 0; child_index --)
+    if (unsigned(pindex) >= m_index.size()) return (-1);
+    const partition& p = m_index[pindex];
+
+    if (p.split == leaf || child_index > p.childs_number)
+        return (-1);
+    pindex ++;
+    for (int k = 0; k < child_index - 1; k++)
     {
-        if (!skip_node(index)) return false;
+        pindex = skip_node(pindex, leaf_count);
+        if (pindex < 0) return (-1);
     }
-    return true;
+    return pindex;
 }
 
-bool
-window_part::get_slot_index(const char* str, unsigned& index)
+int
+window_part::get_slot_index(const char* str)
 {
-    index = 0;
+    int leaf_count = 0;
+    int pindex = 0;
     for (;;)
     {
         char* _tail;
@@ -155,7 +159,8 @@ window_part::get_slot_index(const char* str, unsigned& index)
         if (v < 0) return false;
         if (tail == str) break;
 
-        if (!goto_child_index(index, v)) return false;
+        pindex = goto_child_index(pindex, v, leaf_count);
+        if (pindex < 0) return (-1);
 
         str = tail;
         tail = get_next_comma(str);
@@ -164,8 +169,8 @@ window_part::get_slot_index(const char* str, unsigned& index)
         str = tail;
     }
 
-    const partition& part = m_index[index];
-    return (part.split == leaf);
+    const partition& part = m_index[pindex];
+    return (part.split == leaf ? leaf_count : (-1));
 }
 
 agg::trans_affine

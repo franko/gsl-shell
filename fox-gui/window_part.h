@@ -1,6 +1,7 @@
 
 #include "agg_basics.h"
 #include "agg_array.h"
+#include "agg_trans_affine.h"
 
 enum split_e { vertical, horizontal, leaf };
 
@@ -14,14 +15,14 @@ class window_part {
     typedef agg::rect_base<num_type> rect_type;
 
 public:
-    window_part();
+    window_part() {};
 
     int parse(const char* split);
 
 //    const agg::rect_i& rect(unsigned k) { return m_rect[k]; }
 
     void split();
-    bool get_slot_index(const char* str, unsigned& index);
+    int get_slot_index(const char* str);
 
     // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
     agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);
@@ -29,8 +30,8 @@ public:
 //    agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 
 private:
-    bool skip_node(unsigned& index);
-    bool goto_child_index(unsigned& index, int child_index);
+    int skip_node(int index, int& leaf_count);
+    int goto_child_index(int pindex, int child_index, int& leaf_count);
 
     void split_rec(const rect_type& r, unsigned& k);
     bool parse_element(const char*& p);
