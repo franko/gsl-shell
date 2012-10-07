@@ -1902,6 +1902,7 @@ static void parse_body(LexState *ls, ExpDesc *e, int needself, BCLine line)
 #ifdef GSH_SHORT_FSYNTAX
 static void parse_simple_body (LexState *ls, ExpDesc *fne, int line) {
   FuncState fs, *pfs = ls->fs;
+  FuncScope bl;
   BCReg kidx;
   BCLine lastline;
   GCproto *pt;
@@ -1910,6 +1911,7 @@ static void parse_simple_body (LexState *ls, ExpDesc *fne, int line) {
   ExpDesc e;
 
   fs_init(ls, &fs);
+  fscope_begin(&fs, &bl, 0);
   fs.linedefined = line;
   fs.numparams = (uint8_t)parse_params_ext(ls, 0, '|', '|');
   fs.bcbase = pfs->bcbase + pfs->pc;
@@ -1930,6 +1932,9 @@ static void parse_simple_body (LexState *ls, ExpDesc *fne, int line) {
   /* Store new prototype in the constant array of the parent. */
   kidx = const_gc(pfs, obj2gco(pt), LJ_TPROTO);
   expr_init(fne, VRELOCABLE, bcemit_AD(pfs, BC_FNEW, 0, kidx));
+#if LJ_HASFFI
+  pfs->flags |= (fs.flags & PROTO_FFI);
+#endif
   if (!(pfs->flags & PROTO_CHILD)) {
     if (pfs->flags & PROTO_HAS_RETURN)
       pfs->flags |= PROTO_FIXUP_RETURN;
