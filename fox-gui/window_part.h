@@ -23,6 +23,7 @@ public:
 
     void split();
     int get_slot_index(const char* str);
+    unsigned get_slot_number() const;
 
     // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
     agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);

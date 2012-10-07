@@ -8,7 +8,7 @@ FXDEFMAP(fx_plot_window) fx_plot_window_map[]=
 
 FXIMPLEMENT(fx_plot_window,FXMainWindow,fx_plot_window_map,ARRAYNUMBER(fx_plot_window_map))
 
-fx_plot_window::fx_plot_window(FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
+fx_plot_window::fx_plot_window(FXApp* app, const char* split, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
     FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h),
     m_lua_window(0)
 {
@@ -23,7 +23,7 @@ fx_plot_window::fx_plot_window(FXApp* app, const FXString& name, FXIcon *ic, FXI
     // Sunken border for text widget
     FXHorizontalFrame *cbox = new FXHorizontalFrame(frame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
-    m_canvas = new fx_plot_canvas(cbox, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas = new fx_plot_canvas(cbox, split, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 }
 
 fx_plot_window::~fx_plot_window()

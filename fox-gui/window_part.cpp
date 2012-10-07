@@ -190,3 +190,15 @@ window_part::rect(unsigned index, int w, int h)
     rect_type& r = m_rect[index];
     return agg::rect_i(w * r.x1, h * r.y1, w * r.x2, h * r.y2);
 }
+
+unsigned
+window_part::get_slot_number() const
+{
+    unsigned n = 0;
+    for (unsigned k = 0; k < m_index.size(); k++)
+    {
+        if (m_index[k].split == leaf)
+            n ++;
+    }
+    return n;
+}

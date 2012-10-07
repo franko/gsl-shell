@@ -35,24 +35,25 @@ class fx_plot_canvas : public FXCanvas
     typedef image_gen<image_pixel_width, true> image;
 
 public:
-    fx_plot_canvas(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0,
+    fx_plot_canvas(FXComposite* p, const char* split, FXObject* tgt=NULL, FXSelector sel=0,
                    FXuint opts=FRAME_NORMAL,
                    FXint x=0, FXint y=0, FXint w=0, FXint h=0);
 
     ~fx_plot_canvas();
 
-    void attach(sg_plot* p, const char* slot_str);
+    int attach(sg_plot* p, const char* slot_str);
+    void split(const char* split_str);
+
     void update_region(const agg::rect_base<int>& r);
 
-    // sg_plot* get_plot(unsigned index)
-    // {
-    //     return m_plot;
-    // }
+    void plot_draw(unsigned index);
+    void plot_draw_queue(unsigned index, bool draw_all);
+    void plot_render(unsigned index);
 
-    void plot_render(plot_ref& ref, const agg::trans_affine& m);
-    void plot_draw(unsigned index, int canvas_width, int canvas_height);
-    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::trans_affine& m);
-    void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
+    bool need_redraw(unsigned index)
+    {
+        return m_plots[index].plot->need_redraw();
+    }
 
 #if 0
     agg::trans_affine plot_matrix(unsigned index) const
@@ -64,12 +65,7 @@ public:
     }
 #endif
 
-#if 0    
-    bool is_ready() const
-    {
-        return m_canvas && m_plot;
-    }
-#endif
+    bool is_ready() const { return (m_canvas != 0); }
 
     bool save_plot_image(unsigned index);
     bool restore_plot_image(unsigned index);
@@ -84,6 +80,11 @@ private:
     void prepare_image_buffer(unsigned ww, unsigned hh);
     void ensure_canvas_size(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
+
+    void plot_render(plot_ref& ref, const agg::trans_affine& m);
+    void plot_draw(unsigned index, int canvas_width, int canvas_height);
+    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::trans_affine& m);
+    void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
 
     bool plot_is_defined(unsigned index)
     {
