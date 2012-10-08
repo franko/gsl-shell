@@ -55,16 +55,6 @@ public:
         return m_plots[index].plot->need_redraw();
     }
 
-#if 0
-    agg::trans_affine plot_matrix(unsigned index) const
-    {
-        const agg::rect_i& r = m_part.rect(index);
-        double dx = r.x2 - r.x1, dy = r.y2 - r.y1;
-        double tx = r.x1, ty = r.y1;
-        return agg::trans_affine(dx, 0.0, 0.0, dy, tx, ty);
-    }
-#endif
-
     bool is_ready() const { return (m_canvas != 0); }
 
     bool save_plot_image(unsigned index);
@@ -92,16 +82,11 @@ private:
         return (ref.plot != NULL);
     }
 
-//    my_array<image> m_img;
-//    my_array<image> m_save_img;
     image m_img;
     image m_save_img;
     window_part m_part;
     agg::pod_bvector<plot_ref> m_plots;
     canvas* m_canvas;
-//    bool m_dirty_flag, m_dirty_img;
-//    opt_rect<double> m_dirty_rect;
-//    agg::trans_affine m_area_mtx;
 };
 
 #endif

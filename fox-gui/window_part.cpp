@@ -169,8 +169,9 @@ window_part::get_slot_index(const char* str)
         str = tail;
     }
 
-    const partition& part = m_index[pindex];
-    return (part.split == leaf ? leaf_count : (-1));
+    if (unsigned(pindex) >= m_index.size())
+        return (-1);
+    return (m_index[pindex].split == leaf ? leaf_count : (-1));
 }
 
 agg::trans_affine

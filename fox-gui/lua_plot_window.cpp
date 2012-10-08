@@ -64,19 +64,7 @@ fox_window_new (lua_State *L)
 {
     gsl_shell_app* app = global_app;
 
-    const char* split;
-    if (lua_gettop(L) == 0)
-    {
-        split = ".";
-    }
-    else if (lua_isstring(L, 1))
-    {
-        split = lua_tostring(L, 1);
-    }
-    else
-    {
-        return luaL_error(L, "invalid split specification");
-    }
+    const char* split = lua_tostring(L, 1);
 
     app->lock();
 

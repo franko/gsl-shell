@@ -18,7 +18,7 @@ fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* 
     FXCanvas(p, tgt, sel, opts, x, y, w, h),
     m_img(), m_save_img(), m_canvas(0)
 {
-    split(split_str);
+    split(split_str ? split_str : ".");
 }
 
 fx_plot_canvas::~fx_plot_canvas()
@@ -43,24 +43,15 @@ void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
     m_img.resize(ww, hh);
     m_canvas = new canvas(m_img, ww, hh, colors::white);
     plots_set_to_dirty();
-//    m_dirty_img = true;
 }
 
 void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 {
     if (m_img.width() != ww || m_img.height() != hh)
     {
-//        m_area_mtx.sx = ww;
-//        m_area_mtx.sy = hh;
         prepare_image_buffer(ww, hh);
     }
 }
-
-// void fx_plot_canvas::clear_plot_area(unsigned index, int canvas_width, int canvas_height)
-// {
-//     agg::rect_i rect = m_part.rect(index, canvas_width, canvas_height);
-//     m_canvas->clear_box(rect);
-// }
 
 void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
 {
@@ -93,10 +84,6 @@ fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::trans_affine& m)
 
 void fx_plot_canvas::update_region(const agg::rect_i& r)
 {
-//    int iw = m_img.width(), ih = m_img.height();
-//    const agg::rect_i b(0, 0, iw, ih);
-//    agg::rect_i r = agg::intersect_rectangles(_r, b);
-
     FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
     FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
@@ -139,7 +126,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     {
         FXDCWindow dc(this);
         dc.setForeground(FXRGB(255,255,255));
-        dc.fillRectangle(r.x1, r.y1, ww, hh);
+        dc.fillRectangle(r.x1, hh - r.y2, ww, hh);
     }
 
     ref.is_dirty = false;
@@ -198,8 +185,6 @@ int fx_plot_canvas::attach(sg_plot* p, const char* slot_str)
     if (index >= 0)
         m_plots[index].attach(p);
     return index;
-    // int ww = getWidth(), hh = getHeight();
-    // plot_draw(index, ww, hh);
 }
 
 bool fx_plot_canvas::save_plot_image(unsigned index)
@@ -234,8 +219,6 @@ bool fx_plot_canvas::restore_plot_image(unsigned index)
     if (!image::match(m_img, m_save_img))
         return false;
 
-//    if (!image::match(m_img, m_save_img))
-//        return false;
     agg::rect_i r = m_part.rect(index, ww, hh);
 
     rendering_buffer_ro src;
@@ -248,14 +231,6 @@ bool fx_plot_canvas::restore_plot_image(unsigned index)
     return true;
 }
 
-#if 0
-long fx_plot_canvas::on_configure(FXObject* sender, FXSelector sel, void *ptr)
-{
-    this->FXCanvas::onConfigure(sender, sel, ptr);
-
-}
-#endif
-
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
     int ww = getWidth(), hh = getHeight();
@@ -266,12 +241,6 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
     }
     return 1;
 }
-
-// void fx_plot_canvas::plot_draw(unsigned index)
-// {
-//     int ww = getWidth(), hh = getHeight();
-//     plot_draw(index, ww, hh);
-// }
 
 long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
