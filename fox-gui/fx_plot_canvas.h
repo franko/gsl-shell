@@ -71,7 +71,7 @@ private:
     void ensure_canvas_size(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
-    void plot_render(plot_ref& ref, const agg::trans_affine& m);
+    void plot_render(plot_ref& ref, const agg::trans_affine& m, const agg::rect_i& r);
     void plot_draw(unsigned index, int canvas_width, int canvas_height);
     opt_rect<double> plot_render_queue(plot_ref& ref, const agg::trans_affine& m);
     void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);

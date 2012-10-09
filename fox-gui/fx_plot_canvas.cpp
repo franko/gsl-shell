@@ -53,8 +53,9 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
     }
 }
 
-void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m)
+void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m, const agg::rect_i& r)
 {
+    m_canvas->clear_box(r);
     AGG_LOCK();
     ref.plot->draw(*m_canvas, m);
     AGG_UNLOCK();
@@ -66,7 +67,8 @@ void fx_plot_canvas::plot_render(unsigned index)
     plot_ref& ref = m_plots[index];
     int ww = getWidth(), hh = getHeight();
     agg::trans_affine mat = m_part.area_matrix(index, ww, hh);
-    plot_render(ref, mat);
+    agg::rect_i r = m_part.rect(index, ww, hh);
+    plot_render(ref, mat, r);
 }
 
 opt_rect<double>
@@ -116,8 +118,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     {
         if (ref.is_image_dirty)
         {
-            m_canvas->clear_box(r);
-            plot_render(ref, plot_mtx);
+            plot_render(ref, plot_mtx, r);
         }
 
         update_region(r);
@@ -194,13 +195,12 @@ bool fx_plot_canvas::save_plot_image(unsigned index)
     if (!m_save_img.ensure_size(ww, hh)) return false;
 
     plot_ref& ref = m_plots[index];
-    if (ref.is_image_dirty)
-    {
-        agg::trans_affine plot_mtx = m_part.area_matrix(index, ww, hh);
-        plot_render(ref, plot_mtx);
-    }
 
+    agg::trans_affine plot_mtx = m_part.area_matrix(index, ww, hh);
     agg::rect_i r = m_part.rect(index, ww, hh);
+
+    if (ref.is_image_dirty)
+        plot_render(ref, plot_mtx, r);
 
     rendering_buffer_ro src;
     rendering_buffer_get_const_view(src, m_img, r, 4, true);
