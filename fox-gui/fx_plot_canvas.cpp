@@ -126,7 +126,7 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     {
         FXDCWindow dc(this);
         dc.setForeground(FXRGB(255,255,255));
-        dc.fillRectangle(r.x1, hh - r.y2, ww, hh);
+        dc.fillRectangle(r.x1, canvas_height - r.y2, ww, hh);
     }
 
     ref.is_dirty = false;
