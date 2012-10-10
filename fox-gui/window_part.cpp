@@ -174,16 +174,6 @@ window_part::get_slot_index(const char* str)
     return (m_index[pindex].split == leaf ? leaf_count : (-1));
 }
 
-agg::trans_affine
-window_part::area_matrix(unsigned index, int canvas_width, int canvas_height)
-{
-    rect_type& r = m_rect[index];
-    double ww = canvas_width * (r.x2 - r.x1);
-    double hh = canvas_height * (r.y2 - r.y1);
-    double tx = canvas_width * r.x1, ty = canvas_height * r.y1;
-    return agg::trans_affine(ww, 0.0, 0.0, hh, tx, ty);
-}
-
 agg::rect_i
 window_part::rect(unsigned index, int w, int h)
 {

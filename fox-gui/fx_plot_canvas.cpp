@@ -8,7 +8,6 @@
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 {
     FXMAPFUNC(SEL_PAINT,     0, fx_plot_canvas::on_cmd_paint),
-//    FXMAPFUNC(SEL_CONFIGURE, 0, fx_plot_canvas::on_configure),
     FXMAPFUNC(SEL_UPDATE,    0, fx_plot_canvas::on_update),
 };
 
@@ -53,12 +52,15 @@ void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
     }
 }
 
-void fx_plot_canvas::plot_render(plot_ref& ref, const agg::trans_affine& m, const agg::rect_i& r)
+void fx_plot_canvas::plot_render(plot_ref& ref, const agg::rect_i& r)
 {
     m_canvas->clear_box(r);
-    AGG_LOCK();
-    ref.plot->draw(*m_canvas, m);
-    AGG_UNLOCK();
+    if (ref.plot)
+    {
+        AGG_LOCK();
+        ref.plot->draw(*m_canvas, r);
+        AGG_UNLOCK();
+    }
     ref.is_image_dirty = false;
 }
 
@@ -66,14 +68,14 @@ void fx_plot_canvas::plot_render(unsigned index)
 {
     plot_ref& ref = m_plots[index];
     int ww = getWidth(), hh = getHeight();
-    agg::trans_affine mat = m_part.area_matrix(index, ww, hh);
     agg::rect_i r = m_part.rect(index, ww, hh);
-    plot_render(ref, mat, r);
+    plot_render(ref, r);
 }
 
 opt_rect<double>
-fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::trans_affine& m)
+fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
 {
+    const agg::trans_affine m = affine_matrix(box);
     opt_rect<double> r, draw_rect;
     AGG_LOCK();
     ref.plot->draw_queue(*m_canvas, m, draw_rect);
@@ -108,28 +110,11 @@ void fx_plot_canvas::update_region(const agg::rect_i& r)
 
 void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
-    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
-    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
-    int ww = r.x2 - r.x1, hh = r.y2 - r.y1;
-
     plot_ref& ref = m_plots[index];
-
-    if (plot_is_defined(index))
-    {
-        if (ref.is_image_dirty)
-        {
-            plot_render(ref, plot_mtx, r);
-        }
-
-        update_region(r);
-    }
-    else
-    {
-        FXDCWindow dc(this);
-        dc.setForeground(FXRGB(255,255,255));
-        dc.fillRectangle(r.x1, canvas_height - r.y2, ww, hh);
-    }
-
+    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
+    if (ref.is_image_dirty)
+        plot_render(ref, r);
+    update_region(r);
     ref.is_dirty = false;
 }
 
@@ -146,21 +131,19 @@ fx_plot_canvas::plot_draw_queue(unsigned index, int canvas_width, int canvas_hei
 
     if (!ref.plot) return;
 
-    agg::trans_affine plot_mtx = m_part.area_matrix(index, canvas_width, canvas_height);
-
-    opt_rect<double> rect = plot_render_queue(ref, plot_mtx);
+    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
+    opt_rect<double> rect = plot_render_queue(ref, r);
 
     if (draw_all)
     {
-        agg::rect_i ri = m_part.rect(index, canvas_width, canvas_height);
-        update_region(ri);
+        update_region(r);
     }
     else if (rect.is_defined())
     {
         const int pd = 4;
-        const agg::rect_d& r = rect.rect();
+        const agg::rect_d& ur = rect.rect();
         const agg::rect_i box(0, 0, canvas_width, canvas_height);
-        agg::rect_i ri(r.x1 - pd, r.y1 - pd, r.x2 + pd, r.y2 + pd);
+        agg::rect_i ri(ur.x1 - pd, ur.y1 - pd, ur.x2 + pd, ur.y2 + pd);
         ri.clip(box);
         update_region(ri);
     }
@@ -195,12 +178,10 @@ bool fx_plot_canvas::save_plot_image(unsigned index)
     if (!m_save_img.ensure_size(ww, hh)) return false;
 
     plot_ref& ref = m_plots[index];
-
-    agg::trans_affine plot_mtx = m_part.area_matrix(index, ww, hh);
     agg::rect_i r = m_part.rect(index, ww, hh);
 
     if (ref.is_image_dirty)
-        plot_render(ref, plot_mtx, r);
+        plot_render(ref, r);
 
     rendering_buffer_ro src;
     rendering_buffer_get_const_view(src, m_img, r, 4, true);

@@ -19,16 +19,11 @@ public:
 
     int parse(const char* split);
 
-//    const agg::rect_i& rect(unsigned k) { return m_rect[k]; }
-
     void split();
     int get_slot_index(const char* str);
     unsigned get_slot_number() const;
 
-    // agg::trans_affine area_matrix(unsigned index, const agg::trans_affine& m);
-    agg::trans_affine area_matrix(unsigned index, int canvas_width, int canvas_height);
     agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
-//    agg::rect_i rect(unsigned index, int canvas_width, int canvas_height);
 
 private:
     int skip_node(int index, int& leaf_count);

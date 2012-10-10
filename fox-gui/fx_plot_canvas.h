@@ -71,15 +71,14 @@ private:
     void ensure_canvas_size(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
-    void plot_render(plot_ref& ref, const agg::trans_affine& m, const agg::rect_i& r);
+    void plot_render(plot_ref& ref, const agg::rect_i& r);
     void plot_draw(unsigned index, int canvas_width, int canvas_height);
-    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::trans_affine& m);
+    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::rect_i& r);
     void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
 
     bool plot_is_defined(unsigned index)
     {
-        plot_ref& ref = m_plots[index];
-        return (ref.plot != NULL);
+        return (m_plots[index].plot != NULL);
     }
 
     image m_img;
