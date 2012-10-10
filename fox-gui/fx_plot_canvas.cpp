@@ -91,14 +91,13 @@ void fx_plot_canvas::update_region(const agg::rect_i& r)
     FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
     FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
-    const unsigned bpp = 32;
-    const unsigned pixel_size = bpp / 8;
+    const unsigned fox_pixel_size = 4;
 
     agg::rendering_buffer dest;
-    dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * pixel_size);
+    dest.attach((agg::int8u*) img.getData(), ww, hh, -ww * fox_pixel_size);
 
     rendering_buffer_ro src;
-    rendering_buffer_get_const_view(src, m_img, r, gslshell::bpp / 8, true);
+    rendering_buffer_get_const_view(src, m_img, r, image_pixel_width);
 
     my_color_conv(&dest, &src, color_conv_rgb24_to_rgba32());
 
@@ -184,10 +183,10 @@ bool fx_plot_canvas::save_plot_image(unsigned index)
         plot_render(ref, r);
 
     rendering_buffer_ro src;
-    rendering_buffer_get_const_view(src, m_img, r, 4, true);
+    rendering_buffer_get_const_view(src, m_img, r, image_pixel_width);
 
     agg::rendering_buffer dest;
-    rendering_buffer_get_view(dest, m_save_img, r, 4, true);
+    rendering_buffer_get_view(dest, m_save_img, r, image_pixel_width);
 
     dest.copy_from(src);
     return true;
@@ -203,10 +202,10 @@ bool fx_plot_canvas::restore_plot_image(unsigned index)
     agg::rect_i r = m_part.rect(index, ww, hh);
 
     rendering_buffer_ro src;
-    rendering_buffer_get_const_view(src, m_save_img, r, 4, true);
+    rendering_buffer_get_const_view(src, m_save_img, r, image_pixel_width);
 
     agg::rendering_buffer dest;
-    rendering_buffer_get_view(dest, m_img, r, 4, true);
+    rendering_buffer_get_view(dest, m_img, r, image_pixel_width);
 
     dest.copy_from(src);
     return true;

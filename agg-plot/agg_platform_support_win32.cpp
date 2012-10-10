@@ -166,7 +166,7 @@ namespace agg
         pixel_map_attach (pmap, &rbuf_tmp, m_flip_y);
 
         rendering_buffer_ro src_view;
-        rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8, m_flip_y);
+        rendering_buffer_get_const_view(src_view, *src, r, m_bpp / 8);
 
         if (m_format == m_sys_format)
           {
