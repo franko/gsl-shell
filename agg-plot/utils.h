@@ -57,6 +57,8 @@ inline bool is_unit_matrix(const agg::trans_affine& m, double eps = 1.0e-5)
 extern void   trans_affine_compose  (agg::trans_affine& a,
                                      const agg::trans_affine& b);
 
+extern agg::trans_affine affine_matrix(const agg::rect_i& r);
+
 extern agg::trans_affine identity_matrix;
 
 #endif
