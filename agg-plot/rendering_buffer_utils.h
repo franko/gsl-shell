@@ -27,11 +27,9 @@ void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base
     }
 }
 
-#warning argument flip_y is unused
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
-				      const agg::rect_base<int>& r,
-				      unsigned pixel_width, bool flip_y)
+				      const agg::rect_base<int>& r, unsigned pixel_width)
 {
   int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
   const unsigned char *buf_start = src.row_ptr(y);
@@ -42,8 +40,7 @@ void rendering_buffer_get_const_view (RenBufDst& view, const RenBufSrc& src,
 
 template<class RenBufDst, class RenBufSrc>
 void rendering_buffer_get_view (RenBufDst& view, RenBufSrc& src,
-				const agg::rect_base<int>& r,
-				unsigned pixel_width, bool flip_y)
+				const agg::rect_base<int>& r, unsigned pixel_width)
 {
   int x = r.x1, y = r.y1, w = r.x2 - r.x1, h = r.y2 - r.y1;
   unsigned char *buf_start = src.row_ptr(y);
