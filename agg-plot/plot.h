@@ -253,7 +253,9 @@ public:
   void draw(Canvas& canvas, const agg::trans_affine& m)
   {
     canvas_adapter<Canvas> vc(&canvas);
-    draw_virtual_canvas(vc, m);
+    agg::rect_i clip = rect_of_slot_matrix<int>(m);
+    plot_layout layout = compute_plot_layout(m);
+    draw_virtual_canvas(vc, layout, m, &clip);
   }
 
   template <class Canvas>
@@ -261,7 +263,8 @@ public:
   {
     canvas_adapter<Canvas> vc(&canvas);
     agg::trans_affine mtx = affine_matrix(r);
-    draw_virtual_canvas(vc, mtx);
+    plot_layout layout = compute_plot_layout(mtx);
+    draw_virtual_canvas(vc, layout, mtx, &r);
   }
 
   virtual bool push_layer();
@@ -328,7 +331,7 @@ public:
   }
 
 protected:
-  void draw_virtual_canvas(canvas_type& canvas, const agg::trans_affine& canvas_mtx);
+  void draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::trans_affine& canvas_mtx, const agg::rect_i* r);
 
   double draw_axis_m(axis_e dir, units& u, const agg::trans_affine& user_mtx,
                      ptr_list<draw::text>& labels, double scale,
@@ -454,19 +457,14 @@ static bool area_is_valid(const agg::trans_affine& b)
 }
 
 template <class RM>
-void plot<RM>::draw_virtual_canvas(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
+void plot<RM>::draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::trans_affine& canvas_mtx, const agg::rect_i* clip)
 {
   before_draw();
-
-  agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
-
-  plot_layout layout = compute_plot_layout(canvas_mtx);
-
   draw_legends(canvas, layout);
 
   if (area_is_valid(layout.plot_area))
     {
-      draw_axis(canvas, layout, &clip);
+      draw_axis(canvas, layout, clip);
       draw_elements(canvas, layout);
     }
 };
@@ -770,7 +768,9 @@ void plot<RM>::draw_legends(canvas_type& canvas, const plot_layout& layout)
       if (mp)
         {
           const agg::trans_affine& mtx = layout.legend_area[k];
-          mp->draw_virtual_canvas(canvas, mtx);
+          agg::rect_i clip = rect_of_slot_matrix<int>(mtx);
+          plot_layout mp_layout = mp->compute_plot_layout(mtx);
+          mp->draw_virtual_canvas(canvas, mp_layout, mtx, &clip);
         }
     }
 }
