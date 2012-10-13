@@ -63,6 +63,29 @@ private:
   Canvas* m_canvas;
 };
 
+struct plot_layout {
+  struct point {
+    point(double _x, double _y): x(_x), y(_y) {}
+    point() {}
+    double x, y;
+  };
+
+  void set_plot_active_area(double sx, double sy, double tx, double ty)
+  {
+    plot_active_area.sx = sx;
+    plot_active_area.sy = sy;
+    plot_active_area.tx = tx;
+    plot_active_area.ty = ty;
+  }
+
+  point title_pos;
+  double title_font_size;
+
+  agg::trans_affine legend_area[4];
+  agg::trans_affine plot_area;
+  agg::trans_affine plot_active_area;
+};
+
 struct plot_item {
   sg_object* vs;
   agg::rgba8 color;
@@ -227,10 +250,19 @@ public:
   }
 
   template <class Canvas>
-  void draw(Canvas& canvas, const agg::trans_affine& m);
+  void draw(Canvas& canvas, const agg::trans_affine& m)
+  {
+    canvas_adapter<Canvas> vc(&canvas);
+    draw_virtual_canvas(vc, m);
+  }
 
   template <class Canvas>
-  void draw(Canvas& canvas, const agg::rect_i& r);
+  void draw(Canvas& canvas, const agg::rect_i& r)
+  {
+    canvas_adapter<Canvas> vc(&canvas);
+    agg::trans_affine mtx = affine_matrix(r);
+    draw_virtual_canvas(vc, mtx);
+  }
 
   virtual bool push_layer();
   virtual bool pop_layer();
@@ -296,18 +328,23 @@ public:
   }
 
 protected:
+  void draw_virtual_canvas(canvas_type& canvas, const agg::trans_affine& canvas_mtx);
+
   double draw_axis_m(axis_e dir, units& u, const agg::trans_affine& user_mtx,
                      ptr_list<draw::text>& labels, double scale,
                      agg::path_storage& mark, agg::path_storage& ln);
 
-  void draw_elements(canvas_type &canvas, const agg::trans_affine& m);
+  void draw_elements(canvas_type &canvas, const plot_layout& layout);
   void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m);
-  void draw_axis(canvas_type& can, const agg::trans_affine& m, const agg::rect_i* clip = 0);
+  void draw_axis(canvas_type& can, plot_layout& layout, const agg::rect_i* clip = 0);
 
-  agg::trans_affine draw_legends(canvas_type& canvas,
-                                    const agg::trans_affine& canvas_mtx);
+  void draw_legends(canvas_type& canvas, const plot_layout& layout);
 
-  agg::trans_affine get_scaled_matrix(const agg::trans_affine& canvas_mtx);
+  plot_layout compute_plot_layout(const agg::trans_affine& canvas_mtx);
+
+  // return the matrix that map from plot coordinates to screen
+  // coordinates
+  agg::trans_affine get_model_matrix(const plot_layout& layout);
 
   void clip_plot_area(canvas_type& canvas, const agg::trans_affine& canvas_mtx);
 
@@ -346,7 +383,6 @@ private:
   bool m_pad_units;
 
   str m_title;
-  agg::trans_affine m_area_mtx;
 
   bool m_sync_mode;
 
@@ -418,35 +454,20 @@ static bool area_is_valid(const agg::trans_affine& b)
 }
 
 template <class RM>
-template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::trans_affine& canvas_mtx)
+void plot<RM>::draw_virtual_canvas(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
 {
-  canvas_adapter<Canvas> canvas(&_canvas);
   before_draw();
 
   agg::rect_base<int> clip = rect_of_slot_matrix<int>(canvas_mtx);
 
-  agg::trans_affine area_mtx = draw_legends(canvas, canvas_mtx);
+  plot_layout layout = compute_plot_layout(canvas_mtx);
 
-  if (area_is_valid(area_mtx))
+  draw_legends(canvas, layout);
+
+  if (area_is_valid(layout.plot_area))
     {
-      draw_axis(canvas, area_mtx, &clip);
-      draw_elements(canvas, area_mtx);
-    }
-};
-
-template <class RM>
-template <class Canvas> void plot<RM>::draw(Canvas& _canvas, const agg::rect_i& r)
-{
-  canvas_adapter<Canvas> canvas(&_canvas);
-  before_draw();
-
-  agg::trans_affine canvas_mtx = affine_matrix(r);
-  agg::trans_affine area_mtx = draw_legends(canvas, canvas_mtx);
-
-  if (area_is_valid(area_mtx))
-    {
-      draw_axis(canvas, area_mtx, &r);
-      draw_elements(canvas, area_mtx);
+      draw_axis(canvas, layout, &clip);
+      draw_elements(canvas, layout);
     }
 };
 
@@ -463,29 +484,29 @@ void plot<RM>::draw_element(item& c, canvas_type& canvas, const agg::trans_affin
 }
 
 template <class RM>
-agg::trans_affine plot<RM>::get_scaled_matrix(const agg::trans_affine& canvas_mtx)
+agg::trans_affine plot<RM>::get_model_matrix(const plot_layout& layout)
 {
   agg::trans_affine m = m_trans;
-  trans_affine_compose (m, m_area_mtx);
+  trans_affine_compose (m, layout.plot_active_area);
   return m;
 }
 
 template<class RM>
-void plot<RM>::clip_plot_area(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
+void plot<RM>::clip_plot_area(canvas_type& canvas, const agg::trans_affine& area_mtx)
 {
   if (this->clip_is_active())
     {
-      agg::rect_base<int> clip = rect_of_slot_matrix<int>(m_area_mtx);
+      agg::rect_base<int> clip = rect_of_slot_matrix<int>(area_mtx);
       canvas.clip_box(clip);
     }
 }
 
 template <class RM>
-void plot<RM>::draw_elements(canvas_type& canvas, const agg::trans_affine& canvas_mtx)
+void plot<RM>::draw_elements(canvas_type& canvas, const plot_layout& layout)
 {
-  const agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+  const agg::trans_affine m = get_model_matrix(layout);
 
-  this->clip_plot_area(canvas, canvas_mtx);
+  this->clip_plot_area(canvas, layout.plot_area);
 
   for (unsigned k = 0; k < m_layers.size(); k++)
     {
@@ -502,19 +523,19 @@ void plot<RM>::draw_elements(canvas_type& canvas, const agg::trans_affine& canva
 template <class RM>
 template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, const agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
 {
-  canvas_adapter<Canvas>  canvas(&_canvas);
-
-  typedef typename plot<RM>::iterator iter_type;
-
+  canvas_adapter<Canvas> canvas(&_canvas);
   before_draw();
 
   this->clip_plot_area(canvas, canvas_mtx);
 
+  plot_layout layout = compute_plot_layout(canvas_mtx);
+
+  typedef typename plot<RM>::iterator iter_type;
   iter_type *c0 = m_drawing_queue;
   for (iter_type *c = c0; c != 0; c = c->next())
     {
       item& d = c->content();
-      agg::trans_affine m = get_scaled_matrix(canvas_mtx);
+      agg::trans_affine m = get_model_matrix(layout);
       draw_element(d, canvas, m);
 
       agg::rect_base<double> ebb;
@@ -638,9 +659,10 @@ static inline double approx_text_height(double text_size)
 }
 
 template <class RM>
-agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
-                                         const agg::trans_affine& canvas_mtx)
+plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx)
 {
+  plot_layout layout;
+
   const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
   const double ppad = double(canvas_margin_prop_space) / 1000.0;
   const double fpad = double(canvas_margin_fixed_space);
@@ -662,11 +684,8 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
       canvas_mtx.transform(&x, &y);
       y -= ptpad + dyt + title_text_size;
 
-      draw::text title(m_title.cstr(), title_text_size, 0.5, 0.0);
-      title.set_point(x, y);
-      title.apply_transform(identity_matrix, 1.0);
-
-      canvas.draw(title, colors::black);
+      layout.title_pos = plot_layout::point(x, y);
+      layout.title_font_size = title_text_size;
 
       dyt += 2 * ptpad + th;
     }
@@ -719,36 +738,60 @@ agg::trans_affine plot<RM>::draw_legends(canvas_type& canvas,
 
           if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)
             {
-              const double tx = canvas_mtx.tx, ty = canvas_mtx.ty;
-              agg::trans_affine mtx(dx, 0.0, 0.0, dy, tx + px, ty + py);
-              mp->before_draw();
-              mp->draw_axis(canvas, mtx);
-              mp->draw_elements(canvas, mtx);
+              const double x0 = canvas_mtx.tx + px, y0 = canvas_mtx.ty + py;
+              layout.legend_area[k] = agg::trans_affine(dx, 0.0, 0.0, dy, x0, y0);
             }
         }
     }
 
-  double cpx = canvas_mtx.tx, cpy = canvas_mtx.ty;
+  double x0 = canvas_mtx.tx + dxl, y0 = canvas_mtx.ty + dyb;
   double ssx = sx - (dxl + dxr), ssy = sy - (dyb + dyt);
-  return agg::trans_affine(ssx, 0.0, 0.0, ssy, cpx + dxl, cpy + dyb);
+  layout.plot_area = agg::trans_affine(ssx, 0.0, 0.0, ssy, x0, y0);
+
+  return layout;
 }
 
 template <class RM>
-void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mtx,
-                         const agg::rect_i* clip)
+void plot<RM>::draw_legends(canvas_type& canvas, const plot_layout& layout)
 {
-  agg::trans_affine& m = m_area_mtx;
+  if (!str_is_null(&m_title))
+    {
+      const plot_layout::point& pos = layout.title_pos;
+      draw::text title(m_title.cstr(), layout.title_font_size, 0.5, 0.0);
+      title.set_point(pos.x, pos.y);
+      title.apply_transform(identity_matrix, 1.0);
+      canvas.draw(title, colors::black);
+    }
 
+  for (int k = 0; k < 4; k++)
+    {
+      plot* mp = m_legend[k];
+
+      if (mp)
+        {
+          const agg::trans_affine& mtx = layout.legend_area[k];
+          mp->draw_virtual_canvas(canvas, mtx);
+        }
+    }
+}
+
+// Draw the axis elements and labels and set layout.plot_active_area
+// to the actual plotting are matrix.
+template <class RM>
+void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i* clip)
+{
   if (!m_use_units)
     {
-      m = canvas_mtx;
+      layout.plot_active_area = layout.plot_area;
       return;
     }
 
-  double scale = compute_scale(canvas_mtx);
+  double scale = compute_scale(layout.plot_area);
 
   if (clip)
     canvas.clip_box(*clip);
+
+  const agg::trans_affine& m = layout.plot_active_area;
 
   agg::path_storage box;
   sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
@@ -795,7 +838,8 @@ void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mt
       ppad_bottom += ptpad;
     }
 
-  const double sx = canvas_mtx.sx, sy = canvas_mtx.sy;
+  const double sx = layout.plot_area.sx, sy = layout.plot_area.sy;
+  const double x0 = layout.plot_area.tx, y0 = layout.plot_area.ty;
 
   const double xppad = (ppad_left + ppad_right);
   const double lsx = (dx_left + dx_right + xppad * sx) / (1 + xppad);
@@ -806,10 +850,9 @@ void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mt
   const double sxr = sx - lsx;
   const double syr = sy - lsy;
 
-  m.sx = sxr;
-  m.sy = syr;
-  m.tx = canvas_mtx.tx + dx_left + ppad_left * sxr;
-  m.ty = canvas_mtx.ty + dy_bottom + ppad_bottom * syr;
+  const double aax = x0 + dx_left + ppad_left * sxr;
+  const double aay = y0 + dy_bottom + ppad_bottom * syr;
+  layout.set_plot_active_area(sxr, syr, aax, aay);
 
   for (unsigned j = 0; j < labels.size(); j++)
     {
@@ -832,7 +875,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mt
   if (!str_is_null(&m_x_axis.title))
     {
       double labx = m.sx * 0.5 + m.tx;
-      double laby = canvas_mtx.ty;
+      double laby = y0;
 
       const char* text = m_x_axis.title.cstr();
       draw::text xlabel(text, label_text_size, 0.5, 0.0);
@@ -844,7 +887,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, const agg::trans_affine& canvas_mt
 
   if (!str_is_null(&m_y_axis.title))
     {
-      double labx = canvas_mtx.tx;
+      double labx = x0;
       double laby = m.sy * 0.5 + m.ty;
 
       const char* text = m_y_axis.title.cstr();
