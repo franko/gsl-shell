@@ -36,7 +36,7 @@ bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
   agg::rect_base<int> r = rect_of_slot_matrix<int>(mtx);
   can.clear_box(r);
 
-  p->draw(can, mtx);
+  p->draw(can, mtx, NULL);
 
   bool success = platform_support_ext::save_image_file (rbuf_tmp, fn, gslshell::pixel_format);
 

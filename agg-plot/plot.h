@@ -86,6 +86,10 @@ struct plot_layout {
   agg::trans_affine plot_active_area;
 };
 
+struct plot_render_info {
+  agg::trans_affine active_area;
+};
+
 struct plot_item {
   sg_object* vs;
   agg::rgba8 color;
@@ -250,21 +254,25 @@ public:
   }
 
   template <class Canvas>
-  void draw(Canvas& canvas, const agg::trans_affine& m)
+  void draw(Canvas& canvas, const agg::trans_affine& m, plot_render_info* inf)
   {
     canvas_adapter<Canvas> vc(&canvas);
     agg::rect_i clip = rect_of_slot_matrix<int>(m);
     plot_layout layout = compute_plot_layout(m);
     draw_virtual_canvas(vc, layout, m, &clip);
+    if (inf)
+      inf->active_area = layout.plot_active_area;
   }
 
   template <class Canvas>
-  void draw(Canvas& canvas, const agg::rect_i& r)
+  void draw(Canvas& canvas, const agg::rect_i& r, plot_render_info* inf)
   {
     canvas_adapter<Canvas> vc(&canvas);
     agg::trans_affine mtx = affine_matrix(r);
     plot_layout layout = compute_plot_layout(mtx);
     draw_virtual_canvas(vc, layout, mtx, &r);
+    if (inf)
+      inf->active_area = layout.plot_active_area;
   }
 
   virtual bool push_layer();
@@ -283,7 +291,7 @@ public:
   void commit_pending_draw();
 
   template <class Canvas>
-  void draw_queue(Canvas& canvas, const agg::trans_affine& m, opt_rect<double>& bbox);
+  void draw_queue(Canvas& canvas, const agg::trans_affine& m, const plot_render_info& inf, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
@@ -504,7 +512,7 @@ void plot<RM>::draw_elements(canvas_type& canvas, const plot_layout& layout)
 {
   const agg::trans_affine m = get_model_matrix(layout);
 
-  this->clip_plot_area(canvas, layout.plot_area);
+  this->clip_plot_area(canvas, layout.plot_active_area);
 
   for (unsigned k = 0; k < m_layers.size(); k++)
     {
@@ -519,14 +527,15 @@ void plot<RM>::draw_elements(canvas_type& canvas, const plot_layout& layout)
 }
 
 template <class RM>
-template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, const agg::trans_affine& canvas_mtx, opt_rect<double>& bb)
+template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, const agg::trans_affine& canvas_mtx, const plot_render_info& inf, opt_rect<double>& bb)
 {
   canvas_adapter<Canvas> canvas(&_canvas);
   before_draw();
 
-  this->clip_plot_area(canvas, canvas_mtx);
-
   plot_layout layout = compute_plot_layout(canvas_mtx);
+  layout.plot_active_area = inf.active_area;
+
+  this->clip_plot_area(canvas, layout.plot_active_area);
 
   typedef typename plot<RM>::iterator iter_type;
   iter_type *c0 = m_drawing_queue;

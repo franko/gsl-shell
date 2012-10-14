@@ -58,7 +58,7 @@ void fx_plot_canvas::plot_render(plot_ref& ref, const agg::rect_i& r)
     if (ref.plot)
     {
         AGG_LOCK();
-        ref.plot->draw(*m_canvas, r);
+        ref.plot->draw(*m_canvas, r, &ref.inf);
         AGG_UNLOCK();
     }
     ref.is_image_dirty = false;
@@ -78,7 +78,7 @@ fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
     const agg::trans_affine m = affine_matrix(box);
     opt_rect<double> r, draw_rect;
     AGG_LOCK();
-    ref.plot->draw_queue(*m_canvas, m, draw_rect);
+    ref.plot->draw_queue(*m_canvas, m, ref.inf, draw_rect);
     AGG_UNLOCK();
     r.add<rect_union>(draw_rect);
     r.add<rect_union>(ref.dirty_rect);
