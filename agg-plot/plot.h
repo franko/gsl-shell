@@ -275,7 +275,7 @@ public:
     canvas_adapter<Canvas> vc(&canvas);
     agg::rect_i clip = rect_of_slot_matrix<int>(m);
     plot_layout layout = compute_plot_layout(m);
-    draw_virtual_canvas(vc, layout, m, &clip);
+    draw_virtual_canvas(vc, layout, &clip);
     if (inf)
       inf->active_area = layout.plot_active_area;
   }
@@ -286,7 +286,7 @@ public:
     canvas_adapter<Canvas> vc(&canvas);
     agg::trans_affine mtx = affine_matrix(r);
     plot_layout layout = compute_plot_layout(mtx);
-    draw_virtual_canvas(vc, layout, mtx, &r);
+    draw_virtual_canvas(vc, layout, &r);
     if (inf)
       inf->active_area = layout.plot_active_area;
   }
@@ -355,7 +355,8 @@ public:
   }
 
 protected:
-  void draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::trans_affine& canvas_mtx, const agg::rect_i* r);
+  void draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
+  void draw_simple(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
 
   double draw_axis_m(axis_e dir, units& u, const agg::trans_affine& user_mtx,
                      ptr_list<draw::text>& labels, double scale,
@@ -367,7 +368,7 @@ protected:
 
   void draw_legends(canvas_type& canvas, const plot_layout& layout);
 
-  plot_layout compute_plot_layout(const agg::trans_affine& canvas_mtx);
+  plot_layout compute_plot_layout(const agg::trans_affine& canvas_mtx, bool do_legends = true);
 
   // return the matrix that map from plot coordinates to screen
   // coordinates
@@ -481,7 +482,7 @@ static bool area_is_valid(const agg::trans_affine& b)
 }
 
 template <class RM>
-void plot<RM>::draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::trans_affine& canvas_mtx, const agg::rect_i* clip)
+void plot<RM>::draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::rect_i* clip)
 {
   before_draw();
   draw_legends(canvas, layout);
@@ -491,6 +492,14 @@ void plot<RM>::draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, con
       draw_axis(canvas, layout, clip);
       draw_elements(canvas, layout);
     }
+};
+
+template <class RM>
+void plot<RM>::draw_simple(canvas_type& canvas, plot_layout& layout, const agg::rect_i* clip)
+{
+  before_draw();
+  draw_axis(canvas, layout, clip);
+  draw_elements(canvas, layout);
 };
 
 template <class RM>
@@ -683,7 +692,7 @@ static inline double approx_text_height(double text_size)
 }
 
 template <class RM>
-plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx)
+plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx, bool do_legends)
 {
   plot_layout layout;
 
@@ -714,7 +723,7 @@ plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx)
       dyt += 2 * ptpad + th;
     }
 
-  for (int k = 0; k < 4; k++)
+  for (int k = 0; k < 4 && do_legends; k++)
     {
       plot* mp = m_legend[k];
 
@@ -795,8 +804,8 @@ void plot<RM>::draw_legends(canvas_type& canvas, const plot_layout& layout)
         {
           const agg::trans_affine& mtx = layout.legend_area[k];
           agg::rect_i clip = rect_of_slot_matrix<int>(mtx);
-          plot_layout mp_layout = mp->compute_plot_layout(mtx);
-          mp->draw_virtual_canvas(canvas, mp_layout, mtx, &clip);
+          plot_layout mp_layout = mp->compute_plot_layout(mtx, false);
+          mp->draw_simple(canvas, mp_layout, &clip);
         }
     }
 }
