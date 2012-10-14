@@ -117,6 +117,22 @@ class plot {
   };
 
 protected:
+  enum text_class_e { text_axis_title, text_axis_labels, text_plot_title };
+
+  double get_default_font_size(text_class_e tc, double scale)
+  {
+    double base_size;
+    if (tc == text_axis_title)
+      base_size = 15.0;
+    else if (tc == text_axis_labels)
+      base_size = 14.0;
+    else /* text_axis_title */
+      base_size = 18.0;
+
+    const double cscale = max(scale, 0.75);
+    return base_size * cscale;
+  }
+
   typedef plot_item item;
 
   class item_list : public agg::pod_bvector<item>
@@ -589,6 +605,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
                              agg::path_storage& mark, agg::path_storage& ln)
 {
   const double ppad = double(axis_label_prop_space) / 1000.0;
+  const double text_label_size = get_default_font_size(text_axis_labels, scale);
   const double eps = 1.0e-3;
 
   opt_rect<double> bb;
@@ -617,7 +634,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
       if (q < -eps || q > 1.0 + eps)
         continue;
 
-      draw::text* label = new draw::text(text, 14.0*scale, hj, vj);
+      draw::text* label = new draw::text(text, text_label_size, hj, vj);
 
       label->set_point(isx ? q : -ppad, isx ? -ppad : q);
       label->angle(langle);
@@ -684,7 +701,7 @@ plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx)
     {
       const double scale = compute_scale(canvas_mtx);
       const double ptpad = double(axis_title_prop_space) / 1000.0;
-      const double title_text_size = 18.0 * scale;
+      const double title_text_size = get_default_font_size(text_plot_title, scale);
       const double th = approx_text_height(title_text_size);
 
       double x = 0.5, y = 1.0;
@@ -821,7 +838,7 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
   trans::dash_a lndash(&ln_tr);
   trans::stroke_a lns(&lndash);
 
-  const double label_text_size = 15.0 * scale;
+  const double label_text_size = get_default_font_size(text_axis_title, scale);
   const double plpad = double(axis_label_prop_space) / 1000.0;
   const double ptpad = double(axis_title_prop_space) / 1000.0;
 
