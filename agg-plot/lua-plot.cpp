@@ -605,7 +605,7 @@ plot_save_svg (lua_State *L)
   canvas_svg canvas(f, h);
   agg::trans_affine_scaling m(w, h);
   canvas.write_header(w, h);
-  p->draw(canvas, m);
+  p->draw(canvas, m, NULL);
   canvas.write_end();
   fclose(f);
 

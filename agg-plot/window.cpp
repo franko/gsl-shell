@@ -160,7 +160,7 @@ void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
   if (ref.plot)
     {
       AGG_LOCK();
-          ref.plot->draw(*m_canvas, mtx);
+          ref.plot->draw(*m_canvas, mtx, &ref.inf);
       AGG_UNLOCK();
     }
 
@@ -240,7 +240,7 @@ window::refresh_slot_by_ref(ref& ref, bool draw_all)
 
   AGG_LOCK();
   opt_rect<double> draw_rect;
-  ref.plot->draw_queue(*m_canvas, mtx, draw_rect);
+  ref.plot->draw_queue(*m_canvas, mtx, ref.inf, draw_rect);
   rect.add<rect_union>(draw_rect);
   rect.add<rect_union>(ref.dirty_rect);
   ref.dirty_rect = draw_rect;

@@ -21,6 +21,7 @@ struct plot_ref {
     void attach(sg_plot* p);
 
     sg_plot* plot;
+    plot_render_info inf;
     bool is_dirty;
     bool is_image_dirty;
     opt_rect<double> dirty_rect;

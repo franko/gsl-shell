@@ -28,6 +28,7 @@ public:
     sg_plot* plot;
     int slot_id;
 
+    plot_render_info inf;
     bmatrix matrix;
 
     unsigned char *layer_buf;
