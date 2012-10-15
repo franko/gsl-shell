@@ -12,10 +12,12 @@ extern "C" {
 #include "lua-graph.h"
 #include "gs-types.h"
 #include "plot.h"
+#include "canvas_svg.h"
 
 __BEGIN_DECLS
 
 static int fox_window_layout(lua_State* L);
+static int fox_window_export_svg (lua_State *L);
 
 static const struct luaL_Reg fox_window_functions[] =
 {
@@ -30,6 +32,7 @@ static const struct luaL_Reg fox_window_methods[] =
     {"close",          fox_window_close        },
     {"refresh",        fox_window_slot_refresh        },
     {"update",         fox_window_slot_update },
+    {"save_svg",       fox_window_export_svg },
     {NULL, NULL}
 };
 
@@ -235,6 +238,69 @@ fox_window_restore_slot_image (lua_State *L)
     }
 
     app->unlock();
+    return 0;
+}
+
+int
+fox_window_export_svg (lua_State *L)
+{
+    lua_fox_window *lwin = check_fox_window_lock(L, 1);
+    const char *filename = lua_tostring(L, 2);
+    const double w = luaL_optnumber(L, 3, 600.0);
+    const double h = luaL_optnumber(L, 4, 600.0);
+
+    if (!lwin)
+    {
+        lwin->app->unlock();
+        return luaL_error(L, "invalid window");
+    }
+
+    if (!filename)
+    {
+        lwin->app->unlock();
+        return gs_type_error(L, 2, "string");
+    }
+
+    unsigned fnlen = strlen(filename);
+    if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
+    {
+        const char* basename = (fnlen > 0 ? filename : "unnamed");
+        lua_pushfstring(L, "%s.svg", basename);
+        filename = lua_tostring(L, -1);
+    }
+
+    FILE* f = fopen(filename, "w");
+    if (!f)
+    {
+        lwin->app->unlock();
+        return luaL_error(L, "cannot open filename: %s", filename);
+    }
+
+    fx_plot_window* win = lwin->window;
+    fx_plot_canvas* fxcanvas = win->canvas();
+
+    canvas_svg canvas(f, h);
+    canvas.write_header(w, h);
+
+    unsigned n = fxcanvas->get_plot_number();
+    for (unsigned k = 0; k < n; k++)
+    {
+        agg::rect_i box;
+        char plot_name[64];
+        sg_plot* p = fxcanvas->get_plot(k, int(w), int(h), box);
+        if (p)
+        {
+            sprintf(plot_name, "plot%u", k + 1);
+            canvas.write_group_header(plot_name);
+            p->draw(canvas, box, NULL);
+            canvas.write_group_end(plot_name);
+        }
+    }
+
+    canvas.write_end();
+    fclose(f);
+
+    lwin->app->unlock();
     return 0;
 }
 

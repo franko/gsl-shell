@@ -121,6 +121,14 @@ void fx_plot_canvas::plot_draw(unsigned index, int canvas_width, int canvas_heig
     ref.is_dirty = false;
 }
 
+sg_plot* fx_plot_canvas::get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area)
+{
+    plot_ref& ref = m_plots[index];
+    if (ref.plot)
+        area = m_part.rect(index, canvas_width, canvas_height);
+    return ref.plot;
+}
+
 void fx_plot_canvas::plot_draw(unsigned index)
 {
     int ww = getWidth(), hh = getHeight();

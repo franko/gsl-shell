@@ -51,6 +51,9 @@ public:
     void plot_draw_queue(unsigned index, bool draw_all);
     void plot_render(unsigned index);
 
+    sg_plot* get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area);
+    unsigned get_plot_number() const { return m_plots.size(); }
+
     bool need_redraw(unsigned index)
     {
         return m_plots[index].plot->need_redraw();

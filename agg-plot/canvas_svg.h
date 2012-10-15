@@ -57,6 +57,14 @@ public:
         fputs(svg_end, m_output);
     }
 
+    void write_group_header(const char* id) {
+        fprintf(m_output, "<g id=\"%s\">\n", id);
+    }
+
+    void write_group_end(const char* id) {
+        fprintf(m_output, "</g>\n");
+    }
+
     static void writeln(FILE* f, str& s, const char* indent = 0) {
         if (str_is_null(&s))
             return;
