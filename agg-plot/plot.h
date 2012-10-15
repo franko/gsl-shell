@@ -78,6 +78,13 @@ struct plot_layout {
     plot_active_area.ty = ty;
   }
 
+  static void set_area_undefined(agg::trans_affine& m) { m.sx = -1.0; }
+
+  static bool is_area_defined(const agg::trans_affine& m)
+  {
+    return (m.sx > 0.0);
+  }
+
   point title_pos;
   double title_font_size;
 
@@ -774,6 +781,10 @@ plot_layout plot<RM>::compute_plot_layout(const agg::trans_affine& canvas_mtx, b
               const double x0 = canvas_mtx.tx + px, y0 = canvas_mtx.ty + py;
               layout.legend_area[k] = agg::trans_affine(dx, 0.0, 0.0, dy, x0, y0);
             }
+          else
+            {
+              plot_layout::set_area_undefined(layout.legend_area[k]);
+            }
         }
     }
 
@@ -799,10 +810,10 @@ void plot<RM>::draw_legends(canvas_type& canvas, const plot_layout& layout)
   for (int k = 0; k < 4; k++)
     {
       plot* mp = m_legend[k];
+      const agg::trans_affine& mtx = layout.legend_area[k];
 
-      if (mp)
+      if (mp && plot_layout::is_area_defined(mtx))
         {
-          const agg::trans_affine& mtx = layout.legend_area[k];
           agg::rect_i clip = rect_of_slot_matrix<int>(mtx);
           plot_layout mp_layout = mp->compute_plot_layout(mtx, false);
           mp->draw_simple(canvas, mp_layout, &clip);
