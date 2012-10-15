@@ -16,42 +16,50 @@
 template <typename T>
 T min(T a, T b)
 {
-  return (a < b) ? a : b;
+    return (a < b) ? a : b;
 };
 
 template <typename T>
 T max(T a, T b)
 {
-  return (a > b) ? a : b;
+    return (a > b) ? a : b;
 };
 
 template <class T>
 class ptr_list {
 public:
-  ~ptr_list() { clear(); }
+    ~ptr_list() {
+        clear();
+    }
 
-  void add(T* p) { m_list.add(p); }
+    void add(T* p) {
+        m_list.add(p);
+    }
 
-  T* operator [] (unsigned k) const { return m_list[k]; }
+    T* operator [] (unsigned k) const {
+        return m_list[k];
+    }
 
-  unsigned size() const { return m_list.size(); }
+    unsigned size() const {
+        return m_list.size();
+    }
 
-  void clear()
-  {
-    unsigned n = m_list.size();
-    for (unsigned k = 0; k < n; k++)
-      delete m_list[k];
-    m_list.clear();
-  }
+    void clear()
+    {
+        unsigned n = m_list.size();
+        for (unsigned k = 0; k < n; k++)
+            delete m_list[k];
+        m_list.clear();
+    }
 
 private:
-  agg::pod_bvector<T*> m_list;
+    agg::pod_bvector<T*> m_list;
 };
 
 inline bool is_unit_matrix(const agg::trans_affine& m, double eps = 1.0e-5)
 {
-  return (fabs(m.sx - 1.0) < eps && fabs(m.shx) < eps &&
-          fabs(m.shy) < eps && fabs(m.sy - 1.0) < eps);
+    return (fabs(m.sx - 1.0) < eps && fabs(m.shx) < eps &&
+            fabs(m.shy) < eps && fabs(m.sy - 1.0) < eps);
 }
 
 extern void   trans_affine_compose  (agg::trans_affine& a,

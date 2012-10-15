@@ -20,10 +20,10 @@ class text : public sg_object
 
     text_label m_text_label;
 
-  public:
+public:
     text(const char* text, double size = 10.0, double hjustif = 0.0, double vjustif = 0.0):
-    m_x(0.0), m_y(0.0), m_angle(0.0),
-    m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, round(size))
+        m_x(0.0), m_y(0.0), m_angle(0.0),
+        m_hjustif(hjustif), m_vjustif(vjustif), m_text_label(text, round(size))
     {
         m_text_label.model_mtx(m_matrix);
     }
@@ -50,11 +50,17 @@ class text : public sg_object
         m_matrix.sy  =  c;
     }
 
-    double angle() const { return m_angle; };
+    double angle() const {
+        return m_angle;
+    };
 
-    const char * get_text() const { return m_text_label.text().cstr(); }
+    const char * get_text() const {
+        return m_text_label.text().cstr();
+    }
 
-    double text_height() const { return m_text_label.get_text_height(); }
+    double text_height() const {
+        return m_text_label.get_text_height();
+    }
 
     void set_point(double x, double y)
     {
@@ -65,14 +71,18 @@ class text : public sg_object
         m_matrix.ty = m_y;
     }
 
-    void hjustif(double hj) { m_hjustif = hj; }
-    void vjustif(double vj) { m_vjustif = vj; }
+    void hjustif(double hj) {
+        m_hjustif = hj;
+    }
+    void vjustif(double vj) {
+        m_vjustif = vj;
+    }
 
     virtual void apply_transform(const agg::trans_affine& m, double as);
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2);
 
     virtual str write_svg(int id, agg::rgba8 c, double h);
-  };
+};
 }
 
 #endif

@@ -35,74 +35,84 @@
 #include "strpp.h"
 
 struct vertex_source {
-  virtual void rewind(unsigned path_id) = 0;
-  virtual unsigned vertex(double* x, double* y) = 0;
-  virtual ~vertex_source() { }
+    virtual void rewind(unsigned path_id) = 0;
+    virtual unsigned vertex(double* x, double* y) = 0;
+    virtual ~vertex_source() { }
 };
 
 // Scalable Graphics Object
 struct sg_object : public vertex_source {
 
-  virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
+    virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
 
-  virtual bool affine_compose(agg::trans_affine& m) { return false; }
+    virtual bool affine_compose(agg::trans_affine& m) {
+        return false;
+    }
 
-  virtual str write_svg(int id, agg::rgba8 c, double h) {
-    str path;
-    svg_property_list* ls = this->svg_path(path, h);
-    str s = svg_fill_path(path, id, c, ls);
-    svg_property_list::free(ls);
-    return s;
-  }
+    virtual str write_svg(int id, agg::rgba8 c, double h) {
+        str path;
+        svg_property_list* ls = this->svg_path(path, h);
+        str s = svg_fill_path(path, id, c, ls);
+        svg_property_list::free(ls);
+        return s;
+    }
 
-  virtual svg_property_list* svg_path(str& s, double h) {
-    svg_coords_from_vs(this, s, h);
-    return 0;
-  }
+    virtual svg_property_list* svg_path(str& s, double h) {
+        svg_coords_from_vs(this, s, h);
+        return 0;
+    }
 
-  virtual ~sg_object() { }
+    virtual ~sg_object() { }
 };
 
 struct approx_scale {
-  template <class T> static void approximation_scale(T& obj, double as)
-  {
-    obj.approximation_scale(as);
-  }
+    template <class T> static void approximation_scale(T& obj, double as)
+    {
+        obj.approximation_scale(as);
+    }
 };
 
 struct no_approx_scale {
-  template <class T> static void approximation_scale(T& obj, double as) { }
+    template <class T> static void approximation_scale(T& obj, double as) { }
 };
 
 template <class VertexSource, class ApproxManager=no_approx_scale>
 class sg_object_gen : public sg_object {
 protected:
-  VertexSource m_base;
+    VertexSource m_base;
 
 public:
-  sg_object_gen(): m_base() {}
+    sg_object_gen(): m_base() {}
 
-  template <class InitType> sg_object_gen(InitType& i) : m_base(i) { }
+    template <class InitType> sg_object_gen(InitType& i) : m_base(i) { }
 
-  template <class InitType1, class InitType2>
-  sg_object_gen(InitType1& i1, InitType2& i2) : m_base(i1, i2) { }
+    template <class InitType1, class InitType2>
+    sg_object_gen(InitType1& i1, InitType2& i2) : m_base(i1, i2) { }
 
-  virtual void rewind(unsigned path_id) { m_base.rewind(path_id); }
-  virtual unsigned vertex(double* x, double* y) { return m_base.vertex(x, y);  }
+    virtual void rewind(unsigned path_id) {
+        m_base.rewind(path_id);
+    }
+    virtual unsigned vertex(double* x, double* y) {
+        return m_base.vertex(x, y);
+    }
 
-  virtual void apply_transform(const agg::trans_affine& m, double as)
-  {
-    ApproxManager::approximation_scale(m_base, as);
-  }
+    virtual void apply_transform(const agg::trans_affine& m, double as)
+    {
+        ApproxManager::approximation_scale(m_base, as);
+    }
 
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
-  {
-    agg::bounding_rect_single(m_base, 0, x1, y1, x2, y2);
-  }
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+    {
+        agg::bounding_rect_single(m_base, 0, x1, y1, x2, y2);
+    }
 
-  const VertexSource& self() const { return m_base; };
-        VertexSource& self()       { return m_base; };
+    const VertexSource& self() const {
+        return m_base;
+    };
+    VertexSource& self()       {
+        return m_base;
+    };
 };
 
 /* this class does create an sg_object obtained combining an an AGG
@@ -112,34 +122,42 @@ public:
 template <class ConvType, class ApproxManager>
 class sg_adapter : public sg_object {
 protected:
-  ConvType m_output;
-  sg_object* m_source;
+    ConvType m_output;
+    sg_object* m_source;
 
 public:
-  sg_adapter(sg_object* src): m_output(*src), m_source(src) { }
+    sg_adapter(sg_object* src): m_output(*src), m_source(src) { }
 
-  template <class InitType>
-  sg_adapter(sg_object* src, InitType& val): m_output(*src, val), m_source(src)
-  { }
+    template <class InitType>
+    sg_adapter(sg_object* src, InitType& val): m_output(*src, val), m_source(src)
+    { }
 
-  virtual ~sg_adapter() { }
+    virtual ~sg_adapter() { }
 
-  virtual void rewind(unsigned path_id) { m_output.rewind(path_id); }
-  virtual unsigned vertex(double* x, double* y) { return m_output.vertex(x, y); }
+    virtual void rewind(unsigned path_id) {
+        m_output.rewind(path_id);
+    }
+    virtual unsigned vertex(double* x, double* y) {
+        return m_output.vertex(x, y);
+    }
 
-  virtual void apply_transform(const agg::trans_affine& m, double as)
-  {
-    ApproxManager::approximation_scale(m_output, as);
-    this->m_source->apply_transform(m, as);
-  }
+    virtual void apply_transform(const agg::trans_affine& m, double as)
+    {
+        ApproxManager::approximation_scale(m_output, as);
+        this->m_source->apply_transform(m, as);
+    }
 
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
-  {
-    this->m_source->bounding_box(x1, y1, x2, y2);
-  }
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+    {
+        this->m_source->bounding_box(x1, y1, x2, y2);
+    }
 
-  const ConvType& self() const { return m_output; };
-        ConvType& self()       { return m_output; };
+    const ConvType& self() const {
+        return m_output;
+    };
+    ConvType& self()       {
+        return m_output;
+    };
 };
 
 /* This class add a scaling transformation to an object. The scaling
@@ -148,63 +166,81 @@ public:
 template <class ResourceManager = manage_owner>
 class sg_object_scaling : public sg_object
 {
-  sg_object* m_source;
-  agg::conv_transform<sg_object> m_trans;
+    sg_object* m_source;
+    agg::conv_transform<sg_object> m_trans;
 
 public:
-  sg_object_scaling(sg_object* src, agg::trans_affine& mtx=identity_matrix):
-    m_source(src), m_trans(*m_source, mtx)
-  {
-    ResourceManager::acquire(m_source);
-  }
+    sg_object_scaling(sg_object* src, agg::trans_affine& mtx=identity_matrix):
+        m_source(src), m_trans(*m_source, mtx)
+    {
+        ResourceManager::acquire(m_source);
+    }
 
-  virtual ~sg_object_scaling() { ResourceManager::dispose(m_source); }
+    virtual ~sg_object_scaling() {
+        ResourceManager::dispose(m_source);
+    }
 
-  virtual void rewind(unsigned path_id) { m_trans.rewind(path_id); }
-  virtual unsigned vertex(double* x, double* y) { return m_trans.vertex(x, y); }
+    virtual void rewind(unsigned path_id) {
+        m_trans.rewind(path_id);
+    }
+    virtual unsigned vertex(double* x, double* y) {
+        return m_trans.vertex(x, y);
+    }
 
-  virtual void apply_transform(const agg::trans_affine& m, double as)
-  {
-    m_trans.transformer(m);
-    m_source->apply_transform (m, as * m.scale());
-  }
+    virtual void apply_transform(const agg::trans_affine& m, double as)
+    {
+        m_trans.transformer(m);
+        m_source->apply_transform (m, as * m.scale());
+    }
 
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
-  {
-    agg::bounding_rect_single (*m_source, 0, x1, y1, x2, y2);
-  }
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2)
+    {
+        agg::bounding_rect_single (*m_source, 0, x1, y1, x2, y2);
+    }
 };
 
 template <class ResourceManager>
 class sg_object_ref : public sg_object {
 public:
-  sg_object_ref(sg_object* src) : m_source(src)
-  {
-    ResourceManager::acquire(this->m_source);
-  }
+    sg_object_ref(sg_object* src) : m_source(src)
+    {
+        ResourceManager::acquire(this->m_source);
+    }
 
-  virtual ~sg_object_ref() { ResourceManager::dispose(this->m_source); }
+    virtual ~sg_object_ref() {
+        ResourceManager::dispose(this->m_source);
+    }
 
-  virtual void rewind(unsigned path_id) { this->m_source->rewind(path_id); }
+    virtual void rewind(unsigned path_id) {
+        this->m_source->rewind(path_id);
+    }
 
-  virtual unsigned vertex(double* x, double* y) { return this->m_source->vertex(x, y); }
+    virtual unsigned vertex(double* x, double* y) {
+        return this->m_source->vertex(x, y);
+    }
 
-  virtual void apply_transform(const agg::trans_affine& m, double as) { this->m_source->apply_transform(m, as); }
+    virtual void apply_transform(const agg::trans_affine& m, double as) {
+        this->m_source->apply_transform(m, as);
+    }
 
-  virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) { this->m_source->bounding_box(x1, y1, x2, y2); }
+    virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) {
+        this->m_source->bounding_box(x1, y1, x2, y2);
+    }
 
-  virtual str write_svg(int id, agg::rgba8 c, double h) {
-    return this->m_source->write_svg(id, c, h);
-  }
+    virtual str write_svg(int id, agg::rgba8 c, double h) {
+        return this->m_source->write_svg(id, c, h);
+    }
 
-  virtual svg_property_list* svg_path(str& s, double h) {
-    return this->m_source->svg_path(s, h);
-  }
+    virtual svg_property_list* svg_path(str& s, double h) {
+        return this->m_source->svg_path(s, h);
+    }
 
-  virtual bool affine_compose(agg::trans_affine& m) { return this->m_source->affine_compose(m); }
+    virtual bool affine_compose(agg::trans_affine& m) {
+        return this->m_source->affine_compose(m);
+    }
 
 private:
-  sg_object* m_source;
+    sg_object* m_source;
 };
 
 #endif

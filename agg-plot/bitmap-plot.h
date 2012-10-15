@@ -5,7 +5,7 @@ extern "C" {
 
 #include "lua.h"
 
-extern int bitmap_save_image (lua_State *L);
+    extern int bitmap_save_image (lua_State *L);
 
 }
 

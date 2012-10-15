@@ -12,12 +12,12 @@ const char *gslshell::get_font_name()
     memcpy(pf, ttf_dir, len + 1);
     for (int k = 0; ttf_names[k]; k++)
     {
-    	const char* font_name = ttf_names[k];
-    	memcpy(pf + len, font_name, (strlen(font_name) + 1) * sizeof(char));
-    	struct stat inf[1];
-    	int status = stat(pf, inf);
-    	if (status == 0)
-    		return pf;
+        const char* font_name = ttf_names[k];
+        memcpy(pf + len, font_name, (strlen(font_name) + 1) * sizeof(char));
+        struct stat inf[1];
+        int status = stat(pf, inf);
+        if (status == 0)
+            return pf;
     }
 
     return 0;

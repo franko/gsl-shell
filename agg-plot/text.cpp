@@ -8,25 +8,25 @@
 
 namespace draw {
 
-  void
-  text::apply_transform(const agg::trans_affine& m, double as)
-  {
+void
+text::apply_transform(const agg::trans_affine& m, double as)
+{
     double x = m_x, y = m_y;
     m.transform(&x, &y);
     m_matrix.tx = x;
     m_matrix.ty = round(y);
-  }
+}
 
-  void
-  text::bounding_box(double *x1, double *y1, double *x2, double *y2)
-  {
+void
+text::bounding_box(double *x1, double *y1, double *x2, double *y2)
+{
     *x1 = *x2 = m_x;
     *y1 = *y2 = m_y;
-  }
+}
 
-  str
-  text::write_svg(int id, agg::rgba8 c, double h)
-  {
+str
+text::write_svg(int id, agg::rgba8 c, double h)
+{
     const agg::trans_affine& m = m_matrix;
 
     const double eps = 1.0e-6;
@@ -34,19 +34,19 @@ namespace draw {
 
     const str& content = m_text_label.text();
     if (str_is_null(&content))
-      return s;
+        return s;
 
     str style;
     int hjust = lrint(m_hjustif * 2.0);
     if (hjust == 1)
-      style.append(";text-anchor:middle");
+        style.append(";text-anchor:middle");
     else if (hjust >= 2)
-      style.append(";text-anchor:end");
+        style.append(";text-anchor:end");
 
     if (c.r != 0 || c.g != 0 || c.b != 0) {
-      char rgbstr[8];
-      format_rgb(rgbstr, c);
-      style.printf_add(";fill:%s", rgbstr);
+        char rgbstr[8];
+        format_rgb(rgbstr, c);
+        style.printf_add(";fill:%s", rgbstr);
     }
 
     bool need_rotate = !is_unit_matrix(m, eps);
@@ -56,10 +56,10 @@ namespace draw {
     double x = 0.0, y = - m_vjustif * text_height() * 1.2;
 
     if (!need_rotate) {
-      x = x + m.tx;
-      y = svg_y_coord(y + m.ty, h);
+        x = x + m.tx;
+        y = svg_y_coord(y + m.ty, h);
     } else {
-      y = -y;
+        y = -y;
     }
 
     const char* cont = get_text();
@@ -71,13 +71,13 @@ namespace draw {
                          id, cont);
 
     if (need_rotate) {
-      s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
-                     m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
-                     txt.cstr());
+        s = str::print("<g transform=\"matrix(%g,%g,%g,%g,%g,%g)\">%s</g>",
+                       m.sx, m.shx, m.shy, m.sy, m.tx, svg_y_coord(m.ty, h),
+                       txt.cstr());
     } else {
-      s = txt;
+        s = txt;
     }
 
     return s;
-  }
+}
 }

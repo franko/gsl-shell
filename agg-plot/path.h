@@ -8,8 +8,8 @@
 
 namespace draw {
 
-  typedef sg_object_gen<agg::path_storage, no_approx_scale> path;
-  typedef sg_object_gen<agg::ellipse, approx_scale> ellipse;
+typedef sg_object_gen<agg::path_storage, no_approx_scale> path;
+typedef sg_object_gen<agg::ellipse, approx_scale> ellipse;
 }
 
 #endif

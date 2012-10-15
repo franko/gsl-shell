@@ -41,100 +41,100 @@ __END_DECLS
 void
 canvas_window::on_resize(int sx, int sy)
 {
-  if (m_canvas)
-    delete m_canvas;
+    if (m_canvas)
+        delete m_canvas;
 
-  m_canvas = new(std::nothrow) canvas(rbuf_window(), sx, sy, m_bgcolor);
+    m_canvas = new(std::nothrow) canvas(rbuf_window(), sx, sy, m_bgcolor);
 
-  m_matrix.sx = sx;
-  m_matrix.sy = sy;
+    m_matrix.sx = sx;
+    m_matrix.sy = sy;
 }
 
 void
 canvas_window::on_init()
 {
-  this->on_resize(width(), height());
+    this->on_resize(width(), height());
 }
 
 bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>& inf)
 {
-  if (status != not_ready && status != closed)
-    return false;
+    if (status != not_ready && status != closed)
+        return false;
 
-  pthread_attr_t attr[1];
+    pthread_attr_t attr[1];
 
-  pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_JOINABLE);
+    pthread_attr_init (attr);
+    pthread_attr_setdetachstate (attr, PTHREAD_CREATE_JOINABLE);
 
-  void *user_data = (void *) inf.get();
-  if (pthread_create(&m_thread, attr, canvas_thread_function, user_data))
+    void *user_data = (void *) inf.get();
+    if (pthread_create(&m_thread, attr, canvas_thread_function, user_data))
     {
-      this->status = canvas_window::error;
-      pthread_attr_destroy (attr);
-      return false;
+        this->status = canvas_window::error;
+        pthread_attr_destroy (attr);
+        return false;
     }
-  else
+    else
     {
-      inf.release();
-      pthread_attr_destroy (attr);
+        inf.release();
+        pthread_attr_destroy (attr);
     }
 
-  return true;
+    return true;
 }
 
 void *
 canvas_thread_function (void *_inf)
 {
-  typedef canvas_window::thread_info thread_info;
+    typedef canvas_window::thread_info thread_info;
 
-  std::auto_ptr<thread_info> inf((thread_info *) _inf);
-  platform_support_ext::prepare();
-  canvas_window *win = inf->win;
+    std::auto_ptr<thread_info> inf((thread_info *) _inf);
+    platform_support_ext::prepare();
+    canvas_window *win = inf->win;
 
-  win->caption("GSL shell plot");
-  if (win->init(480, 480, agg::window_resize))
+    win->caption("GSL shell plot");
+    if (win->init(480, 480, agg::window_resize))
     {
-      win->status = canvas_window::running;
-      int ec = win->run();
-      win->status = (ec == 0 ? canvas_window::closed : canvas_window::error);
+        win->status = canvas_window::running;
+        int ec = win->run();
+        win->status = (ec == 0 ? canvas_window::closed : canvas_window::error);
     }
-  else
+    else
     {
-      win->status = canvas_window::error;
+        win->status = canvas_window::error;
     }
 
-  win->unlock();
+    win->unlock();
 
-  gsl_shell_state* gs = win->state();
+    gsl_shell_state* gs = win->state();
 
-  pthread_mutex_lock (&gs->shutdown_mutex);
-  if (!gs->is_shutting_down)
+    pthread_mutex_lock (&gs->shutdown_mutex);
+    if (!gs->is_shutting_down)
     {
-      pthread_mutex_lock(&gs->exec_mutex);
-      window_index_remove (gs->L, inf->window_id);
-      pthread_mutex_unlock(&gs->exec_mutex);
+        pthread_mutex_lock(&gs->exec_mutex);
+        window_index_remove (gs->L, inf->window_id);
+        pthread_mutex_unlock(&gs->exec_mutex);
     }
-  pthread_mutex_unlock (&gs->shutdown_mutex);
+    pthread_mutex_unlock (&gs->shutdown_mutex);
 
-  return NULL;
+    return NULL;
 }
 
 void
 canvas_window::shutdown_close()
 {
-  lock();
-  if (status == canvas_window::running)
+    lock();
+    if (status == canvas_window::running)
     {
-      close_request();
-      unlock();
+        close_request();
+        unlock();
 
-      gsl_shell_state* gs = this->m_gsl_shell;
-      pthread_mutex_unlock (&gs->shutdown_mutex);
-      pthread_join(m_thread, NULL);
-      pthread_mutex_lock (&gs->shutdown_mutex);
+        gsl_shell_state* gs = this->m_gsl_shell;
+        pthread_mutex_unlock (&gs->shutdown_mutex);
+        pthread_join(m_thread, NULL);
+        pthread_mutex_lock (&gs->shutdown_mutex);
     }
-  else
+    else
     {
-      unlock();
+        unlock();
     }
 }

@@ -10,10 +10,10 @@ __BEGIN_DECLS
 #include <lua.h>
 
 struct gsl_shell_state {
-  lua_State *L;
-  pthread_mutex_t exec_mutex;
-  pthread_mutex_t shutdown_mutex;
-  int is_shutting_down;
+    lua_State *L;
+    pthread_mutex_t exec_mutex;
+    pthread_mutex_t shutdown_mutex;
+    int is_shutting_down;
 };
 
 extern void gsl_shell_open (struct gsl_shell_state *gs);

@@ -43,36 +43,36 @@ pthread_mutex_t agg_mutex[1];
 void
 graph_close_windows (lua_State *L)
 {
-  window_index_apply_all (L, app_window_hooks->close);
+    window_index_apply_all (L, app_window_hooks->close);
 }
 
 void
 register_graph (lua_State *L)
 {
-  pthread_mutex_init (agg_mutex, NULL);
+    pthread_mutex_init (agg_mutex, NULL);
 
-  window_registry_prepare (L);
+    window_registry_prepare (L);
 
-  luaL_register (L, MLUA_GRAPHLIBNAME, methods_dummy);
+    luaL_register (L, MLUA_GRAPHLIBNAME, methods_dummy);
 
-  draw_register (L);
-  text_register (L);
-  app_window_hooks->register_module (L);
-  plot_register (L);
+    draw_register (L);
+    text_register (L);
+    app_window_hooks->register_module (L);
+    plot_register (L);
 
-  initialize_fonts (L);
+    initialize_fonts (L);
 
-  lua_pop(L, 1);
+    lua_pop(L, 1);
 }
 
 void
 gsl_shell_close_with_graph (struct gsl_shell_state* gs)
 {
-  pthread_mutex_lock (&gs->shutdown_mutex);
-  gs->is_shutting_down = 1;
-  pthread_mutex_lock(&gs->exec_mutex);
-  graph_close_windows(gs->L);
-  lua_close(gs->L);
-  pthread_mutex_unlock(&gs->shutdown_mutex);
-  pthread_mutex_unlock(&gs->exec_mutex);
+    pthread_mutex_lock (&gs->shutdown_mutex);
+    gs->is_shutting_down = 1;
+    pthread_mutex_lock(&gs->exec_mutex);
+    graph_close_windows(gs->L);
+    lua_close(gs->L);
+    pthread_mutex_unlock(&gs->shutdown_mutex);
+    pthread_mutex_unlock(&gs->exec_mutex);
 }

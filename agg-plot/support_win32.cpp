@@ -16,12 +16,12 @@ const char *gslshell::get_font_name()
     pf[len++] = '\\';
     for (int k = 0; ttf_names[k]; k++)
     {
-    	const char* font_name = ttf_names[k];
-    	memcpy(pf + len, font_name, (strlen(font_name) + 1) * sizeof(char));
-    	struct _stat inf[1];
-    	int status = _stat(pf, inf);
-    	if (status == 0)
-    		return pf;
+        const char* font_name = ttf_names[k];
+        memcpy(pf + len, font_name, (strlen(font_name) + 1) * sizeof(char));
+        struct _stat inf[1];
+        int status = _stat(pf, inf);
+        if (status == 0)
+            return pf;
     }
 
     return 0;

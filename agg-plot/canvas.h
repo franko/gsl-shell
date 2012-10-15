@@ -21,16 +21,22 @@ class renderer_gray_aa
 {
 public:
     renderer_gray_aa(agg::rendering_buffer& ren_buf, agg::rgba8 bg_color):
-    m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
-    m_bgcol(bg_color)
+        m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
+        m_bgcol(bg_color)
     { }
 
     typedef Pixel pixfmt_type;
 
-    agg::renderer_base<Pixel>& renderer_base() { return m_ren_base; }
+    agg::renderer_base<Pixel>& renderer_base() {
+        return m_ren_base;
+    }
 
-    double width()  const { return m_pixbuf.width(); };
-    double height() const { return m_pixbuf.height(); };
+    double width()  const {
+        return m_pixbuf.width();
+    };
+    double height() const {
+        return m_pixbuf.height();
+    };
 
     template <class Rasterizer, class VertexSource>
     static void add_path(Rasterizer& ras, VertexSource& vs)
@@ -38,9 +44,13 @@ public:
         ras.add_path(vs);
     }
 
-    void color(agg::rgba8 c) { m_ren_solid.color(c); }
+    void color(agg::rgba8 c) {
+        m_ren_solid.color(c);
+    }
 
-    void clear(agg::rgba8 c) { m_ren_base.clear(c); }
+    void clear(agg::rgba8 c) {
+        m_ren_base.clear(c);
+    }
 
     void clear_box(const agg::rect_base<int>& r)
     {
@@ -53,7 +63,9 @@ public:
         m_ren_base.clip_box_naked(clip.x1, clip.y1, clip.x2, clip.y2);
     }
 
-    void reset_clipping() { m_ren_base.reset_clipping(true); }
+    void reset_clipping() {
+        m_ren_base.reset_clipping(true);
+    }
 
     template <class Rasterizer, class Scanline>
     void render_scanlines(Rasterizer& ras, Scanline& sl)
@@ -74,23 +86,33 @@ class renderer_subpixel_aa
 
     struct subpixel_scale_trans
     {
-        void transform(double* x, double* y) const { *x = subpixel_scale * (*x); }
+        void transform(double* x, double* y) const {
+            *x = subpixel_scale * (*x);
+        }
     };
 
 public:
     renderer_subpixel_aa(agg::rendering_buffer& ren_buf, agg::rgba8 bg_color):
-    m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
-    m_bgcol(bg_color)
+        m_pixbuf(ren_buf), m_ren_base(m_pixbuf), m_ren_solid(m_ren_base),
+        m_bgcol(bg_color)
     { }
 
     typedef Pixel pixfmt_type;
 
-    agg::renderer_base<pixfmt_type>& renderer_base() { return m_ren_base; }
+    agg::renderer_base<pixfmt_type>& renderer_base() {
+        return m_ren_base;
+    }
 
-    double width()  const { return m_pixbuf.width() / subpixel_scale; };
-    double height() const { return m_pixbuf.height(); };
+    double width()  const {
+        return m_pixbuf.width() / subpixel_scale;
+    };
+    double height() const {
+        return m_pixbuf.height();
+    };
 
-    void clear(agg::rgba8 c) { m_ren_base.clear(c); }
+    void clear(agg::rgba8 c) {
+        m_ren_base.clear(c);
+    }
 
     void clear_box(const agg::rect_base<int>& r)
     {
@@ -105,7 +127,9 @@ public:
         m_ren_base.clip_box_naked(x1, clip.y1, x2, clip.y2);
     }
 
-    void reset_clipping() { m_ren_base.reset_clipping(true); }
+    void reset_clipping() {
+        m_ren_base.reset_clipping(true);
+    }
 
     template <class Rasterizer, class VertexSource>
     static void add_path(Rasterizer& ras, VertexSource& vs)
@@ -115,7 +139,9 @@ public:
         ras.add_path(scaled_vs);
     }
 
-    void color(agg::rgba8 c) { m_ren_solid.color(c); }
+    void color(agg::rgba8 c) {
+        m_ren_solid.color(c);
+    }
 
     template <class Rasterizer, class Scanline>
     void render_scanlines(Rasterizer& ras, Scanline& sl)
@@ -143,35 +169,35 @@ class canvas_gen : public Renderer {
 public:
     canvas_gen(agg::rendering_buffer& ren_buf, double width, double height,
                agg::rgba8 bgcol):
-    Renderer(ren_buf, bgcol), ras(), sl()
+        Renderer(ren_buf, bgcol), ras(), sl()
     { }
 
-  void draw(sg_object& vs, agg::rgba8 c)
-  {
-    this->add_path(this->ras, vs);
-    this->color(c);
-    this->render_scanlines(this->ras, this->sl);
-  }
+    void draw(sg_object& vs, agg::rgba8 c)
+    {
+        this->add_path(this->ras, vs);
+        this->color(c);
+        this->render_scanlines(this->ras, this->sl);
+    }
 
-  void draw_outline(sg_object& vs, agg::rgba8 c)
-  {
-    agg::conv_stroke<sg_object> line(vs);
-    line.width(line_width / 100.0);
-    line.line_cap(agg::round_cap);
-    this->add_path(this->ras, line);
-    this->color(c);
-    this->render_scanlines(this->ras, this->sl);
-  }
+    void draw_outline(sg_object& vs, agg::rgba8 c)
+    {
+        agg::conv_stroke<sg_object> line(vs);
+        line.width(line_width / 100.0);
+        line.line_cap(agg::round_cap);
+        this->add_path(this->ras, line);
+        this->color(c);
+        this->render_scanlines(this->ras, this->sl);
+    }
 };
 
 struct virtual_canvas {
-  virtual void draw(sg_object& vs, agg::rgba8 c) = 0;
-  virtual void draw_outline(sg_object& vs, agg::rgba8 c) = 0;
+    virtual void draw(sg_object& vs, agg::rgba8 c) = 0;
+    virtual void draw_outline(sg_object& vs, agg::rgba8 c) = 0;
 
-  virtual void clip_box(const agg::rect_base<int>& clip) = 0;
-  virtual void reset_clipping() = 0;
+    virtual void clip_box(const agg::rect_base<int>& clip) = 0;
+    virtual void reset_clipping() = 0;
 
-  virtual ~virtual_canvas() { }
+    virtual ~virtual_canvas() { }
 };
 
 #ifdef DISABLE_SUBPIXEL_AA

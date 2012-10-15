@@ -11,7 +11,9 @@
 #include "sg_object.h"
 
 struct grid_fit_y_only {
-    static void adjust(double& x, double& y) { y = round(y); }
+    static void adjust(double& x, double& y) {
+        y = round(y);
+    }
 };
 
 typedef grid_fit_y_only grid_fit;
@@ -41,18 +43,20 @@ class text_label
     agg::conv_curve<font_manager_type::path_adaptor_type> m_text_curve;
     agg::conv_transform<agg::conv_curve<font_manager_type::path_adaptor_type> > m_text_trans;
 
-  public:
+public:
     text_label(const char* text, double size):
-    m_text_buf(text), m_font_height(size), m_font_width(size),
-    m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
-    m_model_mtx(&identity_matrix),
-    m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
+        m_text_buf(text), m_font_height(size), m_font_width(size),
+        m_font_eng(gslshell::font_engine()), m_font_man(gslshell::font_manager()),
+        m_model_mtx(&identity_matrix),
+        m_text_curve(m_font_man.path_adaptor()), m_text_trans(m_text_curve, m_text_mtx)
     {
         update_font_size();
         m_width = get_text_width();
     }
 
-    void model_mtx(const agg::trans_affine& m) { m_model_mtx = &m; }
+    void model_mtx(const agg::trans_affine& m) {
+        m_model_mtx = &m;
+    }
 
     void font_size(double height, double width)
     {
@@ -60,7 +64,9 @@ class text_label
         m_font_width = width;
     }
 
-    const str& text() const { return m_text_buf; }
+    const str& text() const {
+        return m_text_buf;
+    }
 
     bool load_glyph()
     {
@@ -128,9 +134,13 @@ class text_label
         return cmd;
     }
 
-    void approximation_scale(double as) { m_text_curve.approximation_scale(as); }
+    void approximation_scale(double as) {
+        m_text_curve.approximation_scale(as);
+    }
 
-    double get_text_height() const { return m_font_height; }
+    double get_text_height() const {
+        return m_font_height;
+    }
 
     double get_text_width()
     {
