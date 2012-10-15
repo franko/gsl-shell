@@ -36,20 +36,24 @@ void fx_plot_canvas::split(const char* split_str)
         m_plots.add(empty);
 }
 
-void fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
+bool fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
 {
-#warning a check should be added to check for allocation fail
-    m_img.resize(ww, hh);
-    m_canvas = new canvas(m_img, ww, hh, colors::white);
-    plots_set_to_dirty();
+    if (likely(m_img.resize(ww, hh)))
+    {
+        m_canvas = new(std::nothrow) canvas(m_img, ww, hh, colors::white);
+        plots_set_to_dirty();
+        return (m_canvas != NULL);
+    }
+    return false;
 }
 
-void fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
+bool fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
 {
-    if (m_img.width() != ww || m_img.height() != hh)
+    if (unlikely(m_img.width() != ww || m_img.height() != hh))
     {
-        prepare_image_buffer(ww, hh);
+        return prepare_image_buffer(ww, hh);
     }
+    return true;
 }
 
 void fx_plot_canvas::plot_render(plot_ref& ref, const agg::rect_i& r)
@@ -214,7 +218,8 @@ bool fx_plot_canvas::restore_plot_image(unsigned index)
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
     int ww = getWidth(), hh = getHeight();
-    ensure_canvas_size(ww, hh);
+    if (unlikely(!ensure_canvas_size(ww, hh)))
+        return 1;
     for (unsigned k = 0; k < m_plots.size(); k++)
     {
         plot_draw(k, ww, hh);
@@ -225,7 +230,8 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
     int ww = getWidth(), hh = getHeight();
-    ensure_canvas_size(ww, hh);
+    if (unlikely(!ensure_canvas_size(ww, hh)))
+        return 1;
     for (unsigned k = 0; k < m_plots.size(); k++)
     {
         plot_ref& ref = m_plots[k];

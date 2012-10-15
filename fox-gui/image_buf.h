@@ -1,6 +1,8 @@
 #ifndef FOXGUI_IMAGE_BUF_H
 #define FOXGUI_IMAGE_BUF_H
 
+#include "defs.h"
+
 #include <agg_rendering_buffer.h>
 
 template <unsigned PixelSize, bool FlipY>
@@ -52,8 +54,11 @@ private:
     bool init(unsigned w, unsigned h)
     {
         agg::int8u* data = new(std::nothrow) agg::int8u[w * h * PixelSize];
-        int stride = (FlipY ? - w * PixelSize : w * PixelSize);
-        attach(data, w, h, stride);
+        if (likely(data))
+        {
+            int stride = (FlipY ? - w * PixelSize : w * PixelSize);
+            attach(data, w, h, stride);
+        }
         return (data != 0);
     }
 

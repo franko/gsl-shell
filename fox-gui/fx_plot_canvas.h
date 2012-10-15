@@ -68,8 +68,8 @@ protected:
     fx_plot_canvas() {}
 
 private:
-    void prepare_image_buffer(unsigned ww, unsigned hh);
-    void ensure_canvas_size(unsigned ww, unsigned hh);
+    bool prepare_image_buffer(unsigned ww, unsigned hh);
+    bool ensure_canvas_size(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
     void plot_render(plot_ref& ref, const agg::rect_i& r);
