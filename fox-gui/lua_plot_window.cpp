@@ -74,19 +74,6 @@ private:
     lua_fox_window* m_handle;
 };
 
-static lua_fox_window*
-check_fox_window_lock(lua_State* L, int index)
-{
-    lua_fox_window *lwin = object_check<lua_fox_window>(L, 1, GS_WINDOW);
-    lwin->app->lock();
-    if (lwin->status != running)
-    {
-        lwin->app->unlock();
-        return 0;
-    }
-    return lwin;
-}
-
 static int
 error_return(lua_State* L, const char* error_msg)
 {
@@ -203,7 +190,7 @@ fox_window_close(lua_State* L)
 }
 
 static int
-fox_window_slot_refresh_try(lua_State *L)
+fox_window_slot_generic_try(lua_State *L, void (*slot_func)(fx_plot_canvas*, unsigned))
 {
     window_mutex wm(L, 1);
 
@@ -220,87 +207,74 @@ fox_window_slot_refresh_try(lua_State *L)
 
     if (canvas->is_ready())
     {
-        unsigned index = slot_id - 1;
-        bool redraw = canvas->need_redraw(index);
-        if (redraw)
-            canvas->plot_render(index);
-        canvas->plot_draw_queue(index, redraw);
+        slot_func(canvas, slot_id - 1);
     }
 
     return 0;
+}
+
+static void
+slot_refresh(fx_plot_canvas* canvas, unsigned index)
+{
+    bool redraw = canvas->need_redraw(index);
+    if (redraw)
+        canvas->plot_render(index);
+    canvas->plot_draw_queue(index, redraw);
 }
 
 int
 fox_window_slot_refresh(lua_State* L)
 {
-    int nret = fox_window_slot_refresh_try(L);
+    int nret = fox_window_slot_generic_try(L, slot_refresh);
     if (nret < 0) lua_error(L);
     return nret;
 }
 
-int
-fox_window_slot_update (lua_State *L)
+static void
+slot_update(fx_plot_canvas* canvas, unsigned index)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    int slot_id = luaL_checkinteger (L, 2);
+    canvas->plot_render(index);
+    canvas->plot_draw_queue(index, true);
+}
 
-    if (!lwin || slot_id <= 0) return 0;
+int
+fox_window_slot_update(lua_State* L)
+{
+    int nret = fox_window_slot_generic_try(L, slot_update);
+    if (nret < 0) lua_error(L);
+    return nret;
+}
 
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
-    fx_plot_canvas* canvas = win->canvas();
-
-    if (canvas->is_ready())
-    {
-        unsigned index = slot_id - 1;
-        canvas->plot_render(index);
-        canvas->plot_draw_queue(index, true);
-    }
-
-    app->unlock();
-    return 0;
+static void
+save_slot_image(fx_plot_canvas* canvas, unsigned index)
+{
+    canvas->save_plot_image(index);
 }
 
 int
 fox_window_save_slot_image (lua_State *L)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    int slot_id = luaL_checkinteger (L, 2);
-
-    if (!lwin || slot_id <= 0) return 0;
-
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
-    fx_plot_canvas* canvas = win->canvas();
-
-    unsigned index = slot_id - 1;
-    canvas->save_plot_image(index);
-
-    app->unlock();
-    return 0;
+    int nret = fox_window_slot_generic_try(L, save_slot_image);
+    if (nret < 0) lua_error(L);
+    return nret;
 }
 
-int
-fox_window_restore_slot_image (lua_State *L)
+static void
+restore_slot_image(fx_plot_canvas* canvas, unsigned index)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    int slot_id = luaL_checkinteger (L, 2);
-
-    if (!lwin || slot_id <= 0) return 0;
-
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
-    fx_plot_canvas* canvas = win->canvas();
-
-    unsigned index = slot_id - 1;
     if (!canvas->restore_plot_image(index))
     {
         canvas->plot_render(index);
         canvas->save_plot_image(index);
     }
+}
 
-    app->unlock();
-    return 0;
+int
+fox_window_restore_slot_image (lua_State *L)
+{
+    int nret = fox_window_slot_generic_try(L, restore_slot_image);
+    if (nret < 0) lua_error(L);
+    return nret;
 }
 
 static int
@@ -311,14 +285,11 @@ fox_window_export_svg_try(lua_State *L)
     const double w = luaL_optnumber(L, 3, 600.0);
     const double h = luaL_optnumber(L, 4, 600.0);
 
-    if (!wm.is_defined())
-        return type_error_return(L, 1, "window");
+    if (!wm.is_defined()) return type_error_return(L, 1, "window");
 
-    if (!wm.is_running())
-        return error_return(L, "window is not running");
+    if (!wm.is_running()) return error_return(L, "window is not running");
 
-    if (!filename)
-        return type_error_return(L, 2, "string");
+    if (!filename) return type_error_return(L, 2, "string");
 
     unsigned fnlen = strlen(filename);
     if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
