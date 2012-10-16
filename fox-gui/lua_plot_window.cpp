@@ -174,36 +174,48 @@ fox_window_attach(lua_State* L)
     return nret;
 }
 
-int
-fox_window_close (lua_State *L)
+static int
+fox_window_close_try (lua_State *L)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return 0;
+    window_mutex wm(L, 1);
 
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
+    if (!wm.is_defined()) return type_error_return(L, 1, "window");
+    if (!wm.is_running()) return 0;
+
+    fx_plot_window* win = wm.window();
+    gsl_shell_app* app = wm.app();
 
     int window_id = win->lua_id;
 
     app->window_close_request(win);
     app->wait_action();
-    app->unlock();
 
     window_index_remove (L, window_id);
-
     return 0;
 }
 
 int
-fox_window_slot_refresh (lua_State *L)
+fox_window_close(lua_State* L)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    int slot_id = luaL_checkinteger (L, 2);
+    int nret = fox_window_close_try(L);
+    if (nret < 0) lua_error(L);
+    return nret;
+}
 
-    if (!lwin || slot_id <= 0) return 0;
+static int
+fox_window_slot_refresh_try(lua_State *L)
+{
+    window_mutex wm(L, 1);
 
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
+    if (!wm.is_defined()) return type_error_return(L, 1, "window");
+    if (!wm.is_running()) return 0;
+
+    if (!lua_isnumber(L, 2)) return type_error_return(L, 2, "integer");
+    int slot_id = lua_tointeger(L, 2);
+
+    if (slot_id <= 0) return error_return(L, "invalid slot index");
+
+    fx_plot_window* win = wm.window();
     fx_plot_canvas* canvas = win->canvas();
 
     if (canvas->is_ready())
@@ -215,8 +227,15 @@ fox_window_slot_refresh (lua_State *L)
         canvas->plot_draw_queue(index, redraw);
     }
 
-    app->unlock();
     return 0;
+}
+
+int
+fox_window_slot_refresh(lua_State* L)
+{
+    int nret = fox_window_slot_refresh_try(L);
+    if (nret < 0) lua_error(L);
+    return nret;
 }
 
 int
