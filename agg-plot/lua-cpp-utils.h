@@ -73,4 +73,10 @@ T* object_check (lua_State *L, int index, enum gs_type_e tp)
     return (T *) gs_check_userdata (L, index, tp);
 }
 
+template <class T>
+T* object_cast (lua_State *L, int index, enum gs_type_e tp)
+{
+    return (T *) gs_is_userdata (L, index, tp);
+}
+
 #endif

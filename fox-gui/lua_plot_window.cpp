@@ -49,6 +49,31 @@ __END_DECLS
 
 typedef plot<manage_owner> sg_plot;
 
+class window_mutex {
+public:
+    window_mutex(lua_State* L, int index)
+    {
+        m_handle = (lua_fox_window*) gs_is_userdata(L, index, GS_WINDOW);
+        if (m_handle)
+            m_handle->app->lock();
+    }
+
+    ~window_mutex()
+    {
+        if (m_handle)
+            m_handle->app->unlock();
+    }
+
+    bool is_defined() { return (m_handle != NULL); }
+    bool is_running() { return (m_handle->status == running); }
+
+    gsl_shell_app*  app()    { return m_handle->app; }
+    fx_plot_window* window() { return m_handle->window; }
+
+private:
+    lua_fox_window* m_handle;
+};
+
 static lua_fox_window*
 check_fox_window_lock(lua_State* L, int index)
 {
@@ -60,6 +85,21 @@ check_fox_window_lock(lua_State* L, int index)
         return 0;
     }
     return lwin;
+}
+
+static int
+error_return(lua_State* L, const char* error_msg)
+{
+    lua_pushstring(L, error_msg);
+    return (-1);
+}
+
+static int
+type_error_return(lua_State* L, int narg, const char* req_type)
+{
+    const char *actual_type = full_type_name(L, narg);
+    lua_pushfstring(L, "bad argument #%d (expected %s, got %s)", narg, req_type, actual_type);
+    return (-1);
 }
 
 int
@@ -99,36 +139,39 @@ fox_window_layout(lua_State* L)
         "in FOX client");
 }
 
-int
-fox_window_attach (lua_State *L)
+static int
+fox_window_attach_try(lua_State *L)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
-    if (!lwin) return luaL_error(L, "window is not running");
+    window_mutex wm(L, 1);
 
-    fx_plot_window* win = lwin->window;
-    gsl_shell_app* app = lwin->app;
-    sg_plot* p = object_check<sg_plot>(L, 2, GS_PLOT);
+    if (!wm.is_defined()) return type_error_return(L, 1, "window");
+    if (!wm.is_running()) return error_return(L, "window is not running");
+
+    sg_plot* p = object_cast<sg_plot>(L, 2, GS_PLOT);
+    if (!p) return type_error_return(L, 2, "plot");
 
     const char* slot_str = lua_tostring(L, 3);
 
-    if (!slot_str)
-        return luaL_error(L, "missing slot specification");
+    if (!slot_str) return type_error_return(L, 3, "string");
 
+    fx_plot_window* win = wm.window();
     fx_plot_canvas* canvas = win->canvas();
     int index = canvas->attach(p, slot_str);
 
-    if (index < 0)
-    {
-        app->unlock();
-        luaL_error(L, "invalid slot specification");
-    }
-    else
-    {
-        canvas->plot_draw(index);
-        app->unlock();
-        window_refs_add (L, index + 1, 1, 2);
-    }
+    if (index < 0) return error_return(L, "invalid slot specification");
+
+    canvas->plot_draw(index);
+
+    window_refs_add (L, index + 1, 1, 2);
     return 0;
+}
+
+int
+fox_window_attach(lua_State* L)
+{
+    int nret = fox_window_attach_try(L);
+    if (nret < 0) lua_error(L);
+    return nret;
 }
 
 int
@@ -241,25 +284,22 @@ fox_window_restore_slot_image (lua_State *L)
     return 0;
 }
 
-int
-fox_window_export_svg (lua_State *L)
+static int
+fox_window_export_svg_try(lua_State *L)
 {
-    lua_fox_window *lwin = check_fox_window_lock(L, 1);
+    window_mutex wm(L, 1);
     const char *filename = lua_tostring(L, 2);
     const double w = luaL_optnumber(L, 3, 600.0);
     const double h = luaL_optnumber(L, 4, 600.0);
 
-    if (!lwin)
-    {
-        lwin->app->unlock();
-        return luaL_error(L, "invalid window");
-    }
+    if (!wm.is_defined())
+        return type_error_return(L, 1, "window");
+
+    if (!wm.is_running())
+        return error_return(L, "window is not running");
 
     if (!filename)
-    {
-        lwin->app->unlock();
-        return gs_type_error(L, 2, "string");
-    }
+        return type_error_return(L, 2, "string");
 
     unsigned fnlen = strlen(filename);
     if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
@@ -272,11 +312,11 @@ fox_window_export_svg (lua_State *L)
     FILE* f = fopen(filename, "w");
     if (!f)
     {
-        lwin->app->unlock();
-        return luaL_error(L, "cannot open filename: %s", filename);
+        lua_pushfstring(L, "cannot open filename: %s", filename);
+        return (-1);
     }
 
-    fx_plot_window* win = lwin->window;
+    fx_plot_window* win = wm.window();
     fx_plot_canvas* fxcanvas = win->canvas();
 
     canvas_svg canvas(f, h);
@@ -300,8 +340,16 @@ fox_window_export_svg (lua_State *L)
     canvas.write_end();
     fclose(f);
 
-    lwin->app->unlock();
     return 0;
+}
+
+int
+fox_window_export_svg(lua_State *L)
+{
+    int nret = fox_window_export_svg_try(L);
+    if (unlikely(nret < 0))
+        return lua_error(L);
+    return nret;
 }
 
 void lua_window_set_closed(void* _win)
