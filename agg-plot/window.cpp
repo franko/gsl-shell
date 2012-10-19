@@ -56,6 +56,7 @@ void window::ref::compose(bmatrix& a, const bmatrix& b)
     trans_affine_compose (a, b);
 };
 
+#if 0
 int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 {
     ref *r = t->content();
@@ -93,6 +94,7 @@ int window::ref::calculate(window::ref::node* t, const bmatrix& m, int id)
 
     return id;
 }
+#endif
 
 void
 window::ref::save_image (agg::rendering_buffer& win_buf,
@@ -115,6 +117,7 @@ window::ref::save_image (agg::rendering_buffer& win_buf,
     }
 }
 
+#if 0
 void
 window::draw_rec(ref::node *n)
 {
@@ -128,9 +131,23 @@ window::draw_rec(ref::node *n)
         draw_slot_by_ref (*ref, false);
     }
 }
+#endif
+
+void
+window::draw_all()
+{
+    for (unsigned k = 0; k < m_plots.size(); k++)
+    {
+        draw_slot_by_ref(m_plots[k], false);
+    }
+}
 
 window::ref* window::ref_lookup (ref::node *p, int slot_id)
 {
+    for (unsigned k = 0; k < m_plots.size(); k++)
+    {
+        ref& r = m_plots[k];
+
     list<ref::node*> *t = p->tree();
     for (/* */; t; t = t->next())
     {
@@ -259,7 +276,7 @@ void
 window::on_draw()
 {
     if (m_canvas)
-        draw_rec(m_tree);
+        draw_all();
 }
 
 void
@@ -272,6 +289,7 @@ window::on_resize(int sx, int sy)
     }
 }
 
+#if 0
 void
 window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
 {
@@ -285,7 +303,20 @@ window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
             window_refs_remove (L, ref->slot_id, window_index);
     }
 }
+#endif
 
+void window::split(const char* split_str)
+{
+    m_partition.parse(split_str);
+    m_partition.split();
+
+    m_plots.clear();
+    window::ref empty;
+    for (unsigned k = 0; k < m_partition.get_slot_number(); k++)
+        m_plots.add(empty);
+}
+
+#if 0
 bool
 window::split(const char *spec)
 {
@@ -302,6 +333,7 @@ window::split(const char *spec)
     ref::calculate(m_tree, m0, 0);
     return (parse_tree != NULL);
 }
+#endif
 
 static const char *
 next_int (const char *str, int& val)
