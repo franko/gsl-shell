@@ -8,57 +8,100 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "fatal.h"
 #include "redirect.h"
 
-#define READ_FD 0
-#define WRITE_FD 1
+#define PIPE_READ 0
+#define PIPE_WRITE 1
 
-#define CHECK(a) if ((a)!= 0) return -1;
-
-stdout_redirect::stdout_redirect(int bufferSize)
+static void open_pipe(int fd[], int buffer_size)
 {
     int status;
-
 #ifdef WIN32
-    status = _pipe(fd_pipe, bufferSize, O_TEXT);
+    status = _pipe(fd, buffer_size, O_TEXT);
 #else
-    status = pipe(fd_pipe);
+    status = pipe(fd);
 #endif
-
-    assert(status == 0);
-
-    fd_stdout = dup(fileno(stdout));
+    if (status)
+        fatal_exception("error opening pipe");
 }
 
-int stdout_redirect::start()
+static void dup_stdout(int fd)
 {
     fflush(stdout);
-    CHECK(dup2(fd_pipe[WRITE_FD], STDOUT_FILENO));
+
+    if (dup2(fd, STDOUT_FILENO) < 0)
+        fatal_exception("cannot overwrite the STDOUT file descriptor");
+    close(fd);
+
 #ifdef WIN32
     FILE* of = _fdopen(STDOUT_FILENO, "w");
     *stdout = *of;
 
-    setvbuf(stdout, NULL, _IONBF, 0); // absolutely needed
+    setvbuf(stdout, NULL, _IONBF, 0);
 
     HANDLE ofh = (HANDLE) _get_osfhandle(STDOUT_FILENO);
     SetStdHandle(STD_OUTPUT_HANDLE, ofh);
 #else
-    setvbuf(stdout, NULL, _IONBF, 0); // absolutely needed
+    setvbuf(stdout, NULL, _IONBF, 0);
 #endif
-    return 0;
 }
 
-int stdout_redirect::stop()
+static void dup_stdin(int fd)
 {
-    CHECK(dup2(fd_stdout, fileno(stdout)));
+    fflush(stdin);
+
+    if (dup2(fd, STDIN_FILENO) < 0)
+        fatal_exception("cannot overwrite the STDIN file descriptor");
+    close(fd);
+
+#ifdef WIN32
+    FILE* f = _fdopen(STDIN_FILENO, "w");
+    *stdin = *f;
+
+    setvbuf(stdin, NULL, _IONBF, 0);
+
+    HANDLE ifh = (HANDLE) _get_osfhandle(STDIN_FILENO);
+    SetStdHandle(STD_INPUT_HANDLE, ifh);
+#else
+    setvbuf(stdin, NULL, _IONBF, 0);
+#endif
+}
+
+stdout_redirect::stdout_redirect(int buffer_size)
+{
+    open_pipe(fd_opipe, buffer_size);
+    open_pipe(fd_ipipe, buffer_size);
+
+    fd_stdout = dup(STDOUT_FILENO);
+    fd_stdin  = dup(STDIN_FILENO);
+}
+
+void stdout_redirect::start()
+{
+    dup_stdout(fd_opipe[PIPE_WRITE]);
+    dup_stdin(fd_ipipe[PIPE_READ]);
+}
+
+void stdout_redirect::stop()
+{
+    dup2(fd_stdout, STDOUT_FILENO);
+    dup2(fd_stdin, STDIN_FILENO);
     close(fd_stdout);
-    close(fd_pipe[WRITE_FD]);
-    close(fd_pipe[READ_FD]);
-    return 0;
+    close(fd_stdin);
+    close(fd_opipe[PIPE_READ]);
+    close(fd_ipipe[PIPE_WRITE]);
 }
 
 int stdout_redirect::read(char *buffer, int size)
 {
-    int nOutRead = ::read(fd_pipe[READ_FD], buffer, size);
+    int nOutRead = ::read(fd_opipe[PIPE_READ], buffer, size);
     return nOutRead;
+}
+
+
+int stdout_redirect::write(const char *buffer, int size)
+{
+    int nOutW = ::write(fd_ipipe[PIPE_WRITE], buffer, size);
+    return nOutW;
 }

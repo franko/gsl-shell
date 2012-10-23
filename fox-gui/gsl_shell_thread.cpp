@@ -134,3 +134,9 @@ gsl_shell_thread::read(char* buffer, unsigned buffer_size)
 {
     return m_redirect.read(buffer, buffer_size);
 }
+
+int
+gsl_shell_thread::write(const char* buffer, unsigned buffer_size)
+{
+    return m_redirect.write(buffer, buffer_size);
+}

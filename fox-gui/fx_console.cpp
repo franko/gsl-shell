@@ -17,6 +17,7 @@ FXDEFMAP(fx_console) fx_console_map[]=
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, fx_console::on_cmd_delete),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, fx_console::on_cmd_insert_string),
     FXMAPFUNC(SEL_IO_READ, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
 
@@ -80,6 +81,8 @@ void fx_console::prepare_input()
     appendStyledText(prompt, strlen(prompt), prompt_style);
     m_status = input_mode;
     m_input_begin = getCursorPos();
+    appendText(m_input_acc);
+    m_input_acc.clear();
 }
 
 void fx_console::show_errors()
@@ -150,24 +153,39 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
     case KEY_Return:
     case KEY_KP_Enter:
     {
-        FXint line_len = get_input_length();
-        if (line_len < 0) return 1;
-
-        extractText(m_input, m_input_begin, line_len);
-        setCursorPos(m_input_begin + line_len);
-        appendText("\n");
-
-        if (m_input == "exit")
+        if (m_status == input_mode)
         {
-            FXApp* app = getApp();
-            app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
+            FXint line_len = get_input_length();
+            if (line_len < 0) return 1;
+
+            extractText(m_input, m_input_begin, line_len);
+            setCursorPos(m_input_begin + line_len);
+            appendText("\n");
+
+            if (m_input == "exit")
+            {
+                FXApp* app = getApp();
+                app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
+            }
+            else
+            {
+                const char* input_line = m_input.text();
+                m_history.add(input_line);
+                this->m_status = output_mode;
+                m_engine->set_request(gsl_shell_thread::execute_request, input_line);
+            }
         }
         else
         {
-            const char* input_line = m_input.text();
-            m_history.add(input_line);
-            this->m_status = output_mode;
-            m_engine->set_request(gsl_shell_thread::execute_request, input_line);
+            m_input_acc.append("\n");
+
+            const char* input_txt = m_input_acc.text();
+            unsigned len = m_input_acc.length();
+
+            m_engine->write(input_txt, len);
+
+            m_input_acc.clear();
+            appendText("\n");
         }
 
         return 1;
@@ -282,5 +300,14 @@ long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
             return 1;
     }
 
+    return this->FXText::handle(obj, sel, ptr);
+}
+
+long fx_console::on_cmd_insert_string(FXObject* obj, FXSelector sel, void* ptr)
+{
+    if (m_status == output_mode)
+    {
+        m_input_acc.append((const FXchar*) ptr);
+    }
     return this->FXText::handle(obj, sel, ptr);
 }

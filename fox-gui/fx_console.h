@@ -36,6 +36,7 @@ public:
 
     long on_key_press(FXObject*,FXSelector,void*);
     long on_cmd_delete(FXObject*,FXSelector,void*);
+    long on_cmd_insert_string(FXObject*,FXSelector,void*);
     long on_lua_output(FXObject*,FXSelector,void*);
 
     enum
@@ -61,6 +62,7 @@ private:
     FXGUISignal* m_lua_io_signal;
     FXMutex m_lua_io_mutex;
     FXString m_lua_io_buffer;
+    FXString m_input_acc;
 
     FXString m_saved_line;
     history m_history;

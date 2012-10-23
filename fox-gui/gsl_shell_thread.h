@@ -40,6 +40,7 @@ public:
     }
 
     int read(char* buffer, unsigned buffer_size);
+    int write(const char* buffer, unsigned buffer_size);
 
     int eval_status() const
     {
