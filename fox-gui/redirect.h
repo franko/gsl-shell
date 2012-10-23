@@ -1,10 +1,10 @@
 #ifndef FOXGUI_REDIRECT_H
 #define FOXGUI_REDIRECT_H
 
-class stdout_redirect
+class io_redirect
 {
 public:
-    stdout_redirect(int buffer_size);
+    io_redirect(int stdout_bufsize, int stdin_bufsize);
 
     void start();
     void stop();

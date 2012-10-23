@@ -17,19 +17,12 @@ luajit_eval_thread (void *userdata)
 }
 
 gsl_shell_thread::gsl_shell_thread():
-    m_status(starting), m_redirect(4096), m_request(no_request)
+    m_status(starting), m_request(no_request)
 {
-}
-
-gsl_shell_thread::~gsl_shell_thread()
-{
-    m_redirect.stop();
 }
 
 void gsl_shell_thread::start()
 {
-    m_redirect.start();
-
     pthread_attr_t attr[1];
 
     pthread_attr_init (attr);
@@ -127,16 +120,4 @@ gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
     }
     m_eval.unlock();
     sched_yield();
-}
-
-int
-gsl_shell_thread::read(char* buffer, unsigned buffer_size)
-{
-    return m_redirect.read(buffer, buffer_size);
-}
-
-int
-gsl_shell_thread::write(const char* buffer, unsigned buffer_size)
-{
-    return m_redirect.write(buffer, buffer_size);
 }

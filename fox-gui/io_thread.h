@@ -4,11 +4,12 @@
 #include <fx.h>
 
 #include "gsl_shell_thread.h"
+#include "redirect.h"
 
 class lua_io_thread {
 public:
-    lua_io_thread(gsl_shell_thread* eng, FXGUISignal* sig, FXMutex* mut, FXString* buf):
-        m_engine(eng), m_io_ready(sig), m_io_protect(mut), m_io_buffer(buf)
+    lua_io_thread(io_redirect* lua_io, FXGUISignal* sig, FXMutex* mut, FXString* buf):
+        m_redirect(lua_io), m_io_ready(sig), m_io_protect(mut), m_io_buffer(buf)
     { }
 
     void run();
@@ -16,7 +17,7 @@ public:
 
 private:
     pthread_t m_thread;
-    gsl_shell_thread* m_engine;
+    io_redirect* m_redirect;
     FXGUISignal* m_io_ready;
     FXMutex* m_io_protect;
     FXString* m_io_buffer;

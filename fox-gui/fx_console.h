@@ -20,7 +20,7 @@ private:
     static const FXchar* prompt;
 
 public:
-    fx_console(gsl_shell_thread* gs, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2);
+    fx_console(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2);
 
     ~fx_console();
 
@@ -57,6 +57,7 @@ private:
     FXString m_input;
     status_e m_status;
     gsl_shell_thread* m_engine;
+    io_redirect* m_lua_io;
 
     lua_io_thread* m_lua_io_thread;
     FXGUISignal* m_lua_io_signal;

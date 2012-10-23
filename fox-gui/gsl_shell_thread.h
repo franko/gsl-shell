@@ -7,7 +7,6 @@ extern "C" {
 
 #include "gsl_shell_interp.h"
 #include "pthreadpp.h"
-#include "redirect.h"
 #include "str.h"
 
 class gsl_shell_thread : public gsl_shell
@@ -19,7 +18,6 @@ public:
     enum { eot_character = 0x04 };
 
     gsl_shell_thread();
-    ~gsl_shell_thread();
 
     void set_request(request_e req, const char* line = 0);
 
@@ -34,13 +32,11 @@ public:
     {
         pthread_mutex_lock(&this->exec_mutex);
     }
+
     void unlock()
     {
         pthread_mutex_unlock(&this->exec_mutex);
     }
-
-    int read(char* buffer, unsigned buffer_size);
-    int write(const char* buffer, unsigned buffer_size);
 
     int eval_status() const
     {
@@ -57,7 +53,6 @@ private:
 
     pthread_t m_thread;
     engine_status_e m_status;
-    stdout_redirect m_redirect;
     pthread::cond m_eval;
     str m_line_pending;
     int m_eval_status;

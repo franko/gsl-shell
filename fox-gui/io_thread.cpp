@@ -16,7 +16,7 @@ void lua_io_thread::run()
 
     while (1)
     {
-        int nr = m_engine->read(buffer, 127);
+        int nr = m_redirect->read(buffer, 127);
         if (nr < 0)
         {
             fprintf(stderr, "ERROR on read: %d.\n", errno);

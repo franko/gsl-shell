@@ -6,6 +6,7 @@
 #include "agg_array.h"
 #include "fox_gsl_shell.h"
 #include "fx_console.h"
+#include "redirect.h"
 
 class gsl_shell_app : public FXApp
 {
@@ -76,6 +77,7 @@ private:
     FXGUISignal* m_signal_request;
     lua_request m_request;
     fx_console* m_console;
+    io_redirect m_redirect;
 };
 
 extern gsl_shell_app* global_app;

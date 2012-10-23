@@ -14,7 +14,7 @@ FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]=
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
 
-gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
+gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
     FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h)
 {
     m_menu_bar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -36,7 +36,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, FXApp* app, const FXStr
 
     const char* console_font = gslshell::get_fox_console_font_name();
     m_text_font = new FXFont(app, console_font, 11);
-    m_text = new fx_console(gs, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_text = new fx_console(gs, lua_io, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
 }
 

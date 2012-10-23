@@ -21,13 +21,15 @@ FXIMPLEMENT(gsl_shell_app,FXApp,gsl_shell_app_map,ARRAYNUMBER(gsl_shell_app_map)
 
 gsl_shell_app* global_app;
 
-gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
-    m_engine(this)
+gsl_shell_app::gsl_shell_app():
+FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
 {
     m_signal_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
 
     FXGUISignal* quit = new FXGUISignal(this, this, ID_LUA_QUIT);
     m_engine.set_closing_signal(quit);
+
+    m_redirect.start();
 
     global_app = this;
     m_engine.start();
@@ -36,12 +38,14 @@ gsl_shell_app::gsl_shell_app() : FXApp("GSL Shell", "GSL Shell"),
     gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
     plot_icon = new FXGIFIcon(this, plot_icon_data);
 
-    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, this, "GSL Shell Console", gsl_shell_icon, gsl_shell_mini, 600, 500);
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell Console", gsl_shell_icon, gsl_shell_mini, 600, 500);
     m_console = gsw->console();
 }
 
 gsl_shell_app::~gsl_shell_app()
 {
+    m_redirect.stop();
+
     delete m_signal_request;
     delete gsl_shell_icon;
     delete gsl_shell_mini;

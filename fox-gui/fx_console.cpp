@@ -25,13 +25,13 @@ FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 
 const FXchar * fx_console::prompt = "> ";
 
-fx_console::fx_console(gsl_shell_thread* gs, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
+fx_console::fx_console(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
     FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
-    m_status(not_ready), m_engine(gs)
+    m_status(not_ready), m_engine(gs), m_lua_io(lua_io)
 {
     FXApp* app = getApp();
     m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
-    m_lua_io_thread = new lua_io_thread(m_engine, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
+    m_lua_io_thread = new lua_io_thread(m_lua_io, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
 
     init_styles();
 }
@@ -182,7 +182,7 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
             const char* input_txt = m_input_acc.text();
             unsigned len = m_input_acc.length();
 
-            m_engine->write(input_txt, len);
+            m_lua_io->write(input_txt, len);
 
             m_input_acc.clear();
             appendText("\n");

@@ -68,22 +68,22 @@ static void dup_stdin(int fd)
 #endif
 }
 
-stdout_redirect::stdout_redirect(int buffer_size)
+io_redirect::io_redirect(int stdout_bufsize, int stdin_bufsize)
 {
-    open_pipe(fd_opipe, buffer_size);
-    open_pipe(fd_ipipe, buffer_size);
+    open_pipe(fd_opipe, stdout_bufsize);
+    open_pipe(fd_ipipe, stdin_bufsize);
 
     fd_stdout = dup(STDOUT_FILENO);
     fd_stdin  = dup(STDIN_FILENO);
 }
 
-void stdout_redirect::start()
+void io_redirect::start()
 {
     dup_stdout(fd_opipe[PIPE_WRITE]);
     dup_stdin(fd_ipipe[PIPE_READ]);
 }
 
-void stdout_redirect::stop()
+void io_redirect::stop()
 {
     dup2(fd_stdout, STDOUT_FILENO);
     dup2(fd_stdin, STDIN_FILENO);
@@ -93,14 +93,14 @@ void stdout_redirect::stop()
     close(fd_ipipe[PIPE_WRITE]);
 }
 
-int stdout_redirect::read(char *buffer, int size)
+int io_redirect::read(char *buffer, int size)
 {
     int nOutRead = ::read(fd_opipe[PIPE_READ], buffer, size);
     return nOutRead;
 }
 
 
-int stdout_redirect::write(const char *buffer, int size)
+int io_redirect::write(const char *buffer, int size)
 {
     int nOutW = ::write(fd_ipipe[PIPE_WRITE], buffer, size);
     return nOutW;
