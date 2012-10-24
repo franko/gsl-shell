@@ -14,58 +14,8 @@ FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canvas_map));
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
-    FXCanvas(p, tgt, sel, opts, x, y, w, h),
-    m_img(), m_save_img(), m_canvas(0)
+    FXCanvas(p, tgt, sel, opts, x, y, w, h), m_surface(split_str)
 {
-    split(split_str ? split_str : ".");
-}
-
-fx_plot_canvas::~fx_plot_canvas()
-{
-    delete m_canvas;
-}
-
-void fx_plot_canvas::split(const char* split_str)
-{
-    m_part.parse(split_str);
-    m_part.split();
-
-    m_plots.clear();
-    plot_ref empty;
-    for (unsigned k = 0; k < m_part.get_slot_number(); k++)
-        m_plots.add(empty);
-}
-
-bool fx_plot_canvas::prepare_image_buffer(unsigned ww, unsigned hh)
-{
-    if (likely(m_img.resize(ww, hh)))
-    {
-        m_canvas = new(std::nothrow) canvas(m_img, ww, hh, colors::white);
-        plots_set_to_dirty();
-        return (m_canvas != NULL);
-    }
-    return false;
-}
-
-bool fx_plot_canvas::ensure_canvas_size(unsigned ww, unsigned hh)
-{
-    if (unlikely(m_img.width() != ww || m_img.height() != hh))
-    {
-        return prepare_image_buffer(ww, hh);
-    }
-    return true;
-}
-
-void fx_plot_canvas::plot_render(plot_ref& ref, const agg::rect_i& r)
-{
-    m_canvas->clear_box(r);
-    if (ref.plot)
-    {
-        AGG_LOCK();
-        ref.plot->draw(*m_canvas, r, &ref.inf);
-        AGG_UNLOCK();
-    }
-    ref.is_image_dirty = false;
 }
 
 void fx_plot_canvas::plot_render(unsigned index)
@@ -74,20 +24,6 @@ void fx_plot_canvas::plot_render(unsigned index)
     int ww = getWidth(), hh = getHeight();
     agg::rect_i r = m_part.rect(index, ww, hh);
     plot_render(ref, r);
-}
-
-opt_rect<double>
-fx_plot_canvas::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
-{
-    const agg::trans_affine m = affine_matrix(box);
-    opt_rect<double> r, draw_rect;
-    AGG_LOCK();
-    ref.plot->draw_queue(*m_canvas, m, ref.inf, draw_rect);
-    AGG_UNLOCK();
-    r.add<rect_union>(draw_rect);
-    r.add<rect_union>(ref.dirty_rect);
-    ref.dirty_rect = draw_rect;
-    return r;
 }
 
 void fx_plot_canvas::update_region(const agg::rect_i& r)

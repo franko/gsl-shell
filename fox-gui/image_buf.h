@@ -1,9 +1,11 @@
 #ifndef FOXGUI_IMAGE_BUF_H
 #define FOXGUI_IMAGE_BUF_H
 
+#include <new>
+
 #include "defs.h"
 
-#include <agg_rendering_buffer.h>
+#include "agg_rendering_buffer.h"
 
 template <unsigned PixelSize, bool FlipY>
 struct image_gen : agg::rendering_buffer
