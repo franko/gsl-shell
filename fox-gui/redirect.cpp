@@ -35,16 +35,10 @@ static void dup_stdout(int fd)
     close(fd);
 
 #ifdef WIN32
-    FILE* of = _fdopen(STDOUT_FILENO, "w");
-    *stdout = *of;
-
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    HANDLE ofh = (HANDLE) _get_osfhandle(STDOUT_FILENO);
-    SetStdHandle(STD_OUTPUT_HANDLE, ofh);
-#else
-    setvbuf(stdout, NULL, _IONBF, 0);
+    FILE* f = _fdopen(STDOUT_FILENO, "w");
+    *stdout = *f;
 #endif
+    setvbuf(stdout, NULL, _IONBF, 0);
 }
 
 static void dup_stdin(int fd)
@@ -56,16 +50,10 @@ static void dup_stdin(int fd)
     close(fd);
 
 #ifdef WIN32
-    FILE* f = _fdopen(STDIN_FILENO, "w");
+    FILE* f = _fdopen(STDIN_FILENO, "r");
     *stdin = *f;
-
-    setvbuf(stdin, NULL, _IONBF, 0);
-
-    HANDLE ifh = (HANDLE) _get_osfhandle(STDIN_FILENO);
-    SetStdHandle(STD_INPUT_HANDLE, ifh);
-#else
-    setvbuf(stdin, NULL, _IONBF, 0);
 #endif
+    setvbuf(stdin, NULL, _IONBF, 0);
 }
 
 io_redirect::io_redirect(int stdout_bufsize, int stdin_bufsize)
