@@ -44,8 +44,6 @@ public:
     int attach(sg_plot* p, const char* slot_str);
     void split(const char* split_str);
 
-//    virtual void update_region(const agg::rect_base<int>& r) = 0;
-
     bool ensure_canvas_size(unsigned ww, unsigned hh);
 
     int get_width()  const { return m_img.width(); }
@@ -53,7 +51,6 @@ public:
 
     agg::rect_i plot_draw(unsigned index);
     agg::rect_i plot_draw_queue(unsigned index, bool draw_all);
-    void plot_render(unsigned index);
 
     sg_plot* plot(unsigned index) { return m_plots[index].plot; }
 
@@ -74,14 +71,13 @@ public:
     bool plot_is_dirty(unsigned k) const { return m_plots[k].is_dirty; }
 
 private:
-    bool prepare_image_buffer(unsigned ww, unsigned hh);
+    bool resize(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
-    void plot_render(plot_ref& ref, const agg::rect_i& r);
-    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::rect_i& r);
+    void render(plot_ref& ref, const agg::rect_i& r);
 
     agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height);
-    agg::rect_i plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
+    opt_rect<double> plot_render_queue(plot_ref& ref, const agg::rect_i& r);
 
     bool plot_is_defined(unsigned index) const
     {

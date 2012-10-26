@@ -2,7 +2,6 @@
 
 #include "util/agg_color_conv_rgb8.h"
 
-#include "rendering_buffer_utils.h"
 #include "fatal.h"
 #include "lua-graph.h"
 
@@ -36,7 +35,7 @@ void window_surface::split(const char* split_str)
         m_plots.add(empty);
 }
 
-bool window_surface::prepare_image_buffer(unsigned ww, unsigned hh)
+bool window_surface::resize(unsigned ww, unsigned hh)
 {
     m_save_img.clear();
 
@@ -53,12 +52,12 @@ bool window_surface::ensure_canvas_size(unsigned ww, unsigned hh)
 {
     if (unlikely(m_img.width() != ww || m_img.height() != hh))
     {
-        return prepare_image_buffer(ww, hh);
+        return resize(ww, hh);
     }
     return true;
 }
 
-void window_surface::plot_render(plot_ref& ref, const agg::rect_i& r)
+void window_surface::render(plot_ref& ref, const agg::rect_i& r)
 {
     m_canvas->clear_box(r);
     if (ref.plot)
@@ -67,15 +66,24 @@ void window_surface::plot_render(plot_ref& ref, const agg::rect_i& r)
         ref.plot->draw(*m_canvas, r, &ref.inf);
         graph_mutex::unlock();
     }
-    ref.is_image_dirty = false;
 }
 
-void window_surface::plot_render(unsigned index)
+agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
     plot_ref& ref = m_plots[index];
-    int ww = get_width(), hh = get_height();
-    agg::rect_i r = m_part.rect(index, ww, hh);
-    plot_render(ref, r);
+    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
+
+    if (ref.is_image_dirty)
+    {
+        render(ref, r);
+        ref.is_image_dirty = false;
+    }
+    return r;
+}
+
+agg::rect_i window_surface::plot_draw(unsigned index)
+{
+    return plot_draw(index, get_width(), get_height());
 }
 
 opt_rect<double>
@@ -95,25 +103,10 @@ window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
 }
 
 agg::rect_i
-window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
+window_surface::plot_draw_queue(unsigned index, bool draw_all)
 {
-    plot_ref& ref = m_plots[index];
-    agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
-    if (ref.is_image_dirty)
-        plot_render(ref, r);
-    ref.is_dirty = false;
-    return r;
-}
+    int canvas_width = get_width(), canvas_height = get_height();
 
-agg::rect_i window_surface::plot_draw(unsigned index)
-{
-    int ww = get_width(), hh = get_height();
-    return plot_draw(index, ww, hh);
-}
-
-agg::rect_i
-window_surface::plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all)
-{
     plot_ref& ref = m_plots[index];
 
     if (!ref.plot)
@@ -134,13 +127,6 @@ window_surface::plot_draw_queue(unsigned index, int canvas_width, int canvas_hei
     return r;
 }
 
-agg::rect_i
-window_surface::plot_draw_queue(unsigned index, bool draw_all)
-{
-    int ww = get_width(), hh = get_height();
-    return plot_draw_queue(index, ww, hh, draw_all);
-}
-
 int window_surface::attach(sg_plot* p, const char* slot_str)
 {
     int index = m_part.get_slot_index(slot_str);
@@ -155,19 +141,8 @@ bool window_surface::save_plot_image(unsigned index)
 
     if (!m_save_img.ensure_size(ww, hh)) return false;
 
-    plot_ref& ref = m_plots[index];
-    agg::rect_i r = m_part.rect(index, ww, hh);
-
-    if (ref.is_image_dirty)
-        plot_render(ref, r);
-
-    rendering_buffer_ro src;
-    rendering_buffer_get_const_view(src, m_img, r, image_pixel_width);
-
-    agg::rendering_buffer dest;
-    rendering_buffer_get_view(dest, m_save_img, r, image_pixel_width);
-
-    dest.copy_from(src);
+    agg::rect_i r = plot_draw(index, ww, hh);
+    image::copy_region(m_save_img, m_img, r);
     return true;
 }
 
@@ -175,18 +150,11 @@ bool window_surface::restore_plot_image(unsigned index)
 {
     int ww = get_width(), hh = get_height();
 
-    if (!image::match(m_img, m_save_img))
+    if (!m_save_img.defined())
         return false;
 
     agg::rect_i r = m_part.rect(index, ww, hh);
-
-    rendering_buffer_ro src;
-    rendering_buffer_get_const_view(src, m_save_img, r, image_pixel_width);
-
-    agg::rendering_buffer dest;
-    rendering_buffer_get_view(dest, m_img, r, image_pixel_width);
-
-    dest.copy_from(src);
+    image::copy_region(m_img, m_save_img, r);
     return true;
 }
 

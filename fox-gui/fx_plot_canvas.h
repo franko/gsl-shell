@@ -39,7 +39,7 @@ public:
     long on_update(FXObject *, FXSelector, void *);
 
 protected:
-    fx_plot_canvas(): m_surface(".") {}
+    fx_plot_canvas(): m_surface(NULL) {}
 
 private:
     window_surface m_surface;
