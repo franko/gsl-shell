@@ -14,8 +14,8 @@ void plot_ref::attach(sg_plot* p)
     dirty_rect.clear();
 }
 
-window_surface::window_surface(const char* split_str, pthread::mutex& sg_mut):
-m_img(), m_save_img(), m_canvas(0), m_graph_mutex(sg_mut)
+window_surface::window_surface(const char* split_str):
+m_img(), m_save_img(), m_canvas(0)
 {
     split(split_str ? split_str : ".");
 }
@@ -38,6 +38,8 @@ void window_surface::split(const char* split_str)
 
 bool window_surface::prepare_image_buffer(unsigned ww, unsigned hh)
 {
+    m_save_img.clear();
+
     if (likely(m_img.resize(ww, hh)))
     {
         m_canvas = new(std::nothrow) canvas(m_img, ww, hh, colors::white);
@@ -61,9 +63,9 @@ void window_surface::plot_render(plot_ref& ref, const agg::rect_i& r)
     m_canvas->clear_box(r);
     if (ref.plot)
     {
-        m_graph_mutex.lock();
+        graph_mutex::lock();
         ref.plot->draw(*m_canvas, r, &ref.inf);
-        m_graph_mutex.unlock();
+        graph_mutex::unlock();
     }
     ref.is_image_dirty = false;
 }
@@ -82,9 +84,9 @@ window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
     const agg::trans_affine m = affine_matrix(box);
     opt_rect<double> r, draw_rect;
 
-    m_graph_mutex.lock();
+    graph_mutex::lock();
     ref.plot->draw_queue(*m_canvas, m, ref.inf, draw_rect);
-    m_graph_mutex.unlock();
+    graph_mutex::unlock();
 
     r.add<rect_union>(draw_rect);
     r.add<rect_union>(ref.dirty_rect);
@@ -92,59 +94,51 @@ window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
     return r;
 }
 
-void window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
+agg::rect_i
+window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
     plot_ref& ref = m_plots[index];
     agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
     if (ref.is_image_dirty)
         plot_render(ref, r);
-    update_region(r);
     ref.is_dirty = false;
+    return r;
 }
 
-sg_plot* window_surface::get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area)
-{
-    plot_ref& ref = m_plots[index];
-    if (ref.plot)
-        area = m_part.rect(index, canvas_width, canvas_height);
-    return ref.plot;
-}
-
-void window_surface::plot_draw(unsigned index)
+agg::rect_i window_surface::plot_draw(unsigned index)
 {
     int ww = get_width(), hh = get_height();
-    plot_draw(index, ww, hh);
+    return plot_draw(index, ww, hh);
 }
 
-void
+agg::rect_i
 window_surface::plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all)
 {
     plot_ref& ref = m_plots[index];
 
-    if (!ref.plot) return;
+    if (!ref.plot)
+        fatal_exception("call to plot_draw_queue for undefined plot");
 
     agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
     opt_rect<double> rect = plot_render_queue(ref, r);
 
-    if (draw_all)
-    {
-        update_region(r);
-    }
-    else if (rect.is_defined())
+    if (!draw_all && rect.is_defined())
     {
         const int pd = 4;
         const agg::rect_d& ur = rect.rect();
         const agg::rect_i box(0, 0, canvas_width, canvas_height);
-        agg::rect_i ri(ur.x1 - pd, ur.y1 - pd, ur.x2 + pd, ur.y2 + pd);
-        ri.clip(box);
-        update_region(ri);
+        r = agg::rect_i(ur.x1 - pd, ur.y1 - pd, ur.x2 + pd, ur.y2 + pd);
+        r.clip(box);
     }
+
+    return r;
 }
 
-void window_surface::plot_draw_queue(unsigned index, bool draw_all)
+agg::rect_i
+window_surface::plot_draw_queue(unsigned index, bool draw_all)
 {
     int ww = get_width(), hh = get_height();
-    plot_draw_queue(index, ww, hh, draw_all);
+    return plot_draw_queue(index, ww, hh, draw_all);
 }
 
 int window_surface::attach(sg_plot* p, const char* slot_str)
@@ -194,6 +188,11 @@ bool window_surface::restore_plot_image(unsigned index)
 
     dest.copy_from(src);
     return true;
+}
+
+agg::rect_i window_surface::get_plot_area(unsigned index, int canvas_width, int canvas_height)
+{
+    return m_part.rect(index, canvas_width, canvas_height);
 }
 
 void window_surface::plots_set_to_dirty()

@@ -7,9 +7,9 @@
 #include <agg_rendering_buffer.h>
 #include <agg_trans_affine.h>
 
+#include "lua-graph.h"
 #include "image_buf.h"
 #include "window_part.h"
-#include "pthreadpp.h"
 #include "sg_object.h"
 #include "lua-plot-cpp.h"
 #include "canvas.h"
@@ -27,29 +27,38 @@ struct plot_ref {
     opt_rect<double> dirty_rect;
 };
 
+struct graph_mutex {
+    static void lock()   { AGG_LOCK();   }
+    static void unlock() { AGG_UNLOCK(); }
+};
+
 class window_surface
 {
-    enum { image_pixel_width = 3 };
-
 public:
+    enum { image_pixel_width = 3 };
     typedef image_gen<image_pixel_width, true> image;
 
-    window_surface(const char* split, pthread::mutex& sg_mut);
+    window_surface(const char* split);
     ~window_surface();
 
     int attach(sg_plot* p, const char* slot_str);
     void split(const char* split_str);
 
-    virtual void update_region(const agg::rect_base<int>& r) = 0;
-    virtual int get_width() const = 0;
-    virtual int get_height() const = 0;
+//    virtual void update_region(const agg::rect_base<int>& r) = 0;
 
-    void plot_draw(unsigned index);
-    void plot_draw_queue(unsigned index, bool draw_all);
+    bool ensure_canvas_size(unsigned ww, unsigned hh);
+
+    int get_width()  const { return m_img.width(); }
+    int get_height() const { return m_img.height(); }
+
+    agg::rect_i plot_draw(unsigned index);
+    agg::rect_i plot_draw_queue(unsigned index, bool draw_all);
     void plot_render(unsigned index);
 
-    sg_plot* get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area);
-    unsigned get_plot_number() const { return m_plots.size(); }
+    sg_plot* plot(unsigned index) { return m_plots[index].plot; }
+
+    agg::rect_i get_plot_area(unsigned index, int canvas_width, int canvas_height);
+    unsigned plot_number() const { return m_plots.size(); }
 
     bool need_redraw(unsigned index) const
     {
@@ -61,15 +70,18 @@ public:
     bool save_plot_image(unsigned index);
     bool restore_plot_image(unsigned index);
 
+    const image& get_image() { return m_img; }
+    bool plot_is_dirty(unsigned k) const { return m_plots[k].is_dirty; }
+
 private:
     bool prepare_image_buffer(unsigned ww, unsigned hh);
-    bool ensure_canvas_size(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
     void plot_render(plot_ref& ref, const agg::rect_i& r);
-    void plot_draw(unsigned index, int canvas_width, int canvas_height);
     opt_rect<double> plot_render_queue(plot_ref& ref, const agg::rect_i& r);
-    void plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
+
+    agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height);
+    agg::rect_i plot_draw_queue(unsigned index, int canvas_width, int canvas_height, bool draw_all);
 
     bool plot_is_defined(unsigned index) const
     {
@@ -81,7 +93,6 @@ private:
     window_part m_part;
     agg::pod_bvector<plot_ref> m_plots;
     canvas* m_canvas;
-    pthread::mutex& m_graph_mutex;
 };
 
 #endif

@@ -41,6 +41,12 @@ public:
             m_rect = src.m_rect;
     }
 
+    void operator = (const rect_type& src)
+    {
+        m_defined = true;
+        m_rect = src;
+    }
+
     template <set_oper_e op>
     void add(const rect_type& r)
     {
