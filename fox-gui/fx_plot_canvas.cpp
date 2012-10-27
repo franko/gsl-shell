@@ -16,11 +16,17 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
     FXCanvas(p, tgt, sel, opts, x, y, w, h), m_surface(split_str)
 {
+    unsigned n = m_surface.plot_number();
+    m_dirty_flags.resize(n);
+    for (unsigned k = 0; k < n; k++)
+        m_dirty_flags[k] = true;
 }
 
 void fx_plot_canvas::update_region(const image& src_img, const agg::rect_i& r)
 {
     FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
+    if (ww <= 0 || hh <= 0) return;
+
     FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
     const unsigned fox_pixel_size = 4;
@@ -55,6 +61,7 @@ void fx_plot_canvas::plot_draw(unsigned index)
 {
     agg::rect_i r = m_surface.plot_draw(index);
     update_region(m_surface.get_image(), r);
+    plot_set_dirty(index, false);
 }
 
 void fx_plot_canvas::plot_draw_queue(unsigned index, bool draw_all)
@@ -65,6 +72,7 @@ void fx_plot_canvas::plot_draw_queue(unsigned index, bool draw_all)
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
+    fprintf(stderr, "fx_plot_canvas::on_cmd_paint\n");
     int ww = getWidth(), hh = getHeight();
     if (unlikely(!m_surface.ensure_canvas_size(ww, hh)))
         return 1;
@@ -75,12 +83,13 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 
 long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
+    // fprintf(stderr, "fx_plot_canvas::on_update\n");
     int ww = getWidth(), hh = getHeight();
     if (unlikely(!m_surface.ensure_canvas_size(ww, hh)))
         return 1;
     for (unsigned k = 0; k < m_surface.plot_number(); k++)
     {
-        if (m_surface.plot_is_dirty(k))
+        if (plot_is_dirty(k))
             plot_draw(k);
     }
     return 1;

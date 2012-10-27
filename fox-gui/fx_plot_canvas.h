@@ -50,6 +50,10 @@ protected:
     fx_plot_canvas(): m_surface(NULL) {}
 
 private:
+    void plot_set_dirty(unsigned k, bool flag) { m_dirty_flags[k] = flag; }
+    bool plot_is_dirty(unsigned k) const { return m_dirty_flags[k]; }
+
+    agg::pod_array<bool> m_dirty_flags;
     window_surface m_surface;
 };
 

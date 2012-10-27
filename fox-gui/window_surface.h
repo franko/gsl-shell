@@ -22,7 +22,6 @@ struct plot_ref {
 
     sg_plot* plot;
     plot_render_info inf;
-    bool is_dirty;
     bool is_image_dirty;
     opt_rect<double> dirty_rect;
 };
@@ -68,7 +67,6 @@ public:
     bool restore_plot_image(unsigned index);
 
     const image& get_image() { return m_img; }
-    bool plot_is_dirty(unsigned k) const { return m_plots[k].is_dirty; }
 
 private:
     bool resize(unsigned ww, unsigned hh);

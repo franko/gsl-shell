@@ -8,7 +8,6 @@
 void plot_ref::attach(sg_plot* p)
 {
     plot = p;
-    is_dirty = true;
     is_image_dirty = true;
     dirty_rect.clear();
 }
@@ -37,6 +36,8 @@ void window_surface::split(const char* split_str)
 
 bool window_surface::resize(unsigned ww, unsigned hh)
 {
+    fprintf(stderr, "window_surface::resize to size: %u %u\n", ww, hh);
+
     m_save_img.clear();
 
     if (likely(m_img.resize(ww, hh)))
@@ -59,6 +60,7 @@ bool window_surface::ensure_canvas_size(unsigned ww, unsigned hh)
 
 void window_surface::render(plot_ref& ref, const agg::rect_i& r)
 {
+    fprintf(stderr, "window_surface::render rendering using area: %i %i %i %i\n", r.x1, r.y1, r.x2, r.y2);
     m_canvas->clear_box(r);
     if (ref.plot)
     {
@@ -66,10 +68,14 @@ void window_surface::render(plot_ref& ref, const agg::rect_i& r)
         ref.plot->draw(*m_canvas, r, &ref.inf);
         graph_mutex::unlock();
     }
+    if (!ref.plot)
+        fprintf(stderr, "window_surface::render WARNING: undefined plot\n");
 }
 
 agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
 {
+    fprintf(stderr, "window_surface::plot_draw plot %i, ww: %i, hh: %i\n", index, canvas_width, canvas_height);
+
     plot_ref& ref = m_plots[index];
     agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
 
@@ -77,7 +83,10 @@ agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canv
     {
         render(ref, r);
         ref.is_image_dirty = false;
+        fprintf(stderr, "window_surface::plot_draw drawing done.\n");
     }
+    else
+        fprintf(stderr, "window_surface::plot_draw drawing not needed.\n");
     return r;
 }
 
@@ -89,6 +98,8 @@ agg::rect_i window_surface::plot_draw(unsigned index)
 opt_rect<double>
 window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
 {
+    fprintf(stderr, "window_surface::plot_render_queue rect: %i %i %i %i\n", box.x1, box.y1, box.x2, box.y2);
+
     const agg::trans_affine m = affine_matrix(box);
     opt_rect<double> r, draw_rect;
 
@@ -99,6 +110,16 @@ window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
     r.add<rect_union>(draw_rect);
     r.add<rect_union>(ref.dirty_rect);
     ref.dirty_rect = draw_rect;
+
+    if (r.is_defined())
+    {
+        const agg::rect_d& rx = r.rect();
+        fprintf(stderr, "window_surface::plot_render_queue Update RECT: %g %g %g %g\n", rx.x1, rx.y1, rx.x2, rx.y2);
+    }
+    else
+    {
+        fprintf(stderr, "window_surface::plot_render_queue Update rect: EMPTY\n");
+    }
     return r;
 }
 
@@ -115,13 +136,26 @@ window_surface::plot_draw_queue(unsigned index, bool draw_all)
     agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
     opt_rect<double> rect = plot_render_queue(ref, r);
 
-    if (!draw_all && rect.is_defined())
+    if (draw_all)
     {
+        fprintf(stderr, "window_surface::plot_draw_queue UPDATE PLOT RECTANGLE.\n");
+        return r;
+    }
+
+    if (rect.is_defined())
+    {
+        fprintf(stderr, "window_surface::plot_draw_queue UPDATE ONLY RECTANGLE.\n");
         const int pd = 4;
         const agg::rect_d& ur = rect.rect();
         const agg::rect_i box(0, 0, canvas_width, canvas_height);
         r = agg::rect_i(ur.x1 - pd, ur.y1 - pd, ur.x2 + pd, ur.y2 + pd);
         r.clip(box);
+    }
+    else
+    {
+        fprintf(stderr, "window_surface::plot_draw_queue EMPTY UPDATE RECT.\n");
+        r.x2 = r.x1;
+        r.y2 = r.y1;
     }
 
     return r;
@@ -141,6 +175,8 @@ bool window_surface::save_plot_image(unsigned index)
 
     if (!m_save_img.ensure_size(ww, hh)) return false;
 
+    fprintf(stderr, "window_surface::save_plot_image saving: %i\n", index);
+
     agg::rect_i r = plot_draw(index, ww, hh);
     image::copy_region(m_save_img, m_img, r);
     return true;
@@ -150,6 +186,8 @@ bool window_surface::restore_plot_image(unsigned index)
 {
     if (unlikely(!m_save_img.defined()))
         return false;
+
+    fprintf(stderr, "window_surface::restore_plot_image restoring: %i\n", index);
 
     int ww = get_width(), hh = get_height();
     agg::rect_i r = m_part.rect(index, ww, hh);
