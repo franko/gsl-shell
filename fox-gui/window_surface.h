@@ -49,18 +49,18 @@ public:
     int get_width()  const { return m_img.width(); }
     int get_height() const { return m_img.height(); }
 
+    // draw plot identified by index in its slot and
+    // returns the rectangle area that needs to be updated on screen
     agg::rect_i plot_draw(unsigned index);
+
+    // draw plot's drawing queue and returns the rectangle area
+    // that needs to be updated on screen
     agg::rect_i plot_draw_queue(unsigned index, bool draw_all);
 
-    sg_plot* plot(unsigned index) { return m_plots[index].plot; }
+    sg_plot* plot(unsigned index) const { return m_plots[index].plot; }
 
     agg::rect_i get_plot_area(unsigned index, int canvas_width, int canvas_height);
     unsigned plot_number() const { return m_plots.size(); }
-
-    bool need_redraw(unsigned index) const
-    {
-        return m_plots[index].plot->need_redraw();
-    }
 
     bool is_ready() const { return (m_canvas != 0); }
 
@@ -74,6 +74,7 @@ private:
     bool resize(unsigned ww, unsigned hh);
     void plots_set_to_dirty();
 
+    // render the plot in the given rectangle area of image
     void render(plot_ref& ref, const agg::rect_i& r);
 
     agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height);

@@ -148,11 +148,10 @@ bool window_surface::save_plot_image(unsigned index)
 
 bool window_surface::restore_plot_image(unsigned index)
 {
-    int ww = get_width(), hh = get_height();
-
-    if (!m_save_img.defined())
+    if (unlikely(!m_save_img.defined()))
         return false;
 
+    int ww = get_width(), hh = get_height();
     agg::rect_i r = m_part.rect(index, ww, hh);
     image::copy_region(m_img, m_save_img, r);
     return true;

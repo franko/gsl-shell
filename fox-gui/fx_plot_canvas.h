@@ -22,6 +22,14 @@ public:
 
     int attach(sg_plot* p, const char* slot_str);
 
+    bool is_ready() const { return m_surface.is_ready(); }
+
+    bool need_redraw(unsigned index) const
+    {
+        return m_surface.plot(index)->need_redraw();
+    }
+
+    void plot_render(unsigned index) { m_surface.plot_draw(index); }
     void plot_draw(unsigned index);
     void plot_draw_queue(unsigned index, bool draw_all);
 
