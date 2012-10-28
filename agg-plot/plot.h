@@ -466,6 +466,11 @@ protected:
     bool m_need_redraw;
     opt_rect<double> m_rect;
 
+    // keep trace of the region where changes happened since
+    // the last pushlayer or clear
+    opt_rect<double> m_changes_accu;
+    opt_rect<double> m_changes_pending;
+
     bool m_use_units;
     units m_ux, m_uy;
 
@@ -505,6 +510,7 @@ void plot<RM>::commit_pending_draw()
 {
     push_drawing_queue();
     m_need_redraw = false;
+    m_changes_pending.clear();
 }
 
 template <class RM>
@@ -640,6 +646,14 @@ template <class Canvas> void plot<RM>::draw_queue(Canvas& _canvas, const agg::tr
 
         if (not_empty)
             bb.add<rect_union>(ebb);
+    }
+
+    m_changes_accu.add<rect_union>(bb);
+
+    if (m_changes_pending.is_defined())
+    {
+        fprintf(stderr, "plot::draw_queue adding pending rect\n");
+        bb.add<rect_union>(m_changes_pending);
     }
 
     canvas.reset_clipping();
@@ -1114,6 +1128,8 @@ void plot<RM>::clear_current_layer()
     clear_drawing_queue();
     layer_dispose_elements(current);
     current->clear();
+    m_changes_pending = m_changes_accu;
+    fprintf(stderr, "plot::clear_current_layer\n");
 }
 
 template <class RM>

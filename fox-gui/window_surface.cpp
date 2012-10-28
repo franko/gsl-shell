@@ -9,7 +9,6 @@ void plot_ref::attach(sg_plot* p)
 {
     plot = p;
     is_image_dirty = true;
-    dirty_rect.clear();
 }
 
 window_surface::window_surface(const char* split_str):
@@ -72,14 +71,14 @@ void window_surface::render(plot_ref& ref, const agg::rect_i& r)
         fprintf(stderr, "window_surface::render WARNING: undefined plot\n");
 }
 
-agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height)
+agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canvas_height, bool redraw)
 {
     fprintf(stderr, "window_surface::plot_draw plot %i, ww: %i, hh: %i\n", index, canvas_width, canvas_height);
 
     plot_ref& ref = m_plots[index];
     agg::rect_i r = m_part.rect(index, canvas_width, canvas_height);
 
-    if (ref.is_image_dirty)
+    if (redraw || ref.is_image_dirty)
     {
         render(ref, r);
         ref.is_image_dirty = false;
@@ -90,9 +89,9 @@ agg::rect_i window_surface::plot_draw(unsigned index, int canvas_width, int canv
     return r;
 }
 
-agg::rect_i window_surface::plot_draw(unsigned index)
+agg::rect_i window_surface::plot_draw(unsigned index, bool redraw)
 {
-    return plot_draw(index, get_width(), get_height());
+    return plot_draw(index, get_width(), get_height(), redraw);
 }
 
 opt_rect<double>
@@ -101,15 +100,11 @@ window_surface::plot_render_queue(plot_ref& ref, const agg::rect_i& box)
     fprintf(stderr, "window_surface::plot_render_queue rect: %i %i %i %i\n", box.x1, box.y1, box.x2, box.y2);
 
     const agg::trans_affine m = affine_matrix(box);
-    opt_rect<double> r, draw_rect;
+    opt_rect<double> r;
 
     graph_mutex::lock();
-    ref.plot->draw_queue(*m_canvas, m, ref.inf, draw_rect);
+    ref.plot->draw_queue(*m_canvas, m, ref.inf, r);
     graph_mutex::unlock();
-
-    r.add<rect_union>(draw_rect);
-    r.add<rect_union>(ref.dirty_rect);
-    ref.dirty_rect = draw_rect;
 
     if (r.is_defined())
     {
@@ -177,7 +172,7 @@ bool window_surface::save_plot_image(unsigned index)
 
     fprintf(stderr, "window_surface::save_plot_image saving: %i\n", index);
 
-    agg::rect_i r = plot_draw(index, ww, hh);
+    agg::rect_i r = plot_draw(index, ww, hh, false);
     image::copy_region(m_save_img, m_img, r);
     return true;
 }

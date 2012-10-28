@@ -23,7 +23,6 @@ struct plot_ref {
     sg_plot* plot;
     plot_render_info inf;
     bool is_image_dirty;
-    opt_rect<double> dirty_rect;
 };
 
 struct graph_mutex {
@@ -50,7 +49,7 @@ public:
 
     // draw plot identified by index in its slot and
     // returns the rectangle area that needs to be updated on screen
-    agg::rect_i plot_draw(unsigned index);
+    agg::rect_i plot_draw(unsigned index, bool redraw);
 
     // draw plot's drawing queue and returns the rectangle area
     // that needs to be updated on screen
@@ -75,7 +74,7 @@ private:
     // render the plot in the given rectangle area of image
     void render(plot_ref& ref, const agg::rect_i& r);
 
-    agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height);
+    agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height, bool redraw);
     opt_rect<double> plot_render_queue(plot_ref& ref, const agg::rect_i& r);
 
     bool plot_is_defined(unsigned index) const

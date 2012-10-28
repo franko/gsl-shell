@@ -29,7 +29,7 @@ public:
         return m_surface.plot(index)->need_redraw();
     }
 
-    void plot_render(unsigned index) { m_surface.plot_draw(index); }
+    void plot_render(unsigned index, bool redraw) { m_surface.plot_draw(index, redraw); }
     void plot_draw(unsigned index);
     void plot_draw_queue(unsigned index, bool draw_all);
 

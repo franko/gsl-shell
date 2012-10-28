@@ -218,7 +218,7 @@ slot_refresh(fx_plot_canvas* canvas, unsigned index)
 {
     bool redraw = canvas->need_redraw(index);
     if (redraw)
-        canvas->plot_render(index);
+        canvas->plot_render(index, redraw);
     canvas->plot_draw_queue(index, redraw);
 }
 
@@ -233,7 +233,7 @@ fox_window_slot_refresh(lua_State* L)
 static void
 slot_update(fx_plot_canvas* canvas, unsigned index)
 {
-    canvas->plot_render(index);
+    canvas->plot_render(index, true);
     canvas->plot_draw_queue(index, true);
 }
 
@@ -264,7 +264,7 @@ restore_slot_image(fx_plot_canvas* canvas, unsigned index)
 {
     if (!canvas->restore_plot_image(index))
     {
-        canvas->plot_render(index);
+        canvas->plot_render(index, false);
         canvas->save_plot_image(index);
     }
 }

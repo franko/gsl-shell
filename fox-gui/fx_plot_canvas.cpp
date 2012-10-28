@@ -59,7 +59,7 @@ fx_plot_canvas::get_plot(unsigned index, int canvas_width, int canvas_height, ag
 
 void fx_plot_canvas::plot_draw(unsigned index)
 {
-    agg::rect_i r = m_surface.plot_draw(index);
+    agg::rect_i r = m_surface.plot_draw(index, true);
     update_region(m_surface.get_image(), r);
     plot_set_dirty(index, false);
 }
