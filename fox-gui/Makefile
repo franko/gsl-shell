@@ -45,7 +45,9 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 CXXCOMPILE = $(CC) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-LDFLAGS += -mwindows
+ifeq ($(HOST_SYS),Windows)
+  LDFLAGS += -mwindows
+endif
 
 TARGETS = $(GSL_SHELL_GUI)
 
