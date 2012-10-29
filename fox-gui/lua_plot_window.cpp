@@ -216,10 +216,22 @@ fox_window_slot_generic_try(lua_State *L, void (*slot_func)(fx_plot_canvas*, uns
 static void
 slot_refresh(fx_plot_canvas* canvas, unsigned index)
 {
-    bool redraw = canvas->need_redraw(index);
+    bool redraw = canvas->plot_need_redraw(index);
     if (redraw)
-        canvas->plot_render(index, redraw);
-    canvas->plot_draw_queue(index, redraw);
+    {
+        canvas->plot_render(index);
+    }
+
+    opt_rect<int> r = plot_render_queue(index);
+    if (redraw)
+    {
+        canvas->update_plot_region(index);
+    }
+    else
+    {
+        if (r.is_defined())
+            update_region(r.rect());
+    }
 }
 
 int
@@ -233,8 +245,9 @@ fox_window_slot_refresh(lua_State* L)
 static void
 slot_update(fx_plot_canvas* canvas, unsigned index)
 {
-    canvas->plot_render(index, true);
-    canvas->plot_draw_queue(index, true);
+    canvas->plot_render(index);
+    // canvas->plot_render_queue(index);
+    canvas->update_plot_region(index);
 }
 
 int
@@ -264,9 +277,10 @@ restore_slot_image(fx_plot_canvas* canvas, unsigned index)
 {
     if (!canvas->restore_plot_image(index))
     {
-        canvas->plot_render(index, false);
+        canvas->plot_render(index);
         canvas->save_plot_image(index);
     }
+    update_plot_region(index);
 }
 
 int

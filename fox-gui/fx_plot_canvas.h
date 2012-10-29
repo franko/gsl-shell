@@ -24,19 +24,24 @@ public:
 
     bool is_ready() const { return m_surface.is_ready(); }
 
-    bool need_redraw(unsigned index) const
+    bool plot_need_redraw(unsigned index) const
     {
         return m_surface.plot(index)->need_redraw();
     }
 
-    void plot_render(unsigned index, bool redraw) { m_surface.plot_draw(index, redraw); }
-    void plot_draw(unsigned index);
-    void plot_draw_queue(unsigned index, bool draw_all);
+    void plot_render(unsigned index);
+    opt_rect<int> plot_render_queue(unsigned index);
 
-    void update_region(const image& src_img, const agg::rect_i& r);
+    void plot_draw(unsigned index);
+//    void plot_draw_queue(unsigned index, bool draw_all);
+
+    void update_region(const agg::rect_i& r);
+    void update_plot_region(unsigned index);
 
     sg_plot* get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area);
     unsigned get_plot_number() const { return m_surface.plot_number(); }
+    agg::rect_i get_plot_area(unsigned index) const { return m_surface.get_plot_area(index); }
+
 
     void draw(unsigned index);
 
