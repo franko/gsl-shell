@@ -1129,6 +1129,7 @@ void plot<RM>::clear_current_layer()
     layer_dispose_elements(current);
     current->clear();
     m_changes_pending = m_changes_accu;
+    m_changes_accu.clear();
     fprintf(stderr, "plot::clear_current_layer\n");
 }
 
