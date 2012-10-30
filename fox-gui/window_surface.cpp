@@ -5,14 +5,6 @@
 #include "fatal.h"
 #include "lua-graph.h"
 
-#if 0
-void plot_ref::attach(sg_plot* p)
-{
-    plot = p;
-    is_image_dirty = true;
-}
-#endif
-
 window_surface::window_surface(const char* split_str):
 m_img(), m_save_img(), m_canvas(0)
 {

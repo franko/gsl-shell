@@ -24,30 +24,18 @@ public:
 
     bool is_ready() const { return m_surface.is_ready(); }
 
-    bool plot_need_redraw(unsigned index) const
-    {
-        return m_surface.plot(index)->need_redraw();
-    }
-
-    void plot_render(unsigned index);
-    opt_rect<int> plot_render_queue(unsigned index);
-
     void plot_draw(unsigned index);
-
-    void update_region(const agg::rect_i& r);
-    void update_plot_region(unsigned index);
 
     sg_plot* get_plot(unsigned index) const { return m_surface.plot(index); }
     unsigned get_plot_number() const { return m_surface.plot_number(); }
-    agg::rect_i get_plot_area(unsigned index) const { return m_surface.get_plot_area(index); }
     agg::rect_i get_plot_area(unsigned index, int w, int h) const { return m_surface.get_plot_area(index, w, h); }
 
     void draw(unsigned index);
 
-    bool plot_have_saved_image(unsigned index) const { return m_surface.have_saved_image(index); }
-
-    bool save_plot_image(unsigned index) { return m_surface.save_plot_image(index); }
-    void restore_plot_image(unsigned index) { m_surface.restore_plot_image(index); }
+    void slot_refresh(unsigned index);
+    void slot_update(unsigned index);
+    void save_slot_image(unsigned index);
+    void restore_slot_image(unsigned index);
 
     long on_cmd_paint(FXObject *, FXSelector, void *);
 
@@ -55,6 +43,9 @@ protected:
     fx_plot_canvas(): m_surface(NULL) {}
 
 private:
+    void update_region(const agg::rect_i& r);
+    void update_plot_region(unsigned index);
+
     void plot_set_dirty(unsigned k, bool flag) { m_dirty_flags[k] = flag; }
     bool plot_is_dirty(unsigned k) const { return m_dirty_flags[k]; }
 
