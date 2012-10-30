@@ -222,15 +222,28 @@ slot_refresh(fx_plot_canvas* canvas, unsigned index)
         canvas->plot_render(index);
     }
 
-    opt_rect<int> r = plot_render_queue(index);
+    opt_rect<int> r = canvas->plot_render_queue(index);
+    agg::rect_i area = canvas->get_plot_area(index);
     if (redraw)
     {
-        canvas->update_plot_region(index);
+        canvas->update_region(area);
+        fprintf(stderr, "slot_refresh: updating PLOT AREA: %i %i %i %i\n", area.x1, area.y1, area.x2, area.y2);
     }
     else
     {
         if (r.is_defined())
-            update_region(r.rect());
+        {
+            const int pad = 4;
+            const agg::rect_i& ri = r.rect();
+            agg::rect_i r_pad(ri.x1 - pad, ri.y1 - pad, ri.x2 + pad, ri.y2 + pad);
+            r_pad.clip(area);
+            canvas->update_region(r_pad);
+            fprintf(stderr, "slot_refresh: updating RECT: %i %i %i %i\n", r_pad.x1, r_pad.y1, r_pad.x2, r_pad.y2);
+        }
+        else
+        {
+            fprintf(stderr, "slot_refresh: EMPTY BOX\n");
+        }
     }
 }
 
@@ -246,7 +259,7 @@ static void
 slot_update(fx_plot_canvas* canvas, unsigned index)
 {
     canvas->plot_render(index);
-    // canvas->plot_render_queue(index);
+    canvas->plot_render_queue(index);
     canvas->update_plot_region(index);
 }
 
@@ -275,12 +288,15 @@ fox_window_save_slot_image (lua_State *L)
 static void
 restore_slot_image(fx_plot_canvas* canvas, unsigned index)
 {
-    if (!canvas->restore_plot_image(index))
+    if (canvas->plot_have_saved_image(index))
+    {
+        canvas->restore_plot_image(index);
+    }
+    else
     {
         canvas->plot_render(index);
         canvas->save_plot_image(index);
     }
-    update_plot_region(index);
 }
 
 int
@@ -329,14 +345,14 @@ fox_window_export_svg_try(lua_State *L)
     unsigned n = fxcanvas->get_plot_number();
     for (unsigned k = 0; k < n; k++)
     {
-        agg::rect_i box;
         char plot_name[64];
-        sg_plot* p = fxcanvas->get_plot(k, int(w), int(h), box);
+        sg_plot* p = fxcanvas->get_plot(k);
         if (p)
         {
+            agg::rect_i area = fxcanvas->get_plot_area(k, int(w), int(h));
             sprintf(plot_name, "plot%u", k + 1);
             canvas.write_group_header(plot_name);
-            p->draw(canvas, box, NULL);
+            p->draw(canvas, area, NULL);
             canvas.write_group_end(plot_name);
         }
     }
@@ -351,8 +367,7 @@ int
 fox_window_export_svg(lua_State *L)
 {
     int nret = fox_window_export_svg_try(L);
-    if (unlikely(nret < 0))
-        return lua_error(L);
+    if (nret < 0) return lua_error(L);
     return nret;
 }
 

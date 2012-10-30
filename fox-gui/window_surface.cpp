@@ -47,7 +47,6 @@ bool window_surface::resize(unsigned ww, unsigned hh)
     if (likely(m_img.resize(ww, hh)))
     {
         m_canvas = new(std::nothrow) canvas(m_img, ww, hh, colors::white);
-//        plots_set_to_dirty();
         return (m_canvas != NULL);
     }
     return false;
@@ -58,17 +57,6 @@ void window_surface::draw_image_buffer()
     for (unsigned k = 0; k < plot_number(); k++)
         render(k);
 }
-
-#if 0
-bool window_surface::ensure_canvas_size(unsigned ww, unsigned hh)
-{
-    if (unlikely(m_img.width() != ww || m_img.height() != hh))
-    {
-        return resize(ww, hh);
-    }
-    return true;
-}
-#endif
 
 void window_surface::render(plot_ref& ref, const agg::rect_i& r)
 {
@@ -93,18 +81,10 @@ void window_surface::render(unsigned index)
     plot_ref& ref = m_plots[index];
     agg::rect_i area = m_part.rect(index, canvas_width, canvas_height);
     render(ref, area);
-    // ref.is_image_dirty = false;
 
     fprintf(stderr, "window_surface::plot_draw drawing done.\n");
-    // return area;
 }
 
-/*
-agg::rect_i window_surface::plot_draw(unsigned index, bool redraw)
-{
-    return plot_draw(index, get_width(), get_height(), redraw);
-}
-*/
 opt_rect<int>
 window_surface::render_drawing_queue(plot_ref& ref, const agg::rect_i& box)
 {
@@ -121,13 +101,7 @@ window_surface::render_drawing_queue(plot_ref& ref, const agg::rect_i& box)
     if (r.is_defined())
     {
         const agg::rect_d& rx = r.rect();
-        agg::rect_i rxi(rx.x1, rx.y1, rx.x2, rx.y2);
-        ri.set(rxi);
-//        fprintf(stderr, "window_surface::plot_render_queue Update RECT: %g %g %g %g\n", rx.x1, rx.y1, rx.x2, rx.y2);
-    }
-    else
-    {
-        fprintf(stderr, "window_surface::plot_render_queue Update rect: EMPTY\n");
+        ri.set(rx.x1, rx.y1, rx.x2, rx.y2);
     }
 
     return ri;
@@ -144,25 +118,6 @@ window_surface::render_drawing_queue(unsigned index)
 
     agg::rect_i area = m_part.rect(index, canvas_width, canvas_height);
     return render_drawing_queue(ref, area);
-/*
-    if (r.is_defined())
-    {
-        fprintf(stderr, "window_surface::plot_draw_queue UPDATE ONLY RECTANGLE.\n");
-        const int pd = 4;
-        const agg::rect_d& ur = rect.rect();
-        const agg::rect_i box(0, 0, canvas_width, canvas_height);
-        r = agg::rect_i(ur.x1 - pd, ur.y1 - pd, ur.x2 + pd, ur.y2 + pd);
-        r.clip(box);
-    }
-    else
-    {
-        fprintf(stderr, "window_surface::plot_draw_queue EMPTY UPDATE RECT.\n");
-        r.x2 = r.x1;
-        r.y2 = r.y1;
-    }
-
-    return r;
-    */
 }
 
 int window_surface::attach(sg_plot* p, const char* slot_str)
@@ -180,7 +135,6 @@ bool window_surface::save_plot_image(unsigned index)
 
     fprintf(stderr, "window_surface::save_plot_image saving: %i\n", index);
 
-//    agg::rect_i r = plot_draw(index, ww, hh, false);
     agg::rect_i r = m_part.rect(index, ww, hh);
     image::copy_region(m_save_img, m_img, r);
     m_plots[index].have_save_img = true;
@@ -189,8 +143,8 @@ bool window_surface::save_plot_image(unsigned index)
 
 bool window_surface::restore_plot_image(unsigned index)
 {
-    if (!m_save_img.is_defined() || !m_plots[index].have_save_img)
-        return false;
+    if (unlikely(!m_plots[index].have_save_img))
+        fatal_exception("window_surface::restore_slot_image invalid restore image");
 
     fprintf(stderr, "window_surface::restore_plot_image restoring: %i\n", index);
 
@@ -206,13 +160,7 @@ agg::rect_i window_surface::get_plot_area(unsigned index) const
     return m_part.rect(index, canvas_width, canvas_height);
 }
 
-#if 0
-void window_surface::plots_set_to_dirty()
+agg::rect_i window_surface::get_plot_area(unsigned index, int width, int height) const
 {
-    for (unsigned k = 0; k < m_plots.size(); k++)
-    {
-        plot_ref& ref = m_plots[k];
-        ref.is_image_dirty = true;
-    }    
+    return m_part.rect(index, width, height);
 }
-#endif

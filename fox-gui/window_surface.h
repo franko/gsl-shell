@@ -46,19 +46,13 @@ public:
         return (m_img.width() == ww && m_img.height() == hh);
     }
 
+    bool resize(unsigned ww, unsigned hh);
+
     // redraw all the image buffer for the current plots
     void draw_image_buffer();
 
     int get_width()  const { return m_img.width(); }
     int get_height() const { return m_img.height(); }
-
-    // draw plot identified by index in its slot and
-    // returns the rectangle area that needs to be updated on screen
-    // agg::rect_i plot_draw(unsigned index, bool redraw);
-
-    // draw plot's drawing queue and returns the rectangle area
-    // that needs to be updated on screen
-    // agg::rect_i plot_draw_queue(unsigned index, bool draw_all);
 
     void render(unsigned index);
     opt_rect<int> render_drawing_queue(unsigned index);
@@ -66,6 +60,7 @@ public:
     sg_plot* plot(unsigned index) const { return m_plots[index].plot; }
 
     agg::rect_i get_plot_area(unsigned index) const;
+    agg::rect_i get_plot_area(unsigned index, int width, int height) const;
     unsigned plot_number() const { return m_plots.size(); }
 
     bool is_ready() const { return (m_canvas != 0); }
@@ -75,9 +70,9 @@ public:
 
     const image& get_image() { return m_img; }
 
+    bool have_saved_image(unsigned k) const { return m_plots[k].have_save_img; }
+
 private:
-    bool resize(unsigned ww, unsigned hh);
-    // void plots_set_to_dirty();
 
     // render the plot in the given rectangle area of image
     void render(plot_ref& ref, const agg::rect_i& r);

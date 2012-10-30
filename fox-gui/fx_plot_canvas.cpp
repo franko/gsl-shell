@@ -8,7 +8,6 @@
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 {
     FXMAPFUNC(SEL_PAINT,     0, fx_plot_canvas::on_cmd_paint),
-//    FXMAPFUNC(SEL_UPDATE,    0, fx_plot_canvas::on_update),
 };
 
 FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canvas_map));
@@ -58,13 +57,6 @@ int fx_plot_canvas::attach(sg_plot* p, const char* slot_str)
     return m_surface.attach(p, slot_str);
 }
 
-sg_plot*
-fx_plot_canvas::get_plot(unsigned index, int canvas_width, int canvas_height, agg::rect_i& area)
-{
-    area = m_surface.get_plot_area(index, canvas_width, canvas_height);
-    return m_surface.plot(index);
-}
-
 void fx_plot_canvas::plot_render(unsigned index)
 {
     m_surface.render(index);
@@ -94,22 +86,7 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
         m_surface.draw_image_buffer();
     }
 
-    agg::rect_i r(0, 0, ww - 1, hh - 1);
+    agg::rect_i r(0, 0, ww, hh);
     update_region(r);
-    return 1;
-}
-
-long fx_plot_canvas::on_update(FXObject *, FXSelector, void *)
-{
-    // fprintf(stderr, "fx_plot_canvas::on_update\n");
-/*    int ww = getWidth(), hh = getHeight();
-    if (unlikely(!m_surface.ensure_canvas_size(ww, hh)))
-        return 1;
-    for (unsigned k = 0; k < m_surface.plot_number(); k++)
-    {
-        if (plot_is_dirty(k))
-            plot_draw(k);
-    }
-*/
     return 1;
 }
