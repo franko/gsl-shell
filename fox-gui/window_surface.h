@@ -73,11 +73,8 @@ public:
     bool have_saved_image(unsigned k) const { return m_plots[k].have_save_img; }
 
 private:
-
-    // render the plot in the given rectangle area of image
     void render(plot_ref& ref, const agg::rect_i& r);
 
-    // agg::rect_i plot_draw(unsigned index, int canvas_width, int canvas_height, bool redraw);
     opt_rect<int> render_drawing_queue(plot_ref& ref, const agg::rect_i& r);
 
     bool plot_is_defined(unsigned index) const

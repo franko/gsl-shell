@@ -147,7 +147,8 @@ fox_window_attach_try(lua_State *L)
 
     if (index < 0) return error_return(L, "invalid slot specification");
 
-    canvas->plot_draw(index);
+    if (canvas->is_ready())
+        canvas->slot_update(index);
 
     window_refs_add (L, index + 1, 1, 2);
     return 0;

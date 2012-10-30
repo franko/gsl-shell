@@ -15,10 +15,6 @@ FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canva
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
     FXCanvas(p, tgt, sel, opts, x, y, w, h), m_surface(split_str)
 {
-    unsigned n = m_surface.plot_number();
-    m_dirty_flags.resize(n);
-    for (unsigned k = 0; k < n; k++)
-        m_dirty_flags[k] = true;
 }
 
 void fx_plot_canvas::update_region(const agg::rect_i& r)
@@ -57,14 +53,6 @@ int fx_plot_canvas::attach(sg_plot* p, const char* slot_str)
     return m_surface.attach(p, slot_str);
 }
 
-void fx_plot_canvas::plot_draw(unsigned index)
-{
-    m_surface.render(index);
-    agg::rect_i r = m_surface.get_plot_area(index);
-    update_region(r);
-    plot_set_dirty(index, false);
-}
-
 void fx_plot_canvas::slot_refresh(unsigned index)
 {
     bool redraw = m_surface.plot(index)->need_redraw();
@@ -100,6 +88,7 @@ void fx_plot_canvas::slot_refresh(unsigned index)
 void
 fx_plot_canvas::slot_update(unsigned index)
 {
+    fprintf(stderr, "fx_plot_canvas::slot_update\n");
     m_surface.render(index);
     m_surface.render_drawing_queue(index);
     update_plot_region(index);
@@ -108,6 +97,7 @@ fx_plot_canvas::slot_update(unsigned index)
 void
 fx_plot_canvas::save_slot_image(unsigned index)
 {
+    fprintf(stderr, "fx_plot_canvas::save_slot_image saving image\n");
     m_surface.save_plot_image(index);
 }
 
@@ -116,10 +106,12 @@ fx_plot_canvas::restore_slot_image(unsigned index)
 {
     if (m_surface.have_saved_image(index))
     {
+        fprintf(stderr, "fx_plot_canvas::restore_slot_image restoring saved image\n");
         m_surface.restore_plot_image(index);
     }
     else
     {
+        fprintf(stderr, "fx_plot_canvas::restore_slot_image no saved image!\n");
         m_surface.render(index);
         m_surface.save_plot_image(index);
     }

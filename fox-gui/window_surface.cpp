@@ -52,7 +52,6 @@ void window_surface::draw_image_buffer()
 
 void window_surface::render(plot_ref& ref, const agg::rect_i& r)
 {
-    fprintf(stderr, "window_surface::render rendering using area: %i %i %i %i\n", r.x1, r.y1, r.x2, r.y2);
     m_canvas->clear_box(r);
     if (ref.plot)
     {
@@ -68,19 +67,17 @@ void window_surface::render(unsigned index)
 {
     int canvas_width = get_width(), canvas_height = get_height();
 
-    fprintf(stderr, "window_surface::plot_draw plot %i, ww: %i, hh: %i\n", index, canvas_width, canvas_height);
+    fprintf(stderr, "window_surface::render plot %i, ww: %i, hh: %i\n", index, canvas_width, canvas_height);
 
     plot_ref& ref = m_plots[index];
     agg::rect_i area = m_part.rect(index, canvas_width, canvas_height);
     render(ref, area);
-
-    fprintf(stderr, "window_surface::plot_draw drawing done.\n");
 }
 
 opt_rect<int>
 window_surface::render_drawing_queue(plot_ref& ref, const agg::rect_i& box)
 {
-    fprintf(stderr, "window_surface::plot_render_queue rect: %i %i %i %i\n", box.x1, box.y1, box.x2, box.y2);
+    fprintf(stderr, "window_surface::render_drawing_queue\n");
 
     const agg::trans_affine m = affine_matrix(box);
     opt_rect<double> r;
@@ -125,8 +122,6 @@ bool window_surface::save_plot_image(unsigned index)
     int ww = get_width(), hh = get_height();
     if (unlikely(!m_save_img.ensure_size(ww, hh))) return false;
 
-    fprintf(stderr, "window_surface::save_plot_image saving: %i\n", index);
-
     agg::rect_i r = m_part.rect(index, ww, hh);
     image::copy_region(m_save_img, m_img, r);
     m_plots[index].have_save_img = true;
@@ -137,8 +132,6 @@ bool window_surface::restore_plot_image(unsigned index)
 {
     if (unlikely(!m_plots[index].have_save_img))
         fatal_exception("window_surface::restore_slot_image invalid restore image");
-
-    fprintf(stderr, "window_surface::restore_plot_image restoring: %i\n", index);
 
     int ww = get_width(), hh = get_height();
     agg::rect_i r = m_part.rect(index, ww, hh);
