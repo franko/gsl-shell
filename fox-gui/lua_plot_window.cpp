@@ -147,7 +147,8 @@ fox_window_attach_try(lua_State *L)
 
     if (index < 0) return error_return(L, "invalid slot specification");
 
-    canvas->plot_draw(index);
+    if (canvas->is_ready())
+        canvas->slot_update(index);
 
     window_refs_add (L, index + 1, 1, 2);
     return 0;
@@ -189,8 +190,8 @@ fox_window_close(lua_State* L)
     return nret;
 }
 
-static int
-fox_window_slot_generic_try(lua_State *L, void (*slot_func)(fx_plot_canvas*, unsigned))
+int
+fx_canvas_slot_operation(lua_State *L, void (fx_plot_canvas::*method_ptr)(unsigned))
 {
     window_mutex wm(L, 1);
 
@@ -207,72 +208,40 @@ fox_window_slot_generic_try(lua_State *L, void (*slot_func)(fx_plot_canvas*, uns
 
     if (canvas->is_ready())
     {
-        slot_func(canvas, slot_id - 1);
+        (canvas->*method_ptr)(slot_id - 1);
     }
 
     return 0;
 }
 
-static void
-slot_refresh(fx_plot_canvas* canvas, unsigned index)
-{
-    bool redraw = canvas->need_redraw(index);
-    if (redraw)
-        canvas->plot_render(index);
-    canvas->plot_draw_queue(index, redraw);
-}
-
 int
 fox_window_slot_refresh(lua_State* L)
 {
-    int nret = fox_window_slot_generic_try(L, slot_refresh);
+    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::slot_refresh);
     if (nret < 0) lua_error(L);
     return nret;
-}
-
-static void
-slot_update(fx_plot_canvas* canvas, unsigned index)
-{
-    canvas->plot_render(index);
-    canvas->plot_draw_queue(index, true);
 }
 
 int
 fox_window_slot_update(lua_State* L)
 {
-    int nret = fox_window_slot_generic_try(L, slot_update);
+    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::slot_update);
     if (nret < 0) lua_error(L);
     return nret;
-}
-
-static void
-save_slot_image(fx_plot_canvas* canvas, unsigned index)
-{
-    canvas->save_plot_image(index);
 }
 
 int
 fox_window_save_slot_image (lua_State *L)
 {
-    int nret = fox_window_slot_generic_try(L, save_slot_image);
+    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::save_slot_image);
     if (nret < 0) lua_error(L);
     return nret;
-}
-
-static void
-restore_slot_image(fx_plot_canvas* canvas, unsigned index)
-{
-    if (!canvas->restore_plot_image(index))
-    {
-        canvas->plot_render(index);
-        canvas->save_plot_image(index);
-    }
 }
 
 int
 fox_window_restore_slot_image (lua_State *L)
 {
-    int nret = fox_window_slot_generic_try(L, restore_slot_image);
+    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::restore_slot_image);
     if (nret < 0) lua_error(L);
     return nret;
 }
@@ -315,14 +284,14 @@ fox_window_export_svg_try(lua_State *L)
     unsigned n = fxcanvas->get_plot_number();
     for (unsigned k = 0; k < n; k++)
     {
-        agg::rect_i box;
         char plot_name[64];
-        sg_plot* p = fxcanvas->get_plot(k, int(w), int(h), box);
+        sg_plot* p = fxcanvas->get_plot(k);
         if (p)
         {
+            agg::rect_i area = fxcanvas->get_plot_area(k, int(w), int(h));
             sprintf(plot_name, "plot%u", k + 1);
             canvas.write_group_header(plot_name);
-            p->draw(canvas, box, NULL);
+            p->draw(canvas, area, NULL);
             canvas.write_group_end(plot_name);
         }
     }
@@ -337,8 +306,7 @@ int
 fox_window_export_svg(lua_State *L)
 {
     int nret = fox_window_export_svg_try(L);
-    if (unlikely(nret < 0))
-        return lua_error(L);
+    if (nret < 0) return lua_error(L);
     return nret;
 }
 

@@ -20,10 +20,20 @@ public:
     void clear() {
         m_defined = false;
     };
+
     void set(const rect_type& r) {
         m_defined = true;
         m_rect = r;
     };
+
+    void set(T x1, T y1, T x2, T y2) {
+        m_defined = true;
+        m_rect.x1 = x1;
+        m_rect.y1 = y1;
+        m_rect.x2 = x2;
+        m_rect.y2 = y2;
+    };
+
     bool is_defined() const {
         return m_defined;
     };
@@ -39,6 +49,12 @@ public:
         m_defined = src.m_defined;
         if (m_defined)
             m_rect = src.m_rect;
+    }
+
+    void operator = (const rect_type& src)
+    {
+        m_defined = true;
+        m_rect = src;
     }
 
     template <set_oper_e op>

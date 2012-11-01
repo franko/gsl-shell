@@ -175,10 +175,9 @@ window_part::get_slot_index(const char* str)
 }
 
 agg::rect_i
-window_part::rect(unsigned index, int w, int h)
+window_part::rect(unsigned index, int w, int h) const
 {
-#warning TODO: enforce that rect is never bigger than canvas
-    rect_type& r = m_rect[index];
+    const rect_type& r = m_rect[index];
     return agg::rect_i(w * r.x1, h * r.y1, w * r.x2, h * r.y2);
 }
 
