@@ -178,6 +178,15 @@ window_surface::slot_update(unsigned index)
 }
 
 void
+window_surface::draw_all()
+{
+    for (unsigned k = 0; k < m_plots.size(); k++)
+        render(k);
+    const agg::rect_i r(0, 0, get_width(), get_height());
+    m_window->update_region(r);
+}
+
+void
 window_surface::save_slot_image(unsigned index)
 {
     save_plot_image(index);

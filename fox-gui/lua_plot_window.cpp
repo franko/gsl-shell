@@ -119,11 +119,35 @@ fox_window_new (lua_State *L)
     return 1;
 }
 
+static int
+fox_window_layout_try(lua_State* L)
+{
+    window_mutex wm(L, 1);
+    const char *spec = lua_tostring(L, 2);
+
+    if (!spec) return type_error_return(L, 2, "string");
+
+    fx_plot_window* win = wm.window();
+    window_surface& surface = win->surface();
+
+    const int window_lua_index = 1;
+    for (unsigned k = 0; k < surface.plot_number(); k++)
+    {
+        if (surface.plot(k))
+            window_refs_remove(L, k + 1, window_lua_index);
+    }
+
+    surface.split(spec);
+    surface.draw_all();
+    return 0;
+}
+
 int
 fox_window_layout(lua_State* L)
 {
-    return luaL_error(L, "window's layout method not yet implemented "
-        "in FOX client");
+    int nret = fox_window_layout_try(L);
+    if (nret < 0) lua_error(L);
+    return nret;
 }
 
 static int

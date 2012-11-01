@@ -60,6 +60,8 @@ public:
     void render(unsigned index);
     opt_rect<int> render_drawing_queue(unsigned index);
 
+    void draw_all();
+
     sg_plot* plot(unsigned index) const { return m_plots[index].plot; }
 
     agg::rect_i get_plot_area(unsigned index) const;

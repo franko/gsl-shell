@@ -9,6 +9,7 @@ int
 window_part::parse(const char* str)
 {
     const char* p = str;
+    m_index.clear();
     parse_element(p);
     return m_index.size();
 }
@@ -91,6 +92,7 @@ window_part::split_rec(const rect_type& r, unsigned& k)
 void
 window_part::split()
 {
+    m_rect.clear();
     rect_type r(0, 0, 1, 1);
     unsigned pos = 0;
     split_rec(r, pos);
