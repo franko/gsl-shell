@@ -142,13 +142,13 @@ fox_window_attach_try(lua_State *L)
     if (!slot_str) return type_error_return(L, 3, "string");
 
     fx_plot_window* win = wm.window();
-    fx_plot_canvas* canvas = win->canvas();
-    int index = canvas->attach(p, slot_str);
+    window_surface& surface = win->canvas()->surface();
 
+    int index = surface.attach(p, slot_str);
     if (index < 0) return error_return(L, "invalid slot specification");
 
-    if (canvas->is_ready())
-        canvas->slot_update(index);
+    if (surface.is_ready())
+        surface.slot_update(index);
 
     window_refs_add (L, index + 1, 1, 2);
     return 0;
@@ -191,7 +191,7 @@ fox_window_close(lua_State* L)
 }
 
 int
-fx_canvas_slot_operation(lua_State *L, void (fx_plot_canvas::*method_ptr)(unsigned))
+fx_canvas_slot_operation(lua_State *L, void (window_surface::*method_ptr)(unsigned))
 {
     window_mutex wm(L, 1);
 
@@ -204,11 +204,11 @@ fx_canvas_slot_operation(lua_State *L, void (fx_plot_canvas::*method_ptr)(unsign
     if (slot_id <= 0) return error_return(L, "invalid slot index");
 
     fx_plot_window* win = wm.window();
-    fx_plot_canvas* canvas = win->canvas();
+    window_surface& surface = win->canvas()->surface();
 
-    if (canvas->is_ready())
+    if (surface.is_ready())
     {
-        (canvas->*method_ptr)(slot_id - 1);
+        (surface.*method_ptr)(slot_id - 1);
     }
 
     return 0;
@@ -217,7 +217,7 @@ fx_canvas_slot_operation(lua_State *L, void (fx_plot_canvas::*method_ptr)(unsign
 int
 fox_window_slot_refresh(lua_State* L)
 {
-    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::slot_refresh);
+    int nret = fx_canvas_slot_operation(L, &window_surface::slot_refresh);
     if (nret < 0) lua_error(L);
     return nret;
 }
@@ -225,7 +225,7 @@ fox_window_slot_refresh(lua_State* L)
 int
 fox_window_slot_update(lua_State* L)
 {
-    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::slot_update);
+    int nret = fx_canvas_slot_operation(L, &window_surface::slot_update);
     if (nret < 0) lua_error(L);
     return nret;
 }
@@ -233,7 +233,7 @@ fox_window_slot_update(lua_State* L)
 int
 fox_window_save_slot_image (lua_State *L)
 {
-    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::save_slot_image);
+    int nret = fx_canvas_slot_operation(L, &window_surface::save_slot_image);
     if (nret < 0) lua_error(L);
     return nret;
 }
@@ -241,7 +241,7 @@ fox_window_save_slot_image (lua_State *L)
 int
 fox_window_restore_slot_image (lua_State *L)
 {
-    int nret = fx_canvas_slot_operation(L, &fx_plot_canvas::restore_slot_image);
+    int nret = fx_canvas_slot_operation(L, &window_surface::restore_slot_image);
     if (nret < 0) lua_error(L);
     return nret;
 }
@@ -276,19 +276,20 @@ fox_window_export_svg_try(lua_State *L)
     }
 
     fx_plot_window* win = wm.window();
-    fx_plot_canvas* fxcanvas = win->canvas();
+    // fx_plot_canvas* fxcanvas = win->canvas();
+    window_surface& surface = win->canvas()->surface();
 
     canvas_svg canvas(f, h);
     canvas.write_header(w, h);
 
-    unsigned n = fxcanvas->get_plot_number();
+    unsigned n = surface.plot_number();
     for (unsigned k = 0; k < n; k++)
     {
         char plot_name[64];
-        sg_plot* p = fxcanvas->get_plot(k);
+        sg_plot* p = surface.plot(k);
         if (p)
         {
-            agg::rect_i area = fxcanvas->get_plot_area(k, int(w), int(h));
+            agg::rect_i area = surface.get_plot_area(k, int(w), int(h));
             sprintf(plot_name, "plot%u", k + 1);
             canvas.write_group_header(plot_name);
             p->draw(canvas, area, NULL);

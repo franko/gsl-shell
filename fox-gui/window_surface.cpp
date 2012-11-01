@@ -5,8 +5,8 @@
 #include "fatal.h"
 #include "lua-graph.h"
 
-window_surface::window_surface(const char* split_str):
-m_img(), m_save_img(), m_canvas(0)
+window_surface::window_surface(display_window* win, const char* split_str):
+m_img(), m_save_img(), m_window(win), m_canvas(0)
 {
     split(split_str ? split_str : ".");
 }
@@ -139,4 +139,60 @@ agg::rect_i window_surface::get_plot_area(unsigned index) const
 agg::rect_i window_surface::get_plot_area(unsigned index, int width, int height) const
 {
     return m_part.rect(index, width, height);
+}
+
+void window_surface::slot_refresh(unsigned index)
+{
+    bool redraw = plot(index)->need_redraw();
+    if (redraw)
+    {
+        render(index);
+    }
+
+    opt_rect<int> r = render_drawing_queue(index);
+    agg::rect_i area = get_plot_area(index);
+    if (redraw)
+    {
+        m_window->update_region(area);
+    }
+    else
+    {
+        if (r.is_defined())
+        {
+            const int pad = 4;
+            const agg::rect_i& ri = r.rect();
+            agg::rect_i r_pad(ri.x1 - pad, ri.y1 - pad, ri.x2 + pad, ri.y2 + pad);
+            r_pad.clip(area);
+            m_window->update_region(r_pad);
+        }
+    }
+}
+
+void
+window_surface::slot_update(unsigned index)
+{
+    render(index);
+    render_drawing_queue(index);
+    agg::rect_i area = get_plot_area(index);
+    m_window->update_region(area);
+}
+
+void
+window_surface::save_slot_image(unsigned index)
+{
+    save_plot_image(index);
+}
+
+void
+window_surface::restore_slot_image(unsigned index)
+{
+    if (m_plots[index].have_save_img)
+    {
+        restore_plot_image(index);
+    }
+    else
+    {
+        render(index);
+        save_plot_image(index);
+    }
 }

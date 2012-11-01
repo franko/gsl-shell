@@ -15,6 +15,10 @@
 #include "canvas.h"
 #include "rect.h"
 
+struct display_window {
+    virtual void update_region(const agg::rect_i& r) = 0;
+};
+
 struct plot_ref {
     plot_ref(): plot(NULL), have_save_img(false) {}
 
@@ -34,7 +38,7 @@ public:
     enum { image_pixel_width = 3 };
     typedef image_gen<image_pixel_width, true> image;
 
-    window_surface(const char* split);
+    window_surface(display_window* window, const char* split);
     ~window_surface();
 
     int attach(sg_plot* p, const char* slot_str);
@@ -69,7 +73,10 @@ public:
 
     const image& get_image() { return m_img; }
 
-    bool have_saved_image(unsigned k) const { return m_plots[k].have_save_img; }
+    void slot_refresh(unsigned index);
+    void slot_update(unsigned index);
+    void save_slot_image(unsigned index);
+    void restore_slot_image(unsigned index);
 
 private:
     void render(plot_ref& ref, const agg::rect_i& r);
@@ -85,6 +92,7 @@ private:
     image m_save_img;
     window_part m_part;
     agg::pod_bvector<plot_ref> m_plots;
+    display_window* m_window;
     canvas* m_canvas;
 };
 

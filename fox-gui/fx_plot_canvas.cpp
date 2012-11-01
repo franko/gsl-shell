@@ -13,7 +13,7 @@ FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canvas_map));
 
 fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
-    FXCanvas(p, tgt, sel, opts, x, y, w, h), m_surface(split_str)
+    FXCanvas(p, tgt, sel, opts, x, y, w, h), m_window(this), m_surface(&m_window, split_str)
 {
 }
 
@@ -40,71 +40,6 @@ void fx_plot_canvas::update_region(const agg::rect_i& r)
 
     FXDCWindow dc(this);
     dc.drawImage(&img, r.x1, getHeight() - r.y2);
-}
-
-void fx_plot_canvas::update_plot_region(unsigned index)
-{
-    agg::rect_i area = m_surface.get_plot_area(index);
-    update_region(area);
-}
-
-int fx_plot_canvas::attach(sg_plot* p, const char* slot_str)
-{
-    return m_surface.attach(p, slot_str);
-}
-
-void fx_plot_canvas::slot_refresh(unsigned index)
-{
-    bool redraw = m_surface.plot(index)->need_redraw();
-    if (redraw)
-    {
-        m_surface.render(index);
-    }
-
-    opt_rect<int> r = m_surface.render_drawing_queue(index);
-    agg::rect_i area = m_surface.get_plot_area(index);
-    if (redraw)
-    {
-        update_region(area);
-    }
-    else
-    {
-        if (r.is_defined())
-        {
-            const int pad = 4;
-            const agg::rect_i& ri = r.rect();
-            agg::rect_i r_pad(ri.x1 - pad, ri.y1 - pad, ri.x2 + pad, ri.y2 + pad);
-            r_pad.clip(area);
-            update_region(r_pad);
-        }
-    }
-}
-void
-fx_plot_canvas::slot_update(unsigned index)
-{
-    m_surface.render(index);
-    m_surface.render_drawing_queue(index);
-    update_plot_region(index);
-}
-
-void
-fx_plot_canvas::save_slot_image(unsigned index)
-{
-    m_surface.save_plot_image(index);
-}
-
-void
-fx_plot_canvas::restore_slot_image(unsigned index)
-{
-    if (m_surface.have_saved_image(index))
-    {
-        m_surface.restore_plot_image(index);
-    }
-    else
-    {
-        m_surface.render(index);
-        m_surface.save_plot_image(index);
-    }
 }
 
 long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
