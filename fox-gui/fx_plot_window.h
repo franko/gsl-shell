@@ -6,7 +6,20 @@
 #include "gsl_shell_app.h"
 #include "fx_plot_canvas.h"
 
+#include "window_surface.h"
+
 struct lua_fox_window;
+
+class fox_display_window : public display_window {
+public:
+    fox_display_window(): m_fox_canvas(0) {}
+
+    void attach(fx_plot_canvas* can) { m_fox_canvas = can; }
+
+    virtual void update_region(const agg::rect_i& r) { m_fox_canvas->update_region(r); }
+private:
+    fx_plot_canvas* m_fox_canvas;
+};
 
 class fx_plot_window : public FXMainWindow
 {
@@ -25,18 +38,22 @@ public:
         return (gsl_shell_app*) getApp();
     }
 
+    window_surface& surface() { return m_surface; }
+
     void set_lua_window(lua_fox_window* w) { m_lua_window = w; }
 
     int lua_id; // the following is used by Lua to keep trace of the window
 
 protected:
-    fx_plot_window() {}
+    fx_plot_window(): m_surface(&m_display_window, NULL) {}
 
 private:
     FXMenuBar* m_menu_bar;
     FXMenuPane* m_plot_menu;
     fx_plot_canvas* m_canvas;
     lua_fox_window* m_lua_window;
+    fox_display_window m_display_window;
+    window_surface m_surface;
 };
 
 #endif

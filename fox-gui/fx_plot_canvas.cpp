@@ -4,6 +4,7 @@
 #include "rendering_buffer_utils.h"
 #include "fatal.h"
 #include "lua-graph.h"
+#include "window_surface.h"
 
 FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 {
@@ -12,8 +13,8 @@ FXDEFMAP(fx_plot_canvas) fx_plot_canvas_map[]=
 
 FXIMPLEMENT(fx_plot_canvas,FXCanvas,fx_plot_canvas_map,ARRAYNUMBER(fx_plot_canvas_map));
 
-fx_plot_canvas::fx_plot_canvas(FXComposite* p, const char* split_str, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
-    FXCanvas(p, tgt, sel, opts, x, y, w, h), m_window(this), m_surface(&m_window, split_str)
+fx_plot_canvas::fx_plot_canvas(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h):
+    FXCanvas(p, tgt, sel, opts, x, y, w, h)
 {
 }
 
@@ -22,7 +23,7 @@ void fx_plot_canvas::update_region(const agg::rect_i& r)
     FXshort ww = r.x2 - r.x1, hh= r.y2 - r.y1;
     if (ww <= 0 || hh <= 0) return;
 
-    const image& src_img = m_surface.get_image();
+    const window_surface::image& src_img = m_surface->get_image();
 
     FXImage img(getApp(), NULL, IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
 
@@ -46,10 +47,10 @@ long fx_plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
     int ww = getWidth(), hh = getHeight();
 
-    if (!m_surface.canvas_size_match(ww, hh))
+    if (!m_surface->canvas_size_match(ww, hh))
     {
-        m_surface.resize(ww, hh);
-        m_surface.draw_image_buffer();
+        m_surface->resize(ww, hh);
+        m_surface->draw_image_buffer();
     }
 
     agg::rect_i r(0, 0, ww, hh);

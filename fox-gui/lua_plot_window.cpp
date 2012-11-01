@@ -142,7 +142,7 @@ fox_window_attach_try(lua_State *L)
     if (!slot_str) return type_error_return(L, 3, "string");
 
     fx_plot_window* win = wm.window();
-    window_surface& surface = win->canvas()->surface();
+    window_surface& surface = win->surface();
 
     int index = surface.attach(p, slot_str);
     if (index < 0) return error_return(L, "invalid slot specification");
@@ -204,7 +204,7 @@ fx_canvas_slot_operation(lua_State *L, void (window_surface::*method_ptr)(unsign
     if (slot_id <= 0) return error_return(L, "invalid slot index");
 
     fx_plot_window* win = wm.window();
-    window_surface& surface = win->canvas()->surface();
+    window_surface& surface = win->surface();
 
     if (surface.is_ready())
     {
@@ -276,8 +276,7 @@ fox_window_export_svg_try(lua_State *L)
     }
 
     fx_plot_window* win = wm.window();
-    // fx_plot_canvas* fxcanvas = win->canvas();
-    window_surface& surface = win->canvas()->surface();
+    window_surface& surface = win->surface();
 
     canvas_svg canvas(f, h);
     canvas.write_header(w, h);
