@@ -11,6 +11,7 @@ extern "C" {
 #include "lua-cpp-utils.h"
 #include "lua-graph.h"
 #include "gs-types.h"
+#include "lua-utils.h"
 #include "plot.h"
 #include "canvas_svg.h"
 
@@ -73,21 +74,6 @@ public:
 private:
     lua_fox_window* m_handle;
 };
-
-static int
-error_return(lua_State* L, const char* error_msg)
-{
-    lua_pushstring(L, error_msg);
-    return (-1);
-}
-
-static int
-type_error_return(lua_State* L, int narg, const char* req_type)
-{
-    const char *actual_type = full_type_name(L, narg);
-    lua_pushfstring(L, "bad argument #%d (expected %s, got %s)", narg, req_type, actual_type);
-    return (-1);
-}
 
 int
 fox_window_new (lua_State *L)
