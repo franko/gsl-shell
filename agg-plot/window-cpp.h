@@ -1,94 +1,71 @@
 
-extern "C" {
-#include "lua.h"
-}
+#include "lua-defs.h"
 
+#include "lua-gsl.h"
+#include "lua-utils.h"
+#include "gs-types.h"
 #include "window.h"
 #include "canvas-window-cpp.h"
-#include "resource-manager.h"
-#include "lua-plot-cpp.h"
-#include "lua-cpp-utils.h"
-#include "plot.h"
-#include "rect.h"
-#include "list.h"
+#include "window_surface.h"
 
-#include "agg_color_rgba.h"
-#include "agg_trans_affine.h"
-#include "split-parser.h"
+class window;
+
+class native_display_window : public display_window {
+public:
+    native_display_window(): m_window(0) {}
+
+    void attach(window* win) { m_window = win; }
+
+    virtual void update_region(const agg::rect_i& r);
+private:
+    window* m_window;
+};
 
 class window : public canvas_window {
 public:
     int window_id;
 
-    typedef agg::trans_affine bmatrix;
+    class acquire {
+    public:
+        acquire(lua_State*L, int index)
+        {
+            m_window = (window*) gs_is_userdata(L, index, GS_WINDOW);
+            if (m_window)
+                m_window->lock();
+        }
 
-    struct ref {
-        typedef tree::node<ref, direction_e> node;
+        ~acquire()
+        {
+            if (m_window)
+                m_window->unlock();
+        }
 
-        sg_plot* plot;
-        int slot_id;
+        window* get_window() { return m_window; }
 
-        plot_render_info inf;
-        bmatrix matrix;
+        bool is_defined() const { return (m_window != 0); }
+        bool is_running() const { return m_window->status == canvas_window::running; }
 
-        unsigned char *layer_buf;
-        agg::rendering_buffer layer_img;
-
-        bool valid_rect;
-        opt_rect<double> dirty_rect;
-
-        ref(sg_plot* p = 0)
-            : plot(p), matrix(), layer_buf(0), valid_rect(true), dirty_rect()
-        {};
-
-        ~ref() {
-            if (layer_buf) delete layer_buf;
-        };
-
-        void save_image (agg::rendering_buffer& winbuf, agg::rect_base<int>& r,
-                         int bpp, bool flip_y);
-
-        static void compose(bmatrix& a, const bmatrix& b);
-        static int calculate(node *t, const bmatrix& m, int id);
+    private:
+        window* m_window;
     };
-
-private:
-    void draw_slot_by_ref(ref& ref, bool dirty);
-    void refresh_slot_by_ref(ref& ref, bool draw_all);
-    void draw_rec(ref::node *n);
-    void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
-
-    static ref *ref_lookup (ref::node *p, int slot_id);
-
-    ref::node* m_tree;
 
 public:
-    window(gsl_shell_state* gs, agg::rgba8 bgcol= colors::white):
-        canvas_window(gs, bgcol), m_tree(0)
+    window(gsl_shell_state* gs, const char* split, agg::rgba8 bgcol= colors::white):
+        canvas_window(gs, bgcol), m_surface(&m_window_proxy, split)
     {
-        this->split(".");
-    };
+        m_window_proxy.attach(this);
+    }
 
-    ~window() {
-        if (m_tree) delete m_tree;
-    };
+    void surface_update_region(const agg::rect_i& r);
 
-    bool split(const char *spec);
-    int attach(sg_plot *plot, const char *spec);
-    void draw_slot(int slot_id, bool update_req);
-    void refresh_slot(int slot_id);
-    void start(lua_State *L, gslshell::ret_status& st);
+    window_surface& surface() { return m_surface; }
 
-    void save_slot_image(int slot_id);
-    void restore_slot_image(int slot_id);
-
-    void cleanup_refs(lua_State *L, int window_index)
-    {
-        cleanup_tree_rec (L, window_index, m_tree);
-    };
-
-    void draw_slot(int slot_id);
+    int start(lua_State *L);
 
     virtual void on_draw();
     virtual void on_resize(int sx, int sy);
+
+private:
+    native_display_window m_window_proxy;
+    window_surface m_surface;
 };

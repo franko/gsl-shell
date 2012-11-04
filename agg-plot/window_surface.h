@@ -1,8 +1,6 @@
 #ifndef FOXGUI_WINDOW_SURFACE_H
 #define FOXGUI_WINDOW_SURFACE_H
 
-#include <fx.h>
-
 #include <agg_basics.h>
 #include <agg_rendering_buffer.h>
 #include <agg_trans_affine.h>
