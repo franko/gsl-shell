@@ -14,6 +14,7 @@ extern "C" {
 #include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-parser.h"
+#include "lua-utils.h"
 #include "platform_support_ext.h"
 
 __BEGIN_DECLS
@@ -21,6 +22,7 @@ __BEGIN_DECLS
 static int window_show            (lua_State *L);
 static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
+static int window_save_svg        (lua_State *L);
 
 static const struct luaL_Reg window_functions[] = {
     {"window",        window_new},
@@ -32,8 +34,9 @@ static const struct luaL_Reg window_methods[] = {
     {"attach",         window_attach        },
     {"layout",         window_split         },
     {"update",         window_update        },
-    {"close",          window_close        },
-    {"__gc",           window_free       },
+    {"close",          window_close         },
+    {"save_svg",       window_save_svg      },
+    {"__gc",           window_free          },
     {NULL, NULL}
 };
 
@@ -301,6 +304,20 @@ window::split(const char *spec)
     bmatrix m0;
     ref::calculate(m_tree, m0, 0);
     return (parse_tree != NULL);
+}
+
+template <class Function>
+void window::plot_apply_rec(Function& f, ref::node* n)
+{
+    list<ref::node*> *ls;
+    for (ls = n->tree(); ls != NULL; ls = ls->next())
+        this->plot_apply_rec(f, ls->content());
+
+    ref* ref = n->content();
+    if (ref)
+    {
+        f.call(ref);
+    }
 }
 
 static const char *
@@ -584,6 +601,78 @@ window_close_wait (lua_State *L)
     window *win = object_check<window>(L, 1, GS_WINDOW);
     win->shutdown_close();
     return 0;
+}
+
+class svg_writer {
+public:
+    svg_writer(FILE* f, double w, double h):
+    m_canvas(f, h), m_width(w), m_height(h)
+    { }
+
+    void write_header() { m_canvas.write_header(m_width, m_height); }
+    void write_end() { m_canvas.write_end(); }
+
+    void call(window::ref* ref)
+    {
+        char plot_name[64];
+        sg_plot* p = ref->plot;
+        if (p)
+        {
+            agg::trans_affine mtx = ref->matrix;
+            agg::trans_affine_scaling scale(m_width, m_height);
+            trans_affine_compose(mtx, scale);
+            sprintf(plot_name, "plot%u", ref->slot_id + 1);
+            m_canvas.write_group_header(plot_name);
+            p->draw(m_canvas, mtx, NULL);
+            m_canvas.write_group_end(plot_name);
+        }
+    }
+
+private:
+    canvas_svg m_canvas;
+    double m_width, m_height;
+};
+
+static int
+window_save_svg_try(lua_State *L)
+{
+    window *win = object_check<window>(L, 1, GS_WINDOW);
+    const char *filename = lua_tostring(L, 2);
+    const double w = luaL_optnumber(L, 3, 600.0);
+    const double h = luaL_optnumber(L, 4, 600.0);
+
+    if (!filename) return type_error_return(L, 2, "string");
+
+    unsigned fnlen = strlen(filename);
+    if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
+    {
+        const char* basename = (fnlen > 0 ? filename : "unnamed");
+        lua_pushfstring(L, "%s.svg", basename);
+        filename = lua_tostring(L, -1);
+    }
+
+    FILE* f = fopen(filename, "w");
+    if (!f)
+    {
+        lua_pushfstring(L, "cannot open filename: %s", filename);
+        return (-1);
+    }
+
+    svg_writer svg_writer(f, w, h);
+    svg_writer.write_header();
+    win->plot_apply(svg_writer);
+    svg_writer.write_end();
+    fclose(f);
+
+    return 0;
+}
+
+int
+window_save_svg(lua_State *L)
+{
+    int nret = window_save_svg_try(L);
+    if (nret < 0) return lua_error(L);
+    return nret;
 }
 
 void

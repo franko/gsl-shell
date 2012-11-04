@@ -60,6 +60,9 @@ private:
 
     static ref *ref_lookup (ref::node *p, int slot_id);
 
+    template <class Function>
+    void plot_apply_rec(Function& f, ref::node* n);
+
     ref::node* m_tree;
 
 public:
@@ -72,6 +75,8 @@ public:
     ~window() {
         if (m_tree) delete m_tree;
     };
+
+    template <class Function> void plot_apply(Function& f) { this->plot_apply_rec(f, m_tree); }
 
     bool split(const char *spec);
     int attach(sg_plot *plot, const char *spec);
