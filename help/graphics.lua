@@ -121,6 +121,15 @@ graph.window([layout])
    chosen recursively.
 ]],
 
+  [Window.save_svg] = [[
+<window>:save_svg(filename[, width, height])
+
+   Save the content of the window in the given filename in SVG format.
+   Two optional parameters can be given to specify the width and
+   height of the drawing area. If the "svg" extension is not given it
+   will be automatically added.
+]],
+
   [graph.plot] = [[
 graph.plot([title])
 

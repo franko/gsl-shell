@@ -347,6 +347,12 @@ Window class
         w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
         w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
 
+   .. method:: save_svg(filename, width, height)
+
+      Save the content of the window in the given filename in SVG format.
+      Two optional parameters can be given to specify the width and height of the drawing area.
+      If the "svg" extension is not given it will be automatically added.
+
 .. _layout-string:
 
 Layout string
