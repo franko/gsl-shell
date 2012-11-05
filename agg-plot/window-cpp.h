@@ -45,6 +45,16 @@ public:
             if (layer_buf) delete layer_buf;
         };
 
+        void dispose_buffer()
+        {
+            valid_rect = false;
+            if (layer_buf)
+            {
+                delete [] layer_buf;
+                layer_buf = 0;
+            }
+        }
+
         void save_image (agg::rendering_buffer& winbuf, agg::rect_base<int>& r,
                          int bpp, bool flip_y);
 
@@ -55,7 +65,6 @@ public:
 private:
     void draw_slot_by_ref(ref& ref, bool dirty);
     void refresh_slot_by_ref(ref& ref, bool draw_all);
-    void draw_rec(ref::node *n);
     void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
     static ref *ref_lookup (ref::node *p, int slot_id);
@@ -87,13 +96,20 @@ public:
     void save_slot_image(int slot_id);
     void restore_slot_image(int slot_id);
 
-    void cleanup_refs(lua_State *L, int window_index)
-    {
-        cleanup_tree_rec (L, window_index, m_tree);
-    };
-
     void draw_slot(int slot_id);
 
     virtual void on_draw();
     virtual void on_resize(int sx, int sy);
+
+private:
+    struct slot_draw_function
+    {
+        slot_draw_function(window* w): win(w) { }
+        void call(window::ref* ref) { win->draw_slot_by_ref(*ref, false); }
+        window* win;
+    };
+
+    struct dispose_buffer_function {
+        void call(window::ref* ref) { ref->dispose_buffer(); }
+    };
 };

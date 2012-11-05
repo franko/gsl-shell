@@ -42,18 +42,6 @@ static const struct luaL_Reg window_methods[] = {
 
 __END_DECLS
 
-struct dispose_buffer {
-    static void func (window::ref& ref)
-    {
-        ref.valid_rect = false;
-        if (ref.layer_buf)
-        {
-            delete [] ref.layer_buf;
-            ref.layer_buf = 0;
-        }
-    }
-};
-
 void window::ref::compose(bmatrix& a, const bmatrix& b)
 {
     trans_affine_compose (a, b);
@@ -118,20 +106,6 @@ window::ref::save_image (agg::rendering_buffer& win_buf,
     }
 }
 
-void
-window::draw_rec(ref::node *n)
-{
-    list<ref::node*> *ls;
-    for (ls = n->tree(); ls != NULL; ls = ls->next())
-        draw_rec(ls->content());
-
-    ref *ref = n->content();
-    if (ref)
-    {
-        draw_slot_by_ref (*ref, false);
-    }
-}
-
 window::ref* window::ref_lookup (ref::node *p, int slot_id)
 {
     list<ref::node*> *t = p->tree();
@@ -182,7 +156,7 @@ window::draw_slot(int slot_id, bool clean_req)
         if (redraw)
         {
             draw_slot_by_ref(*ref, false);
-            dispose_buffer::func(*ref);
+            ref->dispose_buffer();
         }
 
         refresh_slot_by_ref(*ref, redraw);
@@ -262,7 +236,10 @@ void
 window::on_draw()
 {
     if (m_canvas)
-        draw_rec(m_tree);
+    {
+        slot_draw_function draw_func(this);
+        this->plot_apply(draw_func);
+    }
 }
 
 void
@@ -271,23 +248,17 @@ window::on_resize(int sx, int sy)
     this->canvas_window::on_resize(sx, sy);
     if (m_tree)
     {
-        tree::walk_rec<window::ref, direction_e, dispose_buffer>(m_tree);
+        dispose_buffer_function dispose;
+        this->plot_apply(dispose);
     }
 }
 
-void
-window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
-{
-    for (list<ref::node*> *ls = n->tree(); ls != NULL; ls = ls->next())
-        cleanup_tree_rec(L, window_index, ls->content());
-
-    ref *ref = n->content();
-    if (ref)
-    {
-        if (ref->plot)
-            window_refs_remove (L, ref->slot_id, window_index);
-    }
-}
+struct refs_remove_function {
+    refs_remove_function(lua_State *_L, int k): L(_L), window_index(k) {}
+    void call(window::ref* ref) { if (ref->plot) window_refs_remove(L, ref->slot_id, window_index); }
+    lua_State* L;
+    int window_index;
+};
 
 bool
 window::split(const char *spec)
@@ -497,7 +468,8 @@ window_split (lua_State *L)
 
     win->lock();
 
-    win->cleanup_refs(L, 1);
+    refs_remove_function refs_remove_func(L, 1);
+    win->plot_apply(refs_remove_func);
 
     if (! win->split(spec))
     {

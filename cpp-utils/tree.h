@@ -69,22 +69,6 @@ namespace tree {
       m_head = node_list::push_back(m_head, t);
     }
   };
-
-  template <class base_type, class tree_data_type, class f>
-  void walk_rec(node<base_type, tree_data_type> *t)
-  {
-    base_type *c = t->content();
-    if (c)
-      f::func(*c);
-
-    typedef node<base_type, tree_data_type> node_type;
-    list<node_type*>* ls = t->tree();
-    if (ls)
-      {
-        for ( ; ls; ls = ls->next())
-          walk_rec<base_type, tree_data_type, f> (ls->content());
-      }
-  }
 }
 
 #endif
