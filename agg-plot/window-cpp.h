@@ -41,18 +41,13 @@ public:
             : plot(p), matrix(), layer_buf(0), valid_rect(true), dirty_rect()
         {};
 
-        ~ref() {
-            if (layer_buf) delete layer_buf;
-        };
+        ~ref() { delete[] layer_buf; }
 
         void dispose_buffer()
         {
             valid_rect = false;
-            if (layer_buf)
-            {
-                delete [] layer_buf;
-                layer_buf = 0;
-            }
+            delete[] layer_buf;
+            layer_buf = 0;
         }
 
         void save_image (agg::rendering_buffer& winbuf, agg::rect_base<int>& r,
@@ -79,11 +74,9 @@ public:
         canvas_window(gs, bgcol), m_tree(0)
     {
         this->split(".");
-    };
+    }
 
-    ~window() {
-        if (m_tree) delete m_tree;
-    };
+    ~window() { delete m_tree; }
 
     template <class Function> void plot_apply(Function& f) { this->plot_apply_rec(f, m_tree); }
 
