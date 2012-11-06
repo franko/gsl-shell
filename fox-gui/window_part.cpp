@@ -5,13 +5,30 @@
 
 #include "window_part.h"
 
-int
+window_part::window_part()
+{
+    parse_reset();
+    split();
+}
+
+void
+window_part::parse_reset()
+{
+    const char* p = ".";
+    parse_element(p);
+}
+
+bool
 window_part::parse(const char* str)
 {
     const char* p = str;
     m_index.clear();
     parse_element(p);
-    return m_index.size();
+    bool success = (*p == 0);
+    if (!success)
+        parse_reset();
+    split();
+    return success;
 }
 
 bool

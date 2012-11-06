@@ -80,12 +80,22 @@ fox_window_new (lua_State *L)
 {
     gsl_shell_app* app = global_app;
 
-    const char* split = lua_tostring(L, 1);
+    const char* split_str = lua_tostring(L, 1);
 
     app->lock();
 
     lua_fox_window* bwin = new(L, GS_WINDOW) lua_fox_window();
-    fx_plot_window* win = new fx_plot_window(app, split, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
+    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
+
+    if (split_str)
+    {
+        if (!win->surface().split(split_str))
+        {
+            delete win;
+            app->unlock();
+            return luaL_error(L, "invalid split specification");
+        }
+    }
 
     bwin->window = win;
     bwin->app    = app;
@@ -123,8 +133,12 @@ fox_window_layout_try(lua_State* L)
             window_refs_remove(L, k + 1, window_lua_index);
     }
 
-    surface.split(spec);
+    bool split_success = surface.split(spec);
     surface.draw_all();
+
+    if (!split_success)
+        return error_return(L, "invalid split specification");
+
     return 0;
 }
 

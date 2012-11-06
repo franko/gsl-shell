@@ -5,10 +5,10 @@
 #include "fatal.h"
 #include "lua-graph.h"
 
-window_surface::window_surface(display_window* win, const char* split_str):
+window_surface::window_surface(display_window* win):
 m_img(), m_save_img(), m_window(win), m_canvas(0)
 {
-    split(split_str ? split_str : ".");
+    clear_plots_list();
 }
 
 window_surface::~window_surface()
@@ -16,15 +16,20 @@ window_surface::~window_surface()
     delete m_canvas;
 }
 
-void window_surface::split(const char* split_str)
+void
+window_surface::clear_plots_list()
 {
-    m_part.parse(split_str);
-    m_part.split();
-
     m_plots.clear();
     plot_ref empty;
     for (unsigned k = 0; k < m_part.get_slot_number(); k++)
         m_plots.add(empty);
+}
+
+bool window_surface::split(const char* split_str)
+{
+    bool success = m_part.parse(split_str);
+    clear_plots_list();
+    return success;
 }
 
 bool window_surface::resize(unsigned ww, unsigned hh)

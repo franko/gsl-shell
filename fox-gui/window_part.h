@@ -15,17 +15,19 @@ class window_part {
     typedef agg::rect_base<num_type> rect_type;
 
 public:
-    window_part() {};
+    window_part();
 
-    int parse(const char* split);
+    bool parse(const char* split);
 
-    void split();
     int get_slot_index(const char* str);
     unsigned get_slot_number() const;
 
     agg::rect_i rect(unsigned index, int canvas_width, int canvas_height) const;
 
 private:
+    void parse_reset();
+    void split();
+
     int skip_node(int index, int& leaf_count);
     int goto_child_index(int pindex, int child_index, int& leaf_count);
 

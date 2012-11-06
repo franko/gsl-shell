@@ -25,7 +25,7 @@ class fx_plot_window : public FXMainWindow
 {
     FXDECLARE(fx_plot_window)
 public:
-    fx_plot_window(FXApp* a, const char* split, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
+    fx_plot_window(FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
     ~fx_plot_window();
 
@@ -45,7 +45,7 @@ public:
     int lua_id; // the following is used by Lua to keep trace of the window
 
 protected:
-    fx_plot_window(): m_surface(&m_display_window, NULL) {}
+    fx_plot_window(): m_surface(&m_display_window) {}
 
 private:
     FXMenuBar* m_menu_bar;

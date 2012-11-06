@@ -38,11 +38,11 @@ public:
     enum { image_pixel_width = 3 };
     typedef image_gen<image_pixel_width, true> image;
 
-    window_surface(display_window* window, const char* split);
+    window_surface(display_window* window);
     ~window_surface();
 
     int attach(sg_plot* p, const char* slot_str);
-    void split(const char* split_str);
+    bool split(const char* split_str);
 
     bool canvas_size_match(unsigned ww, unsigned hh)
     {
@@ -81,6 +81,8 @@ public:
     void restore_slot_image(unsigned index);
 
 private:
+    void clear_plots_list();
+
     void render(plot_ref& ref, const agg::rect_i& r);
 
     opt_rect<int> render_drawing_queue(plot_ref& ref, const agg::rect_i& r);
