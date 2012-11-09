@@ -41,9 +41,14 @@ public:
             : plot(p), matrix(), layer_buf(0), valid_rect(true), dirty_rect()
         {};
 
-        ~ref() {
-            if (layer_buf) delete layer_buf;
-        };
+        ~ref() { delete[] layer_buf; }
+
+        void dispose_buffer()
+        {
+            valid_rect = false;
+            delete[] layer_buf;
+            layer_buf = 0;
+        }
 
         void save_image (agg::rendering_buffer& winbuf, agg::rect_base<int>& r,
                          int bpp, bool flip_y);
@@ -55,10 +60,12 @@ public:
 private:
     void draw_slot_by_ref(ref& ref, bool dirty);
     void refresh_slot_by_ref(ref& ref, bool draw_all);
-    void draw_rec(ref::node *n);
     void cleanup_tree_rec (lua_State *L, int window_index, ref::node* n);
 
     static ref *ref_lookup (ref::node *p, int slot_id);
+
+    template <class Function>
+    void plot_apply_rec(Function& f, ref::node* n);
 
     ref::node* m_tree;
 
@@ -67,11 +74,11 @@ public:
         canvas_window(gs, bgcol), m_tree(0)
     {
         this->split(".");
-    };
+    }
 
-    ~window() {
-        if (m_tree) delete m_tree;
-    };
+    ~window() { delete m_tree; }
+
+    template <class Function> void plot_apply(Function& f) { this->plot_apply_rec(f, m_tree); }
 
     bool split(const char *spec);
     int attach(sg_plot *plot, const char *spec);
@@ -82,13 +89,20 @@ public:
     void save_slot_image(int slot_id);
     void restore_slot_image(int slot_id);
 
-    void cleanup_refs(lua_State *L, int window_index)
-    {
-        cleanup_tree_rec (L, window_index, m_tree);
-    };
-
     void draw_slot(int slot_id);
 
     virtual void on_draw();
     virtual void on_resize(int sx, int sy);
+
+private:
+    struct slot_draw_function
+    {
+        slot_draw_function(window* w): win(w) { }
+        void call(window::ref* ref) { win->draw_slot_by_ref(*ref, false); }
+        window* win;
+    };
+
+    struct dispose_buffer_function {
+        void call(window::ref* ref) { ref->dispose_buffer(); }
+    };
 };

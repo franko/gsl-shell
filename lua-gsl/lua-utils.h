@@ -41,6 +41,10 @@ extern lua_Number   mlua_named_optnumber (lua_State *L, int index,
 extern lua_Number   mlua_named_number    (lua_State *L, int index,
 					  const char *key);
 
+
+extern int error_return(lua_State* L, const char* error_msg);
+extern int type_error_return(lua_State* L, int narg, const char* req_type);
+
 __END_DECLS
 
 #endif

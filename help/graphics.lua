@@ -101,7 +101,10 @@ graph.window([layout])
 
    Create a new empty window with the layout given by the optional
    layout string. If the argument is omitted, the window will have a
-   single drawing area that will cover the whole window.
+   single drawing area that will cover the whole window. If the second
+   argument evaluates to "true" the window will not be shown on the
+   screen. The window can be shown afterward using the method
+   <window>:show().
 ]],
 
   [Window.layout] = [[
@@ -119,6 +122,15 @@ graph.window([layout])
    integer numbers in the form 'n1,n2,...,nk'. For each of the
    specified integers, the corresponding window partition will be
    chosen recursively.
+]],
+
+  [Window.save_svg] = [[
+<window>:save_svg(filename[, width, height])
+
+   Save the content of the window in the given filename in SVG format.
+   Two optional parameters can be given to specify the width and
+   height of the drawing area. If the "svg" extension is not given it
+   will be automatically added.
 ]],
 
   [graph.plot] = [[

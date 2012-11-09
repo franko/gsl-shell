@@ -1,9 +1,12 @@
 #ifndef FOXGUI_IMAGE_BUF_H
 #define FOXGUI_IMAGE_BUF_H
 
+#include <new>
+
 #include "defs.h"
 
-#include <agg_rendering_buffer.h>
+#include "agg_rendering_buffer.h"
+#include "rendering_buffer_utils.h"
 
 template <unsigned PixelSize, bool FlipY>
 struct image_gen : agg::rendering_buffer
@@ -48,6 +51,17 @@ struct image_gen : agg::rendering_buffer
         if (!a.defined() || !b.defined())
             return false;
         return (a.width() == b.width() && a.height() == b.height());
+    }
+
+    static void copy_region(image_gen& dest_img, const image_gen& src_img, const agg::rect_i r)
+    {
+        rendering_buffer_ro src;
+        rendering_buffer_get_const_view(src, src_img, r, PixelSize);
+
+        agg::rendering_buffer dest;
+        rendering_buffer_get_view(dest, dest_img, r, PixelSize);
+
+        dest.copy_from(src);
     }
 
 private:

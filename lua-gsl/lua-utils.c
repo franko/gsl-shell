@@ -70,3 +70,18 @@ mlua_named_string (lua_State *L, int index, const char *key)
   lua_pop (L, 1);
   return r;
 }
+
+int
+error_return(lua_State* L, const char* error_msg)
+{
+    lua_pushstring(L, error_msg);
+    return (-1);
+}
+
+int
+type_error_return(lua_State* L, int narg, const char* req_type)
+{
+    const char *actual_type = full_type_name(L, narg);
+    lua_pushfstring(L, "bad argument #%d (expected %s, got %s)", narg, req_type, actual_type);
+    return (-1);
+}

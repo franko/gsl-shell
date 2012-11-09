@@ -319,12 +319,12 @@ Window class
 
 .. class:: Window
 
-   .. function:: window([layout])
+   .. function:: window([layout, defer_show])
 
-      Create a new empty window with the layout given by the optional
-      :ref:`layout string <layout-string>`. If the argument is omitted
-      the window will have a single drawing area that will cover the whole
-      window.
+      Create a new empty window with the layout given by the optional :ref:`layout string <layout-string>`.
+      If the argument is omitted the window will have a single drawing area that will cover the whole window.
+      If the second argument evaluates to "true" the window will not be shown on the screen.
+      The window can be shown afterward using the method :meth:`~Window.show`.
 
    .. method:: layout(spec)
 
@@ -346,6 +346,12 @@ Window class
 
         w:attach(p1, '1,1') -- attach plot "p1" to a the lower left subwindow
         w:attach(p1, '2')   -- attach plot "p2" to a the upper subwindow
+
+   .. method:: save_svg(filename, width, height)
+
+      Save the content of the window in the given filename in SVG format.
+      Two optional parameters can be given to specify the width and height of the drawing area.
+      If the "svg" extension is not given it will be automatically added.
 
 .. _layout-string:
 

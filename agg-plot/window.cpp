@@ -14,13 +14,14 @@ extern "C" {
 #include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-parser.h"
+#include "lua-utils.h"
 #include "platform_support_ext.h"
 
 __BEGIN_DECLS
 
-static int window_show            (lua_State *L);
 static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
+static int window_save_svg        (lua_State *L);
 
 static const struct luaL_Reg window_functions[] = {
     {"window",        window_new},
@@ -32,24 +33,13 @@ static const struct luaL_Reg window_methods[] = {
     {"attach",         window_attach        },
     {"layout",         window_split         },
     {"update",         window_update        },
-    {"close",          window_close        },
-    {"__gc",           window_free       },
+    {"close",          window_close         },
+    {"save_svg",       window_save_svg      },
+    {"__gc",           window_free          },
     {NULL, NULL}
 };
 
 __END_DECLS
-
-struct dispose_buffer {
-    static void func (window::ref& ref)
-    {
-        ref.valid_rect = false;
-        if (ref.layer_buf)
-        {
-            delete [] ref.layer_buf;
-            ref.layer_buf = 0;
-        }
-    }
-};
 
 void window::ref::compose(bmatrix& a, const bmatrix& b)
 {
@@ -115,20 +105,6 @@ window::ref::save_image (agg::rendering_buffer& win_buf,
     }
 }
 
-void
-window::draw_rec(ref::node *n)
-{
-    list<ref::node*> *ls;
-    for (ls = n->tree(); ls != NULL; ls = ls->next())
-        draw_rec(ls->content());
-
-    ref *ref = n->content();
-    if (ref)
-    {
-        draw_slot_by_ref (*ref, false);
-    }
-}
-
 window::ref* window::ref_lookup (ref::node *p, int slot_id)
 {
     list<ref::node*> *t = p->tree();
@@ -179,7 +155,7 @@ window::draw_slot(int slot_id, bool clean_req)
         if (redraw)
         {
             draw_slot_by_ref(*ref, false);
-            dispose_buffer::func(*ref);
+            ref->dispose_buffer();
         }
 
         refresh_slot_by_ref(*ref, redraw);
@@ -259,7 +235,10 @@ void
 window::on_draw()
 {
     if (m_canvas)
-        draw_rec(m_tree);
+    {
+        slot_draw_function draw_func(this);
+        this->plot_apply(draw_func);
+    }
 }
 
 void
@@ -268,23 +247,17 @@ window::on_resize(int sx, int sy)
     this->canvas_window::on_resize(sx, sy);
     if (m_tree)
     {
-        tree::walk_rec<window::ref, direction_e, dispose_buffer>(m_tree);
+        dispose_buffer_function dispose;
+        this->plot_apply(dispose);
     }
 }
 
-void
-window::cleanup_tree_rec (lua_State *L, int window_index, ref::node* n)
-{
-    for (list<ref::node*> *ls = n->tree(); ls != NULL; ls = ls->next())
-        cleanup_tree_rec(L, window_index, ls->content());
-
-    ref *ref = n->content();
-    if (ref)
-    {
-        if (ref->plot)
-            window_refs_remove (L, ref->slot_id, window_index);
-    }
-}
+struct refs_remove_function {
+    refs_remove_function(lua_State *_L, int k): L(_L), window_index(k) {}
+    void call(window::ref* ref) { if (ref->plot) window_refs_remove(L, ref->slot_id, window_index); }
+    lua_State* L;
+    int window_index;
+};
 
 bool
 window::split(const char *spec)
@@ -301,6 +274,20 @@ window::split(const char *spec)
     bmatrix m0;
     ref::calculate(m_tree, m0, 0);
     return (parse_tree != NULL);
+}
+
+template <class Function>
+void window::plot_apply_rec(Function& f, ref::node* n)
+{
+    list<ref::node*> *ls;
+    for (ls = n->tree(); ls != NULL; ls = ls->next())
+        this->plot_apply_rec(f, ls->content());
+
+    ref* ref = n->content();
+    if (ref)
+    {
+        f.call(ref);
+    }
 }
 
 static const char *
@@ -418,22 +405,32 @@ void window::start (lua_State *L, gslshell::ret_status& st)
     }
 }
 
+static void
+show_window(lua_State* L, window* win)
+{
+    gslshell::ret_status st;
+    win->start(L, st);
+
+    if (st.error_msg())
+        luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+}
+
 int
 window_new (lua_State *L)
 {
     window *win = push_new_object<window>(L, GS_WINDOW, global_state);
     const char *spec = lua_tostring (L, 1);
-
-    gslshell::ret_status st;
-    win->start(L, st);
-
-    if (st.error_msg())
-        return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+    int defer_show = lua_toboolean(L, 2);
 
     if (spec)
     {
         if (!win->split(spec))
             return luaL_error(L, "invalid layout specification");
+    }
+
+    if (!defer_show)
+    {
+        show_window(L, win);
     }
 
     return 1;
@@ -443,13 +440,7 @@ int
 window_show (lua_State *L)
 {
     window *win = object_check<window>(L, 1, GS_WINDOW);
-
-    gslshell::ret_status st;
-    win->start(L, st);
-
-    if (st.error_msg())
-        return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
-
+    show_window(L, win);
     return 0;
 }
 
@@ -480,7 +471,8 @@ window_split (lua_State *L)
 
     win->lock();
 
-    win->cleanup_refs(L, 1);
+    refs_remove_function refs_remove_func(L, 1);
+    win->plot_apply(refs_remove_func);
 
     if (! win->split(spec))
     {
@@ -584,6 +576,78 @@ window_close_wait (lua_State *L)
     window *win = object_check<window>(L, 1, GS_WINDOW);
     win->shutdown_close();
     return 0;
+}
+
+class svg_writer {
+public:
+    svg_writer(FILE* f, double w, double h):
+    m_canvas(f, h), m_width(w), m_height(h)
+    { }
+
+    void write_header() { m_canvas.write_header(m_width, m_height); }
+    void write_end() { m_canvas.write_end(); }
+
+    void call(window::ref* ref)
+    {
+        char plot_name[64];
+        sg_plot* p = ref->plot;
+        if (p)
+        {
+            agg::trans_affine mtx = ref->matrix;
+            agg::trans_affine_scaling scale(m_width, m_height);
+            trans_affine_compose(mtx, scale);
+            sprintf(plot_name, "plot%u", ref->slot_id + 1);
+            m_canvas.write_group_header(plot_name);
+            p->draw(m_canvas, mtx, NULL);
+            m_canvas.write_group_end(plot_name);
+        }
+    }
+
+private:
+    canvas_svg m_canvas;
+    double m_width, m_height;
+};
+
+static int
+window_save_svg_try(lua_State *L)
+{
+    window *win = object_check<window>(L, 1, GS_WINDOW);
+    const char *filename = lua_tostring(L, 2);
+    const double w = luaL_optnumber(L, 3, 600.0);
+    const double h = luaL_optnumber(L, 4, 600.0);
+
+    if (!filename) return type_error_return(L, 2, "string");
+
+    unsigned fnlen = strlen(filename);
+    if (fnlen <= 4 || strcmp(filename + (fnlen - 4), ".svg") != 0)
+    {
+        const char* basename = (fnlen > 0 ? filename : "unnamed");
+        lua_pushfstring(L, "%s.svg", basename);
+        filename = lua_tostring(L, -1);
+    }
+
+    FILE* f = fopen(filename, "w");
+    if (!f)
+    {
+        lua_pushfstring(L, "cannot open filename: %s", filename);
+        return (-1);
+    }
+
+    svg_writer svg_writer(f, w, h);
+    svg_writer.write_header();
+    win->plot_apply(svg_writer);
+    svg_writer.write_end();
+    fclose(f);
+
+    return 0;
+}
+
+int
+window_save_svg(lua_State *L)
+{
+    int nret = window_save_svg_try(L);
+    if (nret < 0) return lua_error(L);
+    return nret;
 }
 
 void

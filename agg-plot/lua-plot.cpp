@@ -494,11 +494,24 @@ plot_flush (lua_State *L)
 int
 plot_show (lua_State *L)
 {
-    lua_pushcfunction (L, app_window_hooks->attach);
-    (*app_window_hooks->create)(L);
-    lua_pushvalue (L, 1);
-    lua_pushstring (L, "");
-    lua_call (L, 3, 0);
+    /* create a window without shouwing it */
+    lua_pushcfunction(L, app_window_hooks->create);
+    lua_pushstring(L, ".");
+    lua_pushboolean(L, 1);
+    lua_call(L, 2, 1);
+
+    /* attach the plot to the window */
+    lua_pushcfunction(L, app_window_hooks->attach);
+    lua_pushvalue(L, 2);
+    lua_pushvalue(L, 1);
+    lua_pushstring(L, "");
+    lua_call(L, 3, 0);
+
+    /* show the window */
+    lua_pushcfunction(L, app_window_hooks->show);
+    lua_pushvalue(L, 2);
+    lua_call(L, 1, 0);
+
     return 0;
 }
 
