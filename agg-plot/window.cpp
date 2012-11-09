@@ -19,7 +19,6 @@ extern "C" {
 
 __BEGIN_DECLS
 
-static int window_show            (lua_State *L);
 static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
 static int window_save_svg        (lua_State *L);
@@ -406,22 +405,32 @@ void window::start (lua_State *L, gslshell::ret_status& st)
     }
 }
 
+static void
+show_window(lua_State* L, window* win)
+{
+    gslshell::ret_status st;
+    win->start(L, st);
+
+    if (st.error_msg())
+        luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+}
+
 int
 window_new (lua_State *L)
 {
     window *win = push_new_object<window>(L, GS_WINDOW, global_state);
     const char *spec = lua_tostring (L, 1);
-
-    gslshell::ret_status st;
-    win->start(L, st);
-
-    if (st.error_msg())
-        return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
+    int defer_show = lua_toboolean(L, 2);
 
     if (spec)
     {
         if (!win->split(spec))
             return luaL_error(L, "invalid layout specification");
+    }
+
+    if (!defer_show)
+    {
+        show_window(L, win);
     }
 
     return 1;
@@ -431,13 +440,7 @@ int
 window_show (lua_State *L)
 {
     window *win = object_check<window>(L, 1, GS_WINDOW);
-
-    gslshell::ret_status st;
-    win->start(L, st);
-
-    if (st.error_msg())
-        return luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
-
+    show_window(L, win);
     return 0;
 }
 

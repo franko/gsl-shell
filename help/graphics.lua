@@ -101,7 +101,10 @@ graph.window([layout])
 
    Create a new empty window with the layout given by the optional
    layout string. If the argument is omitted, the window will have a
-   single drawing area that will cover the whole window.
+   single drawing area that will cover the whole window. If the second
+   argument evaluates to "true" the window will not be shown on the
+   screen. The window can be shown afterward using the method
+   <window>:show().
 ]],
 
   [Window.layout] = [[

@@ -34,5 +34,5 @@ fx_plot_window::~fx_plot_window()
     delete m_plot_menu;
 
     if (m_lua_window)
-        lua_window_set_closed(m_lua_window);
+        set_lua_status(closed);
 }

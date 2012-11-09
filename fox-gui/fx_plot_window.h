@@ -8,7 +8,20 @@
 
 #include "window_surface.h"
 
-struct lua_fox_window;
+class fx_plot_window;
+
+__BEGIN_DECLS
+
+enum window_status_e { not_ready, running, closed };
+
+struct lua_fox_window
+{
+    fx_plot_window* window;
+    gsl_shell_app* app;
+    enum window_status_e status;
+};
+
+__END_DECLS
 
 class fox_display_window : public display_window {
 public:
@@ -41,6 +54,8 @@ public:
     window_surface& surface() { return m_surface; }
 
     void set_lua_window(lua_fox_window* w) { m_lua_window = w; }
+
+    void set_lua_status(window_status_e s) { m_lua_window->status = s; }
 
     int lua_id; // the following is used by Lua to keep trace of the window
 

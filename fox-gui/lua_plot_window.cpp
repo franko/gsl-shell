@@ -28,6 +28,7 @@ static const struct luaL_Reg fox_window_functions[] =
 
 static const struct luaL_Reg fox_window_methods[] =
 {
+    {"show",           fox_window_show },
     {"layout",         fox_window_layout },
     {"attach",         fox_window_attach        },
     {"close",          fox_window_close        },
@@ -35,15 +36,6 @@ static const struct luaL_Reg fox_window_methods[] =
     {"update",         fox_window_slot_update },
     {"save_svg",       fox_window_export_svg },
     {NULL, NULL}
-};
-
-enum window_status_e { not_ready, running, closed };
-
-struct lua_fox_window
-{
-    fx_plot_window* window;
-    gsl_shell_app* app;
-    enum window_status_e status;
 };
 
 __END_DECLS
@@ -67,6 +59,7 @@ public:
 
     bool is_defined() { return (m_handle != NULL); }
     bool is_running() { return (m_handle->status == running); }
+    int window_status() { return m_handle->status; }
 
     gsl_shell_app*  app()    { return m_handle->app; }
     fx_plot_window* window() { return m_handle->window; }
@@ -75,12 +68,23 @@ private:
     lua_fox_window* m_handle;
 };
 
+static void
+app_create_window(lua_State* L, gsl_shell_app* app, fx_plot_window* win)
+{
+    app->window_create_request(win);
+    win->lua_id = window_index_add (L, -1);
+    app->wait_action();
+
+    win->set_lua_status(running);
+}
+
 int
 fox_window_new (lua_State *L)
 {
     gsl_shell_app* app = global_app;
 
     const char* split_str = lua_tostring(L, 1);
+    int defer_show = lua_toboolean(L, 2);
 
     app->lock();
 
@@ -105,14 +109,31 @@ fox_window_new (lua_State *L)
 
     win->setTarget(app);
 
-    app->window_create_request(win);
-    win->lua_id = window_index_add (L, -1);
-    app->wait_action();
-
-    bwin->status = running;
+    if (!defer_show)
+        app_create_window(L, app, win);
 
     app->unlock();
     return 1;
+}
+
+static int
+fox_window_show_try(lua_State* L)
+{
+    window_mutex wm(L, 1);
+    if (!wm.is_defined()) return type_error_return(L, 2, "window");
+    if (wm.window_status() != not_ready) return error_return(L, "window is already running or closed");
+    fx_plot_window* win = wm.window();
+    gsl_shell_app* app = win->get_app();
+    app_create_window(L, app, win);
+    return 0;
+}
+
+int
+fox_window_show(lua_State* L)
+{
+    int nret = fox_window_show_try(L);
+    if (nret < 0) return lua_error(L);
+    return nret;
 }
 
 static int
@@ -156,7 +177,6 @@ fox_window_attach_try(lua_State *L)
     window_mutex wm(L, 1);
 
     if (!wm.is_defined()) return type_error_return(L, 1, "window");
-    if (!wm.is_running()) return error_return(L, "window is not running");
 
     sg_plot* p = object_cast<sg_plot>(L, 2, GS_PLOT);
     if (!p) return type_error_return(L, 2, "plot");
@@ -334,11 +354,13 @@ fox_window_export_svg(lua_State *L)
     return nret;
 }
 
+#if 0
 void lua_window_set_closed(void* _win)
 {
     lua_fox_window *win = (lua_fox_window*) _win;
     win->status = closed;
 }
+#endif
 
 void
 fox_window_register (lua_State *L)

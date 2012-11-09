@@ -319,12 +319,12 @@ Window class
 
 .. class:: Window
 
-   .. function:: window([layout])
+   .. function:: window([layout, defer_show])
 
-      Create a new empty window with the layout given by the optional
-      :ref:`layout string <layout-string>`. If the argument is omitted
-      the window will have a single drawing area that will cover the whole
-      window.
+      Create a new empty window with the layout given by the optional :ref:`layout string <layout-string>`.
+      If the argument is omitted the window will have a single drawing area that will cover the whole window.
+      If the second argument evaluates to "true" the window will not be shown on the screen.
+      The window can be shown afterward using the method :meth:`~Window.show`.
 
    .. method:: layout(spec)
 

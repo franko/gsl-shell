@@ -9,6 +9,7 @@ __BEGIN_DECLS
 
 struct window_hooks {
     int (*create)(lua_State* L);
+    int (*show)(lua_State* L);
     int (*attach)(lua_State* L);
     int (*update)(lua_State* L);
     int (*refresh)(lua_State* L);
