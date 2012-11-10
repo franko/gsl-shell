@@ -41,6 +41,7 @@ bool window_surface::resize(unsigned ww, unsigned hh)
 
     if (likely(m_img.resize(ww, hh)))
     {
+        delete m_canvas;
         m_canvas = new(std::nothrow) canvas(m_img, ww, hh, colors::white);
         return (m_canvas != NULL);
     }
