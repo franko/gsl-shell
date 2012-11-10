@@ -103,7 +103,6 @@ lua_State *globalL = NULL;
 struct gsl_shell_state gsl_shell[1];
 static const char *progname = LUA_PROGNAME;
 
-#warning the window show function should be implemented
 struct window_hooks app_window_hooks[1] = {{
         window_new, window_show, window_attach,
         window_slot_update, window_slot_refresh,
