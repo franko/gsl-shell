@@ -191,7 +191,7 @@ local function plot_roots()
    local lno = graph.fxline(|x| edet(x)/edet_scale(x), v2, erl)
    local lnd = graph.fxline(|x| edet_sub(x)/edet_sub_scale(x), ell, v2)
 
-   local ps = graph.plot()
+   local ps = graph.canvas()
    ps:addline(lno, 'red')
    ps:addline(lnd, 'magenta')
 
@@ -202,8 +202,8 @@ local function plot_roots()
 
    ps:addline(rln, 'blue', {{'marker', size=5}})
    ps.title = 'Energy eigenvalues determination / roots'
-   ps:show()
    ps:limits(ell, -1, erl, 1)
+   ps:show()
 end
 
 local function coeff(i)
@@ -226,7 +226,7 @@ end
 local coeffs
 
 local function plot_coeffs()
-   local w = graph.window 'v..'
+   local w = graph.window('v..', true)
 
    local ln = graph.ipath(sequence(function(i) return get_root(i+1), coeffs.data[2*i] end, 0, #roots-1))
    local p = graph.plot()
@@ -239,6 +239,7 @@ local function plot_coeffs()
    p:addline(ln)
    p.title = 'Initial state coeffs / imag part'
    w:attach(p, 1)
+   w:show()
 end
 
 local n, p
