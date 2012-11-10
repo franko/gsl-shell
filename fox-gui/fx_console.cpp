@@ -259,6 +259,7 @@ long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
 
         if (status == gsl_shell::incomplete_input)
         {
+            m_history.remove_last();
             m_status = input_mode;
         }
         else

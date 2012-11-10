@@ -21,6 +21,8 @@ public:
         m_index = 0;
     }
 
+    void remove_last() { m_lines.remove_last(); }
+
     bool is_first() const { return m_index == 0; }
 
     const char* previous()
