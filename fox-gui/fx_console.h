@@ -31,6 +31,7 @@ public:
 
     FXint get_input_length();
     long update_editable();
+    void update_input_line(const char* line);
 
     virtual void create();
 

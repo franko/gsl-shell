@@ -145,6 +145,13 @@ long fx_console::update_editable()
     return 0;
 }
 
+void fx_console::update_input_line(const char* line)
+{
+    FXint line_len = get_input_length();
+    replaceText(m_input_begin, line_len, line, strlen(line));
+    makePositionVisible(getCursorPos());
+}
+
 long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event = (FXEvent*)ptr;
@@ -200,8 +207,7 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
             extractText(m_saved_line, m_input_begin, line_len);
 
         const char* line = m_history.previous();
-        if (line)
-            replaceText(m_input_begin, line_len, line, strlen(line));
+        update_input_line(line);
 
         return 1;
     }
@@ -216,7 +222,7 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         if (m_history.is_first())
             line = m_saved_line.text();
 
-        replaceText(m_input_begin, line_len, line, strlen(line));
+        update_input_line(line);
         return 1;
     }
     case KEY_Home:
