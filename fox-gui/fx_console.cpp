@@ -305,9 +305,17 @@ long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
 
 long fx_console::on_cmd_insert_string(FXObject* obj, FXSelector sel, void* ptr)
 {
+    int pos = getCursorPos();
+    if (isPosSelected(pos))
+    {
+        if (getSelStartPos() < m_input_begin)
+            return 1;
+    }
+
     if (m_status == output_mode)
     {
         m_input_acc.append((const FXchar*) ptr);
     }
+
     return this->FXText::handle(obj, sel, ptr);
 }
