@@ -207,7 +207,8 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
             extractText(m_saved_line, m_input_begin, line_len);
 
         const char* line = m_history.previous();
-        update_input_line(line);
+        if (line)
+            update_input_line(line);
 
         return 1;
     }
@@ -222,7 +223,8 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         if (m_history.is_first())
             line = m_saved_line.text();
 
-        update_input_line(line);
+        if (line)
+            update_input_line(line);
         return 1;
     }
     case KEY_Home:
