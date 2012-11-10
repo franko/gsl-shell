@@ -58,6 +58,7 @@ public:
     long on_console_close(FXObject*,FXSelector,void*);
     long on_lua_quit(FXObject*,FXSelector,void*);
     long on_restart_lua_request(FXObject*,FXSelector,void*);
+    long on_lua_interrupt(FXObject*,FXSelector,void*);
 
     FXIcon* gsl_shell_icon;
     FXIcon* gsl_shell_mini;
@@ -68,6 +69,7 @@ public:
         ID_LUA_REQUEST = FXApp::ID_LAST,
         ID_CONSOLE_CLOSE,
         ID_LUA_RESTART,
+        ID_LUA_INTERRUPT,
         ID_LUA_QUIT,
         ID_LAST
     };

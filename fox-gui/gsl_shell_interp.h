@@ -32,6 +32,8 @@ public:
     virtual void close();
 
     int exec(const char* line);
+    void interrupt();
+
     const char* error_msg() const
     {
         return m_error_msg.cstr();

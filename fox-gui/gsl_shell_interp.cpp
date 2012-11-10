@@ -197,3 +197,19 @@ int gsl_shell::exec(const char *line)
 
     return (status == 0 ? eval_success : eval_error);
 }
+
+static void lstop(lua_State *L, lua_Debug *ar)
+{
+    (void)ar;  /* unused arg. */
+    lua_sethook(L, NULL, 0, 0);
+    /* Avoid luaL_error -- a C hook doesn't add an extra frame. */
+    luaL_where(L, 0);
+    lua_pushfstring(L, "%sinterrupted!", lua_tostring(L, -1));
+    lua_error(L);
+}
+
+void
+gsl_shell::interrupt()
+{
+    lua_sethook(this->L, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
+}

@@ -121,3 +121,12 @@ gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
     m_eval.unlock();
     sched_yield();
 }
+
+void
+gsl_shell_thread::interrupt_request()
+{
+    m_eval.lock();
+    if (m_status == busy)
+        this->interrupt();
+    m_eval.unlock();
+}

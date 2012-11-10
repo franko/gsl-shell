@@ -22,6 +22,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FX
 
     m_file_menu = new FXMenuPane(this);
     new FXMenuCommand(m_file_menu, "&Restart\tCtl-R", NULL, app, gsl_shell_app::ID_LUA_RESTART);
+    new FXMenuCommand(m_file_menu, "&Interrupt\tCtl-I", NULL, app, gsl_shell_app::ID_LUA_INTERRUPT);
     new FXMenuCommand(m_file_menu, "&Quit\tCtl-Q", NULL, this, FXTopWindow::ID_CLOSE);
     new FXMenuTitle(m_menu_bar, "&File", NULL, m_file_menu);
 

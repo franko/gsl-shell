@@ -14,6 +14,7 @@ FXDEFMAP(gsl_shell_app) gsl_shell_app_map[]=
     FXMAPFUNC(SEL_IO_READ, gsl_shell_app::ID_LUA_QUIT, gsl_shell_app::on_lua_quit),
     FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE, gsl_shell_app::on_console_close),
     FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_LUA_RESTART, gsl_shell_app::on_restart_lua_request),
+    FXMAPFUNC(SEL_COMMAND, gsl_shell_app::ID_LUA_INTERRUPT, gsl_shell_app::on_lua_interrupt),
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_app::on_window_close),
 };
 
@@ -147,4 +148,9 @@ long gsl_shell_app::on_restart_lua_request(FXObject*, FXSelector, void*)
 {
     m_engine.set_request(gsl_shell_thread::restart_request);
     return 0;
+}
+
+long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
+{
+    m_engine.interrupt_request();
 }

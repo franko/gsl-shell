@@ -48,6 +48,9 @@ public:
         return m_eval;
     }
 
+    // asyncronous request
+    void interrupt_request();
+
 private:
     thread_cmd_e process_request();
 
