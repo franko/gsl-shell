@@ -17,9 +17,10 @@ for d=2, max_dim do
    --Intializing work varaibles
    local a, b = ilist(|| 0, d), ilist(|| 1, d)
    local calls, n = d*1e4,1
+   local vegas_integ = num.vegas_prepare({N=d})
 
    --Obtaining monte carlo vegas callback
-   local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
+   local res,sig,num,cont = vegas_integ(getunitsphere(d),a,b,calls)
    local fmt = "Volume = %.3f +/- %.3f "
    print(string.format(fmt,res*2^d,sig*2^d))
 

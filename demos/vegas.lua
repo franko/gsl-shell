@@ -1,4 +1,4 @@
-local monte_vegas = num.monte_vegas
+local vegas_prepare = num.vegas_prepare
 local ilist = iter.ilist
 
 local function testdim(n)
@@ -12,7 +12,8 @@ local function testdim(n)
   local a, b = ilist(|| lo, n), ilist(|| hi, n)
   print("Integrating SUM_(k=1,"..n..") k*x[k]^2")
   local calls = 1e4*n
-  local result,sigma,runs,cont=monte_vegas(integrand,a,b,calls)
+  local vegas_integ = vegas_prepare({N=n})
+  local result,sigma,runs,cont=vegas_integ(integrand,a,b,calls)
   print( string.format([[
 result = %.6f
 sigma  = %.6f
@@ -28,7 +29,7 @@ local function demo1()
   local maxdim = 10
   local lo,hi = 0,2
   local results = {}
-  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..n)')
+  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..'..maxdim..')')
   p.clip, p.pad = false, true
   local exact = graph.filine(|n| n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1),maxdim)
   local computed = graph.filine(testdim,1,maxdim)
@@ -51,10 +52,11 @@ local function demo2()
   local max_dim = 14
   for d=2, max_dim do
     print("==========================================")
-    print("Calculating the volume of a unit ",d,"-sphere.")
+    print("Calculating the volume of a unit "..d.."-sphere.")
     local a, b = ilist(|| 0, d), ilist(|| 1, d)
     local calls, n = d*1e4,1
-    local res,sig,num,cont = num.monte_vegas(getunitsphere(d),a,b,calls)
+    local vegas_integ = num.vegas_prepare({N=d})
+    local res,sig,num,cont = vegas_integ(getunitsphere(d),a,b,calls)
     local fmt = "Volume = %.3f +/- %.3f "
     print(string.format(fmt,res*2^d,sig*2^d))
     while(sig/res > 0.005) do
@@ -85,6 +87,6 @@ return {'VEGAS Monte Carlo integration', {
   {
      name= 'sphere',
      f = demo2,
-     description = 'Calculate the volume of a unit n-sphere (n=2..10)'
+     description = 'Calculate the volume of a unit n-sphere (n=2..14)'
   }
 }}
