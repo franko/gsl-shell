@@ -212,9 +212,6 @@ local function recttostr(x, y, eps)
    local x_sub, y_sub = abs(x) < eps, abs(y) < eps
 
    local fmt = '%.8g'
-   if x_sub and y_sub then
-      fmt, x_sub, y_sub = '%.0f', x==0, y==0
-   end
 
    if not x_sub then
       local sign = x+eps < 0 and '-' or ''
@@ -246,10 +243,10 @@ local function matrix_display_gen(sel)
              for i=0, n1-1 do
                 for j=0, n2-1 do
                    local x, y = sel(m, i, j)
-                   sq = sq + x*x + y*y
+                   sq = sq + abs(x) + abs(y)
                 end
              end
-             local eps = sqrt(sq) * 1e-8
+             local eps = (sq / (n1*n2)) * 1e-6
              eps = eps > 0 and eps or 1
 
              lsrow = {}
