@@ -1,4 +1,4 @@
--- monte-vegas.lua
+-- vegas-defs.lua.in
 --
 -- Copyright (C) 2012 Lesley De Cruz
 --
@@ -32,9 +32,8 @@ local ffi = require 'ffi'
 local floor, min, max = math.floor, math.min, math.max
 local modf, sqrt, log  = math.modf, math.sqrt, math.log
 
--- a table is used here because this will be passed to the user defined function
-local x = {} -- evaluate the function at x (# dim)
 
+local x = ffi.new('double[$(N+1)]') -- evaluate the function at x (# dim)
 local dx  = ffi.new('double[$(N)]') -- ranges, delta x (# dim)
 local box = ffi.new('int[$(N)]')    -- current box coordinates (integer) (# dim)
 local bin = ffi.new('int[$(N)]')    -- current bin coordinates (integer) (# dim)
@@ -47,22 +46,26 @@ local xi  = ffi.new('double[$(N)][$(K+1)]')
 local xin = ffi.new('double[$(K+1)]')
 
 -- ratio of bin sizes (# bins)
-local weight = ffi.new('double[$(K)]') -- ratio of bin sizes (# bins)
-
+local weight = ffi.new('double[$(K)]')
 
 local bins = 1          -- number of bins
 local boxes = 0         -- number of boxes
 local volume = 1        -- volume of the integration domain
 
--- control variables
-local alpha = 1.5         -- grid stiffness (for rebinning), typically between
-                        -- 1 and 2 (higher is more adaptive, 0 is rigid)
-local mode = $(MODE_IMPORTANCE)
-local iterations = 5
+-- control variables:
+-- grid flexibility (for rebinning), typically between 1 and 2,
+-- (higher is more adaptive, 0 is rigid)
+local alpha = $(ALPHA)
+-- start out with importance or stratified sampling?
+-- if boxes >= bins/2, VEGAS switches from importance (1) to
+-- stratified (3) sampling unless mode is set to importance only (2)
+local mode =  $(MODE)
+-- number of iterations, used for consistency check
+-- each integration uses (calls/iterations) function calls
+local iterations = $(ITERATIONS)
 
 -- intermediate results for an iteration
-local result = 0
-local sigma = 0
+local result, sigma
 
 -- intermediate results for an integrate(...)
 
@@ -70,24 +73,10 @@ local sigma = 0
 local wtd_int_sum = 0
 local sum_wgts = 0        -- sum of weights (denominator)
 local chi_sum = 0         -- sum of squares of the integrals computed this run
-local it_num = 1          -- current iteration
-local it_start = 1        -- start iteration for this run
 local samples = 0         -- number of integrals computed this run
 local chisq = 0           -- chi^2 for the integrals computed this run
 local calls_per_box = 2
 local jac
-
---- initialise a fresh vegas state
---- NB: function argumens are table indexed from 1
-local function init(a, b)
-    for i=0, $(N-1) do
-        assert(a[i+1] < b[i+1],"lower bound should be smaller than upper bound")
-        dx[i] = b[i+1] - a[i+1]
-        volume = volume * dx[i]
-        xi[i][0] = 0
-        xi[i][1] = 1
-    end
-end
 
 --- reset the distribution of the grid and the current box coordinates
 local function reset_val_and_box()
@@ -95,9 +84,30 @@ local function reset_val_and_box()
     ffi.fill(d, $(N * K * SIZE_OF_DOUBLE))
 end
 
--- step through the box coordinates like
+--- initialise a fresh vegas state
+--- NB: function argumens are table indexed from 1
+local function init(a, b)
+    reset_val_and_box()
+    ffi.fill(bin, $(N * SIZE_OF_INT))
+    ffi.fill(weight, $(K * SIZE_OF_DOUBLE))
+    ffi.fill(xi,$(N * (K+1)))
+    volume = 1
+    for i=0, $(N-1) do
+        dx[i] = b[i+1] - a[i+1]
+        volume = volume * dx[i]
+        xi[i][0] = 0
+        xi[i][1] = 1
+    end
+    result, sigma = 0, 0
+    calls_per_box = 2
+    bins = 1
+    boxes = 0
+    mode = $(MODE)
+end
+
+-- step through the box coordinates as follows:
 -- {0, 1},..., {0, boxes-1}, {1, 0}, {1, 1},..., {1, boxes-1}, ...
--- returns true when reaching {0,0} again
+-- returns true when reaching {0,0} again.
 local function boxes_traversed()
 #   for i= N-1,0,-1 do
         box[$(i)] = ( (box[$(i)] + 1) % boxes)
@@ -130,10 +140,7 @@ end
 -- to later refine the grid
 local function accumulate_distribution(fsq)
 #   for i=0, N-1 do
-    do
-        local bin_$(i) = bin[$(i)]
-        d[$(i)][bin_$(i)] = d[$(i)][bin_$(i)] + fsq
-    end
+        d[$(i)][bin[$(i)]] = d[$(i)][bin[$(i)]] + fsq
 #   end
 end
 
@@ -143,7 +150,6 @@ local function clear_stage1()
     wtd_int_sum = 0
     sum_wgts = 0
     chi_sum = 0
-    it_num = 1
     samples = 0
     chisq = 0
 end
@@ -252,13 +258,11 @@ end
 --- run (self.iterations) integrations
 -- "a" will be a table indexed from 1
 local function integrate(f, a, rget)
-    it_start = it_num
     local cum_int, cum_sig = 0, 0
     for it= 1, iterations do
         local intgrl = 0 -- integral for this iteration
         local tss = 0 -- total squared sum
 
-        it_num = it_start + it
         reset_val_and_box()
 
         repeat
@@ -334,6 +338,5 @@ return {
     integrate    = integrate,
     clear_stage1 = clear_stage1,
     rebin_stage2 = rebin_stage2,
-    iterations   = function() return iterations end,
     chisq        = function() return chisq end,
 }
