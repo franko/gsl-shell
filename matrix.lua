@@ -580,12 +580,9 @@ local complex_mt = {
 ffi.metatype(gsl_complex, complex_mt)
 
 local function matrix_new_unit(n)
-   local m = matrix_alloc(n, n)
-   for i=0, n-1 do
-      for j=0, n-1 do
-         m.data[i*n+j] = (i == j and 1 or 0)
-      end
-   end
+   local m = matrix.alloc(n, n)
+   for k = 0, n*n - 1 do m.data[k] = 0 end
+   for k = 0, n-1 do m.data[k*(n+1)] = 1 end
    return m
 end
 
@@ -940,16 +937,11 @@ function matrix.svd(a)
    return u, s, v
 end
 
-matrix.diag = function(d)
-                 local n = #d
-                 local m = d.alloc(n, n)
-                 local mset, dget = m.set, d.get
-                 for i=1, n do
-                    for j= 1, n do
-                       local x = (i ~= j and 0 or dget(d, i, 1))
-                       mset(m, i, j, x)
-                    end
-                 end
+matrix.diag = function(t)
+                 local n = #t
+                 local m = matrix.alloc(n, n)
+                 for k = 0, n*n - 1 do m.data[k] = 0 end
+                 for k = 0, n-1 do m.data[k*(n+1)] = t[k+1] end
                  return m
               end
 

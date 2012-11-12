@@ -215,10 +215,9 @@ All the functions described in this section have an equivalent function for comp
 
    Return the hermitian conjugate of the matrix.
 
-.. function:: diag(v)
+.. function:: diag(t)
 
-   Given a column vector ``v`` of length ``n`` returns a diagonal
-   matrix whose diagonal elements are equal to the elements of ``v``.
+   Given a table ``t`` of length ``n`` returns a diagonal matrix whose diagonal elements are equal to the elements of ``t``.
 
 .. function:: unit(n)
 

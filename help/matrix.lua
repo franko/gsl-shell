@@ -60,16 +60,16 @@ matrix.hc(m)
 ]],
 
    [matrix.diag] = [[
-matrix.diag(v)
+matrix.diag(t)
 
-   Given a column vector "v" of length "n", returns a diagonal
-   matrix whose diagonal elements are equal to the elements of "v".
+   Given a table "t" of length "n", returns a diagonal matrix whose
+   diagonal elements are equal to the elements of "t".
 ]],
 
    [matrix.unit] = [[
 matrix.unit(n)
 
-   Return the unit matrix of dimension nxn.
+   Return the unit matrix of dimension n by n.
 ]],
 
    [matrix.set] = [[
