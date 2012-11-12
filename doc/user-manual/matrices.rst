@@ -123,6 +123,10 @@ Matrix methods
 
      Return a copy of the matrix.
 
+  .. method:: dim()
+
+     Return the dimensions of the matrix, in the order the numbers of rows and the number of columns.
+
   .. method:: get(i, j)
 
      This function returns the (i,j)-th element of a matrix. As a

@@ -658,6 +658,7 @@ matrix = {
 
 local matrix_methods = {
    alloc = matrix_alloc,
+   dim   = matrix_dim,
    col   = matrix_col,
    row   = matrix_row,
    get   = matrix_get,
@@ -720,19 +721,9 @@ local matrix_mt = {
 
 ffi.metatype(gsl_matrix, matrix_mt)
 
-matrix_complex = {
-   alloc = matrix_calloc,
-   col   = matrix_complex_col,
-   row   = matrix_complex_row,
-   get   = matrix_complex_get,
-   set   = matrix_complex_set,
-   copy  = matrix_complex_copy,
-   norm  = matrix_complex_norm,
-   slice = matrix_complex_slice
-}
-
 local matrix_complex_methods = {
    alloc = matrix_calloc,
+   dim   = matrix_dim,
    col   = matrix_complex_col,
    row   = matrix_complex_row,
    get   = matrix_complex_get,
