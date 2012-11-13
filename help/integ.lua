@@ -25,6 +25,18 @@ num.quad_prepare {method= <string>, order= <int>, limits= <int>}
       The maximum number of subdivisions for adaptive algorithms.
       The default value is 64.
 ]],
+
+   [num.linfit] = [[
+num.linfit(X, y[, w])
+
+   Perform a linear fit for the observations "y" using the model
+   matrix "X". It returns a vector with the coefficients of the fit,
+   the residual chi square and the covariance matrix. You can
+   optionally provide the weights "w" of the observations to obtain a
+   weighted linear fit. The argument "y" should be a column matrix of
+   length N while the model "X" should be a N x M matrix where M is
+   the number of basis in the linear model.
+]]
 }
 
 return M
