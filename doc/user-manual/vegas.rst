@@ -44,18 +44,46 @@ The VEGAS algorithm computes a number of independent estimates of the integral i
 
 The convergence of the algorithm can be tested using the overall chi-squared value of the results. A value which differs significantly from 1 indicates that the values from different iterations are inconsistent. In this case the weighted error will be underestimated, and further iterations of the algorithm are needed to obtain reliable results.
 
-The VEGAS algorithm uses a fixed number of calls to evaluate the integral. It is possible to call the continuation function, which is returned by :func:`num.monte_vegas`, with a higher number of calls to increase the accuracy of the result. Keep in mind that reducing :math:`\sigma` by a certain factor typically increases the number of calls quadratically, because :math:`\sigma \propto 1/\sqrt{n}`.
+The VEGAS algorithm uses a fixed number of calls to evaluate the integral. It is possible to call the continuation function, which is returned by :func:`num.vegas_integ`, with a higher number of calls to increase the accuracy of the result. Keep in mind that reducing :math:`\sigma` by a certain factor typically increases the number of calls quadratically, because :math:`\sigma \propto 1/\sqrt{n}`.
 
 Functions
 ---------
 
 .. module:: num
 
-.. function:: monte_vegas(f, a, b[, calls, r, chi_dev])
+.. function:: vegas_prepare(spec)
+ Prepare a VEGAS Monte Carlo integrator, ``vegas_integ``. ``spec`` is a table which can contain the following fields:
 
-   Use the VEGAS Monte Carlo algorithm to integrate the function ``f`` over the dim-dimensional hypercubic region defined by the lower and upper limits in the vectors ``a`` and ``b``. The integration uses a fixed number of function calls ``calls``, and obtains random sampling points using the :mod:`rng` random number generator ``r``. The results of the integration are based on a weighted average of five independent samples. ``chi_dev`` is the tolerated deviation from 1 of the chi-squared per degree of freedom for the weighted average. This quantity must be consistent with 1 for the weighted average to be reliable.
-   The function returns the result of the integration, the error estimate and the number of runs needed to reach the desired chi-squared. The fourth return value is a continuation function that takes a number of calls as an argument. This function can be invoked to recalculate the integral with a higher number of calls, to increase precision. 
-   The continuation function returns the new result, error and number of runs. Note that this function discards the previous results, but retains the optimized grid. Typically the continuation function is called with a multiple of the original number of calls, to improve the error.
+ *N* (required)
+ Number of dimensions of the function you want to integrate.
+
+ *K* (optional, default: 50)
+ Maximum number of bins, which should be an even, positive number.
+
+ *MODE* (optional, default: 1)
+ Integration mode, which can be any of 1) importance (dynamic switching to  stratified), 2) importance only and 3) stratified sampling.
+
+ *ITERATIONS* (optional, default: 5)
+ The result of the integration is based on a weighted average of ``ITERATIONS`` independent samples. For each integration, the number of function calls used is ``calls/ITERATIONS``.
+
+ *ALPHA* (optional, default: 1.5)
+ Grid flexibility for rebinning, typically between 1 and 2. Higher is more adaptive, 0 is rigid.
+
+
+.. function:: vegas_integ(f, a, b[, calls, options])
+  Use the VEGAS Monte Carlo algorithm to integrate the function ``f`` over the ``N``-dimensional hypercubic region defined by the lower and upper limits in the vectors ``a`` and ``b`` (assuming 1-based indexing). The integration uses a fixed number of function calls ``calls``, as opposed to a target precision.  The optional ``options`` table can contain the fields
+
+ *r*
+ The VEGAS integrator obtains random sampling points using the :mod:`rng` random number generator ``r``. By default, the built-in math.random() of LuaJIT2 is used.
+
+ *chidev* (default: 0.5)
+ ``chidev`` is the tolerated deviation from 1 of the chi-squared per degree of freedom for the weighted average. This quantity must be consistent with 1 for the weighted average to be reliable.
+
+ *warmup* (default: 1e4)
+ Number of function calls that is used to "warm up" the grid; i.e. to do a first estimate of the ideal probability distribution.
+
+ It returns the result of the integration, the error estimate and the number of runs needed to reach the desired chi-squared. The fourth return value is a continuation function that takes a number of calls as an argument. This function can be invoked to recalculate the integral with a higher number of calls, to increase precision.
+   The continuation function returns the new result, error and number of runs. Note that this function discards the previous results, but retains the optimized grid. Typically the continuation function is called with a multiple of the original number of calls, to reduce the error.
   
 Usage example
 -------------
@@ -94,10 +122,13 @@ Using the VEGAS algorithm, we can perform a naive calculation of :math:`Q(T,V,N)
   end
 
   -- set the lower and upper boundaries
-  local lo, hi = {},{}
+  local lo,hi = {},{}
   for i=1,N do lo[i],hi[i] = 0,V end
 
+  -- prepare integrator
+  local vegas_integ = num.vegas_prepare({N=N})
+
   -- calculate the integral and print the results
-  local res,sig,num,cont = num.monte_vegas(boltzmann,lo,hi,1e5)
+  local res,sig,num,cont = vegas_integ(boltzmann,lo,hi,1e5)
   io.write("Q(T=",T,",V=",V,",N=",N,") = ",res/V^N," +/- ",sig/V^N,"\n")
 

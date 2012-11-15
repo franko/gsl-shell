@@ -432,7 +432,7 @@ If you utilize functions from certain modules more often, you might want to call
    use 'math'
 
 If you don't use the :func:`use` directive you can still access the functions from a module, but you need to specify the full name.
-So, for example, you can refer to the VEGAS algorithm using its full name ``num.monte_vegas``.
+So, for example, you can refer to the VEGAS algorithm using its full name ``num.vegas_prepare``.
 This latter approach is useful because it avoids conflicts in the global namespace.
 
 Now we need to define the integrand function.
@@ -465,9 +465,10 @@ Now, we can start to calculate the volume of the unit sphere of the first 14 dim
 
       local a, b = ilist(|| 0, d), ilist(|| 1, d)
       local calls, n = d*1e4,1
+      local vegas_integ = num.vegas_prepare({N=d})
 
       --Obtaining monte carlo vegas callback
-      local res,sig,num,cont = monte_vegas(getunitsphere(d),a,b,calls)
+      local res,sig,num,cont = vegas_integ(getunitsphere(d),a,b,calls)
 
       --Increasing the number of calls to reach a satisfying result
       while(sig/res > 0.005) do
@@ -482,7 +483,7 @@ The loop consists of three major parts.
 In the first part, we initialize the important variables with the help of the `short function syntax` and the :func:`iter.ilist` function, which conveniently creates vectors of any size with a value provided by the function.
 In this case `a` and `b` are the lower and the upper boundary for the integration.
 
-By calling :func:`num.monte_vegas` with the desired unitsphere function, the Monte Carlo VEGAS algorithm is being invoked for the first time.
+The Monte Carlo VEGAS integrator `vegas_integ` with the correct number of dimensions is obtained with :func:`num.vegas_prepare`. By calling `vegas_integ` with the desired unitsphere function, the Monte Carlo VEGAS algorithm is being invoked for the first time.
 It returns multiple arguments, namely the result itself, the precision, the number of iterations it took and a continuation function that can be called to recalculate the result with higher precision.
 
 Depending on the relative precision `sig/res`, we continue to recalculate the integral with increasing numbers of iterations.
@@ -519,5 +520,5 @@ Creating data structures with `iterators` and `short functions` are both very co
 With the function `getunitsphere`, we have shown that some problems can be solved in an elegant way by returning a function.
 These kinds of functions are called closures because they refer to local variables declared outside of the function body itself.
 In this particular case, the function returned by `getunitsphere` is a closure because it refers to the variable `n` defined outside its body.
-The function `cont` returned my `num.monte_vegas` is also another example of closure since it refers to the current state of the VEGAS integration.
+The function `cont` returned my `vegas_integ` is also another example of closure since it refers to the current state of the VEGAS integration.
 
