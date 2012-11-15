@@ -52,6 +52,7 @@ Functions
 .. module:: num
 
 .. function:: vegas_prepare(spec)
+
  Prepare a VEGAS Monte Carlo integrator, ``vegas_integ``. ``spec`` is a table which can contain the following fields:
 
  *N* (required)
@@ -71,18 +72,19 @@ Functions
 
 
 .. function:: vegas_integ(f, a, b[, calls, options])
-  Use the VEGAS Monte Carlo algorithm to integrate the function ``f`` over the ``N``-dimensional hypercubic region defined by the lower and upper limits in the vectors ``a`` and ``b`` (assuming 1-based indexing). The integration uses a fixed number of function calls ``calls``, as opposed to a target precision.  The optional ``options`` table can contain the fields
 
- *r*
- The VEGAS integrator obtains random sampling points using the :mod:`rng` random number generator ``r``. By default, the built-in math.random() of LuaJIT2 is used.
+   Use the VEGAS Monte Carlo algorithm to integrate the function ``f`` over the ``N``-dimensional hypercubic region defined by the lower and upper limits in the vectors ``a`` and ``b`` (assuming 1-based indexing). The integration uses a fixed number of function calls ``calls``, as opposed to a target precision.  The optional ``options`` table can contain the fields
 
- *chidev* (default: 0.5)
- ``chidev`` is the tolerated deviation from 1 of the chi-squared per degree of freedom for the weighted average. This quantity must be consistent with 1 for the weighted average to be reliable.
+   *r*
+     The VEGAS integrator obtains random sampling points using the :mod:`rng` random number generator ``r``. By default, the built-in math.random() of LuaJIT2 is used.
 
- *warmup* (default: 1e4)
- Number of function calls that is used to "warm up" the grid; i.e. to do a first estimate of the ideal probability distribution.
+   *chidev* (default: 0.5)
+     ``chidev`` is the tolerated deviation from 1 of the chi-squared per degree of freedom for the weighted average. This quantity must be consistent with 1 for the weighted average to be reliable.
 
- It returns the result of the integration, the error estimate and the number of runs needed to reach the desired chi-squared. The fourth return value is a continuation function that takes a number of calls as an argument. This function can be invoked to recalculate the integral with a higher number of calls, to increase precision.
+   *warmup* (default: 1e4)
+     Number of function calls that is used to "warm up" the grid; i.e. to do a first estimate of the ideal probability distribution.
+
+   It returns the result of the integration, the error estimate and the number of runs needed to reach the desired chi-squared. The fourth return value is a continuation function that takes a number of calls as an argument. This function can be invoked to recalculate the integral with a higher number of calls, to increase precision.
    The continuation function returns the new result, error and number of runs. Note that this function discards the previous results, but retains the optimized grid. Typically the continuation function is called with a multiple of the original number of calls, to reduce the error.
   
 Usage example
