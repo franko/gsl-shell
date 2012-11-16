@@ -75,11 +75,11 @@ CCWARN= -Wall
 #BUILDMODE= mixed
 #
 # Static mode creates a static library and a statically linked luajit.
-BUILDMODE= static
+# BUILDMODE= static
 #
 # Dynamic mode creates a dynamic library and a dynamically linked luajit.
 # Note: this executable will only run when the library is installed!
-#BUILDMODE= dynamic
+BUILDMODE= dynamic
 #
 ##############################################################################
 

@@ -29,7 +29,8 @@ GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
-GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a
+LUA_DLL = $(LUADIR)/src/lua51.dll
+GSL_SHELL_LIBS = $(LUA_DLL) $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
 
@@ -55,7 +56,7 @@ all: $(TARGETS)
 
 $(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES) $(GSL_SHELL_LIBS)
 	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS) $(LDFLAGS)
+	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS) $(LDFLAGS) $(LUA_DLL)
 
 include $(GSH_BASE_DIR)/makerules
 

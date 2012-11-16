@@ -62,7 +62,8 @@ LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
 LUA_BASE_FILES += $(LUA_TEMPLATES:%=templates/%.lua.in)
 LUA_BASE_FILES += $(HELP_FILES:%=help/%.lua)
 
-LUAGSL_LIBS += $(LUADIR)/src/libluajit.a
+LUA_DLL = $(LUADIR)/src/lua51.dll
+LUAGSL_LIBS += $(LUA_DLL)
 
 C_SRC_FILES += gsl-shell-jit.c
 
