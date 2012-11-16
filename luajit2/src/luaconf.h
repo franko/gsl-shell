@@ -19,7 +19,7 @@
 ** path of the directory of the executable file of the current process.
 */
 #define LUA_LDIR	"!\\" QUOTE(PACKAGE_NAME) "\\"
-#define LUA_CDIR	"!\\"
+#define LUA_CDIR	"!\\" QUOTE(PACKAGE_NAME) "\\"
 #define LUA_PATH_DEFAULT \
   ".\\?.lua;" ".\\templates\\?.lua.in;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;" LUA_LDIR"templates\\?.lua.in"
 #define LUA_CPATH_DEFAULT \
