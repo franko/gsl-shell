@@ -84,7 +84,7 @@ fox_window_new (lua_State *L)
     gsl_shell_app* app = global_app;
 
     const char* split_str = lua_tostring(L, 1);
-    int defer_show = lua_toboolean(L, 2);
+    int defer_show = (lua_gettop(L) >= 2 ? lua_toboolean(L, 2) : 0);
 
     app->lock();
 
