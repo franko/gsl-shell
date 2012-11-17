@@ -1,18 +1,23 @@
 
 local REG = debug.getregistry()
-local Window = REG['GSL.window'].__index
-local plot_index = REG['GSL.plot'].__index
+local window_mt = REG['GSL.window']
+local Window = window_mt.__index
+local plot_mt = REG['GSL.plot']
+local plot_index = plot_mt.__index
 local Plot = function(k) return plot_index(nil, k) end
-local Path = REG['GSL.path'].__index
 
-local text_index = REG['GSL.text'].__index
+local path_mt = REG['GSL.path']
+local Path = path_mt.__index
+
+local text_mt = REG['GSL.text']
+local text_index = text_mt.__index
 local Text = function(k) return text_index(nil, k) end
 
 local M = {
   [graph.fxplot] = [[
 graph.fxplot(f, xi, xs[, color, n])
 
-   Produces a plot of the function f(x) for x going from xi to xs. 
+   Produces a plot of the function f(x) for x going from xi to xs.
    The last optional parameter n is the number of sampling points to
    use and, if not given, a default value will be used.  The
    function returns the plot itself.
@@ -73,7 +78,7 @@ graph.ibars(f)
 
    This function takes an iterator function f and returns a Path
    object that draws adjacent rectangular boxes corresponding to the
-   points (x, y) returned by the iterator f.  
+   points (x, y) returned by the iterator f.
 ]],
 
 [graph.rgb] = [[
@@ -116,12 +121,18 @@ graph.window([layout])
 
   [Window.attach] = [[
 <window>:attach(plot, slot)
-  
+
    Attach the given plot to the window's slot specified by the
    string slot. This string should be a list of comma-separated
    integer numbers in the form 'n1,n2,...,nk'. For each of the
    specified integers, the corresponding window partition will be
    chosen recursively.
+]],
+
+  [Window.show] = [[
+<window>:show()
+
+   Show the window on the screen.
 ]],
 
   [Window.save_svg] = [[
@@ -131,6 +142,22 @@ graph.window([layout])
    Two optional parameters can be given to specify the width and
    height of the drawing area. If the "svg" extension is not given it
    will be automatically added.
+]],
+
+  [window_mt] = [[
+<window>
+
+   A graphical window used to display plots on the screen. It can be
+   splitted using the "layout" method to accomodate several plots.
+   These latters can be added using the "attach" method.
+
+   Methods:
+
+   - layout(spec), define the layout of the window to accomodate plots
+   - show(), show the window on the screen
+   - attach(plot, slot), attach the plot is a given slot (string)
+   - save_svg(filename[, width, height]), save the content of the
+       window in SVG format
 ]],
 
   [graph.plot] = [[
@@ -154,6 +181,46 @@ graph.canvas([title])
    "graph.plot" function is that the property sync will be
    initialized to false.  This kind of plot is generally better
    suited for animations.
+]],
+
+  [plot_mt] = [[
+<plot object>
+
+   A plot object can be created incrementally by adding graphical
+   elements with the "add" or "addline methods". It can be shown on
+   the screen using its "show" method or using an existing window
+   using the "attach" method of the window.
+
+   Methods:
+
+   - add(obj, color[, post_trans, pre_trans])
+   - addline(obj, color[, post_trans, pre_trans])
+   - limits(x1, y1, x2, y2), set plot limits
+   - show(), show the plot in a window
+   - clear(), clear the current layer
+   - flush(), show on screen pending operations
+   - pushlayer(), create a new active layer
+   - poplayer(), pop the current layer
+   - save(filename[, w, h]), save plot in bitmap format
+   - save_svg(filename[, w, h]), save the plot in SVG format
+   - set_legend(p[, placement]), add a legend plot
+   - get_legend([placement]), retrieve a legend plot
+   - legend(text, color, symbol[, trans]), set legend
+   - set_categories(axis, categories), set axis labels
+
+   Attributes:
+
+   - title, plot title
+   - xtitle, x axis title
+   - ytitle, y axis title
+   - xlab_angle, angle of x axis labels
+   - ylab_angle, angle of y axis labels
+   - xlab_format, format used for x labels
+   - ylab_format, format used for y labels
+   - units, show plot units (boolean)
+   - sync, use sync mode (boolean)
+   - pad, add extra padding to respect units (boolean)
+   - clip, clip the plots to its area
 ]],
 
   [Plot'add'] = [[
@@ -272,60 +339,6 @@ graph.canvas([title])
    plot system of coordinates.
 ]],
 
---[[
-   .. attribute:: title
-
-      The title of the plot. You can change or set the title using
-      this attribute.
-
-   .. attribute:: xtitle
-                  ytitle
-
-      The title to be used for the x and y axis of the plot.
-      By default the labels are empty.
-
-   .. attribute:: xlab_angle
-                  ylab_angle
-
-      A rotation angle to be used for the text of the labels in the x or y axis.
-      The default angle is zero so that text is shown without rotations.
-
-   .. attribute:: xlab_format
-                  ylab_format
-
-      Choose a format for the numeric labels in the x or y axis.
-      It does accept the same strings used by the C function printf.
-      For example, if you give '%.3f' the numbers will be formatted using the
-      floating point notation with three digits after the point.
-      If you give something like '%03d' the number will be formatted like an integer using three spaces and padding with zeroes from the left..
-
-   .. attribute:: units
-
-      A boolean value that define if the axis and grids should be
-      drawn or not. By default it is true.
-
-   .. attribute:: sync
-
-      This attribute can be either true or false. If true any changes
-      in the plot will automatically update all the windows where the
-      plot is shown. It is useful to set sync to false for
-      animation so that many operations can be performed and the
-      window is updated only when the :meth:`~Plot.flush` method is called.
-
-   .. attribute:: pad
-
-      This attribute determine if the padding is active or not for the plot.
-      The padding determine if the viewport area should be larger than the actual plotting are to align with axis marks.
-      The default is false.
-
-   .. attribute:: clip
-
-      Activate or not the clipping of the graphical elements inside the plotting viewport.
-      The default value is true.
-
-.. _graphical-layer:
-]]
-
   [graph.path] = [[
 graph.path([x, y])
 
@@ -369,10 +382,27 @@ graph.path([x, y])
 ]],
 
   [Path.curve4] = [[
-<path>:curve4(x1_ctrl, y1_ctrl, x2_ctrl, y2_ctrl, x, y)
+<path>:curve4, cu
 
    Add a cubic bezier curve up to (x, y) with two control points. The
    same remarks for the method "curve3" applies to "curve4".
+]],
+
+  [path_mt] = [[
+<path graphical object>
+
+   A path (polygonal line) that can be added to a plot. The points can
+   be added incrementally using the methods "move_to" and "line_to".
+   It can contains also bezier or circular arcs.
+
+   Methods:
+
+   - move_to(x, y), move to a given point to start a new line
+   - line_to(x, y), add a segment up to the given point
+   - close(), close the current line
+   - arc_to(x, y, angle, large_arc, sweep, rad_x, rad_y), circular arc
+   - curve3(x_ctrl, y_ctrl, x, y), quadratic bezier arc
+   - curve4(x1_ctrl, y1_ctrl, x2_ctrl, y2_ctrl, x, y), cubiz bezier arc
 ]],
 
   [graph.text] = [[
@@ -382,17 +412,19 @@ graph.text(x, y, text, [height])
    first optional argument height indicate the text height.
 ]],
 
---[[
-.. class:: Text
+  [text_mt] = [[
+<text object>
 
-   A text object is used to display a text.
-   This class of graphical object is special because it is not a shape that is resized rigidly with the window, the text is always displayed with the same size in pixel.
-   Because of this difference a text object should be subject only to post-transforms.
+   A text object is used to display a text. This class of graphical
+   object is special because it is not a shape that is resized rigidly
+   with the window, the text is always displayed with the same size in
+   pixel. Because of this difference a text object should be subject
+   only to post-transforms.
 
-   .. attribute:: angle
+   Attributes:
 
-      Rotate the text of the given angle (in radians).
-]]
+   - angle, the  orientation of the text
+]],
 
   [Text'justif'] = [[
 <text>:justif(hv)

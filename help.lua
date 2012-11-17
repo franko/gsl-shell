@@ -14,11 +14,15 @@ end
 
 local function search_help(func)
 	for k, modname in ipairs(help_files) do
+		local mt = getmetatable(func)
 		local module = open_module(modname)
 		if module[func] then
 			local help_text = module[func]
 			return help_text
-		end
+		elseif mt and module[mt] then
+			local help_text = module[mt]
+			return help_text
+	    end
 	end
 end
 
