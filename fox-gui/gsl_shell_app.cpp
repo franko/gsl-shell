@@ -153,4 +153,5 @@ long gsl_shell_app::on_restart_lua_request(FXObject*, FXSelector, void*)
 long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
 {
     m_engine.interrupt_request();
+    return 0;
 }
