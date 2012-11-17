@@ -39,7 +39,7 @@ FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
     gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
     plot_icon = new FXGIFIcon(this, plot_icon_data);
 
-    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell Console", gsl_shell_icon, gsl_shell_mini, 600, 500);
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell Console", gsl_shell_icon, gsl_shell_mini, 700, 600);
     m_console = gsw->console();
 }
 
