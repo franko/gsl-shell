@@ -48,7 +48,7 @@ CCOPT= -O2 -fomit-frame-pointer
 # x86/x64 only: For GCC 4.2 or higher and if you don't intend to distribute
 # the binaries to a different machine you could also use: -march=native
 #
-CCOPT_x86= -march=i686
+CCOPT_x86= -march=i686 -msse -msse2
 CCOPT_x64=
 CCOPT_arm=
 CCOPT_ppc=
