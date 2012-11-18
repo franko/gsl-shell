@@ -272,9 +272,9 @@ static int llex(LexState *ls, TValue *tv)
 	save_and_next(ls);
       } while (lj_char_isident(ls->current));
       s = lj_parse_keepstr(ls, ls->sb.buf, ls->sb.n);
+      setstrV(ls->L, tv, s);
       if (s->reserved > 0)  /* Reserved word? */
 	return TK_OFS + s->reserved;
-      setstrV(ls->L, tv, s);
       return TK_name;
     }
     switch (ls->current) {
@@ -330,6 +330,9 @@ static int llex(LexState *ls, TValue *tv)
     case '~':
       next(ls);
       if (ls->current != '=') return '~'; else { next(ls); return TK_ne; }
+    case ':':
+      next(ls);
+      if (ls->current != ':') return ':'; else { next(ls); return TK_label; }
     case '"':
     case '\'':
       read_string(ls, ls->current, tv);
@@ -403,7 +406,7 @@ int lj_lex_setup(lua_State *L, LexState *ls)
       ** Lua code by looking at the first char. Since this is a potential
       ** security violation no attempt is made to echo the chunkname either.
       */
-      setstrV(L, L->top++, lj_err_str(L, LJ_ERR_BCHEAD));
+      setstrV(L, L->top++, lj_err_str(L, LJ_ERR_BCBAD));
       lj_err_throw(L, LUA_ERRSYNTAX);
     }
     return 1;

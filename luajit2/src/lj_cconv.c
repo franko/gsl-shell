@@ -493,17 +493,19 @@ static void cconv_substruct_tab(CTState *cts, CType *d, uint8_t *dp,
     id = df->sib;
     if (ctype_isfield(df->info) || ctype_isbitfield(df->info)) {
       TValue *tv;
-      int32_t i = *ip;
+      int32_t i = *ip, iz = i;
       if (!gcref(df->name)) continue;  /* Ignore unnamed fields. */
       if (i >= 0) {
       retry:
 	tv = (TValue *)lj_tab_getint(t, i);
 	if (!tv || tvisnil(tv)) {
 	  if (i == 0) { i = 1; goto retry; }  /* 1-based tables. */
+	  if (iz == 0) { *ip = i = -1; goto tryname; }  /* Init named fields. */
 	  break;  /* Stop at first nil. */
 	}
 	*ip = i + 1;
       } else {
+      tryname:
 	tv = (TValue *)lj_tab_getstr(t, gco2str(gcref(df->name)));
 	if (!tv || tvisnil(tv)) continue;
       }
@@ -524,7 +526,6 @@ static void cconv_struct_tab(CTState *cts, CType *d,
 {
   int32_t i = 0;
   memset(dp, 0, d->size);  /* Much simpler to clear the struct first. */
-  if (t->hmask) i = -1; else if (t->asize == 0) return;  /* Fast exit. */
   cconv_substruct_tab(cts, d, dp, t, &i, flags);
 }
 
@@ -718,12 +719,14 @@ static void cconv_struct_init(CTState *cts, CType *d, CTSize sz, uint8_t *dp,
 ** This is true if an aggregate is to be initialized with a value.
 ** Valarrays are treated as values here so ct_tv handles (V|C, I|F).
 */
-int lj_cconv_multi_init(CType *d, TValue *o)
+int lj_cconv_multi_init(CTState *cts, CType *d, TValue *o)
 {
   if (!(ctype_isrefarray(d->info) || ctype_isstruct(d->info)))
     return 0;  /* Destination is not an aggregate. */
   if (tvistab(o) || (tvisstr(o) && !ctype_isstruct(d->info)))
     return 0;  /* Initializer is not a value. */
+  if (tviscdata(o) && lj_ctype_rawref(cts, cdataV(o)->ctypeid) == d)
+    return 0;  /* Source and destination are identical aggregates. */
   return 1;  /* Otherwise the initializer is a value. */
 }
 
@@ -733,7 +736,7 @@ void lj_cconv_ct_init(CTState *cts, CType *d, CTSize sz,
 {
   if (len == 0)
     memset(dp, 0, sz);
-  else if (len == 1 && !lj_cconv_multi_init(d, o))
+  else if (len == 1 && !lj_cconv_multi_init(cts, d, o))
     lj_cconv_ct_tv(cts, d, dp, o, 0);
   else if (ctype_isarray(d->info))  /* Also handles valarray init with len>1. */
     cconv_array_init(cts, d, sz, dp, o, len);

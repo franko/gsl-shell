@@ -131,6 +131,7 @@
 #define LJ_TARGET_EHRETREG	0
 #define LJ_TARGET_MASKSHIFT	1
 #define LJ_TARGET_MASKROT	1
+#define LJ_TARGET_UNALIGNED	1
 #define LJ_ARCH_NUMMODE		LJ_NUMMODE_SINGLE_DUAL
 
 #elif LUAJIT_TARGET == LUAJIT_ARCH_X64
@@ -145,6 +146,7 @@
 #define LJ_TARGET_JUMPRANGE	31	/* +-2^31 = +-2GB */
 #define LJ_TARGET_MASKSHIFT	1
 #define LJ_TARGET_MASKROT	1
+#define LJ_TARGET_UNALIGNED	1
 #define LJ_ARCH_NUMMODE		LJ_NUMMODE_SINGLE_DUAL
 
 #elif LUAJIT_TARGET == LUAJIT_ARCH_ARM
@@ -298,7 +300,11 @@
 
 /* Check target-specific constraints. */
 #ifndef _BUILDVM_H
-#if LJ_TARGET_ARM
+#if LJ_TARGET_X64
+#if __USING_SJLJ_EXCEPTIONS__
+#error "Need a C compiler with native exception handling on x64"
+#endif
+#elif LJ_TARGET_ARM
 #if defined(__ARMEB__)
 #error "No support for big-endian ARM"
 #endif
@@ -388,8 +394,12 @@
 #define LJ_64			1
 #endif
 
+#ifndef LJ_TARGET_UNALIGNED
+#define LJ_TARGET_UNALIGNED	0
+#endif
+
 /* Various workarounds for embedded operating systems. */
-#if defined(__ANDROID__) || defined(__symbian__)
+#if (defined(__ANDROID__) && !defined(LJ_TARGET_X86ORX64)) || defined(__symbian__)
 #define LUAJIT_NO_LOG2
 #endif
 #if defined(__symbian__)
@@ -398,6 +408,13 @@
 
 #if defined(LUAJIT_NO_UNWIND) || defined(__symbian__) || LJ_TARGET_IOS || LJ_TARGET_PS3
 #define LJ_NO_UNWIND		1
+#endif
+
+/* Compatibility with Lua 5.1 vs. 5.2. */
+#ifdef LUAJIT_ENABLE_LUA52COMPAT
+#define LJ_52			1
+#else
+#define LJ_52			0
 #endif
 
 #endif

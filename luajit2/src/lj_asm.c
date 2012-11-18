@@ -719,7 +719,7 @@ static void ra_leftov(ASMState *as, Reg dest, IRRef lref)
 }
 #endif
 
-#if !LJ_TARGET_X86ORX64
+#if !LJ_64
 /* Force a RID_RETLO/RID_RETHI destination register pair (marked as free). */
 static void ra_destpair(ASMState *as, IRIns *ir)
 {
@@ -747,9 +747,13 @@ static void ra_destpair(ASMState *as, IRIns *ir)
   /* Check for conflicts and shuffle the registers as needed. */
   if (destlo == RID_RETHI) {
     if (desthi == RID_RETLO) {
+#if LJ_TARGET_X86
+      *--as->mcp = XI_XCHGa + RID_RETHI;
+#else
       emit_movrr(as, ir, RID_RETHI, RID_TMP);
       emit_movrr(as, ir, RID_RETLO, RID_RETHI);
       emit_movrr(as, ir, RID_TMP, RID_RETLO);
+#endif
     } else {
       emit_movrr(as, ir, RID_RETHI, RID_RETLO);
       if (desthi != RID_RETHI) emit_movrr(as, ir, desthi, RID_RETHI);
@@ -822,10 +826,19 @@ static void asm_snap_alloc1(ASMState *as, IRRef ref)
 	      asm_snap_alloc1(as, (irs+1)->op2);
 	  }
       }
-    } else if (ir->o == IR_CONV && ir->op2 == IRCONV_NUM_INT) {
-      asm_snap_alloc1(as, ir->op1);
     } else {
-      RegSet allow = (!LJ_SOFTFP && irt_isfp(ir->t)) ? RSET_FPR : RSET_GPR;
+      RegSet allow;
+      if (ir->o == IR_CONV && ir->op2 == IRCONV_NUM_INT) {
+	IRIns *irc;
+	for (irc = IR(as->curins); irc > ir; irc--)
+	  if ((irc->op1 == ref || irc->op2 == ref) &&
+	      !(irc->r == RID_SINK || irc->r == RID_SUNK))
+	    goto nosink;  /* Don't sink conversion if result is used. */
+	asm_snap_alloc1(as, ir->op1);
+	return;
+      }
+    nosink:
+      allow = (!LJ_SOFTFP && irt_isfp(ir->t)) ? RSET_FPR : RSET_GPR;
       if ((as->freeset & allow) ||
 	       (allow == RSET_FPR && asm_snap_canremat(as))) {
 	/* Get a weak register if we have a free one or can rematerialize. */
@@ -1387,7 +1400,7 @@ static void asm_head_side(ASMState *as)
 	  ra_sethint(ir->r, rs);  /* Hint may be gone, set it again. */
 	else if (sps_scale(regsp_spill(rs))+spdelta == sps_scale(ir->s))
 	  continue;  /* Same spill slot, do nothing. */
-	mask = ((!LJ_SOFTFP && irt_isnum(ir->t)) ? RSET_FPR : RSET_GPR) & allow;
+	mask = ((!LJ_SOFTFP && irt_isfp(ir->t)) ? RSET_FPR : RSET_GPR) & allow;
 	if (mask == RSET_EMPTY)
 	  lj_trace_err(as->J, LJ_TRERR_NYICOAL);
 	r = ra_allocref(as, i, mask);
