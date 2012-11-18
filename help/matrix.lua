@@ -1,3 +1,5 @@
+
+
 local M = {
    [matrix.new] = [[
 matrix.new(r, c[, finit])
@@ -91,6 +93,30 @@ matrix.fset(m, f)
    the matrix. Note that this function has the same semantics as the
    "new" function, with the difference that "fset" operates on a
    matrix that already exists instead of creating a new one.
+]],
+
+   ['gsl_matrix'] = [[
+<real matrix>
+
+   A matrix of real numbers. Ordinary arithmetic operators can be used
+   on matrix to perform matrix addition or multiplication. Arithmetic
+   operations can also mix matrix and scalars of both real or complex
+   type. The length '#' operator can be used to retrieve the number of
+   columns. The form m[k] with an integer index can be used to
+   retrieve a row in column form.
+
+   Methods:
+
+   dim(), returns the dimensions of the matrix: (rows), (columns)
+   col(j), returns a column of the matrix (reference)
+   row(i), returns a row of the matrix (reference)
+   get(i, j), returns the element in the row "i" and column "j"
+   set(i, j, x), set the element in position (i, j) to the value x
+   copy(), returns a copy of the matrix
+   norm(), returns the Frobenius norm of the matrix
+   slice(i, j, r, c), returns the submatrix of dimension (r,c)
+                      starting at position (i,j) (reference)
+   show(), returns the string representation of the matrix
 ]],
 }
 
