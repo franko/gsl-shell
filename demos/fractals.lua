@@ -133,7 +133,7 @@ end
 
 return {'Fractals', {
   {
-     name = 'vonkock',
+     name = 'vonkoch',
      f = von_koch_demo, 
      description = 'Von Koch\'s curve',
   },
