@@ -24,7 +24,7 @@ end
 
 local function print_demos_list()
    for group, t in pairs(demo_list) do
-      print('*** ', group)
+      io.write('*** ', group, '\n')
       for k, v in ipairs(t) do
 	 print(v.name .. ' - ' .. v.description)
       end
