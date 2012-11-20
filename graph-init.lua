@@ -164,6 +164,7 @@ function graph.rect(x1, y1, x2, y2)
 end
 
 local function rgba(r, g, b, a)
+   r, g, b, a = tonumber(r), tonumber(g), tonumber(b), tonumber(a)
    local rb = band(lshift(r, 24), 0xff000000)
    local gb = band(lshift(g, 16), 0xff0000  )
    local bb = band(lshift(b, 8 ), 0xff00    )
@@ -171,6 +172,7 @@ local function rgba(r, g, b, a)
 end
 
 local function rgba_decode(col)
+   col = tonumber(col)
    local r = rshift(band(col, 0xff000000), 24)
    local g = rshift(band(col, 0xff0000), 16)
    local b = rshift(band(col, 0xff00), 8)

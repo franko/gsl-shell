@@ -29,7 +29,7 @@ local function demo1()
   local maxdim = 10
   local lo,hi = 0,2
   local results = {}
-  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..'..maxdim..')')
+  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..n)')
   p.clip, p.pad = false, true
   local exact = graph.filine(|n| n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1),maxdim)
   local computed = graph.filine(testdim,1,maxdim)

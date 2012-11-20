@@ -53,7 +53,7 @@ local function demo2()
 
    local p = graph.fxplot(fitleg, x0, x1)
    p:addline(graph.xyline(x, y), 'blue', {{'marker', size=5}})
-   p.title = 'Legendre Polinomial fit of Bessel J3(x)'
+   p.title = 'Legendre polynomial fit of Bessel J3(x)'
    p.clip = false
    
    return p

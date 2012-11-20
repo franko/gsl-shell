@@ -78,7 +78,7 @@ local function demo1()
    local p = do_plot(save_svg, 'circle', 5, true)
 
    p:save('demo', 600, 400)
-   print 'Plot saved in BMP format in demo.bmp (demo.ppm on linuex).'
+   print 'Plot saved in BMP format in demo.bmp (demo.ppm on linux).'
 
    p:show()
 end
