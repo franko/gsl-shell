@@ -22,11 +22,25 @@ local cat = table.concat
 local fmt = string.format
 
 do
+   local ffi = require('ffi')
    local reg = debug.getregistry()
 
-   gsl_type = function(t)
-      local s = reg.__gsl_type(t)
-      return (s == "cdata" and reg.__gsl_ffi_type(t) or s)
+   reg.__gsl_ffi_types = {}
+
+   function reg.__gsl_reg_ffi_type(ctype, name)
+      local t = reg.__gsl_ffi_types
+      t[#t + 1] = {ctype, name}
+   end
+
+   gsl_type = function(obj)
+      local s = reg.__gsl_type(obj)
+      if s == "cdata" then
+         for _, item in ipairs(reg.__gsl_ffi_types) do
+            local ctype, name = unpack(item)
+            if ffi.istype(ctype, obj) then return name end
+          end
+      end
+      return s
    end
 end
 
@@ -79,7 +93,7 @@ tos = function (t, depth)
       end
    elseif tp == 'cdata' then
       local tpext = gsl_type and gsl_type(t) or tp
-      if tpext == 'matrix' or tpext == 'complex matrix' then
+      if tpext ~= 'cdata' and t.show then
          return (depth == 0 and t:show() or fmt("<%s: %p>", tpext, t))
       end
    end

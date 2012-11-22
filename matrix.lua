@@ -960,13 +960,10 @@ matrix.tr = function(a)
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
 
-local reg = debug.getregistry()
+local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 
-function reg.__gsl_ffi_type(a)
-   if     ffi.istype(gsl_complex, a)        then return "complex"
-   elseif ffi.istype(gsl_matrix, a)         then return "matrix"
-   elseif ffi.istype(gsl_matrix_complex, a) then return "complex matrix" end
-   return "cdata"
-end
+register_ffi_type(gsl_complex, "complex")
+register_ffi_type(gsl_matrix, "matrix")
+register_ffi_type(gsl_matrix_complex, "complex matrix")
 
 return matrix

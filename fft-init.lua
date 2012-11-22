@@ -228,11 +228,22 @@ local function hc_length(ft)
    return tonumber(ft.size)
 end
 
+local function halfcomplex_to_matrix(hc)
+   return matrix.cnew(tonumber(hc.size), 1, function(i) return hc[i-1] end)
+end
+
+local function hc_tostring(hc)
+   local m = halfcomplex_to_matrix(hc)
+   return m:show()
+end
+
 local function hc_radix2_index(ft, k)
    if is_integer(k) then
       local idx = halfcomplex_radix2_index
       local size, stride = tonumber(ft.size), tonumber(ft.stride)
       return halfcomplex_get(idx, ft.data, size, stride, k)
+   elseif k == 'show' then
+      return hc_tostring
    end
 end
 
@@ -249,6 +260,8 @@ local function hc_index(ft, k)
       local idx = halfcomplex_index
       local size, stride = tonumber(ft.size), tonumber(ft.stride)
       return halfcomplex_get(idx, ft.data, size, stride, k)
+   elseif k == 'show' then
+      return hc_tostring
    end
 end
 
@@ -258,14 +271,6 @@ local function hc_newindex(ft, k, z)
       local size, stride = tonumber(ft.size), tonumber(ft.stride)
       return halfcomplex_set(idx, ft.data, size, stride, k, z)
    end
-end
-
-local function halfcomplex_to_matrix(hc)
-   return matrix.cnew(tonumber(hc.size), 1, function(i) return hc[i-1] end)
-end
-
-local function hc_tostring(hc)
-   return tostring(halfcomplex_to_matrix(hc))
 end
 
 local function hc_free(hc)
@@ -282,7 +287,7 @@ ffi.metatype(fft_hc, {
                 __index    = hc_index,
                 __newindex = hc_newindex,
                 __len      = hc_length,
-                __tostring = hc_tostring,
+--                __tostring = hc_tostring,
              }
           )
 
@@ -291,6 +296,11 @@ ffi.metatype(fft_radix2_hc, {
                 __index    = hc_radix2_index,
                 __newindex = hc_radix2_newindex,
                 __len      = hc_length,
-                __tostring = hc_tostring,
+--                __tostring = hc_tostring,
              }
           )
+
+local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
+
+register_ffi_type(fft_radix2_hc, "radix2 half-complex vector")
+register_ffi_type(fft_hc, "half-complex vector")
