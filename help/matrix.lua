@@ -95,7 +95,7 @@ matrix.fset(m, f)
    matrix that already exists instead of creating a new one.
 ]],
 
-   ['gsl_matrix'] = [[
+   ['matrix'] = [[
 <real matrix>
 
    A matrix of real numbers. Ordinary arithmetic operators can be used
@@ -117,6 +117,16 @@ matrix.fset(m, f)
    slice(i, j, r, c), returns the submatrix of dimension (r,c)
                       starting at position (i,j) (reference)
    show(), returns the string representation of the matrix
+]],
+
+   ['complex'] = [[
+<complex number>
+
+   A complex number. Normal arithmetic operations can be used by
+   mixing complex or real numbers or matrices. The general
+   mathematical functions to operate on complex numbers are available
+   in the "complex" module. The cartesian components of a complex or
+   real number can be retrieved with the function "complex.rect".
 ]],
 }
 

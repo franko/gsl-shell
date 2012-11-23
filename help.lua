@@ -2,17 +2,11 @@ local ffi = require 'ffi'
 
 local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode', 'nlfit', 'vegas', 'rng', 'fft'}
 
-local cdata_table = {'gsl_matrix', 'gsl_matrix_complex', 'complex'}
+local cdata_table = {'matrix', 'complex matrix', 'complex'}
 
 local function help_init( ... )
 	local REG = debug.getregistry()
 	REG['GSL.help_hook'] = {}
-end
-
-local function cdata_name(x)
-	for _, name in ipairs(cdata_table) do
-		if ffi.istype(ffi.typeof(name), x) then return name end
-	end
 end
 
 local function open_module(modname)
@@ -43,7 +37,7 @@ function help(x)
 		local mt = getmetatable(x)
 		if mt then txt = search_help(mt) end
 	elseif type(x) == 'cdata' then
-		local cname = cdata_name(x)
+		local cname = gsl_type(x)
 		if cname then txt = search_help(cname) end
 	end
 	print(txt or "No help found for the given function")
