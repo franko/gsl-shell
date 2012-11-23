@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 
-local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode', 'nlfit', 'vegas', 'rng'}
+local help_files = {'graphics', 'matrix', 'iter', 'integ', 'ode', 'nlfit', 'vegas', 'rng', 'fft'}
 
 local cdata_table = {'gsl_matrix', 'gsl_matrix_complex', 'complex'}
 
