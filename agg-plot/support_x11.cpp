@@ -2,11 +2,19 @@
 
 #include "agg-pixfmt-config.h"
 
+#ifdef DARWIN_MACOSX
+const char *ttf_names[] = {"Trebuchet MS.ttf", "Arial.ttf", 0};
+#define TTF_SYSTEM_DIR "/Library/Fonts/"
+#define CONSOLE_FONT_NAME "Monaco"
+#else
 const char *ttf_names[] = {"ubuntu-font-family/Ubuntu-R.ttf", "freefont/FreeSans.ttf", "ttf-dejavu/DejaVuSans.ttf", 0};
+#define TTF_SYSTEM_DIR "/usr/share/fonts/truetype/"
+#define CONSOLE_FONT_NAME "monospace"
+#endif
 
 const char *gslshell::get_font_name()
 {
-    const char* ttf_dir = "/usr/share/fonts/truetype/";
+    const char* ttf_dir = TTF_SYSTEM_DIR;
     unsigned len = strlen(ttf_dir);
     static char pf[256];
     memcpy(pf, ttf_dir, len + 1);
@@ -25,5 +33,5 @@ const char *gslshell::get_font_name()
 
 const char* gslshell::get_fox_console_font_name()
 {
-    return "monospace";
+    return CONSOLE_FONT_NAME;
 }
