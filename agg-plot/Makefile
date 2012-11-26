@@ -31,6 +31,9 @@ ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include -I/usr/pthreads-w32/include
   PLATSUP_SRC_FILES = support_win32.cpp agg_platform_support_win32.cpp agg_win32_bmp.cpp
 else
+  ifeq ($(HOST_SYS),Darwin)
+    DEFS += -DDARWIN_MACOSX
+  endif
   PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
 endif
 
