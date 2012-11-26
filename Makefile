@@ -110,7 +110,7 @@ install: $(GSL_SHELL) $(GUI_SUBDIR)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
-	cp --parents $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
+	$(CP_REL) $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
 
 .PHONY: clean all $(SUBDIRS)
 

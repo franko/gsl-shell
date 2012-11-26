@@ -28,6 +28,30 @@ ifeq ($(HOST_SYS),Windows)
 
   PTHREADS_LIBS = -lpthread
 else
+  ifeq ($(HOST_SYS),Darwin)
+
+# GWH: determined all of the following flags (except for pthread)
+# using the pkg-config utility, except I had to add -lX11 to AGG_LIBS.
+
+  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
+  AGG_LIBS = $(shell pkg-config libagg --libs) -lX11
+
+# GWH: pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
+# If you don't include that, the code won't run unless you first do:
+#   export DYLD_FALLBACK_LIBRARY_PATH=/opt/local/lib
+
+  GSL_INCLUDES = $(shell pkg-config gsl --cflags)
+  GSL_LIBS = $(shell pkg-config gsl --libs)
+
+  FOX_INCLUDES := $(shell pkg-config fox --cflags)
+  FOX_LIBS = $(shell pkg-config fox --libs)
+
+  FREETYPE_INCLUDES = $(shell pkg-config freetype2 --cflags)
+  FREETYPE_LIBS = $(shell pkg-config freetype2 --libs)
+
+  PTHREADS_LIBS = -lpthread
+
+else
   AGG_INCLUDES = -I/usr/include/agg2
   AGG_LIBS = -lagg -lX11
 
@@ -41,4 +65,5 @@ else
   FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthread
+  endif
 endif

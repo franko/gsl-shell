@@ -11,12 +11,16 @@
 
 AR= ar rcu
 RANLIB= ranlib
+CP_REL = cp --parents
 
 CC = gcc
 CXX = g++
 
 ifeq ($(HOST_SYS),Darwin)
   LINK_EXE = $(CXX) $(LDFLAGS)
+  # Use rsync because the --parents option to cp doesn't exist in
+  # Mac OS X
+  CP_REL = rsync -R
 else
   LINK_EXE = $(CC) $(LDFLAGS)
 endif

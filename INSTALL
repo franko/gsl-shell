@@ -24,6 +24,10 @@ The main compilation options for GSL Shell are located in the file "makeconfig".
 
 If you have troubles you can have a look to the "makepackages" files where the include and link flags for each library are defined. In the file "makedefs" you will have additional compiling options but normally you should not need to modify this file.
 
+The makepackages files call the pkg-config command to determine some of the
+options.  If the pkg-config utility is not on your computer, you will
+need to either install it or replace those calls with hard-coded flags.
+
 Once you have modified the file "makeconfig" you can just give:
 
 > make
