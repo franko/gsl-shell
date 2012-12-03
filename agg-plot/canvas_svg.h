@@ -50,6 +50,12 @@ public:
         writeln(m_output, s, "   ");
     }
 
+    template <class VertexSource>
+    void draw_outline_noaa(VertexSource& vs, agg::rgba8 c)
+    {
+        this->draw_outline(vs, c);
+    }
+
     void write_header(double w, double h) {
         fprintf(m_output, svg_header, w, h);
     }

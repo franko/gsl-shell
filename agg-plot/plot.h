@@ -59,6 +59,9 @@ public:
     virtual void draw_outline(sg_object& vs, agg::rgba8 c) {
         m_canvas->draw_outline(vs, c);
     }
+    virtual void draw_outline_noaa(sg_object& vs, agg::rgba8 c) {
+        m_canvas->draw_outline_noaa(vs, c);
+    }
 
     virtual void clip_box(const agg::rect_base<int>& clip) {
         m_canvas->clip_box(clip);
@@ -493,18 +496,6 @@ static double compute_scale(const agg::trans_affine& m)
     return m.scale() / 480.0;
 }
 
-static double
-std_line_width(double scale, double w = 1.0)
-{
-#if 0
-    const double dsf = M_LN10;
-    double ls = log(scale) / dsf;
-    return exp(round(ls) * dsf) * w * 1.5;
-#else
-    return w * 1.5;
-#endif
-}
-
 template <class RM>
 void plot<RM>::commit_pending_draw()
 {
@@ -913,7 +904,6 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
 
     agg::path_storage box;
     sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
-    trans::stroke_a boxvs(&boxtr);
 
     box.move_to(0.0, 0.0);
     box.line_to(0.0, 1.0);
@@ -923,12 +913,10 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
 
     agg::path_storage mark;
     sg_object_gen<agg::conv_transform<agg::path_storage> > mark_tr(mark, m);
-    trans::stroke_a mark_stroke(&mark_tr);
 
     agg::path_storage ln;
     sg_object_gen<agg::conv_transform<agg::path_storage> > ln_tr(ln, m);
     trans::dash_a lndash(&ln_tr);
-    trans::stroke_a lns(&lndash);
 
     const double label_text_size = get_default_font_size(text_axis_title, scale);
     const double plpad = double(axis_label_prop_space) / 1000.0;
@@ -981,14 +969,10 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
 
     lndash.add_dash(7.0, 3.0);
 
-    lns.width(std_line_width(scale, 0.15));
-    canvas.draw(lns, colors::black);
-
-    mark_stroke.width(std_line_width(scale, 0.75));
-    canvas.draw(mark_stroke, colors::black);
-
-    boxvs.width(std_line_width(scale, 0.75));
-    canvas.draw(boxvs, colors::black);
+    agg::rgba8 lgray(210, 210, 210);
+    canvas.draw_outline_noaa(lndash, lgray);
+    canvas.draw_outline_noaa(mark_tr, colors::black);
+    canvas.draw_outline_noaa(boxtr, colors::black);
 
     if (!str_is_null(&m_x_axis.title))
     {
