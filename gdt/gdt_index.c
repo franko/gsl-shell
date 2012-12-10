@@ -35,14 +35,26 @@ char_buffer_resize(struct char_buffer *b, size_t req_size)
     b->size = curr_size;
 }
 
+static int
+char_buffer_append(struct char_buffer *b, const char *str)
+{
+    size_t len = strlen(str);
+    int string_offset = (b->length > 0 ? b->length + 1 : 0);
+    size_t new_len = string_offset + len;
+    char_buffer_resize(b, new_len + 1);
+    memcpy(b->data + string_offset, str, len + 1);
+    b->length = new_len;
+    return string_offset;
+}
+
 gdt_index *
 gdt_index_new(int alloc_size)
 {
     size_t extra_size = sizeof(int) * (alloc_size - INDEX_AUTO);
     gdt_index *g = malloc(sizeof(gdt_index) + extra_size);
     char_buffer_init(g->names, STRING_SECTION_INIT_SIZE);
-    g->size = 0;
-    g->alloc_size = alloc_size;
+    g->length = 0;
+    g->size = alloc_size;
     return g;
 }
 
@@ -56,10 +68,15 @@ gdt_index_free(gdt_index *g)
 gdt_index *
 gdt_index_resize(gdt_index *g)
 {
-    size_t alloc_size = g->alloc_size * 2;
+    size_t alloc_size = g->size * 2;
     size_t extra_size = sizeof(int) * (alloc_size - INDEX_AUTO);
     gdt_index *new_g = malloc(sizeof(gdt_index) + extra_size);
+
     new_g->names[0] = g->names[0];
+    new_g->length = g->length;
+    new_g->size = alloc_size;
+    memcpy(new_g->index, g->index, sizeof(int) * g->length);
+
     free(g);
     return new_g;
 }
@@ -67,27 +84,24 @@ gdt_index_resize(gdt_index *g)
 int
 gdt_index_add(gdt_index *g, const char *str)
 {
-    if (g->size + 1 > g->alloc_size)
+    /* if the index table is not big enough return error code */
+    if (g->length + 1 > g->size)
         return (-1);
 
-    struct char_buffer *s = g->names;
-    size_t len = strlen(str);
-    int string_offset = (s->length > 0 ? s->length + 1 : 0);
-    size_t new_len = string_offset + len;
-    char_buffer_resize(s, new_len + 1);
-    memcpy(s->data + string_offset, str, len + 1);
-    s->length = new_len;
+    /* add the given string in the key string buffer */
+    int str_offset = char_buffer_append(g->names, str);
 
-    int idx = g->size;
-    g->index[idx] = string_offset;
-    g->size ++;
+    /* add the new string offset index into the index table */
+    int idx = g->length;
+    g->index[idx] = str_offset;
+    g->length ++;
     return idx;
 }
 
 const char *
 gdt_index_get(gdt_index *g, int index)
 {
-    if (index < 0 || index >= g->size)
+    if (index < 0 || index >= g->length)
         return NULL;
     return g->names->data + g->index[index];
 }
@@ -96,7 +110,7 @@ int
 gdt_index_lookup(gdt_index *g, const char *req)
 {
     const char *base = g->names->data;
-    for (int k = 0; k < g->size; k++)
+    for (int k = 0; k < g->length; k++)
     {
         const char *str = base + g->index[k];
         if (strcmp(str, req) == 0)

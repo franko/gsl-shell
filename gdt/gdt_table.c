@@ -2,7 +2,7 @@
 
 #include "gdt_table.h"
 
-gdt_block *
+static gdt_block *
 gdt_block_new(int size)
 {
     gdt_block *b = malloc(sizeof(gdt_block));
@@ -12,14 +12,25 @@ gdt_block_new(int size)
     return b;
 }
 
-void
+static void
 gdt_block_ref(gdt_block *b)
 {
     b->ref_count ++;
 }
 
+static void
+gdt_block_unref(gdt_block *b)
+{
+    b->ref_count --;
+    if (b->ref_count <= 0)
+    {
+        free(b->data);
+        free(b);
+    }
+}
+
 gdt_table *
-gdt_table_new (int nb_rows, int nb_columns, int nb_rows_alloc)
+gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
 {
     gdt_table *dt = malloc(sizeof(gdt_table));
 
@@ -34,13 +45,18 @@ gdt_table_new (int nb_rows, int nb_columns, int nb_rows_alloc)
     dt->data = b->data;
     dt->block = b;
 
-    dt->__headers = malloc(nb_columns * sizeof(const char *));
-    for (int j = 0; j < nb_columns; j++)
-    {
-        dt->__headers[j] = NULL;
-    }
+    dt->headers = gdt_index_new(16);
+    dt->strings = gdt_index_new(16);
 
     return dt;
+}
+
+void
+gdt_table_free(gdt_table *t)
+{
+    gdt_block_unref(t->block);
+    gdt_index_free(t->strings);
+    gdt_index_free(t->headers);
 }
 
 const gdt_element *
@@ -50,7 +66,7 @@ gdt_table_get(gdt_table *t, int i, int j)
 }
 
 const char *
-gdt_table_get_string(gdt_table *t, const gdt_element *e)
+gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
 {
     if (e->tag > 0)
         return gdt_index_get(t->strings, e->tag - 1);

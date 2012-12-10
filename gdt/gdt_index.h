@@ -11,8 +11,8 @@ struct char_buffer {
 
 typedef struct {
     struct char_buffer names[1];
+    int length;
     int size;
-    int alloc_size;
     int index[INDEX_AUTO];
 } gdt_index;
 
