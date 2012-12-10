@@ -38,11 +38,11 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-TARGETS = libgdt.so
+TARGETS = libgdt$(DLL_EXT)
 
 all: $(TARGETS)
 
-libgdt.so: $(GDT_OBJ_FILES)
+libgdt$(DLL_EXT): $(GDT_OBJ_FILES)
 	gcc -shared -o $@ $(GDT_OBJ_FILES)
 
 include $(GSH_BASE_DIR)/makerules
@@ -50,6 +50,6 @@ include $(GSH_BASE_DIR)/makerules
 .PHONY: clean all
 
 clean:
-	$(HOST_RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+	$(HOST_RM) *.o *.a *$(DLL_EXT) $(TARGETS)
 
 -include $(DEP_FILES)

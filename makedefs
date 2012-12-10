@@ -47,8 +47,10 @@ DEFS += -D_REENTRANT
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
+  DLL_EXT = .dll
 else
   EXE_EXT =
+  DLL_EXT = .so
   DEFS += -pthread
   LIBS += -pthread
 endif
