@@ -1,5 +1,8 @@
 local cgdt = require 'cgdt'
 
+local format = string.format
+local concat = table.concat
+local max = math.max
 local assert = assert
 
 local gdt_table = ffi.typeof("gdt_table")
@@ -33,9 +36,53 @@ local function gdt_table_new(nrows, ncols, nalloc_rows)
     return ffi.gc(t, cgdt.gdt_table_free)
 end
 
+local function gdt_table_dim(t) return t.size1, t.size2 end
+
+local function gdt_table_header(t, k) return 'V' .. k end
+
+local function gdt_table_show(dt)
+    local field_lens = {}
+    local r, c = gdt_table_dim(dt)
+    for k = 1, c do
+        field_lens[k] = # gdt_table_header(dt, k)
+    end
+    for i = 1, r do
+        for j = 1, c do
+            local len = #tostring(gdt_table_get(dt, i, j))
+            field_lens[j] = max(field_lens[j], len)
+        end
+    end
+
+    local field_fmts = {}
+    for j = 1, c do
+        field_fmts[j] = format('%%%ds', field_lens[j])
+    end
+
+    local lines = {}
+
+    local t = {}
+    for j = 1, c do
+        t[j] = format(field_fmts[j], gdt_table_header(dt, j))
+    end
+    lines[1] = '| ' .. concat(t, ' | ') .. ' |'
+    lines[2] = string.rep('-', #lines[1])
+
+    for i = 1, r do
+        local t = {}
+        for j = 1, c do
+            local x = gdt_table_get(dt, i, j)
+            t[j] = format(field_fmts[j], tostring(x))
+        end
+        lines[#lines + 1] = '| ' .. concat(t, ' | ') .. ' |'
+    end
+    return concat(lines, '\n')
+end
+
 local gdt_methods = {
+    dim = gdt_table_dim,
     get = gdt_table_get,
     set = gdt_table_set,
+    show = gdt_table_show,
 }
 
 local gdt_mt = {
@@ -43,6 +90,9 @@ local gdt_mt = {
 }
 
 ffi.metatype(gdt_table, gdt_mt)
+
+local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
+register_ffi_type(gdt_table, "data table")
 
 return {
     new = gdt_table_new,
