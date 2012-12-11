@@ -33,6 +33,7 @@ end
 local function gdt_table_new(nrows, ncols, nalloc_rows)
     nalloc_rows = nalloc_rows or nrows
     local t = cgdt.gdt_table_new(nrows, ncols, nalloc_rows)
+    if t == nil then error('cannot allocate table: not enough memory') end
     return ffi.gc(t, cgdt.gdt_table_free)
 end
 

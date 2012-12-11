@@ -40,8 +40,11 @@ string_array_set(struct string_array *v, int k, const char *str)
 static gdt_block *
 gdt_block_new(int size)
 {
+    gdt_element *data = malloc(size * sizeof(gdt_element));
+    if (unlikely(data == 0))
+        return NULL;
     gdt_block *b = xmalloc(sizeof(gdt_block));
-    b->data = xmalloc(size * sizeof(gdt_element));
+    b->data = data;
     b->size = size;
     b->ref_count = 0;
     return b;
@@ -67,16 +70,17 @@ gdt_block_unref(gdt_block *b)
 gdt_table *
 gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
 {
+    int sz = nb_columns * nb_rows_alloc;
+    if (unlikely(sz <= 0)) return NULL;
+    gdt_block *b = gdt_block_new(sz);
+    if (unlikely(b == NULL)) return NULL;
+    gdt_block_ref(b);
+
     gdt_table *dt = xmalloc(sizeof(gdt_table));
 
     dt->size1 = nb_rows;
     dt->size2 = nb_columns;
     dt->tda = nb_columns;
-
-    int sz = nb_columns * nb_rows_alloc;
-    gdt_block *b = gdt_block_new(sz);
-    gdt_block_ref(b);
-
     dt->data = b->data;
     dt->block = b;
 
