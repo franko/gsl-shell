@@ -1,6 +1,40 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "gdt_table.h"
+
+static void
+string_array_init(struct string_array *v, int length)
+{
+    char_buffer_init(v->buffer, 256);
+    v->offset_data = malloc(sizeof(int) * length);
+    v->offset_len = length;
+    for (int k = 0; k < length; k++)
+    {
+        v->offset_data[k] = -1;
+    }
+}
+
+static void
+string_array_free(struct string_array *v)
+{
+    char_buffer_free(v->buffer);
+    free(v->offset_data);
+}
+
+static const char *
+string_array_get(struct string_array *v, int k)
+{
+    int offset = v->offset_data[k];
+    return (offset >= 0 ? v->buffer->data + offset : NULL);
+}
+
+static void
+string_array_set(struct string_array *v, int k, const char *str)
+{
+    int offset = char_buffer_append(v->buffer, str);
+    v->offset_data[k] = offset;
+}
 
 static gdt_block *
 gdt_block_new(int size)
@@ -45,8 +79,9 @@ gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
     dt->data = b->data;
     dt->block = b;
 
-    dt->headers = gdt_index_new(16);
     dt->strings = gdt_index_new(16);
+
+    string_array_init(dt->headers, nb_columns);
 
     return dt;
 }
@@ -56,7 +91,7 @@ gdt_table_free(gdt_table *t)
 {
     gdt_block_unref(t->block);
     gdt_index_free(t->strings);
-    gdt_index_free(t->headers);
+    string_array_free(t->headers);
 }
 
 const gdt_element *
@@ -98,4 +133,16 @@ gdt_table_set_string(gdt_table *t, int i, int j, const char *s)
     }
 
     e->tag = str_index + 1;
+}
+
+const char *
+gdt_table_get_header(gdt_table *t, int j)
+{
+    return string_array_get(t->headers, j);
+}
+
+void
+gdt_table_set_header(gdt_table *t, int j, const char *str)
+{
+    string_array_set(t->headers, j, str);
 }

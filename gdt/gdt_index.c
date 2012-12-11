@@ -5,7 +5,7 @@
 
 #define STRING_SECTION_INIT_SIZE 256
 
-static void
+void
 char_buffer_init(struct char_buffer *b, size_t sz)
 {
     b->data = malloc(sz);
@@ -14,7 +14,7 @@ char_buffer_init(struct char_buffer *b, size_t sz)
     b->size = sz;
 }
 
-static void
+void
 char_buffer_free(struct char_buffer *b)
 {
     free(b->data);
@@ -35,13 +35,14 @@ char_buffer_resize(struct char_buffer *b, size_t req_size)
     b->size = curr_size;
 }
 
-static int
+int
 char_buffer_append(struct char_buffer *b, const char *str)
 {
     size_t len = strlen(str);
     int string_offset = (b->length > 0 ? b->length + 1 : 0);
     size_t new_len = string_offset + len;
-    char_buffer_resize(b, new_len + 1);
+    if (new_len + 1 > b->size)
+        char_buffer_resize(b, new_len + 1);
     memcpy(b->data + string_offset, str, len + 1);
     b->length = new_len;
     return string_offset;

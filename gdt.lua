@@ -38,13 +38,22 @@ end
 
 local function gdt_table_dim(t) return t.size1, t.size2 end
 
-local function gdt_table_header(t, k) return 'V' .. k end
+local function gdt_table_get_header(t, k)
+    assert(k > 0 and k <= t.size2, 'invalid column index')
+    local s = cgdt.gdt_table_get_header(t, k - 1)
+    return (s == nil and 'V' .. k or ffi.string(s))
+end
+
+local function gdt_table_set_header(t, k, str)
+    assert(k > 0 and k <= t.size2, 'invalid column index')
+    cgdt.gdt_table_set_header(t, k - 1, str)
+end
 
 local function gdt_table_show(dt)
     local field_lens = {}
     local r, c = gdt_table_dim(dt)
     for k = 1, c do
-        field_lens[k] = # gdt_table_header(dt, k)
+        field_lens[k] = # gdt_table_get_header(dt, k)
     end
     for i = 1, r do
         for j = 1, c do
@@ -62,7 +71,7 @@ local function gdt_table_show(dt)
 
     local t = {}
     for j = 1, c do
-        t[j] = format(field_fmts[j], gdt_table_header(dt, j))
+        t[j] = format(field_fmts[j], gdt_table_get_header(dt, j))
     end
     lines[1] = '| ' .. concat(t, ' | ') .. ' |'
     lines[2] = string.rep('-', #lines[1])
@@ -79,10 +88,12 @@ local function gdt_table_show(dt)
 end
 
 local gdt_methods = {
-    dim = gdt_table_dim,
-    get = gdt_table_get,
-    set = gdt_table_set,
-    show = gdt_table_show,
+    dim        = gdt_table_dim,
+    get        = gdt_table_get,
+    set        = gdt_table_set,
+    get_header = gdt_table_get_header,
+    set_header = gdt_table_set_header,
+    show       = gdt_table_show,
 }
 
 local gdt_mt = {
