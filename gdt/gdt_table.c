@@ -2,12 +2,13 @@
 #include <stdio.h>
 
 #include "gdt_table.h"
+#include "xmalloc.h"
 
 static void
 string_array_init(struct string_array *v, int length)
 {
     char_buffer_init(v->buffer, 256);
-    v->offset_data = malloc(sizeof(int) * length);
+    v->offset_data = xmalloc(sizeof(int) * length);
     v->offset_len = length;
     for (int k = 0; k < length; k++)
     {
@@ -39,8 +40,8 @@ string_array_set(struct string_array *v, int k, const char *str)
 static gdt_block *
 gdt_block_new(int size)
 {
-    gdt_block *b = malloc(sizeof(gdt_block));
-    b->data = malloc(size * sizeof(gdt_element));
+    gdt_block *b = xmalloc(sizeof(gdt_block));
+    b->data = xmalloc(size * sizeof(gdt_element));
     b->size = size;
     b->ref_count = 0;
     return b;
@@ -66,7 +67,7 @@ gdt_block_unref(gdt_block *b)
 gdt_table *
 gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
 {
-    gdt_table *dt = malloc(sizeof(gdt_table));
+    gdt_table *dt = xmalloc(sizeof(gdt_table));
 
     dt->size1 = nb_rows;
     dt->size2 = nb_columns;

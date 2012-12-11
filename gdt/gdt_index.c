@@ -1,14 +1,17 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "gdt_index.h"
+#include "xmalloc.h"
 
 #define STRING_SECTION_INIT_SIZE 256
 
 void
 char_buffer_init(struct char_buffer *b, size_t sz)
 {
-    b->data = malloc(sz);
+    b->data = xmalloc(sz);
     b->data[0] = 0;
     b->length = 0;
     b->size = sz;
@@ -23,12 +26,13 @@ char_buffer_free(struct char_buffer *b)
 static void
 char_buffer_resize(struct char_buffer *b, size_t req_size)
 {
+    assert(req_size < (1 << 16));
     size_t curr_size = b->size;
     while (req_size > curr_size)
     {
         curr_size *= 2;
     }
-    char *new_data = malloc(curr_size);
+    char *new_data = xmalloc(curr_size);
     memcpy(new_data, b->data, b->length + 1);
     free(b->data);
     b->data = new_data;
@@ -52,7 +56,7 @@ gdt_index *
 gdt_index_new(int alloc_size)
 {
     size_t extra_size = sizeof(int) * (alloc_size - INDEX_AUTO);
-    gdt_index *g = malloc(sizeof(gdt_index) + extra_size);
+    gdt_index *g = xmalloc(sizeof(gdt_index) + extra_size);
     char_buffer_init(g->names, STRING_SECTION_INIT_SIZE);
     g->length = 0;
     g->size = alloc_size;
@@ -71,7 +75,7 @@ gdt_index_resize(gdt_index *g)
 {
     size_t alloc_size = g->size * 2;
     size_t extra_size = sizeof(int) * (alloc_size - INDEX_AUTO);
-    gdt_index *new_g = malloc(sizeof(gdt_index) + extra_size);
+    gdt_index *new_g = xmalloc(sizeof(gdt_index) + extra_size);
 
     new_g->names[0] = g->names[0];
     new_g->length = g->length;

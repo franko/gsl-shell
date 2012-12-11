@@ -1,6 +1,7 @@
 #ifndef GDT_TABLE_H
 #define GDT_TABLE_H
 
+#include "defs.h"
 #include "gdt_index.h"
 
 typedef struct {

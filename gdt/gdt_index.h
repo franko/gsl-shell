@@ -1,6 +1,8 @@
 #ifndef GDT_INDEX_H
 #define GDT_INDEX_H
 
+#include "defs.h"
+
 #define INDEX_AUTO 4
 
 struct char_buffer {
