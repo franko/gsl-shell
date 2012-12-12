@@ -50,6 +50,45 @@ local function gdt_table_set_header(t, k, str)
     cgdt.gdt_table_set_header(t, k - 1, str)
 end
 
+local function gdt_table_get_column_index(t, name)
+    local r, c = t:dim()
+    for j = 1, c do
+        local s = cgdt.gdt_table_get_header(t, j - 1)
+        if s == nil then s = 'V' .. j end
+        if s == name then return j end
+    end
+end
+
+local function gdt_table_len(t)
+    return t.size1
+end
+
+local function gdt_table_line(t, c1, c2)
+    local n = #t
+    if c1 and type(c1) == 'string' then
+        c1 = gdt_table_get_column_index(t, c1)
+        assert(type(c1) == 'number', 'invalide column specification')
+    end
+    if c2 and type(c2) == 'string' then
+        c2 = gdt_table_get_column_index(t, c2)
+        assert(type(c1) == 'number', 'invalide column specification')
+    end
+    assert(c1, 'column argument not given')
+    local ln = graph.path()
+    if c2 then
+        for i = 1, n do
+            local x, y = t:get(i,c1), t:get(i,c2)
+            ln:line_to(x, y)
+        end
+    else
+        for i = 1, n do
+            local x, y = i, t:get(i,c1)
+            ln:line_to(x, y)
+        end
+    end
+    return ln
+end
+
 local function gdt_table_show(dt)
     local field_lens = {}
     local r, c = gdt_table_dim(dt)
@@ -94,11 +133,13 @@ local gdt_methods = {
     set        = gdt_table_set,
     get_header = gdt_table_get_header,
     set_header = gdt_table_set_header,
+    line       = gdt_table_line,
     show       = gdt_table_show,
 }
 
 local gdt_mt = {
     __index = gdt_methods,
+    __len   = gdt_table_len,
 }
 
 ffi.metatype(gdt_table, gdt_mt)
