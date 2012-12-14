@@ -63,7 +63,7 @@ local function gdt_parse_csv(filename)
 		local vs = csv.line(line)
 		if #vs == 0 then break end
 		for j = 1, ncols do
-			local v = vs[j] or ''
+			local v = (vs[j] ~= '' and vs[j] or nil)
 			gdt.set(t, i, j, v)
 		end
 		i = i + 1

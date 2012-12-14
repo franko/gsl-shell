@@ -11,11 +11,13 @@ local function gdt_table_get(t, i, j)
     assert(i > 0 and i <= t.size1, 'invalid row index')
     assert(j > 0 and j <= t.size2, 'invalid column index')
     local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+    local val
     if e.tag == 0 then
-        return e.number
-    else
-        return ffi.string(cgdt.gdt_table_element_get_string(t, e))
+        val = e.number
+    elseif e.tag > 0 then
+        val = ffi.string(cgdt.gdt_table_element_get_string(t, e))
     end
+    return val
 end
 
 local function gdt_table_set(t, i, j, val)
@@ -24,9 +26,11 @@ local function gdt_table_set(t, i, j, val)
     local tp = type(val)
     if tp == 'number' then
         cgdt.gdt_table_set_number(t, i - 1, j - 1, val)
-    else
-        assert(tp == 'string', 'expect numeric or string value')
+    elseif tp == 'string' then
         cgdt.gdt_table_set_string(t, i - 1, j - 1, val)
+    else
+        assert(tp ~= nil, 'expect a number, string or nil value')
+        cgdt.gdt_table_set_undef(t, i - 1, j - 1)
     end
 end
 
@@ -63,6 +67,14 @@ local function gdt_table_len(t)
     return t.size1
 end
 
+local function getter_xy(t, i, c1, c2)
+    return t:get(i,c1), t:get(i,c2)
+end
+
+local function getter_iy(t, i, c1)
+    return i, t:get(i,c1)
+end
+
 local function gdt_table_line(t, c1, c2)
     local n = #t
     if c1 and type(c1) == 'string' then
@@ -75,18 +87,21 @@ local function gdt_table_line(t, c1, c2)
     end
     assert(c1, 'column argument not given')
     local ln = graph.path()
-    if c2 then
-        for i = 1, n do
-            local x, y = t:get(i,c1), t:get(i,c2)
-            ln:line_to(x, y)
+    local start = true
+    local getter = c2 and getter_xy or getter_iy
+    for i = 1, n do
+        local x, y = getter(t, i, c1, c2)
+        local data = (x and y)
+        if data then
+            if start then ln:move_to(x, y) else ln:line_to(x, y) end
         end
-    else
-        for i = 1, n do
-            local x, y = i, t:get(i,c1)
-            ln:line_to(x, y)
-        end
+        start = not data
     end
     return ln
+end
+
+local function val_tostr(e)
+    return e and tostring(e) or ''
 end
 
 local function gdt_table_show(dt)
@@ -97,7 +112,7 @@ local function gdt_table_show(dt)
     end
     for i = 1, r do
         for j = 1, c do
-            local len = #tostring(gdt_table_get(dt, i, j))
+            local len = #val_tostr(gdt_table_get(dt, i, j))
             field_lens[j] = max(field_lens[j], len)
         end
     end
@@ -120,7 +135,7 @@ local function gdt_table_show(dt)
         local t = {}
         for j = 1, c do
             local x = gdt_table_get(dt, i, j)
-            t[j] = format(field_fmts[j], tostring(x))
+            t[j] = format(field_fmts[j], val_tostr(x))
         end
         lines[#lines + 1] = '| ' .. concat(t, ' | ') .. ' |'
     end

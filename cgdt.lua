@@ -54,6 +54,7 @@ extern const gdt_element * gdt_table_get                (gdt_table *t, int i, in
 extern const char *        gdt_table_element_get_string (gdt_table *t, const gdt_element *e);
 extern void                gdt_table_set_number         (gdt_table *t, int i, int j, double num);
 extern void                gdt_table_set_string         (gdt_table *t, int i, int j, const char *s);
+extern void                gdt_table_set_undef          (gdt_table *t, int i, int j);
 extern const char *        gdt_table_get_header         (gdt_table *t, int j);
 extern void                gdt_table_set_header         (gdt_table *t, int j, const char *str);
 

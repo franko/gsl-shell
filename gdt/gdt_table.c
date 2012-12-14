@@ -114,6 +114,13 @@ gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
 }
 
 void
+gdt_table_set_undef(gdt_table *t, int i, int j)
+{
+    gdt_element *e = &t->data[i * t->tda + j];
+    e->tag = -1;
+}
+
+void
 gdt_table_set_number(gdt_table *t, int i, int j, double num)
 {
     gdt_element *e = &t->data[i * t->tda + j];
