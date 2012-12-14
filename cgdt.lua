@@ -21,9 +21,18 @@ extern int           gdt_index_add         (gdt_index *g, const char *str);
 extern const char *  gdt_index_get         (gdt_index *g, int index);
 extern int           gdt_index_lookup      (gdt_index *g, const char *req);
 
-typedef struct {
-    int tag;
+enum {
+    TAG_STRING = 0xffff0000,
+    TAG_UNDEF  = 0xfffe0000,
+    TAG_NUMBER = 0xfff80000,
+};
+
+typedef union {
     double number;
+    struct {
+        unsigned int lo;
+        unsigned int hi;
+    } word;
 } gdt_element;
 
 typedef struct {

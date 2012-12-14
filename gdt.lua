@@ -7,14 +7,17 @@ local assert = assert
 
 local gdt_table = ffi.typeof("gdt_table")
 
+local TAG_STRING = tonumber(cgdt.TAG_STRING)
+local TAG_NUMBER = tonumber(cgdt.TAG_NUMBER)
+
 local function gdt_table_get(t, i, j)
     assert(i > 0 and i <= t.size1, 'invalid row index')
     assert(j > 0 and j <= t.size2, 'invalid column index')
     local e = cgdt.gdt_table_get(t, i - 1, j - 1)
     local val
-    if e.tag == 0 then
+    if e.word.hi <= TAG_NUMBER then
         val = e.number
-    elseif e.tag > 0 then
+    elseif e.word.hi == TAG_STRING then
         val = ffi.string(cgdt.gdt_table_element_get_string(t, e))
     end
     return val

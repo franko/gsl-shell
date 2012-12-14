@@ -4,6 +4,18 @@
 #include "gdt_table.h"
 #include "xmalloc.h"
 
+static inline int
+elem_is_string(const gdt_element* e)
+{
+    return e->word.hi == TAG_STRING;
+}
+
+static inline int
+elem_is_undef(const gdt_element* e)
+{
+    return e->word.hi == TAG_UNDEF;
+}
+
 static void
 string_array_init(struct string_array *v, int length)
 {
@@ -108,8 +120,8 @@ gdt_table_get(gdt_table *t, int i, int j)
 const char *
 gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
 {
-    if (e->tag > 0)
-        return gdt_index_get(t->strings, e->tag - 1);
+    if (elem_is_string(e))
+        return gdt_index_get(t->strings, e->word.lo);
     return NULL;
 }
 
@@ -117,14 +129,13 @@ void
 gdt_table_set_undef(gdt_table *t, int i, int j)
 {
     gdt_element *e = &t->data[i * t->tda + j];
-    e->tag = -1;
+    e->word.hi = TAG_UNDEF;
 }
 
 void
 gdt_table_set_number(gdt_table *t, int i, int j, double num)
 {
     gdt_element *e = &t->data[i * t->tda + j];
-    e->tag = 0;
     e->number = num;
 }
 
@@ -144,7 +155,8 @@ gdt_table_set_string(gdt_table *t, int i, int j, const char *s)
         }
     }
 
-    e->tag = str_index + 1;
+    e->word.hi = TAG_STRING;
+    e->word.lo = str_index;
 }
 
 const char *

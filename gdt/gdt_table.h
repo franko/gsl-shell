@@ -4,9 +4,24 @@
 #include "defs.h"
 #include "gdt_index.h"
 
-typedef struct {
-    int tag;
+enum {
+    TAG_STRING = 0xffff0000,
+    TAG_UNDEF  = 0xfffe0000,
+    TAG_NUMBER = 0xfff80000,
+};
+
+/* NaN encoding is used to discriminate between (double) numbers
+   and strings or undef values.
+   For NaN values "hi" is equal to 0xfff80000 and "lo" is 0.
+   We use values of "hi" higher then 0xfff80000 to tag non-number
+   values. In the case of strings "lo" is used to store the string
+   index. */
+typedef union {
     double number;
+    struct {
+        unsigned int lo;
+        unsigned int hi;
+    } word;
 } gdt_element;
 
 typedef struct {
