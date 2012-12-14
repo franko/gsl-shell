@@ -3,6 +3,7 @@ local gdt = require 'gdt'
 local csv = require 'csv'
 
 local max = math.max
+local match = string.match
 
 local function is_string_only(ls)
 	for _, s in ipairs(ls) do
@@ -44,6 +45,10 @@ local function pre_parse_csv(filename)
 	return nrows, ncols, has_header
 end
 
+local function is_not_empty(s)
+	return (match(s, '^%s*$') == nil)
+end
+
 local function gdt_parse_csv(filename)
 	local nrows, ncols, has_header = pre_parse_csv(filename)
 
@@ -63,7 +68,7 @@ local function gdt_parse_csv(filename)
 		local vs = csv.line(line)
 		if #vs == 0 then break end
 		for j = 1, ncols do
-			local v = (vs[j] ~= '' and vs[j] or nil)
+			local v = (is_not_empty(vs[j]) and vs[j] or nil)
 			gdt.set(t, i, j, v)
 		end
 		i = i + 1
