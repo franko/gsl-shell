@@ -15,6 +15,8 @@ require('contour')
 require('sf')
 require('help')
 require('vegas')
+require('gdt')
+require('gdt-parse-csv')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'

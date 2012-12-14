@@ -162,8 +162,10 @@ ffi.metatype(gdt_table, gdt_mt)
 local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
 
-return {
+gdt = {
     new = gdt_table_new,
     get = gdt_table_get,
     set = gdt_table_set,
 }
+
+return gdt

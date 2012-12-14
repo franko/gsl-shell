@@ -44,7 +44,7 @@ else
   endif
 endif
 
-SUBDIRS = $(LUADIR) lua-gsl
+SUBDIRS = $(LUADIR) lua-gsl gdt
 
 C_SRC_FILES =
 

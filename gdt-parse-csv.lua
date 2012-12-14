@@ -78,4 +78,4 @@ local function gdt_parse_csv(filename)
 	return t
 end
 
-return gdt_parse_csv
+gdt.read_csv = gdt_parse_csv
