@@ -32,6 +32,12 @@ typedef struct {
     int ref_count;
 } gdt_block;
 
+struct string_array {
+    struct char_buffer buffer[1];
+    int *offset_data;
+    int offset_len;
+};
+
 typedef struct {
     int size1;
     int size2;
@@ -39,7 +45,7 @@ typedef struct {
     gdt_element *data;
     gdt_block *block;
     gdt_index *strings;
-    gdt_index *headers;
+    struct string_array headers[1];
 } gdt_table;
 
 extern gdt_table *         gdt_table_new                (int nb_rows, int nb_columns, int nb_rows_alloc);
