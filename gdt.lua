@@ -103,6 +103,14 @@ local function gdt_table_line(t, c1, c2)
     return ln
 end
 
+local function gdt_table_icolumn(t, j)
+    local n = #t
+    local f = function(t, i)
+        if i + 1 > n then return nil else return i + 1, t:get(i + 1, j) end
+    end
+    return f, t, 0
+end
+
 local function val_tostr(e)
     return e and tostring(e) or ''
 end
@@ -153,6 +161,7 @@ local gdt_methods = {
     set_header = gdt_table_set_header,
     line       = gdt_table_line,
     show       = gdt_table_show,
+    icolumn   = gdt_table_icolumn,
 }
 
 local gdt_mt = {
