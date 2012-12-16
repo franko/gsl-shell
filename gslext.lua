@@ -18,6 +18,7 @@ require('vegas')
 require('gdt')
 require('gdt-parse-csv')
 require('gdt-hist')
+require('gdt-plot')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
