@@ -1,3 +1,4 @@
+local concat = table.concat
 
 local function treat_column_refs(t, js)
     if type(js) ~= 'table' then js = {js} end
@@ -19,9 +20,16 @@ local function add_unique(ls, e)
     return n + 1
 end
 
-local function rect_bin(t, jxs, jys, jes)
-    local concat = table.concat
+local function collate_factors(t, i, js)
+    local c = {}
+    local n = #js
+    for k = 1, n do
+        c[k] = t:get(i, js[k])
+    end
+    return c
+end
 
+local function rect_bin(t, jxs, jys, jes)
     jys = treat_column_refs(t, jys)
     jxs = treat_column_refs(t, jxs)
     jes = treat_column_refs(t, jes)
@@ -30,15 +38,9 @@ local function rect_bin(t, jxs, jys, jes)
     local val = {}
     local enums, labels = {}, {}
     for i = 1, n do
-        local c = {}
-        for k = 1, #jxs do
-            c[#c+1] = t:get(i, jxs[k])
-        end
+        local c = collate_factors(t, i, jxs)
         for p = 1, #jys do
-            local e = {}
-            for k = 1, #jes do
-                e[#e+1] = t:get(i, jes[k])
-            end
+            local e = collate_factors(t, i, jes)
             if #jys > 1 then
                 e[#e+1] = t:get_header(jys[p])
             end
@@ -149,5 +151,50 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
     return plt
 end
 
+local function gdt_table_xyplot(t, jx, jy, jes)
+    local path, webcolor = graph.path, graph.webcolor
+
+    jes = treat_column_refs(t, jes)
+
+    local enums = {}
+    local n = #t
+    for i = 1, n do
+        local e = collate_factors(t, i, jes)
+        add_unique(enums, concat(e, ' '))
+    end
+
+    local plt, lg = graph.plot(), graph.plot()
+    plt.pad, plt.clip = true, false
+    lg.units, lg.clip = false, false
+    for q, enum in ipairs(enums) do
+        local ln = path()
+        local path_method = ln.move_to
+        for i = 1, n do
+            local e = collate_factors(t, i, jes)
+            if enum == concat(e, ' ') then
+                local x, y = t:get(i, jx), t:get(i, jy)
+                if x and y then
+                    path_method(ln, x, y)
+                    path_method = ln.line_to
+                else
+                    path_method = ln.move_to
+                end
+            end
+        end
+
+        if #enums > 1 then
+            add_legend(lg, q, q, webcolor(q), enum)
+        end
+
+        plt:add(ln, webcolor(q), {{'marker', size=6, mark=q}})
+    end
+
+    if #enums > 1 then plt:set_legend(lg) end
+
+    plt:show()
+    return plt
+end
+
 gdt.barplot = gdt_table_barplot
-gdt.plot = gdt_table_lineplot
+gdt.plot    = gdt_table_lineplot
+gdt.xyplot  = gdt_table_xyplot
