@@ -60,7 +60,7 @@ end
 local function gdt_table_get_column_index(t, name)
     local r, c = t:dim()
     for j = 1, c do
-        local s = cgdt.gdt_table_get_header(t, j - 1)
+        local s = ffi.string(cgdt.gdt_table_get_header(t, j - 1))
         if s == nil then s = 'V' .. j end
         if s == name then return j end
     end
@@ -86,7 +86,7 @@ local function gdt_table_line(t, c1, c2)
     end
     if c2 and type(c2) == 'string' then
         c2 = gdt_table_get_column_index(t, c2)
-        assert(type(c1) == 'number', 'invalide column specification')
+        assert(type(c2) == 'number', 'invalide column specification')
     end
     assert(c1, 'column argument not given')
     local ln = graph.path()
@@ -161,7 +161,7 @@ local gdt_methods = {
     set_header = gdt_table_set_header,
     line       = gdt_table_line,
     show       = gdt_table_show,
-    icolumn   = gdt_table_icolumn,
+    icolumn    = gdt_table_icolumn,
     col_index  = gdt_table_get_column_index,
 }
 
