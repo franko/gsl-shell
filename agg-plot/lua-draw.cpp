@@ -263,8 +263,18 @@ marker_new (lua_State *L)
 {
     const double x = luaL_checknumber(L, 1);
     const double y = luaL_checknumber(L, 2);
-    const char *sym_name = luaL_optstring(L, 3, "");
     const double size = luaL_optnumber(L, 4, 5.0);
+    const char *sym_name;
+
+    if (lua_isnumber(L, 3))
+    {
+        int n = lua_tointeger(L, 3);
+        sym_name = marker_lookup(n);
+    }
+    else
+    {
+        sym_name = luaL_optstring(L, 3, "");
+    }
 
     bool stroke;
     sg_object* sym = new_marker_symbol_raw(sym_name, stroke);

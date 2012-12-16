@@ -151,3 +151,10 @@ new_marker_symbol (int n)
     n = (n-1) % NB_SYMBOLS;
     return new_marker_symbol(builder_table[n].name);
 }
+
+const char*
+marker_lookup(int n)
+{
+    n = (n-1) % NB_SYMBOLS;
+    return builder_table[n].name;
+}
