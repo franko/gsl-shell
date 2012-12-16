@@ -162,6 +162,7 @@ local gdt_methods = {
     line       = gdt_table_line,
     show       = gdt_table_show,
     icolumn   = gdt_table_icolumn,
+    col_index  = gdt_table_get_column_index,
 }
 
 local gdt_mt = {
