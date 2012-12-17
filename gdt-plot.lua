@@ -1,5 +1,9 @@
 local concat = table.concat
 
+local function collate(ls)
+    return concat(ls, ' ')
+end
+
 local function treat_column_refs(t, js)
     if type(js) ~= 'table' then js = {js} end
     for i = 1, #js do
@@ -11,10 +15,18 @@ local function treat_column_refs(t, js)
     return js
 end
 
+local function compare_list(a, b)
+    local n = #a
+    for k = 1, n do
+        if a[k] ~= b[k] then return false end
+    end
+    return true
+end
+
 local function add_unique(ls, e)
     local n = #ls
     for i = 1, n do
-        if ls[i] == e then return i end
+        if compare_list(ls[i], e) then return i end
     end
     ls[n + 1] = e
     return n + 1
@@ -44,8 +56,8 @@ local function rect_bin(t, jxs, jys, jes)
             if #jys > 1 then
                 e[#e+1] = t:get_header(jys[p])
             end
-            local ie = add_unique(enums, concat(e, ' '))
-            local ix = add_unique(labels, concat(c, ' '))
+            local ie = add_unique(enums, e)
+            local ix = add_unique(labels, c)
             if not val[ix] then val[ix] = {} end
             val[ix][ie] = t:get(i, jys[p])
         end
@@ -72,7 +84,7 @@ local function gdt_table_barplot(t, jxs, jys, jes)
             end
         end
         cat[2*p-1] = p - 0.5
-        cat[2*p] = lab
+        cat[2*p] = collate(lab)
     end
 
     plt:set_categories('x', cat)
@@ -80,7 +92,7 @@ local function gdt_table_barplot(t, jxs, jys, jes)
 
     if #enums > 1 then
         for k = 1, #enums do
-            plt:legend(enums[k], webcolor(k), 'square')
+            plt:legend(collate(enums[k]), webcolor(k), 'square')
         end
     end
 
@@ -130,8 +142,9 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
         plt:add(ln, webcolor(q), {{'marker', size=6, mark=q}})
 
         if #enums > 1 then
-            add_legend(lg, q, 'line', webcolor(q), en)
-            add_legend(lg, q, q, webcolor(q), en)
+            local label = collate(en)
+            add_legend(lg, q, 'line', webcolor(q), label)
+            add_legend(lg, q, q, webcolor(q), label)
         end
     end
 
@@ -140,7 +153,7 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
     local cat = {}
     for p, lab in ipairs(labels) do
         cat[2*p-1] = p - 0.5
-        cat[2*p] = lab
+        cat[2*p] = collate(lab)
     end
 
     plt:set_categories('x', cat)
@@ -167,7 +180,7 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
     local n = #t
     for i = 1, n do
         local e = collate_factors(t, i, jes)
-        add_unique(enums, concat(e, ' '))
+        add_unique(enums, e)
     end
 
     local plt, lg = graph.plot(), graph.plot()
@@ -181,7 +194,7 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
             local path_method = ln.move_to
             for i = 1, n do
                 local e = collate_factors(t, i, jes)
-                if enum == concat(e, ' ') then
+                if compare_list(enum, e) then
                     local x, y = t:get(i, jx), t:get(i, jys[p])
                     if x and y then
                         path_method(ln, x, y)
@@ -193,7 +206,7 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
             end
 
             local iq = (q - 1) * #jys + p
-            local ienum = enum .. " " .. name
+            local ienum = collate(enum) .. " " .. name
             if mult > 1 then
                 add_legend(lg, iq, iq, webcolor(iq), ienum)
             end
