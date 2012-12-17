@@ -112,7 +112,7 @@ local function gdt_table_icolumn(t, j)
 end
 
 local function val_tostr(e)
-    return e and tostring(e) or ''
+    return e and tostring(e) or 'NA'
 end
 
 local function gdt_table_show(dt)
@@ -135,20 +135,20 @@ local function gdt_table_show(dt)
 
     local lines = {}
 
-    local t = {}
+    local row_ndig = #tostring(#dt)
+    local t = {string.rep(" ", row_ndig)}
     for j = 1, c do
-        t[j] = format(field_fmts[j], gdt_table_get_header(dt, j))
+        t[#t+1] = format(field_fmts[j], gdt_table_get_header(dt, j))
     end
-    lines[1] = '| ' .. concat(t, ' | ') .. ' |'
-    lines[2] = string.rep('-', #lines[1])
+    lines[1] = concat(t, ' ')
 
     for i = 1, r do
-        local t = {}
+        local t = {format("%-" .. row_ndig .. "d", i)}
         for j = 1, c do
             local x = gdt_table_get(dt, i, j)
-            t[j] = format(field_fmts[j], val_tostr(x))
+            t[#t+1] = format(field_fmts[j], val_tostr(x))
         end
-        lines[#lines + 1] = '| ' .. concat(t, ' | ') .. ' |'
+        lines[#lines + 1] = concat(t, ' ')
     end
     return concat(lines, '\n')
 end
