@@ -226,6 +226,37 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
     return plt
 end
 
+local function gdt_table_reduce(t_src, jxs, jys, jes)
+    jxs = treat_column_refs(t_src, jxs)
+    jys = treat_column_refs(t_src, jys)
+    jes = treat_column_refs(t_src, jes)
+
+    local labels, enums, val = rect_bin(t_src, jxs, jys, jes)
+
+    local n, p, q = #labels, #enums, #labels[1]
+    local t = gdt.new(n, q + p)
+
+    for k = 1, q do
+        t:set_header(k, t_src:get_header(jxs[k]))
+    end
+    for k, en in ipairs(enums) do
+        t:set_header(q + k, collate(en))
+    end
+
+    local set = t.set
+    for i = 1, n do
+        for k = 1, q do
+            set(t, i, k, labels[i][k])
+        end
+        for k = 1, p do
+            set(t, i, q + k, val[i][k])
+        end
+    end
+
+    return t
+end
+
 gdt.barplot = gdt_table_barplot
 gdt.plot    = gdt_table_lineplot
 gdt.xyplot  = gdt_table_xyplot
+gdt.reduce  = gdt_table_reduce
