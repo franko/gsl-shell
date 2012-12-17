@@ -151,10 +151,11 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
     return plt
 end
 
-local function gdt_table_xyplot(t, jx, jy, jes)
+local function gdt_table_xyplot(t, jx, jys, jes)
     local path, webcolor = graph.path, graph.webcolor
 
     jes = treat_column_refs(t, jes)
+    jys = treat_column_refs(t, jys)
 
     local enums = {}
     local n = #t
@@ -166,30 +167,36 @@ local function gdt_table_xyplot(t, jx, jy, jes)
     local plt, lg = graph.plot(), graph.plot()
     plt.pad, plt.clip = true, false
     lg.units, lg.clip = false, false
-    for q, enum in ipairs(enums) do
-        local ln = path()
-        local path_method = ln.move_to
-        for i = 1, n do
-            local e = collate_factors(t, i, jes)
-            if enum == concat(e, ' ') then
-                local x, y = t:get(i, jx), t:get(i, jy)
-                if x and y then
-                    path_method(ln, x, y)
-                    path_method = ln.line_to
-                else
-                    path_method = ln.move_to
+    local mult = #enums * #jys
+    for p = 1, #jys do
+        local name = t:get_header(jys[p])
+        for q, enum in ipairs(enums) do
+            local ln = path()
+            local path_method = ln.move_to
+            for i = 1, n do
+                local e = collate_factors(t, i, jes)
+                if enum == concat(e, ' ') then
+                    local x, y = t:get(i, jx), t:get(i, jys[p])
+                    if x and y then
+                        path_method(ln, x, y)
+                        path_method = ln.line_to
+                    else
+                        path_method = ln.move_to
+                    end
                 end
             end
-        end
 
-        if #enums > 1 then
-            add_legend(lg, q, q, webcolor(q), enum)
-        end
+            local iq = (q - 1) * #jys + p
+            local ienum = enum .. " " .. name
+            if mult > 1 then
+                add_legend(lg, iq, iq, webcolor(iq), ienum)
+            end
 
-        plt:add(ln, webcolor(q), {{'marker', size=6, mark=q}})
+            plt:add(ln, webcolor(iq), {{'marker', size=6, mark=iq}})
+        end
     end
 
-    if #enums > 1 then plt:set_legend(lg) end
+    if mult > 1 then plt:set_legend(lg) end
 
     plt:show()
     return plt
