@@ -173,6 +173,7 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
         if opt.markers == false then use_markers = false end
     end
 
+    jx = type(jx) == 'number' and jx or t:col_index(jx)
     jes = treat_column_refs(t, jes)
     jys = treat_column_refs(t, jys)
 
