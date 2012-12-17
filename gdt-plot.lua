@@ -151,8 +151,14 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
     return plt
 end
 
-local function gdt_table_xyplot(t, jx, jys, jes)
+local function gdt_table_xyplot(t, jx, jys, jes, opt)
     local path, webcolor = graph.path, graph.webcolor
+
+    local use_lines = opt and opt.lines
+    local use_markers = true
+    if opt then
+        if opt.markers == false then use_markers = false end
+    end
 
     jes = treat_column_refs(t, jes)
     jys = treat_column_refs(t, jys)
@@ -192,7 +198,12 @@ local function gdt_table_xyplot(t, jx, jys, jes)
                 add_legend(lg, iq, iq, webcolor(iq), ienum)
             end
 
-            plt:add(ln, webcolor(iq), {{'marker', size=6, mark=iq}})
+            if use_lines then
+                plt:add(ln, webcolor(iq), {{'stroke', width=3}})
+            end
+            if use_markers then
+                plt:add(ln, webcolor(iq), {{'marker', size=6, mark=iq}})
+            end
         end
     end
 
