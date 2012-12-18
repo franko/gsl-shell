@@ -112,7 +112,11 @@ local function gdt_table_icolumn(t, j)
 end
 
 local function val_tostr(e)
-    return e and tostring(e) or 'NA'
+    if type(e) == "number" then
+        return format("%g", e)
+    else
+        return e or 'NA'
+    end
 end
 
 local function gdt_table_show(dt)
