@@ -42,11 +42,32 @@ local function collate_factors(t, i, js)
     return c
 end
 
-local function rect_bin(t, jxs, jys, jes)
-    jys = treat_column_refs(t, jys)
-    jxs = treat_column_refs(t, jxs)
-    jes = treat_column_refs(t, jes)
+local function vec2d_get(r, i, j)
+    if r[i] and r[i][j] then
+        return r[i][j]
+    end
+end
 
+local function vec2d_set(r, i, j, v)
+    if not r[i] then r[i] = {} end
+    r[i][j] = v
+end
+
+local function vec2d_incr(r, i, j)
+    if not r[i] then r[i] = {} end
+    local v = r[i][j] or 0
+    r[i][j] = v + 1
+    return v + 1
+end
+
+local function treat_all_column_refs(t, jxs, jys, jes)
+    jxs = treat_column_refs(t, jxs)
+    jys = treat_column_refs(t, jys)
+    jes = treat_column_refs(t, jes)
+    return jxs, jys, jes
+end
+
+local function rect_bin(t, jxs, jys, jes)
     local n = #t
     local val = {}
     local enums, labels = {}, {}
@@ -59,8 +80,7 @@ local function rect_bin(t, jxs, jys, jes)
             end
             local ie = add_unique(enums, e)
             local ix = add_unique(labels, c)
-            if not val[ix] then val[ix] = {} end
-            val[ix][ie] = t:get(i, jys[p])
+            vec2d_set(val, ix, ie, t:get(i, jys[p]))
         end
     end
 
@@ -68,6 +88,8 @@ local function rect_bin(t, jxs, jys, jes)
 end
 
 local function gdt_table_barplot(t, jxs, jys, jes)
+    jxs, jys, jes = treat_all_column_refs(t, jxs, jys, jes)
+
     local rect, webcolor = graph.rect, graph.webcolor
     local labels, enums, val = rect_bin(t, jxs, jys, jes)
 
@@ -121,6 +143,8 @@ local function add_legend(lg, k, symspec, color, text)
 end
 
 local function gdt_table_lineplot(t, jxs, jys, jes)
+    jxs, jys, jes = treat_all_column_refs(t, jxs, jys, jes)
+
     local path, webcolor = graph.path, graph.webcolor
     local labels, enums, val = rect_bin(t, jxs, jys, jes)
 
