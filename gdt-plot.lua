@@ -231,8 +231,11 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
                 end
             end
 
+            local iqs = {}
+            if #enums > 1 then iqs[#iqs+1] = collate(enum) end
+            if #jys > 1 then iqs[#iqs+1] = name end
+            local ienum = concat(iqs, " ")
             local iq = (q - 1) * #jys + p
-            local ienum = collate(enum) .. " " .. name
             if mult > 1 then
                 add_legend(lg, iq, iq, webcolor(iq), ienum)
             end
