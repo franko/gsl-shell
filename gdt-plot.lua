@@ -1,6 +1,8 @@
 local concat = table.concat
 local select = select
 
+local line_width = 2.5
+
 local function collate(ls)
     return concat(ls, ' ')
 end
@@ -178,7 +180,7 @@ local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
       return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
    elseif sym == 'line' then
-      return graph.segment(dx, 10+dy, 20+dx, 10+dy), {{'stroke'}}
+      return graph.segment(dx, 10+dy, 20+dx, 10+dy), {{'stroke', width=line_width}}
    else
       return graph.marker(10+dx, 10+dy, sym, 8)
    end
@@ -189,7 +191,9 @@ local function add_legend(lg, k, symspec, color, text)
     local sym, symtr = legend_symbol(symspec, 0, y)
     local tr = (trans and trans or symtr)
     lg:add(sym, color, tr)
-    lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+    if text then
+        lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+    end
 end
 
 local function gdt_table_lineplot(t, jxs, jys, jes)
@@ -213,13 +217,13 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
                 path_method = ln.move_to
             end
         end
-        plt:addline(ln, webcolor(q))
-        plt:add(ln, webcolor(q), {{'marker', size=6, mark=q}})
+        plt:add(ln, webcolor(q), {{'stroke', width=line_width}})
+        plt:add(ln, webcolor(q), {{'marker', size=8, mark=q}})
 
         if #enums > 1 then
             local label = collate(en)
             add_legend(lg, q, 'line', webcolor(q), label)
-            add_legend(lg, q, q, webcolor(q), label)
+            add_legend(lg, q, q, webcolor(q))
         end
     end
 

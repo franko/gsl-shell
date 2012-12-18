@@ -64,9 +64,9 @@ build_triangle(bool& stroke)
     agg::path_storage& triangle = p->self();
 
     double ht = 0.86602540378444;
-    triangle.move_to(-0.5, -ht/3);
-    triangle.line_to( 0.5, -ht/3);
-    triangle.line_to( 0.0,  2*ht/3);
+    triangle.move_to(-0.5/ht, -1.0/3.0);
+    triangle.line_to( 0.5/ht, -1.0/3.0);
+    triangle.line_to( 0.0,  2.0/3.0);
     triangle.close_polygon();
 
     stroke = false;
