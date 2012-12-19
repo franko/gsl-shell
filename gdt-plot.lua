@@ -1,10 +1,11 @@
 local concat = table.concat
-local select = select
+local select, unpack = select, unpack
+local sqrt = math.sqrt
 
 local line_width = 2.5
 
-local function collate(ls)
-    return concat(ls, ' ')
+local function collate(ls, sep)
+    return concat(ls, sep or ' ')
 end
 
 local function treat_column_refs(t, js)
@@ -18,18 +19,49 @@ local function treat_column_refs(t, js)
     return js
 end
 
+-- recursive algorithm to computer the standard deviation from
+-- wikipedia: http://en.wikipedia.org/wiki/Standard_deviation.
+-- Welford, BP. "Note on a Method for Calculating Corrected Sums of
+-- Squares and Products". Technometrics 4 (3): 419–420
+local function f_stddev(accu, x, n)
+    local A, Q, km = unpack(accu)
+    accu[1] = A + (x - A) / (km + 1)
+    accu[2] = Q + km / (km + 1) * (x - A)^2
+    accu[3] = km + 1
+    return accu
+end
+
+local function f_stddevp_fini(accu)
+    local A, Q, n = unpack(accu)
+    if n > 0 then return sqrt(Q / n) end
+end
+
+local function f_stddev_fini(accu)
+    local A, Q, n = unpack(accu)
+    if n > 1 then return sqrt(Q / (n - 1)) end
+end
+
+local function f_var_fini(accu)
+    local A, Q, n = unpack(accu)
+    if n > 0 then return Q / n end
+end
+
 local stat_lookup = {
-    mean   = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
-    sum    = {f = function(accu, x, n) return accu + x end},
-    count  = {f = function(accu, x, n) return n end},
+    mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
+    stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
+    stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
+    var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
+    sum     = {f = function(accu, x, n) return accu + x end},
+    count   = {f = function(accu, x, n) return n end},
 }
 
 local function treat_column_funcrefs(t, js)
     if type(js) ~= 'table' then js = {js} end
     for i = 1, #js do
         local v = js[i]
-        local stat, name
+        local stat, name, fullname
         if type(v) == 'string' then
+            fullname = v
             stat, name = string.match(v, '(%a+)%((%w+)%)')
             if not stat then
                 stat, name = 'mean', v
@@ -39,7 +71,13 @@ local function treat_column_funcrefs(t, js)
         end
         local s = stat_lookup[stat]
         assert(s, "invalid parameter requested")
-        js[i] = {f= s.f, f0 = s.f0 or 0, index = t:col_index(name)}
+        js[i] = {
+            f     = s.f,
+            f0    = s.f0,
+            fini  = s.fini,
+            name  = fullname,
+            index = t:col_index(name)
+        }
     end
     return js
 end
@@ -119,20 +157,33 @@ local function rect_funcbin(t, jxs, jys, jes)
     local n = #t
     local val, count = {}, {}
     local enums, labels = {}, {}
+    local fini_table = {}
     for i = 1, n do
         local c = collate_factors(t, i, jxs)
         for p = 1, #jys do
-            local jy, fy, fy0 = jys[p].index, jys[p].f, jys[p].f0
+            local jp = jys[p]
+            local jy, fy, fini = jp.index, jp.f, jp.fini
+            local f0 = jp.f0 and jp.f0() or 0
             local e = collate_factors(t, i, jes)
-            if #jys > 1 then
-                e[#e+1] = t:get_header(jys[p])
-            end
+            e[#e+1] = jp.name
             local ie = add_unique(enums, e)
             local ix = add_unique(labels, c)
             local cc = vec2d_incr(count, ix, ie)
-            local v_accu = vec2d_get(val, ix, ie) or fy0
+            local v_accu = vec2d_get(val, ix, ie) or f0
             local v = t:get(i, jy)
             vec2d_set(val, ix, ie, fy(v_accu, v, cc))
+            fini_table[ie] = fini
+        end
+    end
+
+    for ie, enum in ipairs(enums) do
+        local fini = fini_table[ie]
+        if fini then
+            for ix = 1, #labels do
+                local v = vec2d_get(val, ix, ie)
+                local v_fin = fini(v)
+                vec2d_set(val, ix, ie, v_fin)
+            end
         end
     end
 
@@ -323,7 +374,7 @@ local function gdt_table_reduce(t_src, jxs, jys, jes)
         t:set_header(k, t_src:get_header(jxs[k]))
     end
     for k, en in ipairs(enums) do
-        t:set_header(q + k, collate(en))
+        t:set_header(q + k, collate(en, "/"))
     end
 
     local set = t.set
