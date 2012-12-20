@@ -49,6 +49,28 @@ string_array_set(struct string_array *v, int k, const char *str)
     v->offset_data[k] = offset;
 }
 
+static void
+string_array_insert(struct string_array *v, int j_in, int n)
+{
+    int new_len = v->offset_len + n;
+    int old_len = v->offset_len;
+    int *new_data = xmalloc(sizeof(int) * new_len);
+    int *old_data = v->offset_data;
+    int j, k;
+
+    for (j = 0; j < j_in; j++)
+        new_data[j] = old_data[j];
+    for (k = 0; k < n; k++)
+        new_data[j_in + k] = -1;
+    for (/* */; j < old_len; j++)
+        new_data[j + n] = old_data[j];
+
+    free(v->offset_data);
+
+    v->offset_data = new_data;
+    v->offset_len = new_len;
+}
+
 static gdt_block *
 gdt_block_new(int size)
 {
@@ -169,4 +191,49 @@ void
 gdt_table_set_header(gdt_table *t, int j, const char *str)
 {
     string_array_set(t->headers, j, str);
+}
+
+int
+gdt_table_insert_columns(gdt_table *t, int j_in, int n)
+{
+    int os2 = t->size2, ns2 = t->size2 + n;
+    int sz = ns2 * t->size1;
+    int *src, *dst;
+    int i;
+
+    if (unlikely(sz <= 0)) return (-1);
+    gdt_block *new_block = gdt_block_new(sz);
+    if (unlikely(new_block == NULL)) return (-1);
+    gdt_block_ref(new_block);
+
+    src = (int *) t->data;
+    dst = (int *) new_block->data;
+
+    for (i = 0; i < t->size1; i++)
+    {
+        int j;
+
+        for (j = 0; j < 2 * j_in; j++)
+        {
+            dst[j] = src[j];
+        }
+        for (/* */; j < 2 * os2; j++)
+        {
+            dst[j + 2 * n] = src[j];
+        }
+
+        dst += 2 * ns2;
+        src += 2 * os2;
+    }
+
+    gdt_block_unref(t->block);
+
+    t->size2 = ns2;
+    t->tda = ns2;
+    t->block = new_block;
+    t->data = new_block->data;
+
+    string_array_insert(t->headers, j_in, n);
+
+    return 0;
 }

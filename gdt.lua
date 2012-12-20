@@ -111,6 +111,23 @@ local function gdt_table_icolumn(t, j)
     return f, t, 0
 end
 
+local function gdt_table_insert_column(t, col_name, j, f)
+    local N, M = t:dim()
+    local name = {}
+    for k = 1, M do name[k] = t:get_header(k) end
+
+    cgdt.gdt_table_insert_columns(t, j - 1, 1)
+
+    local row = {}
+    for i = 1, N do
+        for k = 1, j - 1 do row[name[k]] = t:get(i, k) end
+        for k = j, M do row[name[k]] = t:get(i, k + 1) end
+        t:set(i, j, f(row))
+    end
+
+    t:set_header(j, col_name)
+end
+
 local function val_tostr(e)
     if type(e) == "number" then
         return format("%g", e)
@@ -167,6 +184,7 @@ local gdt_methods = {
     show       = gdt_table_show,
     icolumn    = gdt_table_icolumn,
     col_index  = gdt_table_get_column_index,
+    col_insert = gdt_table_insert_column,
 }
 
 local gdt_mt = {
