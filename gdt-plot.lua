@@ -166,13 +166,16 @@ local function rect_funcbin(t, jxs, jys, jes)
             local f0 = jp.f0 and jp.f0() or 0
             local e = collate_factors(t, i, jes)
             e[#e+1] = jp.name
-            local ie = add_unique(enums, e)
-            local ix = add_unique(labels, c)
-            local cc = vec2d_incr(count, ix, ie)
-            local v_accu = vec2d_get(val, ix, ie) or f0
+
             local v = t:get(i, jy)
-            vec2d_set(val, ix, ie, fy(v_accu, v, cc))
-            fini_table[ie] = fini
+            if v then
+                local ie = add_unique(enums, e)
+                local ix = add_unique(labels, c)
+                local cc = vec2d_incr(count, ix, ie)
+                local v_accu = vec2d_get(val, ix, ie) or f0
+                vec2d_set(val, ix, ie, fy(v_accu, v, cc))
+                fini_table[ie] = fini
+            end
         end
     end
 
