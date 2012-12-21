@@ -133,26 +133,6 @@ local function treat_all_column_refs(t, jxs, jys, jes)
     return jxs, jys, jes
 end
 
-local function rect_bin(t, jxs, jys, jes)
-    local n = #t
-    local val = {}
-    local enums, labels = {}, {}
-    for i = 1, n do
-        local c = collate_factors(t, i, jxs)
-        for p = 1, #jys do
-            local e = collate_factors(t, i, jes)
-            if #jys > 1 then
-                e[#e+1] = t:get_header(jys[p])
-            end
-            local ie = add_unique(enums, e)
-            local ix = add_unique(labels, c)
-            vec2d_set(val, ix, ie, t:get(i, jys[p]))
-        end
-    end
-
-    return labels, enums, val
-end
-
 local function rect_funcbin(t, jxs, jys, jes)
     local n = #t
     local val, count = {}, {}
@@ -194,10 +174,12 @@ local function rect_funcbin(t, jxs, jys, jes)
 end
 
 local function gdt_table_barplot(t, jxs, jys, jes)
-    jxs, jys, jes = treat_all_column_refs(t, jxs, jys, jes)
+    jxs = treat_column_refs(t, jxs)
+    jys = treat_column_funcrefs(t, jys)
+    jes = treat_column_refs(t, jes)
 
     local rect, webcolor = graph.rect, graph.webcolor
-    local labels, enums, val = rect_bin(t, jxs, jys, jes)
+    local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
 
     local plt = graph.plot()
     local pad = 0.1
@@ -221,7 +203,7 @@ local function gdt_table_barplot(t, jxs, jys, jes)
 
     if #enums > 1 then
         for k = 1, #enums do
-            plt:legend(collate(enums[k]), webcolor(k), 'square')
+            plt:legend(collate(enums[k], '/'), webcolor(k), 'square')
         end
     end
 
@@ -251,10 +233,12 @@ local function add_legend(lg, k, symspec, color, text)
 end
 
 local function gdt_table_lineplot(t, jxs, jys, jes)
-    jxs, jys, jes = treat_all_column_refs(t, jxs, jys, jes)
+    jxs = treat_column_refs(t, jxs)
+    jys = treat_column_funcrefs(t, jys)
+    jes = treat_column_refs(t, jes)
 
     local path, webcolor = graph.path, graph.webcolor
-    local labels, enums, val = rect_bin(t, jxs, jys, jes)
+    local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
 
     local plt, lg = graph.plot(), graph.plot()
     plt.pad, plt.clip = true, false
