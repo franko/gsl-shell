@@ -118,11 +118,17 @@ local function gdt_table_insert_column(t, col_name, j, f)
 
     cgdt.gdt_table_insert_columns(t, j - 1, 1)
 
-    local row = {}
-    for i = 1, N do
-        for k = 1, j - 1 do row[name[k]] = t:get(i, k) end
-        for k = j, M do row[name[k]] = t:get(i, k + 1) end
-        t:set(i, j, f(row))
+    if not f then
+        for i = 1, N do
+            cgdt.gdt_table_set_undef(t, i - 1, j - 1)
+        end
+    else
+        local row = {}
+        for i = 1, N do
+            for k = 1, j - 1 do row[name[k]] = t:get(i, k) end
+            for k = j, M do row[name[k]] = t:get(i, k + 1) end
+            t:set(i, j, f(row))
+        end
     end
 
     t:set_header(j, col_name)
