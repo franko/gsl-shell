@@ -47,15 +47,25 @@ struct string_array {
     int offset_len;
 };
 
+struct __gdt_table;
+
 typedef struct {
+    int __index;
+    struct __gdt_table *__table;
+} gdt_table_cursor;
+
+struct __gdt_table {
     int size1;
     int size2;
     int tda;
     gdt_element *data;
     gdt_block *block;
     gdt_index *strings;
-    struct string_array headers[1];
-} gdt_table;
+    struct string_array __headers[1];
+    gdt_table_cursor __cursor[1];
+};
+
+typedef struct __gdt_table gdt_table;
 
 extern gdt_table *         gdt_table_new                (int nb_rows, int nb_columns, int nb_rows_alloc);
 extern void                gdt_table_free               (gdt_table *t);
@@ -67,6 +77,8 @@ extern void                gdt_table_set_undef          (gdt_table *t, int i, in
 extern const char *        gdt_table_get_header         (gdt_table *t, int j);
 extern void                gdt_table_set_header         (gdt_table *t, int j, const char *str);
 extern int                 gdt_table_insert_columns     (gdt_table *t, int j_in, int n);
+extern const gdt_element * gdt_table_cursor_get         (gdt_table_cursor *c, const char *key);
+extern gdt_table_cursor *  gdt_table_get_cursor         (gdt_table *t);
 
 ]]
 

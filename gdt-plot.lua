@@ -390,20 +390,12 @@ end
 
 local function gdt_table_linfit(t, f, jy)
     local N, M = t:dim()
-    local name = {}
-    for k = 1, M do
-        name[k] = t:get_header(k)
-    end
-    local row = {}
-    for k = 1, M do
-        row[name[k]] = t:get(1, k)
-    end
+    local row = t:cursor()
     local P = count_args(f(row))
 
     local X, Y = matrix.alloc(N, P), matrix.alloc(N, 1)
-    for i = 1, N do
-        for k = 1, M do row[name[k]] = t:get(i, k) end
-        set_elements(X, P, i, f(row))
+    for i, row in t:rows() do
+        set_elements(X, P, i, f(row, i))
         Y:set(i, 1, t:get(i, jy))
     end
 

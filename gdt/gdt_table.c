@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "gdt_table.h"
 #include "xmalloc.h"
@@ -47,6 +48,20 @@ string_array_set(struct string_array *v, int k, const char *str)
 {
     int offset = char_buffer_append(v->buffer, str);
     v->offset_data[k] = offset;
+}
+
+static int
+string_array_lookup(struct string_array *v, const char *key)
+{
+    int k, len = v->offset_len;
+    const char * base_data = v->buffer->data;
+    for (k = 0; k < len; k++)
+    {
+        int offset = v->offset_data[k];
+        if (offset >= 0 && strcmp(base_data + offset, key) == 0)
+            return k;
+    }
+    return (-1);
 }
 
 static void
@@ -122,6 +137,8 @@ gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
 
     string_array_init(dt->headers, nb_columns);
 
+    dt->cursor->table = dt;
+
     return dt;
 }
 
@@ -131,6 +148,7 @@ gdt_table_free(gdt_table *t)
     gdt_block_unref(t->block);
     gdt_index_free(t->strings);
     string_array_free(t->headers);
+    t->cursor->table = NULL;
 }
 
 const gdt_element *
@@ -236,4 +254,23 @@ gdt_table_insert_columns(gdt_table *t, int j_in, int n)
     string_array_insert(t->headers, j_in, n);
 
     return 0;
+}
+
+gdt_table_cursor *
+gdt_table_get_cursor(gdt_table *t)
+{
+    return t->cursor;
+}
+
+const gdt_element *
+gdt_table_cursor_get(gdt_table_cursor *c, const char *key)
+{
+    gdt_table *t = c->table;
+    int k;
+    if (!t)
+        return NULL;
+    k = string_array_lookup(t->headers, key);
+    if (k < 0)
+        return NULL;
+    return gdt_table_get(t, c->index, k);
 }

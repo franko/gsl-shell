@@ -6,14 +6,12 @@ local max = math.max
 local assert = assert
 
 local gdt_table = ffi.typeof("gdt_table")
+local gdt_table_cursor = ffi.typeof("gdt_table_cursor")
 
 local TAG_STRING = tonumber(cgdt.TAG_STRING)
 local TAG_NUMBER = tonumber(cgdt.TAG_NUMBER)
 
-local function gdt_table_get(t, i, j)
-    assert(i > 0 and i <= t.size1, 'invalid row index')
-    assert(j > 0 and j <= t.size2, 'invalid column index')
-    local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+local function gdt_element(e)
     local val
     if e.word.hi <= TAG_NUMBER then
         val = e.number
@@ -21,6 +19,13 @@ local function gdt_table_get(t, i, j)
         val = ffi.string(cgdt.gdt_table_element_get_string(t, e))
     end
     return val
+end
+
+local function gdt_table_get(t, i, j)
+    assert(i > 0 and i <= t.size1, 'invalid row index')
+    assert(j > 0 and j <= t.size2, 'invalid column index')
+    local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+    return gdt_element(e)
 end
 
 local function gdt_table_set(t, i, j, val)
@@ -105,29 +110,23 @@ end
 
 local function gdt_table_icolumn(t, j)
     local n = #t
-    local f = function(t, i)
-        if i + 1 > n then return nil else return i + 1, t:get(i + 1, j) end
+    local f = function(_t, i)
+        if i + 1 > n then return nil else return i + 1, _t:get(i + 1, j) end
     end
     return f, t, 0
 end
 
 local function gdt_table_insert_column(t, col_name, j, f)
-    local N, M = t:dim()
-    local name = {}
-    for k = 1, M do name[k] = t:get_header(k) end
-
     cgdt.gdt_table_insert_columns(t, j - 1, 1)
 
+    local n = #t
     if not f then
-        for i = 1, N do
+        for i = 1, n do
             cgdt.gdt_table_set_undef(t, i - 1, j - 1)
         end
     else
-        local row = {}
-        for i = 1, N do
-            for k = 1, j - 1 do row[name[k]] = t:get(i, k) end
-            for k = j, M do row[name[k]] = t:get(i, k + 1) end
-            t:set(i, j, f(row))
+        for i, row in t:rows() do
+            t:set(i, j, f(row, i))
         end
     end
 
@@ -180,6 +179,32 @@ local function gdt_table_show(dt)
     return concat(lines, '\n')
 end
 
+local function gdt_table_get_cursor(t)
+    local c = cgdt.gdt_table_get_cursor(t)
+    c.__index = 0
+    return c
+end
+
+local function gdt_table_headers(t)
+    local m = t.size2
+    local name = {}
+    for k = 1, m do name[k] = t:get_header(k) end
+    return name
+end
+
+local function gdt_table_rows(t)
+    local n = #t
+    local cursor = cgdt.gdt_table_get_cursor(t)
+    local function f(t, i)
+        i = i + 1
+        if i <= n then
+            cursor.__index = i - 1
+            return i, cursor
+        end
+    end
+    return f, t, 0
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -191,6 +216,9 @@ local gdt_methods = {
     icolumn    = gdt_table_icolumn,
     col_index  = gdt_table_get_column_index,
     col_insert = gdt_table_insert_column,
+    cursor     = gdt_table_get_cursor,
+    rows       = gdt_table_rows,
+    headers    = gdt_table_headers,
 }
 
 local gdt_mt = {
@@ -199,6 +227,20 @@ local gdt_mt = {
 }
 
 ffi.metatype(gdt_table, gdt_mt)
+
+local function gdt_table_cursor_get(c, k)
+    local e = cgdt.gdt_table_cursor_get(c, k)
+    if e ~= nil then
+        return gdt_element(e)
+    end
+    return nil
+end
+
+local cursor_mt = {
+    __index = gdt_table_cursor_get,
+}
+
+ffi.metatype(gdt_table_cursor, cursor_mt)
 
 local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
