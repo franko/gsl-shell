@@ -5,6 +5,18 @@
 #include "gdt_table.h"
 #include "xmalloc.h"
 
+static inline unsigned int round_two_power(unsigned int n)
+{
+    n = n - 1;
+    n = n | (n >> 1);
+    n = n | (n >> 2);
+    n = n | (n >> 4);
+    n = n | (n >> 8);
+    n = n | (n >> 16);
+    n = n + 1;
+    return n;
+}
+
 static inline int
 elem_is_string(const gdt_element* e)
 {
@@ -166,6 +178,12 @@ gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
 }
 
 void
+gdt_table_set(gdt_table *t, int i, int j, const gdt_element* e)
+{
+    t->data[i * t->tda + j] = *e;
+}
+
+void
 gdt_table_set_undef(gdt_table *t, int i, int j)
 {
     gdt_element *e = &t->data[i * t->tda + j];
@@ -252,6 +270,53 @@ gdt_table_insert_columns(gdt_table *t, int j_in, int n)
     t->data = new_block->data;
 
     string_array_insert(t->headers, j_in, n);
+
+    return 0;
+}
+
+int
+gdt_table_insert_rows(gdt_table *t, int i_in, int n)
+{
+    int n1 = t->size1, n2 = t->size2;
+    int i;
+
+    if (t->block->size < (n1 + n) * n2)
+    {
+        int size_req = (n1 + n) * n2;
+        if (unlikely(size_req <= 0)) return (-1);
+        int new_size = round_two_power(size_req);
+        gdt_block *new_block = gdt_block_new(new_size);
+
+        if (unlikely(new_block == NULL)) return (-1);
+        gdt_block_ref(new_block);
+
+        int * const src = (int *) t->data;
+        int * const dst = (int *) new_block->data;
+
+        for (i = 0; i < 2 * i_in * n2; i++)
+        {
+            dst[i] = src[i];
+        }
+
+        for (/* */; i < 2 * n1 * n2; i++)
+        {
+            dst[i + 2 * n * n2] = src[i];
+        }
+
+        gdt_block_unref(t->block);
+        t->block = new_block;
+        t->data = new_block->data;
+    }
+    else
+    {
+        int * const data = (int *) t->data;
+        for (i = 2 * n1 * n2 - 1; i >= 2 * i_in * n2; i--)
+        {
+            data[i + 2 * n * n2] = data[i];
+        }
+    }
+
+    t->size1 = n1 + n;
 
     return 0;
 }
