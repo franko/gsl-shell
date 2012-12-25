@@ -205,6 +205,26 @@ local function gdt_table_rows(t)
     return f, t, 0
 end
 
+local function gdt_table_filter(t, f)
+    local n, m = t:dim()
+    local n_curr = 0
+    local new = gdt.new(n_curr, m, 16)
+    for i, row in t:rows() do
+        if f(row, i) then
+            n_curr = n_curr + 1
+            cgdt.gdt_table_insert_rows(new, n_curr - 1, 1)
+            for j = 1, m do
+                local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+                cgdt.gdt_table_set(new, n_curr - 1, j - 1, e)
+            end
+        end
+    end
+    for j = 1, m do
+        new:set_header(j, t:get_header(j))
+    end
+    return new
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -246,9 +266,10 @@ local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
 
 gdt = {
-    new = gdt_table_new,
-    get = gdt_table_get,
-    set = gdt_table_set,
+    new    = gdt_table_new,
+    get    = gdt_table_get,
+    set    = gdt_table_set,
+    filter = gdt_table_filter,
 }
 
 return gdt
