@@ -12,15 +12,12 @@ local function is_string_only(ls)
 	return true
 end
 
-local function pre_parse_csv(filename)
-	local f = assert(io.open(filename, 'r'), 'cannot open file: ' .. filename)
-	local head_line = f:read('*l')
-	local head_vs = csv.line(head_line)
+local function pre_parse_csv(source)
+	local head_vs = source()
 	local nrows, ncols = 1, #head_vs
 	local all_strings = true
 	local header_dup = {}
-	for line in f:lines() do
-		local vs = csv.line(line)
+	for vs in source do
 		if #vs == 0 then break end
 		if all_strings then	all_strings = is_string_only(vs) end
 		for k= 1, #vs do
@@ -29,7 +26,6 @@ local function pre_parse_csv(filename)
 		ncols = max(ncols, #vs)
 		nrows = nrows + 1
 	end
-	f:close()
 
 	local header_dup_count = 0
 	for k= 1, ncols do
@@ -49,23 +45,22 @@ local function is_not_empty(s)
 	return (match(s, '^%s*$') == nil)
 end
 
-local function gdt_parse_csv(filename)
-	local nrows, ncols, has_header = pre_parse_csv(filename)
+local function gdt_parse(source_init)
+	local source = source_init()
+	local nrows, ncols, has_header = pre_parse_csv(source)
 
 	local t = gdt.new(nrows, ncols)
-	local f = assert(io.open(filename, 'r'), 'cannot open file: ' .. filename)
+	source = source_init()
 
 	if has_header then
-		local head_line = f:read('*l')
-		local vs = csv.line(head_line)
+		local vs = source()
 		for k, s in ipairs(vs) do
 			t:set_header(k, s)
 		end
 	end
 
 	local i = 1
-	for line in f:lines() do
-		local vs = csv.line(line)
+	for vs in source do
 		if #vs == 0 then break end
 		for j = 1, ncols do
 			local v = (is_not_empty(vs[j]) and vs[j] or nil)
@@ -73,9 +68,34 @@ local function gdt_parse_csv(filename)
 		end
 		i = i + 1
 	end
-	f:close()
 
 	return t
 end
 
-gdt.read_csv = gdt_parse_csv
+local function source_csv(filename)
+	local f
+	local it, s, i
+	local source = function()
+		local line = it(s, i)
+		if line then return csv.line(line) else f:close() end
+	end
+	return function()
+		f = assert(io.open(filename, 'r'), 'cannot open file: ' .. filename)
+		it, s, i = f:lines()
+		return source
+	end
+end
+
+local function source_def(def)
+	local n, i = #def, 0
+	local source = function()
+		if i + 1 <= n then
+			i = i + 1
+			return def[i]
+		end
+	end
+	return function() i = 0; return source end
+end
+
+gdt.read_csv = function(filename) return gdt_parse(source_csv(filename)) end
+gdt.def = function(def) return gdt_parse(source_def(def)) end
