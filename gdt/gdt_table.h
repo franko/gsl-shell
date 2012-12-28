@@ -60,7 +60,6 @@ extern gdt_table *         gdt_table_new                (int nb_rows, int nb_col
 extern void                gdt_table_free               (gdt_table *t);
 extern const gdt_element * gdt_table_get                (gdt_table *t, int i, int j);
 extern const char *        gdt_table_element_get_string (gdt_table *t, const gdt_element *e);
-extern void                gdt_table_set                (gdt_table *t, int i, int j, const gdt_element *e);
 extern void                gdt_table_set_number         (gdt_table *t, int i, int j, double num);
 extern void                gdt_table_set_string         (gdt_table *t, int i, int j, const char *s);
 extern void                gdt_table_set_undef          (gdt_table *t, int i, int j);

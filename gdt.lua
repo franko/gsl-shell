@@ -11,12 +11,14 @@ local gdt_table_cursor = ffi.typeof("gdt_table_cursor")
 local TAG_STRING = tonumber(cgdt.TAG_STRING)
 local TAG_NUMBER = tonumber(cgdt.TAG_NUMBER)
 
-local function gdt_element(e)
+local function gdt_element(t, e)
     local val
     if e.word.hi <= TAG_NUMBER then
         val = e.number
     elseif e.word.hi == TAG_STRING then
-        val = ffi.string(cgdt.gdt_table_element_get_string(t, e))
+        local s = cgdt.gdt_table_element_get_string(t, e)
+        assert(s ~= nil, "invalid gdt element string refernce")
+        return ffi.string(s)
     end
     return val
 end
@@ -25,7 +27,7 @@ local function gdt_table_get(t, i, j)
     assert(i > 0 and i <= t.size1, 'invalid row index')
     assert(j > 0 and j <= t.size2, 'invalid column index')
     local e = cgdt.gdt_table_get(t, i - 1, j - 1)
-    return gdt_element(e)
+    return gdt_element(t, e)
 end
 
 local function gdt_table_set(t, i, j, val)
@@ -215,7 +217,8 @@ local function gdt_table_filter(t, f)
             cgdt.gdt_table_insert_rows(new, n_curr - 1, 1)
             for j = 1, m do
                 local e = cgdt.gdt_table_get(t, i - 1, j - 1)
-                cgdt.gdt_table_set(new, n_curr - 1, j - 1, e)
+                local v = gdt_element(t, e)
+                gdt.set(new, n_curr, j, v)
             end
         end
     end
@@ -251,7 +254,8 @@ ffi.metatype(gdt_table, gdt_mt)
 local function gdt_table_cursor_get(c, k)
     local e = cgdt.gdt_table_cursor_get(c, k)
     if e ~= nil then
-        return gdt_element(e)
+        local t = c.__table
+        return gdt_element(t, e)
     end
     return nil
 end
