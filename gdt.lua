@@ -11,6 +11,10 @@ local gdt_table_cursor = ffi.typeof("gdt_table_cursor")
 local TAG_STRING = tonumber(cgdt.TAG_STRING)
 local TAG_NUMBER = tonumber(cgdt.TAG_NUMBER)
 
+local function element_is_number(e)
+    return (e.word.hi <= TAG_NUMBER)
+end
+
 local function gdt_element(t, e)
     local val
     if e.word.hi <= TAG_NUMBER then
@@ -28,6 +32,11 @@ local function gdt_table_get(t, i, j)
     assert(j > 0 and j <= t.size2, 'invalid column index')
     local e = cgdt.gdt_table_get(t, i - 1, j - 1)
     return gdt_element(t, e)
+end
+
+local function gdt_table_get_number_unsafe(t, i, j)
+    local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+    if e.word.hi <= TAG_NUMBER then return e.number end
 end
 
 local function gdt_table_set(t, i, j, val)
@@ -280,6 +289,8 @@ gdt = {
     get    = gdt_table_get,
     set    = gdt_table_set,
     filter = gdt_table_filter,
+
+    get_number_unsafe = gdt_table_get_number_unsafe,
 }
 
 return gdt
