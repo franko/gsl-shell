@@ -81,6 +81,8 @@ extern int                 gdt_table_insert_rows        (gdt_table *t, int i_in,
 extern const gdt_element * gdt_table_cursor_get         (gdt_table_cursor *c, const char *key);
 extern gdt_table_cursor *  gdt_table_get_cursor         (gdt_table *t);
 
+extern int is_integer(double x);
+
 ]]
 
 return ffi.load("libgdt")
