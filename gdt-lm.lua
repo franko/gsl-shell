@@ -5,20 +5,14 @@ local element_is_number = gdt.element_is_number
 local format = string.format
 local concat = table.concat
 
--- status: 0 => integers, 1 => numbers, 2 => strings
+-- status: 0 => string, 1 => numbers
 local function find_column_type(t, j)
-	local status = 0
 	local n = #t
 	for i = 1, n do
 		local x = gdt.get_number_unsafe(t, i, j)
-		if x then
-			if status == 0 and cgdt.is_integer(x) == 0 then status = 1 end
-		else
-			status = 2
-			break
-		end
+		if not x then return 0 end
 	end
-	return status
+	return 1
 end
 
 local function lm_prepare(t, expr)
@@ -30,6 +24,7 @@ local function lm_prepare(t, expr)
     code([[local _LM = require 'lm-helpers']])
     code([[local select = select]])
     code([[local _get, _set = gdt.get, gdt.set]])
+    code([[local enum = function(x) return {value = x} end]])
 	for j = 1, m do
 		column_class[j] = find_column_type(t, j)
 		local value = (column_class[j] == 1 and "0" or format("_LM.factor(\"%s\")", name[j]))
@@ -93,17 +88,14 @@ local function lm_main(Xt, t, jy, inf)
 			end
 			inf.factors[k] = factors
 			inf.factor_index[k] = factor_index
-			curr_index = curr_index + #factors
+			curr_index = curr_index + (#factors - 1)
 		else
 			curr_index = curr_index + 1
 		end
 	end
 
-	print(inf, index)
-
 	local col = curr_index - 1
 
-	print('size', N, col)
 	local X = matrix.alloc(N, col)
 	local X_data = X.data
 	for i = 1, N do
@@ -116,12 +108,12 @@ local function lm_main(Xt, t, jy, inf)
 				local factors = inf.factors[k]
 				local factor_index = inf.factor_index[k]
 				local req_f = Xt:get(i, k)
-				local nf = #factors
+				local nf = #factors - 1
 				for kf = 1, nf do
 					X_data[idx0 + (j - 1) + (kf - 1)] = 0
 				end
-				local kfx = factor_index[req_f]
-				X_data[idx0 + (j - 1) + (kfx - 1)] = 1
+				local kfx = factor_index[req_f] - 1
+				if kfx > 0 then X_data[idx0 + (j - 1) + (kfx - 1)] = 1 end
 			end
 		end
 	end
