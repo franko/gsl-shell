@@ -69,7 +69,7 @@ end
 
 local function add_unique(t, val)
 	for k, x in ipairs(t) do
-		if x == val then break end
+		if x == val then return 0 end
 	end
 	local n = #t + 1
 	t[n] = val
@@ -89,35 +89,39 @@ local function lm_main(Xt, t, jy, inf)
 			for i = 1, N do
 				local str = Xt:get(i, k)
 				local ui = add_unique(factors, str)
-				if ui then factor_index[str] = ui end
+				if ui > 0 then factor_index[str] = ui end
 			end
 			inf.factors[k] = factors
 			inf.factor_index[k] = factor_index
 			curr_index = curr_index + #factors
+		else
+			curr_index = curr_index + 1
 		end
 	end
 
-	print(inf)
+	print(inf, index)
 
 	local col = curr_index - 1
 
-	local X = matrix.new(N, col)
+	print('size', N, col)
+	local X = matrix.alloc(N, col)
 	local X_data = X.data
 	for i = 1, N do
+		local idx0 = col * (i - 1)
 		for k = 1, inf.np do
 			local j = index[k]
 			if inf.class[k] == 1 then
-				X_data[col * (i - 1) + j] = gdt.get_number_unsafe(Xt, i, k)
+				X_data[idx0 + j - 1] = gdt.get_number_unsafe(Xt, i, k)
 			else
 				local factors = inf.factors[k]
 				local factor_index = inf.factor_index[k]
 				local req_f = Xt:get(i, k)
 				local nf = #factors
 				for kf = 1, nf do
-					X_data[col * (i - 1) + (j - 1) + kf] = 0
+					X_data[idx0 + (j - 1) + (kf - 1)] = 0
 				end
 				local kfx = factor_index[req_f]
-				X_data[col * (i - 1) + (j - 1) + kfx] = 1
+				X_data[idx0 + (j - 1) + (kfx - 1)] = 1
 			end
 		end
 	end
