@@ -6,13 +6,6 @@
 #include "gdt_table.h"
 #include "xmalloc.h"
 
-int
-is_integer(double x)
-{
-    double y = nearbyint(x);
-    return (x == y);
-}
-
 static inline unsigned int round_two_power(unsigned int n)
 {
     n = n - 1;
