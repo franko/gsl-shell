@@ -348,9 +348,9 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
 end
 
 local function gdt_table_reduce(t_src, jxs, jys, jes)
-    jxs = treat_column_refs(t, jxs)
-    jys = treat_column_funcrefs(t, jys)
-    jes = treat_column_refs(t, jes)
+    jxs = treat_column_refs(t_src, jxs)
+    jys = treat_column_funcrefs(t_src, jys)
+    jes = treat_column_refs(t_src, jes)
 
     local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes)
 
