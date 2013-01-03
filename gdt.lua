@@ -136,6 +136,10 @@ local function gdt_table_insert_column(t, col_name, j, f)
     t:set_header(j, col_name)
 end
 
+local function gdt_table_append_column(t, col_name, f)
+    gdt_table_insert_column(t, col_name, t.size2 + 1, f)
+end
+
 local function val_tostr(e)
     if type(e) == "number" then
         return format("%g", e)
@@ -240,6 +244,7 @@ local gdt_methods = {
     icolumn    = gdt_table_icolumn,
     col_index  = gdt_table_get_column_index,
     col_insert = gdt_table_insert_column,
+    col_append = gdt_table_append_column,
     cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
     headers    = gdt_table_headers,
