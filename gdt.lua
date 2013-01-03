@@ -128,7 +128,8 @@ local function gdt_table_insert_column(t, col_name, j, f)
         end
     else
         for i, row in t:rows() do
-            t:set(i, j, f(row, i))
+            local status, x = pcall(f, row, i)
+            t:set(i, j, status and x or nil)
         end
     end
 
