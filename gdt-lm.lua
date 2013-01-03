@@ -71,7 +71,7 @@ local function add_unique(t, val)
 	return n
 end
 
-local function lm_main(Xt, t, jy, inf)
+local function lm_main(Xt, t, inf)
 	local N = #t
 
 	local index = {}
@@ -121,4 +121,12 @@ local function lm_main(Xt, t, jy, inf)
 	return X
 end
 
-return {prepare= lm_prepare, main= lm_main}
+local function lm_model(t, expr)
+	local code = lm_prepare(t, expr)
+	local f_code = load(code)()
+	local Xt, inf = f_code(t)
+	local X = lm_main(Xt, t, inf)
+	return X
+end
+
+return {model= lm_model}
