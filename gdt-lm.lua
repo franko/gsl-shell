@@ -131,18 +131,15 @@ local function lm(t, expr)
 	local n, m = t:dim()
 	local jy = t:col_index(a)
 	assert(jy, "invalid variable specification in lm expression")
-	local sqrt = math.sqrt
+	local sqrt, set = math.sqrt, gdt.set
 	local y = matrix.new(n, 1, |i| t:get(i, jy))
 	local X, name = lm_model(t, b)
 	local c, chisq, cov = num.linfit(X, y)
-	local coeff = gdt.alloc(#c, 3)
-	coeff:set_header(1, "name")
-	coeff:set_header(2, "value")
-	coeff:set_header(3, "stddev")
+	local coeff = gdt.alloc(#c, {"name", "value", "stddev"})
 	for i = 1, #c do
-		coeff:set(i, 1, name[i])
-		coeff:set(i, 2, c[i])
-		coeff:set(i, 3, sqrt(cov:get(i,i)))
+		set(coeff, i, 1, name[i])
+		set(coeff, i, 2, c[i])
+		set(coeff, i, 3, sqrt(cov:get(i,i)))
 	end
 	return {coeff = coeff, c = c, chisq = chisq, cov = cov, X = X}
 end

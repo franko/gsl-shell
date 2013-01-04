@@ -11,11 +11,7 @@ local tools = {"tool A", "tool B", "tool C"}
 local N, P = 30, #tool_effect
 local dx = 3.0
 
-local t = gdt.alloc(N * P, 3)
-
-t:set_header(1, "tool")
-t:set_header(2, "x")
-t:set_header(3, "y")
+local t = gdt.alloc(N * P, {"tool", "x", "y"})
 
 for k, tool in ipairs(tools) do
 	for i = 1, N do
