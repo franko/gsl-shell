@@ -28,15 +28,17 @@ for k, tool in ipairs(tools) do
 	end
 end
 
-local X = lm.model(t, "1, x, tool")
 
-local c, chisq, cov = num.linfit(X, matrix.new(N*P,1,|i| t:get(i,3)))
 local p = gdt.xyplot(t, "x", "y", "tool")
 
 p.title = "Linear Fit example"
 p.xtitle = "time, s"
 p.ytitle = "thickness, mm"
 
+local fit = lm.lm(t, "y ~ 1, x, tool")
+print(fit.coeff)
+
+local X, c = fit.X, fit.c
 local _, FN = X:dim()
 for k = 1, P do
 	local XA = X:slice((k-1)*N + 1, 1, N, FN)

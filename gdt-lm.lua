@@ -76,6 +76,7 @@ local function lm_main(Xt, t, inf)
 
 	local index = {}
 	local curr_index = 1
+	local coeff_name = {}
 	inf.factors, inf.factor_index = {}, {}
 	for k = 1, inf.np do
 		index[k] = curr_index
@@ -84,12 +85,16 @@ local function lm_main(Xt, t, inf)
 			for i = 1, N do
 				local str = Xt:get(i, k)
 				local ui = add_unique(factors, str)
-				if ui > 0 then factor_index[str] = ui end
+				if ui > 0 then
+					factor_index[str] = ui
+					if ui > 1 then coeff_name[curr_index + (ui - 2)] = str end
+				end
 			end
 			inf.factors[k] = factors
 			inf.factor_index[k] = factor_index
 			curr_index = curr_index + (#factors - 1)
 		else
+			coeff_name[curr_index] = string.char(string.byte('a') + curr_index - 1)
 			curr_index = curr_index + 1
 		end
 	end
@@ -118,15 +123,36 @@ local function lm_main(Xt, t, inf)
 		end
 	end
 
-	return X
+	return X, coeff_name
 end
 
 local function lm_model(t, expr)
 	local code = lm_prepare(t, expr)
 	local f_code = load(code)()
 	local Xt, inf = f_code(t)
-	local X = lm_main(Xt, t, inf)
-	return X
+	return lm_main(Xt, t, inf)
 end
 
-return {model= lm_model}
+local function lm(t, expr)
+	local a, b = string.match(expr, "%s*([%S]+)%s*~(.+)")
+	assert(a, "invalid lm expression")
+	local n, m = t:dim()
+	local jy = t:col_index(a)
+	assert(jy, "invalid variable specification in lm expression")
+	local sqrt = math.sqrt
+	local y = matrix.new(n, 1, |i| t:get(i, jy))
+	local X, name = lm_model(t, b)
+	local c, chisq, cov = num.linfit(X, y)
+	local coeff = gdt.new(#c, 3)
+	coeff:set_header(1, "name")
+	coeff:set_header(2, "value")
+	coeff:set_header(3, "stddev")
+	for i = 1, #c do
+		coeff:set(i, 1, name[i])
+		coeff:set(i, 2, c[i])
+		coeff:set(i, 3, sqrt(cov:get(i,i)))
+	end
+	return {coeff = coeff, c = c, chisq = chisq, cov = cov, X = X}
+end
+
+return {model= lm_model, lm= lm}
