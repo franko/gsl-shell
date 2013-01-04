@@ -39,9 +39,7 @@ local function gdt_table_get_number_unsafe(t, i, j)
     if e.word.hi <= TAG_NUMBER then return e.number end
 end
 
-local function gdt_table_set(t, i, j, val)
-    assert(i > 0 and i <= t.size1, 'invalid row index')
-    assert(j > 0 and j <= t.size2, 'invalid column index')
+local function gdt_table_set_unsafe(t, i, j, val)
     local tp = type(val)
     if tp == 'number' then
         cgdt.gdt_table_set_number(t, i - 1, j - 1, val)
@@ -53,11 +51,47 @@ local function gdt_table_set(t, i, j, val)
     end
 end
 
+local function gdt_table_set(t, i, j, val)
+    assert(i > 0 and i <= t.size1, 'invalid row index')
+    assert(j > 0 and j <= t.size2, 'invalid column index')
+    gdt_table_set_unsafe(t, i, j, val)
+end
+
 local function gdt_table_alloc(nrows, ncols, nalloc_rows)
     nalloc_rows = nalloc_rows or nrows
+    local headers
+    if type(ncols) == 'table' then
+        headers = ncols
+        ncols = #headers
+    end
     local t = cgdt.gdt_table_new(nrows, ncols, nalloc_rows)
+    if headers then
+        for k, str in ipairs(headers) do
+            cgdt.gdt_table_set_header(t, k - 1, str)
+        end
+    end
     if t == nil then error('cannot allocate table: not enough memory') end
     return ffi.gc(t, cgdt.gdt_table_free)
+end
+
+local function gdt_table_new(nrows, cols_spec, f_init)
+    local t = gdt_table_alloc(nrows, cols_spec)
+    local ncols = t.size2
+    if f_init then
+        for i = 1, nrows do
+            local v = f_init(i)
+            for j = 1, ncols do
+                gdt_table_set_unsafe(t, i, j, v[j])
+            end
+        end
+    else
+        for i = 1, nrows do
+            for j = 1, ncols do
+                cgdt.gdt_table_set_undef(t, i - 1, j - 1)
+            end
+        end
+    end
+    return t
 end
 
 local function gdt_table_dim(t) return t.size1, t.size2 end
@@ -279,6 +313,7 @@ local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
 
 gdt = {
+    new    = gdt_table_new,
     alloc  = gdt_table_alloc,
     get    = gdt_table_get,
     set    = gdt_table_set,
