@@ -19,6 +19,7 @@ require('gdt')
 require('gdt-parse-csv')
 require('gdt-hist')
 require('gdt-plot')
+require('gdt-lm')
 
 num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
