@@ -8,10 +8,10 @@ local sigma = 0.3
 local tool_effect = {0.4, 0.7, -1.3}
 local tools = {"tool A", "tool B", "tool C"}
 
-local N, P = 30, #tool_effect 
+local N, P = 30, #tool_effect
 local dx = 3.0
 
-local t = gdt.new(N * P, 3)
+local t = gdt.alloc(N * P, 3)
 
 t:set_header(1, "tool")
 t:set_header(2, "x")

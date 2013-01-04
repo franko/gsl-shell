@@ -52,7 +52,7 @@ end
 local function gdt_parse_csv(filename)
 	local nrows, ncols, has_header = pre_parse_csv(filename)
 
-	local t = gdt.new(nrows, ncols)
+	local t = gdt.alloc(nrows, ncols)
 	local f = assert(io.open(filename, 'r'), 'cannot open file: ' .. filename)
 
 	if has_header then

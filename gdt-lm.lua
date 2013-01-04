@@ -35,7 +35,7 @@ local function lm_prepare(t, expr)
 
 	code([[local _eval_func = _LM.eval_func]])
 
-	code(format("local _eval = gdt.new(%d, _y_spec.np)", n))
+	code(format("local _eval = gdt.alloc(%d, _y_spec.np)", n))
 
 	code(format("for _i = 1, %d do", n))
 	for j = 1, m do
@@ -135,7 +135,7 @@ local function lm(t, expr)
 	local y = matrix.new(n, 1, |i| t:get(i, jy))
 	local X, name = lm_model(t, b)
 	local c, chisq, cov = num.linfit(X, y)
-	local coeff = gdt.new(#c, 3)
+	local coeff = gdt.alloc(#c, 3)
 	coeff:set_header(1, "name")
 	coeff:set_header(2, "value")
 	coeff:set_header(3, "stddev")
