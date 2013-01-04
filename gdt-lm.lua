@@ -33,15 +33,7 @@ local function lm_prepare(t, expr)
 
 	code(format([[local _y_spec = _LM.eval_test(%s)]], expr))
 
-	code [[
-local function _eval_func(pt, i, ...)
-    for k = 1, _y_spec.np do
-        local x = select(k, ...)
-        local value = (_y_spec.class[k] == 1 and x or x.value)
-        _set(pt, i, k, value)
-    end
-end
-]]
+	code([[local _eval_func = _LM.eval_func]])
 
 	code(format("local _eval = gdt.new(%d, _y_spec.np)", n))
 
@@ -56,7 +48,7 @@ end
 		code(line)
 	end
 	code("")
-	code(format("    _eval_func(_eval, _i, %s)", expr))
+	code(format("    _eval_func(_y_spec, _eval, _i, %s)", expr))
 	code(format("end", n))
 
 	return format("return function(_t)\n%s\nreturn _eval, _y_spec\nend", concat(code_lines, "\n"))

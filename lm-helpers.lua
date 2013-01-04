@@ -26,4 +26,12 @@ function LM.eval_test(...)
 	return inf
 end
 
+function LM.eval_func(inf, pt, i, ...)
+    for k = 1, inf.np do
+        local x = select(k, ...)
+        local value = (inf.class[k] == 1 and x or x.value)
+        gdt.set(pt, i, k, value)
+    end
+end
+
 return LM
