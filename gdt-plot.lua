@@ -355,7 +355,7 @@ local function gdt_table_reduce(t_src, jxs, jys, jes)
     local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes)
 
     local n, p, q = #labels, #enums, #labels[1]
-    local t = gdt.new(n, q + p)
+    local t = gdt.alloc(n, q + p)
 
     for k = 1, q do
         t:set_header(k, t_src:get_header(jxs[k]))

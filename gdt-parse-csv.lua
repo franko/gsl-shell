@@ -49,7 +49,7 @@ local function gdt_parse(source_init)
 	local source = source_init()
 	local nrows, ncols, has_header = pre_parse_csv(source)
 
-	local t = gdt.new(nrows, ncols)
+	local t = gdt.alloc(nrows, ncols)
 	source = source_init()
 
 	if has_header then

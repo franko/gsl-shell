@@ -53,7 +53,7 @@ local function gdt_table_set(t, i, j, val)
     end
 end
 
-local function gdt_table_new(nrows, ncols, nalloc_rows)
+local function gdt_table_alloc(nrows, ncols, nalloc_rows)
     nalloc_rows = nalloc_rows or nrows
     local t = cgdt.gdt_table_new(nrows, ncols, nalloc_rows)
     if t == nil then error('cannot allocate table: not enough memory') end
@@ -224,7 +224,7 @@ end
 local function gdt_table_filter(t, f)
     local n, m = t:dim()
     local n_curr = 0
-    local new = gdt.new(n_curr, m, 16)
+    local new = gdt.alloc(n_curr, m, 16)
     for i, row in t:rows() do
         if f(row, i) then
             n_curr = n_curr + 1
@@ -285,7 +285,7 @@ local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
 
 gdt = {
-    new    = gdt_table_new,
+    alloc  = gdt_table_alloc,
     get    = gdt_table_get,
     set    = gdt_table_set,
     filter = gdt_table_filter,
