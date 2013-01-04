@@ -388,22 +388,7 @@ local function set_elements(X, P, i, ...)
     end
 end
 
-local function gdt_table_linfit(t, f, jy)
-    local N, M = t:dim()
-    local row = t:cursor()
-    local P = count_args(f(row))
-
-    local X, Y = matrix.alloc(N, P), matrix.alloc(N, 1)
-    for i, row in t:rows() do
-        set_elements(X, P, i, f(row, i))
-        Y:set(i, 1, t:get(i, jy))
-    end
-
-    return num.linfit(X, Y)
-end
-
 gdt.barplot = gdt_table_barplot
 gdt.plot    = gdt_table_lineplot
 gdt.xyplot  = gdt_table_xyplot
 gdt.reduce  = gdt_table_reduce
-gdt.lm      = gdt_table_linfit
