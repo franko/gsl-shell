@@ -4,6 +4,7 @@ local cgdt = require 'cgdt'
 local element_is_number = gdt.element_is_number
 local format = string.format
 local concat = table.concat
+local sqrt, abs = math.sqrt, math.abs
 
 -- status: 0 => string, 1 => numbers
 local function find_column_type(t, j)
@@ -125,24 +126,32 @@ local function lm_model(t, expr)
 	return lm_main(Xt, t, inf)
 end
 
+local function t_test(xm, s, n, df)
+	local t = xm / s
+	local at = abs(t)
+	local p_value = (1 - randist.tdist_P(at, df)) + (1 - randist.tdist_Q(-at, df))
+	return t, (p_value >= 2e-16 and p_value or '< 2e-16')
+end
+
 local function lm(t, expr)
 	local a, b = string.match(expr, "%s*([%S]+)%s*~(.+)")
 	assert(a, "invalid lm expression")
 	local n, m = t:dim()
 	local jy = t:col_index(a)
 	assert(jy, "invalid variable specification in lm expression")
-	local sqrt = math.sqrt
+	local set = gdt.set
 	local y = matrix.new(n, 1, |i| t:get(i, jy))
 	local X, name = lm_model(t, b)
 	local c, chisq, cov = num.linfit(X, y)
-	local coeff = gdt.new(#c, 3)
-	coeff:set_header(1, "name")
-	coeff:set_header(2, "value")
-	coeff:set_header(3, "stddev")
+	local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
 	for i = 1, #c do
 		coeff:set(i, 1, name[i])
-		coeff:set(i, 2, c[i])
-		coeff:set(i, 3, sqrt(cov:get(i,i)))
+		local xm, s = c[i], cov:get(i,i)
+		coeff:set(i, 2, xm)
+		coeff:set(i, 3, sqrt(s))
+		local t, p_value = t_test(xm, sqrt(s), n, n - #c)
+		coeff:set(i, 4, t)
+		coeff:set(i, 5, p_value)
 	end
 	return {coeff = coeff, c = c, chisq = chisq, cov = cov, X = X}
 end
