@@ -45,8 +45,7 @@ local function lm_prepare(t, expr)
 	local code = function(line) code_lines[#code_lines+1] = line end
     local name = t:headers(j)
     code([[local _LM = require 'lm-helpers']])
-    code([[local select = select]])
-    code([[local _get, _set = gdt.get, gdt.set]])
+    code([[local _get = gdt.get]])
     code([[local enum = function(x) return {value = x} end]])
 	for j = 1, m do
 		column_class[j] = find_column_type(t, j)
@@ -153,7 +152,7 @@ end
 local function t_test(xm, s, n, df)
 	local t = xm / s
 	local at = abs(t)
-	local p_value = (1 - randist.tdist_P(at, df)) + (1 - randist.tdist_Q(-at, df))
+	local p_value = 2 * (1 - randist.tdist_P(at, df))
 	return t, (p_value >= 2e-16 and p_value or '< 2e-16')
 end
 
