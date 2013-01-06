@@ -1,5 +1,7 @@
 local LM = {}
 
+local var_name = require 'lm-expr'
+
 local factor_mt
 
 local function mul_factor(a, b)
@@ -32,6 +34,32 @@ function LM.eval_func(inf, pt, i, ...)
         local value = (inf.class[k] == 1 and x or x.value)
         gdt.set(pt, i, k, value)
     end
+end
+
+LM.var_name = var_name
+
+local function expr_to_name(expr)
+	if type(expr) == 'table' then
+		return expr.name
+	else
+		local base = '(average)'
+		local minus = expr < 0 and '- ' or ''
+		if expr == 1 or expr == -1 then
+			return string.format("%s%s", minus, base)
+		else
+			return string.format("%s%s / %g", minus, base, math.abs(expr))
+		end
+	end
+end
+
+function LM.find_names(...)
+	local n = select("#", ...)
+	local names = {}
+	for k = 1, n do
+		local expr = select(k, ...)
+		names[k] = expr_to_name(expr)
+	end
+	return names
 end
 
 return LM
