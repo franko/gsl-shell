@@ -173,7 +173,10 @@ local function rect_funcbin(t, jxs, jys, jes)
     return labels, enums, val
 end
 
-local function gdt_table_barplot(t, jxs, jys, jes)
+local function gdt_table_barplot(t, jxs, jys, jes, opt)
+    local show_plot = true
+    if opt then show_plot = (opt.show ~= false) end
+
     jxs = treat_column_refs(t, jxs)
     jys = treat_column_funcrefs(t, jys)
     jes = treat_column_refs(t, jes)
@@ -207,8 +210,7 @@ local function gdt_table_barplot(t, jxs, jys, jes)
         end
     end
 
-    plt:show()
-
+    if show_plot then plt:show() end
     return plt
 end
 
@@ -232,7 +234,10 @@ local function add_legend(lg, k, symspec, color, text)
     end
 end
 
-local function gdt_table_lineplot(t, jxs, jys, jes)
+local function gdt_table_lineplot(t, jxs, jys, jes, opt)
+    local show_plot = true
+    if opt then show_plot = (opt.show ~= false) end
+
     jxs = treat_column_refs(t, jxs)
     jys = treat_column_funcrefs(t, jys)
     jes = treat_column_refs(t, jes)
@@ -276,12 +281,15 @@ local function gdt_table_lineplot(t, jxs, jys, jes)
     plt:set_categories('x', cat)
     plt.xlab_angle = math.pi/4
 
-    plt:show()
+    if show_plot then plt:show() end
 
     return plt
 end
 
 local function gdt_table_xyplot(t, jx, jys, jes, opt)
+    local show_plot = true
+    if opt then show_plot = (opt.show ~= false) end
+
     local path, webcolor = graph.path, graph.webcolor
 
     local use_lines = opt and opt.lines
@@ -343,7 +351,7 @@ local function gdt_table_xyplot(t, jx, jys, jes, opt)
 
     if mult > 1 then plt:set_legend(lg) end
 
-    plt:show()
+    if show_plot then plt:show() end
     return plt
 end
 

@@ -24,7 +24,7 @@ local function lm_demo()
 		end
 	end
 
-	local p = gdt.xyplot(t, "x", "y", "tool")
+	local p = gdt.xyplot(t, "x", "y", "tool", {show= false})
 
 	p.title = "Linear Fit example"
 	p.xtitle = "time, s"
@@ -41,6 +41,8 @@ local function lm_demo()
 		local lnA = graph.xyline(XA:col(2), YA:col(1))
 		p:addline(lnA, graph.webcolor(k), {{'dash', 7, 3}})
 	end
+
+	p:show()
 end
 
 return {'Linear Regression', {
