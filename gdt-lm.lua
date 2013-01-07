@@ -143,7 +143,8 @@ end
 
 local function lm_model(t, expr)
 	local code = lm_prepare(t, expr)
-	local f_code = load(code)()
+	local f_gen = assert(load(code))
+	local f_code = f_gen()
 	local Xt, inf = f_code(t)
 	inf.factor_names = lm_expr_names(t, expr)
 	return lm_main(Xt, t, inf)
