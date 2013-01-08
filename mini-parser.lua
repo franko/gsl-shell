@@ -1,12 +1,13 @@
 
+local len, match = string.len, string.match
+
 local mini_lexer = {}
 
 local mini_lexer_mt = {
     __index = mini_lexer,
 }
 
-local operators = {'+', '*', '-', '/', '^'}
-local priority_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['/'] = 2}
+local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2}
 
 local function new_lexer(src)
     local lexer = {n = 1, src= src}
@@ -30,32 +31,45 @@ function mini_lexer.incr(lexer, n)
     lexer.n = lexer.n + (n or 1)
 end
 
+function mini_lexer.match(lexer, pattern)
+    return match(lexer.src, '^' .. pattern, lexer.n)
+end
+
+function mini_lexer.consume(lexer, pattern)
+    local m = match(lexer.src, '^' .. pattern, lexer.n)
+    if m then
+        lexer.n = lexer.n + len(m)
+        return m
+    end
+end
+
 function mini_lexer.next_token(lexer)
-    local spc = lexer.src:match('%s*', lexer.n)
-    lexer:incr(spc:len())
-    if lexer.n > lexer.src:len() then return {type= 'EOF'} end
+    lexer:consume('%s*')
+    if lexer.n > len(lexer.src) then return {type= 'EOF'} end
     local c = lexer:char()
     if c == '[' then
-        lexer:consume('[')
-        local str = lexer.src:match('^[^%]]+', lexer.n)
-        lexer.n = lexer.n + str:len()
-        lexer:consume(']')
-        return {type= 'ident', value= str}
+        local str = lexer:consume('%b[]')
+        return {type= 'ident', value= str:sub(2,-2)}
     end
-    for _, cx in ipairs(operators) do
-        if c == cx then
-            lexer:incr()
-            return {type= 'operator', symbol= c, priority = priority_table[c]}
-        end
+    if oper_table[c] then
+        local prio = oper_table[c]
+        lexer:incr()
+        return {type= 'operator', symbol= c, priority = prio}
     end
     if c == '(' or c == ')' then
         lexer:incr()
         return {type= c}
     end
-    if lexer.src:match('^[%l%u_]', lexer.n) then
-        local str = lexer.src:match('^[%l%u_]%w*', lexer.n)
-        lexer.n = lexer.n + str:len()
+    if lexer:match('[%l%u_]') then
+        local str = lexer:consume('[%l%u_]%w*')
         return {type= 'ident', value= str}
+    end
+    if lexer:match('[1-9]') then
+        local str = lexer:consume('[1-9]%d*%.%d*')
+        if not str then
+            str = lexer:consume('[1-9]%d*')
+        end
+        return {type= 'number', value= tonumber(str)}
     end
 end
 
@@ -85,6 +99,10 @@ local function factor(lexer, actions)
         local id = token.value
         lexer:next()
         return actions.ident(id)
+    elseif token.type == 'number' then
+        local x = token.value
+        lexer:next()
+        return actions.number(x)
     elseif token.type == '(' then
         lexer:next()
         local a = expr(lexer, actions, 0)
@@ -128,6 +146,7 @@ local AST_create = {
     infix  = function(sym, a, b) return {operator= sym, a, b} end,
     ident  = function(id) return {ident= id} end,
     prefix = function(sym, a) return {operator= sym, a} end,
+    number = function(x) return {number= x} end,
 }
 
 local format = string.format
@@ -147,7 +166,8 @@ local function AST_print_op(e, prio)
         local b, b_prio = AST_print(e[2])
         if a_prio < prio then a = format('(%s)', a) end
         if b_prio < prio then b = format('(%s)', b) end
-        return format("%s %s %s", a, e.operator, b)
+        local temp = (prio < 2 and "%s %s %s" or "%s%s%s")
+        return format(temp, a, e.operator, b)
     end
 end
 
@@ -156,8 +176,10 @@ AST_print = function(e)
         local s = e.ident
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
+    elseif e.number then
+        return e.number, 3
     else
-        local prio = priority_table[e.operator]
+        local prio = oper_table[e.operator]
         local s = AST_print_op(e, prio)
         return s, prio
     end
