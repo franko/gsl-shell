@@ -126,8 +126,41 @@ end
 
 local AST_create = {
     infix  = function(sym, a, b) return {operator= sym, a, b} end,
-    ident  = function(id) return id end,
+    ident  = function(id) return {ident= id} end,
     prefix = function(sym, a) return {operator= sym, a} end,
 }
 
-return {lexer = new_lexer, parse = parse_expr, AST= AST_create}
+local format = string.format
+local AST_print
+
+local function is_ident_simple(s)
+    return s:match('^[_%l%u]%w*$')
+end
+
+local function AST_print_op(e, prio)
+    if #e == 1 then
+        local c, c_prio = AST_print(e[1])
+        if c_prio < prio then c = format('(%s)', c) end
+        return format("%s%s", e.operator, c)
+    else
+        local a, a_prio = AST_print(e[1])
+        local b, b_prio = AST_print(e[2])
+        if a_prio < prio then a = format('(%s)', a) end
+        if b_prio < prio then b = format('(%s)', b) end
+        return format("%s %s %s", a, e.operator, b)
+    end
+end
+
+AST_print = function(e)
+    if e.ident then
+        local s = e.ident
+        if not is_ident_simple(s) then s = format('[%s]', s) end
+        return s, 3
+    else
+        local prio = priority_table[e.operator]
+        local s = AST_print_op(e, prio)
+        return s, prio
+    end
+end
+
+return {lexer = new_lexer, parse = parse_expr, AST= AST_create, print = AST_print}
