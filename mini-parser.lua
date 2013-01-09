@@ -7,6 +7,7 @@ local mini_lexer_mt = {
     __index = mini_lexer,
 }
 
+local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1}
 local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2}
 
 local function new_lexer(src)
@@ -56,7 +57,7 @@ function mini_lexer.next_token(lexer)
         lexer:incr()
         return {type= 'operator', symbol= c, priority = prio}
     end
-    if c == '(' or c == ')' then
+    if literal_chars[c] then
         lexer:incr()
         return {type= c}
     end
@@ -71,6 +72,11 @@ function mini_lexer.next_token(lexer)
         end
         return {type= 'number', value= tonumber(str)}
     end
+    msg = { "syntax error in expression:",
+            string.format('   %s', lexer.src),
+            string.format('   %s^', string.rep(' ', lexer.n - 1)) }
+
+    error(table.concat(msg, '\n'))
 end
 
 function mini_lexer.next(lexer)
@@ -138,18 +144,37 @@ expr = function(lexer, actions, prio)
     return a
 end
 
+local function expr_list(lexer, actions)
+    local a = expr(lexer, actions, 0)
+    local els = actions.exprlist(a)
+    while accept(lexer, ',') > 0 do
+        local b = expr(lexer, actions, 0)
+        els = actions.exprlist(b, els)
+    end
+    return els
+end
+
+local function schema(lexer, actions)
+    local y = expr_list(lexer, actions)
+    expect(lexer, '~')
+    local x = expr_list(lexer, actions)
+    return actions.schema(x, y)
+end
+
 local function parse_expr(lexer, actions)
     return expr(lexer, actions, 0)
 end
 
 local AST_create = {
-    infix  = function(sym, a, b) return {operator= sym, a, b} end,
-    ident  = function(id) return {ident= id} end,
-    prefix = function(sym, a) return {operator= sym, a} end,
-    number = function(x) return {number= x} end,
+    infix    = function(sym, a, b) return {operator= sym, a, b} end,
+    ident    = function(id) return {ident= id} end,
+    prefix   = function(sym, a) return {operator= sym, a} end,
+    number   = function(x) return {number= x} end,
+    exprlist = function(a, ls) if ls then ls[#ls+1] = a else ls = {list= true, a} end; return ls end,
+    schema   = function(x, y) return {schema= true, x= x, y= y} end,
 }
 
-local format = string.format
+local format, concat = string.format, table.concat
 local AST_print
 
 local function is_ident_simple(s)
@@ -171,8 +196,20 @@ local function AST_print_op(e, prio)
     end
 end
 
+local function AST_print_exprlist(e)
+    local t = {}
+    for k = 1, #e do t[k] = AST_print(e[k]) end
+    return concat(t, ', ')
+end
+
 AST_print = function(e)
-    if e.ident then
+    if e.schema then
+        local ys = AST_print_exprlist(e.y)
+        local xs = AST_print_exprlist(e.x)
+        return format("%s ~ %s", ys, xs)
+    elseif e.list then
+        return AST_print_exprlist(e)
+    elseif e.ident then
         local s = e.ident
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
@@ -185,4 +222,4 @@ AST_print = function(e)
     end
 end
 
-return {lexer = new_lexer, parse = parse_expr, AST= AST_create, print = AST_print}
+return {lexer = new_lexer, schema= schema, parse = parse_expr, AST= AST_create, print = AST_print}
