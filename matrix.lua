@@ -3,7 +3,7 @@
 local ffi = require 'ffi'
 local gsl = require 'gsl'
 
-local sqrt, abs = math.sqrt, math.abs
+local sqrt, abs, floor = math.sqrt, math.abs, math.floor
 local format = string.format
 
 local check = require 'check'
@@ -208,21 +208,34 @@ local function itostr(im, eps, fmt, signed)
    end
 end
 
+local function is_small_integer(x)
+   local ax = abs(x)
+   return (ax < 2^31 and floor(ax) == ax)
+end
+
 local function recttostr(x, y, eps)
    local x_sub, y_sub = abs(x) < eps, abs(y) < eps
 
-   local fmt = '%.8g'
+   local fmt_x, fmt_y = '%.8g', '%.8g'
+   if is_small_integer(x) then
+      fmt_x = '%.0f'
+      x_sub = false
+   end
+   if is_small_integer(y) then
+      fmt_y = '%.0f'
+      y_sub = false
+   end
 
    if not x_sub then
       local sign = x+eps < 0 and '-' or ''
       local ax = abs(x)
       if y_sub then
-         return format('%s'..fmt, sign, ax)
+         return format('%s'..fmt_x, sign, ax)
       else
-         return format('%s'..fmt..'%s', sign, ax, itostr(y, eps, fmt, true))
+         return format('%s'..fmt_x..'%s', sign, ax, itostr(y, eps, fmt_y, true))
       end
    else
-      return (y_sub and '0' or itostr(y, eps, fmt, false))
+      return (y_sub and '0' or itostr(y, eps, fmt_y, false))
    end
 end
 
