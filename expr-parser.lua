@@ -22,13 +22,8 @@ function mini_lexer.char(lexer)
     return lexer.src:sub(n, n)
 end
 
-function mini_lexer.consume(lexer, char)
-    local c = lexer:char()
-    assert(c == char, "expecting character " .. char)
-    lexer.n = lexer.n + 1
-end
-
 function mini_lexer.incr(lexer, n)
+    lexer.n_current = lexer.n
     lexer.n = lexer.n + (n or 1)
 end
 
@@ -39,13 +34,19 @@ end
 function mini_lexer.consume(lexer, pattern)
     local m = match(lexer.src, '^' .. pattern, lexer.n)
     if m then
+        lexer.n_current = lexer.n
         lexer.n = lexer.n + len(m)
         return m
     end
 end
 
+function mini_lexer.skip(lexer, pattern)
+    local m = match(lexer.src, '^' .. pattern, lexer.n)
+    if m then lexer.n = lexer.n + len(m) end
+end
+
 function mini_lexer.next_token(lexer)
-    lexer:consume('%s*')
+    lexer:skip('%s*')
     if lexer.n > len(lexer.src) then return {type= 'EOF'} end
     local c = lexer:char()
     if c == '[' then
@@ -72,15 +73,18 @@ function mini_lexer.next_token(lexer)
         end
         return {type= 'number', value= tonumber(str)}
     end
-    msg = { "syntax error in expression:",
-            string.format('   %s', lexer.src),
-            string.format('   %s^', string.rep(' ', lexer.n - 1)) }
-
-    error(table.concat(msg, '\n'))
+    lexer:local_error("syntax error in expression:", lexer.n)
 end
 
 function mini_lexer.next(lexer)
     lexer.token = lexer:next_token()
+end
+
+function mini_lexer.local_error(lexer, msg, n_pos)
+    n_pos = n_pos or lexer.n_current
+    local line = string.format('   %s', lexer.src)
+    local pos = string.format('   %s^', string.rep(' ', n_pos - 1))
+    error(string.format("%s\n%s\n%s", msg, line, pos))
 end
 
 local function accept(lexer, token_type)
@@ -115,7 +119,7 @@ local function factor(lexer, actions)
         expect(lexer, ')')
         return a
     end
-    error('expecting variable or number')
+    lexer:local_error('unexpected symbol:')
 end
 
 expr = function(lexer, actions, prio)
@@ -158,6 +162,9 @@ local function schema(lexer, actions)
     local y = expr(lexer, actions, 0)
     expect(lexer, '~')
     local x = expr_list(lexer, actions)
+    if lexer.token.type ~= 'EOF' then
+        lexer:local_error('unexpected symbol:')
+    end
     return actions.schema(x, y)
 end
 
