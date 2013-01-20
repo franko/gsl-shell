@@ -62,7 +62,7 @@ function mini_lexer.next_token(lexer)
         return {type= c}
     end
     if lexer:match('[%l%u_]') then
-        local str = lexer:consume('[%l%u_]%w*')
+        local str = lexer:consume('[%l%u_][%w_]*')
         return {type= 'ident', value= str}
     end
     if lexer:match('[1-9]') then
@@ -155,7 +155,7 @@ local function expr_list(lexer, actions)
 end
 
 local function schema(lexer, actions)
-    local y = expr_list(lexer, actions)
+    local y = expr(lexer, actions, 0)
     expect(lexer, '~')
     local x = expr_list(lexer, actions)
     return actions.schema(x, y)
@@ -165,61 +165,4 @@ local function parse_expr(lexer, actions)
     return expr(lexer, actions, 0)
 end
 
-local AST_create = {
-    infix    = function(sym, a, b) return {operator= sym, a, b} end,
-    ident    = function(id) return {ident= id} end,
-    prefix   = function(sym, a) return {operator= sym, a} end,
-    number   = function(x) return {number= x} end,
-    exprlist = function(a, ls) if ls then ls[#ls+1] = a else ls = {list= true, a} end; return ls end,
-    schema   = function(x, y) return {schema= true, x= x, y= y} end,
-}
-
-local format, concat = string.format, table.concat
-local AST_print
-
-local function is_ident_simple(s)
-    return s:match('^[_%l%u]%w*$')
-end
-
-local function AST_print_op(e, prio)
-    if #e == 1 then
-        local c, c_prio = AST_print(e[1])
-        if c_prio < prio then c = format('(%s)', c) end
-        return format("%s%s", e.operator, c)
-    else
-        local a, a_prio = AST_print(e[1])
-        local b, b_prio = AST_print(e[2])
-        if a_prio < prio then a = format('(%s)', a) end
-        if b_prio < prio then b = format('(%s)', b) end
-        local temp = (prio < 2 and "%s %s %s" or "%s%s%s")
-        return format(temp, a, e.operator, b)
-    end
-end
-
-local function AST_print_exprlist(e)
-    local t = {}
-    for k = 1, #e do t[k] = AST_print(e[k]) end
-    return concat(t, ', ')
-end
-
-AST_print = function(e)
-    if e.schema then
-        local ys = AST_print_exprlist(e.y)
-        local xs = AST_print_exprlist(e.x)
-        return format("%s ~ %s", ys, xs)
-    elseif e.list then
-        return AST_print_exprlist(e)
-    elseif e.ident then
-        local s = e.ident
-        if not is_ident_simple(s) then s = format('[%s]', s) end
-        return s, 3
-    elseif e.number then
-        return e.number, 3
-    else
-        local prio = oper_table[e.operator]
-        local s = AST_print_op(e, prio)
-        return s, prio
-    end
-end
-
-return {lexer = new_lexer, schema= schema, parse = parse_expr, AST= AST_create, print = AST_print}
+return {lexer = new_lexer, schema= schema, parse = parse_expr}
