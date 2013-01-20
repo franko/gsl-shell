@@ -53,6 +53,10 @@ local function prefix_action(sym, a)
     return {scalar= {operator= sym, a}}
 end
 
+local function enum_action(id)
+	return {scalar= 1, factor= {id}}
+end
+
 local function lm_actions_gen(t)
     local n, m = t:dim()
 
@@ -72,6 +76,7 @@ local function lm_actions_gen(t)
         infix    = infix_action,
         ident    = ident_action,
         prefix   = prefix_action,
+        enum     = enum_action,
         number   = function(x) return {scalar= x} end,
         exprlist = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
         schema   = function(x, y) return {x= x, y= y} end,

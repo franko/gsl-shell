@@ -8,7 +8,7 @@ local mini_lexer_mt = {
 }
 
 local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1}
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2}
+local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['!'] = -1}
 
 local function new_lexer(src)
     local lexer = {n = 1, src= src}
@@ -118,6 +118,14 @@ local function factor(lexer, actions)
         local a = expr(lexer, actions, 0)
         expect(lexer, ')')
         return a
+    elseif token.type == 'operator' and token.symbol == '!' then
+        lexer:next()
+        if lexer.token.type ~= 'ident' then
+            lexer:local_error("expecting identifier:")
+        end
+        local id = lexer.token.value
+        lexer:next()
+        return actions.enum(id)
     end
     lexer:local_error('unexpected symbol:')
 end
