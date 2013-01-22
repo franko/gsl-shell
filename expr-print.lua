@@ -32,10 +32,13 @@ end
 ex_print = function(e)
     if type(e) == 'number' then
         return e, 3
-    elseif type(e) == 'string' then
-        local s = e
+    elseif e.name then
+        local s = e.name
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
+    elseif e.func then
+        local arg_str = ex_print(e.arg)
+        return format('%s(%s)', e.func, arg_str)
     else
         local prio = oper_table[e.operator]
         local s = op_print(e, prio)

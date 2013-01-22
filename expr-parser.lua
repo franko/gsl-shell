@@ -7,7 +7,7 @@ local mini_lexer_mt = {
     __index = mini_lexer,
 }
 
-local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1}
+local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1, ['|'] = 1}
 local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['!'] = -1}
 
 local function new_lexer(src)
@@ -90,13 +90,13 @@ end
 local function accept(lexer, token_type)
     if lexer.token.type == token_type then
         lexer:next()
-        return 1
+        return true
     end
-    return 0
+    return false
 end
 
 local function expect(lexer, token_type)
-    if accept(lexer, token_type) == 0 then
+    if not accept(lexer, token_type) then
         error("expecting " .. token_type)
     end
 end
@@ -108,7 +108,13 @@ local function factor(lexer, actions)
     if token.type == 'ident' then
         local id = token.value
         lexer:next()
-        return actions.ident(id)
+        if accept(lexer, '(') then
+            local arg = expr(lexer, actions, 0)
+            expect(lexer, ')')
+            return actions.func_eval(id, arg)
+        else
+            return actions.ident(id)
+        end
     elseif token.type == 'number' then
         local x = token.value
         lexer:next()
@@ -128,6 +134,20 @@ local function factor(lexer, actions)
         return actions.enum(id)
     end
     lexer:local_error('unexpected symbol:')
+end
+
+local function ident_singleton(lexer, actions)
+    local token = lexer.token
+    if token.type == 'ident' then
+        local id = token.value
+        lexer:next()
+        if accept(lexer, '(') then
+            lexer:local_error('expecting simple identifier')
+        end
+        return actions.ident(id)
+    else
+        lexer:local_error('expecting simple identifier')
+    end
 end
 
 expr = function(lexer, actions, prio)
@@ -159,8 +179,18 @@ end
 local function expr_list(lexer, actions)
     local a = expr(lexer, actions, 0)
     local els = actions.exprlist(a)
-    while accept(lexer, ',') > 0 do
+    while accept(lexer, ',') do
         local b = expr(lexer, actions, 0)
+        els = actions.exprlist(b, els)
+    end
+    return els
+end
+
+local function ident_list(lexer, actions)
+    local a = ident_singleton(lexer, actions)
+    local els = actions.exprlist(a)
+    while accept(lexer, ',') do
+        local b = ident_singleton(lexer, actions)
         els = actions.exprlist(b, els)
     end
     return els
@@ -176,8 +206,20 @@ local function schema(lexer, actions)
     return actions.schema(x, y)
 end
 
+local function gschema(lexer, actions)
+    local y = expr_list(lexer, actions)
+    expect(lexer, '~')
+    local x = expr_list(lexer, actions)
+    expect(lexer, '|')
+    local enums = ident_list(lexer, actions)
+    if lexer.token.type ~= 'EOF' then
+        lexer:local_error('unexpected symbol:')
+    end
+    return actions.schema(x, y, enums)
+end
+
 local function parse_expr(lexer, actions)
     return expr(lexer, actions, 0)
 end
 
-return {lexer = new_lexer, schema= schema, parse = parse_expr}
+return {lexer = new_lexer, schema= schema, gschema= gschema, parse = parse_expr}
