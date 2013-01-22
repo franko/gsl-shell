@@ -36,6 +36,9 @@ ex_print = function(e)
         local s = e
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
+    elseif e.func then
+        local arg_str = ex_print(e.arg)
+        return format('%s(%s)', e.func, arg_str)
     else
         local prio = oper_table[e.operator]
         local s = op_print(e, prio)

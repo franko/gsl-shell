@@ -57,6 +57,13 @@ local function enum_action(id)
 	return {scalar= 1, factor= {id}}
 end
 
+local function func_eval_action(func_name, arg_expr)
+    if arg_expr.factor then
+        error('applying function ' .. func_name .. ' to an enumerated factor')
+    end
+    return {scalar= {func = func_name, arg = arg_expr}}
+end
+
 local function lm_actions_gen(t)
     local n, m = t:dim()
 
@@ -73,13 +80,14 @@ local function lm_actions_gen(t)
     end
 
     return {
-        infix    = infix_action,
-        ident    = ident_action,
-        prefix   = prefix_action,
-        enum     = enum_action,
-        number   = function(x) return {scalar= x} end,
-        exprlist = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
-        schema   = function(x, y) return {x= x, y= y} end,
+        infix     = infix_action,
+        ident     = ident_action,
+        prefix    = prefix_action,
+        enum      = enum_action,
+        func_eval = func_eval_action,
+        number    = function(x) return {scalar= x} end,
+        exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
+        schema    = function(x, y) return {x= x, y= y} end,
     }
 end
 
@@ -142,6 +150,11 @@ local function eval_scalar(t, i, expr)
         return t:get(i, j)
     elseif tp == 'number' then
         return expr
+    elseif expr.func then
+        local arg_value = eval_scalar(t, i, expr.arg.scalar)
+        local f = math[expr.func]
+        if not f then error('unknown function: '..expr.func) end
+        return f(arg_value)
     else
         if #expr == 1 then
             return - eval_scalar(t, i, expr[1])
