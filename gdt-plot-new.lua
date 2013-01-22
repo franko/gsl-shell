@@ -11,19 +11,6 @@ local function collate(ls, sep)
     return concat(ls, sep or ' ')
 end
 
---[[
-local function treat_column_refs(t, js)
-    if type(js) ~= 'table' then js = {js} end
-    for i = 1, #js do
-        local v = js[i]
-        if type(v) == 'string' then
-            js[i] = t:col_index(v)
-        end
-    end
-    return js
-end
---]]
-
 -- recursive algorithm to computer the standard deviation from
 -- wikipedia: http://en.wikipedia.org/wiki/Standard_deviation.
 -- Welford, BP. "Note on a Method for Calculating Corrected Sums of
@@ -59,35 +46,6 @@ local stat_lookup = {
     sum     = {f = function(accu, x, n) return accu + x end},
     count   = {f = function(accu, x, n) return n end},
 }
-
---[[
-local function treat_column_funcrefs(t, js)
-    if type(js) ~= 'table' then js = {js} end
-    for i = 1, #js do
-        local v = js[i]
-        local stat, name, fullname
-        if type(v) == 'string' then
-            fullname = v
-            stat, name = string.match(v, '(%a+)%((%w+)%)')
-            if not stat then
-                stat, name = 'mean', v
-            end
-        else
-            stat, name = 'mean', t:get_header(v)
-        end
-        local s = stat_lookup[stat]
-        assert(s, "invalid parameter requested")
-        js[i] = {
-            f     = s.f,
-            f0    = s.f0,
-            fini  = s.fini,
-            name  = fullname,
-            index = t:col_index(name)
-        }
-    end
-    return js
-end
---]]
 
 local function compare_list(a, b)
     local n = #a
@@ -132,15 +90,6 @@ local function vec2d_incr(r, i, j)
     r[i][j] = v + 1
     return v + 1
 end
-
---[[
-local function treat_all_column_refs(t, jxs, jys, jes)
-    jxs = treat_column_refs(t, jxs)
-    jys = treat_column_refs(t, jys)
-    jes = treat_column_refs(t, jes)
-    return jxs, jys, jes
-end
---]]
 
 ----------------------------------------------------------
 -- TODO: separate the module to 'evaluate' an expression
@@ -289,7 +238,7 @@ local function gdt_table_barplot(t, plot_descr, opt)
             f     = s.f,
             f0    = s.f0,
             fini  = s.fini,
-            name  = '###', -- expr_print.expr(yexpr),
+            name  = expr_print.expr(yexpr),
             expr  = yexpr,
         }
     end
@@ -299,10 +248,6 @@ local function gdt_table_barplot(t, plot_descr, opt)
         if not expr.name then error('invalid enumeration factor') end
         jes[i] = t:col_index(expr.name)
     end
-
---    jxs = treat_column_refs(t, jxs)
---    jys = treat_column_funcrefs(t, jys)
---    jes = treat_column_refs(t, jes)
 
     local rect, webcolor = graph.rect, graph.webcolor
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes)

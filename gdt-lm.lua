@@ -75,7 +75,7 @@ local function lm_actions_gen(t)
         if column_class[index] == FACTOR_CLASS then
             return {scalar= 1, factor= {id}}
         else
-            return {scalar= id}
+            return {scalar= {name= id}}
         end
     end
 
@@ -144,12 +144,11 @@ local function eval_operator(op, a, b)
 end
 
 local function eval_scalar(t, i, expr)
-    local tp = type(expr)
-    if tp == 'string' then
-        local j = t:col_index(expr)
-        return t:get(i, j)
-    elseif tp == 'number' then
+    if type(expr) == 'number' then
         return expr
+    elseif expr.name then
+        local j = t:col_index(expr.name)
+        return t:get(i, j)
     elseif expr.func then
         local arg_value = eval_scalar(t, i, expr.arg.scalar)
         local f = math[expr.func]
