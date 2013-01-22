@@ -216,7 +216,103 @@ local function get_stat(expr)
     end
 end
 
-local function gdt_table_barplot(t, plot_descr, opt)
+local rect, webcolor, path = graph.rect, graph.webcolor, graph.path
+
+local barplot = {}
+
+function barplot.create(labels, enums, val)
+    local plt = graph.plot()
+    local pad = 0.1
+    local dx = (1 - 2*pad) / #enums
+    local cat = {}
+    for p, lab in ipairs(labels) do
+        for q, _ in ipairs(enums) do
+            local v = val[p][q]
+            if v then
+                local x = (p - 1) + pad + dx * (q - 1)
+                local r = rect(x, 0, x + dx, val[p][q])
+                plt:add(r, webcolor(q))
+            end
+        end
+        cat[2*p-1] = p - 0.5
+        cat[2*p] = collate(lab)
+    end
+    return plt, cat
+end
+
+function barplot.legend(plt, labels, enums)
+    if #enums > 1 then
+        for k = 1, #enums do
+            plt:legend(collate(enums[k], '/'), webcolor(k), 'square')
+        end
+    end
+end
+
+local lineplot = {}
+
+local function legend_symbol(sym, dx, dy)
+   if sym == 'square' then
+      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
+   elseif sym == 'line' then
+      return graph.segment(dx, 10+dy, 20+dx, 10+dy), {{'stroke', width=line_width}}
+   else
+      return graph.marker(10+dx, 10+dy, sym, 8)
+   end
+end
+
+local function add_legend(lg, k, symspec, color, text)
+    local y = -k * 20
+    local sym, symtr = legend_symbol(symspec, 0, y)
+    local tr = (trans and trans or symtr)
+    lg:add(sym, color, tr)
+    if text then
+        lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+    end
+end
+
+function lineplot.create(labels, enums, val)
+    local plt = graph.plot()
+    plt.pad, plt.clip = true, false
+
+    for q, en in ipairs(enums) do
+        local ln = path()
+        local path_method = ln.move_to
+        for p, lab in ipairs(labels) do
+            local y = val[p][q]
+            if y then
+                path_method(ln, p - 0.5, y)
+                path_method = ln.line_to
+            else
+                path_method = ln.move_to
+            end
+        end
+        plt:add(ln, webcolor(q), {{'stroke', width=line_width}})
+        plt:add(ln, webcolor(q), {{'marker', size=8, mark=q}})
+    end
+
+    local cat = {}
+    for p, lab in ipairs(labels) do
+        cat[2*p-1] = p - 0.5
+        cat[2*p] = collate(lab)
+    end
+
+    return plt, cat
+end
+
+function lineplot.legend(plt, labels, enums)
+    if #enums > 1 then
+        local lg = graph.plot()
+        lg.units, lg.clip = false, false
+        for q, en in ipairs(enums) do
+            local label = collate(en)
+            add_legend(lg, q, 'line', webcolor(q), label)
+            add_legend(lg, q, q, webcolor(q))
+        end
+        plt:set_legend(lg)
+    end
+end
+
+local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
 
@@ -249,37 +345,20 @@ local function gdt_table_barplot(t, plot_descr, opt)
         jes[i] = t:col_index(expr.name)
     end
 
-    local rect, webcolor = graph.rect, graph.webcolor
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
 
-    local plt = graph.plot()
-    local pad = 0.1
-    local dx = (1 - 2*pad) / #enums
-    local cat = {}
-    for p, lab in ipairs(labels) do
-        for q, _ in ipairs(enums) do
-            local v = val[p][q]
-            if v then
-                local x = (p - 1) + pad + dx * (q - 1)
-                local r = rect(x, 0, x + dx, val[p][q])
-                plt:add(r, webcolor(q))
-            end
-        end
-        cat[2*p-1] = p - 0.5
-        cat[2*p] = collate(lab)
-    end
+    local plt, cat = plotter.create(labels, enums, val)
 
     plt:set_categories('x', cat)
     plt.xlab_angle = math.pi/4
 
-    if #enums > 1 then
-        for k = 1, #enums do
-            plt:legend(collate(enums[k], '/'), webcolor(k), 'square')
-        end
-    end
+    plotter.legend(plt, labels, enums)
 
     if show_plot then plt:show() end
     return plt
 end
 
-return gdt_table_barplot
+return {
+    barplot  = function(t, spec, opt) return gdt_table_category_plot(barplot,  t, spec, opt) end,
+    lineplot = function(t, spec, opt) return gdt_table_category_plot(lineplot, t, spec, opt) end,
+}
