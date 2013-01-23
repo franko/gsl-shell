@@ -38,7 +38,7 @@ ex_print = function(e)
         return s, 3
     elseif e.func then
         local arg_str = ex_print(e.arg)
-        return format('%s(%s)', e.func, arg_str)
+        return format('%s(%s)', e.func, arg_str), 3
     else
         local prio = oper_table[e.operator]
         local s = op_print(e, prio)
@@ -52,4 +52,34 @@ local function schema_print(e)
     return format("%s ~ %s", ys, xs)
 end
 
-return {schema = schema_print, expr = ex_print, expr_list = exlist_print}
+local function eval_operator(op, a, b)
+    if     op == '+' then return a + b
+    elseif op == '-' then return a - b
+    elseif op == '*' then return a * b
+    elseif op == '/' then return a / b
+    elseif op == '^' then return a ^ b
+    else error('unkown operation: ' .. op) end
+end
+
+local function eval(expr, scope)
+    if type(expr) == 'number' then
+        return expr
+    elseif expr.name then
+        return scope.ident(expr)
+    elseif expr.func then
+        local arg_value = eval(expr.arg, scope)
+        local f = scope.func(expr)
+        if not f then error('unknown function: '..expr.func) end
+        return f(arg_value)
+    else
+        if #expr == 1 then
+            return - eval(expr[1], scope)
+        else
+            local a = eval(expr[1], scope)
+            local b = eval(expr[2], scope)
+            return eval_operator(expr.operator, a, b)
+        end
+    end
+end
+
+return {schema = schema_print, expr = ex_print, expr_list = exlist_print, eval = eval}

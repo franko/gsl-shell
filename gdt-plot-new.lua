@@ -91,46 +91,24 @@ local function vec2d_incr(r, i, j)
     return v + 1
 end
 
-----------------------------------------------------------
--- TODO: separate the module to 'evaluate' an expression
-----------------------------------------------------------
-
-local function eval_operator(op, a, b)
-    if     op == '+' then return a + b
-    elseif op == '-' then return a - b
-    elseif op == '*' then return a * b
-    elseif op == '/' then return a / b
-    elseif op == '^' then return a ^ b
-    else error('unkown operation: ' .. op) end
-end
-
-local function eval_scalar(t, i, expr)
-    if type(expr) == 'number' then
-        return expr
-    elseif expr.name then
-        return t:get(i, expr.index)
-    elseif expr.func then
-        local arg_value = eval_scalar(t, i, expr.arg.scalar)
-        local f = math[expr.func]
-        if not f then error('unknown function: '..expr.func) end
-        return f(arg_value)
-    else
-        if #expr == 1 then
-            return - eval_scalar(t, i, expr[1])
-        else
-            local a = eval_scalar(t, i, expr[1])
-            local b = eval_scalar(t, i, expr[2])
-            return eval_operator(expr.operator, a, b)
-        end
-    end
+local function eval_scalar_gen(t)
+    local i
+    local id_res = function(expr) return t:get(i, expr.index) end
+    local func_res = function(expr) return math[expr.func] end
+    local set = function(ix) i = ix end
+    return set, {ident= id_res, func= func_res}
 end
 
 local function rect_funcbin(t, jxs, jys, jes)
+    local eval_set, eval_scope = eval_scalar_gen(t)
+    local eval = expr_print.eval
+
     local n = #t
     local val, count = {}, {}
     local enums, labels = {}, {}
     local fini_table = {}
     for i = 1, n do
+        eval_set(i)
         local c = collate_factors(t, i, jxs)
         for p = 1, #jys do
             local jp = jys[p]
@@ -139,7 +117,7 @@ local function rect_funcbin(t, jxs, jys, jes)
             local e = collate_factors(t, i, jes)
             e[#e+1] = jp.name
 
-            local v = eval_scalar(t, i, jp.expr)
+            local v = eval(jp.expr, eval_scope)
             if v then
                 local ie = add_unique(enums, e)
                 local ix = add_unique(labels, c)
