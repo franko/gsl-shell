@@ -210,8 +210,12 @@ local function gschema(lexer, actions)
     local y = expr_list(lexer, actions)
     expect(lexer, '~')
     local x = expr_list(lexer, actions)
-    expect(lexer, '|')
-    local enums = ident_list(lexer, actions)
+    local enums
+    if accept(lexer, '|') then
+        enums = ident_list(lexer, actions)
+    else
+        enums = {}
+    end
     if lexer.token.type ~= 'EOF' then
         lexer:local_error('unexpected symbol:')
     end
