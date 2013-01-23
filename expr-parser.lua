@@ -90,13 +90,13 @@ end
 local function accept(lexer, token_type)
     if lexer.token.type == token_type then
         lexer:next()
-        return 1
+        return true
     end
-    return 0
+    return false
 end
 
 local function expect(lexer, token_type)
-    if accept(lexer, token_type) == 0 then
+    if not accept(lexer, token_type) then
         error("expecting " .. token_type)
     end
 end
@@ -108,7 +108,7 @@ local function factor(lexer, actions)
     if token.type == 'ident' then
         local id = token.value
         lexer:next()
-        if accept(lexer, '(') > 0 then
+        if accept(lexer, '(') then
             local arg = expr(lexer, actions, 0)
             expect(lexer, ')')
             return actions.func_eval(id, arg)
@@ -141,7 +141,7 @@ local function ident_singleton(lexer, actions)
     if token.type == 'ident' then
         local id = token.value
         lexer:next()
-        if accept(lexer, '(') > 0 then
+        if accept(lexer, '(') then
             lexer:local_error('expecting simple identifier')
         end
         return actions.ident(id)
@@ -179,7 +179,7 @@ end
 local function expr_list(lexer, actions)
     local a = expr(lexer, actions, 0)
     local els = actions.exprlist(a)
-    while accept(lexer, ',') > 0 do
+    while accept(lexer, ',') do
         local b = expr(lexer, actions, 0)
         els = actions.exprlist(b, els)
     end
@@ -189,7 +189,7 @@ end
 local function ident_list(lexer, actions)
     local a = ident_singleton(lexer, actions)
     local els = actions.exprlist(a)
-    while accept(lexer, ',') > 0 do
+    while accept(lexer, ',') do
         local b = ident_singleton(lexer, actions)
         els = actions.exprlist(b, els)
     end
