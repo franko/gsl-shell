@@ -61,7 +61,7 @@ local function func_eval_action(func_name, arg_expr)
     if arg_expr.factor then
         error('applying function ' .. func_name .. ' to an enumerated factor')
     end
-    return {scalar= {func = func_name, arg = arg_expr}}
+    return {scalar= {func = func_name, arg = arg_expr.scalar}}
 end
 
 local function lm_actions_gen(t)
@@ -75,7 +75,7 @@ local function lm_actions_gen(t)
         if column_class[index] == FACTOR_CLASS then
             return {scalar= 1, factor= {id}}
         else
-            return {scalar= {name= id}}
+            return {scalar= {name= id, index= t:col_index(id)}}
         end
     end
 
@@ -134,37 +134,6 @@ local function enum_levels(factors, levels)
     end
 end
 
-local function eval_operator(op, a, b)
-    if     op == '+' then return a + b
-    elseif op == '-' then return a - b
-    elseif op == '*' then return a * b
-    elseif op == '/' then return a / b
-    elseif op == '^' then return a ^ b
-    else error('unkown operation: ' .. op) end
-end
-
-local function eval_scalar(t, i, expr)
-    if type(expr) == 'number' then
-        return expr
-    elseif expr.name then
-        local j = t:col_index(expr.name)
-        return t:get(i, j)
-    elseif expr.func then
-        local arg_value = eval_scalar(t, i, expr.arg.scalar)
-        local f = math[expr.func]
-        if not f then error('unknown function: '..expr.func) end
-        return f(arg_value)
-    else
-        if #expr == 1 then
-            return - eval_scalar(t, i, expr[1])
-        else
-            local a = eval_scalar(t, i, expr[1])
-            local b = eval_scalar(t, i, expr[2])
-            return eval_operator(expr.operator, a, b)
-        end
-    end
-end
-
 local function level_does_match(t, i, factors, req_levels)
     for k, factor_name in ipairs(factors) do
         local y = t:get(i, t:col_index(factor_name))
@@ -205,7 +174,18 @@ local function expr_is_unit(e)
     return type(e) == 'number' and e == 1
 end
 
+local function eval_scalar_gen(t)
+    local i
+    local id_res = function(expr) return t:get(i, expr.index) end
+    local func_res = function(expr) return math[expr.func] end
+    local set = function(ix) i = ix end
+    return set, {ident= id_res, func= func_res}
+end
+
 local function build_lm_model(t, expr_list)
+    local eval_set, eval_scope = eval_scalar_gen(t)
+    local eval_scalar = expr_print.eval
+
     local N, M = t:dim()
 
     -- list of unique factors referenced in expr_list
@@ -271,7 +251,8 @@ local function build_lm_model(t, expr_list)
         if not expr.factor then
             local j = index_offs
             for i = 1, N do
-                local xs = eval_scalar(t, i, scalar_expr)
+                eval_set(i)
+                local xs = eval_scalar(scalar_expr, eval_scope)
                 X:set(i, j, xs)
             end
             names[j] = scalar_repr
@@ -279,7 +260,8 @@ local function build_lm_model(t, expr_list)
             local expr_levels = enum_levels(expr.factor, levels)
             local j0 = index_offs
             for i = 1, N do
-                local xs = eval_scalar(t, i, scalar_expr)
+                eval_set(i)
+                local xs = eval_scalar(scalar_expr, eval_scope)
                 for j, req_lev in ipairs(expr_levels) do
                     local match = level_does_match(t, i, expr.factor, req_lev)
                     X:set(i, j0 + (j - 1), match * xs)
@@ -302,10 +284,14 @@ local function build_lm_model(t, expr_list)
 end
 
 local function eval_y(t, y_expr)
+    local eval_set, eval_scope = eval_scalar_gen(t)
+    local eval_scalar = expr_print.eval
+
     local N = #t
     local y = matrix.alloc(N, 1)
     for i = 1, N do
-        local yi = eval_scalar(t, i, y_expr)
+        eval_set(i)
+        local yi = eval_scalar(y_expr, eval_scope)
         y.data[i - 1] = yi
     end
     return y
