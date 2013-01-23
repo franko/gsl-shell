@@ -290,22 +290,18 @@ function lineplot.legend(plt, labels, enums)
     end
 end
 
-local function gdt_table_category_plot(plotter, t, plot_descr, opt)
-    local show_plot = true
-    if opt then show_plot = (opt.show ~= false) end
-
-    local l = mini.lexer(plot_descr)
-    local actions = plot_actions_gen(t)
-    local schema = mini.gschema(l, actions)
-
+local function idents_get_column_indexes(t, exprs)
     local jxs = {}
-    for i, expr in ipairs(schema.x) do
+    for i, expr in ipairs(exprs) do
         if not expr.name then error('invalid enumeration factor') end
         jxs[i] = t:col_index(expr.name)
     end
+    return jxs
+end
 
+local function stat_expr_get_functions(exprs)
     local jys = {}
-    for i, expr in ipairs(schema.y) do
+    for i, expr in ipairs(exprs) do
         local stat_name, yexpr = get_stat(expr)
         local s = stat_lookup[stat_name]
         jys[i] = {
@@ -316,12 +312,34 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
             expr  = yexpr,
         }
     end
+    return jys
+end
 
-    local jes = {}
-    for i, expr in ipairs(schema.enums) do
-        if not expr.name then error('invalid enumeration factor') end
-        jes[i] = t:col_index(expr.name)
+local function expr_get_functions(exprs)
+    local jys = {}
+    for i, expr in ipairs(exprs) do
+        jys[i] = {
+            name  = expr_print.expr(expr),
+            expr  = expr,
+        }
     end
+    return jys
+end
+
+local function schema_from_plot_descr(plot_descr, t)
+    local l = mini.lexer(plot_descr)
+    local actions = plot_actions_gen(t)
+    return mini.gschema(l, actions)
+end
+
+local function gdt_table_category_plot(plotter, t, plot_descr, opt)
+    local show_plot = true
+    if opt then show_plot = (opt.show ~= false) end
+
+    local schema = schema_from_plot_descr(plot_descr, t)
+    local jxs = idents_get_column_indexes(t, schema.x)
+    local jys = stat_expr_get_functions(schema.y)
+    local jes = idents_get_column_indexes(t, schema.enums)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
 
@@ -336,7 +354,81 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     return plt
 end
 
+local function gdt_table_xyplot(t, plot_descr, opt)
+    local show_plot = true
+    if opt then show_plot = (opt.show ~= false) end
+
+    local use_lines = opt and opt.lines
+    local use_markers = opt and (opt.markers ~= false) or true
+
+    local schema = schema_from_plot_descr(plot_descr, t)
+    local jxs = expr_get_functions(schema.x)
+    local jys = expr_get_functions(schema.y)
+    local jes = idents_get_column_indexes(t, schema.enums)
+    local jx = jxs[1]
+
+    print('JS', jxs, jys)
+
+    local eval_set, eval_scope = eval_scalar_gen(t)
+    local eval = expr_print.eval
+
+    local enums = {}
+    local n = #t
+    for i = 1, n do
+        local e = collate_factors(t, i, jes)
+        add_unique(enums, e)
+    end
+
+    local plt, lg = graph.plot(), graph.plot()
+    plt.pad, plt.clip = true, false
+    lg.units, lg.clip = false, false
+    local mult = #enums * #jys
+    for p = 1, #jys do
+        local name = jys[p].name
+        for q, enum in ipairs(enums) do
+            local ln = path()
+            local path_method = ln.move_to
+            for i = 1, n do
+                eval_set(i)
+                local e = collate_factors(t, i, jes)
+                if compare_list(enum, e) then
+                    local x, y = eval(jx.expr, eval_scope), eval(jys[p].expr, eval_scope)
+                    -- t:get(i, jx), t:get(i, jys[p])
+                    if x and y then
+                        path_method(ln, x, y)
+                        path_method = ln.line_to
+                    else
+                        path_method = ln.move_to
+                    end
+                end
+            end
+
+            local iqs = {}
+            if #enums > 1 then iqs[#iqs+1] = collate(enum) end
+            if #jys > 1 then iqs[#iqs+1] = name end
+            local ienum = concat(iqs, " ")
+            local iq = (q - 1) * #jys + p
+            if mult > 1 then
+                add_legend(lg, iq, iq, webcolor(iq), ienum)
+            end
+
+            if use_lines then
+                plt:add(ln, webcolor(iq), {{'stroke', width=3}})
+            end
+            if use_markers then
+                plt:add(ln, webcolor(iq), {{'marker', size=6, mark=iq}})
+            end
+        end
+    end
+
+    if mult > 1 then plt:set_legend(lg) end
+
+    if show_plot then plt:show() end
+    return plt
+end
+
 return {
     barplot  = function(t, spec, opt) return gdt_table_category_plot(barplot,  t, spec, opt) end,
     lineplot = function(t, spec, opt) return gdt_table_category_plot(lineplot, t, spec, opt) end,
+    xyplot   = gdt_table_xyplot,
 }
