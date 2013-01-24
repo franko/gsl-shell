@@ -97,7 +97,7 @@ end
 
 local function expect(lexer, token_type)
     if not accept(lexer, token_type) then
-        error("expecting " .. token_type)
+        lexer:local_error("expecting " .. token_type)
     end
 end
 
