@@ -367,8 +367,6 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local jes = idents_get_column_indexes(t, schema.enums)
     local jx = jxs[1]
 
-    print('JS', jxs, jys)
-
     local eval_set, eval_scope = eval_scalar_gen(t)
     local eval = expr_print.eval
 
@@ -393,7 +391,6 @@ local function gdt_table_xyplot(t, plot_descr, opt)
                 local e = collate_factors(t, i, jes)
                 if compare_list(enum, e) then
                     local x, y = eval(jx.expr, eval_scope), eval(jys[p].expr, eval_scope)
-                    -- t:get(i, jx), t:get(i, jys[p])
                     if x and y then
                         path_method(ln, x, y)
                         path_method = ln.line_to
@@ -427,8 +424,40 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     return plt
 end
 
+local function gdt_table_reduce(t_src, schema_descr)
+    local schema = schema_from_plot_descr(schema_descr, t_src)
+    local jxs = idents_get_column_indexes(t_src, schema.x)
+    local jys = stat_expr_get_functions(schema.y)
+    local jes = idents_get_column_indexes(t_src, schema.enums)
+
+    local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes)
+
+    local n, p, q = #labels, #enums, #labels[1]
+    local t = gdt.alloc(n, q + p)
+
+    for k = 1, q do
+        t:set_header(k, t_src:get_header(jxs[k]))
+    end
+    for k, en in ipairs(enums) do
+        t:set_header(q + k, collate(en, "/"))
+    end
+
+    local set = t.set
+    for i = 1, n do
+        for k = 1, q do
+            set(t, i, k, labels[i][k])
+        end
+        for k = 1, p do
+            set(t, i, q + k, val[i][k])
+        end
+    end
+
+    return t
+end
+
 return {
     barplot  = function(t, spec, opt) return gdt_table_category_plot(barplot,  t, spec, opt) end,
     lineplot = function(t, spec, opt) return gdt_table_category_plot(lineplot, t, spec, opt) end,
     xyplot   = gdt_table_xyplot,
+    reduce   = gdt_table_reduce,
 }
