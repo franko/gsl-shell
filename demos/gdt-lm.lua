@@ -24,7 +24,7 @@ local function lm_demo()
 		end
 	end
 
-	local p = gdt.xyplot(t, "x", "y", "tool", {show= false})
+	local p = gdt.xyplot(t, "y ~ x | tool", {show= false})
 
 	p.title = "Linear Fit example"
 	p.xtitle = "time, s"
