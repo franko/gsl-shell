@@ -308,7 +308,7 @@ local function stat_expr_get_functions(exprs)
             f     = s.f,
             f0    = s.f0,
             fini  = s.fini,
-            name  = expr_print.expr(yexpr),
+            name  = expr_print.expr(expr),
             expr  = yexpr,
         }
     end
