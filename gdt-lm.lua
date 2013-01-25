@@ -305,9 +305,7 @@ local function build_lm_model(t, expr_list, y_expr)
         col_index = col_index + expr.mult
     end
 
-    local X, Y = eval_lm_matrix(t, expr_list, y_expr)
-
-    return X, Y, names
+    return names
 end
 
 local function t_test(xm, s, n, df)
@@ -317,7 +315,7 @@ local function t_test(xm, s, n, df)
     return t, (p_value >= 2e-16 and p_value or '< 2e-16')
 end
 
-local function linfit(X, y, names)
+local function compute_fit(X, y, names)
     local n = #y
     local c, chisq, cov = num.linfit(X, y)
     local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
@@ -337,8 +335,17 @@ local function lm(t, model_formula)
     local actions = lm_actions_gen(t)
     local l = mini.lexer(model_formula)
     local schema = mini.schema(l, actions)
-    local X, y, names = build_lm_model(t, schema.x, schema.y.scalar)
-    return linfit(X, y, names)
+
+    local function matrix_eval(t_alt)
+        return eval_lm_matrix(t_alt, schema.x, schema.y.scalar)
+    end
+
+    local names = build_lm_model(t, schema.x, schema.y.scalar)
+    local X, y = matrix_eval(t)
+    local fit = compute_fit(X, y, names)
+    fit.schema = schema
+    fit.eval = matrix_eval
+    return fit
 end
 
 gdt.lm = lm
