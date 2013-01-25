@@ -182,10 +182,71 @@ local function eval_scalar_gen(t)
     return set, {ident= id_res, func= func_res}
 end
 
-local function build_lm_model(t, expr_list)
+local function compute_lm_model_matrix(t, expr_list, expr_index, levels)
     local eval_set, eval_scope = eval_scalar_gen(t)
     local eval_scalar = expr_print.eval
 
+    local N = #t
+    local NE = #expr_list
+    local XM = expr_index[NE + 1] - 1
+
+    -- first pass to find coefficient names and levels by expression
+    local names = {}
+    local expr_levels = {}
+    for k, expr in ipairs(expr_list) do
+        local j0 = expr_index[k]
+        local scalar_repr = expr_print.expr(expr.scalar)
+        if not expr.factor then
+            names[j0] = scalar_repr
+        else
+            local flevels = enum_levels(expr.factor, levels)
+            for j, req_lev in ipairs(flevels) do
+                local level_repr = print_expr_level(expr.factor, req_lev)
+                local nm
+                if expr_is_unit(expr.scalar) then
+                    nm = level_repr
+                else
+                    nm = scalar_repr .. ' * ' .. level_repr
+                end
+                names[j0 + (j - 1)] = nm
+            end
+            expr_levels[k] = flevels
+        end
+    end
+
+    local X = matrix.alloc(N, XM)
+    local ix = 1
+    for i = 1, N do
+        eval_set(i)
+        local row_undef = false
+        for k = 1, NE do
+            local expr = expr_list[k]
+            local scalar_expr = expr.scalar
+            local index_offs = expr_index[k]
+            if not expr.factor then
+                local xs = eval_scalar(scalar_expr, eval_scope)
+                row_undef = row_undef or (not xs)
+                if xs then X:set(ix, index_offs, xs) end
+            else
+                local j0 = index_offs
+                local xs = eval_scalar(scalar_expr, eval_scope)
+                row_undef = row_undef or (not xs)
+                for j, req_lev in ipairs(expr_levels[k]) do
+                    local match = xs and level_does_match(t, i, expr.factor, req_lev) or 0
+                    X:set(ix, j0 + (j - 1), match * xs)
+                end
+            end
+        end
+        if not row_undef then ix = ix + 1 end
+    end
+
+    -- resize X to take into account the rows really defined
+    X.size1 = ix - 1
+
+    return X, names
+end
+
+local function build_lm_model(t, expr_list)
     local N, M = t:dim()
 
     -- list of unique factors referenced in expr_list
@@ -241,46 +302,7 @@ local function build_lm_model(t, expr_list)
     end
     expr_index[#expr_list + 1] = curr_index
 
-    local model_m = curr_index - 1
-    local X = matrix.alloc(N, model_m)
-    local names = {}
-    for k, expr in ipairs(expr_list) do
-        local scalar_repr = expr_print.expr(expr.scalar)
-        local index_offs = expr_index[k]
-        local scalar_expr = expr.scalar
-        if not expr.factor then
-            local j = index_offs
-            for i = 1, N do
-                eval_set(i)
-                local xs = eval_scalar(scalar_expr, eval_scope)
-                X:set(i, j, xs)
-            end
-            names[j] = scalar_repr
-        else
-            local expr_levels = enum_levels(expr.factor, levels)
-            local j0 = index_offs
-            for i = 1, N do
-                eval_set(i)
-                local xs = eval_scalar(scalar_expr, eval_scope)
-                for j, req_lev in ipairs(expr_levels) do
-                    local match = level_does_match(t, i, expr.factor, req_lev)
-                    X:set(i, j0 + (j - 1), match * xs)
-                end
-            end
-            for j, req_lev in ipairs(expr_levels) do
-                local level_repr = print_expr_level(expr.factor, req_lev)
-                local nm
-                if expr_is_unit(expr.scalar) then
-                    nm = level_repr
-                else
-                    nm = scalar_repr .. ' * ' .. level_repr
-                end
-                names[j0 + (j - 1)] = nm
-            end
-        end
-    end
-
-    return X, names
+    return compute_lm_model_matrix(t, expr_list, expr_index, levels)
 end
 
 local function eval_y(t, y_expr)
