@@ -68,16 +68,21 @@ local function eval(expr, scope)
         return scope.ident(expr)
     elseif expr.func then
         local arg_value = eval(expr.arg, scope)
-        local f = scope.func(expr)
-        if not f then error('unknown function: '..expr.func) end
-        return f(arg_value)
+        if arg_value then
+            local f = scope.func(expr)
+            if not f then error('unknown function: '..expr.func) end
+            return f(arg_value)
+        end
     else
         if #expr == 1 then
-            return - eval(expr[1], scope)
+            local v = eval(expr[1], scope)
+            if v then return -v end
         else
             local a = eval(expr[1], scope)
             local b = eval(expr[2], scope)
-            return eval_operator(expr.operator, a, b)
+            if a and b then
+                return eval_operator(expr.operator, a, b)
+            end
         end
     end
 end

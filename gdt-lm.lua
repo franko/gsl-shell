@@ -3,6 +3,7 @@ local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
 
 local sqrt, abs = math.sqrt, math.abs
+local type = type
 
 local FACTOR_CLASS = 0
 local SCALAR_CLASS = 1
@@ -10,8 +11,8 @@ local SCALAR_CLASS = 1
 local function find_column_type(t, j)
     local n = #t
     for i = 1, n do
-        local x = gdt.get_number_unsafe(t, i, j)
-        if not x then return FACTOR_CLASS end
+        local x = t:get(i, j)
+        if type(x) == 'string' then return FACTOR_CLASS end
     end
     return SCALAR_CLASS
 end
@@ -134,6 +135,14 @@ local function enum_levels(factors, levels)
     end
 end
 
+local function factors_defined(t, i, factors)
+    for k, factor_name in ipairs(factors) do
+        local y = t:get(i, t:col_index(factor_name))
+        if not y then return false end
+    end
+    return true
+end
+
 local function level_does_match(t, i, factors, req_levels)
     for k, factor_name in ipairs(factors) do
         local y = t:get(i, t:col_index(factor_name))
@@ -182,10 +191,60 @@ local function eval_scalar_gen(t)
     return set, {ident= id_res, func= func_res}
 end
 
-local function build_lm_model(t, expr_list)
+local function eval_lm_matrix(t, expr_list, y_expr)
     local eval_set, eval_scope = eval_scalar_gen(t)
     local eval_scalar = expr_print.eval
 
+    local N = #t
+    local NE = #expr_list
+    local XM = 0
+    for k, e in ipairs(expr_list) do XM = XM + e.mult end
+
+    local X, Y = matrix.alloc(N, XM), matrix.alloc(N, 1)
+    local row_index = 1
+    for i = 1, N do
+        eval_set(i)
+        local row_undef = false
+        local col_index = 1
+        for k = 1, NE do
+            local expr = expr_list[k]
+            local scalar_expr = expr.scalar
+            local xs = eval_scalar(scalar_expr, eval_scope)
+            row_undef = row_undef or (not xs)
+            if xs then
+                if not expr.factor then
+                    X:set(row_index, col_index, xs)
+                else
+                    row_undef = row_undef or (not factors_defined(t, i, expr.factor))
+                    local j0 = col_index
+                    for j, req_lev in ipairs(expr.levels) do
+                        local match = level_does_match(t, i, expr.factor, req_lev)
+                        X:set(row_index, j0 + (j - 1), match * xs)
+                    end
+                end
+            end
+            col_index = col_index + expr.mult
+        end
+        if not row_undef then
+            local y_val = eval_scalar(y_expr, eval_scope)
+            if y_val then
+                Y:set(row_index, 1, y_val)
+                row_index = row_index + 1
+            end
+        end
+    end
+
+    local nb_rows = row_index - 1
+    assert(nb_rows > 0, "undefined model")
+
+    -- resize X to take into account the rows really defined
+    X.size1 = nb_rows
+    Y.size1 = nb_rows
+
+    return X, Y
+end
+
+local function build_lm_model(t, expr_list, y_expr)
     local N, M = t:dim()
 
     -- list of unique factors referenced in expr_list
@@ -227,47 +286,27 @@ local function build_lm_model(t, expr_list)
         end
     end
 
-    local expr_index = {}
-    local curr_index = 1
     for k, expr in ipairs(expr_list) do
-        expr_index[k] = curr_index
         if expr.factor then
             local lnb = level_number(expr.factor, levels)
             local inn = expr.factor.omit_ref_level and lnb - 1 or lnb
-            curr_index = curr_index + inn
+            expr.mult = inn
         else
-            curr_index = curr_index + 1
+            expr.mult = 1
         end
     end
-    expr_index[#expr_list + 1] = curr_index
 
-    local model_m = curr_index - 1
-    local X = matrix.alloc(N, model_m)
+    -- first pass to find coefficient names and levels by expression
     local names = {}
+    local col_index = 1
     for k, expr in ipairs(expr_list) do
+        local j0 = col_index
         local scalar_repr = expr_print.expr(expr.scalar)
-        local index_offs = expr_index[k]
-        local scalar_expr = expr.scalar
         if not expr.factor then
-            local j = index_offs
-            for i = 1, N do
-                eval_set(i)
-                local xs = eval_scalar(scalar_expr, eval_scope)
-                X:set(i, j, xs)
-            end
-            names[j] = scalar_repr
+            names[j0] = scalar_repr
         else
-            local expr_levels = enum_levels(expr.factor, levels)
-            local j0 = index_offs
-            for i = 1, N do
-                eval_set(i)
-                local xs = eval_scalar(scalar_expr, eval_scope)
-                for j, req_lev in ipairs(expr_levels) do
-                    local match = level_does_match(t, i, expr.factor, req_lev)
-                    X:set(i, j0 + (j - 1), match * xs)
-                end
-            end
-            for j, req_lev in ipairs(expr_levels) do
+            local flevels = enum_levels(expr.factor, levels)
+            for j, req_lev in ipairs(flevels) do
                 local level_repr = print_expr_level(expr.factor, req_lev)
                 local nm
                 if expr_is_unit(expr.scalar) then
@@ -277,24 +316,12 @@ local function build_lm_model(t, expr_list)
                 end
                 names[j0 + (j - 1)] = nm
             end
+            expr.levels = flevels
         end
+        col_index = col_index + expr.mult
     end
 
-    return X, names
-end
-
-local function eval_y(t, y_expr)
-    local eval_set, eval_scope = eval_scalar_gen(t)
-    local eval_scalar = expr_print.eval
-
-    local N = #t
-    local y = matrix.alloc(N, 1)
-    for i = 1, N do
-        eval_set(i)
-        local yi = eval_scalar(y_expr, eval_scope)
-        y.data[i - 1] = yi
-    end
-    return y
+    return names
 end
 
 local function t_test(xm, s, n, df)
@@ -304,7 +331,7 @@ local function t_test(xm, s, n, df)
     return t, (p_value >= 2e-16 and p_value or '< 2e-16')
 end
 
-local function linfit(X, y, names)
+local function compute_fit(X, y, names)
     local n = #y
     local c, chisq, cov = num.linfit(X, y)
     local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
@@ -324,9 +351,16 @@ local function lm(t, model_formula)
     local actions = lm_actions_gen(t)
     local l = mini.lexer(model_formula)
     local schema = mini.schema(l, actions)
-    local X, names = build_lm_model(t, schema.x)
-    local y = eval_y(t, schema.y.scalar)
-    return linfit(X, y, names)
+
+    local function matrix_eval(t_alt)
+        return eval_lm_matrix(t_alt, schema.x, schema.y.scalar)
+    end
+
+    local names = build_lm_model(t, schema.x, schema.y.scalar)
+    local X, y = matrix_eval(t)
+    local fit = compute_fit(X, y, names)
+    fit.model = matrix_eval
+    return fit
 end
 
 gdt.lm = lm
