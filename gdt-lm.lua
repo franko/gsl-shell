@@ -3,6 +3,7 @@ local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
 
 local sqrt, abs = math.sqrt, math.abs
+local type = type
 
 local FACTOR_CLASS = 0
 local SCALAR_CLASS = 1
@@ -10,8 +11,8 @@ local SCALAR_CLASS = 1
 local function find_column_type(t, j)
     local n = #t
     for i = 1, n do
-        local x = gdt.get_number_unsafe(t, i, j)
-        if not x then return FACTOR_CLASS end
+        local x = t:get(i, j)
+        if type(x) == 'string' then return FACTOR_CLASS end
     end
     return SCALAR_CLASS
 end
@@ -134,6 +135,14 @@ local function enum_levels(factors, levels)
     end
 end
 
+local function factors_defined(t, i, factors)
+    for k, factor_name in ipairs(factors) do
+        local y = t:get(i, t:col_index(factor_name))
+        if not y then return false end
+    end
+    return true
+end
+
 local function level_does_match(t, i, factors, req_levels)
     for k, factor_name in ipairs(factors) do
         local y = t:get(i, t:col_index(factor_name))
@@ -206,6 +215,7 @@ local function eval_lm_matrix(t, expr_list, y_expr)
                 if not expr.factor then
                     X:set(row_index, col_index, xs)
                 else
+                    row_undef = row_undef or (not factors_defined(t, i, expr.factor))
                     local j0 = col_index
                     for j, req_lev in ipairs(expr.levels) do
                         local match = level_does_match(t, i, expr.factor, req_lev)
@@ -216,14 +226,20 @@ local function eval_lm_matrix(t, expr_list, y_expr)
             col_index = col_index + expr.mult
         end
         if not row_undef then
-            Y:set(row_index, 1, eval_scalar(y_expr, eval_scope))
-            row_index = row_index + 1
+            local y_val = eval_scalar(y_expr, eval_scope)
+            if y_val then
+                Y:set(row_index, 1, y_val)
+                row_index = row_index + 1
+            end
         end
     end
 
+    local nb_rows = row_index - 1
+    assert(nb_rows > 0, "undefined model")
+
     -- resize X to take into account the rows really defined
-    X.size1 = row_index - 1
-    Y.size1 = row_index - 1
+    X.size1 = nb_rows
+    Y.size1 = nb_rows
 
     return X, Y
 end
@@ -343,8 +359,7 @@ local function lm(t, model_formula)
     local names = build_lm_model(t, schema.x, schema.y.scalar)
     local X, y = matrix_eval(t)
     local fit = compute_fit(X, y, names)
-    fit.schema = schema
-    fit.eval = matrix_eval
+    fit.model = matrix_eval
     return fit
 end
 
