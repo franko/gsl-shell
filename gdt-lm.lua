@@ -352,7 +352,29 @@ local function compute_fit(X, y, names)
         coeff:set(i, 4, t)
         coeff:set(i, 5, p_value)
     end
-    return {coeff = coeff, c = c, chisq = chisq, cov = cov, X = X}
+    return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = #c}
+end
+
+local function fit_compute_Rsquare(fit, t)
+    local n, p = fit.n, fit.p
+    local X, y = eval_lm_matrix(t, fit.schema.x, fit.schema.y.scalar)
+    local y_pred = X * fit.c
+
+    local y_mean = 0
+    for k = 1, #y do y_mean = y_mean + y:get(k, 1) end
+    y_mean = y_mean / #y
+
+    local SS_tot, SS_reg = 0, 0
+    for k = 1, #y do
+        SS_reg = SS_reg + (y:get(k, 1) - y_pred:get(k, 1))^2
+        SS_tot = SS_tot + (y:get(k, 1) - y_mean)^2
+    end
+
+    local R2 = 1 - SS_reg/SS_tot
+    local R2_adj = R2 - (1 - R2) * p / (n - p - 1)
+    local SE = sqrt(SS_reg / (n - p))
+
+    return SE, R2, R2_adj
 end
 
 local function lm(t, model_formula)
@@ -368,8 +390,21 @@ local function lm(t, model_formula)
     local X, y = matrix_eval(t)
     local fit = compute_fit(X, y, names)
 
+    fit.schema = schema
+
     function fit.model(t_alt)
         return eval_lm_matrix(t_alt, schema.x)
+    end
+
+    function fit.predict(t_alt)
+        local xx = eval_lm_matrix(t_alt, schema.x)
+        return xx * fit.c
+    end
+
+    function fit.summary()
+        print(fit.coeff)
+        print()
+        print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit_compute_Rsquare(fit, t)))
     end
 
     -- used to eval a model for a single entry
