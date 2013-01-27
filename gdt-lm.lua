@@ -3,7 +3,7 @@ local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
 
 local sqrt, abs = math.sqrt, math.abs
-local type = type
+local type, pairs, ipairs = type, pairs, ipairs
 
 local FACTOR_CLASS = 0
 local SCALAR_CLASS = 1
@@ -200,7 +200,8 @@ local function eval_lm_matrix(t, expr_list, y_expr)
     local XM = 0
     for k, e in ipairs(expr_list) do XM = XM + e.mult end
 
-    local X, Y = matrix.alloc(N, XM), matrix.alloc(N, 1)
+    local X = matrix.alloc(N, XM)
+    local Y = y_expr and matrix.alloc(N, 1)
     local row_index = 1
     for i = 1, N do
         eval_set(i)
@@ -226,9 +227,13 @@ local function eval_lm_matrix(t, expr_list, y_expr)
             col_index = col_index + expr.mult
         end
         if not row_undef then
-            local y_val = eval_scalar(y_expr, eval_scope)
-            if y_val then
-                Y:set(row_index, 1, y_val)
+            if y_expr then
+                local y_val = eval_scalar(y_expr, eval_scope)
+                if y_val then
+                    Y:set(row_index, 1, y_val)
+                    row_index = row_index + 1
+                end
+            else
                 row_index = row_index + 1
             end
         end
@@ -239,9 +244,12 @@ local function eval_lm_matrix(t, expr_list, y_expr)
 
     -- resize X to take into account the rows really defined
     X.size1 = nb_rows
-    Y.size1 = nb_rows
+    if y_expr then
+        Y.size1 = nb_rows
+        return X, Y
+    end
 
-    return X, Y
+    return X
 end
 
 local function build_lm_model(t, expr_list, y_expr)
@@ -359,7 +367,28 @@ local function lm(t, model_formula)
     local names = build_lm_model(t, schema.x, schema.y.scalar)
     local X, y = matrix_eval(t)
     local fit = compute_fit(X, y, names)
-    fit.model = matrix_eval
+
+    function fit.model(t_alt)
+        return eval_lm_matrix(t_alt, schema.x)
+    end
+
+    -- used to eval a model for a single entry
+    local eval_table = gdt.alloc(1, t:headers())
+    function fit.eval(tn)
+        local N, M = t:dim()
+        for k = 1, M do
+            local name = t:get_header(k)
+            eval_table:set(1, k, tn[name])
+        end
+        local coeff = fit.c
+        local sX = eval_lm_matrix(eval_table, schema.x)
+        local sy = 0
+        for k = 0, #coeff - 1 do
+            sy = sy + sX.data[k] * coeff.data[k]
+        end
+        return sy
+    end
+
     return fit
 end
 
