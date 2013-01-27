@@ -38,12 +38,21 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-TARGETS = libgdt$(DLL_EXT)
+ifeq ($(strip $(LIBGDT_STATIC)), yes)
+  TARGETS = libgdt.a
+else
+  TARGETS = libgdt$(DLL_EXT)
+endif
 
 all: $(TARGETS)
 
 libgdt$(DLL_EXT): $(GDT_OBJ_FILES)
 	gcc -shared -o $@ $(GDT_OBJ_FILES)
+
+libgdt.a: $(GDT_OBJ_FILES)
+	@echo Archive $@
+	@$(AR) $@ $?
+	@$(RANLIB) $@
 
 include $(GSH_BASE_DIR)/makerules
 

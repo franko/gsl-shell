@@ -32,14 +32,12 @@ LUA_CFLAGS = -I$(LUADIR)/src
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
-  LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib -lsupc++
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
     LIBS += -ldl -lreadline -lncurses
   else
-    LDFLAGS += -Wl,-E
     LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
   endif
 endif
@@ -77,6 +75,10 @@ LUAGSL_LIBS += agg-plot/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
 LUAGSL_LIBS += lua-gsl/libluagsl.a
+
+ifeq ($(strip $(LIBGDT_STATIC)), yes)
+  LUAGSL_LIBS += gdt/libgdt.a
+endif
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
@@ -123,6 +125,7 @@ clean:
 	$(MAKE) -C agg-plot clean
 	$(MAKE) -C $(LUADIR) clean
 	$(MAKE) -C fox-gui clean
+	$(MAKE) -C gdt clean
 	$(HOST_RM) *.o $(TARGETS)
 	$(HOST_RM) -r ./.libs/
 

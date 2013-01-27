@@ -83,4 +83,8 @@ extern gdt_table_cursor *  gdt_table_get_cursor         (gdt_table *t);
 
 ]]
 
-return ffi.load("libgdt")
+if jit.os == 'Linux' then
+    return ffi.C
+else
+    return ffi.load('libgdt')
+end

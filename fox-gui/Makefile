@@ -33,6 +33,10 @@ GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
 
+ifeq ($(strip $(LIBGDT_STATIC)), yes)
+  GSL_SHELL_LIBS += $(GSH_BASE_DIR)/gdt/libgdt.a
+endif
+
 INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
 LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS) -lsupc++ -lm
 
@@ -55,7 +59,7 @@ all: $(TARGETS)
 
 $(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES) $(GSL_SHELL_LIBS)
 	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS) $(LDFLAGS)
+	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
 
 include $(GSH_BASE_DIR)/makerules
 
