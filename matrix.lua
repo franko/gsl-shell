@@ -509,7 +509,7 @@ local function matrix_complex_unm(a)
    return m
 end
 
-local function matrix_norm(m)
+local function matrix_norm2(m)
    local r, c = matrix_dim(m)
    local tda = m.tda
    local ssq, idx = 0, 0
@@ -520,10 +520,14 @@ local function matrix_norm(m)
       end
       idx = idx + tda
    end
-   return sqrt(ssq)
+   return ssq
 end
 
-local function matrix_complex_norm(m)
+local function matrix_norm(m)
+  return sqrt(matrix_norm2(m))
+end
+
+local function matrix_complex_norm2(m)
    local r, c = matrix_dim(m)
    local tda = m.tda
    local ssq, idx = 0, 0
@@ -534,7 +538,11 @@ local function matrix_complex_norm(m)
       end
       idx = idx + 2*tda
    end
-   return sqrt(ssq)
+   return ssq
+end
+
+local function matrix_complex_norm(m)
+  return sqrt(matrix_complex_norm2(m))
 end
 
 complex = {
@@ -543,6 +551,7 @@ complex = {
    real  = complex_real,
    imag  = complex_imag,
    abs   = complex_abs,
+   norm  = complex_abs,
    norm2 = complex_norm2,
    rect  = cartesian,
    i     = 1i,
@@ -662,6 +671,7 @@ local matrix_methods = {
    set   = matrix_set,
    copy  = matrix_copy,
    norm  = matrix_norm,
+   norm2 = matrix_norm2,
    slice = matrix_slice,
    show  = matrix_display_gen(mat_real_get),
 }
@@ -727,6 +737,7 @@ local matrix_complex_methods = {
    set   = matrix_complex_set,
    copy  = matrix_complex_copy,
    norm  = matrix_complex_norm,
+   norm2 = matrix_complex_norm2,
    slice = matrix_complex_slice,
    show  = matrix_display_gen(mat_complex_get),
 }
