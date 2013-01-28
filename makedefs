@@ -48,19 +48,13 @@ ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
   EXE_EXT = .exe
   DLL_EXT = .dll
-  LDFLAGS += -Wl,--enable-auto-import
-  LIBGDT_STATIC = no
+  LDFLAGS += -Wl,--export-all-symbols
 else
   EXE_EXT =
   DLL_EXT = .so
   DEFS += -pthread
   LIBS += -pthread
   LDFLAGS += -Wl,-E
-  LIBGDT_STATIC = yes
-endif
-
-ifeq ($(strip $(LIBGDT_STATIC)), yes)
-  DEFS += -DLIBGDT_STATIC
 endif
 
 ifeq ($(strip $(DEBUG)), yes)

@@ -38,16 +38,9 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
-ifeq ($(strip $(LIBGDT_STATIC)), yes)
-  TARGETS = libgdt.a
-else
-  TARGETS = libgdt$(DLL_EXT)
-endif
+TARGETS = libgdt.a
 
 all: $(TARGETS)
-
-libgdt$(DLL_EXT): $(GDT_OBJ_FILES)
-	gcc -shared -o $@ $(GDT_OBJ_FILES)
 
 libgdt.a: $(GDT_OBJ_FILES)
 	@echo Archive $@

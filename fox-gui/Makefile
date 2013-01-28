@@ -29,13 +29,9 @@ GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
 
 LUADIR = $(GSH_BASE_DIR)/luajit2
 
-GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a
+GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a $(GSH_BASE_DIR)/gdt/libgdt.a
 
 INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
-
-ifeq ($(strip $(LIBGDT_STATIC)), yes)
-  GSL_SHELL_LIBS += $(GSH_BASE_DIR)/gdt/libgdt.a
-endif
 
 INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
 LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS) -lsupc++ -lm

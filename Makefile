@@ -74,11 +74,7 @@ SUBDIRS += agg-plot $(GUI_SUBDIR)
 LUAGSL_LIBS += agg-plot/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
-LUAGSL_LIBS += lua-gsl/libluagsl.a
-
-ifeq ($(strip $(LIBGDT_STATIC)), yes)
-  LUAGSL_LIBS += gdt/libgdt.a
-endif
+LUAGSL_LIBS += lua-gsl/libluagsl.a gdt/libgdt.a
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
