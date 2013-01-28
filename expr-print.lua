@@ -1,6 +1,6 @@
 local format, concat = string.format, table.concat
 
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2}
+local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['%'] = -1}
 
 local ex_print
 
