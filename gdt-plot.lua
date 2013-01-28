@@ -55,7 +55,17 @@ local function compare_list(a, b)
     return true
 end
 
+local function has_undef_values(ls)
+    local n = #ls
+    for k = 1, n do
+        if not ls[k] then return true end
+    end
+    return false
+end
+
 local function add_unique(ls, e)
+    if has_undef_values(e) then return 0 end
+
     local n = #ls
     for i = 1, n do
         if compare_list(ls[i], e) then return i end
@@ -120,11 +130,13 @@ local function rect_funcbin(t, jxs, jys, jes)
             local v = eval(jp.expr, eval_scope)
             if v then
                 local ie = add_unique(enums, e)
-                local ix = add_unique(labels, c)
-                local cc = vec2d_incr(count, ix, ie)
-                local v_accu = vec2d_get(val, ix, ie) or f0
-                vec2d_set(val, ix, ie, fy(v_accu, v, cc))
-                fini_table[ie] = fini
+                local ix = ie > 0 and add_unique(labels, c) or 0
+                if ix > 0 then
+                    local cc = vec2d_incr(count, ix, ie)
+                    local v_accu = vec2d_get(val, ix, ie) or f0
+                    vec2d_set(val, ix, ie, fy(v_accu, v, cc))
+                    fini_table[ie] = fini
+                end
             end
         end
     end
