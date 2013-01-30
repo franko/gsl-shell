@@ -695,6 +695,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
     const double text_label_size = get_default_font_size(text_axis_labels, scale);
     const double eps = 1.0e-3;
 
+    // used to store the bounding box of text labels
     opt_rect<double> bb;
     agg::rect_base<double> r;
 
@@ -762,6 +763,66 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
     }
 
     return label_size;
+}
+
+template <class RM>
+double plot<RM>::draw_xaxis_factors(units& u,
+                             const agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels,
+                             ptr_list<factor_labels>& f_labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln)
+{
+    const double ppad = double(axis_label_prop_space) / 1000.0;
+    const double text_label_size = get_default_font_size(text_axis_labels, scale);
+    const double eps = 1.0e-3;
+
+    const double y_spacing = 0.01;
+    double y_lab = - f_labels.size() * y_spacing;
+    const unsigned layers_number = f_labels.size();
+    for (unsigned layer = 0; layer < layers_number; layer++)
+    {
+        factor_labels* factor = f_labels[layer];
+        for (int k = 0; k < factor.labels_number(); k++)
+        {
+            double x_lab_a = factor.mark(k);
+            double x_lab_b = factor.mark(k+1);
+            mark.move_to(x_lab_a, y_lab);
+            mark.line_to(x_lab_a, y_lab + y_spacing);
+
+            const char* text = factor.label_text(k);
+            draw::text* label = new draw::text(text, text_label_size, 0.0, -1.0);
+
+            label->set_point((x_lab_a + x_lab_b) / 2.0, y_lab);
+            // label->angle(0.0);
+
+            labels.add(label);
+        }
+
+        double x_lab = factor.mark(layers_number);
+        mark.move_to(x_lab, y_lab);
+        mark.line_to(x_lab, y_lab + y_spacing);
+
+        y_lab += y_spacing;
+    }
+
+    // NB: IMPORTANT
+    // the following code should be factored in a separate routine
+    int jinf = u.begin(), jsup = u.end();
+    for (int j = jinf+1; j < jsup; j++)
+    {
+        double uq = u.mark_value(j);
+        double x = uq, y =  0.0;
+        user_mtx.transform(&x, &y);
+        double q = x;
+
+        if (q >= -eps && q <= 1.0 + eps)
+        {
+            ln.move_to(q, 0.0);
+            ln.line_to(q, 1.0);
+        }
+    }
+
+    return text_label_size * layers_number * 1.2;
 }
 
 static inline double approx_text_height(double text_size)
