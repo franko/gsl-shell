@@ -36,6 +36,7 @@
 #include "text.h"
 #include "categories.h"
 #include "sg_object.h"
+#include "factor_labels.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -239,7 +240,8 @@ public:
         m_drawing_queue(0), m_clip_flag(true),
         m_need_redraw(true), m_rect(),
         m_use_units(use_units), m_pad_units(false), m_title(),
-        m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis)
+        m_sync_mode(true), m_x_axis(x_axis), m_y_axis(y_axis),
+        m_xaxis_hol(0)
     {
         m_layers.add(&m_root_layer);
         compute_user_trans();
@@ -256,6 +258,8 @@ public:
             if (k > 0)
                 delete layer;
         }
+
+        delete m_xaxis_hol;
     };
 
     str& title() {
@@ -300,6 +304,14 @@ public:
     void update_units();
     void set_limits(const agg::rect_base<double>& r);
     void unset_limits();
+
+    ptr_list<factor_labels>* get_xaxis_hol() { return m_xaxis_hol; }
+
+    void set_xaxis_hol(ptr_list<factor_labels>* hol)
+    {
+        delete m_xaxis_hol;
+        m_xaxis_hol = hol;
+    }
 
     virtual void add(sg_object* vs, agg::rgba8& color, bool outline);
     virtual void before_draw() { }
@@ -421,6 +433,11 @@ protected:
                        ptr_list<draw::text>& labels, double scale,
                        agg::path_storage& mark, agg::path_storage& ln);
 
+    double draw_xaxis_factors(units& u, const agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels,
+                             ptr_list<factor_labels>* f_labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln);
+
     void draw_elements(canvas_type &canvas, const plot_layout& layout);
     void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m);
     void draw_axis(canvas_type& can, plot_layout& layout, const agg::rect_i* clip = 0);
@@ -486,6 +503,8 @@ private:
 
     axis m_x_axis, m_y_axis;
     plot* m_legend[4];
+
+    ptr_list<factor_labels>* m_xaxis_hol;
 };
 
 static double compute_scale(const agg::trans_affine& m)
@@ -695,6 +714,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
     const double text_label_size = get_default_font_size(text_axis_labels, scale);
     const double eps = 1.0e-3;
 
+    // used to store the bounding box of text labels
     opt_rect<double> bb;
     agg::rect_base<double> r;
 
@@ -762,6 +782,77 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
     }
 
     return label_size;
+}
+
+template <class RM>
+double plot<RM>::draw_xaxis_factors(units& u,
+                             const agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels,
+                             ptr_list<factor_labels>* f_labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln)
+{
+    const double text_label_size = get_default_font_size(text_axis_labels, scale);
+    const double eps = 1.0e-3;
+
+    const double y_spacing = 0.05;
+    const unsigned layers_number = f_labels->size();
+    double p_lab = - double(layers_number) * y_spacing;
+    for (unsigned layer = 0; layer < layers_number; layer++)
+    {
+        factor_labels* factor = f_labels->at(layer);
+        for (int k = 0; k < factor->labels_number(); k++)
+        {
+            double x_lab_a = factor->mark(k);
+            double x_lab_b = factor->mark(k+1);
+
+            double x_a = x_lab_a, y_a = 0.0;
+            user_mtx.transform(&x_a, &y_a);
+            double q_a = x_a;
+
+            double x_lab = (x_lab_a + x_lab_b) / 2, y_lab = 0.0;
+            user_mtx.transform(&x_lab, &y_lab);
+            double q_lab = x_lab;
+
+            mark.move_to(q_a, p_lab);
+            mark.line_to(q_a, p_lab + y_spacing);
+
+            const char* text = factor->label_text(k);
+            draw::text* label = new draw::text(text, text_label_size, 0.5, -0.2);
+
+            label->set_point(q_lab, p_lab);
+            label->angle(0.0);
+
+            labels.add(label);
+        }
+
+        double x_lab = factor->mark(layers_number);
+        double x_a = x_lab, y_a = 0.0;
+        user_mtx.transform(&x_a, &y_a);
+        double q_a = x_a;
+        mark.move_to(q_a, p_lab);
+        mark.line_to(q_a, p_lab + y_spacing);
+
+        p_lab += y_spacing;
+    }
+
+    // NB: IMPORTANT
+    // the following code should be factored in a separate routine
+    int jinf = u.begin(), jsup = u.end();
+    for (int j = jinf+1; j < jsup; j++)
+    {
+        double uq = u.mark_value(j);
+        double x = uq, y =  0.0;
+        user_mtx.transform(&x, &y);
+        double q = x;
+
+        if (q >= -eps && q <= 1.0 + eps)
+        {
+            ln.move_to(q, 0.0);
+            ln.line_to(q, 1.0);
+        }
+    }
+
+    return y_spacing * layers_number;
 }
 
 static inline double approx_text_height(double text_size)
@@ -936,11 +1027,16 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
 
     ptr_list<draw::text> labels;
 
-    double dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+    double dy_label = 0, pdy_label = 0;
+    if (this->m_xaxis_hol)
+        pdy_label = draw_xaxis_factors(m_ux, m_trans, labels, this->m_xaxis_hol, scale, mark, ln);
+    else
+        dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+
     double dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
 
     double ppad_left = plpad, ppad_right = plpad;
-    double ppad_bottom = plpad, ppad_top = plpad;
+    double ppad_bottom = plpad + pdy_label, ppad_top = plpad;
     double dx_left = dx_label, dx_right = 0.0;
     double dy_bottom = dy_label, dy_top = 0.0;
 
