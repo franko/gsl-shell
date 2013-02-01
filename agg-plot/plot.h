@@ -36,6 +36,7 @@
 #include "text.h"
 #include "categories.h"
 #include "sg_object.h"
+#include "factor_labels.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -421,6 +422,11 @@ protected:
                        ptr_list<draw::text>& labels, double scale,
                        agg::path_storage& mark, agg::path_storage& ln);
 
+    double draw_xaxis_factors(units& u, const agg::trans_affine& user_mtx,
+                             ptr_list<draw::text>& labels,
+                             ptr_list<factor_labels>& f_labels, double scale,
+                             agg::path_storage& mark, agg::path_storage& ln);
+
     void draw_elements(canvas_type &canvas, const plot_layout& layout);
     void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m);
     void draw_axis(canvas_type& can, plot_layout& layout, const agg::rect_i* clip = 0);
@@ -782,14 +788,14 @@ double plot<RM>::draw_xaxis_factors(units& u,
     for (unsigned layer = 0; layer < layers_number; layer++)
     {
         factor_labels* factor = f_labels[layer];
-        for (int k = 0; k < factor.labels_number(); k++)
+        for (int k = 0; k < factor->labels_number(); k++)
         {
-            double x_lab_a = factor.mark(k);
-            double x_lab_b = factor.mark(k+1);
+            double x_lab_a = factor->mark(k);
+            double x_lab_b = factor->mark(k+1);
             mark.move_to(x_lab_a, y_lab);
             mark.line_to(x_lab_a, y_lab + y_spacing);
 
-            const char* text = factor.label_text(k);
+            const char* text = factor->label_text(k);
             draw::text* label = new draw::text(text, text_label_size, 0.0, -1.0);
 
             label->set_point((x_lab_a + x_lab_b) / 2.0, y_lab);
@@ -798,7 +804,7 @@ double plot<RM>::draw_xaxis_factors(units& u,
             labels.add(label);
         }
 
-        double x_lab = factor.mark(layers_number);
+        double x_lab = factor->mark(layers_number);
         mark.move_to(x_lab, y_lab);
         mark.line_to(x_lab, y_lab + y_spacing);
 
@@ -997,7 +1003,12 @@ void plot<RM>::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::re
 
     ptr_list<draw::text> labels;
 
-    double dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+    double dy_label;
+    if (this->m_xaxis_use_hol)
+        dy_label = draw_xaxis_factors(m_ux, m_trans, labels, this->m_xaxis_hol, scale, mark, ln);
+    else
+        dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+    
     double dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
 
     double ppad_left = plpad, ppad_right = plpad;
