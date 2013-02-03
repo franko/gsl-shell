@@ -429,6 +429,10 @@ protected:
     void draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
     void draw_simple(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
 
+    void draw_grid(const axis_e dir, const units& u,
+                   const agg::trans_affine& user_mtx,
+                   agg::path_storage& ln);
+
     double draw_axis_m(axis_e dir, units& u, const agg::trans_affine& user_mtx,
                        ptr_list<draw::text>& labels, double scale,
                        agg::path_storage& mark, agg::path_storage& ln);
@@ -705,6 +709,31 @@ void plot<RM>::compute_user_trans()
 }
 
 template <class RM>
+void plot<RM>::draw_grid(const axis_e dir, const units& u,
+                         const agg::trans_affine& user_mtx,
+                         agg::path_storage& ln)
+{
+    const double eps = 1.0e-3;
+    const bool isx = (dir == x_axis);
+
+    int jinf = u.begin(), jsup = u.end();
+    for (int j = jinf+1; j < jsup; j++)
+    {
+        double uq = u.mark_value(j);
+        double x = (isx ? uq : 0), y = (isx ? 0.0 : uq);
+        user_mtx.transform(&x, &y);
+        const double q = (isx ? x : y);
+
+        if (q >= -eps && q <= 1.0 + eps)
+        {
+            ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
+            ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
+        }
+    }
+}
+
+
+template <class RM>
 double plot<RM>::draw_axis_m(axis_e dir, units& u,
                              const agg::trans_affine& user_mtx,
                              ptr_list<draw::text>& labels, double scale,
@@ -755,20 +784,7 @@ double plot<RM>::draw_axis_m(axis_e dir, units& u,
         mark.line_to(isx ? q : -0.01, isx ? -0.01 : q);
     }
 
-    int jinf = u.begin(), jsup = u.end();
-    for (int j = jinf+1; j < jsup; j++)
-    {
-        double uq = u.mark_value(j);
-        double x = (isx ? uq : 0), y = (isx ? 0.0 : uq);
-        user_mtx.transform(&x, &y);
-        double q = (isx ? x : y);
-
-        if (q >= -eps && q <= 1.0 + eps)
-        {
-            ln.move_to(isx ? q : 0.0, isx ? 0.0 : q);
-            ln.line_to(isx ? q : 1.0, isx ? 1.0 : q);
-        }
-    }
+    this->draw_grid(dir, u, user_mtx, ln);
 
     double label_size;
     if (bb.is_defined())
@@ -792,7 +808,6 @@ double plot<RM>::draw_xaxis_factors(units& u,
                              agg::path_storage& mark, agg::path_storage& ln)
 {
     const double text_label_size = get_default_font_size(text_axis_labels, scale);
-    const double eps = 1.0e-3;
 
     const double y_spacing = 0.05;
     const unsigned layers_number = f_labels->size();
@@ -835,22 +850,7 @@ double plot<RM>::draw_xaxis_factors(units& u,
         p_lab += y_spacing;
     }
 
-    // NB: IMPORTANT
-    // the following code should be factored in a separate routine
-    int jinf = u.begin(), jsup = u.end();
-    for (int j = jinf+1; j < jsup; j++)
-    {
-        double uq = u.mark_value(j);
-        double x = uq, y =  0.0;
-        user_mtx.transform(&x, &y);
-        double q = x;
-
-        if (q >= -eps && q <= 1.0 + eps)
-        {
-            ln.move_to(q, 0.0);
-            ln.line_to(q, 1.0);
-        }
-    }
+    this->draw_grid(x_axis, u, user_mtx, ln);
 
     return y_spacing * layers_number;
 }
