@@ -248,7 +248,7 @@ double plot::draw_xaxis_factors(units& u,
 {
     const double text_label_size = get_default_font_size(text_axis_labels, scale);
 
-    const double y_spacing = 0.05;
+    const double y_spacing = 0.075;
     const unsigned layers_number = f_labels->size();
     double p_lab = - double(layers_number) * y_spacing;
     for (unsigned layer = 0; layer < layers_number; layer++)
@@ -271,7 +271,7 @@ double plot::draw_xaxis_factors(units& u,
             mark.line_to(q_a, p_lab + y_spacing);
 
             const char* text = factor->label_text(k);
-            draw::text* label = new draw::text(text, text_label_size, 0.5, -0.2);
+            draw::text* label = new draw::text(text, text_label_size, 0.5, -0.4);
 
             label->set_point(q_lab, p_lab);
             label->angle(0.0);
