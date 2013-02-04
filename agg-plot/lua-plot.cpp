@@ -71,6 +71,7 @@ static int plot_set_categories (lua_State *L);
 static int plot_set_legend     (lua_State *L);
 static int plot_get_legend     (lua_State *L);
 static int plot_xaxis_hol_set  (lua_State *L);
+static int plot_xaxis_hol_clear(lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -111,6 +112,7 @@ static const struct luaL_Reg plot_methods[] = {
     {"set_legend",  plot_set_legend},
     {"get_legend",  plot_get_legend},
     {"set_multi_labels",     plot_xaxis_hol_set},
+    {"clear_multi_labels",   plot_xaxis_hol_clear},
     {NULL, NULL}
 };
 
@@ -506,7 +508,16 @@ int plot_xaxis_hol_set (lua_State *L)
     AGG_UNLOCK();
 
     plot_update_raw (L, p, 1);
+    return 0;
+}
 
+int plot_xaxis_hol_clear (lua_State *L)
+{
+    sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+    AGG_LOCK();
+    p->set_xaxis_hol(0);
+    AGG_UNLOCK();
+    plot_update_raw (L, p, 1);
     return 0;
 }
 
