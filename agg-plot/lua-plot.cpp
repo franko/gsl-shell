@@ -499,10 +499,13 @@ int plot_xaxis_hol_set (lua_State *L)
             break;
     }
 
+    AGG_LOCK();
     hol->add(fl);
-
     if (create_hol)
         p->set_xaxis_hol(hol);
+    AGG_UNLOCK();
+
+    plot_update_raw (L, p, 1);
 
     return 0;
 }
