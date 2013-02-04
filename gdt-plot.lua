@@ -208,13 +208,43 @@ end
 
 local rect, webcolor, path = graph.rect, graph.webcolor, graph.path
 
-local barplot = {}
+function gen_xlabels(plt, labels)
+    local lab0 = labels[1]
+    local n = #lab0
+    local lspecs, accu = {}, {}
+    for k = 1, n do lspecs[k], accu[k] = {}, {1, lab0[k]} end
+    for j = 2, #labels do
+        local lab = labels[j]
+        for k = 1, n do
+            local f = lab[k]
+            local accu_k = accu[k]
+            if f ~= accu_k[2] then
+                local ls = lspecs[k]
+                ls[#ls+1] = accu_k[1] - 1
+                ls[#ls+1] = accu_k[2]
+                accu_k[1] = j
+                accu_k[2] = f
+            end
+        end
+    end
+
+    for k = 1, n do
+        local ls = lspecs[k]
+        local accu_k = accu[k]
+        ls[#ls+1] = accu_k[1] - 1
+        ls[#ls+1] = accu_k[2]
+        ls[#ls+1] = #labels
+
+        plt:set_multi_labels(1, ls)
+    end
+end
+
+local barplot = {xlabels = gen_xlabels}
 
 function barplot.create(labels, enums, val)
     local plt = graph.plot()
     local pad = 0.1
     local dx = (1 - 2*pad) / #enums
-    local cat = {}
     for p, lab in ipairs(labels) do
         for q, _ in ipairs(enums) do
             local v = val[p][q]
@@ -224,10 +254,8 @@ function barplot.create(labels, enums, val)
                 plt:add(r, webcolor(q))
             end
         end
-        cat[2*p-1] = p - 0.5
-        cat[2*p] = collate(lab)
     end
-    return plt, cat
+    return plt
 end
 
 function barplot.legend(plt, labels, enums)
@@ -238,7 +266,7 @@ function barplot.legend(plt, labels, enums)
     end
 end
 
-local lineplot = {}
+local lineplot = {xlabels = gen_xlabels}
 
 local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
@@ -280,13 +308,7 @@ function lineplot.create(labels, enums, val)
         plt:add(ln, webcolor(q), {{'marker', size=8, mark=q}})
     end
 
-    local cat = {}
-    for p, lab in ipairs(labels) do
-        cat[2*p-1] = p - 0.5
-        cat[2*p] = collate(lab)
-    end
-
-    return plt, cat
+    return plt
 end
 
 function lineplot.legend(plt, labels, enums)
@@ -355,11 +377,8 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
 
-    local plt, cat = plotter.create(labels, enums, val)
-
-    plt:set_categories('x', cat)
-    plt.xlab_angle = math.pi/4
-
+    local plt = plotter.create(labels, enums, val)
+    plotter.xlabels(plt, labels)
     plotter.legend(plt, labels, enums)
 
     if show_plot then plt:show() end
