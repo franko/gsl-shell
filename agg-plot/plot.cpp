@@ -279,7 +279,7 @@ double plot::draw_xaxis_factors(units& u,
             labels.add(label);
         }
 
-        double x_lab = factor->mark(layers_number);
+        double x_lab = factor->mark(factor->labels_number());
         double x_a = x_lab, y_a = 0.0;
         user_mtx.transform(&x_a, &y_a);
         double q_a = x_a;
