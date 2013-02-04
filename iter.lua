@@ -20,6 +20,7 @@
 
 local cat = table.concat
 local fmt = string.format
+local tostring = tostring
 
 do
    local ffi = require('ffi')
@@ -61,6 +62,13 @@ end
 
 local max_depth = 3
 
+local function cdata_tos(t, deep)
+  local tp = gsl_type and gsl_type(t) or 'cdata'
+  if tp ~= 'cdata' and t.show then
+    return (deep and t:show() or fmt("<%s: %p>", tp, t))
+  end
+end
+
 tos = function (t, depth)
    local tp = type(t)
    if tp == 'table' then
@@ -92,9 +100,9 @@ tos = function (t, depth)
          end
       end
    elseif tp == 'cdata' then
-      local tpext = gsl_type and gsl_type(t) or tp
-      if tpext ~= 'cdata' and t.show then
-         return (depth == 0 and t:show() or fmt("<%s: %p>", tpext, t))
+      local ok, s = pcall(cdata_tos, t, depth == 0)
+      if ok and type(s) == 'string' then
+        return s
       end
    end
    return tostring(t)

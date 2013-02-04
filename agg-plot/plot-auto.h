@@ -27,15 +27,13 @@
 #include "agg_array.h"
 #include "agg_basics.h"
 
-template<class resource_manager>
-class plot_auto : public plot<resource_manager> {
-    typedef typename plot<resource_manager>::item item;
-    typedef typename plot<resource_manager>::item_list item_list;
+class plot_auto : public plot {
+    typedef typename plot::item item;
+    typedef typename plot::item_list item_list;
 
 public:
     plot_auto() :
-        plot<resource_manager>(true),
-        m_bbox_updated(true), m_enlarged_layer(false)
+        plot(true), m_bbox_updated(true), m_enlarged_layer(false)
     { };
 
     virtual ~plot_auto() { };
@@ -43,7 +41,7 @@ public:
     virtual void add(sg_object* vs, agg::rgba8& color, bool outline);
     virtual void before_draw()
     {
-        plot<resource_manager>::before_draw();
+        plot::before_draw();
         if (!m_bbox_updated)
             check_bounding_box();
     };
@@ -64,127 +62,5 @@ private:
     bool m_bbox_updated;
     bool m_enlarged_layer;
 };
-
-template <class RM>
-void plot_auto<RM>::add(sg_object* vs, agg::rgba8& color, bool outline)
-{
-    item d(vs, color, outline);
-
-    if (!this->fit_inside(vs))
-    {
-        this->m_bbox_updated = false;
-        this->m_need_redraw = true;
-        this->m_enlarged_layer = true;
-    }
-
-    list<item> *nn = new list<item>(d);
-    this->m_drawing_queue = list<item>::push_back(this->m_drawing_queue, nn);
-
-    RM::acquire(vs);
-}
-
-template<class RM>
-void plot_auto<RM>::check_bounding_box()
-{
-    this->calc_bounding_box();
-    this->update_units();
-    this->m_bbox_updated = true;
-}
-
-template<class RM>
-void plot_auto<RM>::calc_layer_bounding_box(plot_auto<RM>::item_list* layer,
-        opt_rect<double>& rect)
-{
-    for (unsigned j = 0; j < layer->size(); j++)
-    {
-        item& d = (*layer)[j];
-        agg::rect_base<double> r;
-
-        d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-        rect.add<rect_union>(r);
-    }
-}
-
-template<class RM>
-void plot_auto<RM>::calc_bounding_box()
-{
-    opt_rect<double> box;
-
-    unsigned n = this->nb_layers();
-    for (unsigned j = 0; j < n-1; j++)
-    {
-        box.add<rect_union>(this->get_layer(j)->bounding_box());
-    }
-
-    calc_layer_bounding_box(this->get_layer(n-1), box);
-    for (list<item> *t = this->m_drawing_queue; t; t = t->next())
-    {
-        const item& d = t->content();
-        agg::rect_base<double> r;
-        d.vs->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-        box.add<rect_union>(r);
-    }
-
-    this->m_rect = box;
-}
-
-template<class RM>
-bool plot_auto<RM>::fit_inside(sg_object* obj) const
-{
-    if (!this->m_bbox_updated || !this->m_rect.is_defined())
-        return false;
-
-    agg::rect_base<double> r;
-    obj->bounding_box(&r.x1, &r.y1, &r.x2, &r.y2);
-
-    const agg::rect_base<double>& bb = this->m_rect.rect();
-    return bb.hit_test(r.x1, r.y1) && bb.hit_test(r.x2, r.y2);
-}
-
-template<class RM>
-void plot_auto<RM>::set_opt_limits(const opt_rect<double>& r)
-{
-    if (r.is_defined())
-        this->set_limits(r.rect());
-    else
-        this->unset_limits();
-}
-
-template<class RM>
-bool plot_auto<RM>::push_layer()
-{
-    bool retval = this->plot<RM>::push_layer();
-    if (this->m_rect.is_defined())
-        this->parent_layer()->set_bounding_box(this->m_rect.rect());
-    this->m_bbox_updated = true;
-    this->m_enlarged_layer = false;
-    return retval;
-}
-
-template<class RM>
-bool plot_auto<RM>::pop_layer()
-{
-    bool retval = this->plot<RM>::pop_layer();
-    if (this->m_enlarged_layer)
-        this->m_bbox_updated = false;
-    this->m_enlarged_layer = true;
-    return retval;
-}
-
-template<class RM>
-void plot_auto<RM>::clear_current_layer()
-{
-    this->plot<RM>::clear_current_layer();
-    if (this->m_enlarged_layer)
-    {
-        item_list* parent = this->parent_layer();
-        if (parent)
-            set_opt_limits(parent->bounding_box());
-        else
-            this->unset_limits();
-    }
-    this->m_bbox_updated = true;
-    this->m_enlarged_layer = false;
-}
 
 #endif

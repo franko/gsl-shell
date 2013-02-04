@@ -4,6 +4,7 @@
 *.dll
 luajit2/lib/vmdef.lua
 *~
+*.sublime*
 gsl-shell
 gsl-shell.exe
 .deps

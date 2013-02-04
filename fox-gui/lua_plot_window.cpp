@@ -40,7 +40,7 @@ static const struct luaL_Reg fox_window_methods[] =
 
 __END_DECLS
 
-typedef plot<manage_owner> sg_plot;
+typedef plot sg_plot;
 
 class window_mutex {
 public:

@@ -90,7 +90,6 @@ public:
 
         val = m_units.mark_value(m_index);
         text = m_buffer;
-        text = m_buffer;
         m_index ++;
         return true;
     }
