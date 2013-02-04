@@ -110,7 +110,7 @@ static const struct luaL_Reg plot_methods[] = {
     {"set_categories", plot_set_categories},
     {"set_legend",  plot_set_legend},
     {"get_legend",  plot_get_legend},
-    {"set_hol",     plot_xaxis_hol_set},
+    {"set_multi_labels",     plot_xaxis_hol_set},
     {NULL, NULL}
 };
 
