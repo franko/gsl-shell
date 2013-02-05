@@ -47,6 +47,46 @@ local stat_lookup = {
     count   = {f = function(accu, x, n) return n end},
 }
 
+local function quicksort_mirror(t, f, mirror)
+
+    local function quicksort(start, endi)
+        if start >= endi then return end
+        local pivot = start
+        for i = start + 1, endi do
+            if f(t[i], t[pivot]) then
+                local temp = t[pivot + 1]
+                local temp_m = mirror[pivot + 1]
+                t[pivot + 1] = t[pivot]
+                mirror[pivot + 1] = mirror[pivot]
+                if(i == pivot + 1) then
+                    t[pivot] = temp
+                    mirror[pivot] = temp_m
+                else
+                    t[pivot] = t[i]
+                    t[i] = temp
+                    mirror[pivot] = mirror[i]
+                    mirror[i] = temp_m
+                end
+                pivot = pivot + 1
+            end
+        end
+
+        quicksort(start, pivot - 1)
+        quicksort(pivot + 1, endi)
+    end
+
+    quicksort(1, #t)
+end
+
+local function sort_labels_func(lab_a, lab_b)
+    local n = #lab_a
+    for k = 1, n do
+        local a, b = lab_a[k], lab_b[k]
+        if a ~= b then return a < b end
+    end
+    return false
+end
+
 local function compare_list(a, b)
     local n = #a
     for k = 1, n do
@@ -151,6 +191,8 @@ local function rect_funcbin(t, jxs, jys, jes)
             end
         end
     end
+
+    quicksort_mirror(labels, sort_labels_func, val)
 
     return labels, enums, val
 end
