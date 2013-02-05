@@ -145,6 +145,17 @@ void plot::compute_user_trans()
         r = m_rect.is_defined() ? m_rect.rect() : agg::rect_base<double>(0.0, 0.0, 1.0, 1.0);
     }
 
+    if (m_xaxis_hol)
+    {
+        for (unsigned k = 0; k < m_xaxis_hol->size(); k++)
+        {
+            factor_labels* f = m_xaxis_hol->at(k);
+            double x1 = f->mark(0), x2 = f->mark(f->labels_number());
+            if (k == 0 || x1 < r.x1) r.x1 = x1;
+            if (k == 0 || x2 > r.x2) r.x2 = x2;
+        }
+    }
+
     double dx = r.x2 - r.x1, dy = r.y2 - r.y1;
     double fx = (dx == 0 ? 1.0 : 1/dx), fy = (dy == 0 ? 1.0 : 1/dy);
     this->m_trans = agg::trans_affine(fx, 0.0, 0.0, fy, -r.x1 * fx, -r.y1 * fy);
