@@ -264,6 +264,39 @@ local function eval_lm_matrix(t, expr_list, y_expr)
     return X
 end
 
+local check = require 'check'
+local mon = require 'monomial'
+
+local function monomial_to_expr(m, context)
+    local coeff = m[1]
+    local prod
+    for k, sym, pow in mon.terms(m) do
+        local base = context[sym]
+        local t = (pow == 1 and base or {operator='^', base, pow})
+        prod = (prod and {operator='*', t, prod} or t)
+    end
+    return coeff == 1 and (prod or 1) or (prod and {operator='*', coeff, prod} or coeff)
+end
+
+local function expr_to_monomial(expr, context)
+    if type(expr) == 'number' then
+        return {expr}
+    elseif expr.operator == '*' then
+        local a = expr_to_monomial(expr[1], context)
+        local b = expr_to_monomial(expr[2], context)
+        mon.mult(a, b)
+        return a
+    elseif expr.operator == '^' and check.is_integer(expr[2]) then
+        local base = expr_to_monomial(expr[1], context)
+        mon.power(base, expr[2])
+        return base
+    else
+        local s = expr_print.expr(expr)
+        context[s] = expr
+        return mon.symbol(s)
+    end
+end
+
 local function build_lm_model(t, expr_list, y_expr)
     local N, M = t:dim()
 
@@ -369,7 +402,7 @@ end
 
 local function fit_compute_Rsquare(fit, t)
     local n, p = fit.n, fit.p
-    local X, y = eval_lm_matrix(t, fit.schema.x, fit.schema.y.scalar)
+    local X, y = eval_lm_matrix(t, fit.x_exprs, fit.schema.y.scalar)
     local y_pred = X * fit.c
 
     local y_mean = 0
@@ -405,13 +438,43 @@ local function fit_add_predicted(t, param_name, X, fit, index_map)
     end
 end
 
+local function monomial_exists(ls, e)
+    local n = #ls
+    for k = 1, n do
+        if mon.equal(ls[k], e) then return true end
+    end
+    return false
+end
+
+local function expand_exprs(expr_list)
+    local lsm, lsexp, j = {}, {}, 1
+    for k, e in ipairs(expr_list) do
+        local context = {}
+        local m = expr_to_monomial(e.scalar, context)
+        local ls = mon.combine(m)
+        for _, mexp in ipairs(ls) do
+            if not monomial_exists(lsm, mexp) then
+                lsm[j], j = mexp, j+1
+                local eexp = monomial_to_expr(mexp, context)
+                lsexp[#lsexp+1] = {scalar= eexp}
+            end
+        end
+        if e.factor then lsexp[#lsexp+1] = e end
+    end
+
+    return lsexp
+end
+
 local function lm(t, model_formula, options)
     local actions = lm_actions_gen(t)
     local l = mini.lexer(model_formula)
     local schema = mini.schema(l, actions)
 
-    local names = build_lm_model(t, schema.x, schema.y.scalar)
-    local X, y, index_map = eval_lm_matrix(t, schema.x, schema.y.scalar, true)
+    local expand = not options or (options.expand == nil or options.expand)
+    local x_exprs = expand and expand_exprs(schema.x) or schema.x
+
+    local names = build_lm_model(t, x_exprs, schema.y.scalar)
+    local X, y, index_map = eval_lm_matrix(t, x_exprs, schema.y.scalar, true)
     local fit = compute_fit(X, y, names)
 
     if options and options.predict then
@@ -420,13 +483,14 @@ local function lm(t, model_formula, options)
     end
 
     fit.schema = schema
+    fit.x_exprs = x_exprs
 
     function fit.model(t_alt)
-        return eval_lm_matrix(t_alt, schema.x)
+        return eval_lm_matrix(t_alt, x_exprs)
     end
 
     function fit.predict(t_alt)
-        local xx = eval_lm_matrix(t_alt, schema.x)
+        local xx = eval_lm_matrix(t_alt, x_exprs)
         return xx * fit.c
     end
 
@@ -445,7 +509,7 @@ local function lm(t, model_formula, options)
             eval_table:set(1, k, tn[name])
         end
         local coeff = fit.c
-        local sX = eval_lm_matrix(eval_table, schema.x)
+        local sX = eval_lm_matrix(eval_table, x_exprs)
         local sy = 0
         for k = 0, #coeff - 1 do
             sy = sy + sX.data[k] * coeff.data[k]
