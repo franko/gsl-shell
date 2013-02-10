@@ -276,14 +276,10 @@ marker_new (lua_State *L)
         sym_name = luaL_optstring(L, 3, "");
     }
 
-    bool stroke;
-    sg_object* sym = new_marker_symbol_raw(sym_name, stroke);
+    sg_object* sym = new_marker_symbol_raw(sym_name);
     draw::marker* marker = new draw::marker(x, y, sym, size);
 
-    if (stroke)
-        new(L, GS_DRAW_MARKER) trans::stroke(marker);
-    else
-        new(L, GS_DRAW_MARKER) sg_object_ref<manage_owner>(marker);
+    new(L, GS_DRAW_MARKER) sg_object_ref<manage_owner>(marker);
 
     return 1;
 }

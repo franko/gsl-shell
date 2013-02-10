@@ -17,11 +17,11 @@ struct path_code {
 
 struct symbol_reg {
     const char *name;
-    sg_object *(*builder)(bool&);
+    sg_object *(*builder)();
     const path_code* pcode;
 };
 
-static sg_object *build_circle(bool& stroke);
+static sg_object *build_circle();
 static sg_object *build_path(const path_code* pcode);
 
 /*
@@ -138,11 +138,10 @@ static struct symbol_reg builder_table[NB_SYMBOLS+1] = {
 };
 
 sg_object *
-build_circle(bool& stroke)
+build_circle()
 {
     draw::ellipse* c = new draw::ellipse();
     c->self().init(0.0, 0.0, 0.5, 0.5);
-    stroke = false;
     return c;
 }
 
@@ -178,7 +177,7 @@ build_path(const path_code *pcode)
 }
 
 sg_object*
-new_marker_symbol_raw(const char *req_name, bool& stroke)
+new_marker_symbol_raw(const char *req_name)
 {
     struct symbol_reg *reg;
     for (reg = builder_table; reg->name != NULL; reg++)
@@ -186,29 +185,20 @@ new_marker_symbol_raw(const char *req_name, bool& stroke)
         if (strcmp (reg->name, req_name) == 0)
         {
             if (reg->builder)
-                return reg->builder(stroke);
+                return reg->builder();
             else
-            {
-                stroke = false;
                 return build_path(reg->pcode);
-            }
         }
     }
 
-    return builder_table[0].builder(stroke);
+    return builder_table[0].builder();
 }
 
 sg_object*
 new_marker_symbol (const char *req_name)
 {
-    bool stroke;
-    sg_object* s = new_marker_symbol_raw(req_name, stroke);
-
-    trans::scaling *ss = new trans::scaling(s);
-    sg_object* sf = ss;
-    if (stroke)
-        sf = new trans::stroke(sf);
-    return sf;
+    sg_object* s = new_marker_symbol_raw(req_name);
+    return new trans::scaling(s);
 }
 
 sg_object*
