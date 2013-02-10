@@ -225,8 +225,12 @@ graph.color = {
 }
 
 local bcolors = {'red', 'blue', 'green', 'magenta', 'cyan', 'yellow'}
--- colors from a popular spreadsheet application
-local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38}
+-- colors from a popular spreadsheet application + random colors from
+-- the web
+local wcolors = {0x4f81bd, 0xc0504d, 0x9bbb59, 0x695185, 0x3c8da3, 0xcc7b38,
+                 0x58c3bb, 0xf29a86, 0xbd87bb, 0xc3a492, 0xf0d845,
+                 0x2d7ac0, 0xfce4ca, 0x8b9068, 0xc0b99d,
+                 0xD9CCB9, 0xDF7782, 0xE95D22, 0x017890, 0x613D2D}
 
 local hue_map = {
    {231, 0,   0  },
