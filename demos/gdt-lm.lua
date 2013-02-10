@@ -30,10 +30,10 @@ local function lm_demo()
 	p.xtitle = "time, s"
 	p.ytitle = "thickness, mm"
 
-	local fit = gdt.lm(t, "y ~ 1, x, tool")
-	print(fit.coeff)
+	local fit = gdt.lm(t, "y ~ x, tool")
+	fit:summary()
 
-	local X, c = fit.model(t), fit.c
+	local X, c = fit:model(t), fit.c
 	local _, FN = X:dim()
 	for k = 1, P do
 		local XA = X:slice((k-1)*N + 1, 1, N, FN)

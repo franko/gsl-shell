@@ -400,9 +400,8 @@ local function compute_fit(X, y, names)
     return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = #c}
 end
 
-local function fit_compute_Rsquare(fit, t)
+local function fit_compute_Rsquare(fit, X, y)
     local n, p = fit.n, fit.p
-    local X, y = eval_lm_matrix(t, fit.x_exprs, fit.schema.y.scalar)
     local y_pred = X * fit.c
 
     local y_mean = 0
@@ -465,6 +464,40 @@ local function expand_exprs(expr_list)
     return lsexp
 end
 
+local FIT = {}
+
+function FIT.model(fit, t_alt)
+    return eval_lm_matrix(t_alt, fit.x_exprs)
+end
+
+function FIT.predict(fit, t_alt)
+    local X = eval_lm_matrix(t_alt, fit.x_exprs)
+    return X * fit.c
+end
+
+function FIT.summary(fit)
+    print(fit.coeff)
+    print()
+    print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit.SE, fit.R2, fit.R2_adj))
+end
+
+local FIT_MT = {__index = FIT}
+
+-- used to eval a model for a single entry
+function FIT.eval(fit, tn)
+    local eval_table = fit.eval_table
+    for k, name in ipairs(fit.headers) do
+        eval_table:set(1, k, tn[name])
+    end
+    local coeff = fit.c
+    local sX = eval_lm_matrix(eval_table, fit.x_exprs)
+    local sy = 0
+    for k = 0, #coeff - 1 do
+        sy = sy + sX.data[k] * coeff.data[k]
+    end
+    return sy
+end
+
 local function lm(t, model_formula, options)
     local actions = lm_actions_gen(t)
     local l = mini.lexer(model_formula)
@@ -474,7 +507,7 @@ local function lm(t, model_formula, options)
     local x_exprs = expand and expand_exprs(schema.x) or schema.x
 
     local names = build_lm_model(t, x_exprs, schema.y.scalar)
-    local X, y, index_map = eval_lm_matrix(t, x_exprs, schema.y.scalar, true)
+    local X, y, index_map = eval_lm_matrix(t, x_exprs, schema.y.scalar)
     local fit = compute_fit(X, y, names)
 
     if options and options.predict then
@@ -484,40 +517,11 @@ local function lm(t, model_formula, options)
 
     fit.schema = schema
     fit.x_exprs = x_exprs
+    fit.SE, fit.R2, fit.R2_adj = fit_compute_Rsquare(fit, X, y)
+    fit.eval_table = gdt.alloc(1, t:headers())
+    fit.headers = t:headers()
 
-    function fit.model(t_alt)
-        return eval_lm_matrix(t_alt, x_exprs)
-    end
-
-    function fit.predict(t_alt)
-        local xx = eval_lm_matrix(t_alt, x_exprs)
-        return xx * fit.c
-    end
-
-    function fit.summary()
-        print(fit.coeff)
-        print()
-        print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit_compute_Rsquare(fit, t)))
-    end
-
-    -- used to eval a model for a single entry
-    local eval_table = gdt.alloc(1, t:headers())
-    function fit.eval(tn)
-        local N, M = t:dim()
-        for k = 1, M do
-            local name = t:get_header(k)
-            eval_table:set(1, k, tn[name])
-        end
-        local coeff = fit.c
-        local sX = eval_lm_matrix(eval_table, x_exprs)
-        local sy = 0
-        for k = 0, #coeff - 1 do
-            sy = sy + sX.data[k] * coeff.data[k]
-        end
-        return sy
-    end
-
-    return fit
+    return setmetatable(fit, FIT_MT)
 end
 
 gdt.lm = lm
