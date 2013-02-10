@@ -19,8 +19,9 @@ static sg_object *build_triangle(bool& stroke);
 static sg_object *build_diamond(bool& stroke);
 static sg_object *build_plus(bool& stroke);
 static sg_object *build_cross(bool& stroke);
+static sg_object *build_asterisk(bool& stroke);
 
-const unsigned NB_SYMBOLS = 6;
+const unsigned NB_SYMBOLS = 7;
 static struct symbol_reg builder_table[NB_SYMBOLS+1] = {
     {"circle",   build_circle},
     {"square",   build_square},
@@ -28,6 +29,7 @@ static struct symbol_reg builder_table[NB_SYMBOLS+1] = {
     {"diamond",  build_diamond},
     {"plus",     build_plus},
     {"cross",    build_cross},
+    {"asterisk", build_asterisk},
     {NULL, NULL}
 };
 
@@ -84,6 +86,46 @@ build_diamond(bool& stroke)
     square.line_to( 0.5,  0.0);
     square.line_to( 0.0, -0.5);
     square.close_polygon();
+
+    stroke = false;
+    return p;
+}
+
+sg_object *
+build_asterisk(bool& stroke)
+{
+    draw::path* p = new draw::path();
+    const double lw = 0.16;
+    const double x[4] = {-lw/2, lw/2, lw/2, -lw/2};
+    const double y[4] = {0.5, 0.5, -0.5, -0.5};
+
+    agg::path_storage& ps = p->self();
+
+    ps.move_to(-lw/2,  0.5);
+    ps.line_to( lw/2,  0.5);
+    ps.line_to( lw/2, -0.5);
+    ps.line_to(-lw/2, -0.5);
+    ps.close_polygon();
+
+    {
+        const double a = M_PI / 3;
+        const double s = sin(a), c = cos(a);
+        ps.move_to(x[0] * c - y[0] * s, y[0] * c + x[0] * s);
+        ps.line_to(x[1] * c - y[1] * s, y[1] * c + x[1] * s);
+        ps.line_to(x[2] * c - y[2] * s, y[2] * c + x[2] * s);
+        ps.line_to(x[3] * c - y[3] * s, y[3] * c + x[3] * s);
+        ps.close_polygon();
+    }
+
+    {
+        const double a = - M_PI / 3;
+        const double s = sin(a), c = cos(a);
+        ps.move_to(x[0] * c - y[0] * s, y[0] * c + x[0] * s);
+        ps.line_to(x[1] * c - y[1] * s, y[1] * c + x[1] * s);
+        ps.line_to(x[2] * c - y[2] * s, y[2] * c + x[2] * s);
+        ps.line_to(x[3] * c - y[3] * s, y[3] * c + x[3] * s);
+        ps.close_polygon();
+    }
 
     stroke = false;
     return p;
