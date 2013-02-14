@@ -3,7 +3,7 @@ local gdt = require 'gdt'
 local csv = require 'csv'
 
 local max = math.max
-local match = string.match
+local match, gsub = string.match, string.gsub
 
 local function is_string_only(ls)
 	for _, s in ipairs(ls) do
@@ -72,12 +72,28 @@ local function gdt_parse(source_init)
 	return t
 end
 
-local function source_csv(filename)
+local function trim_spaces(line)
+	for j = 1, #line do
+		if type(line[j]) == 'string' then
+			local a = gsub(line[j], "^%s+", "")
+			line[j] = gsub(a, "%s+$", "")
+		end
+	end
+end
+
+local function source_csv(filename, options)
+	local strip_spaces = true
+	if options and options.strip_spaces then strip_spaces = options.strip_spaces end
 	local f
 	local it, s, i
 	local source = function()
 		local line = it(s, i)
-		if line then return csv.line(line) else f:close() end
+		if line then
+			if strip_spaces then trim_spaces(line) end
+			return csv.line(line)
+		else
+			f:close()
+		end
 	end
 	return function()
 		f = assert(io.open(filename, 'r'), 'cannot open file: ' .. filename)
@@ -97,5 +113,5 @@ local function source_def(def)
 	return function() i = 0; return source end
 end
 
-gdt.read_csv = function(filename) return gdt_parse(source_csv(filename)) end
+gdt.read_csv = function(filename, options) return gdt_parse(source_csv(filename, options)) end
 gdt.def = function(def) return gdt_parse(source_def(def)) end
