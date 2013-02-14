@@ -110,8 +110,8 @@ end
 local function gdt_table_get_column_index(t, name)
     local r, c = t:dim()
     for j = 1, c do
-        local s = ffi.string(cgdt.gdt_table_get_header(t, j - 1))
-        if s == nil then s = 'V' .. j end
+        local sptr = cgdt.gdt_table_get_header(t, j - 1)
+        local s = (sptr == nil and 'V' .. j or ffi.string(sptr))
         if s == name then return j end
     end
 end
