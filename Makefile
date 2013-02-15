@@ -30,20 +30,6 @@ GSL_SHELL = gsl-shell$(EXE_EXT)
 GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
 LUA_CFLAGS = -I$(LUADIR)/src
 
-ifeq ($(HOST_SYS),Windows)
-  INCLUDES += -I/usr/include
-  LDFLAGS += -Wl,--enable-auto-import
-  LIBS += -L/usr/lib -lsupc++
-else
-  ifeq ($(HOST_SYS),Darwin)
-    LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
-    LIBS += -ldl -lreadline -lncurses
-  else
-    LDFLAGS += -Wl,-E
-    LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
-  endif
-endif
-
 SUBDIRS = $(LUADIR) lua-gsl
 
 C_SRC_FILES =

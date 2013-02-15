@@ -16,13 +16,28 @@ CP_REL = cp --parents
 CC = gcc
 CXX = g++
 
-ifeq ($(HOST_SYS),Darwin)
-  LINK_EXE = $(CXX) $(LDFLAGS)
-  # Use rsync because the --parents option to cp doesn't exist in
-  # Mac OS X
-  CP_REL = rsync -R
+LINK_EXE = $(CC) $(LDFLAGS)
+
+ifeq ($(HOST_SYS),Windows)
+  INCLUDES += -I/usr/include
+  LDFLAGS += -Wl,--enable-auto-import
+  LIBS += -L/usr/lib
 else
-  LINK_EXE = $(CC) $(LDFLAGS)
+  ifeq ($(HOST_SYS),Darwin)
+    LINK_EXE = $(CXX) $(LDFLAGS)
+    # Use rsync because the --parents option to cp doesn't exist in
+    # Mac OS X
+    CP_REL = rsync -R
+    LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
+    ifeq ($(strip $(USE_READLINE)), yes)
+      LIBS += -ldl -lreadline -lncurses
+    endif
+  else
+    LDFLAGS += -Wl,-E
+    ifeq ($(strip $(USE_READLINE)), yes)
+      LIBS += -ldl -lreadline -lhistory -lncurses
+    endif
+  endif
 endif
 
 ifeq ($(strip $(LUA_BUILD)), yes)
@@ -43,6 +58,7 @@ else
 endif
 
 DEFS += -D_REENTRANT
+LIBS += -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
