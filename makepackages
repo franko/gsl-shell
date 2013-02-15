@@ -64,6 +64,9 @@ else
   FREETYPE_INCLUDES = -I/usr/include/freetype2
   FREETYPE_LIBS = -lfreetype
 
+  RL_INCLUDES = -I/usr/include/readline
+  RL_LIBS = -ldl -lreadline -lhistory -lncurses
+
   PTHREADS_LIBS = -lpthread
   endif
 endif

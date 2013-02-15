@@ -29,14 +29,8 @@ else
     # Mac OS X
     CP_REL = rsync -R
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
-    ifeq ($(strip $(USE_READLINE)), yes)
-      LIBS += -ldl -lreadline -lncurses
-    endif
   else
     LDFLAGS += -Wl,-E
-    ifeq ($(strip $(USE_READLINE)), yes)
-      LIBS += -ldl -lreadline -lhistory -lncurses
-    endif
   endif
 endif
 

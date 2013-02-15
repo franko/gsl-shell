@@ -35,6 +35,8 @@ SUBDIRS = $(LUADIR) lua-gsl
 C_SRC_FILES =
 
 ifeq ($(strip $(USE_READLINE)),yes)
+  INCLUDES += $(RL_INCLUDES)
+  LIBS += $(RL_LIBS)
   C_SRC_FILES += completion.c
 endif
 
