@@ -2,11 +2,15 @@
 local gsl = require 'gsl'
 local ffi = require 'ffi'
 
-local format = string.format
+local format, tonumber = string.format, tonumber
 
 local M = {}
 
 local rng_type = ffi.typeof('gsl_rng')
+
+local function rng_getint(r, seed)
+   return tonumber(gsl.gsl_rng_uniform_int(r, seed))
+end
 
 local rng_mt = {
    __tostring = function(s)
@@ -14,7 +18,7 @@ local rng_mt = {
                 end,
 
    __index = {
-      getint = gsl.gsl_rng_uniform_int,
+      getint = rng_getint,
       get    = gsl.gsl_rng_uniform,
       set    = gsl.gsl_rng_set,
    },
