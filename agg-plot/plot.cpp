@@ -269,19 +269,25 @@ double plot::draw_xaxis_factors(units& u,
     {
         factor_labels* factor = f_labels->at(layer);
 
+        if (factor->labels_number() > 256) continue;
+
         agg::pod_bvector<draw::text*> tlabels;
         double hmax = 0.0;
-        for (int k = 0; k < factor->labels_number(); k++)
+        bool draw_labels =  (factor->labels_number() < 32);
+        if (draw_labels)
         {
-            const char* text = factor->label_text(k);
-            draw::text* label = new draw::text(text, text_label_size, 0.5, 0.5);
-            label->angle(lab_angle);
+            for (int k = 0; k < factor->labels_number(); k++)
+            {
+                const char* text = factor->label_text(k);
+                draw::text* label = new draw::text(text, text_label_size, 0.5, 0.5);
+                label->angle(lab_angle);
 
-            double rx1, ry1, rx2, ry2;
-            agg::bounding_rect_single(*label, 0, &rx1, &ry1, &rx2, &ry2);
-            double rh = ry2 - ry1;
-            if (rh > hmax) hmax = rh;
-            tlabels.add(label);
+                double rx1, ry1, rx2, ry2;
+                agg::bounding_rect_single(*label, 0, &rx1, &ry1, &rx2, &ry2);
+                double rh = ry2 - ry1;
+                if (rh > hmax) hmax = rh;
+                tlabels.add(label);
+            }
         }
 
         double p_lab_inf = p_lab - (y_spac_top + y_spac_bot + hmax);
@@ -302,10 +308,12 @@ double plot::draw_xaxis_factors(units& u,
             mark.move_to(q_a, p_lab);
             mark.line_to(q_a, p_lab_inf);
 
-            draw::text* label = tlabels[k];
-            label->set_point(q_lab, p_lab_inf + y_spac_bot + hmax/2.0);
-
-            labels.add(label);
+            if (draw_labels)
+            {
+                draw::text* label = tlabels[k];
+                label->set_point(q_lab, p_lab_inf + y_spac_bot + hmax/2.0);
+                labels.add(label);
+            }
         }
 
         double x_lab = factor->mark(factor->labels_number());
