@@ -423,7 +423,7 @@ end
 
 local function fit_add_predicted(t, param_name, X, fit, index_map)
     local cname = string.format("%s (PREDICTED)", param_name)
-    t:col_append(cname)
+    if not t:col_index(cname) then t:col_append(cname) end
     local cindex = t:col_index(cname)
 
     local y_pred = X * fit.c
