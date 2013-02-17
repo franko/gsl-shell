@@ -259,12 +259,33 @@ double plot::draw_xaxis_factors(units& u,
 {
     const double text_label_size = get_default_font_size(text_axis_labels, scale);
 
-    const double y_spacing = 0.075;
-    const unsigned layers_number = f_labels->size();
-    double p_lab = - double(layers_number) * y_spacing;
-    for (unsigned layer = 0; layer < layers_number; layer++)
+    const axis& ax = get_axis(x_axis);
+    const double lab_angle = ax.labels_angle();
+
+    const double y_spac_top = 3, y_spac_bot = 3;
+    const int layers_number = f_labels->size();
+    double p_lab = 0;
+    for (int layer = layers_number - 1; layer >= 0; layer--)
     {
         factor_labels* factor = f_labels->at(layer);
+
+        agg::pod_bvector<draw::text*> tlabels;
+        double hmax = 0.0;
+        for (int k = 0; k < factor->labels_number(); k++)
+        {
+            const char* text = factor->label_text(k);
+            draw::text* label = new draw::text(text, text_label_size, 0.5, 0.5);
+            label->angle(lab_angle);
+
+            double rx1, ry1, rx2, ry2;
+            agg::bounding_rect_single(*label, 0, &rx1, &ry1, &rx2, &ry2);
+            double rh = ry2 - ry1;
+            if (rh > hmax) hmax = rh;
+            tlabels.add(label);
+        }
+
+        double p_lab_inf = p_lab - (y_spac_top + y_spac_bot + hmax);
+
         for (int k = 0; k < factor->labels_number(); k++)
         {
             double x_lab_a = factor->mark(k);
@@ -279,13 +300,10 @@ double plot::draw_xaxis_factors(units& u,
             double q_lab = x_lab;
 
             mark.move_to(q_a, p_lab);
-            mark.line_to(q_a, p_lab + y_spacing);
+            mark.line_to(q_a, p_lab_inf);
 
-            const char* text = factor->label_text(k);
-            draw::text* label = new draw::text(text, text_label_size, 0.5, -0.4);
-
-            label->set_point(q_lab, p_lab);
-            label->angle(0.0);
+            draw::text* label = tlabels[k];
+            label->set_point(q_lab, p_lab_inf + y_spac_bot + hmax/2.0);
 
             labels.add(label);
         }
@@ -295,14 +313,14 @@ double plot::draw_xaxis_factors(units& u,
         user_mtx.transform(&x_a, &y_a);
         double q_a = x_a;
         mark.move_to(q_a, p_lab);
-        mark.line_to(q_a, p_lab + y_spacing);
+        mark.line_to(q_a, p_lab_inf);
 
-        p_lab += y_spacing;
+        p_lab = p_lab_inf;
     }
 
     this->draw_grid(x_axis, u, user_mtx, ln);
 
-    return y_spacing * layers_number;
+    return - p_lab;
 }
 
 static inline double approx_text_height(double text_size)
@@ -459,9 +477,13 @@ void plot::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i
     box.line_to(1.0, 0.0);
     box.close_polygon();
 
-    agg::path_storage mark;
-    sg_object_gen<agg::conv_transform<agg::path_storage> > mark_tr(mark, m);
-    trans::stroke_a mark_stroke(&mark_tr);
+    agg::path_storage x_mark;
+    sg_object_gen<agg::conv_transform<agg::path_storage> > x_mark_tr(x_mark, m);
+    trans::stroke_a x_mark_stroke(&x_mark_tr);
+
+    agg::path_storage y_mark;
+    sg_object_gen<agg::conv_transform<agg::path_storage> > y_mark_tr(y_mark, m);
+    trans::stroke_a y_mark_stroke(&y_mark_tr);
 
     agg::path_storage ln;
     sg_object_gen<agg::conv_transform<agg::path_storage> > ln_tr(ln, m);
@@ -472,18 +494,18 @@ void plot::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i
     const double plpad = double(axis_label_prop_space) / 1000.0;
     const double ptpad = double(axis_title_prop_space) / 1000.0;
 
-    ptr_list<draw::text> labels;
+    ptr_list<draw::text> xlabels, ylabels;
 
-    double dy_label = 0, pdy_label = 0;
+    double dy_label = 0;
     if (this->m_xaxis_hol)
-        pdy_label = draw_xaxis_factors(m_ux, m_trans, labels, this->m_xaxis_hol, scale, mark, ln);
+        dy_label = draw_xaxis_factors(m_ux, m_trans, xlabels, this->m_xaxis_hol, scale, x_mark, ln);
     else
-        dy_label = draw_axis_m(x_axis, m_ux, m_trans, labels, scale, mark, ln);
+        dy_label = draw_axis_m(x_axis, m_ux, m_trans, xlabels, scale, x_mark, ln);
 
-    double dx_label = draw_axis_m(y_axis, m_uy, m_trans, labels, scale, mark, ln);
+    double dx_label = draw_axis_m(y_axis, m_uy, m_trans, ylabels, scale, y_mark, ln);
 
     double ppad_left = plpad, ppad_right = plpad;
-    double ppad_bottom = plpad + pdy_label, ppad_top = plpad;
+    double ppad_bottom = plpad, ppad_top = plpad;
     double dx_left = dx_label, dx_right = 0.0;
     double dy_bottom = dy_label, dy_top = 0.0;
 
@@ -515,9 +537,30 @@ void plot::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i
     const double aay = y0 + dy_bottom + ppad_bottom * syr;
     layout.set_plot_active_area(sxr, syr, aax, aay);
 
-    for (unsigned j = 0; j < labels.size(); j++)
+    agg::trans_affine m_xlabels;
+    if (this->m_xaxis_hol)
     {
-        draw::text* label = labels[j];
+        m_xlabels.sx = m.sx;
+        m_xlabels.tx = m.tx;
+        m_xlabels.ty = m.ty;
+
+        x_mark_tr.self().transformer(m_xlabels);
+    }
+    else
+    {
+        m_xlabels = m;
+    }
+
+    for (unsigned j = 0; j < xlabels.size(); j++)
+    {
+        draw::text* label = xlabels[j];
+        label->apply_transform(m_xlabels, 1.0);
+        canvas.draw(*label, colors::black);
+    }
+
+    for (unsigned j = 0; j < ylabels.size(); j++)
+    {
+        draw::text* label = ylabels[j];
         label->apply_transform(m, 1.0);
         canvas.draw(*label, colors::black);
     }
@@ -527,8 +570,11 @@ void plot::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i
     lns.width(std_line_width(scale, 0.15));
     canvas.draw(lns, colors::black);
 
-    mark_stroke.width(std_line_width(scale, 0.75));
-    canvas.draw(mark_stroke, colors::black);
+    x_mark_stroke.width(std_line_width(scale, 0.75));
+    canvas.draw(x_mark_stroke, colors::black);
+
+    y_mark_stroke.width(std_line_width(scale, 0.75));
+    canvas.draw(y_mark_stroke, colors::black);
 
     boxvs.width(std_line_width(scale, 0.75));
     canvas.draw(boxvs, colors::black);
