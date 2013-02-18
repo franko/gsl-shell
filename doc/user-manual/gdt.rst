@@ -46,7 +46,6 @@ GDT methods
 -----------
 
     line       = gdt_table_line,
-    col_index  = gdt_table_get_column_index,
     col_insert = gdt_table_insert_column,
     col_append = gdt_table_append_column,
     cursor     = gdt_table_get_cursor,
@@ -77,11 +76,19 @@ GDT methods
 
      Set the column's name of the j-th column of the table to the given name.
 
-  .. method: icolumn(j)
+  .. method:: icolumn(j)
 
      Return an iterator the gives, at each iterations, the couple (i, v) representing the index and the value of each cell in the column j.
 
-  .. method: col_index(name)
+  .. method:: col_index(name)
 
      Return the column index corresponding to the given
 
+  .. method:: col_insert(name, j[, f_init])
+
+     Insert a new column named ``name`` at the given index.
+     If the function ``f_init`` is provided the value of the i-th cell will be set to ``f_init(r, i)`` where ``r`` is a table whose elements are the values of the i-th row indexed by their column name.
+
+     For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
+
+        t:col_insert("average", 3, |r| (r.x + r.y) / 2)
