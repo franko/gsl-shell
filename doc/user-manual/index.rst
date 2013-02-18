@@ -26,6 +26,7 @@ Contents:
    general.rst
    complex.rst
    matrices.rst
+   gdt.rst
    lua-base.rst
    linalg.rst
    eigen.rst
