@@ -1,0 +1,24 @@
+- provide help for matrix.svd function
+- modify get/set methods for gdt table to accept column's names
+- rename gdt.new to gdt.alloc and define gdt.new to initialize the table
+  like matrix.new
+- in gdt.lineplot remove the parameter name from legend if only one parameter
+  is plotted. It can be put in the title instead.
+- sanitize variable names in gdt-lm macro generation => exclude Lua keywords and
+  headers that cannot be considered as Lua identifiers
+- add more colors and markers for generated plots
+- add a "correlation" function for gdt table like GNU R
+- carry out a complete example for PCA analysis in GNU R book (heptatlon)
+- bug with PREDICTED [[th_sigeb.ell] (PREDICTED)]
+- introduire a WHERE clause to filter data
+- ajouter le Degree of freedom dans le summary du gdt.lm
+- DONE/ dans PREDICTED il devrait verifier si la colonne n'existe pas déjà
+- dans gdt.plot il faut skipper les lignes undefinis au niveau de champs
+  de aggregation
+
+
+A REFLECHIR
+- trois mechanisms sont disponible pour travailler sur les tables (gdt)
+  - functional approach: t:col_append("boo", |r| r.a + r.b)
+  - simple string header like: gdt.plot(t, {"wafer", "site"}, "thickness")
+  - GNU R like LM model specifications: "thickness ~ 1, exec_time, tool"
