@@ -15,7 +15,7 @@
 - DONE/ dans PREDICTED il devrait verifier si la colonne n'existe pas déjà
 - dans gdt.plot il faut skipper les lignes undefinis au niveau de champs
   de aggregation
-
+- implement col_insert/append using expressions
 
 A REFLECHIR
 - trois mechanisms sont disponible pour travailler sur les tables (gdt)
