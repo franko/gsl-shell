@@ -42,15 +42,26 @@ Of course you have many functions available to operate of a GDT table. The more 
 
 TODO: the get or set method should accept the column name as an index specification.
 
-GDT methods
------------
+GET Functions
+-------------
 
-    line       = gdt_table_line,
-    col_insert = gdt_table_insert_column,
-    col_append = gdt_table_append_column,
-    cursor     = gdt_table_get_cursor,
-    rows       = gdt_table_rows,
-    headers    = gdt_table_headers,
+    new    = gdt_table_new,
+    alloc  = gdt_table_alloc,
+    get    = gdt_table_get,
+    set    = gdt_table_set,
+    filter = gdt_table_filter,
+
+.. module:: gdt
+
+.. function:: new(n, m[, f_init])
+
+   Create a new data table with ``n`` rowss and ``m`` columns.
+   If the function ``f_init`` is not given all the cell are initialized to ``undefined``.
+   Otherwise, if the function is given, it will be called with the row index as arguments.
+   The initialization function should return a table with the values of each field.
+
+GDT Methods
+-----------
 
 .. class:: Gdt
 
@@ -92,3 +103,34 @@ GDT methods
      For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
 
         t:col_insert("average", 3, |r| (r.x + r.y) / 2)
+
+.. method:: col_append(name[, f_init])
+
+     Append a new column named ``name``.
+     If the function ``f_init`` is provided the value of the i-th cell will be set to ``f_init(r, i)`` where ``r`` is a table whose elements are the values of the i-th row indexed by their column name.
+
+     For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
+
+        t:col_append("average", |r| (r.x + r.y) / 2)
+
+.. method:: cursor()
+
+     Return an object of type cursor.
+     It does intially point to the first row of the table.
+     A cursor object can be indexed with the name of the columns to obtain the correponding value for the current row.
+
+.. method:: rows()
+
+     Return an iterator to span all the rows of the table.
+     At each iteration the row index is provided and a cursor pointing to the current row.
+
+     For example to print the element ``x`` and ``y`` for each row of a table::
+
+        for i, cursor in t:rows() do
+           print(cursor.x, cursor.y)
+        end
+
+.. method:: headers()
+
+     Returns a table with the name of the columns (headers).
+     The value are given in the column order so that the index of each element corresponds to the index of the given column in the table.
