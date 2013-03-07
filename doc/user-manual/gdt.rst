@@ -93,7 +93,7 @@ GDT Methods
 
   .. method:: col_index(name)
 
-     Return the column index corresponding to the given
+     Return the column index corresponding to the given name.
 
   .. method:: col_insert(name, j[, f_init])
 
@@ -134,3 +134,52 @@ GDT Methods
 
      Returns a table with the name of the columns (headers).
      The value are given in the column order so that the index of each element corresponds to the index of the given column in the table.
+
+GDT Functions
+-------------
+
+.. function:: filter(t, f)
+
+    Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
+    The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
+    The row will be retained if and only if the predicate function returns true.
+
+.. function:: plot(t, plot_spec[, options])
+
+    Make a plot of the data in the table ``t`` based on the plot description ``plot_desc``.
+    For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
+
+.. _gdt-plot:
+
+GDT Plots
+---------
+
+With GSL Shell it is relatively easy to plot data from a GDT table based on the name of the columns.
+A mini language is used to express the type of plot that should be realized but let us begin with some examples.
+
+Let us use the following data for our example:
+
+   >>> ms = gdt.read_csv('examples/hw-example.csv')
+   >>> ms
+      height weight
+   1    1.47  52.21
+   2     1.5  53.12
+   3    1.52  54.48
+   4    1.55  55.84
+   5    1.57   57.2
+   6     1.6  58.57
+   7    1.63  59.93
+   8    1.65  61.29
+   9    1.68  63.11
+   10    1.7  64.47
+   11   1.73  66.28
+   12   1.75   68.1
+   13   1.78  69.92
+   14    1.8  72.19
+   15   1.83  74.46
+
+The table just have two columns names "height" and "weight".
+We may want to make a scatterplot of the data to see how the weight varies with the height.
+In order to make such plot we can just use the function :func:`gdt.xyplot`::
+
+   gdt.xyplot(ms, "weight ~ height")
