@@ -83,14 +83,17 @@ end
 
 local function source_csv(filename, options)
 	local strip_spaces = true
-	if options and options.strip_spaces then strip_spaces = options.strip_spaces end
+	if options and (options.strip_spaces ~= nil) then
+		strip_spaces = options.strip_spaces
+	end
 	local f
 	local it, s, i
 	local source = function()
 		local line = it(s, i)
 		if line then
-			if strip_spaces then trim_spaces(line) end
-			return csv.line(line)
+			local ls = csv.line(line)
+			if strip_spaces then trim_spaces(ls) end
+			return ls
 		else
 			f:close()
 		end
