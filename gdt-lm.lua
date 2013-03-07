@@ -117,15 +117,14 @@ local function enum_levels(factors, levels)
         ks[i], ms[i] = 0, #levels[name]
     end
 
-    -- Start the counter from 1 instead of 0 to omit the first
-    -- level. It will be implicitely the reference.
-    ks[n] = (factors.omit_ref_level and 1 or 0)
+    local first = true
     while true do
         local lev = {}
         for i, name in ipairs(factors) do
             lev[i] = levels[name][ks[i] + 1]
         end
-        ls[#ls + 1] = lev
+        if not (factors.omit_ref_level and first) then ls[#ls + 1] = lev end
+        first = false
 
         for i = n, 0, -1 do
             if i == 0 then return ls end
