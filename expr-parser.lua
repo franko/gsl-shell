@@ -63,14 +63,14 @@ function mini_lexer.next_token(lexer)
         return {type= c}
     end
     if lexer:match('[%l%u_]') then
-        local str = lexer:consume('[%l%u_][%w_]*')
+        local str = lexer:consume('[%l%u_][%l%u_.$]*')
         return {type= 'ident', value= str}
     end
-    if lexer:match('[1-9]') then
-        local str = lexer:consume('[1-9]%d*%.%d*')
-        if not str then
-            str = lexer:consume('[1-9]%d*')
-        end
+    if lexer:match('%d') then
+        local str =  lexer:consume('%d+%.%d*[Ee]%+?%d+')
+        str = str or lexer:consume('%d+%.%d*[Ee]%-?%d+')
+        str = str or lexer:consume('%d+%.%d*')
+        str = str or lexer:consume('%d+')
         return {type= 'number', value= tonumber(str)}
     end
     lexer:local_error("syntax error in expression:", lexer.n)
