@@ -2,26 +2,50 @@
 local ffi = require 'ffi'
 local gsl = require 'gsl'
 
-local min, max = math.min, math.max
 local rect = graph.rect
 
-local function gdt_table_hist(t, j, nbins, opt)
-    local h = ffi.gc(gsl.gsl_histogram_alloc(nbins), gsl.gsl_histogram_free)
+local function compare_float(a, b)
+    return a < b
+end
+
+local function gdt_table_hist(t, col_name, opt)
+    local j
+    if type(col_name) == 'string' then
+        j = t:col_index(col_name)
+        if not j then error(string.format("invalid column name: %s", col_name)) end
+    else
+        if type(col_name) ~= 'number' then error("invalid column index") end
+        j = col_name
+    end
+
     local n = #t
+
+    local dv = matrix.alloc(n, 1)
+    for i = 1, n do dv.data[i - 1] = t:get(i, j) end
+
+    dv:sort(compare_float)
+
+    local Q1 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.25)
+    local Q3 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.75)
+    local IQR = Q3 - Q1
 
     local a, b
     if opt and opt.a and opt.b then
         a, b = opt.a, opt.b
     else
-        a, b = t:get(1, j), t:get(1, j)
-        for i = 2, n do
-            local x = t:get(i, j)
-            if x then
-                a = min(a, x)
-                b = max(b, x)
-            end
-        end
+        a, b = dv.data[0], dv.data[n - 1]
     end
+
+    -- Freedman-Diaconis rule from http://stats.stackexchange.com/questions/798/calculating-optimal-number-of-bins-in-a-histogram-for-n-where-n-ranges-from-30
+    -- corresponds to GNU R with breaks='FD'
+    local h_FD = 2 * IQR * n^(-1/3)
+    local nbins = (b - a) / h_FD
+
+    if nbins < 2 then error("not enough data to produce an histogram") end
+
+    local h = ffi.gc(gsl.gsl_histogram_alloc(nbins), gsl.gsl_histogram_free)
+    assert(h, "error creating histogram")
+
     local eps = (b - a) * 1e-5
     gsl.gsl_histogram_set_ranges_uniform(h, a - eps, b + eps)
 

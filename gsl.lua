@@ -2489,6 +2489,17 @@ gsl_histogram_pdf * gsl_histogram_pdf_alloc (const size_t n);
 int gsl_histogram_pdf_init (gsl_histogram_pdf * p, const gsl_histogram * h);
 void gsl_histogram_pdf_free (gsl_histogram_pdf * p);
 double gsl_histogram_pdf_sample (const gsl_histogram_pdf * p, double r);
+
+double gsl_stats_mean (const double data[], const size_t stride, const size_t n);
+double gsl_stats_variance (const double data[], const size_t stride, const size_t n);
+double gsl_stats_sd (const double data[], const size_t stride, const size_t n);
+double gsl_stats_variance_with_fixed_mean (const double data[], const size_t stride, const size_t n, const double mean);
+double gsl_stats_sd_with_fixed_mean (const double data[], const size_t stride, const size_t n, const double mean);
+double gsl_stats_tss (const double data[], const size_t stride, const size_t n);
+double gsl_stats_tss_m (const double data[], const size_t stride, const size_t n, const double mean);
+
+double gsl_stats_median_from_sorted_data (const double sorted_data[], const size_t stride, const size_t n) ;
+double gsl_stats_quantile_from_sorted_data (const double sorted_data[], const size_t stride, const size_t n, const double f) ;
 ]]
 
 
