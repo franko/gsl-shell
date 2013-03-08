@@ -223,7 +223,7 @@ local function plot_actions_gen(t)
         infix     = infix_ast,
         prefix    = prefix_ast,
         ident     = ident_ast,
-        enum      = itself,
+        enum      = ident_ast,
         func_eval = func_eval_ast,
         number    = itself,
         exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
@@ -322,8 +322,7 @@ end
 
 local function add_legend(lg, k, symspec, color, text)
     local y = -k * 20
-    local sym, symtr = legend_symbol(symspec, 0, y)
-    local tr = (trans and trans or symtr)
+    local sym, tr = legend_symbol(symspec, 0, y)
     lg:add(sym, color, tr)
     if text then
         lg:add(graph.textshape(25, y + 6, text, 14), 'black')
@@ -497,7 +496,7 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     return plt
 end
 
-local function gdt_table_reduce(t_src, schema_descr)
+function gdt.reduce(t_src, schema_descr)
     local schema = schema_from_plot_descr(schema_descr, t_src)
     local jxs = idents_get_column_indexes(t_src, schema.x)
     local jys = stat_expr_get_functions(schema.y)
@@ -528,7 +527,30 @@ local function gdt_table_reduce(t_src, schema_descr)
     return t
 end
 
-gdt.barplot = function(t, spec, opt) return gdt_table_category_plot(barplot,  t, spec, opt) end
-gdt.plot    = function(t, spec, opt) return gdt_table_category_plot(lineplot, t, spec, opt) end
-gdt.xyplot  = gdt_table_xyplot
-gdt.reduce  = gdt_table_reduce
+local function is_simple_numeric(t, plot_descr)
+    local gdt_eval_actions = require('gdt-eval')
+    local actions = gdt_eval_actions(t)
+    local l = mini.lexer(plot_descr)
+    local schema = mini.gschema(l, actions)
+    if #schema.x == 1 then
+        local expr = schema.x[1]
+        return (expr.factor == nil)
+    end
+    return false
+end
+
+function gdt.plot(t, plot_descr, opts)
+    if is_simple_numeric(t, plot_descr) then
+        return gdt_table_xyplot(t, plot_descr, opts)
+    else
+        return gdt_table_category_plot(lineplot, t, plot_descr, opts)
+    end
+end
+
+function gdt.lineplot(t, plot_descr, opts)
+    return gdt_table_category_plot(lineplot, t, plot_descr, opts)
+end
+
+function gdt.barplot(t, plot_descr, opts)
+    return gdt_table_category_plot(barplot, t, plot_descr, opts)
+end
