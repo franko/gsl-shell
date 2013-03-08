@@ -276,6 +276,21 @@ local function gdt_table_filter(t, f)
     return new
 end
 
+local function find_column_type(t, j)
+    local n = #t
+    for i = 1, n do
+        local x = t:get(i, j)
+        if type(x) == 'string' then return 'factor' end
+    end
+    return 'scalar'
+end
+
+local function gdt_table_column_type(t, col)
+    local j = (type(col) == 'string') and gdt_table_get_column_index(t, col) or col
+    assert(type(j) == 'number', 'invalid column')
+    return find_column_type(t, j)
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -288,6 +303,7 @@ local gdt_methods = {
     col_index  = gdt_table_get_column_index,
     col_insert = gdt_table_insert_column,
     col_append = gdt_table_append_column,
+    col_type   = gdt_table_column_type,
     cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
     headers    = gdt_table_headers,
