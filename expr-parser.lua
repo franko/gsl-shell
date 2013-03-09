@@ -63,7 +63,7 @@ function mini_lexer.next_token(lexer)
         return {type= c}
     end
     if lexer:match('[%l%u_]') then
-        local str = lexer:consume('[%l%u_][%l%u_.$]*')
+        local str = lexer:consume('[%l%u_][%l%u%d_.$]*')
         return {type= 'ident', value= str}
     end
     if lexer:match('%d') then
