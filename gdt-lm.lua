@@ -5,93 +5,6 @@ local expr_print = require 'expr-print'
 local sqrt, abs = math.sqrt, math.abs
 local type, pairs, ipairs = type, pairs, ipairs
 
-local FACTOR_CLASS = 0
-local SCALAR_CLASS = 1
-
-local function find_column_type(t, j)
-    local n = #t
-    for i = 1, n do
-        local x = t:get(i, j)
-        if type(x) == 'string' then return FACTOR_CLASS end
-    end
-    return SCALAR_CLASS
-end
-
-local function mult(a, b)
-    if a == 1 then return b end
-    if b == 1 then return a end
-    return {operator= '*', a, b}
-end
-
-local function scalar_infix(sym, a, b)
-    if sym == '*' then
-        return mult(a, b)
-    else
-        return {operator= sym, a, b}
-    end
-end
-
-local function factor_infix(sym, a, b)
-    if not (a or b) then return nil end
-    if sym ~= '*' then
-        error('non multiplicative opeation on factors')
-    end
-    local c = {}
-    if a then for i, f in ipairs(a) do c[#c+1] = f end end
-    if b then for i, f in ipairs(b) do c[#c+1] = f end end
-    return c
-end
-
-local function infix_action(sym, a, b)
-    local c = {}
-    c.scalar = scalar_infix(sym, a.scalar, b.scalar)
-    c.factor = factor_infix(sym, a.factor, b.factor)
-    return c
-end
-
-local function prefix_action(sym, a)
-    if a.factor then error('non multiplicative opeation on factors') end
-    return {scalar= {operator= sym, a}}
-end
-
-local function enum_action(id)
-	return {scalar= 1, factor= {id}}
-end
-
-local function func_eval_action(func_name, arg_expr)
-    if arg_expr.factor then
-        error('applying function ' .. func_name .. ' to an enumerated factor')
-    end
-    return {scalar= {func = func_name, arg = arg_expr.scalar}}
-end
-
-local function lm_actions_gen(t)
-    local n, m = t:dim()
-
-    local column_class = {}
-    for j = 1, m do column_class[j] = find_column_type(t, j) end
-
-    local function ident_action(id)
-        local index = t:col_index(id)
-        if column_class[index] == FACTOR_CLASS then
-            return {scalar= 1, factor= {id}}
-        else
-            return {scalar= {name= id, index= t:col_index(id)}}
-        end
-    end
-
-    return {
-        infix     = infix_action,
-        ident     = ident_action,
-        prefix    = prefix_action,
-        enum      = enum_action,
-        func_eval = func_eval_action,
-        number    = function(x) return {scalar= x} end,
-        exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
-        schema    = function(x, y) return {x= x, y= y} end,
-    }
-end
-
 local function add_unique(t, val)
     for k, x in ipairs(t) do
         if x == val then return k end
@@ -117,15 +30,14 @@ local function enum_levels(factors, levels)
         ks[i], ms[i] = 0, #levels[name]
     end
 
-    -- Start the counter from 1 instead of 0 to omit the first
-    -- level. It will be implicitely the reference.
-    ks[n] = (factors.omit_ref_level and 1 or 0)
+    local first = true
     while true do
         local lev = {}
         for i, name in ipairs(factors) do
             lev[i] = levels[name][ks[i] + 1]
         end
-        ls[#ls + 1] = lev
+        if not (factors.omit_ref_level and first) then ls[#ls + 1] = lev end
+        first = false
 
         for i = n, 0, -1 do
             if i == 0 then return ls end
@@ -499,7 +411,8 @@ function FIT.eval(fit, tn)
 end
 
 local function lm(t, model_formula, options)
-    local actions = lm_actions_gen(t)
+    local gdt_eval_actions = require('gdt-eval')
+    local actions = gdt_eval_actions(t)
     local l = mini.lexer(model_formula)
     local schema = mini.schema(l, actions)
 

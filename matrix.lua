@@ -686,6 +686,7 @@ local matrix_methods = {
    norm  = matrix_norm,
    norm2 = matrix_norm2,
    slice = matrix_slice,
+   sort  = require("matrix-quicksort"),
    show  = matrix_display_gen(mat_real_get),
 }
 
