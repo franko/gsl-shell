@@ -8,12 +8,14 @@ General Data Tables
 Overview
 --------
 
-General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format. They are similar to matrices but with some notable differences:
+General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format.
+They are similar to matrices but with some notable differences:
 
 * columns have a name defined in the table's headers
-* each cell can contain a number, a string or be undefined.
+* each cell can contain a number or a string or be undefined.
 
-Since a GDT table can contain also strings it is much more useful to store data coming from observations or from reports. The possibility to mark as undefined the cell's value is also useful to take into account missing data.
+Since a GDT table can contain also strings it is much more useful to store data coming from observations or from reports.
+The possibility to mark as undefined the cell's value is also useful to take into account missing data.
 
 Here an example of a GDT table:
 
@@ -36,20 +38,21 @@ Here an example of a GDT table:
    14       QAG            C   1.886
    15       QAG      LuaJIT2   1.107
 
-As you can see in this case the data is loaded from a CSV file. In the first line the headers are shown. Then the data follows in tabular format. As you can see in this case we have both numerical and string values.
+As you can see in this case the data is loaded from a CSV file. In the first line the headers are shown.
 
-Of course you have many functions available to operate of a GDT table. The more common are probably the methods :meth:`~Gdt.get` and :meth:`~Gdt.set` to operate on the table's elements on a given row and column.
+There are many functions available to operate of a GDT table.
+The functions can be grouped into families:
+
+* functions to manipulate tables
+* functions to create plots based on the table itself
+* functions to perform statistical computations
+
+The more common are probably the methods :meth:`~Gdt.get` and :meth:`~Gdt.set` to operate on the table's elements on a given row and column.
 
 TODO: the get or set method should accept the column name as an index specification.
 
 GET Functions
 -------------
-
-    new    = gdt_table_new,
-    alloc  = gdt_table_alloc,
-    get    = gdt_table_get,
-    set    = gdt_table_set,
-    filter = gdt_table_filter,
 
 .. module:: gdt
 
@@ -59,6 +62,17 @@ GET Functions
    If the function ``f_init`` is not given all the cell are initialized to ``undefined``.
    Otherwise, if the function is given, it will be called with the row index as arguments.
    The initialization function should return a table with the values of each field.
+
+.. function:: filter(t, f)
+
+    Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
+    The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
+    The row will be retained if and only if the predicate function returns true.
+
+.. function:: plot(t, plot_spec[, options])
+
+    Make a plot of the data in the table ``t`` based on the plot description ``plot_desc``.
+    For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
 
 GDT Methods
 -----------
@@ -135,20 +149,6 @@ GDT Methods
      Returns a table with the name of the columns (headers).
      The value are given in the column order so that the index of each element corresponds to the index of the given column in the table.
 
-GDT Functions
--------------
-
-.. function:: filter(t, f)
-
-    Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
-    The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
-    The row will be retained if and only if the predicate function returns true.
-
-.. function:: plot(t, plot_spec[, options])
-
-    Make a plot of the data in the table ``t`` based on the plot description ``plot_desc``.
-    For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
-
 .. _gdt-plot:
 
 GDT Plots
@@ -159,7 +159,7 @@ A mini language is used to express the type of plot that should be realized but 
 
 Let us use the following data for our example:
 
-   >>> ms = gdt.read_csv('examples/hw-example.csv')
+   >>> ms = gdt.read_csv('examples/am-women-weight.csv')
    >>> ms
       height weight
    1    1.47  52.21
@@ -178,8 +178,92 @@ Let us use the following data for our example:
    14    1.8  72.19
    15   1.83  74.46
 
-The table just have two columns names "height" and "weight".
+As you can see the table above have two columns names "height" and "weight".
 We may want to make a scatterplot of the data to see how the weight varies with the height.
-In order to make such plot we can just use the function :func:`gdt.xyplot`::
+In order to make such plot we can just use the function :func:`gdt.plot` ::
 
-   gdt.xyplot(ms, "weight ~ height")
+   gdt.plot(ms, "weight ~ height")
+
+The formula provided as a second argument tell to the function that variable "weight" should be plotted versus the variable "height".
+
+The function :func:`gdt.plot` can create even more complex plots when dealing with tables with enumeration variables.
+Let us cover a more complex example with another set of data::
+
+   >>> ms = gdt.read_csv('examples/perf-julia.csv')
+   >>> ms
+               test   language  time.c
+   1            fib    Fortran    0.28
+   2      parse_int    Fortran    9.22
+   3      quicksort    Fortran    1.65
+   4         mandel    Fortran    0.76
+   5         pi_sum    Fortran       1
+   6  rand_mat_stat    Fortran    2.23
+   7   rand_mat_mul    Fortran    1.14
+   8            fib      Julia    1.97
+   9      parse_int      Julia    1.72
+   10     quicksort      Julia    1.37
+   11        mandel      Julia    1.45
+   12        pi_sum      Julia       1
+   13 rand_mat_stat      Julia    1.95
+   14  rand_mat_mul      Julia       1
+   15           fib     Python   46.03
+   16     parse_int     Python   25.29
+   ...
+
+In the table above we have a numerical column, "time.c" but the other two columns are not numerical.
+In this case we can still use the plot function that will automatically display the variable as an enumeration.
+So, fox example, we can do a plot using the function::
+
+   gdt.plot(ms, "time.c ~ language, test")
+
+to obtain the following plot:
+
+.. figure:: gdt-plot-perf.png
+
+In this latter example we have fiven a formula with *two* variables on the right of the "~" symbol.
+The meaning is that we want to plot the "time" variable versus the "language" and the "test".
+It is interesting to note that if the "test" variable was omitted the plot routine would have plotted the average over all the tests.
+
+To make the plot above more clear it can be interesting to plot the logarithm of the "time.c" variable.
+This can be done easily::
+
+   gdt.plot(ms, "log(time.c) ~ language, test")
+
+since we can use complete expressions and refer to the functions in the "math" module.
+The resulting plot would be::
+
+.. figure:: gdt-plot-perf-log.png
+
+At this point you may want to switch to a barplot to plot the results.
+This can be done very easily by using the function :func:`gdt.barplot`.
+This latter function can be used in exactly the same way that the function :func:`gdt.plot` so you can switch between them without changing the formula.
+
+To produce a nicer plot we may want to use a different color for each test and add a legend.
+This can be done easily by using a modified formula::
+
+   gdt.barplot(ms, "log(time.c) ~ language | test")
+
+to obtain the plot below:
+
+.. figure:: gdt-plot-perf-by-test.png
+
+In this case we have used the "|" symbol.
+The idea is that all the variables on the right of the "|" will be enumerated with different colors and different symbols depending on the plot.
+A legend will be also added to link each color with each enumerated value.
+We will refer to the variables or the right of the "|" as "enumeration variables".
+
+The enumeration variables are useful for all kind of plots.
+In the case of line plots enumerated plots are handy to obtain different lines with different colors plotted over the same variables.
+
+Histogram plots
+---------------
+
+Histogram plots can be created very easily by using the function :func:`gdt.hist`.
+Its usage is simple, you just provide the GDT table as first argument and the variable you want to plot as a second plot.
+
+Here an example of the kind of plot that you can obtain:
+
+.. figure:: gdt-hist-example.png
+
+Currently the histogram function does not support any option but this may change in future.
+The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
