@@ -12,9 +12,9 @@ General Data Tables, GDT in short, are used in GSL Shell to store data in tabula
 They are similar to matrices but with some notable differences:
 
 * columns have a name defined in the table's headers
-* each cell can contain a number or a string or be undefined.
+* each cell can contain either a number, a string or an undefined value.
 
-Since a GDT table can contain also strings it is much more useful to store data coming from observations or from reports.
+Since a GDT table can contain strings they are ofter useful to store data coming from observations or from reports.
 The possibility to mark as undefined the cell's value is also useful to take into account missing data.
 
 Here an example of a GDT table:
@@ -58,7 +58,7 @@ GET Functions
 
 .. function:: new(n, m[, f_init])
 
-   Create a new data table with ``n`` rowss and ``m`` columns.
+   Create a new data table with ``n`` rows and ``m`` columns.
    If the function ``f_init`` is not given all the cell are initialized to ``undefined``.
    Otherwise, if the function is given, it will be called with the row index as arguments.
    The initialization function should return a table with the values of each field.
@@ -73,6 +73,7 @@ GET Functions
 
     Make a plot of the data in the table ``t`` based on the plot description ``plot_desc``.
     For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
+    The options are document in the paragraph about :ref:`plotting options <gdt-plot-opts>`.
 
 GDT Methods
 -----------
@@ -155,7 +156,8 @@ GDT Plots
 ---------
 
 With GSL Shell it is relatively easy to plot data from a GDT table based on the name of the columns.
-A mini language is used to express the type of plot that should be realized but let us begin with some examples.
+A mini language is used to express the type of plot that should be realized.
+In this chapter we will illustrate its usage with some examples.
 
 Let us use the following data for our example:
 
@@ -267,3 +269,17 @@ Here an example of the kind of plot that you can obtain:
 
 Currently the histogram function does not support any option but this may change in future.
 The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
+
+.. _gdt-plot-opts:
+
+Plotting options
+----------------
+
+Plotting options are passed in the form of a table as the last arguments.
+The table should be of the form ``{option_1= value_1, option_2= value_2, ...}``.
+
+The options accepted by plots are:
+
+* ``show``, if false the plot will not be shown, default to true
+* ``lines``, if true lines will be used for the plot
+* ``points``, if true points markers will be used for the plot
