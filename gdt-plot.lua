@@ -426,6 +426,35 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     return plt
 end
 
+function gdt.xyline(t, plot_descr)
+    local schema = schema_from_plot_descr(plot_descr, t)
+    local jxs = expr_get_functions(schema.x)
+    local jys = expr_get_functions(schema.y)
+
+    assert(#jys == 1, "single y expression required")
+
+    local jx, jy = jxs[1], jys[1]
+    local n = #t
+
+    local eval_set, eval_scope = eval_scalar_gen(t)
+    local eval = expr_print.eval
+
+    local ln = path()
+    local path_method = ln.move_to
+    for i = 1, n do
+        eval_set(i)
+        local x, y = eval(jx.expr, eval_scope), eval(jy.expr, eval_scope)
+        if x and y then
+            path_method(ln, x, y)
+            path_method = ln.line_to
+        else
+            path_method = ln.move_to
+        end
+    end
+
+    return ln
+end
+
 local function gdt_table_xyplot(t, plot_descr, opt)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
