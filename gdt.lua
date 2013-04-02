@@ -57,9 +57,18 @@ local function gdt_table_set_unsafe(t, i, j, val)
     end
 end
 
-local function gdt_table_set(t, i, j, val)
+local function gdt_table_set(t, i, j_name, val)
     assert(i > 0 and i <= t.size1, 'invalid row index')
-    assert(j > 0 and j <= t.size2, 'invalid column index')
+    local j
+    if type(j_name) == 'string' then
+        local index = cgdt.gdt_table_header_index(t, j_name)
+        assert(index >= 0, 'invalid column index')
+        j = index + 1
+    else
+        assert(type(j_name) == 'number', 'invalid column index')
+        j = j_name
+        assert(j > 0 and j <= t.size2, 'invalid column index')
+    end
     gdt_table_set_unsafe(t, i, j, val)
 end
 
@@ -113,13 +122,9 @@ local function gdt_table_set_header(t, k, str)
     cgdt.gdt_table_set_header(t, k - 1, str)
 end
 
-local function gdt_table_get_column_index(t, name)
-    local r, c = t:dim()
-    for j = 1, c do
-        local sptr = cgdt.gdt_table_get_header(t, j - 1)
-        local s = (sptr == nil and 'V' .. j or ffi.string(sptr))
-        if s == name then return j end
-    end
+local function gdt_table_header_index(t, name)
+    local j = cgdt.gdt_table_header_index(t, name)
+    return (j >= 0 and j + 1 or nil)
 end
 
 local function gdt_table_len(t)
@@ -137,11 +142,11 @@ end
 local function gdt_table_line(t, c1, c2)
     local n = #t
     if c1 and type(c1) == 'string' then
-        c1 = gdt_table_get_column_index(t, c1)
+        c1 = gdt_table_header_index(t, c1)
         assert(type(c1) == 'number', 'invalide column specification')
     end
     if c2 and type(c2) == 'string' then
-        c2 = gdt_table_get_column_index(t, c2)
+        c2 = gdt_table_header_index(t, c2)
         assert(type(c2) == 'number', 'invalide column specification')
     end
     assert(c1, 'column argument not given')
@@ -292,7 +297,7 @@ local function find_column_type(t, j)
 end
 
 local function gdt_table_column_type(t, col)
-    local j = (type(col) == 'string') and gdt_table_get_column_index(t, col) or col
+    local j = (type(col) == 'string') and gdt_table_header_index(t, col) or col
     assert(type(j) == 'number', 'invalid column')
     return find_column_type(t, j)
 end
@@ -306,7 +311,7 @@ local gdt_methods = {
     line       = gdt_table_line,
     show       = gdt_table_show,
     icolumn    = gdt_table_icolumn,
-    col_index  = gdt_table_get_column_index,
+    col_index  = gdt_table_header_index,
     col_insert = gdt_table_insert_column,
     col_append = gdt_table_append_column,
     col_type   = gdt_table_column_type,
