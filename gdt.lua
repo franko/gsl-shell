@@ -89,21 +89,12 @@ local function gdt_table_alloc(nrows, ncols, nalloc_rows)
     return ffi.gc(t, cgdt.gdt_table_free)
 end
 
-local function gdt_table_new(nrows, cols_spec, f_init)
+local function gdt_table_new(nrows, cols_spec)
     local t = gdt_table_alloc(nrows, cols_spec)
     local ncols = t.size2
-    if f_init then
-        for i = 1, nrows do
-            local v = f_init(i)
-            for j = 1, ncols do
-                gdt_table_set_unsafe(t, i, j, v[j])
-            end
-        end
-    else
-        for i = 1, nrows do
-            for j = 1, ncols do
-                cgdt.gdt_table_set_undef(t, i - 1, j - 1)
-            end
+    for i = 1, nrows do
+        for j = 1, ncols do
+            cgdt.gdt_table_set_undef(t, i - 1, j - 1)
         end
     end
     return t
