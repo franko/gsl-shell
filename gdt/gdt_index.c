@@ -8,50 +8,6 @@
 
 #define STRING_SECTION_INIT_SIZE 256
 
-void
-char_buffer_init(struct char_buffer *b, size_t sz)
-{
-    b->data = xmalloc(sz);
-    b->data[0] = 0;
-    b->length = 0;
-    b->size = sz;
-}
-
-void
-char_buffer_free(struct char_buffer *b)
-{
-    free(b->data);
-}
-
-static void
-char_buffer_resize(struct char_buffer *b, size_t req_size)
-{
-    assert(req_size < (1 << 16));
-    size_t curr_size = b->size;
-    while (req_size > curr_size)
-    {
-        curr_size *= 2;
-    }
-    char *new_data = xmalloc(curr_size);
-    memcpy(new_data, b->data, b->length + 1);
-    free(b->data);
-    b->data = new_data;
-    b->size = curr_size;
-}
-
-int
-char_buffer_append(struct char_buffer *b, const char *str)
-{
-    size_t len = strlen(str);
-    int string_offset = (b->length > 0 ? b->length + 1 : 0);
-    size_t new_len = string_offset + len;
-    if (new_len + 1 > b->size)
-        char_buffer_resize(b, new_len + 1);
-    memcpy(b->data + string_offset, str, len + 1);
-    b->length = new_len;
-    return string_offset;
-}
-
 gdt_index *
 gdt_index_new(int alloc_size)
 {

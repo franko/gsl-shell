@@ -5,18 +5,6 @@
 #include "gdt_table.h"
 #include "xmalloc.h"
 
-static inline unsigned int round_two_power(unsigned int n)
-{
-    n = n - 1;
-    n = n | (n >> 1);
-    n = n | (n >> 2);
-    n = n | (n >> 4);
-    n = n | (n >> 8);
-    n = n | (n >> 16);
-    n = n + 1;
-    return n;
-}
-
 static inline int
 elem_is_string(const gdt_element* e)
 {
