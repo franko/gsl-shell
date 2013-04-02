@@ -66,6 +66,7 @@ extern void                gdt_table_set_string         (gdt_table *t, int i, in
 extern void                gdt_table_set_undef          (gdt_table *t, int i, int j);
 extern const char *        gdt_table_get_header         (gdt_table *t, int j);
 extern void                gdt_table_set_header         (gdt_table *t, int j, const char *str);
+extern int                 gdt_table_header_index       (gdt_table *t, const char* col_name);
 extern int                 gdt_table_insert_columns     (gdt_table *t, int j_in, int n);
 extern int                 gdt_table_insert_rows        (gdt_table *t, int i_in, int n);
 extern const gdt_element * gdt_table_cursor_get         (gdt_table_cursor *c, const char *key);

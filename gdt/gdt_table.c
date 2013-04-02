@@ -86,6 +86,27 @@ string_array_insert(struct string_array *v, int j_in, int n)
     v->offset_len = new_len;
 }
 
+/* match string in the form "V[1-9]\d*". strtol is not used because
+   it does match other forms like for example "V +015". */
+static int
+match_anonymous_header(const char* s)
+{
+    if (*s == 'V') {
+        const int int0 = (int) '0', int9 = (int) '9';
+        const int s0 = *(++s);
+        if (s0 > int0 && s0 <= int9) {
+            int accu = s0 - int0;
+            for (s++; (int) s[0] >= int0 && (int) s[0] <= int9; s++) {
+                accu = accu * 10 + ((int)s[0] - int0);
+            }
+            if (*s == 0) {
+                return (accu - 1);
+            }
+        }
+    }
+    return (-1);
+}
+
 static gdt_block *
 gdt_block_new(int size)
 {
@@ -160,11 +181,29 @@ gdt_table_get(gdt_table *t, int i, int j)
 const gdt_element *
 gdt_table_get_by_name(gdt_table *t, int i, const char* col_name)
 {
-    int j = string_array_lookup(t->headers, col_name);
+    int j = gdt_table_header_index(t, col_name);
     if (j >= 0) {
         return gdt_table_get(t, i, j);
     }
     return NULL;
+}
+
+int
+gdt_table_header_index(gdt_table *t, const char* col_name)
+{
+    int j = string_array_lookup(t->headers, col_name);
+    if (likely(j >= 0)) {
+        return j;
+    } else {
+        int jan = match_anonymous_header(col_name);
+        if (jan >= 0 && jan < t->size2) {
+            const char* name = string_array_get(t->headers, jan);
+            if (!name) {
+                return jan;
+            }
+        }
+    }
+    return (-1);
 }
 
 const char *
