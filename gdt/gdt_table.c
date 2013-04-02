@@ -157,6 +157,16 @@ gdt_table_get(gdt_table *t, int i, int j)
     return &t->data[i * t->tda + j];
 }
 
+const gdt_element *
+gdt_table_get_by_name(gdt_table *t, int i, const char* col_name)
+{
+    int j = string_array_lookup(t->headers, col_name);
+    if (j >= 0) {
+        return gdt_table_get(t, i, j);
+    }
+    return NULL;
+}
+
 const char *
 gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
 {

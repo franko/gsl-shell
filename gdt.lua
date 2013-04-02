@@ -29,8 +29,14 @@ end
 
 local function gdt_table_get(t, i, j)
     assert(i > 0 and i <= t.size1, 'invalid row index')
-    assert(j > 0 and j <= t.size2, 'invalid column index')
-    local e = cgdt.gdt_table_get(t, i - 1, j - 1)
+    local e
+    if type(j) == 'string' then
+        e = cgdt.gdt_table_get_by_name(t, i - 1, j)
+        assert(e ~= nil, "invalid column name")
+    else
+        assert(j > 0 and j <= t.size2, 'invalid column index')
+        e = cgdt.gdt_table_get(t, i - 1, j - 1)
+    end
     return gdt_element(t, e)
 end
 
