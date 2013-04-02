@@ -537,7 +537,7 @@ function gdt.reduce(t_src, schema_descr)
     local t = gdt.alloc(n, q + p)
 
     for k = 1, q do
-        t:set_header(k, t_src:get_header(jxs[k]))
+        t:set_header(k, t_src:header(jxs[k]))
     end
     for k, en in ipairs(enums) do
         t:set_header(q + k, collate(en, "/"))

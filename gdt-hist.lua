@@ -49,13 +49,13 @@ local function gdt_table_hist(t, col_name, opt)
     local eps = (b - a) * 1e-5
     gsl.gsl_histogram_set_ranges_uniform(h, a - eps, b + eps)
 
-    for i, x in t:icolumn(j) do
+    for i, x in t:column(j) do
         if x then
             gsl.gsl_histogram_increment(h, x)
         end
     end
 
-    local name = t:get_header(j)
+    local name = t:header(j)
     local title = (opt and opt.title) and opt.title or (name .. ' histogram')
     local color = (opt and opt.color) and opt.color or 'green'
     local p = graph.plot(title)

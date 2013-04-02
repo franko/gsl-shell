@@ -122,40 +122,7 @@ local function gdt_table_len(t)
     return t.size1
 end
 
-local function getter_xy(t, i, c1, c2)
-    return t:get(i,c1), t:get(i,c2)
-end
-
-local function getter_iy(t, i, c1)
-    return i, t:get(i,c1)
-end
-
-local function gdt_table_line(t, c1, c2)
-    local n = #t
-    if c1 and type(c1) == 'string' then
-        c1 = gdt_table_header_index(t, c1)
-        assert(type(c1) == 'number', 'invalide column specification')
-    end
-    if c2 and type(c2) == 'string' then
-        c2 = gdt_table_header_index(t, c2)
-        assert(type(c2) == 'number', 'invalide column specification')
-    end
-    assert(c1, 'column argument not given')
-    local ln = graph.path()
-    local start = true
-    local getter = c2 and getter_xy or getter_iy
-    for i = 1, n do
-        local x, y = getter(t, i, c1, c2)
-        local data = (x and y)
-        if data then
-            if start then ln:move_to(x, y) else ln:line_to(x, y) end
-        end
-        start = not data
-    end
-    return ln
-end
-
-local function gdt_table_icolumn(t, j)
+local function gdt_table_column_iter(t, j)
     local n = #t
     local f = function(_t, i)
         if i + 1 > n then return nil else return i + 1, _t:get(i + 1, j) end
@@ -240,7 +207,7 @@ end
 local function gdt_table_headers(t)
     local m = t.size2
     local name = {}
-    for k = 1, m do name[k] = t:get_header(k) end
+    for k = 1, m do name[k] = gdt_table_get_header(t, k) end
     return name
 end
 
@@ -273,7 +240,7 @@ local function gdt_table_filter(t, f)
         end
     end
     for j = 1, m do
-        new:set_header(j, t:get_header(j))
+        new:set_header(j, t:header(j))
     end
     return new
 end
@@ -297,18 +264,17 @@ local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
     set        = gdt_table_set,
-    get_header = gdt_table_get_header,
+    header     = gdt_table_get_header,
     set_header = gdt_table_set_header,
-    line       = gdt_table_line,
+    headers    = gdt_table_headers,
     show       = gdt_table_show,
-    icolumn    = gdt_table_icolumn,
+    column     = gdt_table_column_iter,
     col_index  = gdt_table_header_index,
-    col_insert = gdt_table_insert_column,
-    col_append = gdt_table_append_column,
     col_type   = gdt_table_column_type,
+    insert     = gdt_table_insert_column,
+    append     = gdt_table_append_column,
     cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
-    headers    = gdt_table_headers,
 }
 
 local gdt_mt = {

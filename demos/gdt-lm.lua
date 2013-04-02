@@ -24,22 +24,20 @@ local function lm_demo()
 		end
 	end
 
-	local p = gdt.xyplot(t, "y ~ x | tool", {show= false})
+	local p = gdt.plot(t, "y ~ x | tool", {show= false})
 
 	p.title = "Linear Fit example"
 	p.xtitle = "time, s"
 	p.ytitle = "thickness, mm"
 
-	local fit = gdt.lm(t, "y ~ x, tool")
+	local fit = gdt.lm(t, "y ~ x, tool", {predict= true})
 	fit:summary()
 
 	local X, c = fit:model(t), fit.c
 	local _, FN = X:dim()
 	for k = 1, P do
-		local XA = X:slice((k-1)*N + 1, 1, N, FN)
-		local YA = XA * c
-		local lnA = graph.xyline(XA:col(2), YA:col(1))
-		p:addline(lnA, graph.webcolor(k), {{'dash', 7, 3}})
+		local ln = graph.fxline(|x| fit:eval {tool= tools[k], x= x}, 0, dx)
+		p:addline(ln, graph.webcolor(k), {{'dash', 7, 3}})
 	end
 
 	p:show()
