@@ -66,11 +66,19 @@ GDT Functions
     The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
     The row will be retained if and only if the predicate function returns true.
 
+.. function:: lm(t, model_descr, options)
+
+    Perform a linear fit of the data in the table ``t`` based on the model described with ``model_descr``.
+    This latter should be a string of the form ``"y ~ x1, x2^2"`` where the variables referenced are the column's name of the table.
+    For more details about the model description look in the section on :ref:`GDT linear model <gdt-lm>`.
+    The options are documented in the paragraph about :ref:`linear model options <gdt-lm-opts>`.
+
+
 .. function:: plot(t, plot_spec[, options])
 
     Make a plot of the data in the table ``t`` based on the plot description ``plot_desc``.
-    For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
-    The options are document in the paragraph about :ref:`plotting options <gdt-plot-opts>`.
+    For more details about the plot description look in the section on :ref:`GDT plots <gdt-plot>`.
+    The options are documented in the paragraph about :ref:`plotting options <gdt-plot-opts>`.
 
 .. function:: barplot(t, plot_spec[, options])
 
@@ -294,3 +302,26 @@ The options accepted by plots are:
 * ``show``, if false the plot will not be shown, default to true
 * ``lines``, if true lines will be used for the plot
 * ``points``, if true points markers will be used for the plot
+
+.. _gdt-lm:
+
+GDT Linear Model
+----------------
+
+The linear model function :func:`gdt.lm` is a generic function to perform a linear least square fit for a set of table.
+The linear fit is performed accordingly to the model string.
+This latter should be of the form:
+
+  y ~ factor1, factor2, ...
+
+where ``y`` is the indipendent variables.
+The factors that appears on the right hand side can be expression the make reference to the column's names.
+GSL Shell will treat columns that contains strings as *enumeration factors* while columns that contains number are considerd as *scalar factors*.
+A column can be forced to be considerd as an *enumeration factors* by using the ``%`` prefix operator.
+
+.. _gdt-lm-opts:
+
+GDT Linear Model Options
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Plotting options are passed in the form of a table as the last arguments.
