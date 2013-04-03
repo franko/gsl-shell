@@ -49,19 +49,16 @@ The functions can be grouped into families:
 
 The more common are probably the methods :meth:`~Gdt.get` and :meth:`~Gdt.set` to operate on the table's elements on a given row and column.
 
-TODO: the get or set method should accept the column name as an index specification.
-
-GET Functions
+GDT Functions
 -------------
 
 .. module:: gdt
 
-.. function:: new(n, m[, f_init])
+.. function:: new(n, m)
+              new(n, headers)
 
    Create a new data table with ``n`` rows and ``m`` columns.
-   If the function ``f_init`` is not given all the cell are initialized to ``undefined``.
-   Otherwise, if the function is given, it will be called with the row index as arguments.
-   The initialization function should return a table with the values of each field.
+   In the second form a table is provided with the column's names.
 
 .. function:: filter(t, f)
 
@@ -75,6 +72,11 @@ GET Functions
     For more details about the plot description look for more details in the section on :ref:`GDT plots <gdt-plot>`.
     The options are document in the paragraph about :ref:`plotting options <gdt-plot-opts>`.
 
+.. function:: barplot(t, plot_spec[, options])
+
+    Make a bar plot of the data in the table ``t`` based on the plot description ``plot_desc``.
+    The meaning of the plot description strings and the options are the same of the function :func:`gdt.plot`.
+
 GDT Methods
 -----------
 
@@ -85,16 +87,20 @@ GDT Methods
      Return the numbers of rows and of columns of the table.
 
   .. method:: get(i, j)
+              get(i, name)
 
      This function returns the (i,j)-th element of a table.
      As for the matrices the indexes starts from 1.
+     In the second form the column's name can be used.
      The returned value can be either a number, a string or "nil" in case of undefined value.
 
   .. method:: set(i, j, v)
+              set(i, name, v)
 
      This function sets the value of the (i,j)-th element of the table to v.
+     The name of the column can be given instead of the column's index.
 
-  .. method:: get_header(j)
+  .. method:: header(j)
 
      Return the column's name of the j-th column of the table.
 
@@ -102,7 +108,8 @@ GDT Methods
 
      Set the column's name of the j-th column of the table to the given name.
 
-  .. method:: icolumn(j)
+  .. method:: column(j)
+              column(name)
 
      Return an iterator the gives, at each iterations, the couple (i, v) representing the index and the value of each cell in the column j.
 
@@ -110,23 +117,27 @@ GDT Methods
 
      Return the column index corresponding to the given name.
 
-  .. method:: col_insert(name, j[, f_init])
+  .. method:: insert(name, j[, f_init])
 
      Insert a new column named ``name`` at the given index.
-     If the function ``f_init`` is provided the value of the i-th cell will be set to ``f_init(r, i)`` where ``r`` is a table whose elements are the values of the i-th row indexed by their column name.
+     The function ``f_init`` is called for each row of the table to intialize the column's value.
+     The function is called in the form ``f_init(r, i)`` where the argument ``r`` passed to ``f_init`` contains the values in the current row indexed by the column's name.
+     If the initialized function is not provided the values will be initialized to ``NA``.
 
      For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
 
-        t:col_insert("average", 3, |r| (r.x + r.y) / 2)
+        t:insert("average", 3, |r| (r.x + r.y) / 2)
 
-.. method:: col_append(name[, f_init])
+.. method:: append(name[, f_init])
 
      Append a new column named ``name``.
-     If the function ``f_init`` is provided the value of the i-th cell will be set to ``f_init(r, i)`` where ``r`` is a table whose elements are the values of the i-th row indexed by their column name.
+     The function ``f_init`` is called for each row of the table to intialize the column's value.
+     The function is called in the form ``f_init(r, i)`` where the argument ``r`` passed to ``f_init`` contains the values in the current row indexed by the column's name.
+     If the initialized function is not provided the values will be initialized to ``NA``.
 
      For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
 
-        t:col_append("average", |r| (r.x + r.y) / 2)
+        t:append("average", |r| (r.x + r.y) / 2)
 
 .. method:: cursor()
 
@@ -232,7 +243,7 @@ This can be done easily::
    gdt.plot(ms, "log(time.c) ~ language, test")
 
 since we can use complete expressions and refer to the functions in the "math" module.
-The resulting plot would be::
+The resulting plot would be:
 
 .. figure:: gdt-plot-perf-log.png
 
