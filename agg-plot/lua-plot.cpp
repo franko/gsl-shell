@@ -70,6 +70,8 @@ static int plot_ylab_angle_get (lua_State *L);
 static int plot_set_categories (lua_State *L);
 static int plot_set_legend     (lua_State *L);
 static int plot_get_legend     (lua_State *L);
+static int plot_xaxis_hol_set  (lua_State *L);
+static int plot_xaxis_hol_clear(lua_State *L);
 
 static int plot_sync_mode_get (lua_State *L);
 static int plot_sync_mode_set (lua_State *L);
@@ -109,6 +111,8 @@ static const struct luaL_Reg plot_methods[] = {
     {"set_categories", plot_set_categories},
     {"set_legend",  plot_set_legend},
     {"get_legend",  plot_get_legend},
+    {"set_multi_labels",     plot_xaxis_hol_set},
+    {"clear_multi_labels",   plot_xaxis_hol_clear},
     {NULL, NULL}
 };
 
@@ -465,6 +469,56 @@ int
 plot_units_get (lua_State *L)
 {
     return plot_bool_property_get(L, &sg_plot::use_units);
+}
+
+int plot_xaxis_hol_set (lua_State *L)
+{
+    sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+    double delta = lua_tonumber(L, 2);
+
+    if (!lua_istable(L, 3))
+        return luaL_error(L, "expect labels table specification");
+
+    ptr_list<factor_labels>* hol = p->get_xaxis_hol();
+    bool create_hol = (hol == 0);
+    if (create_hol)
+        hol = new ptr_list<factor_labels>();
+
+    factor_labels* fl = new factor_labels(delta);
+    int n = lua_objlen(L, 3);
+    for (int k = 1; k <= n; k += 2)
+    {
+        lua_rawgeti(L, 3, k);
+        int idx = lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_rawgeti(L, 3, k + 1);
+        const char* str = lua_tostring(L, -1);
+        fl->add_mark(idx, str);
+        lua_pop(L, 1);
+
+        if (!str)
+            break;
+    }
+
+    AGG_LOCK();
+    hol->add(fl);
+    if (create_hol)
+        p->set_xaxis_hol(hol);
+    AGG_UNLOCK();
+
+    plot_update_raw (L, p, 1);
+    return 0;
+}
+
+int plot_xaxis_hol_clear (lua_State *L)
+{
+    sg_plot *p = object_check<sg_plot>(L, 1, GS_PLOT);
+    AGG_LOCK();
+    p->set_xaxis_hol(0);
+    AGG_UNLOCK();
+    plot_update_raw (L, p, 1);
+    return 0;
 }
 
 void

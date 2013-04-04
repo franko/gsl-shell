@@ -1,0 +1,16 @@
+Test,Source,Time
+ODE rk8pd,LuaJIT2 joff,10.408
+ODE rk8pd,C,1.449
+ODE rk8pd,LuaJIT2,0.732
+ODE rkf45,LuaJIT2 joff,22.27
+ODE rkf45,C,2.192
+ODE rkf45,LuaJIT2,0.95
+SF roots,LuaJIT2 joff,18.765
+SF roots,LuaJIT2 FFI,6.437
+SF roots,LuaJIT2,6.531
+VEGAS,LuaJIT2 joff,134.617
+VEGAS,C,2.509
+VEGAS,LuaJIT2,2.914
+QAG,LuaJIT2 joff,6.889
+QAG,C,1.886
+QAG,LuaJIT2,1.107

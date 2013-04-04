@@ -40,6 +40,10 @@ public:
         return m_list[k];
     }
 
+    T* at(unsigned k) const {
+        return m_list[k];
+    }
+
     unsigned size() const {
         return m_list.size();
     }

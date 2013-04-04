@@ -263,17 +263,23 @@ marker_new (lua_State *L)
 {
     const double x = luaL_checknumber(L, 1);
     const double y = luaL_checknumber(L, 2);
-    const char *sym_name = luaL_optstring(L, 3, "");
     const double size = luaL_optnumber(L, 4, 5.0);
+    const char *sym_name;
 
-    bool stroke;
-    sg_object* sym = new_marker_symbol_raw(sym_name, stroke);
+    if (lua_isnumber(L, 3))
+    {
+        int n = lua_tointeger(L, 3);
+        sym_name = marker_lookup(n);
+    }
+    else
+    {
+        sym_name = luaL_optstring(L, 3, "");
+    }
+
+    sg_object* sym = new_marker_symbol_raw(sym_name);
     draw::marker* marker = new draw::marker(x, y, sym, size);
 
-    if (stroke)
-        new(L, GS_DRAW_MARKER) trans::stroke(marker);
-    else
-        new(L, GS_DRAW_MARKER) sg_object_ref<manage_owner>(marker);
+    new(L, GS_DRAW_MARKER) sg_object_ref<manage_owner>(marker);
 
     return 1;
 }

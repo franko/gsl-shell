@@ -10,7 +10,7 @@ extern "C" {
 #include "plot-auto.h"
 #include "resource-manager.h"
 
-typedef plot<manage_owner> sg_plot;
-typedef plot_auto<manage_owner> sg_plot_auto;
+typedef plot sg_plot;
+typedef plot_auto sg_plot_auto;
 
 #endif
