@@ -308,20 +308,181 @@ The options accepted by plots are:
 GDT Linear Model
 ----------------
 
-The linear model function :func:`gdt.lm` is a generic function to perform a linear least square fit for a set of table.
+The linear model function :func:`gdt.lm` is a generic function to perform a linear least square fit based on a linear model description.
+
 The linear fit is performed accordingly to the model string.
 This latter should be of the form:
 
   y ~ factor1, factor2, ...
 
 where ``y`` is the indipendent variables.
-The factors that appears on the right hand side can be expression the make reference to the column's names.
-GSL Shell will treat columns that contains strings as *enumeration factors* while columns that contains number are considerd as *scalar factors*.
-A column can be forced to be considerd as an *enumeration factors* by using the ``%`` prefix operator.
+
+In general you can refer to the data present in the table by using the column's name.
+
+The factors that appears on the right hand side can be just variable names or a derived expression.
+All the arithmetic operations can be used plus the functions present the the "math" module.
+
+The linear model procedure classify the factors in two classes:
+
+  - *enumeration factors*, by default any column that contains string
+  - *scalar factors*, purely numerical columns
+
+A column can be forced to be considerd as an *enumeration factor* by using the ``%`` prefix operator.
+
+The *enumeration factors* are treated differently by the linear model procedure.
+For each enumeration factor the possible levels are enumerated based on the table.
+The first level is chosen as a reference and a coefficient is added in the fit for each other level.
+The enumeration can have a scalar part that multiply the coefficient in the model.
+For purely enumeration factors the scalar part is equal to 1.
+
+In mathematical terms the more general linear fit form is given by the formula:
+
+.. math::
+     f_i = \sum_{k} a_k \, A_{k,i} + \sum_{k} \sum_{p \in \textrm{levels}_k} b_{k,p} F_{p,i} B_{k,i}
+
+where $A_{k,i}$ is the matrix of the scalar factors, $B_{k,i}$ is the matrix of the scalar part of the enumeration factors and $F_{p,i}$ is the "level matrix".
+The index ``p`` will assume the values $1, ..., P_k$ where $P_k$ are the number of levels for the k-th enumerated factor.
+The value $F_{p,i}$ will be always equal to 1 for $p = 1$ since the first level is taken as a reference.
+For the other levels $F_{p,i}$ will be 1 if the level in the i-th row match the p-level and 0 otherwise.
+The coefficient determined by the fit are $a_k$ and $b_{k,p}$ for the scalar and enumerated factors respectively.
+The index ``i`` span each row in the tables by excluding only rows where one of the factors or the observation is undefined.
+
+For example, in the case of a linear fit of the form:
+
+.. math::
+     y = a + b x
+
+let us suppose that in our table we have two columns named "x" and "y".
+In this case we can make the fit by using the model:
+
+    "y ~ 1, x"
+
+and the general mathematical form given above simplifies to:
+
+.. math::
+     y_i = a_1 \dot 1 + a_2 x_i
+
+since only two scalar factors are used.
+In this case the model matrix has two columns, the first identically equal to 1 and the second equal to the ``x`` column.
+
+For this fit we could have omitted the scalar factor ``1`` as it is automatically added from the ``x`` factor.
+In general for each expression factor all the multiplicative factor of inferior degree are added.
+So, for example, if you add a factor ``"x * z^2"`` the factors ``1``, ``x``, ``z``, ``z^2`` will be automatically added.
+
+GDT linear fit example
+~~~~~~~~~~~~~~~~~~~~~~
+
+In this example we illustrate the more general case of linear model with scalar and enumerated factors.
+
+Let us suppose that we have a measured quantity ``y`` taken at different moment of time ``t``.
+We suspect that the speciman evolve with time and ``y`` varies linearly with ``t``.
+
+In addition let us suppose that we have three different tools, "tool A", "tool B" and "tool C" and we suspect they are not matched.
+
+Here a extract of how the data table will look like:
+
+       tool   t        y
+  1  tool A   0  2.74018
+  2  tool A 0.1  2.79357
+  3  tool A 0.2  3.44232
+  4  tool A 0.3  3.28009
+  5  tool A 0.4  3.47926
+  6  tool A 0.5  2.91675
+  7  tool A 0.6  2.70099
+  ...
+  31 tool B   0  2.93806
+  32 tool B 0.1  3.04179
+  33 tool B 0.2  3.19853
+  34 tool B 0.3  2.59698
+  35 tool B 0.4  3.65323
+  36 tool B 0.5  3.58917
+  37 tool B 0.6  3.65215
+  38 tool B 0.7   4.0545
+  ...
+  61 tool C   0 0.928787
+  62 tool C 0.1  1.22095
+  63 tool C 0.2  1.21612
+  64 tool C 0.3  1.19774
+  65 tool C 0.4  1.06587
+  ...
+
+Based on out knowledge we suspect that the data can be explained with a linear model of the form:
+
+.. math::
+      y_i = a + b \, t_i + \delta_p F_{p,i}
+
+where $a_i$ and $b_i$ are the linear coefficient and $\delta_p$ are the coefficients for the levels of the enumerated factor, the tool.
+These latter describe de tool effect by taking "tool A" as a reference so that
+``p`` can take two values: 1, 2 for tools B et C respectively.
+
+From the practical point this model assume that "tool C" has a dematching versus "tool A" of $delta_1$ and "tool C" has a dematching id $delta_2$.
+
+Here a way to perform the linear fit and make a plot of the data::
+
+  -- make a plot of the data
+  p = gdt.plot(t, "y ~ t | tool", {show= false})
+
+  -- set plot's titles
+  p.title = "Linear Fit example"
+  p.xtitle = "time, s"
+  p.ytitle = "thickness, mm"
+
+  -- perform a linear model fit
+  fit = gdt.lm(t, "y ~ t, tool")
+  fit:summary()
+
+  -- add into the plot the lines representing the predicted values
+  -- by tool
+  for k = 1, P do
+    local ln = graph.fxline(|t| fit:eval {tool= tools[k], t= t}, 0, 3.0)
+    p:addline(ln, graph.webcolor(k), {{'dash', 7, 3}})
+  end
+
+  p:show()
+
+You can note that the function :func:`gdt.lm` return a "fit" object.
+This latter is important because it does store the result of the fit.
+More specifically its :meth:`~Fit.summary` will print a summary of the results:
+
+          term estimate std error  t value     Pr(>|t|)
+  1          1  2.68767 0.0816757  32.9067      < 2e-16
+  2          x  1.17714 0.0391605  30.0594      < 2e-16
+  3 tooltool B 0.417387 0.0830258  5.02719 2.68273e-006
+  4 tooltool C -1.61441 0.0830258 -19.4447      < 2e-16
+
+  Standard Error: 0.321557, R2: 0.948122, Adjusted R2: 0.94568
+
+In the table above a summary of the fit result is presented including the estimated coefficients with their standard errors and the "t values".
+At the bottom the residual R square of the fit and the residual standard error are given.
+
+Later we use the :meth:`~Fit.eval` method to trace the predicted line to obtain the following plot:
+
+.. figure:: gdt-lm-plot-example.png
+
+It is interesting to note that the tool effect can be taken into account with a different model::
+
+  fit = gdt.lm(t, "y ~ t * tool")
+
+and in this latter case the system would have calculated a different coefficient for each tool.
+The corresponding model would be:
+
+.. math::
+      y_i = a + b_p F_{p,i} t_i = a + ( b_1 + b_2 F_{2,i} + b_3 F_{3,i} ) \, t_i
+
+so that a different linear coefficient is attributed to each tool.
+
+You can also add the "tool" effect::
+
+
+  fit = gdt.lm(t, "y ~ tool, t * tool")
+
+to obtain a different intercept for each tool.
 
 .. _gdt-lm-opts:
 
 GDT Linear Model Options
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Plotting options are passed in the form of a table as the last arguments.
+The options accepted by the :func:`gdt.lm` functions are:
+
+  - **predict**, a boolean value, if true a column will be added to the table with the predicted value.
