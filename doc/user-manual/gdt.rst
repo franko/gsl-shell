@@ -338,13 +338,13 @@ For purely enumeration factors the scalar part is equal to 1.
 In mathematical terms the more general linear fit form is given by the formula:
 
 .. math::
-     f_i = \sum_{k} a_k \, A_{k,i} + \sum_{k} \sum_{p \in \textrm{levels}_k} b_{k,p} F_{p,i} B_{k,i}
+     f_i = \sum_{k} a_k \, A_{k i} + \sum_{k} \sum_{p = 1}^{P_k} b_{k p} F_{k p i} B_{k i}
 
-where $A_{k,i}$ is the matrix of the scalar factors, $B_{k,i}$ is the matrix of the scalar part of the enumeration factors and $F_{p,i}$ is the "level matrix".
-The index ``p`` will assume the values $1, ..., P_k$ where $P_k$ are the number of levels for the k-th enumerated factor.
-The value $F_{p,i}$ will be always equal to 1 for $p = 1$ since the first level is taken as a reference.
-For the other levels $F_{p,i}$ will be 1 if the level in the i-th row match the p-level and 0 otherwise.
-The coefficient determined by the fit are $a_k$ and $b_{k,p}$ for the scalar and enumerated factors respectively.
+where :math:`A_{k i}` is the matrix of the scalar factors, :math:`B_{k i}` is the matrix of the scalar part of the enumeration factors and :math:`F_{k p i}` is the "level matrix".
+The index :math:`p` will assume the values :math:`1, ..., P_k` where :math:`P_k` are the number of levels for the k-th enumerated factor.
+The value :math:`F_{k p i}` will be always equal to 1 for :math:`p = 1` since the first level is taken as a reference.
+For the other levels :math:`F_{k p i}` will be 1 if the level in the i-th row match the p-level and 0 otherwise.
+The coefficient determined by the fit are :math:`a_k` and :math:`b_{k p}` for the scalar and enumerated factors respectively.
 The index ``i`` span each row in the tables by excluding only rows where one of the factors or the observation is undefined.
 
 For example, in the case of a linear fit of the form:
@@ -360,7 +360,7 @@ In this case we can make the fit by using the model:
 and the general mathematical form given above simplifies to:
 
 .. math::
-     y_i = a_1 \dot 1 + a_2 x_i
+     y_i = a_1 \cdot 1 + a_2 \, x_i
 
 since only two scalar factors are used.
 In this case the model matrix has two columns, the first identically equal to 1 and the second equal to the ``x`` column.
@@ -379,43 +379,45 @@ We suspect that the speciman evolve with time and ``y`` varies linearly with ``t
 
 In addition let us suppose that we have three different tools, "tool A", "tool B" and "tool C" and we suspect they are not matched.
 
-Here a extract of how the data table will look like:
+Here a extract of how the data table will look like::
 
-       tool   t        y
-  1  tool A   0  2.74018
-  2  tool A 0.1  2.79357
-  3  tool A 0.2  3.44232
-  4  tool A 0.3  3.28009
-  5  tool A 0.4  3.47926
-  6  tool A 0.5  2.91675
-  7  tool A 0.6  2.70099
-  ...
-  31 tool B   0  2.93806
-  32 tool B 0.1  3.04179
-  33 tool B 0.2  3.19853
-  34 tool B 0.3  2.59698
-  35 tool B 0.4  3.65323
-  36 tool B 0.5  3.58917
-  37 tool B 0.6  3.65215
-  38 tool B 0.7   4.0545
-  ...
-  61 tool C   0 0.928787
-  62 tool C 0.1  1.22095
-  63 tool C 0.2  1.21612
-  64 tool C 0.3  1.19774
-  65 tool C 0.4  1.06587
-  ...
+   >>> ms = gdt.read_csv('examples/metro-lm-example.csv')
+   >>> ms
+        tool   t        y
+   1  tool A   0  2.74018
+   2  tool A 0.1  2.79357
+   3  tool A 0.2  3.44232
+   4  tool A 0.3  3.28009
+   5  tool A 0.4  3.47926
+   6  tool A 0.5  2.91675
+   7  tool A 0.6  2.70099
+   ...
+   31 tool B   0  2.93806
+   32 tool B 0.1  3.04179
+   33 tool B 0.2  3.19853
+   34 tool B 0.3  2.59698
+   35 tool B 0.4  3.65323
+   36 tool B 0.5  3.58917
+   37 tool B 0.6  3.65215
+   38 tool B 0.7   4.0545
+   ...
+   61 tool C   0 0.928787
+   62 tool C 0.1  1.22095
+   63 tool C 0.2  1.21612
+   64 tool C 0.3  1.19774
+   65 tool C 0.4  1.06587
+   ...
 
 Based on out knowledge we suspect that the data can be explained with a linear model of the form:
 
 .. math::
-      y_i = a + b \, t_i + \delta_p F_{p,i}
+      y_i = a + b \, t_i + \delta_p F_{p i}
 
-where $a_i$ and $b_i$ are the linear coefficient and $\delta_p$ are the coefficients for the levels of the enumerated factor, the tool.
+where :math:`a_i` and :math:`b_i` are the linear coefficient and :math:`\delta_p` are the coefficients for the levels of the enumerated factor, the tool.
 These latter describe de tool effect by taking "tool A" as a reference so that
 ``p`` can take two values: 1, 2 for tools B et C respectively.
 
-From the practical point this model assume that "tool C" has a dematching versus "tool A" of $delta_1$ and "tool C" has a dematching id $delta_2$.
+From the practical point this model assume that "tool C" has a dematching versus "tool A" of :math:`\delta_1` and "tool C" has a dematching id :math:`\delta_2`.
 
 Here a way to perform the linear fit and make a plot of the data::
 
@@ -442,8 +444,9 @@ Here a way to perform the linear fit and make a plot of the data::
 
 You can note that the function :func:`gdt.lm` return a "fit" object.
 This latter is important because it does store the result of the fit.
-More specifically its :meth:`~Fit.summary` will print a summary of the results:
+More specifically its :meth:`~Fit.summary` will print a summary of the results::
 
+  >>> fit:summary()
           term estimate std error  t value     Pr(>|t|)
   1          1  2.68767 0.0816757  32.9067      < 2e-16
   2          x  1.17714 0.0391605  30.0594      < 2e-16
@@ -467,7 +470,7 @@ and in this latter case the system would have calculated a different coefficient
 The corresponding model would be:
 
 .. math::
-      y_i = a + b_p F_{p,i} t_i = a + ( b_1 + b_2 F_{2,i} + b_3 F_{3,i} ) \, t_i
+      y_i = a + b_p F_{p i} t_i = a + ( b_1 + b_2 F_{2 i} + b_3 F_{3 i} ) \, t_i
 
 so that a different linear coefficient is attributed to each tool.
 
