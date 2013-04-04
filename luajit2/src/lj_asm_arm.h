@@ -1,6 +1,6 @@
 /*
 ** ARM IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Register allocator extensions --------------------------------------- */
@@ -91,6 +91,7 @@ static MCode *asm_exitstub_gen(ASMState *as, ExitNo group)
   *mxp++ = group*EXITSTUBS_PER_GROUP;
   for (i = 0; i < EXITSTUBS_PER_GROUP; i++)
     *mxp++ = ARMI_B|((-6-i)&0x00ffffffu);
+  lj_mcode_sync(as->mcbot, mxp);
   lj_mcode_commitbot(as->J, mxp);
   as->mcbot = mxp;
   as->mclim = as->mcbot + MCLIM_REDZONE;
@@ -355,7 +356,7 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
     IRRef ref = args[n];
     IRIns *ir = IR(ref);
 #if !LJ_SOFTFP
-    if (irt_isfp(ir->t)) {
+    if (ref && irt_isfp(ir->t)) {
       RegSet of = as->freeset;
       Reg src;
       if (!LJ_ABI_SOFTFP && !(ci->flags & CCI_VARARG)) {
@@ -1642,13 +1643,13 @@ static void asm_intmin_max(ASMState *as, IRIns *ir, int cc)
     kcmp = 0;
     right = ra_alloc1(as, ir->op2, rset_exclude(RSET_GPR, left));
   }
-  if (dest != right) {
+  if (kmov || dest != right) {
     emit_dm(as, ARMF_CC(ARMI_MOV, cc)^kmov, dest, right);
     cc ^= 1;  /* Must use opposite conditions for paired moves. */
   } else {
     cc ^= (CC_LT^CC_GT);  /* Otherwise may swap CC_LT <-> CC_GT. */
   }
-  if (dest != left) emit_dm(as, ARMF_CC(ARMI_MOV, cc)^kmov, dest, left);
+  if (dest != left) emit_dm(as, ARMF_CC(ARMI_MOV, cc), dest, left);
   emit_nm(as, ARMI_CMP^kcmp, left, right);
 }
 

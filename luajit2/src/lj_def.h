@@ -1,6 +1,6 @@
 /*
 ** LuaJIT common internal definitions.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_DEF_H
@@ -101,8 +101,8 @@ typedef unsigned int uintptr_t;
 #define checkptr32(x)	((uintptr_t)(x) == (uint32_t)(uintptr_t)(x))
 
 /* Every half-decent C compiler transforms this into a rotate instruction. */
-#define lj_rol(x, n)	(((x)<<(n)) | ((x)>>(8*sizeof(x)-(n))))
-#define lj_ror(x, n)	(((x)<<(8*sizeof(x)-(n))) | ((x)>>(n)))
+#define lj_rol(x, n)	(((x)<<(n)) | ((x)>>(-(int)(n)&(8*sizeof(x)-1))))
+#define lj_ror(x, n)	(((x)<<(-(int)(n)&(8*sizeof(x)-1))) | ((x)>>(n)))
 
 /* A really naive Bloom filter. But sufficient for our needs. */
 typedef uintptr_t BloomFilter;
@@ -120,7 +120,7 @@ typedef uintptr_t BloomFilter;
 #define LJ_NOINLINE	__attribute__((noinline))
 
 #if defined(__ELF__) || defined(__MACH__)
-#if !((defined(__sun__) && defined(__svr4__)) || defined(__solaris__) || defined(__CELLOS_LV2__))
+#if !((defined(__sun__) && defined(__svr4__)) || defined(__CELLOS_LV2__))
 #define LJ_NOAPI	extern __attribute__((visibility("hidden")))
 #endif
 #endif
@@ -242,10 +242,18 @@ static LJ_AINLINE uint32_t lj_getu32(const void *p)
 #define LJ_FASTCALL	__fastcall
 #endif
 
+#ifdef _M_PPC
+unsigned int _CountLeadingZeros(long);
+#pragma intrinsic(_CountLeadingZeros)
+static LJ_AINLINE uint32_t lj_fls(uint32_t x)
+{
+  return _CountLeadingZeros(x) ^ 31;
+}
+#else
 unsigned char _BitScanForward(uint32_t *, unsigned long);
 unsigned char _BitScanReverse(uint32_t *, unsigned long);
-unsigned long _byteswap_ulong(unsigned long);
-uint64_t _byteswap_uint64(uint64_t);
+#pragma intrinsic(_BitScanForward)
+#pragma intrinsic(_BitScanReverse)
 
 static LJ_AINLINE uint32_t lj_ffs(uint32_t x)
 {
@@ -256,13 +264,33 @@ static LJ_AINLINE uint32_t lj_fls(uint32_t x)
 {
   uint32_t r; _BitScanReverse(&r, x); return r;
 }
+#endif
 
+unsigned long _byteswap_ulong(unsigned long);
+uint64_t _byteswap_uint64(uint64_t);
 #define lj_bswap(x)	(_byteswap_ulong((x)))
 #define lj_bswap64(x)	(_byteswap_uint64((x)))
 
-/* MSVC is only supported on x86/x64, where unaligned loads are always ok. */
+#if defined(_M_PPC) && defined(LUAJIT_NO_UNALIGNED)
+/*
+** Replacement for unaligned loads on Xbox 360. Disabled by default since it's
+** usually more costly than the occasional stall when crossing a cache-line.
+*/
+static LJ_AINLINE uint16_t lj_getu16(const void *v)
+{
+  const uint8_t *p = (const uint8_t *)v;
+  return (uint16_t)((p[0]<<8) | p[1]);
+}
+static LJ_AINLINE uint32_t lj_getu32(const void *v)
+{
+  const uint8_t *p = (const uint8_t *)v;
+  return (uint32_t)((p[0]<<24) | (p[1]<<16) | (p[2]<<8) | p[3]);
+}
+#else
+/* Unaligned loads are generally ok on x86/x64. */
 #define lj_getu16(p)	(*(uint16_t *)(p))
 #define lj_getu32(p)	(*(uint32_t *)(p))
+#endif
 
 #else
 #error "missing defines for your compiler"

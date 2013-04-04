@@ -1,6 +1,6 @@
 /*
 ** MIPS IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Register allocator extensions --------------------------------------- */
@@ -71,6 +71,7 @@ static void asm_sparejump_setup(ASMState *as)
     memset(mxp+2, 0, MIPS_SPAREJUMP*8);
     mxp += MIPS_SPAREJUMP*2;
     lua_assert(mxp < as->mctop);
+    lj_mcode_sync(as->mcbot, mxp);
     lj_mcode_commitbot(as->J, mxp);
     as->mcbot = mxp;
     as->mclim = as->mcbot + MCLIM_REDZONE;
@@ -282,6 +283,7 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
       else
 	ofs += 4;
     }
+    checkmclim(as);
   }
 }
 

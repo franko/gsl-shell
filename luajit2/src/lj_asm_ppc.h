@@ -1,6 +1,6 @@
 /*
 ** PPC IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Register allocator extensions --------------------------------------- */
@@ -286,6 +286,7 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
       else
 	ofs += 4;
     }
+    checkmclim(as);
   }
   if ((ci->flags & CCI_VARARG))  /* Vararg calls need to know about FPR use. */
     emit_tab(as, fpr == REGARG_FIRSTFPR ? PPCI_CRXOR : PPCI_CREQV, 6, 6, 6);
