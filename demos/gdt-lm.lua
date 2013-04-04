@@ -33,8 +33,6 @@ local function lm_demo()
 	local fit = gdt.lm(t, "y ~ x, tool", {predict= true})
 	fit:summary()
 
-	local X, c = fit:model(t), fit.c
-	local _, FN = X:dim()
 	for k = 1, P do
 		local ln = graph.fxline(|x| fit:eval {tool= tools[k], x= x}, 0, dx)
 		p:addline(ln, graph.webcolor(k), {{'dash', 7, 3}})
