@@ -1,7 +1,7 @@
 
  -- base.lua
  -- 
- -- Copyright (C) 2009-2011 Francesco Abbate
+ -- Copyright (C) 2009-2013 Francesco Abbate
  -- 
  -- This program is free software; you can redistribute it and/or modify
  -- it under the terms of the GNU General Public License as published by

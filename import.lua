@@ -10,7 +10,7 @@
 -- (even assigning nil will do) in a main chunk before being used
 -- anywhere or assigned to inside a function.
 --
--- Copyright (C) 2009-2012 Francesco Abbate
+-- Copyright (C) 2009-2013 Francesco Abbate
 --
 -- Contributions made by Lesley De Cruz.
 -- Some parts are adapted from the 'strict' module included in Lua 5.1.

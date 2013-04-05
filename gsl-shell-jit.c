@@ -2,7 +2,7 @@
  * GSL shell interactive interface to GSL library
  * Based on the Lua programming language
  *
- * Copyright (C) 2009 Francesco Abbate
+ * Copyright (C) 2009-2013 Francesco Abbate
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -208,7 +208,7 @@ static int docall(lua_State *L, int narg, int clear)
 
 static void print_version(void)
 {
-    l_message(NULL, "GSL Shell " GSL_SHELL_RELEASE ", Copyright (C) 2009-2012 Francesco Abbate");
+    l_message(NULL, "GSL Shell " GSL_SHELL_RELEASE ", Copyright (C) 2009-2013 Francesco Abbate");
     l_message(NULL, "GNU Scientific Library, Copyright (C) The GSL Team");
     l_message(NULL, LUAJIT_VERSION " -- " LUAJIT_COPYRIGHT ". " LUAJIT_URL);
 }
