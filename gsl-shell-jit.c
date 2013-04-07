@@ -230,6 +230,15 @@ static void print_jit_status(lua_State *L)
     fputs("\n", stderr);
 }
 
+static void print_help_message()
+{
+    l_message(NULL, "");
+    l_message(NULL, "Documentation available at http://www.nongnu.org/gsl-shell/doc/.");
+    l_message(NULL, "To obtain help on a function or object type: help(func).");
+    l_message(NULL, "Type demo() to see the lists of demo.");
+    l_message(NULL, "");
+}
+
 static int getargs(lua_State *L, char **argv, int n)
 {
     int narg;
@@ -651,6 +660,7 @@ static int pmain(lua_State *L)
         if (lua_stdin_is_tty()) {
             print_version();
             print_jit_status(L);
+            print_help_message();
             dotty(L);
         } else {
             dofile(L, NULL);  /* executes stdin as a file */

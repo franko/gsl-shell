@@ -109,7 +109,10 @@ void fx_console::init()
     FXString msg;
     msg.format("GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
                "GNU Scientific Library, Copyright (C) The GSL Team\n"
-               "%s -- %s\n",
+               "%s -- %s\n\n"
+               "Documentation available at http://www.nongnu.org/gsl-shell/doc/.\n"
+               "To obtain help on a function or object type: help(func).\n"
+               "Type demo() to see the lists of demo.\n\n",
                GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
 
     setText(msg);

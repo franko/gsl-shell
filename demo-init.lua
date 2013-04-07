@@ -29,6 +29,10 @@ local function print_demos_list()
 	 print(v.name .. ' - ' .. v.description)
       end
       print ''
+      print("***************************************************")
+      print("Type demo(<name>) to execute the demo.")
+      print("For example type demo(\"wave\") for wave particle demo.")
+      print ''
    end
 end
 
