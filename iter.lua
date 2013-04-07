@@ -69,9 +69,19 @@ local function cdata_tos(t, deep)
   end
 end
 
+local function table_tos(t, deep)
+  return (deep and t:show() or fmt('<table: %p>', t))
+end
+
 tos = function (t, depth)
    local tp = type(t)
    if tp == 'table' then
+      if type(t.show) == 'function' then
+        local ok, s = pcall(table_tos, t, depth == 0)
+        if ok and type(s) == 'string' then
+          return s
+        end
+      end
       if depth >= max_depth then return fmt('<table: %p>', t) end
       local ls, n = {}, #t
       local skip = {}
