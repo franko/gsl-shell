@@ -310,6 +310,9 @@ GDT Linear Model
 
 The linear model function :func:`gdt.lm` is a generic function to perform a linear least square fit based on a linear model description.
 
+It does return a special type of object that store the result of the fit.
+The fit object can be used to print a summary of performing other operations like evaluating the predicted values. See the section about the :ref:`fit objects <gdt-fit-obj>` for more informations.
+
 The linear fit is performed accordingly to the model string.
 This latter should be of the form:
 
@@ -480,6 +483,52 @@ You can also add the "tool" effect::
   fit = gdt.lm(t, "y ~ tool, t * tool")
 
 to obtain a different intercept for each tool.
+
+.. _gdt-fit-obj:
+
+GDT Fit Object
+~~~~~~~~~~~~~~
+
+.. class:: LMFit
+
+   A fit object is returned by the function :func:`gdt.lm` and store the result of a linear fit.
+
+   .. method:: summary()
+
+      Print a summary of the fit results with some statistical informations.
+
+      Example::
+
+        >>> fit = gdt.lm(t, "y ~ x, tool")
+        >>> fit:summary()
+                term estimate std error  t value    Pr(>|t|)
+        1          1  2.68767 0.0816757  32.9067     < 2e-16
+        2          x  1.17714 0.0391605  30.0594     < 2e-16
+        3 tooltool B 0.417387 0.0830258  5.02719 2.68273e-06
+        4 tooltool C -1.61441 0.0830258 -19.4447     < 2e-16
+
+        Standard Error: 0.321557, R2: 0.948122, Adjusted R2: 0.94568
+
+      In the table the coefficient estimated are shown with the associated standard error, t value and t value probability.
+      This latter is a test that can help to determine if the effect is significative.
+
+      In the last row the residual standard error is reported with the fit's R square.
+
+   .. method:: eval(data)
+
+      Return the predicted value based on the provided ``data``.
+      This latter should be a table whose field match the variables' names used in the model.
+
+      Example::
+
+         fit = gdt.lm(t, "y ~ time, site | tool")
+         fit.eval({time= 20.5, site= 1, tool= "Tool A"})
+
+    .. method:: model(t)
+
+      Return the model matrix associated with the given fit method and a given data table.
+      This latter can be different from the table used for the fit.
+      The obtained matrix can be used, for example, with the function :func:`num.linfit`.
 
 .. _gdt-lm-opts:
 
