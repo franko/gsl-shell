@@ -393,6 +393,10 @@ function FIT.summary(fit)
     print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit.SE, fit.R2, fit.R2_adj))
 end
 
+function FIT.show(fit)
+    return string.format("<fit %p: model: %s>", fit, fit.model_formula)
+end
+
 local FIT_MT = {__index = FIT}
 
 -- used to eval a model for a single entry
@@ -428,6 +432,7 @@ local function lm(t, model_formula, options)
         fit_add_predicted(t, y_name, X, fit, index_map)
     end
 
+    fit.model_formula = model_formula
     fit.schema = schema
     fit.x_exprs = x_exprs
     fit.SE, fit.R2, fit.R2_adj = fit_compute_Rsquare(fit, X, y)
