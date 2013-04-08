@@ -19,24 +19,26 @@ The possibility to mark as undefined the cell's value is also useful to take int
 
 Here an example of a GDT table:
 
-   >>> ms = gdt.read_csv("benchmakrs/results.csv")
+   >>> ms = gdt.read_csv("examples/perf-julia.csv")
    >>> ms
-           Test       Source    Time
-   1  ODE rk8pd LuaJIT2 joff  10.408
-   2  ODE rk8pd            C   1.449
-   3  ODE rk8pd      LuaJIT2   0.732
-   4  ODE rkf45 LuaJIT2 joff   22.27
-   5  ODE rkf45            C   2.192
-   6  ODE rkf45      LuaJIT2    0.95
-   7   SF roots LuaJIT2 joff  18.765
-   8   SF roots  LuaJIT2 FFI   6.437
-   9   SF roots      LuaJIT2   6.531
-   10     VEGAS LuaJIT2 joff 134.617
-   11     VEGAS            C   2.509
-   12     VEGAS      LuaJIT2   2.914
-   13       QAG LuaJIT2 joff   6.889
-   14       QAG            C   1.886
-   15       QAG      LuaJIT2   1.107
+               test   language  time.c
+   1            fib    Fortran    0.28
+   2      parse_int    Fortran    9.22
+   3      quicksort    Fortran    1.65
+   4         mandel    Fortran    0.76
+   5         pi_sum    Fortran       1
+   6  rand_mat_stat    Fortran    2.23
+   7   rand_mat_mul    Fortran    1.14
+   8            fib      Julia    1.97
+   9      parse_int      Julia    1.72
+   10     quicksort      Julia    1.37
+   11        mandel      Julia    1.45
+   12        pi_sum      Julia       1
+   13 rand_mat_stat      Julia    1.95
+   14  rand_mat_mul      Julia       1
+   15           fib     Python   46.03
+   16     parse_int     Python   25.29
+   ...
 
 As you can see in this case the data is loaded from a CSV file. In the first line the headers are shown.
 
@@ -524,11 +526,28 @@ GDT Fit Object
          fit = gdt.lm(t, "y ~ time, site | tool")
          fit.eval({time= 20.5, site= 1, tool= "Tool A"})
 
-    .. method:: model(t)
+   .. method:: model(t)
 
       Return the model matrix associated with the given fit method and a given data table.
       This latter can be different from the table used for the fit.
       The obtained matrix can be used, for example, with the function :func:`num.linfit`.
+
+   .. method:: predict(t)
+
+      Return a column matrix with the predicted values for the given data table.
+      This latter can be different from the table used for the fit.
+
+   .. attribute:: SE
+
+      The residual standard error of the fit.
+
+   .. attribute:: R2
+
+      The R square of the fit.
+
+   .. attribute:: R2_adj
+
+      The adjusted R square of the fit.
 
 .. _gdt-lm-opts:
 
