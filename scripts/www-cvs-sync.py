@@ -47,8 +47,12 @@ for dirpath, subdirs, files in os.walk(www_dir):
     www_list += [os.path.join(dirpath, name) for name in files]
     if 'CVS' in subdirs:
         subdirs.remove('CVS')
+    if '.git' in subdirs:
+	subdirs.remove('.git')
 
 for www_filename in www_list:
+    if os.path.basename(www_filename) in ['status.log', '.gitignore']:
+	continue
     name, src_filename = base_replace(www_filename, 'www/gsl-shell', 'doc/html')
     dirname = os.path.dirname(name)
     src_dirname = os.path.join('doc/html', dirname)
