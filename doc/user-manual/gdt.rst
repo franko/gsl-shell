@@ -87,6 +87,12 @@ GDT Functions
     Make a bar plot of the data in the table ``t`` based on the plot description ``plot_desc``.
     The meaning of the plot description strings and the options are the same of the function :func:`gdt.plot`.
 
+.. function:: read_csv(filename)
+
+    Read a file in CSV format (Comma Separated Values) and return a GDT table.
+    If the file have headers they will be used to define the columns' names.
+    The function will determine automatically is the first line should be considered as a line of headers or data.
+
 GDT Methods
 -----------
 
