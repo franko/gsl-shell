@@ -116,5 +116,48 @@ local function source_def(def)
 	return function() i = 0; return source end
 end
 
+local function csv_format(x)
+	if type(x) == 'number' then
+		return x
+	elseif type(x) == 'string' then
+		if match(x, "^%a[%w_]+$") then
+			return x
+		else
+			local cs = {}
+			for i = 1, #x do
+				local c = x:sub(i, i)
+				if c == '"' then
+					cs[#cs+1] = '"'
+					cs[#cs+1] = '"'
+				else
+					cs[#cs+1] = c
+				end
+			end
+			return string.format("\"%s\"", table.concat(cs, ""))
+		end
+	else
+		return ""
+	end
+end
+
+local function write_csv_row(f, row)
+	for i = 1, #row do
+		row[i] = csv_format(row[i])
+	end
+	f:write(string.format("%s\n", table.concat(row, ",")))
+end
+
+function gdt.write_csv(t, filename)
+	local f = assert(io.open(filename, "w"))
+	local hs = t:headers()
+	write_csv_row(f, hs)
+	for i, r in t:rows() do
+		local s = {}
+		for j, k in ipairs(hs) do s[j] = r[k] end
+		write_csv_row(f, s)
+	end
+	f:close()
+end
+
 gdt.read_csv = function(filename, options) return gdt_parse(source_csv(filename, options)) end
 gdt.def = function(def) return gdt_parse(source_def(def)) end

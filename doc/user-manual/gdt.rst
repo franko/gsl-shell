@@ -93,6 +93,10 @@ GDT Functions
     If the file have headers they will be used to define the columns' names.
     The function will determine automatically is the first line should be considered as a line of headers or data.
 
+.. function:: write_csv(t, filename)
+
+    Write a CSV file with the given ``filename`` with the content of the table ``t``.
+
 GDT Methods
 -----------
 
