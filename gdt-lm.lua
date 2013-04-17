@@ -36,7 +36,7 @@ local function enum_levels(factors, levels)
         for i, name in ipairs(factors) do
             lev[i] = levels[name][ks[i] + 1]
         end
-        if not (factors.omit_ref_level and first) then ls[#ls + 1] = lev end
+        if not first then ls[#ls + 1] = lev end
         first = false
 
         for i = n, 0, -1 do
@@ -61,26 +61,6 @@ local function level_does_match(t, i, factors, req_levels)
         if y ~= req_levels[k] then return 0 end
     end
     return 1
-end
-
-local function expr_are_equal(a, b)
-    if a == b then
-        return true
-    elseif type(a) == 'table' and type(b) == 'table' then
-        if a.operator == b.operator then
-            return expr_are_equal(a[1], b[1]) and expr_are_equal(a[2], b[2])
-        end
-    end
-    return false
-end
-
-local function scalar_term_exists(expr_list, s)
-    for i, expr in ipairs(expr_list) do
-        if not expr.factor and expr_are_equal(expr.scalar, s) then
-            return true
-        end
-    end
-    return false
 end
 
 local function print_expr_level(factors, levels)
@@ -222,18 +202,6 @@ local function build_lm_model(t, expr_list, y_expr)
         end
     end
 
-    -- flag the factors whose scalar part is already used
-    -- in the model. In these cases the first level of the
-    -- factor will be omitted from the model matrix.
-    for k, expr in ipairs(expr_list) do
-        if expr.factor then
-            local s = expr.scalar
-            if scalar_term_exists(expr_list, s) then
-                expr.factor.omit_ref_level = true
-            end
-        end
-    end
-
     -- for each unique used factor prepare the levels list and
     -- set the column index
     local levels, factor_index = {}, {}
@@ -254,8 +222,7 @@ local function build_lm_model(t, expr_list, y_expr)
     for k, expr in ipairs(expr_list) do
         if expr.factor then
             local lnb = level_number(expr.factor, levels)
-            local inn = expr.factor.omit_ref_level and lnb - 1 or lnb
-            expr.mult = inn
+            expr.mult = lnb - 1
         else
             expr.mult = 1
         end
@@ -364,13 +331,15 @@ local function expand_exprs(expr_list)
         local m = expr_to_monomial(e.scalar, context)
         local ls = mon.combine(m)
         for _, mexp in ipairs(ls) do
+            local eexp = monomial_to_expr(mexp, context)
             if not monomial_exists(lsm, mexp) then
                 lsm[j], j = mexp, j+1
-                local eexp = monomial_to_expr(mexp, context)
                 lsexp[#lsexp+1] = {scalar= eexp}
             end
+            if e.factor then
+                lsexp[#lsexp+1] = {scalar= eexp, factor= e.factor}
+            end
         end
-        if e.factor then lsexp[#lsexp+1] = e end
     end
 
     return lsexp
