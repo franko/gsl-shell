@@ -107,6 +107,17 @@ match_anonymous_header(const char* s)
     return (-1);
 }
 
+static void
+write_anonymous_header(char buffer[], const int buf_size, int index)
+{
+    buffer[0] = 'V';
+    int nc = snprintf(buffer + 1, buf_size - 1, "%d", index + 1);
+    if (unlikely(nc >= buf_size - 1)) {
+        fputs("invalid buffer size for table anonymous header\n", stderr);
+        abort();
+    }
+}
+
 static gdt_block *
 gdt_block_new(int size)
 {
@@ -251,7 +262,12 @@ gdt_table_set_string(gdt_table *t, int i, int j, const char *s)
 const char *
 gdt_table_get_header(gdt_table *t, int j)
 {
-    return string_array_get(t->headers, j);
+    const char * s = string_array_get(t->headers, j);
+    if (s == NULL) {
+        write_anonymous_header(t->header_temp, GDT_HEADER_TEMP_SIZE, j);
+        return t->header_temp;
+    }
+    return s;
 }
 
 void

@@ -43,6 +43,8 @@ typedef struct {
     struct __gdt_table *table;
 } gdt_table_cursor;
 
+#define GDT_HEADER_TEMP_SIZE 16
+
 struct __gdt_table {
     int size1;
     int size2;
@@ -51,6 +53,7 @@ struct __gdt_table {
     gdt_block *block;
     gdt_index *strings;
     struct string_array headers[1];
+    char header_temp[GDT_HEADER_TEMP_SIZE];
     gdt_table_cursor cursor[1];
 };
 

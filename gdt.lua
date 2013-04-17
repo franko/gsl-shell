@@ -104,8 +104,7 @@ local function gdt_table_dim(t) return t.size1, t.size2 end
 
 local function gdt_table_get_header(t, k)
     assert(k > 0 and k <= t.size2, 'invalid column index')
-    local s = cgdt.gdt_table_get_header(t, k - 1)
-    return (s == nil and 'V' .. k or ffi.string(s))
+    return ffi.string(cgdt.gdt_table_get_header(t, k - 1));
 end
 
 local function gdt_table_set_header(t, k, str)
