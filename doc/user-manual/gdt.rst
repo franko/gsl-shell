@@ -159,6 +159,10 @@ GDT Methods
 
         t:append("average", |r| (r.x + r.y) / 2)
 
+.. method:: define(name[, f_init])
+
+     Like the method :meth:`~Gdt.append` with the exception that, if a column with the given name already exists, it will be overwritten with the new values.
+
 .. method:: cursor()
 
      Return an object of type cursor.

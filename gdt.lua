@@ -129,9 +129,7 @@ local function gdt_table_column_iter(t, j)
     return f, t, 0
 end
 
-local function gdt_table_insert_column(t, col_name, j, f)
-    cgdt.gdt_table_insert_columns(t, j - 1, 1)
-
+local function gdt_table_eval_column(t, j, f)
     local n = #t
     if not f then
         for i = 1, n do
@@ -143,12 +141,25 @@ local function gdt_table_insert_column(t, col_name, j, f)
             t:set(i, j, status and x or nil)
         end
     end
+end
 
-    t:set_header(j, col_name)
+local function gdt_table_insert_column(t, col_name, j, f)
+    cgdt.gdt_table_insert_columns(t, j - 1, 1)
+    gdt_table_eval_column(t, j, f)
+    gdt_table_set_header(t, j, col_name)
 end
 
 local function gdt_table_append_column(t, col_name, f)
     gdt_table_insert_column(t, col_name, t.size2 + 1, f)
+end
+
+local function gdt_table_define_column(t, col_name, f)
+    local j = gdt_table_header_index(t, col_name)
+    if not j then
+        gdt_table_insert_column(t, col_name, t.size2 + 1, f)
+    else
+        gdt_table_eval_column(t, j, f)
+    end
 end
 
 local function val_tostr(e)
@@ -272,6 +283,7 @@ local gdt_methods = {
     col_type   = gdt_table_column_type,
     insert     = gdt_table_insert_column,
     append     = gdt_table_append_column,
+    define     = gdt_table_define_column,
     cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
 }
