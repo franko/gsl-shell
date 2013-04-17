@@ -203,7 +203,7 @@ int
 gdt_table_header_index(gdt_table *t, const char* col_name)
 {
     int j = string_array_lookup(t->headers, col_name);
-    if (likely(j >= 0)) {
+    if (j >= 0) {
         return j;
     } else {
         int jan = match_anonymous_header(col_name);
@@ -378,11 +378,8 @@ const gdt_element *
 gdt_table_cursor_get(gdt_table_cursor *c, const char *key)
 {
     gdt_table *t = c->table;
-    int k;
-    if (!t)
-        return NULL;
-    k = string_array_lookup(t->headers, key);
-    if (k < 0)
-        return NULL;
-    return gdt_table_get(t, c->index, k);
+    if (t) {
+        return gdt_table_get_by_name(t, c->index, key);
+    }
+    return NULL;
 }
