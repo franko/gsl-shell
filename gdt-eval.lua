@@ -60,7 +60,7 @@ local function gdt_eval_actions(t)
         if column_class[index] == 'factor' then
             return {scalar= 1, factor= {id}}
         else
-            return {scalar= {name= id, index= t:col_index(id)}}
+            return {scalar= {name= id, index= index}}
         end
     end
 
