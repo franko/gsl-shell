@@ -5,13 +5,27 @@ local expr_print = require 'expr-print'
 local sqrt, abs = math.sqrt, math.abs
 local type, pairs, ipairs = type, pairs, ipairs
 
-local function add_unique(t, val)
+local function add_unique_gen(t, val, equal)
     for k, x in ipairs(t) do
-        if x == val then return k end
+        if equal(x, val) then return k end
     end
     local n = #t + 1
     t[n] = val
     return n
+end
+
+local std_equal = function(a, b) return a == b end
+
+local function list_equal(a, b)
+    local n = #a
+    for i = 1, n do
+        if a[i] ~= b[i] then return false end
+    end
+    return true
+end
+
+local function add_unique(t, val)
+    return add_unique_gen(t, val, std_equal)
 end
 
 local function level_number(factors, levels)
@@ -325,24 +339,43 @@ local function monomial_exists(ls, e)
 end
 
 local function expand_exprs(expr_list)
-    local lsm, lsexp, j = {}, {}, 1
+    -- mls is a table indexed with: 0 for scalar and an id >= 1 for
+    -- each factor combination.
+    -- Each value in mls is a list of the monomials already
+    -- included in the expansion.
+    -- mls[0] is the list of monomials for the purely scalar terms.
+    -- msl[<factor id>] is the list of monomials for the named
+    -- factor term.
+    local mls, els = {[0]= {}}, {}
+    local fls = {}
     for k, e in ipairs(expr_list) do
         local context = {}
         local m = expr_to_monomial(e.scalar, context)
         local ls = mon.combine(m)
         for _, mexp in ipairs(ls) do
             local eexp = monomial_to_expr(mexp, context)
-            if not monomial_exists(lsm, mexp) then
-                lsm[j], j = mexp, j+1
-                lsexp[#lsexp+1] = {scalar= eexp}
+            local smls = mls[0]
+            if not monomial_exists(smls, mexp) then
+                smls[#smls+1] = mexp
+                els[#els+1] = {scalar= eexp}
             end
-            if e.factor then
-                lsexp[#lsexp+1] = {scalar= eexp, factor= e.factor}
+            local fact = e.factor
+            local fact_id = add_unique_gen(fls, fact, list_equal)
+            if fact then
+                local fmls = mls[fact_id]
+                if not fmls then
+                    fmls = {}
+                    mls[fact_id] = fmls
+                end
+                if not monomial_exists(fmls, mexp) then
+                    fmls[#fmls+1] = mexp
+                    els[#els+1] = {scalar= eexp, factor= fact}
+                end
             end
         end
     end
 
-    return lsexp
+    return els
 end
 
 local FIT = {}
