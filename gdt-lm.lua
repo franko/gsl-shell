@@ -403,6 +403,31 @@ function FIT.eval(fit, tn)
     return sy
 end
 
+local function gdt_table_interp(t, expr_formula, spec)
+    local cgsl = require('gsl')
+    local gdt_eval_actions = require('gdt-eval')
+    local actions = gdt_eval_actions(t)
+    local l = mini.lexer(expr_formula)
+    local schema = mini.schema(l, actions)
+
+    local interp_type = (spec and spec.type) and spec.type or "cspline"
+    local T = cgsl["gsl_interp_" .. interp_type]
+    if T == nil then error("invalid interpolator type") end
+
+    build_lm_model(t, schema.x, schema.y.scalar)
+    
+    local X, y, index_map = eval_lm_matrix(t, schema.x, schema.y.scalar)
+    local n = #y
+    local interp = ffi.gc(cgsl.gsl_interp_alloc(T, n), cgsl.gsl_interp_free)
+    local accel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
+    local x_data, y_data = X.data, y.data
+    cgsl.gsl_interp_init(interp, x_data, y_data, n)
+    local function eval(x_req)
+        return cgsl.gsl_interp_eval(interp, x_data, y_data, x_req, acc)
+    end
+    return eval
+end
+
 local function lm(t, model_formula, options)
     local gdt_eval_actions = require('gdt-eval')
     local actions = gdt_eval_actions(t)
@@ -432,3 +457,4 @@ local function lm(t, model_formula, options)
 end
 
 gdt.lm = lm
+gdt.interp = gdt_table_interp
