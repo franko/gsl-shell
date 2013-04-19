@@ -185,6 +185,11 @@ GDT Methods
      Returns a table with the name of the columns (headers).
      The value are given in the column order so that the index of each element corresponds to the index of the given column in the table.
 
+.. method:: levels(j)
+            levels(column_name)
+
+     Returns a list of the unique levels for the given column identified by its index ``j`` or its name.
+
 .. _gdt-plot:
 
 GDT Plots

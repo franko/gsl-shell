@@ -270,6 +270,20 @@ local function gdt_table_column_type(t, col)
     return find_column_type(t, j)
 end
 
+local function gdt_table_levels(t, j)
+    local n = #t
+    local ls = {}
+    for i = 1, n do
+        local x = gdt_table_get(t, i, j)
+        local found = false
+        for k, y in ipairs(ls) do
+            if x == y then found = true; break end
+        end
+        if not found then ls[#ls+1] = x end
+    end
+    return ls
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -286,6 +300,7 @@ local gdt_methods = {
     define     = gdt_table_define_column,
     cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
+    levels     = gdt_table_levels,
 }
 
 local gdt_mt = {

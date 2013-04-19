@@ -14,18 +14,12 @@ local function add_unique_gen(t, val, equal)
     return n
 end
 
-local std_equal = function(a, b) return a == b end
-
 local function list_equal(a, b)
     local n = #a
     for i = 1, n do
         if a[i] ~= b[i] then return false end
     end
     return true
-end
-
-local function add_unique(t, val)
-    return add_unique_gen(t, val, std_equal)
 end
 
 local function level_number(factors, levels)
@@ -204,6 +198,8 @@ local function expr_to_monomial(expr, context)
 end
 
 local function build_lm_model(t, expr_list, y_expr)
+    local std_equal = function(a, b) return a == b end
+
     local N, M = t:dim()
 
     -- list of unique factors referenced in expr_list
@@ -211,7 +207,7 @@ local function build_lm_model(t, expr_list, y_expr)
     for k, expr in ipairs(expr_list) do
         if expr.factor then
             for _, f_name in ipairs(expr.factor) do
-                add_unique(used_factors, f_name)
+                add_unique_gen(used_factors, f_name, std_equal)
             end
         end
     end
@@ -220,17 +216,8 @@ local function build_lm_model(t, expr_list, y_expr)
     -- set the column index
     local levels, factor_index = {}, {}
     for k, name in ipairs(used_factors) do
-        levels[name] = {}
+        levels[name] = t:levels(name)
         factor_index[name] = t:col_index(name)
-    end
-
-    -- find the levels for each of the used factors
-    local get = t.get
-    for i = 1, N do
-        for _, name in ipairs(used_factors) do
-            local v = get(t, i, factor_index[name])
-            add_unique(levels[name], v)
-        end
     end
 
     for k, expr in ipairs(expr_list) do
