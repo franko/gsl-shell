@@ -223,7 +223,7 @@ local function gschema(lexer, actions)
 end
 
 local function parse_expr(lexer, actions)
-    return expr(lexer, actions, 0)
+    return expr_list(lexer, actions)
 end
 
 return {lexer = new_lexer, schema= schema, gschema= gschema, parse = parse_expr}

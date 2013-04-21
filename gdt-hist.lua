@@ -1,6 +1,7 @@
 
 local ffi = require 'ffi'
 local gsl = require 'gsl'
+local gdt_expr = require 'gdt-expr'
 
 local rect = graph.rect
 
@@ -8,20 +9,11 @@ local function compare_float(a, b)
     return a < b
 end
 
-local function gdt_table_hist(t, col_name, opt)
-    local j
-    if type(col_name) == 'string' then
-        j = t:col_index(col_name)
-        if not j then error(string.format("invalid column name: %s", col_name)) end
-    else
-        if type(col_name) ~= 'number' then error("invalid column index") end
-        j = col_name
-    end
-
-    local n = #t
-
-    local dv = matrix.alloc(n, 1)
-    for i = 1, n do dv.data[i - 1] = t:get(i, j) end
+local function gdt_table_hist(t, expr_formula, opt)
+    local expr = gdt_expr.parse_expr(t, expr_formula)
+    local names = gdt_expr.eval_mult(t, expr)
+    local dv = gdt_expr.eval_matrix(t, expr)
+    local n = #dv
 
     dv:sort(compare_float)
 
@@ -49,13 +41,12 @@ local function gdt_table_hist(t, col_name, opt)
     local eps = (b - a) * 1e-5
     gsl.gsl_histogram_set_ranges_uniform(h, a - eps, b + eps)
 
-    for i, x in t:column(j) do
-        if x then
-            gsl.gsl_histogram_increment(h, x)
-        end
+    for i = 1, n do
+        local x = dv:get(i,1)
+        gsl.gsl_histogram_increment(h, x)
     end
 
-    local name = t:header(j)
+    local name = names[1]
     local title = (opt and opt.title) and opt.title or (name .. ' histogram')
     local color = (opt and opt.color) and opt.color or 'green'
     local p = graph.plot(title)
@@ -69,7 +60,7 @@ local function gdt_table_hist(t, col_name, opt)
         local y = gsl.gsl_histogram_get(h, k)
         local r = rect(lim[0], 0, lim[1], y)
         p:add(r, color)
-        p:addline(r, 'darkgray')
+        p:addline(r, graph.rgb(50,50,50))
     end
 
     p:show()

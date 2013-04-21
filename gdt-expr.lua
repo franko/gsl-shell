@@ -206,4 +206,11 @@ function gdt_expr.parse_schema(t, formula)
     return mini.schema(l, actions)
 end
 
+function gdt_expr.parse_expr(t, formula)
+    local gdt_eval_actions = require('gdt-eval')
+    local actions = gdt_eval_actions(t)
+    local l = mini.lexer(formula)
+    return mini.parse(l, actions)
+end
+
 return gdt_expr
