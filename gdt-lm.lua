@@ -165,11 +165,11 @@ end
 local FIT = {}
 
 function FIT.model(fit, t_alt)
-    return gdt_expr.eval_matrix(t_alt, fit.x_exprs)
+    return gdt_expr.eval_matrix(t_alt, fit.x_exprs, fit.info)
 end
 
 function FIT.predict(fit, t_alt)
-    local X = gdt_expr.eval_matrix(t_alt, fit.x_exprs)
+    local X = gdt_expr.eval_matrix(t_alt, fit.x_exprs, fit.info)
     return X * fit.c
 end
 
@@ -192,7 +192,7 @@ function FIT.eval(fit, tn)
         eval_table:set(1, k, tn[name])
     end
     local coeff = fit.c
-    local sX = gdt_expr.eval_matrix(eval_table, fit.x_exprs)
+    local sX = gdt_expr.eval_matrix(eval_table, fit.x_exprs, fit.info)
     local sy = 0
     for k = 0, #coeff - 1 do
         sy = sy + sX.data[k] * coeff.data[k]
@@ -205,16 +205,18 @@ local function lm(t, model_formula, options)
 
     local expand = not options or (options.expand == nil or options.expand)
     local x_exprs = expand and expand_exprs(schema.x) or schema.x
+    local y_expr = schema.y.scalar
 
-    local names = gdt_expr.eval_mult(t, x_exprs)
-    local X, y, index_map = gdt_expr.eval_matrix(t, x_exprs, schema.y.scalar)
-    local fit = compute_fit(X, y, names)
+    local info = gdt_expr.eval_mult(t, x_exprs, y_expr)
+    local X, y = gdt_expr.eval_matrix(t, x_exprs, info, y_expr)
+    local fit = compute_fit(X, y, info.names)
 
     if options and options.predict then
-        local y_name = expr_print.expr(schema.y.scalar)
-        fit_add_predicted(t, y_name, X, fit, index_map)
+        local y_name = expr_print.expr(y_expr)
+        fit_add_predicted(t, y_name, X, fit, info.index_map)
     end
 
+    fit.info = info
     fit.model_formula = model_formula
     fit.schema = schema
     fit.x_exprs = x_exprs

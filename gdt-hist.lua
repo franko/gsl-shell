@@ -11,8 +11,8 @@ end
 
 local function gdt_table_hist(t, expr_formula, opt)
     local expr = gdt_expr.parse_expr(t, expr_formula)
-    local names = gdt_expr.eval_mult(t, expr)
-    local dv = gdt_expr.eval_matrix(t, expr)
+    local info = gdt_expr.eval_mult(t, expr)
+    local dv = gdt_expr.eval_matrix(t, expr, info)
     local n = #dv
 
     dv:sort(compare_float)
@@ -46,7 +46,7 @@ local function gdt_table_hist(t, expr_formula, opt)
         gsl.gsl_histogram_increment(h, x)
     end
 
-    local name = names[1]
+    local name = info.names[1]
     local title = (opt and opt.title) and opt.title or (name .. ' histogram')
     local color = (opt and opt.color) and opt.color or 'green'
     local p = graph.plot(title)
