@@ -87,4 +87,22 @@ local function eval(expr, scope)
     end
 end
 
-return {schema = schema_print, expr = ex_print, expr_list = exlist_print, eval = eval}
+-- return a set with all the variables referenced in a given expression
+local function ref_list_rec(expr, list)
+    if type(expr) == 'number' then
+        return
+    elseif expr.name then
+        list[expr.name] = true
+    elseif expr.func then
+        ref_list_rec(expr.arg, list)
+    else
+        if #expr == 1 then
+            ref_list_rec(expr[1], list)
+        else
+            ref_list_rec(expr[1], list)
+            ref_list_rec(expr[2], list)
+        end
+    end
+end
+
+return {schema = schema_print, expr = ex_print, expr_list = exlist_print, eval = eval, references = ref_list_rec}
