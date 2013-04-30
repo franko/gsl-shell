@@ -118,7 +118,7 @@ local function collate_factors(t, i, js)
     local c = {}
     local n = #js
     for k = 1, n do
-        c[k] = t:get(i, js[k])
+        c[k] = tostring(t:get(i, js[k]))
     end
     return c
 end
