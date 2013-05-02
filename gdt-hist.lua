@@ -12,7 +12,7 @@ end
 local function gdt_table_hist(t, expr_formula, opt)
     local expr = gdt_expr.parse_expr(t, expr_formula)
     local info = gdt_expr.eval_mult(t, expr)
-    local dv = gdt_expr.eval_matrix(t, expr, info)
+    local dv = gdt_expr.eval_matrix(t, expr, info, nil, true)
     local n = #dv
 
     dv:sort(compare_float)

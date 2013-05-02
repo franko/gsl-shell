@@ -146,7 +146,15 @@ local function eval_scalar_gen(t)
     return set, {ident= id_res, func= func_res}
 end
 
-function gdt_expr.eval_matrix(t, expr_list, info, y_expr)
+-- return the model matrix for the given table and expression list.
+-- the "info" field contains the information about the levels and
+-- will be augmented with coeff's names information if "annotate_names" is true.
+-- y_expr can be optianally given to evaluate a column matrix for the same rows
+-- of the table.
+-- the function returns X, Y and index_map, respectively: X model matrix, Y column matrix
+-- and index mapping. This latter given the correspondance
+-- (table's row index) => (matrix' row index)
+function gdt_expr.eval_matrix(t, expr_list, info, y_expr, annotate_names)
     local eval_set, eval_scope = eval_scalar_gen(t)
     local eval_scalar = expr_print.eval
 
@@ -251,8 +259,7 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr)
         end
     end
 
-    info.names = {}
-    info.index_map = index_map
+    local names = {}
 
     -- here NR and XM gives the dimension of the model matrix
     local NR = index_map_count(index_map)
@@ -262,22 +269,22 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr)
     for k = 1, NE do
         local expr = expr_list[k]
         if expr.factor then
-            set_contrasts_matrix(X, expr, col_index, info.names)
+            set_contrasts_matrix(X, expr, col_index, names)
         else
-            set_scalar_column(X, expr.scalar, col_index, info.names)
+            set_scalar_column(X, expr.scalar, col_index, names)
         end
         col_index = col_index + expr.mult
     end
 
     if y_expr then
-        set_scalar_column(Y, y_expr, 1, info.names)
+        set_scalar_column(Y, y_expr, 1, names)
     end
 
-    if y_expr then
-        return X, Y
+    if annotate_names then
+        info.names = names
     end
 
-    return X
+    return X, Y, index_map
 end
 
 function gdt_expr.parse_schema(t, formula)
