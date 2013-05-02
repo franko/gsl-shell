@@ -319,8 +319,21 @@ local function gdt_table_cursor_get(c, k)
     return nil
 end
 
+local function gdt_table_cursor_set(c, k, val)
+    local tp = type(val)
+    if tp == 'number' then
+        cgdt.gdt_table_cursor_set_number(c, k, val)
+    elseif tp == 'string' then
+        cgdt.gdt_table_cursor_set_string(c, k, val)
+    else
+        assert(tp ~= nil, 'expect a number, string or nil value')
+        cgdt.gdt_table_cursor_set_undef(c, k)
+    end
+end
+
 local cursor_mt = {
     __index = gdt_table_cursor_get,
+    __newindex = gdt_table_cursor_set,
 }
 
 ffi.metatype(gdt_table_cursor, cursor_mt)
