@@ -152,7 +152,7 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr)
 
     -- the "index_map" creates a mapping between matrix indexes and table
     -- indexes to take into account missing data in some rows.
-    local index_map = map_missing_rows(t, expr_list, y_expr_scalar)
+    local index_map = map_missing_rows(t, expr_list, y_expr)
 
     local N = #t
     local NE = #expr_list
