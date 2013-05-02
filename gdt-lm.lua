@@ -144,8 +144,8 @@ local function expand_exprs(expr_list)
                 els[#els+1] = {scalar= eexp}
             end
             local fact = e.factor
-            local fact_id = add_unique_gen(fls, fact, list_equal)
             if fact then
+                local fact_id = add_unique_gen(fls, fact, list_equal)
                 local fmls = mls[fact_id]
                 if not fmls then
                     fmls = {}
