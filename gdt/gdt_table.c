@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "gdt_table.h"
 #include "xmalloc.h"
@@ -236,7 +237,11 @@ void
 gdt_table_set_number(gdt_table *t, int i, int j, double num)
 {
     gdt_element *e = &t->data[i * t->tda + j];
-    e->number = num;
+    if (isfinite(num)) {
+        e->number = num;
+    } else { /* if the number is NaN of +/- Inf we set the value to UNDEF */
+        e->word.hi = TAG_UNDEF;
+    }
 }
 
 void
