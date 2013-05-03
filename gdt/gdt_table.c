@@ -244,19 +244,23 @@ gdt_table_set_string(gdt_table *t, int i, int j, const char *s)
 {
     gdt_element *e = &t->data[i * t->tda + j];
 
-    int str_index = gdt_index_lookup(t->strings, s);
-    if (str_index < 0)
-    {
-        str_index = gdt_index_add(t->strings, s);
+    if (likely(s != NULL)) {
+        int str_index = gdt_index_lookup(t->strings, s);
         if (str_index < 0)
         {
-            t->strings = gdt_index_resize(t->strings);
             str_index = gdt_index_add(t->strings, s);
+            if (str_index < 0)
+            {
+                t->strings = gdt_index_resize(t->strings);
+                str_index = gdt_index_add(t->strings, s);
+            }
         }
-    }
 
-    e->word.hi = TAG_STRING;
-    e->word.lo = str_index;
+        e->word.hi = TAG_STRING;
+        e->word.lo = str_index;
+    } else {
+        e->word.hi = TAG_UNDEF;
+    }
 }
 
 const char *
