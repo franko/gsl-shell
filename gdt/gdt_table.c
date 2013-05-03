@@ -371,14 +371,28 @@ gdt_table_insert_rows(gdt_table *t, int i_in, int n)
 gdt_table_cursor *
 gdt_table_get_cursor(gdt_table *t)
 {
+    t->cursor->index = 0;
     return t->cursor;
+}
+
+int
+gdt_table_cursor_set_index(gdt_table_cursor *c, int index)
+{
+    gdt_table *t = c->table;
+    if (likely(t != NULL)) {
+        if (index >= 0 && index < t->size1) {
+            c->index = index;
+            return 0;
+        }
+    }
+    return (-1);
 }
 
 const gdt_element *
 gdt_table_cursor_get(gdt_table_cursor *c, const char *key)
 {
     gdt_table *t = c->table;
-    if (t) {
+    if (likely(t != NULL)) {
         return gdt_table_get_by_name(t, c->index, key);
     }
     return NULL;
@@ -390,8 +404,10 @@ gdt_table_cursor_set_number(gdt_table_cursor *c, const char *key, double x)
     gdt_table *t = c->table;
     if (likely(t != NULL)) {
         int j = gdt_table_header_index(t, key);
-        gdt_table_set_number(t, c->index, j, x);
-        return 0;
+        if (j >= 0) {
+            gdt_table_set_number(t, c->index, j, x);
+            return 0;
+        }
     }
     return (-1);
 }
@@ -402,8 +418,10 @@ gdt_table_cursor_set_string(gdt_table_cursor *c, const char *key, const char *x)
     gdt_table *t = c->table;
     if (likely(t != NULL)) {
         int j = gdt_table_header_index(t, key);
-        gdt_table_set_string(t, c->index, j, x);
-        return 0;
+        if (j >= 0) {
+            gdt_table_set_string(t, c->index, j, x);
+            return 0;
+        }
     }
     return (-1);
 }
@@ -414,8 +432,10 @@ gdt_table_cursor_set_undef(gdt_table_cursor *c, const char *key)
     gdt_table *t = c->table;
     if (likely(t != NULL)) {
         int j = gdt_table_header_index(t, key);
-        gdt_table_set_undef(t, c->index, j);
-        return 0;
+        if (j >= 0) {
+            gdt_table_set_undef(t, c->index, j);
+            return 0;
+        }
     }
     return (-1);
 }

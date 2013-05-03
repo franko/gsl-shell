@@ -77,5 +77,6 @@ extern gdt_table_cursor *  gdt_table_get_cursor         (gdt_table *t);
 extern int                 gdt_table_cursor_set_number  (gdt_table_cursor *c, const char *key, double x);
 extern int                 gdt_table_cursor_set_string  (gdt_table_cursor *c, const char *key, const char *x);
 extern int                 gdt_table_cursor_set_undef   (gdt_table_cursor *c, const char *key);
+extern int                 gdt_table_cursor_set_index   (gdt_table_cursor *c, int index);
 
 #endif

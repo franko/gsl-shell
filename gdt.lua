@@ -215,17 +215,17 @@ local function gdt_table_headers(t)
     return name
 end
 
-local function gdt_table_rows(t)
-    local n = #t
-    local cursor = cgdt.gdt_table_get_cursor(t)
-    local function f(t, i)
-        i = i + 1
-        if i <= n then
-            cursor.__index = i - 1
-            return i, cursor
-        end
+local function cursor_iter(cursor, i)
+    i = i + 1
+    local rv = cgdt.gdt_table_cursor_set_index(cursor, i - 1)
+    if rv == 0 then -- if the index is out of bounds a non zero value is returned
+        return i, cursor
     end
-    return f, t, 0
+end
+
+local function gdt_table_rows(t)
+    local cursor = cgdt.gdt_table_get_cursor(t)
+    return cursor_iter, cursor, 0
 end
 
 local function gdt_table_filter(t, f)
@@ -313,19 +313,21 @@ local function gdt_table_cursor_get(c, k)
 end
 
 local function gdt_table_cursor_set(c, k, val)
+    local rv
     local tp = type(val)
     if tp == 'number' then
-        cgdt.gdt_table_cursor_set_number(c, k, val)
+        rv = cgdt.gdt_table_cursor_set_number(c, k, val)
     elseif tp == 'string' then
-        cgdt.gdt_table_cursor_set_string(c, k, val)
+        rv = cgdt.gdt_table_cursor_set_string(c, k, val)
     else
         assert(tp ~= nil, 'expect a number, string or nil value')
-        cgdt.gdt_table_cursor_set_undef(c, k)
+        rv = cgdt.gdt_table_cursor_set_undef(c, k)
     end
+    if rv ~= 0 then error("invalid cursor or table's index") end
 end
 
 local cursor_mt = {
-    __index = gdt_table_cursor_get,
+    __index    = gdt_table_cursor_get,
     __newindex = gdt_table_cursor_set,
 }
 
