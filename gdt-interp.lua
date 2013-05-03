@@ -16,9 +16,8 @@ function gdt.interp(t, expr_formula, interp_type)
     local T = interp_lookup[interp_type or "cspline"]
     if T == nil then error("invalid interpolator type") end
 
-    gdt_expr.eval_mult(t, schema.x)
-
-    local X, y, index_map = gdt_expr.eval_matrix(t, schema.x, schema.y.scalar)
+    local info = gdt_expr.eval_mult(t, schema.x)
+    local X, y = gdt_expr.eval_matrix(t, schema.x, info, schema.y.scalar)
     local n = #y
     local interp = ffi.gc(cgsl.gsl_interp_alloc(T, n), cgsl.gsl_interp_free)
     local accel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
