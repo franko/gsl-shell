@@ -209,7 +209,6 @@ local function lm(t, model_formula, options)
 
     local info = gdt_expr.eval_mult(t, x_exprs, y_expr)
     local X, y, index_map = gdt_expr.eval_matrix(t, x_exprs, info, y_expr, true)
-    print(index_map)
     local fit = compute_fit(X, y, info.names)
 
     if options and options.predict then
