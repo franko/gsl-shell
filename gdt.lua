@@ -208,12 +208,6 @@ local function gdt_table_show(dt)
     return concat(lines, '\n')
 end
 
-local function gdt_table_get_cursor(t)
-    local c = cgdt.gdt_table_get_cursor(t)
-    c.__index = 0
-    return c
-end
-
 local function gdt_table_headers(t)
     local m = t.size2
     local name = {}
@@ -298,7 +292,6 @@ local gdt_methods = {
     insert     = gdt_table_insert_column,
     append     = gdt_table_append_column,
     define     = gdt_table_define_column,
-    cursor     = gdt_table_get_cursor,
     rows       = gdt_table_rows,
     levels     = gdt_table_levels,
 }
