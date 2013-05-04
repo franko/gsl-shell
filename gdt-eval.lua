@@ -35,7 +35,7 @@ end
 
 local function prefix_action(sym, a)
     if a.factor then error('non multiplicative opeation on factors') end
-    return {scalar= {operator= sym, a}}
+    return {scalar= {operator= sym, a.scalar}}
 end
 
 local function enum_action(id)
