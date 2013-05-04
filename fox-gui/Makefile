@@ -47,6 +47,8 @@ CXXCOMPILE = $(CC) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
 ifeq ($(HOST_SYS),Windows)
   LDFLAGS += -mwindows
+else
+  LIBS += -ldl
 endif
 
 TARGETS = $(GSL_SHELL_GUI)
