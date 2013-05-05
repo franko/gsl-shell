@@ -227,4 +227,51 @@ local function lm(t, model_formula, options)
     return setmetatable(fit, FIT_MT)
 end
 
+local function eval_scalar_direct()
+    local math = math
+    local x
+    local function id_res(expr) return x end
+    local function func_res(expr) return math[expr.func] end
+    local function set(new_x) x = new_x end
+    return set, {ident= id_res, func= func_res}
+end
+
+local function simple_fit(t, model_formula, options)
+    local schema = gdt_expr.parse_schema(t, model_formula)
+    local expand = not options or (options.expand == nil or options.expand)
+    local x_exprs = expand and expand_exprs(schema.x) or schema.x
+    local y_expr = schema.y.scalar
+
+    local info = gdt_expr.eval_mult(t, x_exprs, y_expr)
+    local X, y = gdt_expr.eval_matrix(t, x_exprs, info, y_expr)
+    local coeff_vec = num.linfit(X, y)
+    local coeff = coeff_vec.data
+
+    local refs = {}
+    for _, e in ipairs(x_exprs) do
+        expr_print.references(e.scalar, refs)
+    end
+
+    local var_name
+    for v in pairs(refs) do
+        assert(var_name == nil, "cannot use more that one variable")
+        var_name = v
+    end
+
+    local eval_set_x, eval_scope = eval_scalar_direct()
+    local eval_scalar = expr_print.eval
+
+    local function eval(x)
+        eval_set_x(x)
+        local y = 0
+        for i, e in ipairs(x_exprs) do
+            y = y + coeff[i - 1] * eval_scalar(e.scalar, eval_scope)
+        end
+        return y
+    end
+
+    return eval
+end
+
 gdt.lm = lm
+gdt.fit = simple_fit
