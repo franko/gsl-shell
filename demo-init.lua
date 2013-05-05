@@ -26,22 +26,22 @@ local function print_demos_list()
    for group, t in pairs(demo_list) do
       io.write('*** ', group, '\n')
       for k, v in ipairs(t) do
-	 print(v.name .. ' - ' .. v.description)
+         print(v.name .. ' - ' .. v.description)
       end
       print ''
       print("***************************************************")
-      print("Type demo(<name>) to execute the demo.")
-      print("For example type demo(\"wave\") for wave particle demo.")
-      print ''
    end
+   print("Type demo(<name>) to execute the demo.")
+   print("For example type demo(\"wave\") for wave particle demo.")
+   print ''
 end
 
 local function load_demo(name)
    for group, t in pairs(demo_list) do
       for k, entry in ipairs(t) do
-	 if entry.name == name then
-	    return entry
-	 end
+         if entry.name == name then
+            return entry
+         end
       end
    end
 end
