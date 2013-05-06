@@ -401,17 +401,52 @@ local function expr_get_functions(exprs)
     return jys
 end
 
+local function expr_get_references(expr, refs)
+    if type(expr) == 'number' then
+        return
+    elseif expr.name then
+        refs[expr.name] = true
+    elseif expr.operator then
+        for _, sub_expr in ipairs(expr) do
+            expr_get_references(sub_expr, refs)
+        end
+    elseif expr.func then
+        expr_get_references(expr.arg, refs)
+    end
+end
+
+local function compute_plot_info(schema, plot_info)
+    local x_refs, y_refs, e_refs = {}, {}, {}
+    for _, e in ipairs(schema.x) do
+        expr_get_references(e, x_refs)
+    end
+
+    for _, e in ipairs(schema.y) do
+        expr_get_references(e, y_refs)
+    end
+
+    for _, e in ipairs(schema.enums) do
+        expr_get_references(e, e_refs)
+    end
+
+    plot_info.refs = {x= x_refs, y= y_refs, enums= e_refs}
+end
+
 local function schema_from_plot_descr(plot_descr, t)
     local l = mini.lexer(plot_descr)
     local actions = plot_actions_gen(t)
     return mini.gschema(l, actions)
 end
 
-local function gdt_table_category_plot(plotter, t, plot_descr, opt)
+local function gdt_table_category_plot(plotter, t, plot_descr, opt, plot_info)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
 
     local schema = schema_from_plot_descr(plot_descr, t)
+    if plot_info then
+        plot_info.class = 'category'
+        compute_plot_info(schema, plot_info)
+    end
     local jxs = idents_get_column_indexes(t, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -455,7 +490,7 @@ function gdt.xyline(t, plot_descr)
     return ln
 end
 
-local function gdt_table_xyplot(t, plot_descr, opt)
+local function gdt_table_xyplot(t, plot_descr, opt, plot_info)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
 
@@ -463,6 +498,10 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local use_markers = opt and (opt.markers ~= false) or true
 
     local schema = schema_from_plot_descr(plot_descr, t)
+    if plot_info then
+        plot_info.class = 'xy'
+        compute_plot_info(schema, plot_info)
+    end
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -556,11 +595,10 @@ function gdt.reduce(t_src, schema_descr)
     return t
 end
 
+local gdt_expr = require('gdt-expr')
+
 local function is_simple_numeric(t, plot_descr)
-    local gdt_eval_actions = require('gdt-eval')
-    local actions = gdt_eval_actions(t)
-    local l = mini.lexer(plot_descr)
-    local schema = mini.gschema(l, actions)
+    local schema = gdt_expr.parse_general_schema(t, plot_descr)
     if #schema.x == 1 then
         local expr = schema.x[1]
         return (expr.factor == nil)
@@ -568,18 +606,18 @@ local function is_simple_numeric(t, plot_descr)
     return false
 end
 
-function gdt.plot(t, plot_descr, opts)
+function gdt.plot(t, plot_descr, opts, plot_info)
     if is_simple_numeric(t, plot_descr) then
-        return gdt_table_xyplot(t, plot_descr, opts)
+        return gdt_table_xyplot(t, plot_descr, opts, plot_info)
     else
-        return gdt_table_category_plot(lineplot, t, plot_descr, opts)
+        return gdt_table_category_plot(lineplot, t, plot_descr, opts, plot_info)
     end
 end
 
-function gdt.lineplot(t, plot_descr, opts)
-    return gdt_table_category_plot(lineplot, t, plot_descr, opts)
+function gdt.lineplot(t, plot_descr, opts, plot_info)
+    return gdt_table_category_plot(lineplot, t, plot_descr, opts, plot_info)
 end
 
-function gdt.barplot(t, plot_descr, opts)
-    return gdt_table_category_plot(barplot, t, plot_descr, opts)
+function gdt.barplot(t, plot_descr, opts, plot_info)
+    return gdt_table_category_plot(barplot, t, plot_descr, opts, plot_info)
 end

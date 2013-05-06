@@ -287,6 +287,13 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr, annotate_names)
     return X, Y, index_map
 end
 
+function gdt_expr.parse_general_schema(t, formula)
+    local gdt_eval_actions = require('gdt-eval')
+    local actions = gdt_eval_actions(t)
+    local l = mini.lexer(formula)
+    return mini.gschema(l, actions)
+end
+
 function gdt_expr.parse_schema(t, formula)
     local gdt_eval_actions = require('gdt-eval')
     local actions = gdt_eval_actions(t)

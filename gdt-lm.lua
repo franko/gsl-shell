@@ -200,6 +200,36 @@ function FIT.eval(fit, tn)
     return sy
 end
 
+local function get_exprs_refs(exprs)
+    local refs = {}
+    for _, e in ipairs(exprs) do
+        expr_print.references(e.scalar, refs)
+    end
+    return refs
+end
+
+function FIT.plot(fit, plot_formula, opts)
+    local plot_info = {}
+    local p = gdt.plot(fit.table, plot_formula, opts, plot_info)
+    local lm_refs, lm_factors = {}, {}
+    for _, e in ipairs(fit.x_exprs) do
+        expr_print.references(e.scalar, lm_refs)
+        if e.factor then
+            for _, factor_name in ipairs(e.factor) then
+                lm_factors[factor_name] = true
+            end
+        end
+    end
+    if plot_info.class == 'xy' then
+        local broken = false
+        for lm_var_name in pairs(lm_refs) do
+            if not plot_info.refs.x[lm_var_name] then
+                if not plot_info.refs.enums[lm_var_name] then
+                    broken = true
+
+    end
+end
+
 local function lm(t, model_formula, options)
     local schema = gdt_expr.parse_schema(t, model_formula)
 
