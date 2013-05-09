@@ -1,6 +1,7 @@
 local format, concat = string.format, table.concat
 
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['%'] = -1}
+-- TODO: this information is duplicated from expr-parser => remove the duplication
+local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['='] = 3, ['>'] = 3, ['<'] = 3, ['%'] = -1}
 
 local ex_print
 
@@ -32,8 +33,8 @@ end
 ex_print = function(e)
     if type(e) == 'number' then
         return e, 3
-    elseif e.name then
-        local s = e.name
+    elseif type(e) == 'string' then
+        local s = e
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
     elseif e.func then
@@ -49,7 +50,8 @@ end
 local function schema_print(e)
     local ys = exlist_print(e.y)
     local xs = exlist_print(e.x)
-    return format("%s ~ %s", ys, xs)
+    local cs = exlist_print(e.conds)
+    return format("%s ~ %s : %s", ys, xs, cs)
 end
 
 local function eval_operator(op, a, b)
@@ -58,28 +60,31 @@ local function eval_operator(op, a, b)
     elseif op == '*' then return a * b
     elseif op == '/' then return a / b
     elseif op == '^' then return a ^ b
+    elseif op == '=' then return (a == b and 1 or 0)
+    elseif op == '>' then return (a > b  and 1 or 0)
+    elseif op == '<' then return (a < b  and 1 or 0)
     else error('unkown operation: ' .. op) end
 end
 
-local function eval(expr, scope)
+local function eval(expr, scope, scope_state)
     if type(expr) == 'number' then
         return expr
-    elseif expr.name then
-        return scope.ident(expr)
+    elseif type(expr) == 'string' then
+        return scope.ident(expr, scope_state)
     elseif expr.func then
-        local arg_value = eval(expr.arg, scope)
+        local arg_value = eval(expr.arg, scope, scope_state)
         if arg_value then
             local f = scope.func(expr)
-            if not f then error('unknown function: '..expr.func) end
+            if not f then error('unknown function: ' .. expr.func) end
             return f(arg_value)
         end
     else
         if #expr == 1 then
-            local v = eval(expr[1], scope)
+            local v = eval(expr[1], scope, scope_state)
             if v then return -v end
         else
-            local a = eval(expr[1], scope)
-            local b = eval(expr[2], scope)
+            local a = eval(expr[1], scope, scope_state)
+            local b = eval(expr[2], scope, scope_state)
             if a and b then
                 return eval_operator(expr.operator, a, b)
             end
@@ -91,8 +96,8 @@ end
 local function ref_list_rec(expr, list)
     if type(expr) == 'number' then
         return
-    elseif expr.name then
-        list[expr.name] = true
+    elseif type(expr) == 'string' then
+        list[expr] = true
     elseif expr.func then
         ref_list_rec(expr.arg, list)
     else

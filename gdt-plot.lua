@@ -1,5 +1,7 @@
 local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
+local AST_actions = require 'expr-actions'
+local gdt_expr = require 'gdt-expr'
 
 local concat = table.concat
 local select, unpack = select, unpack
@@ -557,13 +559,11 @@ function gdt.reduce(t_src, schema_descr)
 end
 
 local function is_simple_numeric(t, plot_descr)
-    local gdt_eval_actions = require('gdt-eval')
-    local actions = gdt_eval_actions(t)
     local l = mini.lexer(plot_descr)
-    local schema = mini.gschema(l, actions)
+    local schema = mini.gschema(l, AST_actions)
     if #schema.x == 1 then
-        local expr = schema.x[1]
-        return (expr.factor == nil)
+        local xs = gdt_expr.extract_factors(t, schema.x)
+        return (xs[1].factor == nil)
     end
     return false
 end

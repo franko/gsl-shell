@@ -7,8 +7,9 @@ local mini_lexer_mt = {
     __index = mini_lexer,
 }
 
-local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1, ['|'] = 1}
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['%'] = -1}
+local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1, ['|'] = 1, [':'] = 1}
+local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['='] = 3, ['>'] = 3, ['<'] = 3, ['%'] = -1}
+local max_oper_prio = 3
 
 local function new_lexer(src)
     local lexer = {n = 1, src= src}
@@ -151,7 +152,7 @@ local function ident_singleton(lexer, actions)
 end
 
 expr = function(lexer, actions, prio)
-    if prio > 2 then
+    if prio > max_oper_prio then
         return factor(lexer, actions)
     end
 
@@ -200,10 +201,14 @@ local function schema(lexer, actions)
     local y = expr(lexer, actions, 0)
     expect(lexer, '~')
     local x = expr_list(lexer, actions)
+    local conds = {}
+    if accept(lexer, ':') then
+        conds = expr_list(lexer, actions)
+    end
     if lexer.token.type ~= 'EOF' then
         lexer:local_error('unexpected symbol:')
     end
-    return actions.schema(x, y)
+    return actions.schema(x, y, conds)
 end
 
 local function gschema(lexer, actions)
@@ -216,10 +221,14 @@ local function gschema(lexer, actions)
     else
         enums = {}
     end
+    local conds = {}
+    if accept(lexer, ':') then
+        conds = expr_list(lexer, actions)
+    end
     if lexer.token.type ~= 'EOF' then
         lexer:local_error('unexpected symbol:')
     end
-    return actions.schema(x, y, enums)
+    return actions.schema(x, y, conds, enums)
 end
 
 local function parse_expr(lexer, actions)

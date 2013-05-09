@@ -1,28 +1,10 @@
 local expr_print = require 'expr-print'
 local gdt_expr = require 'gdt-expr'
+local check = require 'check'
+local mon = require 'monomial'
 
 local sqrt, abs = math.sqrt, math.abs
 local type, ipairs = type, ipairs
-
-local function add_unique_gen(t, val, equal)
-    for k, x in ipairs(t) do
-        if equal(x, val) then return k end
-    end
-    local n = #t + 1
-    t[n] = val
-    return n
-end
-
-local function list_equal(a, b)
-    local n = #a
-    for i = 1, n do
-        if a[i] ~= b[i] then return false end
-    end
-    return true
-end
-
-local check = require 'check'
-local mon = require 'monomial'
 
 local function monomial_to_expr(m, context)
     local coeff = m[1]
@@ -130,31 +112,15 @@ local function expand_exprs(expr_list)
     -- mls[0] is the list of monomials for the purely scalar terms.
     -- msl[<factor id>] is the list of monomials for the named
     -- factor term.
-    local mls, els = {[0]= {}}, {}
-    local fls = {}
+    local mls, els = {}, {}
     for k, e in ipairs(expr_list) do
         local context = {}
-        local m = expr_to_monomial(e.scalar, context)
-        local ls = mon.combine(m)
-        for _, mexp in ipairs(ls) do
+        local m = expr_to_monomial(e, context)
+        for _, mexp in ipairs(mon.combine(m)) do
             local eexp = monomial_to_expr(mexp, context)
-            local smls = mls[0]
-            if not monomial_exists(smls, mexp) then
-                smls[#smls+1] = mexp
-                els[#els+1] = {scalar= eexp}
-            end
-            local fact = e.factor
-            if fact then
-                local fact_id = add_unique_gen(fls, fact, list_equal)
-                local fmls = mls[fact_id]
-                if not fmls then
-                    fmls = {}
-                    mls[fact_id] = fmls
-                end
-                if not monomial_exists(fmls, mexp) then
-                    fmls[#fmls+1] = mexp
-                    els[#els+1] = {scalar= eexp, factor= fact}
-                end
+            if not monomial_exists(mls, mexp) then
+                mls[#mls+1] = mexp
+                els[#els+1] = eexp
             end
         end
     end
@@ -201,14 +167,26 @@ function FIT.eval(fit, tn)
 end
 
 local function lm(t, model_formula, options)
-    local schema = gdt_expr.parse_schema(t, model_formula)
+    local schema = gdt_expr.parse_schema(model_formula)
+
+    print("SCHEMA'x xs")
+    for _, e in ipairs(schema.x) do print(e) end
 
     local expand = not options or (options.expand == nil or options.expand)
-    local x_exprs = expand and expand_exprs(schema.x) or schema.x
-    local y_expr = schema.y.scalar
+    local xs = expand and expand_exprs(schema.x) or schema.x
 
-    local info = gdt_expr.eval_mult(t, x_exprs, y_expr)
-    local X, y, index_map = gdt_expr.eval_matrix(t, x_exprs, info, y_expr, true)
+    print("EXPANDED")
+    for _, e in ipairs(xs) do print(e) end
+
+    local x_exprs = gdt_expr.extract_factors(t, xs)
+    local y_expr = schema.y
+
+--    local info = gdt_expr.eval_mult(t, x_exprs, y_expr)
+
+    print('EXPRESSIONS')
+    for _, e in ipairs(x_exprs) do print(e) end
+
+    local X, y, info, index_map = gdt_expr.eval_matrix(t, x_exprs, y_expr, schema.conds, true)
     local fit = compute_fit(X, y, info.names)
 
     if options and options.predict then

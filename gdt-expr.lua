@@ -1,34 +1,26 @@
 local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
+local AST_actions = require('expr-actions')
+
+local type, pairs, ipairs = type, pairs, ipairs
 
 local gdt_expr = {}
+
+local function list_add_unique(ls, x)
+    local n = #ls
+    for i = 1, n do
+        if ls[i] == x then return end
+    end
+    ls[n+1] = x
+end
 
 local function level_number(factors, levels)
     if not factors then return 0 end
     local nb = 1
     for _, factor_name in ipairs(factors) do
-        nb = nb * #levels[factor_name]
+        nb = nb * (#levels[factor_name] - 1)
     end
     return nb
-end
-
-local function dup_list(b)
-    local a = {}
-    local n = #b
-    for k = 1, n do a[k] = b[k] end
-    return a
-end
-
-local function combine_factors_rec(factors, index, degree, ls, parz)
-    if degree == 0 then
-        for k = 1, #parz do ls[#ls+1] = parz[k] end
-    else
-        if index > #factors then return end
-        local np1 = dup_list(parz)
-        combine_factors_rec(factors, index + 1, degree, ls, np1)
-        np1[#np1+1] = factors[index]
-        combine_factors_rec(factors, index + 1, degree - 1, ls, np1)
-    end
 end
 
 local function expr_is_unit(e)
@@ -42,8 +34,22 @@ local function add_expr_refs(expr, refs)
     end
 end
 
-local function map_missing_rows(t, expr_list, y_expr_scalar)
-    local refs = {}
+local function table_var_resolve(expr, st)
+    local t, i = st[1], st[2]
+    return t:get(i, expr)
+end
+
+local function math_func_resolve(expr)
+    return math[expr.func]
+end
+
+local eval_table_context = {
+    ident = table_var_resolve,
+    func = math_func_resolve,
+}
+
+local function map_missing_rows(t, expr_list, y_expr_scalar, conditions)
+    local refs, levels = {}, {}
     for k, expr in ipairs(expr_list) do
         add_expr_refs(expr, refs)
     end
@@ -51,13 +57,33 @@ local function map_missing_rows(t, expr_list, y_expr_scalar)
         expr_print.references(y_expr_scalar, refs)
     end
 
+    for factor_name in pairs(refs) do
+        levels[factor_name] = {}
+    end
+
     local N = #t
     local index_map = {}
     local map_i, map_len = 1, 0
+    local eval_state = {t, 0}
     for i = 1, N do
+        -- set the row to be evaluated to "i"
+        eval_state[2] = i
+
         local row_undef = false
         for col_name in pairs(refs) do
             row_undef = row_undef or (not t:get(i, col_name))
+        end
+
+        if not row_undef then
+            for _, cond in ipairs(conditions) do
+                local cx = expr_print.eval(cond, eval_table_context, eval_state)
+                row_undef = row_undef or (cx == 0)
+            end
+        end
+        if not row_undef then
+            for col_name in pairs(refs) do
+                list_add_unique(levels[col_name], t:get(i, col_name))
+            end
         end
         if row_undef then
             if map_len > 0 then
@@ -75,7 +101,7 @@ local function map_missing_rows(t, expr_list, y_expr_scalar)
         index_map[map_i + 1] = map_len
     end
 
-    return index_map
+    return index_map, levels
 end
 
 local function iter_by_two(ls, k)
@@ -108,70 +134,41 @@ local function index_map_iter(index_map, ils)
     end
 end
 
--- annotate each expression in "expr_list" with multiplicity ("mult")
--- and return an object with the "levels"
-function gdt_expr.eval_mult(t, expr_list, y_expr_scalar)
-    -- for each unique used factor prepare the levels list and
-    -- set the column index
-    local levels = {}
-    for k, expr in ipairs(expr_list) do
-        if expr.factor then
-            for _, name in ipairs(expr.factor) do
-                if not levels[name] then
-                    levels[name] = t:levels(name)
-                end
-            end
-        end
+local function annotate_mult(expr_list, levels)
+    for _, expr in ipairs(expr_list) do
+        expr.mult = expr.factor and level_number(expr.factor, levels) or 1
     end
-
-    for k, expr in ipairs(expr_list) do
-        if expr.factor then
-            expr.mult = level_number(expr.factor, levels) - 1
-        else
-            expr.mult = 1
-        end
-    end
-
-    return {levels= levels}
-end
-
-local function eval_model_dim(t, expr_list)
-end
-
-local function eval_scalar_gen(t)
-    local i
-    local id_res = function(expr) return t:get(i, expr.index) end
-    local func_res = function(expr) return math[expr.func] end
-    local set = function(ix) i = ix end
-    return set, {ident= id_res, func= func_res}
 end
 
 -- return the model matrix for the given table and expression list.
 -- the "info" field contains the information about the levels and
--- will be augmented with coeff's names information if "annotate_names" is true.
--- y_expr can be optianally given to evaluate a column matrix for the same rows
+-- will be augmented with coeff's names information if "annotate" is true.
+-- y_expr can be optionally given to evaluate a column matrix for the same rows
 -- of the table.
 -- the function returns X, Y and index_map, respectively: X model matrix, Y column matrix
 -- and index mapping. This latter given the correspondance
 -- (table's row index) => (matrix' row index)
-function gdt_expr.eval_matrix(t, expr_list, info, y_expr, annotate_names)
-    local eval_set, eval_scope = eval_scalar_gen(t)
-    local eval_scalar = expr_print.eval
-
+function gdt_expr.eval_matrix(t, expr_list, y_expr, conditions, annotate)
     -- the "index_map" creates a mapping between matrix indexes and table
     -- indexes to take into account missing data in some rows.
-    local index_map = map_missing_rows(t, expr_list, y_expr)
+    local index_map, levels = map_missing_rows(t, expr_list, y_expr, conditions)
+
+    if annotate then
+        annotate_mult(expr_list, levels)
+    end
 
     local N = #t
     local NE = #expr_list
     local XM = 0
     for k, e in ipairs(expr_list) do XM = XM + e.mult end
 
+    local eval_state = {t, 0}
+
     local function set_scalar_column(X, expr_scalar, j, names)
         names[#names+1] = expr_print.expr(expr_scalar)
         for _, i, x_i in index_map_iter, index_map, {-1, 0, 0} do
-            eval_set(i)
-            local xs = eval_scalar(expr_scalar, eval_scope)
+            eval_state[2] = i
+            local xs = expr_print.eval(expr_scalar, eval_table_context, eval_state)
             assert(xs, string.format('missing value in data table at row: %d', i))
             X:set(x_i, j, xs)
         end
@@ -194,63 +191,50 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr, annotate_names)
     end
 
     local function set_contrasts_matrix(X, expr, j, names)
-        local NF = #expr.factor
-        -- pred_list contains a list of "predicates".
-        -- each predicate require a given level for a given factor
-        -- and if of the form {"factor1", "level_a", "factor2", "level_b", ...}
+        local factors = expr.factor
+        local NF = #factors
+        local factor_levels = {}
+        local counter = {}
+        for p = 1, NF do
+            factor_levels[p] = levels[factors[p]]
+            counter[p] = 0
+        end
+
         local pred_list = {}
-        for degree = 1, NF do
-            local ls, parz = {}, {}
-            combine_factors_rec(expr.factor, 1, degree, ls, parz)
-            -- here ls will be a flat list containing the factors grouped
-            -- by "degree" number
+        -- the following code cycles through all the factors/levels
+        -- combinations for the given factor set (subset of ls at
+        -- index "k")
+        counter[NF + 1] = 0
+        while counter[NF + 1] == 0 do
+            local pred = {}
+            for p = 1, NF do
+                pred[#pred + 1] = factors[p]
+                pred[#pred + 1] = factor_levels[p][counter[p] + 2]
+            end
+            local coeff_name = pred_coeff_name(pred)
+            if expr_is_unit(expr.scalar) then
+                names[#names+1] = coeff_name
+            else
+                local scalar_repr = expr_print.expr(expr.scalar)
+                names[#names+1] = scalar_repr .. ' * ' .. coeff_name
+            end
+            -- add coefficient "pred"
+            pred_list[#pred_list + 1] = pred
 
-            -- M is the number of terms found for the given degree
-            local M = #ls / degree
-            for k = 0, M - 1 do
-                local factor_levels = {}
-                local counter = {}
-                for p = 1, degree do
-                    factor_levels[p] = info.levels[ls[k * degree + p]]
+            for p = 1, NF + 1 do
+                local cn = counter[p] + 1
+                if p > NF or cn < #factor_levels[p] - 1 then
+                    counter[p] = cn
+                    break
+                else
                     counter[p] = 0
-                end
-
-                -- the following code cycles through all the factors/levels
-                -- combinations for the given factor set (subset of ls at
-                -- index "k")
-                counter[degree + 1] = 0
-                while counter[degree + 1] == 0 do
-                    local pred = {}
-                    for p = 1, degree do
-                        pred[#pred + 1] = ls[k * degree + p]
-                        pred[#pred + 1] = factor_levels[p][counter[p] + 2]
-                    end
-                    local coeff_name = pred_coeff_name(pred)
-                    if expr_is_unit(expr.scalar) then
-                        names[#names+1] = coeff_name
-                    else
-                        local scalar_repr = expr_print.expr(expr.scalar)
-                        names[#names+1] = scalar_repr .. ' * ' .. coeff_name
-                    end
-                    -- add coefficient "pred"
-                    pred_list[#pred_list + 1] = pred
-
-                    for p = 1, degree + 1 do
-                        local cn = counter[p] + 1
-                        if p > degree or cn < #factor_levels[p] - 1 then
-                            counter[p] = cn
-                            break
-                        else
-                            counter[p] = 0
-                        end
-                    end
                 end
             end
         end
 
         for _, i, x_i in index_map_iter, index_map, {-1, 0, 0} do
-            eval_set(i)
-            local xs = eval_scalar(expr.scalar, eval_scope)
+            eval_state[2] = i
+            local xs = expr_print.eval(expr.scalar, eval_table_context, eval_state)
             assert(xs, string.format('missing value in data table at row: %d', i))
             for k, pred in ipairs(pred_list) do
                 local fs = eval_pred_list(pred, i)
@@ -280,25 +264,61 @@ function gdt_expr.eval_matrix(t, expr_list, info, y_expr, annotate_names)
         set_scalar_column(Y, y_expr, 1, names)
     end
 
-    if annotate_names then
-        info.names = names
+    local info = {levels= levels}
+    if annotate then info.names = names end
+
+    return X, Y, info, index_map
+end
+
+function var_is_factor(t, var_name)
+    local esc_name = string.match(var_name, "^%%(.*)")
+    if esc_name or t:col_type(var_name) == 'factor' then
+        return true, esc_name or var_name
+    else
+        return false, var_name
     end
-
-    return X, Y, index_map
 end
 
-function gdt_expr.parse_schema(t, formula)
-    local gdt_eval_actions = require('gdt-eval')
-    local actions = gdt_eval_actions(t)
-    local l = mini.lexer(formula)
-    return mini.schema(l, actions)
+local function expr_find_factors_rec(t, expr, factors)
+    if type(expr) == 'number' then
+        return expr
+    elseif type(expr) == 'string' then
+        local is_factor, var_name = var_is_factor(t, expr)
+        if is_factor then
+            factors[#factors+1] = var_name
+            return 1
+        else
+            return expr
+        end
+    elseif expr.operator == '*' then
+        local a, b = expr[1], expr[2]
+        local sa1 = expr_find_factors_rec(t, a, factors)
+        local sa2 = expr_find_factors_rec(t, b, factors)
+        return AST_actions.infix('*', sa1, sa2)
+    else
+        return expr
+    end
 end
 
-function gdt_expr.parse_expr(t, formula)
-    local gdt_eval_actions = require('gdt-eval')
-    local actions = gdt_eval_actions(t)
+function gdt_expr.extract_factors(t, expr_list)
+    local els = {}
+    for i, e in ipairs(expr_list) do
+        local et, factors = {}, {}
+        et.scalar = expr_find_factors_rec(t, e, factors)
+        if #factors > 0 then et.factor = factors end
+        els[i] = et
+    end
+    return els
+end
+
+function gdt_expr.parse_schema(formula)
     local l = mini.lexer(formula)
-    return mini.parse(l, actions)
+    return mini.schema(l, AST_actions)
+end
+
+function gdt_expr.parse_expr(formula)
+    local l = mini.lexer(formula)
+    return mini.parse(l, AST_actions)
 end
 
 return gdt_expr
