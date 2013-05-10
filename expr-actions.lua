@@ -1,4 +1,6 @@
 
+local type = type
+
 local function mult(a, b)
     if a == 1 then return b end
     if b == 1 then return a end
@@ -27,6 +29,21 @@ end
 
 local function ident_action(id) return id end
 
+-- return true iff expr is a variable (with enums or not).
+-- if it is a variable returns, in addition, the var_name and the enumeration flag
+local function is_variable(expr)
+    if type(expr) == 'string' then
+        local esc_name = string.match(expr, "^%%(.*)")
+        return true, esc_name or expr, (esc_name ~= nil)
+    else
+        return false
+    end
+end
+
+local function is_number(expr)
+    return type(expr) == 'number'
+end
+
 return {
     infix     = infix_action,
     ident     = ident_action,
@@ -36,4 +53,7 @@ return {
     number    = function(x) return x end,
     exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
     schema    = function(x, y, conds) return {x= x, y= y, conds= conds} end,
+
+    is_variable = is_variable,
+    is_number   = is_number,
 }

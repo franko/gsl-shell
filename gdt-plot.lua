@@ -1,4 +1,4 @@
-local mini = require 'expr-parser'
+local mini = require 'expr-parse'
 local expr_print = require 'expr-print'
 local AST_actions = require 'expr-actions'
 local gdt_expr = require 'gdt-expr'
@@ -143,13 +143,13 @@ local function vec2d_incr(r, i, j)
     return v + 1
 end
 
-local function eval_scalar_gen(t)
-    local i
-    local id_res = function(expr) return t:get(i, expr.index) end
-    local func_res = function(expr) return math[expr.func] end
-    local set = function(ix) i = ix end
-    return set, {ident= id_res, func= func_res}
-end
+-- local function eval_scalar_gen(t)
+--     local i
+--     local id_res = function(expr) return t:get(i, expr.index) end
+--     local func_res = function(expr) return math[expr.func] end
+--     local set = function(ix) i = ix end
+--     return set, {ident= id_res, func= func_res}
+-- end
 
 local function rect_funcbin(t, jxs, jys, jes)
     local eval_set, eval_scope = eval_scalar_gen(t)
@@ -197,40 +197,6 @@ local function rect_funcbin(t, jxs, jys, jes)
     quicksort_mirror(labels, sort_labels_func, val)
 
     return labels, enums, val
-end
-
-local function infix_ast(sym, a, b)
-    return {operator= sym, a, b}
-end
-
-local function prefix_ast(sym, a)
-    return {operator= sym, a}
-end
-
-local function func_eval_ast(func_name, arg_expr)
-    return {func= func_name, arg= arg_expr}
-end
-
-local function itself(x) return x end
-
-local function plot_actions_gen(t)
-
-    local function ident_ast(id)
-        local i = t:col_index(id)
-        if not i then error('unknown column name: '..id) end
-        return {name= id, index= i}
-    end
-
-    return {
-        infix     = infix_ast,
-        prefix    = prefix_ast,
-        ident     = ident_ast,
-        enum      = ident_ast,
-        func_eval = func_eval_ast,
-        number    = itself,
-        exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
-        schema    = function(x, y, enums) return {x= x, y= y, enums= enums} end,
-    }
 end
 
 local stat_lookup = {
@@ -403,17 +369,16 @@ local function expr_get_functions(exprs)
     return jys
 end
 
-local function schema_from_plot_descr(plot_descr, t)
-    local l = mini.lexer(plot_descr)
-    local actions = plot_actions_gen(t)
-    return mini.gschema(l, actions)
-end
+-- local function schema_from_plot_descr(plot_descr, t)
+--     local l = mini.lexer(plot_descr)
+--     return mini.gschema(l, AST_actions)
+-- end
 
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
 
-    local schema = schema_from_plot_descr(plot_descr, t)
+    local schema = gdt_expr.parse_gen_schema(plot_descr)
     local jxs = idents_get_column_indexes(t, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -429,7 +394,7 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
 end
 
 function gdt.xyline(t, plot_descr)
-    local schema = schema_from_plot_descr(plot_descr, t)
+    local schema = gdt_expr.parse_gen_schema(plot_descr)
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions(schema.y)
 
@@ -464,7 +429,7 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local use_lines = opt and opt.lines
     local use_markers = opt and (opt.markers ~= false) or true
 
-    local schema = schema_from_plot_descr(plot_descr, t)
+    local schema = gdt_expr.parse_gen_schema(plot_descr)
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)

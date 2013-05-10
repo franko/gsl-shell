@@ -1,10 +1,12 @@
+local expr_parse = require 'expr-parse'
 local expr_print = require 'expr-print'
 local gdt_expr = require 'gdt-expr'
 local check = require 'check'
 local mon = require 'monomial'
+local AST = require 'expr-actions'
 
 local sqrt, abs = math.sqrt, math.abs
-local type, ipairs = type, ipairs
+local ipairs = ipairs
 
 local function monomial_to_expr(m, context)
     local coeff = m[1]
@@ -18,7 +20,7 @@ local function monomial_to_expr(m, context)
 end
 
 local function expr_to_monomial(expr, context)
-    if type(expr) == 'number' then
+    if AST.is_number(expr) then
         return {expr}
     elseif expr.operator == '*' then
         local a = expr_to_monomial(expr[1], context)
@@ -166,8 +168,40 @@ function FIT.eval(fit, tn)
     return sy
 end
 
+local function expr_find_factors_rec(t, expr, factors)
+    if AST.is_number(expr) then
+        return expr
+    elseif AST.is_variable(expr) then
+        local _, var_name, force_enum = AST.is_variable(expr)
+        if force_enum or t:col_type(var_name) == 'factor' then
+            factors[#factors+1] = var_name
+            return 1
+        else
+            return expr
+        end
+    elseif expr.operator == '*' then
+        local a, b = expr[1], expr[2]
+        local sa1 = expr_find_factors_rec(t, a, factors)
+        local sa2 = expr_find_factors_rec(t, b, factors)
+        return AST.infix('*', sa1, sa2)
+    else
+        return expr
+    end
+end
+
+function gdt_expr.extract_factors(t, expr_list)
+    local els = {}
+    for i, e in ipairs(expr_list) do
+        local et, factors = {}, {}
+        et.scalar = expr_find_factors_rec(t, e, factors)
+        if #factors > 0 then et.factor = factors end
+        els[i] = et
+    end
+    return els
+end
+
 local function lm(t, model_formula, options)
-    local schema = gdt_expr.parse_schema(model_formula)
+    local schema = expr_parse.schema(model_formula, AST, false)
 
     print("SCHEMA'x xs")
     for _, e in ipairs(schema.x) do print(e) end

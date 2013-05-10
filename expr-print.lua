@@ -1,7 +1,8 @@
+local expr_lexer = require 'expr-lexer'
+
 local format, concat = string.format, table.concat
 
--- TODO: this information is duplicated from expr-parser => remove the duplication
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['='] = 3, ['>'] = 3, ['<'] = 3, ['%'] = -1}
+local oper_table = expr_lexer.operators
 
 local ex_print
 

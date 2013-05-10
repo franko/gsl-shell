@@ -1,8 +1,6 @@
-local mini = require 'expr-parser'
 local expr_print = require 'expr-print'
-local AST_actions = require('expr-actions')
 
-local type, pairs, ipairs = type, pairs, ipairs
+local pairs, ipairs = pairs, ipairs
 
 local gdt_expr = {}
 
@@ -24,7 +22,7 @@ local function level_number(factors, levels)
 end
 
 local function expr_is_unit(e)
-    return type(e) == 'number' and e == 1
+    return e == 1
 end
 
 local function add_expr_refs(expr, refs)
@@ -268,57 +266,6 @@ function gdt_expr.eval_matrix(t, expr_list, y_expr, conditions, annotate)
     if annotate then info.names = names end
 
     return X, Y, info, index_map
-end
-
-function var_is_factor(t, var_name)
-    local esc_name = string.match(var_name, "^%%(.*)")
-    if esc_name or t:col_type(var_name) == 'factor' then
-        return true, esc_name or var_name
-    else
-        return false, var_name
-    end
-end
-
-local function expr_find_factors_rec(t, expr, factors)
-    if type(expr) == 'number' then
-        return expr
-    elseif type(expr) == 'string' then
-        local is_factor, var_name = var_is_factor(t, expr)
-        if is_factor then
-            factors[#factors+1] = var_name
-            return 1
-        else
-            return expr
-        end
-    elseif expr.operator == '*' then
-        local a, b = expr[1], expr[2]
-        local sa1 = expr_find_factors_rec(t, a, factors)
-        local sa2 = expr_find_factors_rec(t, b, factors)
-        return AST_actions.infix('*', sa1, sa2)
-    else
-        return expr
-    end
-end
-
-function gdt_expr.extract_factors(t, expr_list)
-    local els = {}
-    for i, e in ipairs(expr_list) do
-        local et, factors = {}, {}
-        et.scalar = expr_find_factors_rec(t, e, factors)
-        if #factors > 0 then et.factor = factors end
-        els[i] = et
-    end
-    return els
-end
-
-function gdt_expr.parse_schema(formula)
-    local l = mini.lexer(formula)
-    return mini.schema(l, AST_actions)
-end
-
-function gdt_expr.parse_expr(formula)
-    local l = mini.lexer(formula)
-    return mini.parse(l, AST_actions)
 end
 
 return gdt_expr
