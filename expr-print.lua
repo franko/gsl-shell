@@ -67,13 +67,13 @@ local function eval_operator(op, a, b)
     else error('unkown operation: ' .. op) end
 end
 
-local function eval(expr, scope, scope_state)
+local function eval(expr, scope, ...)
     if type(expr) == 'number' then
         return expr
     elseif type(expr) == 'string' then
-        return scope.ident(expr, scope_state)
+        return scope.ident(expr, ...)
     elseif expr.func then
-        local arg_value = eval(expr.arg, scope, scope_state)
+        local arg_value = eval(expr.arg, scope, ...)
         if arg_value then
             local f = scope.func(expr)
             if not f then error('unknown function: ' .. expr.func) end
@@ -81,11 +81,11 @@ local function eval(expr, scope, scope_state)
         end
     else
         if #expr == 1 then
-            local v = eval(expr[1], scope, scope_state)
+            local v = eval(expr[1], scope, ...)
             if v then return -v end
         else
-            local a = eval(expr[1], scope, scope_state)
-            local b = eval(expr[2], scope, scope_state)
+            local a = eval(expr[1], scope, ...)
+            local b = eval(expr[2], scope, ...)
             if a and b then
                 return eval_operator(expr.operator, a, b)
             end
