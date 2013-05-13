@@ -38,6 +38,8 @@ ex_print = function(e)
         local s = e
         if not is_ident_simple(s) then s = format('[%s]', s) end
         return s, 3
+    elseif e.literal then
+        return format('%q', e.literal)
     elseif e.func then
         local arg_str = ex_print(e.arg)
         return format('%s(%s)', e.func, arg_str), 3
@@ -72,6 +74,8 @@ local function eval(expr, scope, ...)
         return expr
     elseif type(expr) == 'string' then
         return scope.ident(expr, ...)
+    elseif expr.literal then
+        return expr.literal
     elseif expr.func then
         local arg_value = eval(expr.arg, scope, ...)
         if arg_value then
@@ -99,6 +103,8 @@ local function ref_list_rec(expr, list)
         return
     elseif type(expr) == 'string' then
         list[expr] = true
+    elseif expr.literal then
+        return
     elseif expr.func then
         ref_list_rec(expr.arg, list)
     else

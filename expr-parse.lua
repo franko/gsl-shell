@@ -28,6 +28,10 @@ local function factor(lexer, actions)
         else
             return actions.ident(id)
         end
+    elseif token.type == 'literal' then
+        local x = token.value
+        lexer:next()
+        return actions.literal(x)
     elseif token.type == 'number' then
         local x = token.value
         lexer:next()

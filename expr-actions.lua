@@ -29,6 +29,10 @@ end
 
 local function ident_action(id) return id end
 
+local function literal_action(name)
+    return {literal= name}
+end
+
 -- return true iff expr is a variable (with enums or not).
 -- if it is a variable returns, in addition, the var_name and the enumeration flag
 local function is_variable(expr)
@@ -47,6 +51,7 @@ end
 return {
     infix     = infix_action,
     ident     = ident_action,
+    literal   = literal_action,
     prefix    = prefix_action,
     enum      = enum_action,
     func_eval = func_eval_action,

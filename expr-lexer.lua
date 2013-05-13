@@ -52,6 +52,10 @@ function expr_lexer.next_token(lexer)
     lexer:skip('%s*')
     if lexer.n > len(lexer.src) then return {type= 'EOF'} end
     local c = lexer:char()
+    if c == '\'' then
+        local str = lexer:consume("'[^']+'")
+        return {type= 'literal', value = str:sub(2, -2)}
+    end
     if c == '[' then
         local str = lexer:consume('%b[]')
         return {type= 'ident', value= str:sub(2,-2)}
