@@ -208,7 +208,6 @@ local function eval_coeff_names(expr_list, levels)
     for _, expr in ipairs(expr_list) do
         if expr.factor then
             local pred_list = eval_predicates(expr.factor, levels)
-            print('EXPR', expr.factor, 'predicate', pred_list)
             predlist_add_coeff_names(names, pred_list, expr)
         else
             names[#names+1] = expr_print.expr(expr.scalar)

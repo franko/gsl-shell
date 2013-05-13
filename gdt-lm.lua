@@ -172,25 +172,12 @@ end
 local function lm(t, model_formula, options)
     local schema = expr_parse.schema(model_formula, AST, false)
 
-    print("SCHEMA'x xs")
-    for _, e in ipairs(schema.x) do print(e) end
-
     local expand = not options or (options.expand == nil or options.expand)
     local xs = expand and expand_exprs(schema.x) or schema.x
-
-    print("EXPANDED")
-    for _, e in ipairs(xs) do print(e) end
-
     local x_exprs = gdt_factors.compute(t, xs)
     local y_expr = schema.y
 
     local info, index_map = gdt_expr.prepare_model(t, x_exprs, y_expr, schema.conds)
-
-    print('info', info, index_map)
-
-    print('EXPRESSIONS')
-    for _, e in ipairs(x_exprs) do print(e) end
-
     local X, y = gdt_expr.eval_matrix(t, info, x_exprs, y_expr, index_map)
     local fit = compute_fit(X, y, info.names)
 
