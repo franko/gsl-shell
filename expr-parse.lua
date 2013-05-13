@@ -135,11 +135,26 @@ local function schema(lexer, actions, accept_enums)
     return actions.schema(x, y, conds, enums)
 end
 
+local function schema_multivar(lexer, actions)
+    local y = expr_list(lexer, actions, 0)
+    expect(lexer, '~')
+    local x = expr_list(lexer, actions)
+    local enums = enums(lexer, actions)
+    local conds = conditions(lexer, actions)
+    expect(lexer, 'EOF')
+    return actions.schema(x, y, conds, enums)
+end
+
 local expr_parse = {}
 
 function expr_parse.schema(formula, actions, accept_enums)
     local l = expr_lexer.new(formula)
     return schema(l, actions, accept_enums)
+end
+
+function expr_parse.schema_multivar(formula, actions)
+    local l = expr_lexer.new(formula)
+    return schema_multivar(l, actions)
 end
 
 function expr_parse.expr(formula, actions)

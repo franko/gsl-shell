@@ -1,13 +1,20 @@
-local mini = require 'expr-parse'
+use 'strict'
+
+local expr_parse = require 'expr-parse'
 local expr_print = require 'expr-print'
-local AST_actions = require 'expr-actions'
 local gdt_expr = require 'gdt-expr'
+local gdt_factors = require 'gdt-factors'
+local check = require 'check'
+local mon = require 'monomial'
+local AST = require 'expr-actions'
 
 local concat = table.concat
-local select, unpack = select, unpack
+local unpack, ipairs = unpack, ipairs
 local sqrt = math.sqrt
 
 local line_width = 2.5
+
+local table_scope = gdt_expr.table_scope
 
 local function collate(ls, sep)
     return concat(ls, sep or ' ')
@@ -120,7 +127,7 @@ local function collate_factors(t, i, js)
     local c = {}
     local n = #js
     for k = 1, n do
-        c[k] = tostring(t:get(i, js[k]))
+        c[k] = t:get(i, js[k]) -- tostring(t:get(i, js[k]))
     end
     return c
 end
@@ -143,24 +150,12 @@ local function vec2d_incr(r, i, j)
     return v + 1
 end
 
--- local function eval_scalar_gen(t)
---     local i
---     local id_res = function(expr) return t:get(i, expr.index) end
---     local func_res = function(expr) return math[expr.func] end
---     local set = function(ix) i = ix end
---     return set, {ident= id_res, func= func_res}
--- end
-
 local function rect_funcbin(t, jxs, jys, jes)
-    local eval_set, eval_scope = eval_scalar_gen(t)
-    local eval = expr_print.eval
-
     local n = #t
     local val, count = {}, {}
     local enums, labels = {}, {}
     local fini_table = {}
     for i = 1, n do
-        eval_set(i)
         local c = collate_factors(t, i, jxs)
         for p = 1, #jys do
             local jp = jys[p]
@@ -169,7 +164,7 @@ local function rect_funcbin(t, jxs, jys, jes)
             local e = collate_factors(t, i, jes)
             e[#e+1] = jp.name
 
-            local v = eval(jp.expr, eval_scope)
+            local v = expr_print.eval(jp.expr, table_scope, t, i)
             if v then
                 local ie = add_unique(enums, e)
                 local ix = ie > 0 and add_unique(labels, c) or 0
@@ -336,8 +331,12 @@ end
 local function idents_get_column_indexes(t, exprs)
     local jxs = {}
     for i, expr in ipairs(exprs) do
-        if not expr.name then error('invalid enumeration factor') end
-        jxs[i] = t:col_index(expr.name)
+        local is_var, var_name = AST.is_variable(expr)
+        if not is_var then
+            local repr = expr_print.expr(expr)
+            error('invalid enumeration factor: ' .. repr)
+        end
+        jxs[i] = t:col_index(var_name)
     end
     return jxs
 end
@@ -369,16 +368,11 @@ local function expr_get_functions(exprs)
     return jys
 end
 
--- local function schema_from_plot_descr(plot_descr, t)
---     local l = mini.lexer(plot_descr)
---     return mini.gschema(l, AST_actions)
--- end
-
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = true
     if opt then show_plot = (opt.show ~= false) end
 
-    local schema = gdt_expr.parse_gen_schema(plot_descr)
+    local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = idents_get_column_indexes(t, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -394,23 +388,18 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
 end
 
 function gdt.xyline(t, plot_descr)
-    local schema = gdt_expr.parse_gen_schema(plot_descr)
+    local schema = expr_parse.schema(plot_descr, AST)
     local jxs = expr_get_functions(schema.x)
-    local jys = expr_get_functions(schema.y)
-
-    assert(#jys == 1, "single y expression required")
+    local jys = expr_get_functions({ schema.y })
 
     local jx, jy = jxs[1], jys[1]
     local n = #t
 
-    local eval_set, eval_scope = eval_scalar_gen(t)
-    local eval = expr_print.eval
-
     local ln = path()
     local path_method = ln.move_to
     for i = 1, n do
-        eval_set(i)
-        local x, y = eval(jx.expr, eval_scope), eval(jy.expr, eval_scope)
+        local x = expr_print.eval(jx.expr, table_scope, t, i)
+        local y = expr_print.eval(jy.expr, table_scope, t, i)
         if x and y then
             path_method(ln, x, y)
             path_method = ln.line_to
@@ -429,14 +418,11 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local use_lines = opt and opt.lines
     local use_markers = opt and (opt.markers ~= false) or true
 
-    local schema = gdt_expr.parse_gen_schema(plot_descr)
+    local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
     local jx = jxs[1]
-
-    local eval_set, eval_scope = eval_scalar_gen(t)
-    local eval = expr_print.eval
 
     local enums = {}
     local n = #t
@@ -455,10 +441,10 @@ local function gdt_table_xyplot(t, plot_descr, opt)
             local ln = path()
             local path_method = ln.move_to
             for i = 1, n do
-                eval_set(i)
                 local e = collate_factors(t, i, jes)
                 if compare_list(enum, e) then
-                    local x, y = eval(jx.expr, eval_scope), eval(jys[p].expr, eval_scope)
+                    local x = expr_print.eval(jx.expr, table_scope, t, i)
+                    local y = expr_print.eval(jys[p].expr, table_scope, t, i)
                     if x and y then
                         path_method(ln, x, y)
                         path_method = ln.line_to
@@ -493,7 +479,7 @@ local function gdt_table_xyplot(t, plot_descr, opt)
 end
 
 function gdt.reduce(t_src, schema_descr)
-    local schema = schema_from_plot_descr(schema_descr, t_src)
+    local schema = expr_parse.schema_multivar(schema_descr, AST)
     local jxs = idents_get_column_indexes(t_src, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t_src, schema.enums)
@@ -524,10 +510,9 @@ function gdt.reduce(t_src, schema_descr)
 end
 
 local function is_simple_numeric(t, plot_descr)
-    local l = mini.lexer(plot_descr)
-    local schema = mini.gschema(l, AST_actions)
-    if #schema.x == 1 then
-        local xs = gdt_expr.extract_factors(t, schema.x)
+    local schema = expr_parse.schema_multivar(plot_descr, AST)
+    local xs = gdt_factors.compute(t, schema.x)
+    if #xs == 1 then
         return (xs[1].factor == nil)
     end
     return false

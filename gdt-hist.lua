@@ -1,7 +1,12 @@
 
 local ffi = require 'ffi'
 local gsl = require 'gsl'
+
 local gdt_expr = require 'gdt-expr'
+local expr_parse = require 'expr-parse'
+local gdt_expr = require 'gdt-expr'
+local gdt_factors = require 'gdt-factors'
+local AST = require 'expr-actions'
 
 local rect = graph.rect
 
@@ -10,9 +15,10 @@ local function compare_float(a, b)
 end
 
 local function gdt_table_hist(t, expr_formula, opt)
-    local expr = gdt_expr.parse_expr(t, expr_formula)
-    local info = gdt_expr.eval_mult(t, expr)
-    local dv = gdt_expr.eval_matrix(t, expr, info, nil, true)
+    local expr = expr_parse.expr(expr_formula, AST)
+    local x_exprs = gdt_factors.compute(t, { expr })
+    local info, index_map = gdt_expr.prepare_model(t, x_exprs)
+    local dv = gdt_expr.eval_matrix(t, info, x_exprs, nil, index_map)
     local n = #dv
 
     dv:sort(compare_float)

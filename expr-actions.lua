@@ -52,7 +52,7 @@ return {
     func_eval = func_eval_action,
     number    = function(x) return x end,
     exprlist  = function(a, ls) if ls then ls[#ls+1] = a else ls = {a} end; return ls end,
-    schema    = function(x, y, conds) return {x= x, y= y, conds= conds} end,
+    schema    = function(x, y, conds, enums) return {x= x, y= y, conds= conds, enums= enums} end,
 
     is_variable = is_variable,
     is_number   = is_number,

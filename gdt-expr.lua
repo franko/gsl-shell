@@ -43,10 +43,12 @@ local function math_func_resolve(expr)
     return math[expr.func]
 end
 
-local table_context = {
+local table_scope = {
     ident = table_var_resolve,
     func = math_func_resolve,
 }
+
+gdt_expr.table_scope = table_scope
 
 local function map_missing_rows(t, expr_list, y_expr_scalar, conditions)
     local refs, factor_refs, levels = {}, {}, {}
@@ -72,7 +74,7 @@ local function map_missing_rows(t, expr_list, y_expr_scalar, conditions)
 
         if not row_undef then
             for _, cond in ipairs(conditions) do
-                local cx = expr_print.eval(cond, table_context, t, i)
+                local cx = expr_print.eval(cond, table_scope, t, i)
                 row_undef = row_undef or (cx == 0)
             end
         end
@@ -243,7 +245,7 @@ function gdt_expr.eval_matrix(t, info, expr_list, y_expr, index_map)
 
     local function set_scalar_column(X, expr_scalar, j)
         for _, i, x_i in index_map_iter, index_map, {-1, 0, 0} do
-            local xs = expr_print.eval(expr_scalar, table_context, t, i)
+            local xs = expr_print.eval(expr_scalar, table_scope, t, i)
             assert(xs, string.format('missing value in data table at row: %d', i))
             X:set(x_i, j, xs)
         end
@@ -252,7 +254,7 @@ function gdt_expr.eval_matrix(t, info, expr_list, y_expr, index_map)
     local function set_contrasts_matrix(X, expr, j)
         local pred_list = eval_predicates(expr.factor, info.levels)
         for _, i, x_i in index_map_iter, index_map, {-1, 0, 0} do
-            local xs = expr_print.eval(expr.scalar, table_context, t, i)
+            local xs = expr_print.eval(expr.scalar, table_scope, t, i)
             assert(xs, string.format('missing value in data table at row: %d', i))
             for k, pred in ipairs(pred_list) do
                 local fs = eval_pred_list(t, pred, i)
