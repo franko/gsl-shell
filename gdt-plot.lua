@@ -150,7 +150,16 @@ local function vec2d_incr(r, i, j)
     return v + 1
 end
 
-local function rect_funcbin(t, jxs, jys, jes)
+local function eval_conditions(conds, t, i)
+    local pass = true
+    for _, cond in ipairs(conds) do
+        local cx = expr_print.eval(cond, table_scope, t, i)
+        pass = pass and (cx ~= 0)
+    end
+    return pass
+end
+
+local function rect_funcbin(t, jxs, jys, jes, conds)
     local n = #t
     local val, count = {}, {}
     local enums, labels = {}, {}
@@ -165,7 +174,10 @@ local function rect_funcbin(t, jxs, jys, jes)
             e[#e+1] = jp.name
 
             local v = expr_print.eval(jp.expr, table_scope, t, i)
-            if v then
+            -- eval the conditions of the current row
+            local pass = eval_conditions(conds, t, i)
+
+            if pass and v then
                 local ie = add_unique(enums, e)
                 local ix = ie > 0 and add_unique(labels, c) or 0
                 if ix > 0 then
@@ -377,7 +389,7 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
 
-    local labels, enums, val = rect_funcbin(t, jxs, jys, jes)
+    local labels, enums, val = rect_funcbin(t, jxs, jys, jes, schema.conds)
 
     local plt = plotter.create(labels, enums, val)
     plotter.xlabels(plt, labels)
@@ -400,7 +412,9 @@ function gdt.xyline(t, plot_descr)
     for i = 1, n do
         local x = expr_print.eval(jx.expr, table_scope, t, i)
         local y = expr_print.eval(jy.expr, table_scope, t, i)
-        if x and y then
+        -- eval the conditions of the current row
+        local pass = eval_conditions(schema.conds, t, i)
+        if pass and x and y then
             path_method(ln, x, y)
             path_method = ln.line_to
         else
@@ -445,7 +459,9 @@ local function gdt_table_xyplot(t, plot_descr, opt)
                 if compare_list(enum, e) then
                     local x = expr_print.eval(jx.expr, table_scope, t, i)
                     local y = expr_print.eval(jys[p].expr, table_scope, t, i)
-                    if x and y then
+                    -- eval the conditions of the current row
+                    local pass = eval_conditions(schema.conds, t, i)
+                    if pass and x and y then
                         path_method(ln, x, y)
                         path_method = ln.line_to
                     else
