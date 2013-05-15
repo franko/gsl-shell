@@ -8,7 +8,9 @@ local lexer_mt = {
 
 local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1, ['|'] = 1, [':'] = 1}
 
-local oper_table = {['+'] = 2, ['-'] = 2, ['*'] = 3, ['/'] = 3, ['^'] = 4, ['!='] = 1, ['='] = 1, ['>'] = 1, ['>='] = 1, ['<'] = 1, ['<='] = 1, ['AND'] = 0, ['OR'] = 0, ['%'] = -1}
+local oper_table = {['+'] = 2, ['-'] = 2, ['*'] = 3, ['/'] = 3, ['^'] = 4, ['!='] = 1, ['='] = 1, ['>'] = 1, ['>='] = 1, ['<'] = 1, ['<='] = 1, ['and'] = 0, ['or'] = 0, ['%'] = -1}
+local word_operators = {'and', 'or'}
+local multi_char_operators = {'!=', '>=', '<='}
 
 expr_lexer.operators = oper_table
 expr_lexer.max_oper_prio = 4
@@ -65,22 +67,23 @@ end
 
 local function consume_oper(lexer, c)
     local op
-    if lexer:match('AND[^%l%u_]') then
-        lexer:consume('AND')
-        op = 'AND'
-    elseif lexer:match('OR[^%l%u_]') then
-        lexer:consume('OR')
-        op = 'OR'
-    elseif lexer:match('>=') then
-        lexer:consume('>=')
-        op = '>='
-    elseif lexer:match('<=') then
-        lexer:consume('<=')
-        op = '<='
-    elseif lexer:match('!=') then
-        lexer:consume('!=')
-        op = '!='
-    else
+    for i, ops in ipairs(word_operators) do
+        if lexer:match(ops .. '[^%l%u_]') then
+            lexer:consume(ops)
+            op = ops
+            break
+        end
+    end
+    if not op then
+        for i, ops in ipairs(multi_char_operators) do
+            if lexer:match(ops) then
+                lexer:consume(ops)
+                op = ops
+                break
+            end
+        end
+    end
+    if not op then
         op = oper_table[c] and c
         if op then
             lexer:incr()

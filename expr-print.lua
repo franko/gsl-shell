@@ -31,18 +31,20 @@ local function exlist_print(e)
     return concat(t, ', ')
 end
 
+local high_prio = expr_lexer.max_oper_prio + 1
+
 ex_print = function(e)
     if type(e) == 'number' then
-        return e, 3
+        return e, high_prio
     elseif type(e) == 'string' then
         local s = e
         if not is_ident_simple(s) then s = format('[%s]', s) end
-        return s, 3
+        return s, high_prio
     elseif e.literal then
-        return format('%q', e.literal)
+        return format('%q', e.literal), high_prio
     elseif e.func then
         local arg_str = ex_print(e.arg)
-        return format('%s(%s)', e.func, arg_str), 3
+        return format('%s(%s)', e.func, arg_str), high_prio
     else
         local prio = oper_table[e.operator]
         local s = op_print(e, prio)
@@ -64,14 +66,14 @@ local function eval_operator(op, a, b)
     elseif op == '/' then return a / b
     elseif op == '^' then return a ^ b
     elseif op == '=' then return (a == b and 1 or 0)
-    elseif op == '>' then return (a > b  and 1 or 0)
-    elseif op == '<' then return (a < b  and 1 or 0)
+    elseif op == '>' then return (a > b and 1 or 0)
+    elseif op == '<' then return (a < b and 1 or 0)
     elseif op == '!=' then return (a ~= b and 1 or 0)
     elseif op == '>=' then return (a >= b and 1 or 0)
     elseif op == '<=' then return (a <= b and 1 or 0)
-    elseif op == 'AND' then return ((a ~= 0 and b ~= 0) and 1 or 0)
-    elseif op == 'OR' then return ((a ~= 0 or  b ~= 0) and 1 or 0)
-    else error('unkown operation: ' .. op) end
+    elseif op == 'and' then return ((a ~= 0 and b ~= 0) and 1 or 0)
+    elseif op == 'or' then return ((a ~= 0 or b ~= 0) and 1 or 0)
+    else error('unknown operation: ' .. op) end
 end
 
 local function eval(expr, scope, ...)
