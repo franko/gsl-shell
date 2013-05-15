@@ -66,6 +66,11 @@ local function eval_operator(op, a, b)
     elseif op == '=' then return (a == b and 1 or 0)
     elseif op == '>' then return (a > b  and 1 or 0)
     elseif op == '<' then return (a < b  and 1 or 0)
+    elseif op == '!=' then return (a ~= b and 1 or 0)
+    elseif op == '>=' then return (a >= b and 1 or 0)
+    elseif op == '<=' then return (a <= b and 1 or 0)
+    elseif op == 'AND' then return ((a ~= 0 and b ~= 0) and 1 or 0)
+    elseif op == 'OR' then return ((a ~= 0 or  b ~= 0) and 1 or 0)
     else error('unkown operation: ' .. op) end
 end
 

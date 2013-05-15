@@ -8,10 +8,25 @@ local lexer_mt = {
 
 local literal_chars = {['('] = 1, [')'] = 1, ['~'] = 1, [','] = 1, ['|'] = 1, [':'] = 1}
 
-local oper_table = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['^'] = 2, ['='] = 3, ['>'] = 3, ['<'] = 3, ['%'] = -1}
+local oper_table = {['+'] = 2, ['-'] = 2, ['*'] = 3, ['/'] = 3, ['^'] = 4, ['!='] = 1, ['='] = 1, ['>'] = 1, ['>='] = 1, ['<'] = 1, ['<='] = 1, ['AND'] = 0, ['OR'] = 0, ['%'] = -1}
 
 expr_lexer.operators = oper_table
-expr_lexer.max_oper_prio = 3
+expr_lexer.max_oper_prio = 4
+
+local oper_start_sym
+local function compile_oper_pattern()
+    local oper_start_set = {}
+    for k in pairs(oper_table) do
+        oper_start_set[k:sub(1,1)] = true
+    end
+
+    oper_start_sym = '['
+    for k in pairs(oper_start_set) do
+        local str = (k == '-' or k == '%' or k == '^') and ('%' .. k) or k
+        oper_start_sym = oper_start_sym .. str
+    end
+    oper_start_sym = oper_start_sym .. ']'
+end
 
 function expr_lexer.new(src)
     local lexer = {n = 1, src= src}
@@ -48,6 +63,35 @@ function expr_lexer.skip(lexer, pattern)
     if m then lexer.n = lexer.n + len(m) end
 end
 
+local function consume_oper(lexer, c)
+    local op
+    if lexer:match('AND[^%l%u_]') then
+        lexer:consume('AND')
+        op = 'AND'
+    elseif lexer:match('OR[^%l%u_]') then
+        lexer:consume('OR')
+        op = 'OR'
+    elseif lexer:match('>=') then
+        lexer:consume('>=')
+        op = '>='
+    elseif lexer:match('<=') then
+        lexer:consume('<=')
+        op = '<='
+    elseif lexer:match('!=') then
+        lexer:consume('!=')
+        op = '!='
+    else
+        op = oper_table[c] and c
+        if op then
+            lexer:incr()
+        end
+    end
+    if op then
+        local prio = oper_table[op]
+        return {type= 'operator', symbol= op, priority = prio}
+    end
+end
+
 function expr_lexer.next_token(lexer)
     lexer:skip('%s*')
     if lexer.n > len(lexer.src) then return {type= 'EOF'} end
@@ -60,10 +104,9 @@ function expr_lexer.next_token(lexer)
         local str = lexer:consume('%b[]')
         return {type= 'ident', value= str:sub(2,-2)}
     end
-    if oper_table[c] then
-        local prio = oper_table[c]
-        lexer:incr()
-        return {type= 'operator', symbol= c, priority = prio}
+    if lexer:match(oper_start_sym) then
+        local elt = consume_oper(lexer, c)
+        if elt then return elt end
     end
     if literal_chars[c] then
         lexer:incr()
@@ -93,5 +136,7 @@ function expr_lexer.local_error(lexer, msg, n_pos)
     local pos = string.format('   %s^', string.rep(' ', n_pos - 1))
     error(string.format("%s\n%s\n%s", msg, line, pos))
 end
+
+compile_oper_pattern()
 
 return expr_lexer
