@@ -174,7 +174,6 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
             e[#e+1] = jp.name
 
             local v = expr_print.eval(jp.expr, table_scope, t, i)
-            -- eval the conditions of the current row
             local pass = eval_conditions(conds, t, i)
 
             if pass and v then
@@ -441,8 +440,11 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local enums = {}
     local n = #t
     for i = 1, n do
-        local e = collate_factors(t, i, jes)
-        add_unique(enums, e)
+        local pass = eval_conditions(schema.conds, t, i)
+        if pass then
+            local e = collate_factors(t, i, jes)
+            add_unique(enums, e)
+        end
     end
 
     local plt, lg = graph.plot(), graph.plot()
@@ -459,7 +461,6 @@ local function gdt_table_xyplot(t, plot_descr, opt)
                 if compare_list(enum, e) then
                     local x = expr_print.eval(jx.expr, table_scope, t, i)
                     local y = expr_print.eval(jys[p].expr, table_scope, t, i)
-                    -- eval the conditions of the current row
                     local pass = eval_conditions(schema.conds, t, i)
                     if pass and x and y then
                         path_method(ln, x, y)
