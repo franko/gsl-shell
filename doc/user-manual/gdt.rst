@@ -62,6 +62,12 @@ GDT Functions
    Create a new data table with ``n`` rows and ``m`` columns.
    In the second form a table is provided with the column's names.
 
+.. function:: alloc(n, m)
+              alloc(n, headers)
+
+   Like the function :func:`gdt.new` but the table data is not initialized.
+   It is left to the user to set the values for each rows and columns.
+
 .. function:: filter(t, f)
 
     Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
@@ -74,7 +80,6 @@ GDT Functions
     This latter should be a string of the form ``"y ~ x1, x2^2"`` where the variables referenced are the column's name of the table.
     For more details about the model description look in the section on :ref:`GDT linear model <gdt-lm>`.
     The options are documented in the paragraph about :ref:`linear model options <gdt-lm-opts>`.
-
 
 .. function:: plot(t, plot_spec[, options])
 
@@ -96,6 +101,14 @@ GDT Functions
 .. function:: write_csv(t, filename)
 
     Write a CSV file with the given ``filename`` with the content of the table ``t``.
+
+.. function:: interp(t, description[, interp_method])
+
+    Return a function that perform an interpolation based on the ``description`` string.
+    The description should be of the form ``y ~ x``.
+    The meaning is to interpolate the variable ``y`` based on the values of ``x``.
+    Both variable names should be valid numeric columns defined in the table.
+    In addition the values of the x variables should be monotonically increasing.
 
 GDT Methods
 -----------
@@ -297,11 +310,32 @@ We will refer to the variables or the right of the "|" as "enumeration variables
 The enumeration variables are useful for all kind of plots.
 In the case of line plots enumerated plots are handy to obtain different lines with different colors plotted over the same variables.
 
+In addition you can *filter* the data to be plotted.
+The filter is given in the form of a logical relation specifid after a colon ':' character.
+Only the rows satisfying the given relation will be included in the plot.
+
+So, for example, if you want to plot only the results for the "mandel" test you can do::
+
+   gdt.barplot(ms, "log(time.c) ~ language : test = 'mandel'")
+
+to obtain the following plot:
+
+.. figure:: gdt-plot-perf-filter-mandel.png
+
+In this case you can note that the string 'mandel' is enclosed between the '' characters.
+This is required because otherwise the expression is interpreted as a variable/column name.
+
+The relation operators available are: '>', '<', '>=', '<=', '=', '!='.
+More conditions can be given to filter the data.
+In addition the logical operators 'and' and 'or' can be used to combine the logical relations.
+
 Histogram plots
 ---------------
 
 Histogram plots can be created very easily by using the function :func:`gdt.hist`.
 Its usage is simple, you just provide the GDT table as first argument and the variable you want to plot as a second plot.
+Actually the second argument can be a string that describe an expression based on the table's values.
+In this case the expression will be evaluated for each row and included in the histogram plot.
 
 Here an example of the kind of plot that you can obtain:
 
