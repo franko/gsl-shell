@@ -19,26 +19,29 @@ The possibility to mark as undefined the cell's value is also useful to take int
 
 Here an example of a GDT table:
 
-   >>> ms = gdt.read_csv("examples/perf-julia.csv")
+   >>> ms=gdt.read_csv 'examples/exam.csv'
    >>> ms
-               test   language  time.c
-   1            fib    Fortran    0.28
-   2      parse_int    Fortran    9.22
-   3      quicksort    Fortran    1.65
-   4         mandel    Fortran    0.76
-   5         pi_sum    Fortran       1
-   6  rand_mat_stat    Fortran    2.23
-   7   rand_mat_mul    Fortran    1.14
-   8            fib      Julia    1.97
-   9      parse_int      Julia    1.72
-   10     quicksort      Julia    1.37
-   11        mandel      Julia    1.45
-   12        pi_sum      Julia       1
-   13 rand_mat_stat      Julia    1.95
-   14  rand_mat_mul      Julia       1
-   15           fib     Python   46.03
-   16     parse_int     Python   25.29
-   ...
+      student teacher    sex m1 m2 final
+   1      S-1    john   male 56 42    58
+   2      S-2    john   male 96 90    91
+   3      S-3    john   male 70 59    65
+   4      S-4    john   male 82 75    78
+   5      S-5    john   male 85 90    92
+   6      S-6    john   male 69 60    65
+   7      S-7    john female 82 78    60
+   8      S-8    john female 84 81    82
+   9      S-9    john female 89 80    68
+   10    S-10    john female 90 93    91
+   11    S-11    jane   male 42 46    65
+   12    S-12    jane   male 28 15    34
+   13    S-13    jane   male 49 68    75
+   14    S-14    jane   male 36 30    48
+   15    S-15    jane   male 58 58    62
+   16    S-16    jane   male 72 70    84
+   17    S-17    jane female 65 61    70
+   18    S-18    jane female 68 75    71
+   19    S-19    jane female 62 50    55
+   20    S-20    jane female 71 72    87
 
 As you can see in this case the data is loaded from a CSV file. In the first line the headers are shown.
 
@@ -104,11 +107,14 @@ GDT Functions
 
 .. function:: interp(t, description[, interp_method])
 
-    Return a function that perform an interpolation based on the ``description`` string.
-    The description should be of the form ``y ~ x``.
-    The meaning is to interpolate the variable ``y`` based on the values of ``x``.
-    Both variable names should be valid numeric columns defined in the table.
-    In addition the values of the x variables should be monotonically increasing.
+    Return a function that perform an interpolation for the table ``t`` based on the ``description`` string.
+    The description should be of the form ``"y ~ x"`` where "y" and "x" are variables defined in the table.
+
+    Given the set of data points :math:`(x_1, y_1) \dots (x_n, y_n)` the routines described in this section compute a continuous interpolating function :math:`y(x)` such that :math:`y(x_i) = y_i`. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used. 
+
+    The interpolation method is specified by the optional argument ``interp_method``.
+    The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
+    The default method is "cspline" if none is specified.
 
 GDT Methods
 -----------
@@ -244,63 +250,69 @@ The formula provided as a second argument tell to the function that variable "we
 The function :func:`gdt.plot` can create even more complex plots when dealing with tables with enumeration variables.
 Let us cover a more complex example with another set of data::
 
-   >>> ms = gdt.read_csv('examples/perf-julia.csv')
+   >>> ms=gdt.read_csv 'examples/exam.csv'
    >>> ms
-               test   language  time.c
-   1            fib    Fortran    0.28
-   2      parse_int    Fortran    9.22
-   3      quicksort    Fortran    1.65
-   4         mandel    Fortran    0.76
-   5         pi_sum    Fortran       1
-   6  rand_mat_stat    Fortran    2.23
-   7   rand_mat_mul    Fortran    1.14
-   8            fib      Julia    1.97
-   9      parse_int      Julia    1.72
-   10     quicksort      Julia    1.37
-   11        mandel      Julia    1.45
-   12        pi_sum      Julia       1
-   13 rand_mat_stat      Julia    1.95
-   14  rand_mat_mul      Julia       1
-   15           fib     Python   46.03
-   16     parse_int     Python   25.29
-   ...
+      student teacher    sex m1 m2 final
+   1      S-1    john   male 56 42    58
+   2      S-2    john   male 96 90    91
+   3      S-3    john   male 70 59    65
+   4      S-4    john   male 82 75    78
+   5      S-5    john   male 85 90    92
+   6      S-6    john   male 69 60    65
+   7      S-7    john female 82 78    60
+   8      S-8    john female 84 81    82
+   9      S-9    john female 89 80    68
+   10    S-10    john female 90 93    91
+   11    S-11    jane   male 42 46    65
+   12    S-12    jane   male 28 15    34
+   13    S-13    jane   male 49 68    75
+   14    S-14    jane   male 36 30    48
+   15    S-15    jane   male 58 58    62
+   16    S-16    jane   male 72 70    84
+   17    S-17    jane female 65 61    70
+   18    S-18    jane female 68 75    71
+   19    S-19    jane female 62 50    55
+   20    S-20    jane female 71 72    87
 
-In the table above we have a numerical column, "time.c" but the other two columns are not numerical.
+In the table above we have some numerical columns, "m1", "m2" and "final" while the other three columns are not numerical.
 In this case we can still use the plot function that will automatically display the variable as an enumeration.
 So, fox example, we can do a plot using the function::
 
-   gdt.plot(ms, "time.c ~ language, test")
+   gdt.plot(ms, "final ~ teacher, sex, student")
 
 to obtain the following plot:
 
 .. figure:: gdt-plot-perf.png
 
-In this latter example we have fiven a formula with *two* variables on the right of the "~" symbol.
-The meaning is that we want to plot the "time" variable versus the "language" and the "test".
-It is interesting to note that if the "test" variable was omitted the plot routine would have plotted the average over all the tests.
+We have just adjusted the orientation of the x axis' labels with the command::
 
-To make the plot above more clear it can be interesting to plot the logarithm of the "time.c" variable.
-This can be done easily::
+   >>> _.xlab_angle=math.pi/2
 
-   gdt.plot(ms, "log(time.c) ~ language, test")
-
-since we can use complete expressions and refer to the functions in the "math" module.
-The resulting plot would be:
-
-.. figure:: gdt-plot-perf-log.png
+In this latter example we have fiven a formula with *three* variables on the right of the "~" symbol.
+The meaning is that we want to plot the "final" variable versus the "teacher", "sex" and the "student" id.
+It is interesting to note that if the "student" variable was omitted the plot routine would have plotted the average for each teacher and sex.
 
 At this point you may want to switch to a barplot to plot the results.
 This can be done very easily by using the function :func:`gdt.barplot`.
 This latter function can be used in exactly the same way that the function :func:`gdt.plot` so you can switch between them without changing the formula.
 
-To produce a nicer plot we may want to use a different color for each test and add a legend.
-This can be done easily by using a modified formula::
+In this case we may want to plot both the final score and the "m2" score (mid term score).
+This can be done easily with the following formula::
 
-   gdt.barplot(ms, "log(time.c) ~ language | test")
+   gdt.barplot(ms, "final, m2 ~ teacher, sex, student")
 
 to obtain the plot below:
 
-.. figure:: gdt-plot-perf-by-test.png
+.. figure:: gdt-plot-exam-m2-final.png
+
+Now let use suppose that we want to drop the "student" variable to obtain the average score for each teacher and sex possible combinations.
+The plot can be done using the following expression::
+
+   gdt.barplot(ms, "final ~ teacher | sex")
+
+to obtain the plot below:
+
+.. figure:: gdt-plot-exam-by-sex.png
 
 In this case we have used the "|" symbol.
 The idea is that all the variables on the right of the "|" will be enumerated with different colors and different symbols depending on the plot.
@@ -314,9 +326,11 @@ In addition you can *filter* the data to be plotted.
 The filter is given in the form of a logical relation specifid after a colon ':' character.
 Only the rows satisfying the given relation will be included in the plot.
 
-So, for example, if you want to plot only the results for the "mandel" test you can do::
+To make an example we use now the data from the Julia language benchmark.
+With the benchmark data, let us suppose that you want to plot only the results for the "mandel" test. You can use the command::
 
-   gdt.barplot(ms, "log(time.c) ~ language : test = 'mandel'")
+   >>> ms=gdt.read_csv 'examples/exam.csv'
+   >>> gdt.barplot(ms, "log(time.c) ~ language : test = 'mandel'")
 
 to obtain the following plot:
 
@@ -325,8 +339,11 @@ to obtain the following plot:
 In this case you can note that the string 'mandel' is enclosed between the '' characters.
 This is required because otherwise the expression is interpreted as a variable/column name.
 
-The relation operators available are: '>', '<', '>=', '<=', '=', '!='.
-More conditions can be given to filter the data.
+In addition we have also used the ``log`` function.
+When you describe a plot you can actually use any function contained in the standard "math" module.
+
+The relation operators available are: ``>``, ``<``, ``>=``, ``<=``, ``=``, ``!=``.
+More conditions can be given, separated by a comma, to filter the data.
 In addition the logical operators 'and' and 'or' can be used to combine the logical relations.
 
 Histogram plots
