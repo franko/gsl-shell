@@ -9,15 +9,15 @@ Overview
 --------
 
 General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format.
-They are similar to matrices but with some notable differences:
+They are somewhat similar to matrices but have some notables differences.
 
-* columns have a name defined in the table's headers
-* each cell can contain either a number, a string or an undefined value.
+While in matrices the columns are always unnamed in GDT tables they have names so that you can refer to a specific column by giving its name.
+The other important difference is that the value in each cell does not need to be numeric but can be also a string or undefined.
 
-Since a GDT table can contain strings they are ofter useful to store data coming from observations or from reports.
-The possibility to mark as undefined the cell's value is also useful to take into account missing data.
+Since a GDT table can contain strings they are often useful to store data coming from observations or from reports.
+The possibility to mark a cell as undefined is also useful to take into account missing or not available data.
 
-Here an example of a GDT table:
+Here an example of GDT table taken from the excellent `|STAT user manual <http://oldwww.acm.org/perlman/stat/handbook/handbook.html>`_ of Gary Pearlman:
 
    >>> ms=gdt.read_csv 'examples/exam.csv'
    >>> ms
@@ -43,16 +43,19 @@ Here an example of a GDT table:
    19    S-19    jane female 62 50    55
    20    S-20    jane female 71 72    87
 
-As you can see in this case the data is loaded from a CSV file. In the first line the headers are shown.
+As you can see in this case the data is loaded from a CSV file. In the first line the name of each column is shown and the data follow in a tabular form.
 
-There are many functions available to operate of a GDT table.
-The functions can be grouped into families:
+In the example above the columns are either numeric of textual but in reality there is nothing to enforce the type of a column.
+Each column can mix freely numbers or strings or even undefined values without restrictions.
+
+As a general rule the functions that need to know if a column is purely numeric or if it does contain text always looks at the content of the column to decide its type.
+
+As you can imagine there are many functions available to operate of a GDT table.
+They can be grouped into families:
 
 * functions to manipulate tables
-* functions to create plots based on the table itself
+* functions to create plots based on the table's data
 * functions to perform statistical computations
-
-The more common are probably the methods :meth:`~Gdt.get` and :meth:`~Gdt.set` to operate on the table's elements on a given row and column.
 
 GDT Functions
 -------------
@@ -80,7 +83,7 @@ GDT Functions
 .. function:: lm(t, model_descr, options)
 
     Perform a linear fit of the data in the table ``t`` based on the model described with ``model_descr``.
-    This latter should be a string of the form ``"y ~ x1, x2^2"`` where the variables referenced are the column's name of the table.
+    This latter should be a string of the form ``"y ~ x1, x2^2"`` where the variables referenced are column's names of the table.
     For more details about the model description look in the section on :ref:`GDT linear model <gdt-lm>`.
     The options are documented in the paragraph about :ref:`linear model options <gdt-lm-opts>`.
 
@@ -107,10 +110,10 @@ GDT Functions
 
 .. function:: interp(t, description[, interp_method])
 
-    Return a function that perform an interpolation for the table ``t`` based on the ``description`` string.
+    Return a function that perform an interpolation based of the data in the table ``t`` and the ``description`` string.
     The description should be of the form ``"y ~ x"`` where "y" and "x" are variables defined in the table.
 
-    Given the set of data points :math:`(x_1, y_1) \dots (x_n, y_n)` the routines described in this section compute a continuous interpolating function :math:`y(x)` such that :math:`y(x_i) = y_i`. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used. 
+    Given the set of data points :math:`(x_1, y_1) \dots (x_n, y_n)` the routines described in this section compute a continuous interpolating function :math:`y(x)` such that :math:`y(x_i) = y_i`. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.
 
     The interpolation method is specified by the optional argument ``interp_method``.
     The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
@@ -150,7 +153,7 @@ GDT Methods
   .. method:: column(j)
               column(name)
 
-     Return an iterator the gives, at each iterations, the couple (i, v) representing the index and the value of each cell in the column j.
+     Return an iterator that gives, at each iterations, the couple (i, v) representing the index and the value of each cell in the column j.
 
   .. method:: col_index(name)
 
@@ -167,7 +170,7 @@ GDT Methods
 
         t:insert("average", 3, |r| (r.x + r.y) / 2)
 
-.. method:: append(name[, f_init])
+  .. method:: append(name[, f_init])
 
      Append a new column named ``name``.
      The function ``f_init`` is called for each row of the table to intialize the column's value.
@@ -178,17 +181,17 @@ GDT Methods
 
         t:append("average", |r| (r.x + r.y) / 2)
 
-.. method:: define(name[, f_init])
+  .. method:: define(name[, f_init])
 
      Like the method :meth:`~Gdt.append` with the exception that, if a column with the given name already exists, it will be overwritten with the new values.
 
-.. method:: cursor()
+  .. method:: cursor()
 
      Return an object of type cursor.
      It does intially point to the first row of the table.
      A cursor object can be indexed with the name of the columns to obtain the correponding value for the current row.
 
-.. method:: rows()
+  .. method:: rows()
 
      Return an iterator to span all the rows of the table.
      At each iteration the row index is provided and a cursor pointing to the current row.
@@ -199,13 +202,13 @@ GDT Methods
            print(cursor.x, cursor.y)
         end
 
-.. method:: headers()
+  .. method:: headers()
 
      Returns a table with the name of the columns (headers).
-     The value are given in the column order so that the index of each element corresponds to the index of the given column in the table.
+     The values are given in the column's order so that the index of each element corresponds to the index of the given column in the table.
 
-.. method:: levels(j)
-            levels(column_name)
+  .. method:: levels(j)
+              levels(column_name)
 
      Returns a list of the unique levels for the given column identified by its index ``j`` or its name.
 
@@ -239,13 +242,13 @@ Let us use the following data for our example:
    14    1.8  72.19
    15   1.83  74.46
 
-As you can see the table above have two columns names "height" and "weight".
+As you can see the table above have two columns named "height" and "weight".
 We may want to make a scatterplot of the data to see how the weight varies with the height.
 In order to make such plot we can just use the function :func:`gdt.plot` ::
 
    gdt.plot(ms, "weight ~ height")
 
-The formula provided as a second argument tell to the function that variable "weight" should be plotted versus the variable "height".
+The formula provided as a second argument tells to the function that the variable "weight" should be plotted versus the variable "height".
 
 The function :func:`gdt.plot` can create even more complex plots when dealing with tables with enumeration variables.
 Let us cover a more complex example with another set of data::
@@ -282,18 +285,27 @@ So, fox example, we can do a plot using the function::
 
 to obtain the following plot:
 
-.. figure:: gdt-plot-perf.png
+.. figure:: gdt-plot-exam.png
 
 We have just adjusted the orientation of the x axis' labels with the command::
 
    >>> _.xlab_angle=math.pi/2
 
-In this latter example we have fiven a formula with *three* variables on the right of the "~" symbol.
-The meaning is that we want to plot the "final" variable versus the "teacher", "sex" and the "student" id.
-It is interesting to note that if the "student" variable was omitted the plot routine would have plotted the average for each teacher and sex.
+In this latter example we have given a formula with *three* variables on the right of the "~" symbol.
+The meaning is that we want to plot the "final" variable versus the "teacher", "sex" and the "student".
 
-At this point you may want to switch to a barplot to plot the results.
-This can be done very easily by using the function :func:`gdt.barplot`.
+It is interesting to note that if the "student" variable was omitted the plot function would have plotted the average score for each teacher and sex.
+These means that, when more entries correspond to a single plotting value the average of the values is used.
+
+This behavior can be made explicit by using the "mean" function which is otherwise implicit::
+
+   gdt.plot(ms, "mean(final) ~ teacher, sex, student")
+
+Other functions like "stddev" and "count" are available to deal with multiple values.
+The function "stddev" can be especially useful to easily plot the standard deviation of grouped data.
+
+At this point we may want to switch to a barplot to plot the results.
+This can be done using the function :func:`gdt.barplot`.
 This latter function can be used in exactly the same way that the function :func:`gdt.plot` so you can switch between them without changing the formula.
 
 In this case we may want to plot both the final score and the "m2" score (mid term score).
@@ -317,27 +329,29 @@ to obtain the plot below:
 In this case we have used the "|" symbol.
 The idea is that all the variables on the right of the "|" will be enumerated with different colors and different symbols depending on the plot.
 A legend will be also added to link each color with each enumerated value.
-We will refer to the variables or the right of the "|" as "enumeration variables".
+We will refer to the variables or the right of the "|" as an "enumeration variables".
 
 The enumeration variables are useful for all kind of plots.
 In the case of line plots enumerated plots are handy to obtain different lines with different colors plotted over the same variables.
 
-In addition you can *filter* the data to be plotted.
+We want to illustrate now how to *filter* the data to be plotted on the fly.
 The filter is given in the form of a logical relation specifid after a colon ':' character.
 Only the rows satisfying the given relation will be included in the plot.
 
-To make an example we use now the data from the Julia language benchmark.
-With the benchmark data, let us suppose that you want to plot only the results for the "mandel" test. You can use the command::
+To illustrate plot's filters we will use the data from the Julia language benchmark.
+In the benchmark data there is a column "language" that identifies the programming language and a column "test" that identifies the specific benchmark test.
+Now let us suppose that you want to plot only the results for the "mandel" test.
+You can do it by using the plot filters like in the example below::
 
-   >>> ms=gdt.read_csv 'examples/exam.csv'
+   >>> ms=gdt.read_csv 'examples/perf-julia.csv'
    >>> gdt.barplot(ms, "log(time.c) ~ language : test = 'mandel'")
 
 to obtain the following plot:
 
 .. figure:: gdt-plot-perf-filter-mandel.png
 
-In this case you can note that the string 'mandel' is enclosed between the '' characters.
-This is required because otherwise the expression is interpreted as a variable/column name.
+In this case you can note that the string ``'mandel'`` is enclosed using the single quotes characters.
+This is required because otherwise the expression is interpreted as a column's name.
 
 In addition we have also used the ``log`` function.
 When you describe a plot you can actually use any function contained in the standard "math" module.
@@ -349,10 +363,8 @@ In addition the logical operators 'and' and 'or' can be used to combine the logi
 Histogram plots
 ---------------
 
-Histogram plots can be created very easily by using the function :func:`gdt.hist`.
-Its usage is simple, you just provide the GDT table as first argument and the variable you want to plot as a second plot.
-Actually the second argument can be a string that describe an expression based on the table's values.
-In this case the expression will be evaluated for each row and included in the histogram plot.
+Histogram plots can be created using the function :func:`gdt.hist`.
+Its usage is simple, you just need to give the tables and an expression whose values will be plotted in the form of an histogram.
 
 Here an example of the kind of plot that you can obtain:
 
@@ -383,7 +395,7 @@ GDT Linear Model
 The linear model function :func:`gdt.lm` is a generic function to perform a linear least square fit based on a linear model description.
 
 It does return a special type of object that store the result of the fit.
-The fit object can be used to print a summary of performing other operations like evaluating the predicted values. See the section about the :ref:`fit objects <gdt-fit-obj>` for more informations.
+The fit object can be used to print a summary or performing other operations like evaluating the predicted values. The details about the fit objects are given in the :ref:`fit objects <gdt-fit-obj>` specific section.
 
 The linear fit is performed accordingly to the model string.
 This latter should be of the form:
@@ -492,7 +504,7 @@ where :math:`a_i` and :math:`b_i` are the linear coefficient and :math:`\delta_p
 These latter describe de tool effect by taking "tool A" as a reference so that
 ``p`` can take two values: 1, 2 for tools B et C respectively.
 
-From the practical point this model assume that "tool C" has a dematching versus "tool A" of :math:`\delta_1` and "tool C" has a dematching id :math:`\delta_2`.
+The coefficients :math:`\delta_1` and :math:`\delta_2` represents the average delta of tools "B" and "C" versus the tool "A".
 
 Here a way to perform the linear fit and make a plot of the data::
 
@@ -537,24 +549,24 @@ Later we use the :meth:`~Fit.eval` method to trace the predicted line to obtain 
 
 .. figure:: gdt-lm-plot-example.png
 
-It is interesting to note that the tool effect can be taken into account with a different model::
+It is interesting to note that the tool effect can be taken into account with a different model where the "time" and "tool" effect are crossed::
 
   fit = gdt.lm(t, "y ~ t * tool")
 
-and in this latter case the system would have calculated a different coefficient for each tool.
+In this case the regression function will take into account three effects:
+
+  * the "time" linear effect
+  * the tool effect
+  * a tool effect on the time coefficient
+
+So the difference from the example made before would be that, for each tool, a different coefficient is evaluated.
+
 The corresponding model would be:
 
 .. math::
-      y_i = a + b_p F_{p i} t_i = a + ( b_1 + b_2 F_{2 i} + b_3 F_{3 i} ) \, t_i
+      y_i = a + b \, t_i + (\delta_p + c \, t_i) F_{p i}
 
 so that a different linear coefficient is attributed to each tool.
-
-You can also add the "tool" effect::
-
-
-  fit = gdt.lm(t, "y ~ tool, t * tool")
-
-to obtain a different intercept for each tool.
 
 .. _gdt-fit-obj:
 
