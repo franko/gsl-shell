@@ -66,7 +66,7 @@ local function gdt_table_hist(t, expr_formula, opt)
         local y = gsl.gsl_histogram_get(h, k)
         local r = rect(lim[0], 0, lim[1], y)
         p:add(r, color)
-        p:addline(r, graph.rgb(50,50,50))
+        p:add(r, graph.rgb(40,40,40), {{'stroke', width=0.75}})
     end
 
     p:show()
