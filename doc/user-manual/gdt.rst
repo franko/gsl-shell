@@ -9,9 +9,9 @@ Overview
 --------
 
 General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format.
-They are somewhat similar to matrices but have some notables differences.
+They are somewhat similar to matrices but have some notable differences.
 
-While in matrices the columns are always unnamed in GDT tables they have names so that you can refer to a specific column by giving its name.
+While in matrices columns are always unnamed in GDT tables they have names so that you can refer to a specific column by name.
 The other important difference is that the value in each cell does not need to be numeric but can be also a string or undefined.
 
 Since a GDT table can contain strings they are often useful to store data coming from observations or from reports.
@@ -57,6 +57,13 @@ They can be grouped into families:
 * functions to create plots based on the table's data
 * functions to perform statistical computations
 
+The the chapter :ref:`GDT plots <gdt-plot>` you will find an introductions to plotting functions.
+In the chapter about :ref:`Linear Models <gdt-lm>` the function :func:`gdt.lm` in described in details.
+The function :func:`gdt.lm` is very function to analyze data in term of a linear model.
+You can think it as a generalization of the familiar linear regression of the form :math:`y = a \, x + b`.
+
+The function :func:`gdt.filter` and :func:`gdt.reduce` are also very useful to manipulate tables in a similar way to what you can do with spreadsheet applications.
+
 GDT Functions
 -------------
 
@@ -79,6 +86,13 @@ GDT Functions
     Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
     The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
     The row will be retained if and only if the predicate function returns true.
+
+.. function:: reduce(t, description)
+
+    Returns a new table elaborated from table ``t`` based on ``description``.
+    This latter should be a string of the form ``"<y1>, <y2,> ... ~ x1, x2 | e1, e2"`` where ``x1``, ``x2``, ... and ``e1``, ``e2``, ... are table's columns.
+    The terms like ``<y1>`` can be expressions that refer to variable names.
+    For each unique combinations of the values of ``x1``, ``x2``, ... and ``e1``, ``e2``, ... the ys expressions will be evaluated to a numeric value.
 
 .. function:: lm(t, model_descr, options)
 
@@ -292,9 +306,9 @@ We have just adjusted the orientation of the x axis' labels with the command::
    >>> _.xlab_angle=math.pi/2
 
 In this latter example we have given a formula with *three* variables on the right of the "~" symbol.
-The meaning is that we want to plot the "final" variable versus the "teacher", "sex" and the "student".
+The meaning is that we want to plot the "final" variable versus the "teacher", "sex" and the "student" variables.
 
-It is interesting to note that if the "student" variable was omitted the plot function would have plotted the average score for each teacher and sex.
+It is interesting to note that if the "student" variable was omitted the plot function would have plotted the average score for each teacher and sex combination.
 These means that, when more entries correspond to a single plotting value the average of the values is used.
 
 This behavior can be made explicit by using the "mean" function which is otherwise implicit::
@@ -504,7 +518,8 @@ where :math:`a_i` and :math:`b_i` are the linear coefficient and :math:`\delta_p
 These latter describe de tool effect by taking "tool A" as a reference so that
 ``p`` can take two values: 1, 2 for tools B et C respectively.
 
-The coefficients :math:`\delta_1` and :math:`\delta_2` represents the average delta of tools "B" and "C" versus the tool "A".
+The expression :math:`F_{p i}` is equal to 1 when the tool in the i-th column correspond to the tool "p" and 0 otherwise.
+Therefore the coefficients :math:`\delta_1` and :math:`\delta_2` represents the average delta of tools "B" and "C" versus the tool "A".
 
 Here a way to perform the linear fit and make a plot of the data::
 
