@@ -21,8 +21,8 @@ require('gdt-hist')
 require('gdt-plot')
 require('gdt-lm')
 require('gdt-interp')
+require('linfit')
 
-num.linfit  = require 'linfit'
 num.bspline = require 'bspline'
 
 local demomod

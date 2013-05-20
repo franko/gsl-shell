@@ -1512,15 +1512,56 @@ ffi.cdef[[
 			   gsl_matrix * cov,
 			   double * chisq,
 			   gsl_multifit_linear_workspace * work);
+int
+gsl_multifit_linear_svd (const gsl_matrix * X,
+                         const gsl_vector * y,
+                         double tol,
+                         size_t * rank,
+                         gsl_vector * c,
+                         gsl_matrix * cov,
+                         double *chisq,
+                         gsl_multifit_linear_workspace * work);
 
-      int
-      gsl_multifit_wlinear (const gsl_matrix * X,
-			    const gsl_vector * w,
-			    const gsl_vector * y,
-			    gsl_vector * c,
-			    gsl_matrix * cov,
-			    double * chisq,
-			    gsl_multifit_linear_workspace * work);
+int
+gsl_multifit_linear_usvd (const gsl_matrix * X,
+                          const gsl_vector * y,
+                          double tol,
+                          size_t * rank,
+                          gsl_vector * c,
+                          gsl_matrix * cov,
+                          double *chisq,
+                          gsl_multifit_linear_workspace * work);
+
+int
+gsl_multifit_wlinear (const gsl_matrix * X,
+                      const gsl_vector * w,
+                      const gsl_vector * y,
+                      gsl_vector * c,
+                      gsl_matrix * cov,
+                      double * chisq,
+                      gsl_multifit_linear_workspace * work);
+
+int
+gsl_multifit_wlinear_svd (const gsl_matrix * X,
+                          const gsl_vector * w,
+                          const gsl_vector * y,
+                          double tol,
+                          size_t * rank,
+                          gsl_vector * c,
+                          gsl_matrix * cov,
+                          double *chisq,
+                          gsl_multifit_linear_workspace * work);
+
+int
+gsl_multifit_wlinear_usvd (const gsl_matrix * X,
+                           const gsl_vector * w,
+                           const gsl_vector * y,
+                           double tol,
+                           size_t * rank,
+                           gsl_vector * c,
+                           gsl_matrix * cov,
+                           double *chisq,
+                           gsl_multifit_linear_workspace * work);
 
 typedef struct
   {

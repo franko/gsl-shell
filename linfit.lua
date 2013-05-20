@@ -23,15 +23,15 @@ local function get_workspace(n, p)
    return ws
 end
 
-local chisq = ffi.new('double[1]')
-
-local function linfit(X, y, w)
+function num.linfit(X, y, w)
    local n, p = matrix.dim(X)
    local ws = get_workspace(n, p)
    local c = matrix.alloc(p, 1)
    local cov = matrix.alloc(p, p)
    local yv = gsl.gsl_matrix_column (y, 0)
    local cv = gsl.gsl_matrix_column (c, 0)
+
+   local chisq = ffi.new('double[1]')
    
    if w then
       local wv = gsl.gsl_matrix_column (w, 0)
@@ -43,4 +43,24 @@ local function linfit(X, y, w)
    return c, chisq[0], cov
 end
 
-return linfit
+function num.linfit_svd(X, y, w)
+   local n, p = matrix.dim(X)
+   local ws = get_workspace(n, p)
+   local c = matrix.alloc(p, 1)
+   local cov = matrix.alloc(p, p)
+   local yv = gsl.gsl_matrix_column (y, 0)
+   local cv = gsl.gsl_matrix_column (c, 0)
+
+   local rank = ffi.new('size_t[1]')
+   local chisq = ffi.new('double[1]')
+   local tol = 1.0e-12
+
+   if w then
+      local wv = gsl.gsl_matrix_column (w, 0)
+      gsl_check(gsl.gsl_multifit_wlinear_svd (X, wv, yv, tol, rank, cv, cov, chisq, ws))
+   else
+      gsl_check(gsl.gsl_multifit_linear_svd (X, yv, tol, rank, cv, cov, chisq, ws))
+   end
+
+   return c, chisq[0], cov, tonumber(rank[0])
+end
