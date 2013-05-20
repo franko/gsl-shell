@@ -48,7 +48,7 @@ end
 
 local function compute_fit(X, y, names)
     local n = #y
-    local c, chisq, cov = num.linfit(X, y)
+    local c, chisq, cov, rank = num.linfit_svd(X, y)
     local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
     for i = 1, #c do
         coeff:set(i, 1, names[i])
@@ -59,7 +59,7 @@ local function compute_fit(X, y, names)
         coeff:set(i, 4, t)
         coeff:set(i, 5, p_value)
     end
-    return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = #c}
+    return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = #c, rank= rank}
 end
 
 local function fit_compute_Rsquare(fit, X, y)
@@ -144,6 +144,11 @@ end
 
 function FIT.summary(fit)
     print(fit.coeff)
+    if fit.rank < fit.p then
+        print()
+        print('WARNING: rank deficient matrix for the given model.')
+        print(string.format('Matrix rank: %i, matrix dimension: %i.', fit.rank, fit.p))
+    end
     print()
     print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit.SE, fit.R2, fit.R2_adj))
 end
