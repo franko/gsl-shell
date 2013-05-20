@@ -169,8 +169,26 @@ function FIT.eval(fit, tn)
     return sy
 end
 
+local function check_var_references(t, schema)
+    local refs = {}
+    for _, expr in ipairs(schema.x) do
+        expr_print.references(expr, refs)
+    end
+    expr_print.references(schema.y, refs)
+    for _, expr in ipairs(schema.conds) do
+        expr_print.references(expr, refs)
+    end
+    for var_name in pairs(refs) do
+        if not t:col_index(var_name) then
+            error('invalid reference to column name \"'..var_name.."\"", 3)
+        end
+    end
+end
+
 local function lm(t, model_formula, options)
     local schema = expr_parse.schema(model_formula, AST, false)
+
+    check_var_references(t, schema)
 
     local expand = not options or (options.expand == nil or options.expand)
     local xs = expand and expand_exprs(schema.x) or schema.x

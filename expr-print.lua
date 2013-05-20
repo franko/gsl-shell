@@ -1,4 +1,5 @@
 local expr_lexer = require 'expr-lexer'
+local AST = require 'expr-actions'
 
 local format, concat = string.format, table.concat
 
@@ -108,8 +109,9 @@ end
 local function ref_list_rec(expr, list)
     if type(expr) == 'number' then
         return
-    elseif type(expr) == 'string' then
-        list[expr] = true
+    elseif AST.is_variable(expr) then
+        local _, var_name = AST.is_variable(expr)
+        list[var_name] = true
     elseif expr.literal then
         return
     elseif expr.func then
