@@ -501,7 +501,7 @@ function gdt.reduce(t_src, schema_descr)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t_src, schema.enums)
 
-    local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes)
+    local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes, schema.conds)
 
     local n, p, q = #labels, #enums, #labels[1]
     local t = gdt.alloc(n, q + p)
