@@ -48,7 +48,7 @@ end
 
 local function compute_fit(X, y, names)
     local n = #y
-    local c, chisq, cov, rank = num.linfit_svd(X, y)
+    local c, chisq, cov, rank = num.linfit_svd(X, y, nil, 1.0e-10)
     local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
     for i = 1, #c do
         coeff:set(i, 1, names[i])
