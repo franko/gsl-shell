@@ -21,7 +21,7 @@ ifeq ($(HOST_SYS),Windows)
   FOX_LIBS = -lfox -lgdi32
 
   GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lblas
+  GSL_LIBS = -lgsl -lopenblas
 
   FREETYPE_INCLUDES =
   FREETYPE_LIBS = -lfreetype

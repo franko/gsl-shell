@@ -13,8 +13,8 @@ AR= ar rcu
 RANLIB= ranlib
 CP_REL = cp --parents
 
-CC = gcc
-CXX = g++
+CC = gcc -march=i686 -msse -msse2 -mfpmath=sse
+CXX = g++ -march=i686 -msse -msse2 -mfpmath=sse
 
 LINK_EXE = $(CC) $(LDFLAGS)
 
