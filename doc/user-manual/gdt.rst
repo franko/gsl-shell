@@ -89,10 +89,30 @@ GDT Functions
 
 .. function:: reduce(t, description)
 
-    Returns a new table elaborated from table ``t`` based on ``description``.
-    This latter should be a string of the form ``"<y1>, <y2,> ... ~ x1, x2 | e1, e2"`` where ``x1``, ``x2``, ... and ``e1``, ``e2``, ... are table's columns.
-    The terms like ``<y1>`` can be expressions that refer to variable names.
-    For each unique combinations of the values of ``x1``, ``x2``, ... and ``e1``, ``e2``, ... the ys expressions will be evaluated to a numeric value.
+    Returns a new table with aggregate partial results for table ``t`` based on ``description``.
+    This latter should be a string and has the same meaning of the plot description string described in the :ref:`GDT Plot <gdt-plot>` chapter.
+
+    The general form of the description string is ``"<func1>(<expr1>), <func2>(<expr2>), ... ~ x1, x2, ..., xn | e1, e2, ..., en"``.
+    The functions will be used to compute the aggregate value for a given instance of x1, x2, ..., xn and e1, e2, ..., en.
+    The available aggregate functions are "mean", "stddev", "stddevp", "var", "count", "sum".
+
+    Example to compute some averages and std deviations::
+
+       >>> t = gdt.read_csv 'examples/exam.csv'
+       >>> gdt.reduce(t, "mean(final), stddev(final), mean((m1+m2)/2) ~ teacher, sex")
+         teacher    sex mean(final) stddev(final) mean((m1+m2)/2)
+       1    jane female       70.75       13.0735            65.5
+       2    jane   male     61.3333       18.1071         47.6667
+       3    john female       75.25       13.8894          84.625
+       4    john   male     74.8333       14.4418         72.8333
+
+    The meaning of the description string is: for each teacher and sex compute the mean and the standard deviation of the "final" score and the average of m1 and m2 (midterm's scores).
+
+    If you call the function :func:`gdt.barplot` with the same arguments you will obtain the following plot:
+
+    .. figure:: gdt-reduce-exam-example-plot.png
+
+    The plot above correspond actually to the table obtained with :func:`gdt.reduce`. Both functions perform the same operations, the only difference is that :func:`gdt.reduce` will create a table while the function :func:`gdt.barplot` will create a plot.
 
 .. function:: lm(t, model_descr, options)
 
