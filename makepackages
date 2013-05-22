@@ -56,7 +56,7 @@ else
   AGG_LIBS = -lagg -lX11
 
   GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lblas
+  GSL_LIBS = -lgsl -lgslcblas
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
