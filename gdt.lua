@@ -3,7 +3,7 @@ local cgdt = require 'cgdt'
 local format = string.format
 local concat = table.concat
 local max = math.max
-local assert = assert
+local assert, ipairs = assert, ipairs
 
 local gdt_table = ffi.typeof("gdt_table")
 local gdt_table_cursor = ffi.typeof("gdt_table_cursor")
@@ -278,6 +278,37 @@ local function gdt_table_levels(t, j)
     return ls
 end
 
+local function list_add_unique(ls, x)
+    for i, y in ipairs(ls) do
+        if y == x then return i end
+    end
+    local i = #ls + 1
+    ls[i] = x
+    return i
+end
+
+local function gdt_table_create(f_init, a, b)
+    if not b then a, b = 1, a end
+    local n = b - a + 1
+    local t, keys = {}, {}
+    for i = a, b do
+        local st = f_init(i)
+        local row = {}
+        for k, v in pairs(st) do
+            local idx = list_add_unique(keys, k)
+            row[idx] = v
+        end
+        t[#t+1] = row
+    end
+    local tb = gdt.new(n, keys)
+    for i, row in ipairs(t) do
+        for j, v in ipairs(row) do
+            tb:set(i, j, v)
+        end
+    end
+    return tb
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -342,6 +373,7 @@ gdt = {
     get    = gdt_table_get,
     set    = gdt_table_set,
     filter = gdt_table_filter,
+    create = gdt_table_create,
 
     get_number_unsafe = gdt_table_get_number_unsafe,
 }
