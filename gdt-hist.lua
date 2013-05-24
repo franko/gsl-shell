@@ -25,19 +25,25 @@ local function gdt_table_hist(t, expr_formula, opt)
 
     local Q1 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.25)
     local Q3 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.75)
-    local IQR = Q3 - Q1
 
     local a, b
     if opt and opt.a and opt.b then
         a, b = opt.a, opt.b
+        assert(a < b, "invalid histogram limits")
     else
         a, b = dv.data[0], dv.data[n - 1]
     end
 
-    -- Freedman-Diaconis rule from http://stats.stackexchange.com/questions/798/calculating-optimal-number-of-bins-in-a-histogram-for-n-where-n-ranges-from-30
-    -- corresponds to GNU R with breaks='FD'
-    local h_FD = 2 * IQR * n^(-1/3)
-    local nbins = (b - a) / h_FD
+    local IQR = Q3 - Q1
+    local nbins
+    if IQR > 0 then
+        -- Freedman-Diaconis rule from http://stats.stackexchange.com/questions/798/calculating-optimal-number-of-bins-in-a-histogram-for-n-where-n-ranges-from-30
+        -- corresponds to GNU R with breaks='FD'
+        local h_FD = 2 * IQR * n^(-1/3)
+        nbins = math.min((b - a) / h_FD, n)
+    else
+        nbins = 16
+    end
 
     if nbins < 2 then error("not enough data to produce an histogram") end
 
