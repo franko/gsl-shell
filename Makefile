@@ -54,7 +54,7 @@ endif
 
 LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua \
 	graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua \
-	roots.lua contour.lua gsl.lua gsl-machine-consts.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua \
+	roots.lua contour.lua gsl.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua \
 	import.lua plot3d.lua sf.lua vegas.lua eigen.lua help.lua cgdt.lua expr-actions.lua \
 	expr-lexer.lua expr-parse.lua expr-print.lua gdt-factors.lua gdt-interp.lua gdt-expr.lua \
 	gdt-hist.lua gdt-lm.lua gdt.lua gdt-parse-csv.lua gdt-plot.lua lm-expr.lua \
