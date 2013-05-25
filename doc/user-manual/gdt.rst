@@ -81,6 +81,41 @@ GDT Functions
    Like the function :func:`gdt.new` but the table data is not initialized.
    It is left to the user to set the values for each rows and columns.
 
+.. function:: create(f_init, a, b)
+              create(f_init, b)
+
+   Create a new GDT table based using the function ``f_init(i)`` for ``i`` going from ``a`` to ``b``.
+   In the second form ``a`` defaults to 1.
+   The function ``f_init`` should return, for each value of "i", a table in the form ``{field1= <expr>, field2= <expr>, ...}``.
+   The GDT table will be created filling each rows with the provided expressions.
+   For each named field a column will be created in the table.
+
+   For example let us create a table that computes the value of :math:`\sin(x)` and :math:`\cos(x)` for x going from 0 to :math:`2 \pi`.
+   This can done with :func:`gdt.create` like in the following example::
+
+      >>> use 'math'
+      >>> n = 16 -- # of sampling points
+      >>> x = |i| (i-1)*2*pi/n -- sampling function
+      >>> t = gdt.create(|i| {x = x(i), sin = sin(x(i)), cos = cos(x(i))}, n)
+      >>> t
+                 sin        x          cos
+      1            0        0            1
+      2     0.382683 0.392699      0.92388
+      3     0.707107 0.785398     0.707107
+      4      0.92388   1.1781     0.382683
+      5            1   1.5708  6.12303e-17
+      6      0.92388   1.9635    -0.382683
+      7     0.707107  2.35619    -0.707107
+      8     0.382683  2.74889     -0.92388
+      9  1.22461e-16  3.14159           -1
+      10   -0.382683  3.53429     -0.92388
+      11   -0.707107  3.92699    -0.707107
+      12    -0.92388  4.31969    -0.382683
+      13          -1  4.71239 -1.83691e-16
+      14    -0.92388  5.10509     0.382683
+      15   -0.707107  5.49779     0.707107
+      16   -0.382683  5.89049      0.92388
+
 .. function:: filter(t, f)
 
     Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
