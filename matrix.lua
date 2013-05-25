@@ -259,7 +259,7 @@ local function matrix_display_gen(sel)
                    sq = sq + abs(x) + abs(y)
                 end
              end
-             local eps = (sq / (n1*n2)) * 1e-6
+             local eps = (sq / (n1*n2)) * 1e-9
              eps = eps > 0 and eps or 1
 
              lsrow = {}
