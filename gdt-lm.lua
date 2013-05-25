@@ -5,6 +5,7 @@ local gdt_factors = require 'gdt-factors'
 local check = require 'check'
 local mon = require 'monomial'
 local AST = require 'expr-actions'
+local linfit_rank = require 'linfit_rank'
 
 local sqrt, abs = math.sqrt, math.abs
 local ipairs = ipairs
@@ -46,24 +47,36 @@ local function t_test(xm, s, n, df)
     return t, (p_value >= 2e-16 and p_value or '< 2e-16')
 end
 
+local function list_exists(ls, x)
+    local n = #ls
+    for i = 1, n do
+        if ls[i] == x then return true end
+    end
+    return false
+end
+
 local function compute_fit(X, y, names)
-    local n = #y
-    local c, chisq, cov, rank = num.linfit_svd(X, y, nil, 1.0e-10)
-    local coeff = gdt.alloc(#c, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
-    for i = 1, #c do
+    local n, p = matrix.dim(X)
+    local c, chisq, cov, remov = linfit_rank(X, y)
+    local rank = p - #remov
+    local coeff = gdt.alloc(p, {"term", "estimate", "std error", "t value" ,"Pr(>|t|)"})
+    for i = 1, p do
         coeff:set(i, 1, names[i])
-        local xm, s = c[i], cov:get(i,i)
+        local xm, s, t, p_value
+        if not list_exists(remov, i) then
+            xm, s = c[i], sqrt(cov:get(i,i))
+            t, p_value = t_test(xm, s, n, n - rank)
+        end
         coeff:set(i, 2, xm)
-        coeff:set(i, 3, sqrt(s))
-        local t, p_value = t_test(xm, sqrt(s), n, n - #c)
+        coeff:set(i, 3, s)
         coeff:set(i, 4, t)
         coeff:set(i, 5, p_value)
     end
-    return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = #c, rank= rank}
+    return {coeff = coeff, c = c, chisq = chisq, cov = cov, n = n, p = p, rank= rank}
 end
 
 local function fit_compute_Rsquare(fit, X, y)
-    local n, p = fit.n, fit.p
+    local n, p = fit.n, fit.rank
     local y_pred = X * fit.c
 
     local y_mean = 0
@@ -146,8 +159,8 @@ function FIT.summary(fit)
     print(fit.coeff)
     if fit.rank < fit.p then
         print()
-        print('WARNING: rank deficient matrix for the given model.')
-        print(string.format('Matrix rank: %i, matrix dimension: %i.', fit.rank, fit.p))
+        print('WARNING: model has linearly dependent terms.')
+        print(string.format('         %i of the %i coefficients excluded from model.', fit.p - fit.rank, fit.p))
     end
     print()
     print(string.format("Standard Error: %g, R2: %g, Adjusted R2: %g", fit.SE, fit.R2, fit.R2_adj))
