@@ -28,9 +28,6 @@
 #include "agg_basics.h"
 
 class plot_auto : public plot {
-    typedef typename plot::item item;
-    typedef typename plot::item_list item_list;
-
 public:
     plot_auto() :
         plot(true), m_bbox_updated(true), m_enlarged_layer(false)
