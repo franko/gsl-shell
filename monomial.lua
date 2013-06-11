@@ -1,22 +1,51 @@
 local ffi = require 'ffi'
 
-ffi.cdef[[int strcmp ( const char * str1, const char * str2 );]]
+ffi.cdef [[
+    int strcmp ( const char * str1, const char * str2 );
+]]
 
 local M
 
+local function symbol_class(s)
+    if type(s) ~= 'table' then
+        return type(s)
+    elseif s.operator then
+        return 'op' .. s.operator
+    else
+        return 'poly'
+    end
+end
+
 local function mon_symbol_compare(sa, sb)
-    local ta, tb = type(sa), type(sb)
-    if ta == 'string' and tb == 'string' then
-        return ffi.C.strcmp(sa, sb)
-        -- return (sa < sb and -1 or 1)
+    local ta, tb = symbol_class(sa), symbol_class(sb)
+
+    local tcmp = ffi.C.strcmp(ta, tb)
+    if tcmp ~= 0 then
+        return tcmp
     else
         if ta == 'string' then
-            return 1
-        elseif tb == 'string' then
-            return -1
+            return ffi.C.strcmp(sa, sb)
+        elseif ta == 'poly' then
+            return M.poly_compare(sa, sb)
+        elseif ta:sub(1, 2) == 'op' then
+            local a1, b1 = sa[1], sb[1]
+            local c1 = M.poly_compare(a1, b1)
+            if c1 ~= 0 then
+                return c1
+            end
+            local a2, b2 = sa[2], sb[2]
+            if a2 == nil and b2 == nil then
+                return 0
+            elseif a2 == nil then
+                return -1
+            elseif b2 == nil then
+                return 1
+            end
+            return M.poly_compare(a2, b2)
         end
     end
-    return M.poly_compare(sa, sb)
+    print(sa, sb)
+    error('invalid elements')
 end
 
 local function monomial_len(a)

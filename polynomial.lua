@@ -1,13 +1,13 @@
 local mon = require 'monomial'
 
-local function poly_add_monom_ip(a, m)
+local function poly_add_monom_ip(a, bm)
 	for _, am in ipairs(a) do
 		if mon.compare(am, bm) == 0 then
 			am[1] = am[1] + bm[1]
 			return
 		end
 	end
-	a[#a+1] = m
+	a[#a+1] = bm
 end
 
 local function poly_add_ip(a, b)
