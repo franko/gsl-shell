@@ -1,3 +1,24 @@
+local ffi = require 'ffi'
+
+ffi.cdef[[int strcmp ( const char * str1, const char * str2 );]]
+
+local M
+
+local function mon_symbol_compare(sa, sb)
+    local ta, tb = type(sa), type(sb)
+    if ta == 'string' and tb == 'string' then
+        return ffi.C.strcmp(sa, sb)
+        -- return (sa < sb and -1 or 1)
+    else
+        if ta == 'string' then
+            return 1
+        elseif tb == 'string' then
+            return -1
+        end
+    end
+    return M.poly_compare(sa, sb)
+end
+
 local function monomial_len(a)
     return (#a - 1) / 2
 end
@@ -33,11 +54,11 @@ end
 
 local function monomial_mult_factor(a, sym, pow)
     for k, a_sym, a_pow in mon_terms(a) do
-        if a_sym == sym then
+        local scmp = mon_symbol_compare(a_sym, sym)
+        if scmp == 0 then
             monomial_set_term_pow(a, k, a_pow + pow)
             return
-        end
-        if a_sym > sym then
+        elseif scmp > 0 then
             monomial_insert_term(a, k, sym, pow)
             return
         end
@@ -89,4 +110,33 @@ local function monomial_combine(a)
     return combine_rec(a, 1)
 end
 
-return {symbol=mon_symbol, mult= monomial_mult, power=monomial_power, combine= monomial_combine, terms= mon_terms, equal=monomial_equal}
+local function mon_compare(a, b)
+    print('mono compare', a, b)
+    if a == b then
+        return 0
+    else
+        local n = monomial_len(a)
+        for i = 1, n do
+            local at, bt = a[2*i], b[2*i]
+            local ad, bd = a[2*i + 1], b[2*i + 1]
+            if bt == nil then return 1 end
+            local cmp = mon_symbol_compare(at, bt)
+            if cmp == 0 then
+                if ad ~= bd then
+                    print('monomial terms', at, bt, 'have different degrees', ad, bd)
+                    return ad - bd
+                end
+            else
+                if cmp ~= 0 then
+                    print('monomial terms', at, bt, 'differ')
+                    return cmp
+                end
+            end
+        end
+        return (monomial_len(b) > n and -1 or a[1] - b[1])
+    end
+end
+
+M = {symbol=mon_symbol, mult= monomial_mult, power=monomial_power, combine= monomial_combine, terms= mon_terms, equal=monomial_equal, compare=mon_compare}
+
+return M

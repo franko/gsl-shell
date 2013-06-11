@@ -34,7 +34,6 @@ deriv_rec = function(expr, var)
     if type(expr) == 'number' then
         return 0
     elseif type(expr) == 'string' then
-        print('VAR', expr, var)
         return (expr == var and 1 or 0)
     elseif expr.literal then
         return 0
