@@ -141,10 +141,11 @@ local function csv_format(x)
 end
 
 local function write_csv_row(f, row)
+	local rf = {}
 	for i = 1, #row do
-		row[i] = csv_format(row[i])
+		rf[i] = csv_format(row[i])
 	end
-	f:write(string.format("%s\n", table.concat(row, ",")))
+	f:write(string.format("%s\n", table.concat(rf, ",")))
 end
 
 function gdt.write_csv(t, filename)
