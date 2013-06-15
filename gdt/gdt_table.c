@@ -396,7 +396,7 @@ const gdt_element *
 gdt_table_cursor_get(gdt_table_cursor *c, const char *key)
 {
     gdt_table *t = c->table;
-    if (likely(t != NULL)) {
+    if (likely(t != NULL && key != NULL)) {
         return gdt_table_get_by_name(t, c->index, key);
     }
     return NULL;
