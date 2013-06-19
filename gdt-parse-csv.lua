@@ -63,7 +63,7 @@ local function gdt_parse(source_init)
 	for vs in source do
 		if #vs == 0 then break end
 		for j = 1, ncols do
-			local v = (is_not_empty(vs[j]) and vs[j] or nil)
+			local v = (vs[j] and is_not_empty(vs[j]) and vs[j] or nil)
 			gdt.set(t, i, j, v)
 		end
 		i = i + 1
