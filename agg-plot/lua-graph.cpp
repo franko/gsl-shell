@@ -46,6 +46,12 @@ graph_close_windows (lua_State *L)
     window_index_apply_all (L, app_window_hooks->close);
 }
 
+static void
+graph_wait_windows (lua_State *L)
+{
+    window_index_apply_all (L, app_window_hooks->wait);
+}
+
 void
 register_graph (lua_State *L)
 {
@@ -66,12 +72,15 @@ register_graph (lua_State *L)
 }
 
 void
-gsl_shell_close_with_graph (struct gsl_shell_state* gs)
+gsl_shell_close_with_graph (struct gsl_shell_state* gs, int send_close_req)
 {
     pthread_mutex_lock (&gs->shutdown_mutex);
     gs->is_shutting_down = 1;
     pthread_mutex_lock(&gs->exec_mutex);
-    graph_close_windows(gs->L);
+    if (send_close_req)
+        graph_close_windows(gs->L);
+    else
+        graph_wait_windows(gs->L);
     lua_close(gs->L);
     pthread_mutex_unlock(&gs->shutdown_mutex);
     pthread_mutex_unlock(&gs->exec_mutex);

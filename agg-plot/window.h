@@ -19,6 +19,7 @@ extern int  window_show                    (lua_State *L);
 extern int  window_attach                  (lua_State *L);
 extern int  window_close                   (lua_State *L);
 extern int  window_close_wait              (lua_State *L);
+extern int  window_wait                    (lua_State *L);
 
 __END_DECLS
 

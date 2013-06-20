@@ -58,7 +58,7 @@ public:
     virtual void on_init();
     virtual void on_resize(int sx, int sy);
 
-    void shutdown_close();
+    void shutdown_close(bool send_close_request);
     gsl_shell_state* state() {
         return m_gsl_shell;
     }

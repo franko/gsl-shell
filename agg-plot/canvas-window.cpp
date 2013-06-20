@@ -120,12 +120,14 @@ canvas_thread_function (void *_inf)
 }
 
 void
-canvas_window::shutdown_close()
+canvas_window::shutdown_close(bool send_close_request)
 {
     lock();
     if (status == canvas_window::running)
     {
-        close_request();
+        if (send_close_request) {
+            close_request();
+        }
         unlock();
 
         gsl_shell_state* gs = this->m_gsl_shell;

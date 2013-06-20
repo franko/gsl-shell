@@ -575,7 +575,15 @@ int
 window_close_wait (lua_State *L)
 {
     window *win = object_check<window>(L, 1, GS_WINDOW);
-    win->shutdown_close();
+    win->shutdown_close(true);
+    return 0;
+}
+
+int
+window_wait (lua_State *L)
+{
+    window *win = object_check<window>(L, 1, GS_WINDOW);
+    win->shutdown_close(false);
     return 0;
 }
 

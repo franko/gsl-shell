@@ -106,7 +106,7 @@ static const char *progname = LUA_PROGNAME;
 struct window_hooks app_window_hooks[1] = {{
         window_new, window_show, window_attach,
         window_slot_update, window_slot_refresh,
-        window_close_wait,
+        window_close_wait, window_wait,
         window_save_slot_image, window_restore_slot_image,
         window_register,
     }
@@ -623,6 +623,7 @@ struct Smain {
     char **argv;
     int argc;
     int status;
+    int keep_windows;
 };
 
 static int pmain(lua_State *L)
@@ -639,6 +640,7 @@ static int pmain(lua_State *L)
     gsl_shell_openlibs(L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
+    s->keep_windows = 1;
     s->status = handle_luainit(L);
     if (s->status != 0) return 0;
     script = collectargs(argv, &has_i, &has_v, &has_e);
@@ -656,12 +658,14 @@ static int pmain(lua_State *L)
     if (has_i) {
         print_jit_status(L);
         dotty(L);
+        s->keep_windows = 0;
     } else if (script == 0 && !has_e && !has_v) {
         if (lua_stdin_is_tty()) {
             print_version();
             print_jit_status(L);
             print_help_message();
             dotty(L);
+            s->keep_windows = 0;
         } else {
             dofile(L, NULL);  /* executes stdin as a file */
         }
@@ -688,7 +692,7 @@ int main(int argc, char **argv)
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
 
-    gsl_shell_close_with_graph(gsl_shell);
+    gsl_shell_close_with_graph(gsl_shell, !s.keep_windows);
     gsl_shell_free(gsl_shell);
 
     return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
