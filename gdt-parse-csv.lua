@@ -140,9 +140,9 @@ local function csv_format(x)
 	end
 end
 
-local function write_csv_row(f, row)
+local function write_csv_row(f, row, nc)
 	local rf = {}
-	for i = 1, #row do
+	for i = 1, nc do
 		rf[i] = csv_format(row[i])
 	end
 	f:write(string.format("%s\n", table.concat(rf, ",")))
@@ -151,11 +151,12 @@ end
 function gdt.write_csv(t, filename)
 	local f = assert(io.open(filename, "w"))
 	local hs = t:headers()
-	write_csv_row(f, hs)
+	local nc = #hs
+	write_csv_row(f, hs, nc)
 	for i, r in t:rows() do
 		local s = {}
 		for j, k in ipairs(hs) do s[j] = r[k] end
-		write_csv_row(f, s)
+		write_csv_row(f, s, nc)
 	end
 	f:close()
 end
