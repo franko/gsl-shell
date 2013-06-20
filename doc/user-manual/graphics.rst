@@ -242,7 +242,7 @@ In this section, we give an overview and a description of all the higher level p
       r = rng.new()
       f = |x| 1/sqrt(2*pi) * exp(-x^2/2)
       p = graph.plot('Simulated Gaussian Distribution')
-      b = graph.ibars(sample(|x| rnd.poisson(r, f(x)*N) / N, -3, 3, 25))
+      b = graph.ibars(iter.sample(|x| rnd.poisson(r, f(x)*N) / N, -3, 3, 25))
       p:add(b, 'darkgreen')
       p:add(b, 'black', {{'stroke', width= 0.5}})
       p:addline(graph.fxline(f, -4, 4), 'red')
