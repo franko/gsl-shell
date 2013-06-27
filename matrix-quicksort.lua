@@ -25,6 +25,7 @@ end
 
 local function quicksort_array(m, f)
     local array = m.data
+    local indices = {}
 
     f = f or less_than
 
@@ -51,20 +52,16 @@ local function quicksort_array(m, f)
         if n < 5 then
             return istart
         elseif n < 64 then
-            print("using three values median")
             local imid = idiv(istart + iend, 2)
-            local indices = {istart, imid, iend}
+            indices[1], indices[2], indices[3] = istart, imid, iend
             insertion_sort(indices, less_than_by_index, 1, 3)
-            print(indices, iter.ilist(|i| array[indices[i]], 3))
             return indices[2]
         else
-            print("using five values median")
             local im1 = idiv(3*istart +   iend, 4)
             local im2 = idiv(2*istart + 2*iend, 4)
             local im3 = idiv(  istart + 3*iend, 4)
-            local indices = {istart, im1, im2, im3, iend}
+            indices[1], indices[2], indices[3], indices[4], indices[5] = istart, im1, im2, im3, iend
             insertion_sort(indices, less_than_by_index, 1, 5)
-            print(indices, iter.ilist(|i| array[indices[i]], 5))
             return indices[3]
         end
     end
@@ -72,12 +69,10 @@ local function quicksort_array(m, f)
     local function quicksort(istart, iend)
         local n = iend - istart + 1
         if n < insertion_thresold then
-            print("fallback to insertion sort, n:", n)
             insertion_sort(array, f, istart, iend)
         else
             local pivot_index = choose_pivot(istart, iend)
             local part_index = partition(istart, iend, pivot_index)
-            print("quicksort with partitions:", part_index - istart, iend - part_index)
             if part_index - istart == 0 then -- odd case, mostly happens for constant array
                 insertion_sort(array, f, istart, iend)
             else
