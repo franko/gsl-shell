@@ -31,10 +31,15 @@
 
 #include "gdt/gdt_table.h"
 
+extern void RadixSort11(double *farray, double *sorted, unsigned int elements);
+
 /* used to force the linker to link the gdt library. Otherwise it
  * would be discarded as there are no other references to its functions. */
 extern gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc);
 gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc) = gdt_table_new;
+
+extern void *(*_radix_sort)(double *a, double *b, unsigned int nb_rows_alloc);
+void *(*_radix_sort)(double *a, double *b, unsigned int nb_rows_alloc) = RadixSort11;
 
 struct gsl_shell_state* global_state;
 

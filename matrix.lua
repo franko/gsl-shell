@@ -2,6 +2,7 @@
 
 local ffi = require 'ffi'
 local gsl = require 'gsl'
+local cgdt = require 'cgdt'
 
 local sqrt, abs, floor = math.sqrt, math.abs, math.floor
 local format = string.format
@@ -675,6 +676,12 @@ matrix = {
    hc        = matrix_new_hc,
 }
 
+local function radix_sort(m)
+   local r, c = m:dim()
+   local ws = matrix.alloc(r, 1)
+   cgdt.RadixSort11(m.data, ws.data, r)
+end
+
 local matrix_methods = {
    alloc = matrix_alloc,
    dim   = matrix_dim,
@@ -687,6 +694,7 @@ local matrix_methods = {
    norm2 = matrix_norm2,
    slice = matrix_slice,
    sort  = require("matrix-quicksort"),
+   radix_sort = radix_sort,
    show  = matrix_display_gen(mat_real_get),
 }
 

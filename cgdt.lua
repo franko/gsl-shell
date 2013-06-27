@@ -87,6 +87,8 @@ extern int                 gdt_table_cursor_set_string  (gdt_table_cursor *c, co
 extern int                 gdt_table_cursor_set_undef   (gdt_table_cursor *c, const char *key);
 extern int                 gdt_table_cursor_set_index   (gdt_table_cursor *c, int index);
 
+extern void RadixSort11(double *farray, double *sorted, unsigned int elements);
+
 ]]
 
 return ffi.C

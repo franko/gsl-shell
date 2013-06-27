@@ -29,7 +29,7 @@ INCLUDES += -I$(GSH_BASE_DIR)
 
 CFLAGS += -std=c99
 
-GDT_SRC_FILES = char_buffer.c gdt_index.c gdt_table.c
+GDT_SRC_FILES = radix_sort.c char_buffer.c gdt_index.c gdt_table.c
 GDT_OBJ_FILES := $(GDT_SRC_FILES:%.c=%.o)
 
 DEP_FILES := $(GDT_SRC_FILES:%.c=.deps/%.P)
