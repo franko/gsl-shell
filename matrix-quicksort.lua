@@ -1,7 +1,7 @@
 
 local floor = math.floor
 
-local insertion_thresold = 10
+local insertion_thresold = 32
 
 local function less_than(a, b)
     return a < b
@@ -51,18 +51,22 @@ local function quicksort_array(m, f)
         local n = iend - istart + 1
         if n < 5 then
             return istart
-        elseif n < 64 then
+        elseif n < 32 then
             local imid = idiv(istart + iend, 2)
             indices[1], indices[2], indices[3] = istart, imid, iend
             insertion_sort(indices, less_than_by_index, 1, 3)
-            return indices[2]
+            if less_than_by_index(indices[1], indices[2]) then return indices[2] end
+            return indices[3]
         else
             local im1 = idiv(3*istart +   iend, 4)
             local im2 = idiv(2*istart + 2*iend, 4)
             local im3 = idiv(  istart + 3*iend, 4)
             indices[1], indices[2], indices[3], indices[4], indices[5] = istart, im1, im2, im3, iend
             insertion_sort(indices, less_than_by_index, 1, 5)
-            return indices[3]
+            local iref = indices[1]
+            if less_than_by_index(iref, indices[3]) then return indices[3] end
+            if less_than_by_index(iref, indices[4]) then return indices[4] end
+            return indices[5]
         end
     end
 
@@ -73,7 +77,8 @@ local function quicksort_array(m, f)
         else
             local pivot_index = choose_pivot(istart, iend)
             local part_index = partition(istart, iend, pivot_index)
-            if part_index - istart == 0 then -- odd case, mostly happens for constant array
+            if part_index - istart == 0 then
+                -- odd case,should  happen only for constant array
                 insertion_sort(array, f, istart, iend)
             else
                 quicksort(istart, part_index - 1)
