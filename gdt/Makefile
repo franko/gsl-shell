@@ -30,13 +30,15 @@ INCLUDES += -I$(GSH_BASE_DIR)
 CFLAGS += -std=c99
 
 GDT_SRC_FILES = radix_sort.c char_buffer.c gdt_index.c gdt_table.c
-GDT_OBJ_FILES := $(GDT_SRC_FILES:%.c=%.o)
+GDT_OBJ_FILES := $(GDT_SRC_FILES:%.c=%.o) sort_libstd.o
 
-DEP_FILES := $(GDT_SRC_FILES:%.c=.deps/%.P)
+DEP_FILES := $(GDT_SRC_FILES:%.c=.deps/%.P) .deps/sort_libstd.P
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+
+CXXCOMPILE = $(CC) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
 TARGETS = libgdt.a
 
