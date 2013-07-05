@@ -1,7 +1,7 @@
 
 local floor = math.floor
 
-local insertion_thresold = 32
+local insertion_thresold = 16
 
 local function less_than(a, b)
     return a < b
@@ -23,73 +23,62 @@ local function insertion_sort(array, compare, istart, iend)
     end
 end
 
-local function quicksort_array(m, f)
+local function quicksort(m, f)
     local array = m.data
-    local indices = {}
-
     f = f or less_than
 
-    local function less_than_by_index(ia, ib)
-        return f(array[ia], array[ib])
-    end
-
-    local function partition(istart, iend, pivot_index)
-        local pivot_value = array[pivot_index]
-        array[pivot_index], array[iend] = array[iend], array[pivot_index]
-        local store_index = istart
-        for i = istart, iend - 1 do
-            if f(array[i], pivot_value) then
-                array[i], array[store_index] = array[store_index], array[i]
-                store_index = store_index + 1
-            end
-        end
-        array[store_index], array[iend] = array[iend], array[store_index]
-        return store_index
-    end
-
-    local function choose_pivot(istart, iend)
-        local n = iend - istart + 1
-        if n < 5 then
-            return istart
-        elseif n < 32 then
-            local imid = idiv(istart + iend, 2)
-            indices[1], indices[2], indices[3] = istart, imid, iend
-            insertion_sort(indices, less_than_by_index, 1, 3)
-            if less_than_by_index(indices[1], indices[2]) then return indices[2] end
-            return indices[3]
-        else
-            local im1 = idiv(3*istart +   iend, 4)
-            local im2 = idiv(2*istart + 2*iend, 4)
-            local im3 = idiv(  istart + 3*iend, 4)
-            indices[1], indices[2], indices[3], indices[4], indices[5] = istart, im1, im2, im3, iend
-            insertion_sort(indices, less_than_by_index, 1, 5)
-            local iref = indices[1]
-            if less_than_by_index(iref, indices[3]) then return indices[3] end
-            if less_than_by_index(iref, indices[4]) then return indices[4] end
-            return indices[5]
-        end
-    end
-
-    local function quicksort(istart, iend)
-        local n = iend - istart + 1
-        if n < insertion_thresold then
-            insertion_sort(array, f, istart, iend)
-        else
-            local pivot_index = choose_pivot(istart, iend)
-            local part_index = partition(istart, iend, pivot_index)
-            if part_index - istart == 0 then
-                -- odd case,should  happen only for constant array
-                insertion_sort(array, f, istart, iend)
+    local function move_median_first(a, b, c)
+        if f(array[a], array[b]) then
+            if f(array[b], array[c]) then
+                array[a], array[b] = array[b], array[a]
             else
-                quicksort(istart, part_index - 1)
-                quicksort(part_index + 1, iend)
+                array[a], array[c] = array[c], array[a]
             end
+        elseif f(array[a], array[c]) then
+            return
+        elseif f(array[b], array[c]) then
+            array[a], array[c] = array[c], array[a]
+        else
+            array[a], array[b] = array[b], array[a]
+        end
+    end
+
+    local function partition(first, last, pivot_value)
+        while true do
+            while f(array[first], pivot_value) do
+                first = first + 1
+            end
+            while f(pivot_value, array[last]) do
+                last = last - 1
+            end
+            if first >= last then
+                return first
+            end
+            array[first], array[last] = array[last], array[first]
+            first = first + 1
+            last = last - 1
+        end
+    end
+
+    local function partition_pivot(first, last)
+        local mid = idiv(first + last, 2)
+        move_median_first(first, mid, last)
+        return partition(first + 1, last, array[first])
+    end
+
+    local function quicksort_loop(first, last)
+        while last - first > insertion_thresold do
+            local cut = partition_pivot(first, last)
+            quicksort_loop(cut, last)
+            array[first], array[first + 1] = array[first + 1], array[first]
+            last = cut - 1
         end
     end
 
     local n, ncols = m:dim()
     assert(ncols == 1, "expecting column matrix")
-    quicksort(0, n - 1)
+    quicksort_loop(0, n - 1)
+    insertion_sort(array, f, 0, n - 1)
 end
 
-return quicksort_array
+return quicksort
