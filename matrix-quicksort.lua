@@ -27,20 +27,14 @@ local function quicksort(m, f)
     local array = m.data
     f = f or less_than
 
-    local function move_median_first(a, b, c)
-        if f(array[a], array[b]) then
-            if f(array[b], array[c]) then
-                array[a], array[b] = array[b], array[a]
-            else
-                array[a], array[c] = array[c], array[a]
-            end
-        elseif f(array[a], array[c]) then
-            return
-        elseif f(array[b], array[c]) then
-            array[a], array[c] = array[c], array[a]
-        else
-            array[a], array[b] = array[b], array[a]
+    local function median_value(a, b, c)
+        if f(b, a) then
+            a, b = b, a
         end
+        if f(c, b) then
+            c, b = b, c
+        end
+        return f(a, b) and b or a
     end
 
     local function partition(first, last, pivot_value)
@@ -62,15 +56,14 @@ local function quicksort(m, f)
 
     local function partition_pivot(first, last)
         local mid = idiv(first + last, 2)
-        move_median_first(first, mid, last)
-        return partition(first + 1, last, array[first])
+        local pivot_value = median_value(array[first], array[mid], array[last])
+        return partition(first, last, pivot_value)
     end
 
     local function quicksort_loop(first, last)
         while last - first > insertion_thresold do
             local cut = partition_pivot(first, last)
             quicksort_loop(cut, last)
-            array[first], array[first + 1] = array[first + 1], array[first]
             last = cut - 1
         end
     end
