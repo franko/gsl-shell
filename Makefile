@@ -62,7 +62,7 @@ LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua 
 
 HELP_FILES = graphics matrix iter integ ode nlfit vegas rng fft
 DEMOS_LIST = bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour svg graphics sf vegas gdt-lm
-LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-defs vegas-defs
+LUA_TEMPLATES = gauss-kronrod-x-wgs qag rk8pd lmfit qng rkf45 ode-defs rk4 sf-defs vegas-defs rnd-defs
 EXAMPLES_FILES_SRC = am-women-weight perf-julia metro-lm-example exam
 
 LUA_BASE_FILES += $(DEMOS_LIST:%=demos/%.lua)
