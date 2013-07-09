@@ -7,6 +7,7 @@ local gdt_factors = require 'gdt-factors'
 local check = require 'check'
 local mon = require 'monomial'
 local AST = require 'expr-actions'
+local algo = require 'algorithm'
 
 local concat = table.concat
 local unpack, ipairs = unpack, ipairs
@@ -55,37 +56,6 @@ local stat_lookup = {
     sum     = {f = function(accu, x, n) return accu + x end},
     count   = {f = function(accu, x, n) return n end},
 }
-
-local function quicksort_mirror(t, f, mirror)
-
-    local function quicksort(start, endi)
-        if start >= endi then return end
-        local pivot = start
-        for i = start + 1, endi do
-            if f(t[i], t[pivot]) then
-                local temp = t[pivot + 1]
-                local temp_m = mirror[pivot + 1]
-                t[pivot + 1] = t[pivot]
-                mirror[pivot + 1] = mirror[pivot]
-                if(i == pivot + 1) then
-                    t[pivot] = temp
-                    mirror[pivot] = temp_m
-                else
-                    t[pivot] = t[i]
-                    t[i] = temp
-                    mirror[pivot] = mirror[i]
-                    mirror[i] = temp_m
-                end
-                pivot = pivot + 1
-            end
-        end
-
-        quicksort(start, pivot - 1)
-        quicksort(pivot + 1, endi)
-    end
-
-    quicksort(1, #t)
-end
 
 local function sort_labels_func(lab_a, lab_b)
     local n = #lab_a
@@ -200,7 +170,7 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
         end
     end
 
-    quicksort_mirror(labels, sort_labels_func, val)
+    algo.quicksort_mirror(labels, val, 1, #labels, sort_labels_func)
 
     return labels, enums, val
 end

@@ -1,7 +1,6 @@
-
-
 local ffi = require 'ffi'
 local gsl = require 'gsl'
+local algo = require 'algorithm'
 
 local sqrt, abs, floor = math.sqrt, math.abs, math.floor
 local format = string.format
@@ -675,6 +674,11 @@ matrix = {
    hc        = matrix_new_hc,
 }
 
+local function matrix_sort(m, f)
+   local n = matrix_len(m)
+   algo.quicksort(m.data, 0, n - 1, f)
+end
+
 local matrix_methods = {
    alloc = matrix_alloc,
    dim   = matrix_dim,
@@ -686,7 +690,7 @@ local matrix_methods = {
    norm  = matrix_norm,
    norm2 = matrix_norm2,
    slice = matrix_slice,
-   sort  = require("matrix-quicksort"),
+   sort  = matrix_sort,
    show  = matrix_display_gen(mat_real_get),
 }
 

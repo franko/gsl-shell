@@ -10,10 +10,6 @@ local AST = require 'expr-actions'
 
 local rect = graph.rect
 
-local function compare_float(a, b)
-    return a < b
-end
-
 local function gdt_table_hist(t, expr_formula, opt)
     local expr = expr_parse.expr(expr_formula, AST)
     local x_exprs = gdt_factors.compute(t, { expr })
@@ -21,7 +17,7 @@ local function gdt_table_hist(t, expr_formula, opt)
     local dv = gdt_expr.eval_matrix(t, info, x_exprs, nil, index_map)
     local n = #dv
 
-    dv:sort(compare_float)
+    dv:sort()
 
     local Q1 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.25)
     local Q3 = gsl.gsl_stats_quantile_from_sorted_data(dv.data, dv.tda, n, 0.75)
