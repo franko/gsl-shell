@@ -78,19 +78,19 @@ local function gdt_table_set(t, i, j_name, val)
 end
 
 local function gdt_table_alloc(nrows, ncols, nalloc_rows)
-    nalloc_rows = nalloc_rows or nrows
+    nalloc_rows = nalloc_rows or max(nrows, 8)
     local headers
     if type(ncols) == 'table' then
         headers = ncols
         ncols = #headers
     end
     local t = cgdt.gdt_table_new(nrows, ncols, nalloc_rows)
+    if t == nil then error('cannot allocate table: not enough memory') end
     if headers then
         for k, str in ipairs(headers) do
             cgdt.gdt_table_set_header(t, k - 1, str)
         end
     end
-    if t == nil then error('cannot allocate table: not enough memory') end
     return ffi.gc(t, cgdt.gdt_table_free)
 end
 
