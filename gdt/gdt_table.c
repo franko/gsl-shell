@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "gdt_table.h"
 #include "gdt_table_priv.h"
@@ -120,11 +121,16 @@ write_anonymous_header(char buffer[], const int buf_size, int index)
 }
 
 static gdt_block *
-gdt_block_new(int size)
+gdt_block_new(long long size)
 {
-    gdt_element *data = malloc(size * sizeof(gdt_element));
-    if (unlikely(data == 0))
-        return NULL;
+    gdt_element *data = NULL;
+    if (size > 0) {
+        if (size * sizeof(gdt_element) > INT_MAX)
+            return NULL;
+        data = malloc(size * sizeof(gdt_element));
+        if (unlikely(data == NULL))
+            return NULL;
+    }
     gdt_block *b = xmalloc(sizeof(gdt_block));
     b->data = data;
     b->size = size;
@@ -152,8 +158,8 @@ gdt_block_unref(gdt_block *b)
 gdt_table *
 gdt_table_new(int nb_rows, int nb_columns, int nb_rows_alloc)
 {
-    int sz = nb_columns * nb_rows_alloc;
-    if (unlikely(sz <= 0)) return NULL;
+    if (unlikely(nb_rows < 0 || nb_columns < 0)) return NULL;
+    long long sz = (long long)nb_columns * (long long)nb_rows_alloc;
     gdt_block *b = gdt_block_new(sz);
     if (unlikely(b == NULL)) return NULL;
     gdt_block_ref(b);
