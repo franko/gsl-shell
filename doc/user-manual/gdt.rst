@@ -228,31 +228,52 @@ GDT Methods
 
      Return the column index corresponding to the given name.
 
-  .. method:: insert(name, j[, f_init])
+  .. method:: col_insert(name, j[, f_init])
 
      Insert a new column named ``name`` at the given index.
      The function ``f_init`` is called for each row of the table to intialize the column's value.
      The function is called in the form ``f_init(r, i)`` where the argument ``r`` passed to ``f_init`` contains the values in the current row indexed by the column's name.
      If the initialized function is not provided the values will be initialized to ``NA``.
 
-     For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
+     For example if we have a table with two columns named ``x`` and ``y`` we can define a new column with their average with the following code::
 
-        t:insert("average", 3, |r| (r.x + r.y) / 2)
+        t:col_insert("average", 3, |r| (r.x + r.y) / 2)
 
-  .. method:: append(name[, f_init])
+  .. method:: col_append(name[, f_init])
 
      Append a new column named ``name``.
      The function ``f_init`` is called for each row of the table to intialize the column's value.
      The function is called in the form ``f_init(r, i)`` where the argument ``r`` passed to ``f_init`` contains the values in the current row indexed by the column's name.
      If the initialized function is not provided the values will be initialized to ``NA``.
 
-     For example if we have a table with two columns names ``x`` and ``y`` we can define a new column with their average with the following code::
+     For example if we have a table with two columns named ``x`` and ``y`` we can define a new column with their average with the following code::
 
-        t:append("average", |r| (r.x + r.y) / 2)
+        t:col_append("average", |r| (r.x + r.y) / 2)
 
-  .. method:: define(name[, f_init])
+  .. method:: col_define(name[, f_init])
 
-     Like the method :meth:`~Gdt.append` with the exception that, if a column with the given name already exists, it will be overwritten with the new values.
+     Like the method :meth:`~Gdt.col_append` with the exception that, if a column with the given name already exists, it will be overwritten with the new values.
+
+  .. method:: insert(i[, values])
+
+     Insert a new row at the given index ``i``.
+     The second argument, if given, will be used to initialize the new row for each column by taking ``values[key]`` where ``key`` is the column's name.
+     If the second argument is not provided the values will be initialized to ``NA``.
+
+     For example if we have a table with two columns named ``x`` and ``y`` we can insert a new row at index 1 as follows::
+
+        t:insert(1, {x = 3.2, y = 0.7})
+
+  .. method:: append([values])
+
+     Append a new row at the end of the table.
+     The initialization of the values is done using the optional argument like for the :meth:`~Gdt.insert` method.
+
+     If the second argument is not provided the values will be initialized to ``NA``.
+
+     For example if we have a table with two columns named ``x`` and ``y`` we can insert a new row at the end of the table as follows::
+
+        t:append {x = 3.2, y = 0.7}
 
   .. method:: cursor()
 

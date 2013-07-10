@@ -154,6 +154,24 @@ local function gdt_table_append_column(t, col_name, f)
     gdt_table_insert_column(t, col_name, size2(t) + 1, f)
 end
 
+local function gdt_table_insert_row(t, i, row_values)
+    cgdt.gdt_table_insert_rows(t, i - 1, 1)
+    if row_values then
+        for k = 1, size2(t) do
+            local key = gdt_table_get_header(t, k)
+            gdt_table_set(t, i, k, row_values[key])
+        end
+    else
+        for j = 1, size2(t) do
+            cgdt.gdt_table_set_undef(t, i - 1, j - 1)
+        end
+    end
+end
+
+local function gdt_table_append_row(t, row_values)
+    gdt_table_insert_row(t, size1(t) + 1, row_values)
+end
+
 local function gdt_table_define_column(t, col_name, f)
     local j = gdt_table_header_index(t, col_name)
     if not j then
@@ -321,9 +339,11 @@ local gdt_methods = {
     column     = gdt_table_column_iter,
     col_index  = gdt_table_header_index,
     col_type   = gdt_table_column_type,
-    insert     = gdt_table_insert_column,
-    append     = gdt_table_append_column,
-    define     = gdt_table_define_column,
+    col_insert = gdt_table_insert_column,
+    col_append = gdt_table_append_column,
+    col_define = gdt_table_define_column,
+    insert     = gdt_table_insert_row,
+    append     = gdt_table_append_row,
     rows       = gdt_table_rows,
     levels     = gdt_table_levels,
 }
