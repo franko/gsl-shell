@@ -199,10 +199,6 @@ gdt_table_size2(const gdt_table *t)
 gdt_value_enum
 gdt_table_get(const gdt_table *t, int i, int j, gdt_value *value)
 {
-    if (unlikely(i < 0 || i >= t->size1 || j < 0 || j >= t->size2)) {
-        return GDT_VAL_ERROR;
-    }
-
     const gdt_element e = t->data[i * t->tda + j];
     if (e.word.hi <= TAG_NUMBER) {
         value->number = e.number;
@@ -221,7 +217,10 @@ gdt_value_enum
 gdt_table_get_by_name(const gdt_table *t, int i, const char* col_name, gdt_value *value)
 {
     int j = gdt_table_header_index(t, col_name);
-    return gdt_table_get(t, i, j, value);
+    if (j >= 0) {
+        return gdt_table_get(t, i, j, value);
+    }
+    return GDT_VAL_ERROR;
 }
 
 int

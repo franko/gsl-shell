@@ -22,15 +22,25 @@ local function extract_value(e, val)
     return nil
 end
 
+local function size1(t)
+    return cgdt.gdt_table_size1(t)
+end
+
+local function size2(t)
+    return cgdt.gdt_table_size2(t)
+end
+
 local function gdt_table_get(t, i, j)
+    assert(i > 0 and i <= size1(t), 'invalid row index ')
     local val = gdt_value()
     local e
     if type(j) == 'string' then
         e = cgdt.gdt_table_get_by_name(t, i - 1, j, val)
+        if e < 0 then error(string.format("invalid column name \"%s\"", j), 2) end
     else
+        assert(j > 0 and j <= size2(t), 'invalid column index')
         e = cgdt.gdt_table_get(t, i - 1, j - 1, val)
     end
-    if e < 0 then error(string.format("invalid index (%d, %d) for table", i, j), 2) end
     return extract_value(e, val)
 end
 
@@ -38,14 +48,6 @@ local function gdt_table_get_number_unsafe(t, i, j)
     local val = gdt_value()
     local e = cgdt.gdt_table_get(t, i - 1, j - 1, val)
     if e == GDT_VAL_NUMBER then return val.number end
-end
-
-local function size1(t)
-    return cgdt.gdt_table_size1(t)
-end
-
-local function size2(t)
-    return cgdt.gdt_table_size2(t)
 end
 
 local function gdt_table_set_unsafe(t, i, j, val)
@@ -70,7 +72,7 @@ local function gdt_table_set(t, i, j_name, val)
     else
         assert(type(j_name) == 'number', 'invalid column index')
         j = j_name
-        assert(j > 0 and j <= cgdt.gdt_table_size2(t), 'invalid column index')
+        assert(j > 0 and j <= size2(t), 'invalid column index')
     end
     gdt_table_set_unsafe(t, i, j, val)
 end
