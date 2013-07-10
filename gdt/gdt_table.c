@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "gdt_table.h"
+#include "gdt_table_priv.h"
 #include "xmalloc.h"
 
 static inline int
@@ -37,7 +38,7 @@ string_array_free(struct string_array *v)
 }
 
 static const char *
-string_array_get(struct string_array *v, int k)
+string_array_get(const struct string_array *v, int k)
 {
     int offset = v->offset_data[k];
     return (offset >= 0 ? v->buffer->data + offset : NULL);
@@ -51,7 +52,7 @@ string_array_set(struct string_array *v, int k, const char *str)
 }
 
 static int
-string_array_lookup(struct string_array *v, const char *key)
+string_array_lookup(const struct string_array *v, const char *key)
 {
     int k, len = v->offset_len;
     const char * base_data = v->buffer->data;
@@ -183,24 +184,48 @@ gdt_table_free(gdt_table *t)
     t->cursor->table = NULL;
 }
 
-const gdt_element *
-gdt_table_get(gdt_table *t, int i, int j)
+int
+gdt_table_size1(const gdt_table *t)
 {
-    return &t->data[i * t->tda + j];
-}
-
-const gdt_element *
-gdt_table_get_by_name(gdt_table *t, int i, const char* col_name)
-{
-    int j = gdt_table_header_index(t, col_name);
-    if (j >= 0) {
-        return gdt_table_get(t, i, j);
-    }
-    return NULL;
+    return t->size1;
 }
 
 int
-gdt_table_header_index(gdt_table *t, const char* col_name)
+gdt_table_size2(const gdt_table *t)
+{
+    return t->size2;
+}
+
+gdt_value_enum
+gdt_table_get(const gdt_table *t, int i, int j, gdt_value *value)
+{
+    if (unlikely(i < 0 || i >= t->size1 || j < 0 || j >= t->size2)) {
+        return GDT_VAL_ERROR;
+    }
+
+    const gdt_element e = t->data[i * t->tda + j];
+    if (e.word.hi <= TAG_NUMBER) {
+        value->number = e.number;
+        return GDT_VAL_NUMBER;
+    } else if (e.word.hi == TAG_STRING) {
+        const char *s = gdt_table_element_get_string(t, &e);
+        if (likely(s != NULL)) {
+            value->string = s;
+            return GDT_VAL_STRING;
+        }
+    }
+    return GDT_VAL_UNDEF;
+}
+
+gdt_value_enum
+gdt_table_get_by_name(const gdt_table *t, int i, const char* col_name, gdt_value *value)
+{
+    int j = gdt_table_header_index(t, col_name);
+    return gdt_table_get(t, i, j, value);
+}
+
+int
+gdt_table_header_index(const gdt_table *t, const char* col_name)
 {
     int j = string_array_lookup(t->headers, col_name);
     if (j >= 0) {
@@ -218,7 +243,7 @@ gdt_table_header_index(gdt_table *t, const char* col_name)
 }
 
 const char *
-gdt_table_element_get_string(gdt_table *t, const gdt_element *e)
+gdt_table_element_get_string(const gdt_table *t, const gdt_element *e)
 {
     if (elem_is_string(e))
         return gdt_index_get(t->strings, e->word.lo);
@@ -392,14 +417,14 @@ gdt_table_cursor_set_index(gdt_table_cursor *c, int index)
     return (-1);
 }
 
-const gdt_element *
-gdt_table_cursor_get(gdt_table_cursor *c, const char *key)
+gdt_value_enum
+gdt_table_cursor_get(const gdt_table_cursor *c, const char *key, gdt_value *value)
 {
-    gdt_table *t = c->table;
+    const gdt_table *t = c->table;
     if (likely(t != NULL && key != NULL)) {
-        return gdt_table_get_by_name(t, c->index, key);
+        return gdt_table_get_by_name(t, c->index, key, value);
     }
-    return NULL;
+    return GDT_VAL_ERROR;
 }
 
 int
