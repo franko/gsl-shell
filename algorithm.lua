@@ -9,7 +9,9 @@
 -- Based on the libstdc++ std::sort implementation included with GCC.
 --
 
-local floor = math.floor
+local bit = require 'bit'
+
+local band, rshift = bit.band, bit.rshift
 
 local insertion_thresold = 16
 
@@ -17,8 +19,8 @@ local function less_than(a, b)
     return a < b
 end
 
-local function idiv(a, b)
-    return floor(a / b)
+local function div2(a)
+    return rshift(a, 1)
 end
 
 local function insertion_sort(array, compare, istart, iend)
@@ -70,7 +72,7 @@ local function quicksort(array, i0, i1, f)
     end
 
     local function partition_pivot(first, last)
-        local mid = idiv(first + last, 2)
+        local mid = div2(first + last)
         move_median_first(first, mid, last)
         return partition(first + 1, last, array[first])
     end
@@ -119,4 +121,77 @@ local function quicksort_mirror(array, slave, i0, i1, f)
     end
 end
 
-return {quicksort = quicksort, quicksort_mirror = quicksort_mirror}
+local function heapsort(array, i0, i1, f)
+    f = f or less_than
+
+    local function push_heap(first, hole, top, value)
+        local parent = div2(hole - 1)
+        while hole > top and f(array[first + parent], value) do
+            array[first + hole] = array[first + parent]
+            hole = parent
+            parent = div2(hole - 1)
+        end
+        array[first + hole] = value
+    end
+
+    local function adjust_heap(first, hole, len, value)
+        local top = hole
+        local second = hole
+        while second < div2(len - 1) do
+            second = 2 * (second + 1)
+            if f(array[first + second], array[first + (second - 1)]) then
+                second = second - 1
+            end
+            array[first + hole] = array[first + second]
+            hole = second
+        end
+        if band(len, 1) == 0 and second == div2(len - 2) then
+            second = 2 * (second + 1)
+            array[first + hole] = array[first + (second - 1)]
+            hole = second - 1
+        end
+        push_heap(first, hole, top, value)
+    end
+
+    local function pop_heap(first, last, result)
+        local value = array[result]
+        array[result] = array[first]
+        adjust_heap(first, 0, last - first, value)
+    end
+
+    local function make_heap(first, last)
+        if last - first < 2 then return end
+        local len = last - first
+        local parent = div2(len - 2)
+        while true do
+            local value = array[first + parent]
+            adjust_heap(first, parent, len, value)
+            if parent == 0 then
+                return
+            end
+            parent = parent - 1
+        end
+    end
+
+    local function heap_select(first, middle, last)
+        make_heap(first, middle)
+        for i = middle, last - 1 do
+            if f(array[i], array[first]) then
+                pop_heap(first, middle, i)
+            end
+        end
+    end
+
+    local function sort_heap(first, last)
+        while last - first > 1 do
+            last = last - 1
+            pop_heap(first, last, last)
+        end
+    end
+
+    heap_select(i0, i1 + 1, i1 + 1)
+    sort_heap(i0, i1 + 1)
+end
+
+return {quicksort = quicksort, quicksort_mirror = quicksort_mirror,
+        heapsort = heapsort}
