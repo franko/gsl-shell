@@ -349,9 +349,23 @@ local function expr_get_functions(exprs)
     return jys
 end
 
+local xyplot_default = {
+    lines= false,
+    markers= true,
+    line_width= 3,
+    marker_size= 6,
+    show = true,
+}
+
+local function get_option(opt, default, name)
+    if not opt or (opt[name] == nil) then
+        return default[name]
+    end
+    return opt[name]
+end
+
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
-    local show_plot = true
-    if opt then show_plot = (opt.show ~= false) end
+    local show_plot = get_option(opt, xyplot_default, "show")
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = idents_get_column_indexes(t, schema.x)
@@ -395,11 +409,12 @@ function gdt.xyline(t, plot_descr)
 end
 
 local function gdt_table_xyplot(t, plot_descr, opt)
-    local show_plot = true
-    if opt then show_plot = (opt.show ~= false) end
+    local show_plot = get_option(opt, xyplot_default, "show")
 
-    local use_lines = opt and opt.lines
-    local use_markers = opt and (opt.markers ~= false) or true
+    local use_lines = get_option(opt, xyplot_default, "lines")
+    local use_markers = get_option(opt, xyplot_default, "markers")
+    local line_width = get_option(opt, xyplot_default, "line_width")
+    local marker_size = get_option(opt, xyplot_default, "marker_size")
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = expr_get_functions(schema.x)
@@ -451,10 +466,10 @@ local function gdt_table_xyplot(t, plot_descr, opt)
             end
 
             if use_lines then
-                plt:add(ln, webcolor(iq), {{'stroke', width=3}})
+                plt:add(ln, webcolor(iq), {{'stroke', width=line_width}})
             end
             if use_markers then
-                plt:add(ln, webcolor(iq), {{'marker', size=6, mark=iq}})
+                plt:add(ln, webcolor(iq), {{'marker', size=marker_size, mark=iq}})
             end
         end
     end
