@@ -199,6 +199,11 @@ local function complex_abs(z)
    return sqrt(x*x + y*y)
 end
 
+local function complex_arg(z)
+    local x, y = cartesian(z)
+    return math.atan2(y, x)
+end
+
 local function itostr(im, eps, fmt, signed)
    local absim = abs(im)
    local sign = im + eps < 0 and '-' or (signed and '+' or '')
@@ -567,6 +572,7 @@ complex = {
    norm2 = complex_norm2,
    rect  = cartesian,
    i     = 1i,
+   arg   = complex_arg
 }
 
 local generic_add = vector_op(opadd, true)
