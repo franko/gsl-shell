@@ -607,7 +607,7 @@ local complex_mt = {
 ffi.metatype(gsl_complex, complex_mt)
 
 local function matrix_new_unit(n)
-   local m = matrix.alloc(n, n)
+   local m = matrix_alloc(n, n)
    for k = 0, n*n - 1 do m.data[k] = 0 end
    for k = 0, n-1 do m.data[k*(n+1)] = 1 end
    return m
