@@ -93,7 +93,7 @@ local function matrix_new(n1, n2, f)
          end
       end
    else
-      ffi.fill(m.data, n1 * n2 * ffi.sizeof('double'), 0)
+      gsl.gsl_matrix_set_zero(m)
    end
    return m
 end
@@ -110,7 +110,7 @@ local function matrix_cnew(n1, n2, f)
          end
       end
    else
-      ffi.fill(m.data, 2 * n1 * n2 * ffi.sizeof('double'), 0)
+      gsl.gsl_matrix_complex_set_zero(m)
    end
    return m
 end
@@ -616,8 +616,7 @@ ffi.metatype(gsl_complex, complex_mt)
 
 local function matrix_new_unit(n)
    local m = matrix_alloc(n, n)
-   for k = 0, n*n - 1 do m.data[k] = 0 end
-   for k = 0, n-1 do m.data[k*(n+1)] = 1 end
+   gsl.gsl_matrix_set_identity(m)
    return m
 end
 
