@@ -748,6 +748,8 @@ local function matrix_newindex(m, k, v)
    end
 end
 
+local matrix_power = require 'matrix-power'
+
 local matrix_mt = {
    __gc = matrix_free,
 
@@ -756,6 +758,7 @@ local matrix_mt = {
    __mul = generic_mul,
    __div = generic_div,
    __unm = matrix_unm,
+   __pow = matrix_power.power,
 
    __len = matrix_len,
 
@@ -826,6 +829,7 @@ local matrix_complex_mt = {
    __sub = generic_sub,
    __mul = generic_mul,
    __div = generic_div,
+   __pow = matrix_power.cpower,
    __unm = matrix_complex_unm,
 
    __len = matrix_len,
