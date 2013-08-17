@@ -41,6 +41,14 @@ local function cartesian(x)
    end
 end
 
+local function matrix_dim(m)
+   return tonumber(m.size1), tonumber(m.size2)
+end
+
+local function matrix_len(m)
+   return tonumber(m.size1)
+end
+
 local function block_alloc(n)
    local b = ffi.cast('gsl_block *', ffi.C.malloc(ffi.sizeof('gsl_block')))
    local data = ffi.C.malloc(n * ffi.sizeof('double'))
@@ -65,6 +73,14 @@ local function matrix_calloc(n1, n2)
    local b = block_calloc(n1 * n2)
    local m = gsl_matrix_complex(n1, n2, n2, b.data, b, 1)
    return m
+end
+
+local function matrix_zero(m)
+   gsl.gsl_matrix_set_zero(m)
+end
+
+local function matrix_complex_zero(m)
+   gsl.gsl_matrix_complex_set_zero(m)
 end
 
 local function matrix_new(n1, n2, f)
@@ -108,14 +124,6 @@ local function matrix_free(m)
          ffi.C.free(b)
       end
    end
-end
-
-local function matrix_dim(m)
-   return tonumber(m.size1), tonumber(m.size2)
-end
-
-local function matrix_len(m)
-   return tonumber(m.size1)
 end
 
 local function matrix_copy(a)
@@ -663,11 +671,16 @@ local function matrix_new_copy(m)
    return m:copy()
 end
 
+local function matrix_zero_tg()
+  m:zero()
+end
+
 matrix = {
    new    = matrix_new,
    cnew   = matrix_cnew,
    alloc  = matrix_alloc,
    calloc = matrix_calloc,
+   zero   = matrix_zero_tg,
    copy   = matrix_new_copy,
    unit   = matrix_new_unit,
    dim    = matrix_dim,
@@ -688,6 +701,7 @@ end
 local matrix_methods = {
    alloc = matrix_alloc,
    dim   = matrix_dim,
+   zero  = matrix_zero,
    col   = matrix_col,
    row   = matrix_row,
    get   = matrix_get,
@@ -755,6 +769,7 @@ ffi.metatype(gsl_matrix, matrix_mt)
 local matrix_complex_methods = {
    alloc = matrix_calloc,
    dim   = matrix_dim,
+   zero  = matrix_complex_zero,
    col   = matrix_complex_col,
    row   = matrix_complex_row,
    get   = matrix_complex_get,
