@@ -18,8 +18,7 @@ local function power_raw(r, m, n, e)
                 -- The content of m2 is not needed here.
                 -- We compute r <- r * m using m2 as a temporary store
                 gsl.gsl_matrix_memcpy(m2, r)
-                gsl.gsl_matrix_set_zero(r)
-                gsl.gsl_blas_dgemm(NT, NT, 1, m, m2, 1, r)
+                gsl.gsl_blas_dgemm(NT, NT, 1, m, m2, 0, r)
             else
                 gsl.gsl_matrix_memcpy(r, m)
             end
@@ -29,8 +28,7 @@ local function power_raw(r, m, n, e)
 
         if e > 0 then
             -- compute m2 <- m * m
-            gsl.gsl_matrix_set_zero(m2)
-            gsl.gsl_blas_dgemm(NT, NT, 1, m, m, 1, m2)
+            gsl.gsl_blas_dgemm(NT, NT, 1, m, m, 0, m2)
             m, m2 = m2, m
         end
     end
@@ -47,8 +45,7 @@ local function power_complex_raw(r, m, n, e)
                 -- The content of m2 is not needed here.
                 -- We compute r <- r * m using m2 as a temporary store
                 gsl.gsl_matrix_complex_memcpy(m2, r)
-                gsl.gsl_matrix_complex_set_zero(r)
-                gsl.gsl_blas_zgemm(NT, NT, 1, m, m2, 1, r)
+                gsl.gsl_blas_zgemm(NT, NT, 1, m, m2, 0, r)
             else
                 gsl.gsl_matrix_complex_memcpy(r, m)
             end
@@ -58,8 +55,7 @@ local function power_complex_raw(r, m, n, e)
 
         if e > 0 then
             -- compute m2 <- m * m
-            gsl.gsl_matrix_complex_set_zero(m2)
-            gsl.gsl_blas_zgemm(NT, NT, 1, m, m, 1, m2)
+            gsl.gsl_blas_zgemm(NT, NT, 1, m, m, 0, m2)
             m, m2 = m2, m
         end
     end
