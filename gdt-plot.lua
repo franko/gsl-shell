@@ -11,7 +11,7 @@ local algo = require 'algorithm'
 
 local concat = table.concat
 local unpack, ipairs = unpack, ipairs
-local sqrt = math.sqrt
+local sqrt, abs = math.sqrt, math.abs
 
 local line_width = 2.5
 
@@ -48,8 +48,33 @@ local function f_var_fini(accu)
     if n > 0 then return Q / n end
 end
 
+local function f_accu(accu, x, n)
+    accu[n] = x
+    return accu
+end
+
+local function f_meansd_fini(accu)
+    local ls = {0,0,0}
+    local mean = 0
+    for n, x in ipairs(accu) do
+        ls = f_stddev(ls, x, n)
+        mean = mean + x
+    end
+    mean = mean / #accu
+    local sd = f_stddev_fini(ls)
+    local xmean, xn = 0, 0
+    for n, x in ipairs(accu) do
+        if abs(x - mean) < 3.0 * sd then
+            xmean = xmean + x
+            xn = xn + 1
+        end
+    end
+    return xmean / xn
+end
+
 local stat_lookup = {
     mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
+    meansd  = {f = f_accu, f0 = || {}, fini = f_meansd_fini},
     stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
     stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
     var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
