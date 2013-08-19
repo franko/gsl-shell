@@ -141,7 +141,9 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
             local fy, fini = jp.f, jp.fini
             local f0 = jp.f0 and jp.f0() or 0
             local e = collate_factors(t, i, jes)
-            e[#e+1] = jp.name
+            if #jys > 1 then
+                e[#e+1] = jp.name
+            end
 
             local v = expr_print.eval(jp.expr, table_scope, t, i)
             local pass = eval_conditions(conds, t, i)
@@ -216,6 +218,43 @@ function gen_xlabels(plt, labels)
     end
 end
 
+local function add_legend_title(lg, title)
+    lg:add(graph.textshape(25, 12, title, 14), graph.rgb(0, 0, 120))
+end
+
+local function legend_symbol(sym, dx, dy)
+   if sym == 'square' then
+      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
+   elseif sym == 'line' then
+      return graph.segment(dx, 10+dy, 20+dx, 10+dy), {{'stroke', width=line_width}}
+   else
+      return graph.marker(10+dx, 10+dy, sym, 8)
+   end
+end
+
+local function add_legend_item(lg, k, symspec, color, text)
+    local y = -k * 20
+    local sym, tr = legend_symbol(symspec, 0, y)
+    lg:add(sym, color, tr)
+    if text then
+        lg:add(graph.textshape(25, y + 6, text, 14), 'black')
+    end
+end
+
+function add_category_legend(plt, symbol, labels, enums, legend_title)
+    if #enums > 1 then
+        local lg = graph.plot()
+        lg.units, lg.clip = false, false
+        add_legend_title(lg, legend_title)
+        for q, en in ipairs(enums) do
+            local label = collate(en, ' / ')
+            add_legend_item(lg, q, symbol, webcolor(q), label)
+            add_legend_item(lg, q, q, webcolor(q))
+        end
+        plt:set_legend(lg)
+    end
+end
+
 local barplot = {xlabels = gen_xlabels}
 
 function barplot.create(labels, enums, val)
@@ -235,34 +274,11 @@ function barplot.create(labels, enums, val)
     return plt
 end
 
-function barplot.legend(plt, labels, enums)
-    if #enums > 1 then
-        for k = 1, #enums do
-            plt:legend(collate(enums[k], '/'), webcolor(k), 'square')
-        end
-    end
+function barplot.legend(plt, labels, enums, legend_title)
+    add_category_legend(plt, "square", labels, enums, legend_title)
 end
 
 local lineplot = {xlabels = gen_xlabels}
-
-local function legend_symbol(sym, dx, dy)
-   if sym == 'square' then
-      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
-   elseif sym == 'line' then
-      return graph.segment(dx, 10+dy, 20+dx, 10+dy), {{'stroke', width=line_width}}
-   else
-      return graph.marker(10+dx, 10+dy, sym, 8)
-   end
-end
-
-local function add_legend(lg, k, symspec, color, text)
-    local y = -k * 20
-    local sym, tr = legend_symbol(symspec, 0, y)
-    lg:add(sym, color, tr)
-    if text then
-        lg:add(graph.textshape(25, y + 6, text, 14), 'black')
-    end
-end
 
 function lineplot.create(labels, enums, val)
     local plt = graph.plot()
@@ -287,17 +303,8 @@ function lineplot.create(labels, enums, val)
     return plt
 end
 
-function lineplot.legend(plt, labels, enums)
-    if #enums > 1 then
-        local lg = graph.plot()
-        lg.units, lg.clip = false, false
-        for q, en in ipairs(enums) do
-            local label = collate(en)
-            add_legend(lg, q, 'line', webcolor(q), label)
-            add_legend(lg, q, q, webcolor(q))
-        end
-        plt:set_legend(lg)
-    end
+function lineplot.legend(plt, labels, enums, legend_title)
+    add_category_legend(plt, "line", labels, enums, legend_title)
 end
 
 local function idents_get_column_indexes(t, exprs)
@@ -355,6 +362,17 @@ local function get_option(opt, default, name)
     return opt[name]
 end
 
+local function get_legend_title(t, jys, jes)
+    local names = {}
+    for i, je in ipairs(jes) do
+        names[i] = t:header(je)
+    end
+    if #jys > 1 then
+        names[#names+1] = "parameter"
+    end
+    return table.concat(names, " / ")
+end
+
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = get_option(opt, xyplot_default, "show")
 
@@ -365,9 +383,11 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes, schema.conds)
 
+    local legend_title = get_legend_title(t, jys, jes)
+
     local plt = plotter.create(labels, enums, val)
     plotter.xlabels(plt, labels)
-    plotter.legend(plt, labels, enums)
+    plotter.legend(plt, labels, enums, legend_title)
 
     if show_plot then plt:show() end
     return plt
@@ -448,12 +468,12 @@ local function gdt_table_xyplot(t, plot_descr, opt)
             end
 
             local iqs = {}
-            if #enums > 1 then iqs[#iqs+1] = collate(enum) end
+            if #enums > 1 then iqs[#iqs+1] = collate(enum, " / ") end
             if #jys > 1 then iqs[#iqs+1] = name end
-            local ienum = concat(iqs, " ")
+            local ienum = concat(iqs, " / ")
             local iq = (q - 1) * #jys + p
             if mult > 1 then
-                add_legend(lg, iq, iq, webcolor(iq), ienum)
+                add_legend_item(lg, iq, iq, webcolor(iq), ienum)
             end
 
             if use_lines then
@@ -465,7 +485,11 @@ local function gdt_table_xyplot(t, plot_descr, opt)
         end
     end
 
-    if mult > 1 then plt:set_legend(lg) end
+    if mult > 1 then
+        local legend_title = get_legend_title(t, jys, jes)
+        add_legend_title(lg, legend_title)
+        plt:set_legend(lg)
+    end
 
     if show_plot then plt:show() end
     return plt
