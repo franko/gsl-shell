@@ -256,9 +256,9 @@ local function gdt_table_filter(t, f)
             n_curr = n_curr + 1
             cgdt.gdt_table_insert_rows(new, n_curr - 1, 1)
             for j = 1, m do
-                local e = cgdt.gdt_table_get(t, i - 1, j - 1)
-                local v = gdt_element(t, e)
-                gdt.set(new, n_curr, j, v)
+                local v = gdt_value()
+                local e = cgdt.gdt_table_get(t, i - 1, j - 1, v)
+                gdt.set(new, n_curr, j, extract_value(e, v))
             end
         end
     end
