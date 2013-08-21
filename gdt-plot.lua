@@ -11,7 +11,7 @@ local algo = require 'algorithm'
 
 local concat = table.concat
 local unpack, ipairs = unpack, ipairs
-local sqrt = math.sqrt
+local sqrt, abs = math.sqrt, math.abs
 
 local line_width = 2.5
 
@@ -48,6 +48,15 @@ local function f_var_fini(accu)
     if n > 0 then return Q / n end
 end
 
+local function f_accu(accu, x)
+    accu[#accu + 1] = x
+    return accu
+end
+
+local function f_accu_start()
+    return {}
+end
+
 local stat_lookup = {
     mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
     stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
@@ -56,6 +65,43 @@ local stat_lookup = {
     sum     = {f = function(accu, x, n) return accu + x end},
     count   = {f = function(accu, x, n) return n end},
 }
+
+local function stat_filter(y, opts, mean, sd)
+    if opts.maxrdev then
+        if abs(y - mean) > sd * opts.maxrdev then return false end
+    end
+    if opts.max then
+        if y > opts.max then return false end
+    end
+    if opts.min then
+        if y < opts.min then return false end
+    end
+    return true
+end
+
+local function stat_fini_gen(stat, opts)
+    local f = stat.f
+    local accu = stat.f0 and stat.f0() or 0
+    return function(ls)
+        local n = #ls
+        local mean = 0
+        for i = 1, n do mean = mean + ls[i] end
+        mean = mean / n
+        local sd = 0
+        for i = 1, n do sd = sd + (ls[i] - mean)^2 end
+        sd = sqrt(sd / (n - 1))
+        local nf = 1
+        for i = 1, n do
+            local y = ls[i]
+            local ok = stat_filter(y, opts, mean, sd)
+            if ok then
+                accu = f(accu, y, nf)
+                nf = nf + 1
+            end
+        end
+        return stat.fini and stat.fini(accu) or accu
+    end
+end
 
 local function sort_labels_func(lab_a, lab_b)
     local n = #lab_a
@@ -160,11 +206,11 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
 
     for ie, enum in ipairs(enums) do
         local p = enum.p
-        local fini, opts = jys[p].fini, jys[p].options
+        local fini = jys[p].fini
         if fini then
             for ix = 1, #labels do
                 local v = vec2d_get(val, ix, ie)
-                local v_fin = fini(v, opts)
+                local v_fin = fini(v)
                 vec2d_set(val, ix, ie, v_fin)
             end
         end
@@ -344,14 +390,23 @@ local function stat_expr_get_functions(exprs)
     for i, expr in ipairs(exprs) do
         local stat_name, yexpr, opts = get_stat(expr)
         local s = stat_lookup[stat_name]
-        jys[i] = {
-            f       = s.f,
-            f0      = s.f0,
-            fini    = s.fini,
-            name    = expr_print.expr(expr),
-            expr    = yexpr,
-            options = opts,
-        }
+        local entry
+        if opts then
+            entry = {
+                f       = f_accu,
+                f0      = f_accu_start,
+                fini    = stat_fini_gen(s, opts),
+            }
+        else
+            entry = {
+                f       = s.f,
+                f0      = s.f0,
+                fini    = s.fini,
+            }
+        end
+        entry.name = expr_print.expr(expr)
+        entry.expr = yexpr
+        jys[i] = entry
     end
     return jys
 end
