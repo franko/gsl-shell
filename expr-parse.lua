@@ -14,7 +14,44 @@ local function expect(lexer, token_type)
     end
 end
 
+local function expect_ident(lexer)
+    if lexer.token.type == 'ident' then
+        local id = lexer.token.value
+        lexer:next()
+        return id
+    end
+    lexer:local_error("expecting variable name")
+end
+
+local function expect_number(lexer)
+    if lexer.token.type == 'number' then
+        local val = lexer.token.value
+        lexer:next()
+        return val
+    end
+    lexer:local_error("expecting number")
+end
+
 local expr
+
+local function call_options(lexer, actions)
+    if accept(lexer, ':') then
+        local opts = {}
+        while true do
+            local name = expect_ident(lexer)
+            if not (lexer.token.type == 'operator' and lexer.token.symbol == '=') then
+                lexer:local_error("expecting '='")
+            end
+            lexer:next()
+            local value = expect_number(lexer)
+            opts[name] = value
+            if not accept(lexer, ',') then
+                break
+            end
+        end
+        return opts
+    end
+end
 
 local function factor(lexer, actions)
     local token = lexer.token
@@ -23,8 +60,9 @@ local function factor(lexer, actions)
         lexer:next()
         if accept(lexer, '(') then
             local arg = expr(lexer, actions, 0)
+            local opts = call_options(lexer, actions)
             expect(lexer, ')')
-            return actions.func_eval(id, arg)
+            return actions.func_eval(id, arg, opts)
         else
             return actions.ident(id)
         end
@@ -51,20 +89,6 @@ local function factor(lexer, actions)
         return actions.enum(id)
     end
     lexer:local_error('unexpected symbol:')
-end
-
-local function ident_singleton(lexer, actions)
-    local token = lexer.token
-    if token.type == 'ident' then
-        local id = token.value
-        lexer:next()
-        if accept(lexer, '(') then
-            lexer:local_error('expecting simple identifier')
-        end
-        return actions.ident(id)
-    else
-        lexer:local_error('expecting simple identifier')
-    end
 end
 
 local max_oper_prio = expr_lexer.max_oper_prio
@@ -106,10 +130,12 @@ local function expr_list(lexer, actions)
 end
 
 local function ident_list(lexer, actions)
-    local a = ident_singleton(lexer, actions)
+    local fname = expect_ident(lexer)
+    local a = actions.ident(fname)
     local els = actions.exprlist(a)
     while accept(lexer, ',') do
-        local b = ident_singleton(lexer, actions)
+        local name = expect_ident(lexer)
+        local b = actions.ident(name)
         els = actions.exprlist(b, els)
     end
     return els

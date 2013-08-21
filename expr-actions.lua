@@ -23,8 +23,8 @@ local function enum_action(id)
     return "%" .. id
 end
 
-local function func_eval_action(func_name, arg_expr)
-    return {func = func_name, arg = arg_expr}
+local function func_eval_action(func_name, arg_expr, opts)
+    return {func = func_name, arg = arg_expr, options= opts}
 end
 
 local function ident_action(id) return id end
