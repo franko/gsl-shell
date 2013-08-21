@@ -133,7 +133,6 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
     local n = #t
     local val, count = {}, {}
     local enums, labels = {}, {}
-    local fini_table = {}
     for i = 1, n do
         local c = collate_factors(t, i, jxs)
         for p = 1, #jys do
@@ -141,6 +140,7 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
             local fy, fini = jp.f, jp.fini
             local f0 = jp.f0 and jp.f0() or 0
             local e = collate_factors(t, i, jes)
+            e.p = p
             if #jys > 1 then
                 e[#e+1] = jp.name
             end
@@ -155,18 +155,18 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
                     local cc = vec2d_incr(count, ix, ie)
                     local v_accu = vec2d_get(val, ix, ie) or f0
                     vec2d_set(val, ix, ie, fy(v_accu, v, cc))
-                    fini_table[ie] = fini
                 end
             end
         end
     end
 
     for ie, enum in ipairs(enums) do
-        local fini = fini_table[ie]
+        local p = enum.p
+        local fini, opts = jys[p].fini, jys[p].options
         if fini then
             for ix = 1, #labels do
                 local v = vec2d_get(val, ix, ie)
-                local v_fin = fini(v)
+                local v_fin = fini(v, opts)
                 vec2d_set(val, ix, ie, v_fin)
             end
         end
@@ -179,7 +179,7 @@ end
 
 local function get_stat(expr)
     if expr.func and stat_lookup[expr.func]then
-        return expr.func, expr.arg
+        return expr.func, expr.arg, expr.options
     else
         return 'mean', expr
     end
@@ -323,14 +323,15 @@ end
 local function stat_expr_get_functions(exprs)
     local jys = {}
     for i, expr in ipairs(exprs) do
-        local stat_name, yexpr = get_stat(expr)
+        local stat_name, yexpr, opts = get_stat(expr)
         local s = stat_lookup[stat_name]
         jys[i] = {
-            f     = s.f,
-            f0    = s.f0,
-            fini  = s.fini,
-            name  = expr_print.expr(expr),
-            expr  = yexpr,
+            f       = s.f,
+            f0      = s.f0,
+            fini    = s.fini,
+            name    = expr_print.expr(expr),
+            expr    = yexpr,
+            options = opts,
         }
     end
     return jys
