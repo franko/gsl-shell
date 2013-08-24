@@ -79,7 +79,7 @@ EXAMPLES_FILES := $(EXAMPLES_FILES_SRC:%=examples/%.csv)
 
 C_SRC_FILES += gsl-shell-jit.c
 
-TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI)
+TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI) $(LUA_MODULES)
 
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
@@ -89,6 +89,10 @@ LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
 ifneq ($(BUILDMODE),dynamic)
   LUAGSL_LIBS += $(GSH_LIBDIR)/libluajit.a
+endif
+ifneq ($(BUILDMODE),static)
+  LUA_MODULES = $(LPEG_SO)
+  LUA_MODULES_SUBDIRS = lpeg
 endif
 ifeq ($(BUILDMODE),dynamic)
   GSL_SHELL_DEP = $(LUAJIT_SO) $(TARGET_LINK_DEP)
@@ -115,7 +119,7 @@ endif
 
 LIBS += $(GSL_LIBS) -lm
 
-SUBDIRS := $(LUADIR) lua-gsl agg-plot gdt
+SUBDIRS := $(LUADIR) lua-gsl agg-plot gdt $(LUA_MODULES_SUBDIRS)
 FOXGUI_DIR := fox-gui
 
 FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a
@@ -136,6 +140,8 @@ $(GSH_LIBDIR)/libgdt.a: gdt
 $(GSH_LIBDIR)/libaggplot.a: agg-plot
 $(FOXGUI_LIB): $(FOXGUI_DIR)
 $(LUAJIT_SO): $(LUADIR)
+$(LPEG_SO): lpeg
+lpeg: $(LUADIR)
 
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 	@echo Linking $@
@@ -155,6 +161,7 @@ install: $(GSL_SHELL) $(GSL_SHELL_GUI)
 	  cd $(INSTALL_SYS_LIB_DIR) && \
 	  ln -s libluajit.so libluajit-$(ABIVER).so && \
 	  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
+	test -f $(LPEG_SO) && cp $(LPEG_SO) $(INSTALL_LIB_DIR) || :
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
@@ -175,7 +182,7 @@ clean:
 		$(MAKE) -C $$dir clean; \
 	done
 	$(MAKE) -C $(FOXGUI_DIR) clean
-	$(HOST_RM) *.o *.dll *.so
+	$(HOST_RM) *.o *.dll *.so*
 	$(HOST_RM) -r ./.libs/
 
 -include $(DEP_FILES)

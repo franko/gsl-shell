@@ -75,6 +75,7 @@ ifeq ($(HOST_SYS),Windows)
   GSL_SHELL_GUI = gsl-shell-gui.exe
   LUAJIT_DLL = lua$(NODOTABIVER)
   LUAJIT_SO = $(GSH_DLL_LIBDIR)/$(LUAJIT_DLL).dll
+  LPEG_SO = lpeg.dll
 else
   PTHREAD_DEFS += -pthread
   PTHREAD_LIBS += -pthread
@@ -83,6 +84,7 @@ else
   GSL_SHELL_GUI = gsl-shell-gui
   LUAJIT_DLL = luajit
   LUAJIT_SO = $(GSH_DLL_LIBDIR)/lib$(LUAJIT_DLL).so
+  LPEG_SO = lpeg.so
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
