@@ -75,7 +75,7 @@ CCWARN= -Wall
 #BUILDMODE= mixed
 #
 # Static mode creates a static library and a statically linked luajit.
-BUILDMODE= static
+#BUILDMODE= static
 #
 # Dynamic mode creates a dynamic library and a dynamically linked luajit.
 # Note: this executable will only run when the library is installed!
@@ -151,6 +151,7 @@ XCFLAGS=
 include ../../makeconfig
 
 GSH_LIBDIR = ../../.libs
+GSH_DLL_LIBDIR = ../..
 
 ifeq ($(strip $(LUA_BUILD)), no)
   XCFLAGS += -DGSH_SHORT_FSYNTAX -DGSL_SHELL -D_REENTRANT -DPACKAGE_NAME=gsl-shell -DPACKAGE_VERSION=2.3
@@ -573,8 +574,8 @@ E= @echo
 ##############################################################################
 
 default all:	$(TARGET_T)
-	$(E) "Copying luajit $(LUAJIT_A)"
-	$(Q)$(TARGET_COPY) $(LUAJIT_A) $(GSH_LIBDIR)
+	test -f $(LUAJIT_SO) && $(TARGET_COPY) $(LUAJIT_SO) $(GSH_DLL_LIBDIR) || :
+	test -f $(LUAJIT_A) && $(TARGET_COPY) $(LUAJIT_A) $(GSH_LIBDIR) || :
 
 amalg:
 	@grep "^[+|]" ljamalg.c

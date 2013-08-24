@@ -84,10 +84,17 @@ INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
 LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
-LUAGSL_LIBS += $(GSH_LIBDIR)/libluajit.a $(GSH_LIBDIR)/libluagsl.a $(GSH_LIBDIR)/libgdt.a
+ifneq ($(BUILDMODE),dynamic)
+  LUAGSL_LIBS += $(GSH_LIBDIR)/libluajit.a
+endif
+ifeq ($(BUILDMODE),dynamic)
+  GSL_SHELL_DEP = $(LUAJIT_SO) libluajit-$(ABIVER).so.$(MAJVER)
+  LIBS += -L$(GSH_DLL_LIBDIR) -l$(LUAJIT_DLL)
+endif
+
+LUAGSL_LIBS += $(GSH_LIBDIR)/libluagsl.a $(GSH_LIBDIR)/libgdt.a
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o)
-
 DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
@@ -96,9 +103,11 @@ LIBS_MAGIC := $(shell mkdir .libs > /dev/null 2>&1 || :)
 ifeq ($(HOST_SYS),Windows)
   INSTALL_BIN_DIR = $(DESTDIR)$(PREFIX)
   INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/$(PACKAGE_NAME)
+  INSTALL_SYS_LIB_DIR = $(INSTALL_BIN_DIR)
 else
   INSTALL_BIN_DIR = $(DESTDIR)$(PREFIX)/bin
   INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+  INSTALL_SYS_LIB_DIR = $(DESTDIR)$(PREFIX)/lib
 endif
 
 LIBS += $(GSL_LIBS) -lm
@@ -123,12 +132,13 @@ $(GSH_LIBDIR)/libluagsl.a: lua-gsl
 $(GSH_LIBDIR)/libgdt.a: gdt
 $(GSH_LIBDIR)/libaggplot.a: agg-plot
 $(FOXGUI_LIB): $(FOXGUI_DIR)
+$(LUAJIT_SO): $(LUADIR)
 
-$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(SUBDIRS)
+$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
-$(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(SUBDIRS) $(FOXGUI_DIR)
+$(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOXGUI_DIR)
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS)
 
@@ -136,6 +146,12 @@ install: $(GSL_SHELL) $(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_BIN_DIR)
 	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
 	cp $(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
+	test -f $(LUAJIT_SO) && \
+	  mkdir -p $(INSTALL_SYS_LIB_DIR) && \
+	  cp $(LUAJIT_SO) $(INSTALL_SYS_LIB_DIR) && \
+	  cd $(INSTALL_SYS_LIB_DIR) && \
+	  ln -s libluajit.so libluajit-$(ABIVER).so && \
+	  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
@@ -145,6 +161,11 @@ install: $(GSL_SHELL) $(GSL_SHELL_GUI)
 .PHONY: clean all subdirs $(SUBDIRS) $(FOXGUI_DIR)
 
 include makerules
+
+libluajit-$(ABIVER).so.$(MAJVER): $(LUAJIT_SO)
+	$(HOST_RM) libluajit-$(ABIVER).so.$(MAJVER) libluajit-$(ABIVER).so
+	ln -s libluajit.so libluajit-$(ABIVER).so
+	ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER)
 
 clean:
 	for dir in $(SUBDIRS); do \

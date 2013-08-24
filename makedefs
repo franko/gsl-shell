@@ -9,6 +9,12 @@
 # Copyright (C) 2009-2010 Francesco Abbate. See Copyright Notice in gsl-shell.c
 ##############################################################################
 
+MAJVER=  2
+MINVER=  0
+RELVER=  0
+ABIVER=  5.1
+NODOTABIVER= 51
+
 AR= ar rcu
 RANLIB= ranlib
 CP_REL = cp --parents
@@ -43,7 +49,7 @@ endif
 
 ifeq ($(strip $(LUA_BUILD)), yes)
   PACKAGE_NAME = lua
-  PACKAGE_VERSION = 5.1
+  PACKAGE_VERSION = $(ABIVER)
 else
   PACKAGE_NAME = gsl-shell
   PACKAGE_VERSION = 2.3
@@ -67,13 +73,16 @@ ifeq ($(HOST_SYS),Windows)
 
   GSL_SHELL = gsl-shell.exe
   GSL_SHELL_GUI = gsl-shell-gui.exe
+  LUAJIT_DLL = lua$(NODOTABIVER)
+  LUAJIT_SO = $(GSH_DLL_LIBDIR)/$(LUAJIT_DLL).dll
 else
   DEFS += -pthread
   LIBS += -pthread
-  LDFLAGS += -Wl,-E
 
   GSL_SHELL = gsl-shell
   GSL_SHELL_GUI = gsl-shell-gui
+  LUAJIT_DLL = luajit
+  LUAJIT_SO = $(GSH_DLL_LIBDIR)/lib$(LUAJIT_DLL).so
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
