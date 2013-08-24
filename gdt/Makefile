@@ -28,19 +28,18 @@ include $(GSH_BASE_DIR)/makedefs
 INCLUDES += -I$(GSH_BASE_DIR)
 
 CFLAGS += -std=c99
+CFLAGS += $(LUA_CFLAGS)
 
 GDT_SRC_FILES = char_buffer.c gdt_index.c gdt_table.c
 GDT_OBJ_FILES := $(GDT_SRC_FILES:%.c=%.o)
-
 DEP_FILES := $(GDT_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
-
 TARGETS = libgdt.a
 
 all: $(TARGETS)
+	@$(HOST_CP) libgdt.a $(GSH_LIBDIR)
 
 libgdt.a: $(GDT_OBJ_FILES)
 	@echo Archive $@
@@ -52,6 +51,6 @@ include $(GSH_BASE_DIR)/makerules
 .PHONY: clean all
 
 clean:
-	$(HOST_RM) *.o *.a *$(DLL_EXT) $(TARGETS)
+	$(HOST_RM) *.o *.a $(TARGETS)
 
 -include $(DEP_FILES)

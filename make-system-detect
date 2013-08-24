@@ -20,3 +20,4 @@ else
 endif
 
 HOST_RM= rm -f
+HOST_CP= cp

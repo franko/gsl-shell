@@ -25,22 +25,19 @@ include $(GSH_BASE_DIR)/make-system-detect
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
-LUADIR = $(GSH_BASE_DIR)/luajit2
-
-INCLUDES += -I$(LUADIR)/src -I$(GSH_BASE_DIR)
+INCLUDES += -I$(GSH_BASE_DIR)
+CFLAGS += $(LUA_CFLAGS)
 
 LUAGSL_SRC_FILES = lua-properties.c gs-types.c lua-utils.c lua-gsl.c str.c fatal.c
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
-
 DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
-
 TARGETS = libluagsl.a
 
 all: $(TARGETS)
+	@$(HOST_CP) libluagsl.a $(GSH_LIBDIR)
 
 libluagsl.a: $(LUAGSL_OBJ_FILES)
 	@echo Archive $@

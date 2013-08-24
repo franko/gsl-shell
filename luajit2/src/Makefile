@@ -150,6 +150,8 @@ XCFLAGS=
 
 include ../../makeconfig
 
+GSH_LIBDIR = ../../.libs
+
 ifeq ($(strip $(LUA_BUILD)), no)
   XCFLAGS += -DGSH_SHORT_FSYNTAX -DGSL_SHELL -D_REENTRANT -DPACKAGE_NAME=gsl-shell -DPACKAGE_VERSION=2.3
 else
@@ -197,6 +199,7 @@ TARGET_DYNCC= $(DYNAMIC_CC)
 TARGET_LD= $(CROSS)$(CC)
 TARGET_AR= $(CROSS)ar rcus
 TARGET_STRIP= $(CROSS)strip
+TARGET_COPY= cp
 
 TARGET_SONAME= libluajit-$(ABIVER).so.$(MAJVER)
 TARGET_DYLIBNAME= libluajit-$(ABIVER).$(MAJVER).dylib
@@ -570,6 +573,8 @@ E= @echo
 ##############################################################################
 
 default all:	$(TARGET_T)
+	$(E) "Copying luajit $(LUAJIT_A)"
+	$(Q)$(TARGET_COPY) $(LUAJIT_A) $(GSH_LIBDIR)
 
 amalg:
 	@grep "^[+|]" ljamalg.c

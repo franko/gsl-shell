@@ -25,39 +25,24 @@ include $(GSH_BASE_DIR)/make-system-detect
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
-GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
-
-LUADIR = $(GSH_BASE_DIR)/luajit2
-
-GSL_SHELL_LIBS = $(LUADIR)/src/libluajit.a $(GSH_BASE_DIR)/agg-plot/libaggplot.a $(GSH_BASE_DIR)/lua-gsl/libluagsl.a $(GSH_BASE_DIR)/gdt/libgdt.a
-
 INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
-
 INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
-LIBS += $(GSL_SHELL_LIBS) $(FOX_LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS) $(GSL_LIBS) -lsupc++ -lm
 
 FOXGUI_SRC_FILES = io_thread.cpp window_surface.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp fox_gsl_shell.cpp gsl_shell_window.cpp window_part.cpp fx_plot_canvas.cpp fx_plot_window.cpp lua_plot_window.cpp gsl_shell_app.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
-
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-CXXCOMPILE = $(CC) $(CXXFLAGS) $(DEFS) $(INCLUDES)
-
-ifeq ($(HOST_SYS),Windows)
-  LDFLAGS += -mwindows
-else
-  LIBS += -ldl
-endif
-
-TARGETS = $(GSL_SHELL_GUI)
+TARGETS = libfoxgui.a
 
 all: $(TARGETS)
+	@$(HOST_CP) libfoxgui.a $(GSH_LIBDIR)
 
-$(GSL_SHELL_GUI): $(FOXGUI_OBJ_FILES) $(GSL_SHELL_LIBS)
-	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(FOXGUI_OBJ_FILES) $(LIBS)
+libfoxgui.a: $(FOXGUI_OBJ_FILES)
+	@echo Archive $@
+	@$(AR) $@ $?
+	@$(RANLIB) $@
 
 include $(GSH_BASE_DIR)/makerules
 

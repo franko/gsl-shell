@@ -23,12 +23,10 @@ include make-system-detect
 include makepackages
 include makedefs
 
-LUADIR = luajit2
+GSH_BASE_DIR = .
 
 INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
-GSL_SHELL = gsl-shell$(EXE_EXT)
-GSL_SHELL_GUI = gsl-shell-gui$(EXE_EXT)
-LUA_CFLAGS = -I$(LUADIR)/src
+CFLAGS += $(LUA_CFLAGS)
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
@@ -42,7 +40,12 @@ else
   endif
 endif
 
-SUBDIRS = $(LUADIR) lua-gsl gdt
+FOXGUI_LDFLAGS = -lsupc++ -lm
+ifeq ($(HOST_SYS),Windows)
+  FOXGUI_LDFLAGS += -mwindows
+else
+  FOXGUI_LDFLAGS += -ldl
+endif
 
 C_SRC_FILES =
 
@@ -71,23 +74,17 @@ LUA_BASE_FILES += $(HELP_FILES:%=help/%.lua)
 
 EXAMPLES_FILES := $(EXAMPLES_FILES_SRC:%=examples/%.csv)
 
-LUAGSL_LIBS += $(LUADIR)/src/libluajit.a
-
 C_SRC_FILES += gsl-shell-jit.c
 
-TARGETS = $(GSL_SHELL)
+TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI)
 
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
-GUI_SUBDIR = fox-gui
-SUBDIRS += agg-plot $(GUI_SUBDIR)
-LUAGSL_LIBS += agg-plot/libaggplot.a
+LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
-LUAGSL_LIBS += lua-gsl/libluagsl.a gdt/libgdt.a
-
-COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+LUAGSL_LIBS += $(GSH_LIBDIR)/libluajit.a $(GSH_LIBDIR)/libluagsl.a $(GSH_LIBDIR)/libgdt.a
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o)
 
@@ -106,35 +103,55 @@ endif
 
 LIBS += $(GSL_LIBS) -lm
 
-all: $(SUBDIRS) $(TARGETS)
+SUBDIRS := $(LUADIR) lua-gsl agg-plot gdt
+FOXGUI_DIR := fox-gui
 
-$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a
+
+all: $(TARGETS) $(SUBDIRS) $(FOXGUI_DIR)
+
+subdirs: $(SUBDIRS) $(FOXGUI_DIR)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+$(FOXGUI_DIR):
+	$(MAKE) -C $@
+
+$(GSH_LIBDIR)/libluajit.a: $(LUADIR)
+$(GSH_LIBDIR)/libluagsl.a: lua-gsl
+$(GSH_LIBDIR)/libgdt.a: gdt
+$(GSH_LIBDIR)/libaggplot.a: agg-plot
+$(FOXGUI_LIB): $(FOXGUI_DIR)
+
+$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(SUBDIRS)
 	@echo Linking $@
-	@$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 
-install: $(GSL_SHELL) $(GUI_SUBDIR)
+$(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(SUBDIRS) $(FOXGUI_DIR)
+	@echo Linking $@
+	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS)
+
+install: $(GSL_SHELL) $(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_BIN_DIR)
 	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
-	cp fox-gui/$(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
+	cp $(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
 	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
 	$(CP_REL) $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
 	$(CP_REL) $(EXAMPLES_FILES) $(INSTALL_BIN_DIR)
 
-.PHONY: clean all $(SUBDIRS)
+.PHONY: clean all subdirs $(SUBDIRS) $(FOXGUI_DIR)
 
 include makerules
 
-$(SUBDIRS):
-	cd $@; $(MAKE)
-
 clean:
-	$(MAKE) -C agg-plot clean
-	$(MAKE) -C $(LUADIR) clean
-	$(MAKE) -C fox-gui clean
-	$(MAKE) -C gdt clean
-	$(HOST_RM) *.o $(TARGETS)
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir clean; \
+	done
+	$(MAKE) -C $(FOXGUI_DIR) clean
+	$(HOST_RM) *.o *.dll *.so
 	$(HOST_RM) -r ./.libs/
 
 -include $(DEP_FILES)

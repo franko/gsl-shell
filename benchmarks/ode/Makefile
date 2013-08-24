@@ -17,10 +17,10 @@ else
   LINK_EXE = $(CC) $(LDFLAGS)
 endif
 
-ode-benchmark$(EXE_EXT): ode-benchmark.o
+ode-benchmark.exe: ode-benchmark.o
 	@echo Linking $@
 	@$(LINK_EXE) -o $@ $< $(LIBS)
 
-ode-benchmark-rk8pd$(EXE_EXT): ode-benchmark-rk8pd.o
+ode-benchmark-rk8pd.exe: ode-benchmark-rk8pd.o
 	@echo Linking $@
 	@$(LINK_EXE) -o $@ $< $(LIBS)

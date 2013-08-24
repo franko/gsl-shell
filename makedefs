@@ -16,7 +16,14 @@ CP_REL = cp --parents
 CC = gcc
 CXX = g++
 
+COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
+CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 LINK_EXE = $(CC) $(LDFLAGS)
+
+GSH_LIBDIR= $(GSH_BASE_DIR)/.libs
+GSH_DLL_LIBDIR= $(GSH_BASE_DIR)
+LUADIR = $(GSH_BASE_DIR)/luajit2
+LUA_CFLAGS = -I$(LUADIR)/src
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
@@ -56,15 +63,17 @@ LIBS += -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
-  EXE_EXT = .exe
-  DLL_EXT = .dll
   LDFLAGS += -Wl,--export-all-symbols
+
+  GSL_SHELL = gsl-shell.exe
+  GSL_SHELL_GUI = gsl-shell-gui.exe
 else
-  EXE_EXT =
-  DLL_EXT = .so
   DEFS += -pthread
   LIBS += -pthread
   LDFLAGS += -Wl,-E
+
+  GSL_SHELL = gsl-shell
+  GSL_SHELL_GUI = gsl-shell-gui
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
