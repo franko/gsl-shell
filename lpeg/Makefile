@@ -26,6 +26,7 @@ include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
 CFLAGS += $(LUA_CFLAGS)
+LIBS += -L$(GSH_DLL_LIBDIR) -l$(LUAJIT_DLL)
 
 LPEG_SRC_FILES = lpvm.c lpcap.c lptree.c lpcode.c lpprint.c
 LPEG_OBJ_FILES := $(LPEG_SRC_FILES:%.c=%.o)
@@ -39,7 +40,7 @@ all: $(TARGETS)
 	@$(HOST_CP) $(LPEG_SO) $(GSH_DLL_LIBDIR)
 
 $(LPEG_SO): $(LPEG_OBJ_FILES)
-	$(CC) -shared -o $@ $(LPEG_OBJ_FILES) $(LUAJIT_LIBS)
+	$(CC) -shared -o $@ $(LPEG_OBJ_FILES) $(LIBS)
 
 include $(GSH_BASE_DIR)/makerules
 
