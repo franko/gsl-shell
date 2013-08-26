@@ -38,6 +38,7 @@ else
   else
     LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
   endif
+  TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
 endif
 
 FOXGUI_LDFLAGS = -lsupc++ -lm
@@ -88,7 +89,7 @@ ifneq ($(BUILDMODE),dynamic)
   LUAGSL_LIBS += $(GSH_LIBDIR)/libluajit.a
 endif
 ifeq ($(BUILDMODE),dynamic)
-  GSL_SHELL_DEP = $(LUAJIT_SO) libluajit-$(ABIVER).so.$(MAJVER)
+  GSL_SHELL_DEP = $(LUAJIT_SO) $(TARGET_LINK_DEP)
   LIBS += -L$(GSH_DLL_LIBDIR) -l$(LUAJIT_DLL)
 endif
 
