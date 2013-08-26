@@ -26,9 +26,9 @@ include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
 INCLUDES += -I$(GSH_BASE_DIR)
-
-CFLAGS += -std=c99
-CFLAGS += $(LUA_CFLAGS)
+LIBS += $(PTHREAD_LIBS)
+DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
+CFLAGS += -std=c99 $(LUA_CFLAGS)
 
 GDT_SRC_FILES = char_buffer.c gdt_index.c gdt_table.c
 GDT_OBJ_FILES := $(GDT_SRC_FILES:%.c=%.o)

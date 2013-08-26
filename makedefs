@@ -64,8 +64,8 @@ else
   CXXFLAGS = -Os -fno-exceptions -fno-stack-protector -ffast-math -fno-rtti -Wall
 endif
 
-DEFS += -D_REENTRANT
-LIBS += -lsupc++
+PTHREAD_DEFS += -D_REENTRANT
+CPP_SUP_LIBS = -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
@@ -76,8 +76,8 @@ ifeq ($(HOST_SYS),Windows)
   LUAJIT_DLL = lua$(NODOTABIVER)
   LUAJIT_SO = $(GSH_DLL_LIBDIR)/$(LUAJIT_DLL).dll
 else
-  DEFS += -pthread
-  LIBS += -pthread
+  PTHREAD_DEFS += -pthread
+  PTHREAD_LIBS += -pthread
 
   GSL_SHELL = gsl-shell
   GSL_SHELL_GUI = gsl-shell-gui
@@ -86,20 +86,20 @@ else
 endif
 
 ifeq ($(strip $(DEBUG)), yes)
-  DEFS += -DGSL_SHELL_DEBUG
+  GSL_SHELL_DEFS += -DGSL_SHELL_DEBUG
 endif
 
 ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
-  DEFS += -DDISABLE_GAMMA_CORR
+  GSL_SHELL_DEFS += -DDISABLE_GAMMA_CORR
 endif
 
 ifeq ($(strip $(DISABLE_SUBPIXEL_LCD)), yes)
-  DEFS += -DDISABLE_SUBPIXEL_AA
+  GSL_SHELL_DEFS += -DDISABLE_SUBPIXEL_AA
 endif
 
 ifeq ($(strip $(USE_READLINE)),yes)
   ifneq ($(HOST_SYS),Windows)
-    DEFS += -DUSE_READLINE
+    GSL_SHELL_DEFS += -DUSE_READLINE
   else
     USE_READLINE = no
   endif
