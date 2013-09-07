@@ -25,9 +25,9 @@ local patt = [[
    keyword  <- (
       "local" / "function" / "module" / "meta"
       / "new" / "nil" / "true" / "false" / "return" / "end"
-      / "yield" / "await" / "break" / "continue" / "not" / "throw"
+      / "yield" / "await" / "break" / "continue" / "not"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
-      / "super" / "import" / "export" / "try" / "catch" / "finally"
+      / "super" / "import" / "export"
       / "if" / "elseif" / "else" / "then" / "is" / "typeof"
       / "repeat" / "until"
    ) <idsafe>
@@ -110,8 +110,6 @@ local patt = [[
       / <expr_stmt>
       / <decl_stmt>
       / <return_stmt>
-      / <try_stmt>
-      / <throw_stmt>
       / <break_stmt>
       / <yield_stmt>
    )) -> stmt
@@ -131,21 +129,6 @@ local patt = [[
    return_stmt <- (
       "return" <idsafe> s {| <expr_list>? |}
    ) -> returnStmt
-
-   throw_stmt <- (
-      "throw" <idsafe> s <expr>
-   ) -> throwStmt
-
-   try_stmt <- (
-      "try" <idsafe> s <block_stmt>
-      {| <catch_clause>* |} (s "finally" <idsafe> s <block_stmt>)?
-      s <end>
-   ) -> tryStmt
-
-   catch_clause <- (
-      s "catch" <idsafe> s "(" s
-      <ident> (s "if" <idsafe> s <expr>)? s ")" s <block_stmt> s
-   ) -> catchClause
 
    decl_stmt <- (
       <local_decl> / <coro_decl> / <func_decl>

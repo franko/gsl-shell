@@ -182,12 +182,6 @@ function match:SuperExpression(node)
    return B.identifier('super')
 end
 
-function match:ThrowStatement(node)
-   return B.expressionStatement(
-      B.callExpression(B.identifier('throw'), { self:get(node.argument) }) 
-   )
-end
-
 function match:ReturnStatement(node)
    if self.retsig then
       return B.doStatement(
@@ -226,67 +220,6 @@ function match:IfStatement(node)
    return stmt
 end
 
-function match:TryStatement(node)
-   local oldret = self.retsig
-   local oldval = self.retval
-
-   self.retsig = B.tempnam()
-   self.retval = B.tempnam()
-
-   local try = B.functionExpression({ }, self:get(node.body))
-
-   local finally
-   if node.finalizer then
-      finally = B.functionExpression({ }, self:get(node.finalizer))
-   end
-
-   local exit = util.genid()
-
-   local clauses = { }
-   for i=#node.guardedHandlers, 1, -1 do
-      local clause = node.guardedHandlers[i]
-      local cons = self:get(clause.body)
-      local head = B.localDeclaration(
-         { self:get(clause.param) }, { B.vararg() }
-      )
-      cons.body[#cons.body + 1] = B.gotoStatement(B.identifier(exit))
-      clauses[#clauses + 1] = head
-      clauses[#clauses + 1] = B.ifStatement(self:get(clause.guard), cons)
-   end
-   if node.handler then
-      local clause = node.handler
-      local cons = self:get(clause.body)
-      local head = B.localDeclaration(
-         { self:get(clause.param) }, { B.vararg() }
-      )
-      cons.body[#cons.body + 1] = B.gotoStatement(B.identifier(exit))
-      clauses[#clauses + 1] = head
-      clauses[#clauses + 1] = B.doStatement(cons)
-   end
-   clauses[#clauses + 1] = B.labelStatement(B.identifier(exit))
-
-   local catch = B.functionExpression(
-      { B.vararg() }, B.blockStatement(clauses)
-   )
-
-   local expr = B.callExpression(B.identifier('try'), { try, catch, finally })
-   local temp = self.retval
-   local rets = self.retsig
-
-   self.retsig = oldret
-   self.retval = oldval
-
-   return B.doStatement(
-      B.blockStatement{
-         B.localDeclaration({ rets }, { B.literal(false) });
-         B.localDeclaration({ temp }, { B.literal(nil) });
-         B.expressionStatement(expr);
-         B.ifStatement(
-            rets, B.blockStatement{ B.returnStatement{ temp } }
-         )
-      }
-   )
-end
 function match:BreakStatement(node)
    return B.breakStatement()
 end

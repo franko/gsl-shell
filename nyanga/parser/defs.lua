@@ -204,32 +204,6 @@ end
 function defs.breakStmt()
    return { type = "BreakStatement" }
 end
-function defs.throwStmt(expr)
-   return { type = "ThrowStatement", argument = expr }
-end
-function defs.tryStmt(body, handlers, finalizer)
-   local guarded = { }
-   local handler
-   for i=1, #handlers do
-      if handlers[i].guard then
-         guarded[#guarded + 1] = handlers[i]
-      else
-         assert(i == #handlers, "catch all handler must be last")
-         handler = handlers[i]
-      end
-   end
-   return {
-      type = "TryStatement",
-      body = body,
-      handler = handler,
-      guardedHandlers = guarded,
-      finalizer = finalizer
-   }
-end
-function defs.catchClause(param, guard, body)
-   if not body then body, guard = guard, nil end
-   return { type = "CatchClause", param = param, guard = guard, body = body }
-end
 function defs.exprStmt(pos, expr)
    return { type = "ExpressionStatement", expression = expr, pos = pos }
 end
