@@ -1,6 +1,8 @@
 local util = require('nyanga.util')
 local re   = require('lpeg.re')
 local defs = require('nyanga.parser.defs')
+local lpeg = require('lpeg')
+lpeg.setmaxstack(1024)
 
 local patt = [[
    chunk  <- {|
@@ -123,11 +125,11 @@ local patt = [[
    ) -> breakStmt
 
    yield_stmt <- (
-      "yield" <idsafe> s {| <expr_list> |}
+      "yield" <idsafe> s {| <expr_list>? |}
    ) -> yieldStmt
 
    return_stmt <- (
-      "return" <idsafe> s {| <expr_list> |}
+      "return" <idsafe> s {| <expr_list>? |}
    ) -> returnStmt
 
    throw_stmt <- (
@@ -190,8 +192,7 @@ local patt = [[
 
    func_expr <- (
       "function" <idsafe> s <func_head> s <func_body>
-      / <func_head> s "=>" s <func_body>
-      / {| {| {:name: <ident> :} |} |} s "=>" s <func_body>
+      / (<func_head> / {| |}) s "=>" s <func_body>
    ) -> funcExpr
 
    func_body <- <block_stmt> s <end> / <expr>
