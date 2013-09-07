@@ -1,0 +1,8 @@
+obj = {
+   greet(name)
+      print(`Hello ${name}`)
+   end
+}
+
+obj.greet "Rich"
+
