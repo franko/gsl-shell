@@ -1,5 +1,5 @@
-local bc   = require('bytecode')
-local util = require('util')
+local bc   = require('nyanga.bytecode')
+local util = require('nyanga.util')
 
 -- invert these since usually we branch if *not* condition
 local cmpop = {

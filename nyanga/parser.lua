@@ -1,6 +1,6 @@
-local util = require("util")
-local re   = require('re')
-local defs = require('parser.defs')
+local util = require('nyanga.util')
+local re   = require('lpeg.re')
+local defs = require('nyanga.parser.defs')
 
 local patt = [[
    chunk  <- {|

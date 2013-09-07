@@ -1,5 +1,5 @@
 return {
-   generate = require('generator.bytecode').generate;
+   generate = require('nyanga.generator.bytecode').generate;
    --generate = require('generator.source').generate
 }
 

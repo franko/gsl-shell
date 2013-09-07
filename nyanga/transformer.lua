@@ -1,5 +1,5 @@
-local B = require('builder')
-local util = require('util')
+local B = require('nyanga.builder')
+local util = require('nyanga.util')
 
 local Scope = { }
 Scope.__index = Scope

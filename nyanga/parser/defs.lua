@@ -1,5 +1,5 @@
 local defs = { }
-local util = require('util')
+local util = require('nyanga.util')
 
 defs.tonumber = function(s)
    local n = string.gsub(s, '_', '')

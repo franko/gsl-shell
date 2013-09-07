@@ -1,4 +1,4 @@
-local util = require('util')
+local util = require('nyanga.util')
 
 local Writer = { }
 Writer.__index = Writer

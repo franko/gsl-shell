@@ -1,7 +1,7 @@
 local exports = { }
 
-local util   = require('util')
-local syntax = require("syntax")
+local util   = require('nyanga.util')
+local syntax = require('nyanga.syntax')
 
 function exports.tempnam()
    return exports.identifier(util.genid())
