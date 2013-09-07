@@ -23,7 +23,7 @@ local patt = [[
    word     <- (%alpha / "_") (%alnum / "_")*
 
    keyword  <- (
-      "local" / "function" / "class" / "module" / "meta"
+      "local" / "function" / "module" / "meta"
       / "new" / "nil" / "true" / "false" / "return" / "end"
       / "yield" / "await" / "break" / "continue" / "not" / "throw"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
@@ -148,7 +148,7 @@ local patt = [[
    ) -> catchClause
 
    decl_stmt <- (
-      <local_decl> / <coro_decl> / <func_decl> / <class_decl>
+      <local_decl> / <coro_decl> / <func_decl>
    )
 
    local_decl <- (
@@ -210,32 +210,6 @@ local patt = [[
       ({"get"/"set"} <idsafe> s / '' -> "init") "*" <ident> s
       <func_head> s <func_body>
    ) -> coroProp
-
-   class_decl <- (
-      "class" <idsafe> s <ident> (s <class_heritage>)? s <class_body> s <end>
-   ) -> classDecl
-
-   class_body <- {|
-      (<class_body_stmt> (<sep> s <class_body_stmt>)* <sep>?)?
-   |}
-
-   class_body_stmt <- (
-      <class_member> / !<return_stmt> <stmt>
-   )
-
-   class_member <- (
-      ({"meta"} <idsafe> s / '' -> "virt") (<coro_prop> / <prop_defn>)
-   ) -> classMember
-
-   class_heritage <- (
-      "extends" <idsafe> s <expr> / {| |}
-   )
-
-   prop_defn <- (
-      ({"get"/"set"} <idsafe> s / '' -> "init") <ident> s
-      <func_head> s <func_body>
-   ) -> propDefn
-
    param <- {|
       {:name: <ident> :} (s "=" s {:default: <expr> :})?
    |}
@@ -390,7 +364,7 @@ local patt = [[
    table_members <- (
       <table_member> (hs (","/";"/%nl) s <table_member>)* (hs (","/";"/%nl))?
    )
-   table_member <- ((<coro_prop> / <prop_defn>) / {|
+   table_member <- (<coro_prop> / {|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
    |} / <ident>) -> tableMember
 

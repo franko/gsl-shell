@@ -230,26 +230,6 @@ function defs.catchClause(param, guard, body)
    if not body then body, guard = guard, nil end
    return { type = "CatchClause", param = param, guard = guard, body = body }
 end
-
-function defs.classDecl(name, base, body)
-   if #base == 0 and not base.type then
-      base = nil
-   end
-   return { type = "ClassDeclaration", id = name, base = base, body = body }
-end
-function defs.classMember(s, m)
-   m.static = s == "meta"
-   return m
-end
-function defs.propDefn(k, n, h, b)
-   local func = defs.funcExpr(h, b)
-   table.insert(func.params, 1, defs.identifier("self"))
-   for i=#func.defaults, 1, -1 do
-      func.defaults[i + 1] = func.defaults[i]
-   end
-   func.defaults[1] = nil
-   return { type = "PropertyDefinition", kind = k, key = n, value = func }
-end
 function defs.exprStmt(pos, expr)
    return { type = "ExpressionStatement", expression = expr, pos = pos }
 end
