@@ -81,16 +81,6 @@ end
 function defs.identifier(name)
    return { type = "Identifier", name = name }
 end
-function defs.arrayExpr(elements)
-   return { type = "ArrayExpression", elements = elements }
-end
-
-function defs.tableMember(prop)
-   if prop.type ~= "PropertyDefinition" then
-      prop.kind = "init"
-   end
-   return prop
-end
 
 function defs.tableExpr(members)
    return { type = "TableExpression", members = members }

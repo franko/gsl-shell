@@ -376,9 +376,6 @@ function match:RangeExpression(node)
       self:get(node.min), self:get(node.max)
    })
 end
-function match:ArrayExpression(node)
-   return B.callExpression(B.identifier('Array'), self:list(node.elements))
-end
 function match:TableExpression(node)
    local properties = { }
    for i=1, #node.members do
@@ -396,31 +393,17 @@ function match:TableExpression(node)
          key = prop.name
       end
 
-      local desc = properties[key] or { }
-
-      if prop.kind == 'get' then
-         desc.get = self:get(prop.value)
-      elseif prop.kind == 'set' then
-         desc.set = self:get(prop.value)
-      elseif prop.value then
-         desc.value = self:get(prop.value)
+      local desc
+      if prop.value then
+         desc = self:get(prop.value)
       else
-         desc.value = B.identifier(key)
+         desc = B.identifier(key)
       end
 
       properties[key] = desc
    end
 
-   for k,v in pairs(properties) do
-      properties[k] = B.table(v)
-   end
-
-   return B.sendExpression(
-      B.identifier('Object'), B.identifier("create"), {
-         B.literal(nil);
-         B.table(properties);
-      }
-   )
+   return B.table(properties)
 end
 function match:ForInStatement(node)
    local none = B.tempnam()

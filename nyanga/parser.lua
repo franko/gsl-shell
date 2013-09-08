@@ -203,7 +203,6 @@ local patt = [[
         <func_expr>
       / <nil_expr>
       / <table_expr>
-      / <array_expr>
       / <ident>
       / <literal>
       / "(" s <expr> s ")"
@@ -275,12 +274,6 @@ local patt = [[
       <ident> s <assop> s <expr>
    ) -> updateExpr
 
-   array_expr <- (
-      "[" s {| <array_elements>? |} s "]"
-   ) -> arrayExpr
-
-   array_elements <- <expr> (s "," s <expr>)* (s ",")?
-
    table_expr <- (
       "{" s {| <table_members>? |} s "}"
    ) -> tableExpr
@@ -290,7 +283,7 @@ local patt = [[
    )
    table_member <- ({|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
-   |} / <ident>) -> tableMember
+   |} / <ident>)
 ]]
 
 local grammar = re.compile(patt, defs)
