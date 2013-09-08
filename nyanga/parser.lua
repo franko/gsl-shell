@@ -266,12 +266,16 @@ local patt = [[
       / "|=" / "&=" / "^=" / "<<=" / ">>>=" / ">>="
    }
 
+   left_expr <- (
+      <member_expr> / <ident>
+   )
+
    assign_expr <- (
-      {| <ident> (s "," s <ident>)* |} s "=" s {| <expr_list> |}
+      {| <left_expr> (s "," s <left_expr>)* |} s "=" s {| <expr_list> |}
    ) -> assignExpr
 
    update_expr <- (
-      <ident> s <assop> s <expr>
+      <left_expr> s <assop> s <expr>
    ) -> updateExpr
 
    table_expr <- (
