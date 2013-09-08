@@ -85,12 +85,6 @@ function defs.arrayExpr(elements)
    return { type = "ArrayExpression", elements = elements }
 end
 
-function defs.arrayPatt(elements)
-   return { type = "ArrayPattern", elements = elements }
-end
-function defs.tablePatt(properties)
-   return { type = "TablePattern", properties = properties }
-end
 function defs.tableMember(prop)
    if prop.type ~= "PropertyDefinition" then
       prop.kind = "init"
