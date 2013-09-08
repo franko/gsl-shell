@@ -145,7 +145,7 @@ local patt = [[
    )
 
    func_path <- {|
-      <ident> (s {"."/"::"} s <ident>)*
+      <ident> (s {"."/":"} s <ident>)*
    |}
 
    func_decl <- (
@@ -259,7 +259,7 @@ local patt = [[
 
    postfix_tail <- {|
       s { "." } s <ident>
-      / { "::" } s (<ident> / '' => error)
+      / { ":" } s (<ident> / '' => error)
       / { "[" } s <expr> s ("]" / '' => error)
       / { "(" } s {| <expr_list>? |} s (")" / '' => error)
       / {~ HS -> "(" ~} {| !<binop> <expr_list> |}
@@ -274,7 +274,7 @@ local patt = [[
    )
    member_tail <- {|
       s { "." } s <ident>
-      / { "::" } s <ident>
+      / { ":" } s <ident>
       / { "[" } s <expr> s ("]" / '' => error)
    |}
 

@@ -190,7 +190,7 @@ function defs.postfixExpr(expr)
          base = defs.callExpr(base, expr[i][2])
       else
          base = defs.memberExpr(base, expr[i][2], expr[i][1] == "[")
-         base.namespace = expr[i][1] == "::"
+         base.namespace = (expr[i][1] == ".")
       end
    end
    return base
