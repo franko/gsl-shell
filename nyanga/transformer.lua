@@ -441,19 +441,6 @@ function match:ForInStatement(node)
    local body = self:get(node.body)
    return B.forInStatement(B.forNames(left), iter, body)
 end
-function match:RawString(node)
-   local list = { }
-   local tostring = B.identifier('tostring')
-   for i=1, #node.expressions do
-      local expr = node.expressions[i]
-      if type(expr) == 'string' then
-         list[#list + 1] = B.literal(expr)
-      else
-         list[#list + 1] = B.callExpression(tostring, { self:get(expr.expression) })
-      end
-   end
-   return B.listExpression('..', list)
-end
 
 local function countln(src, pos, idx)
    local line = 0

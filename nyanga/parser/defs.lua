@@ -27,12 +27,6 @@ function defs.exportDecl(stmt)
    stmt.export = true
    return stmt
 end
-function defs.rawString(exprs)
-   return { type = "RawString", expressions = exprs }
-end
-function defs.rawExpr(expr)
-   return { type = "RawExpression", expression = expr }
-end
 function defs.importStmt(names, from)
    return { type = "ImportStatement", names = names, from = from }
 end
