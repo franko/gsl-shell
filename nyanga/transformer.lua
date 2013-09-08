@@ -196,15 +196,6 @@ function match:ReturnStatement(node)
    return B.returnStatement(self:list(node.arguments))
 end
 
-function match:YieldStatement(node)
-   return B.expressionStatement(
-      B.callExpression(
-         B.memberExpression(B.identifier('coroutine'), B.identifier('yield')),
-         self:list(node.arguments)
-      )
-   )
-end
-
 function match:IfStatement(node)
    local test, cons, altn = self:get(node.test)
    if node.consequent then
@@ -462,48 +453,6 @@ function match:RawString(node)
       end
    end
    return B.listExpression('..', list)
-end
-function match:ArrayComprehension(node)
-   local temp = B.tempnam()
-   local body = B.blockStatement{
-      B.localDeclaration({ temp }, {
-         B.callExpression(B.identifier('Array'), { })
-      })
-   }
-   local last = body
-   for i=1, #node.blocks do
-      local loop = self:get(node.blocks[i])
-      local test = node.blocks[i].filter
-      if test then
-         local body = loop.body
-         local cond = B.ifStatement(self:get(test), body)
-         loop.body = B.blockStatement{ cond }
-         last.body[#last.body + 1] = loop
-         last = body
-      else
-         last.body[#last.body + 1] = loop
-         last = loop.body
-      end
-   end
-   last.body[#last.body + 1] = B.assignmentExpression({
-      B.memberExpression(temp, B.unaryExpression('#', temp), true)
-   }, {
-      self:get(node.body)    
-   })
-   body.body[#body.body + 1] = B.returnStatement{ temp }
-   return B.callExpression(
-      B.parenExpression{
-         B.functionExpression({ }, body)
-      }, { }
-   )
-end
-function match:ComprehensionBlock(node)
-   local iter = B.callExpression(
-      B.identifier('__each__'), { self:get(node.right) }
-   )
-   local left = self:list(node.left)
-   local body = { }
-   return B.forInStatement(B.forNames(left), iter, B.blockStatement(body))
 end
 
 local function countln(src, pos, idx)

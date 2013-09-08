@@ -87,12 +87,6 @@ end
 function defs.identifier(name)
    return { type = "Identifier", name = name }
 end
-function defs.compExpr(blocks, body)
-   return { type = "ArrayComprehension", blocks = blocks, body = body }
-end
-function defs.compBlock(lhs, rhs, filter)
-   return { type = "ComprehensionBlock", left = lhs, right = rhs, filter = filter }
-end
 function defs.arrayExpr(elements)
    return { type = "ArrayExpression", elements = elements }
 end
@@ -197,9 +191,6 @@ function defs.blockStmt(body)
 end
 function defs.returnStmt(args)
    return { type = "ReturnStatement", arguments = args }
-end
-function defs.yieldStmt(args)
-   return { type = "YieldStatement", arguments = args }
 end
 function defs.breakStmt()
    return { type = "BreakStatement" }

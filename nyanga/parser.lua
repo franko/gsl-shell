@@ -25,7 +25,7 @@ local patt = [[
    keyword  <- (
       "local" / "function" / "module" / "meta"
       / "new" / "nil" / "true" / "false" / "return" / "end"
-      / "yield" / "await" / "break" / "continue" / "not"
+      / "await" / "break" / "continue" / "not"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
       / "import" / "export"
       / "if" / "elseif" / "else" / "then" / "is" / "typeof"
@@ -111,7 +111,6 @@ local patt = [[
       / <decl_stmt>
       / <return_stmt>
       / <break_stmt>
-      / <yield_stmt>
    )) -> stmt
 
    stmt_list <- {|
@@ -121,10 +120,6 @@ local patt = [[
    break_stmt <- (
       "break" <idsafe>
    ) -> breakStmt
-
-   yield_stmt <- (
-      "yield" <idsafe> s {| <expr_list>? |}
-   ) -> yieldStmt
 
    return_stmt <- (
       "return" <idsafe> s {| <expr_list>? |}
@@ -248,7 +243,6 @@ local patt = [[
         <coro_expr>
       / <func_expr>
       / <nil_expr>
-      / <comp_expr>
       / <table_expr>
       / <array_expr>
       / <regex_expr>
@@ -345,16 +339,6 @@ local patt = [[
    table_member <- (<coro_prop> / {|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
    |} / <ident>) -> tableMember
-
-   comp_expr <- (
-      "[" s {| <comp_block>+ |}
-      "yield" <idsafe> s <expr> s "]"
-   ) -> compExpr
-
-   comp_block <- (
-      "for" <idsafe> s {| <name_list> |} s <in> s <expr>
-      (s "if" <idsafe> s <expr>)? s
-   ) -> compBlock
 
    regex_expr <- (
       "/" { ( "\\" / "\/" / !("/" / %nl) .)* } "/" {[gmi]*}
