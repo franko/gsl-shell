@@ -168,21 +168,6 @@ function defs.funcExpr(head, body)
    decl.expression = true
    return decl
 end
-function defs.coroExpr(...)
-   local expr = defs.funcExpr(...)
-   expr.generator = true
-   return expr
-end
-function defs.coroDecl(...)
-   local decl = defs.funcDecl(...)
-   decl.generator = true
-   return decl
-end
-function defs.coroProp(...)
-   local prop = defs.propDefn(...)
-   prop.generator = true
-   return prop
-end
 function defs.blockStmt(body)
    return {
       type = "BlockStatement",

@@ -126,7 +126,7 @@ local patt = [[
    ) -> returnStmt
 
    decl_stmt <- (
-      <local_decl> / <coro_decl> / <func_decl>
+      <local_decl> / <func_decl>
    )
 
    local_decl <- (
@@ -175,19 +175,6 @@ local patt = [[
 
    func_body <- <block_stmt> s <end> / <expr>
 
-   coro_expr <- (
-      "function*" s <func_head> s <func_body>
-      / "*" <func_head> s "=>" s <func_body>
-   ) -> coroExpr
-
-   coro_decl <- (
-      "function*" s <func_path> s <func_head> s <func_body>
-   ) -> coroDecl
-
-   coro_prop <- (
-      ({"get"/"set"} <idsafe> s / '' -> "init") "*" <ident> s
-      <func_head> s <func_body>
-   ) -> coroProp
    param <- {|
       {:name: <ident> :} (s "=" s {:default: <expr> :})?
    |}
@@ -240,8 +227,7 @@ local patt = [[
    ) -> identifier
 
    term <- (
-        <coro_expr>
-      / <func_expr>
+        <func_expr>
       / <nil_expr>
       / <table_expr>
       / <array_expr>
@@ -336,7 +322,7 @@ local patt = [[
    table_members <- (
       <table_member> (hs (","/";"/%nl) s <table_member>)* (hs (","/";"/%nl))?
    )
-   table_member <- (<coro_prop> / {|
+   table_member <- ({|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
    |} / <ident>) -> tableMember
 
