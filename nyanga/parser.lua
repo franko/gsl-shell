@@ -27,7 +27,7 @@ local patt = [[
       / "new" / "nil" / "true" / "false" / "return" / "end"
       / "yield" / "await" / "break" / "continue" / "not"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
-      / "super" / "import" / "export"
+      / "import" / "export"
       / "if" / "elseif" / "else" / "then" / "is" / "typeof"
       / "repeat" / "until"
    ) <idsafe>
@@ -248,7 +248,6 @@ local patt = [[
         <coro_expr>
       / <func_expr>
       / <nil_expr>
-      / <super_expr>
       / <comp_expr>
       / <table_expr>
       / <array_expr>
@@ -268,10 +267,6 @@ local patt = [[
    nil_expr <- (
       "nil" <idsafe>
    ) -> nilExpr
-
-   super_expr <- (
-      "super" <idsafe>
-   ) -> superExpr
 
    expr_stmt <- (
       {} (<assign_expr> / <update_expr> / <expr>)

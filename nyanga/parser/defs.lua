@@ -210,9 +210,6 @@ end
 function defs.selfExpr()
    return { type = "SelfExpression" }
 end
-function defs.superExpr()
-   return { type = "SuperExpression" }
-end
 function defs.prefixExpr(o, a)
    return { type = "UnaryExpression", operator = o, argument = a }
 end

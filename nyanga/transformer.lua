@@ -178,9 +178,6 @@ end
 function match:SelfExpression(node)
    return B.identifier('self')
 end
-function match:SuperExpression(node)
-   return B.identifier('super')
-end
 
 function match:ReturnStatement(node)
    if self.retsig then
@@ -354,37 +351,17 @@ end
 function match:CallExpression(node)
    local callee = node.callee
    if callee.type == 'MemberExpression' and not callee.computed then
-      if callee.object.type == 'SuperExpression' then
-         local args = self:list(node.arguments)
-         local recv = B.memberExpression(
-            B.identifier('super'),
-            self:get(callee.property)
-         )
-         table.insert(args, 1, B.identifier('self'))
-         return B.callExpression(recv, args)
+      if callee.namespace then
+         return B.callExpression(self:get(callee), self:list(node.arguments))
       else
-         if callee.namespace then
-            return B.callExpression(self:get(callee), self:list(node.arguments))
-         else
-            local recv = self:get(callee.object)
-            local prop = self:get(callee.property)
-            return B.sendExpression(recv, prop, self:list(node.arguments))
-         end
+         local recv = self:get(callee.object)
+         local prop = self:get(callee.property)
+         return B.sendExpression(recv, prop, self:list(node.arguments))
       end
    else
-      if callee.type == 'SuperExpression' then
-         local args = self:list(node.arguments)
-         local recv = B.memberExpression(
-            B.identifier('super'),
-            B.identifier('self')
-         )
-         table.insert(args, 1, B.identifier('self'))
-         return B.callExpression(recv, args)
-      else
-         local args = self:list(node.arguments)
-         --table.insert(args, 1, B.literal(nil))
-         return B.callExpression(self:get(callee), args)
-      end
+      local args = self:list(node.arguments)
+      --table.insert(args, 1, B.literal(nil))
+      return B.callExpression(self:get(callee), args)
    end
 end
 function match:NewExpression(node)
