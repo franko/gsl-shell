@@ -371,14 +371,6 @@ function match:ForStatement(node)
    local body = self:get(node.body)
    return B.forStatement(B.forInit(name, init), last, step, body)
 end
-function match:RegExp(node)
-   return B.callExpression(
-      B.identifier('RegExp'), {
-         B.literal(node.pattern),
-         B.literal(node.flags)
-      }
-   )
-end
 function match:RangeExpression(node)
    return B.callExpression(B.identifier('__range__'), {
       self:get(node.min), self:get(node.max)

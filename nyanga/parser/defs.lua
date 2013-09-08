@@ -101,12 +101,6 @@ end
 function defs.tableExpr(members)
    return { type = "TableExpression", members = members }
 end
-function defs.regexExpr(expr, flags)
-   local rx = require('pcre')
-   expr = string.gsub(expr, "(\\[rnt\\])", strEscape)
-   assert(rx.compile(expr))
-   return { type = "RegExp", pattern = expr, flags = flags }
-end
 function defs.ifStmt(test, cons, altn)
    if cons.type ~= "BlockStatement" then
       cons = defs.blockStmt{ cons }

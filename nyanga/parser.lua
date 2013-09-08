@@ -219,7 +219,6 @@ local patt = [[
       / <nil_expr>
       / <table_expr>
       / <array_expr>
-      / <regex_expr>
       / <ident>
       / <literal>
       / "(" s <expr> s ")"
@@ -312,10 +311,6 @@ local patt = [[
    table_member <- ({|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
    |} / <ident>) -> tableMember
-
-   regex_expr <- (
-      "/" { ( "\\" / "\/" / !("/" / %nl) .)* } "/" {[gmi]*}
-   ) -> regexExpr
 ]]
 
 local grammar = re.compile(patt, defs)
