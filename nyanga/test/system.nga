@@ -1,4 +1,39 @@
-import {timeout} from "@system"
+import {sleep, async, await, TCPServer} from "@system"
 
-timeout 1000, (x) => print("tick")
+async =>
+   sleep 1000
+   print "tick 1"
+end
+
+print "waiting..."
+answer = await async =>
+   sleep 200
+   print "tick 2"
+   return 42
+end
+print `answer ${answer}.`
+
+async =>
+   sleep 500
+   print "tick 3"
+end
+
+async =>
+   server = TCPServer('127.0.0.1', 8080)
+   server.listen(128)
+   while true do
+      client = server.accept()
+      async =>
+         while true do
+            data = client.read()
+            if data then
+               client.write(`you said ${data}`)
+            else
+               client.close()
+               break
+            end
+         end
+      end
+   end
+end
 

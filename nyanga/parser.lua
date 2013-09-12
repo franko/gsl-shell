@@ -23,9 +23,9 @@ local patt = [[
    word     <- (%alpha / "_") (%alnum / "_")*
 
    keyword  <- (
-      "local" / "function" / "module" / "meta"
-      / "new" / "nil" / "true" / "false" / "return" / "end"
-      / "break" / "continue" / "not"
+      "local" / "function" / "module"
+      / "nil" / "true" / "false" / "return" / "end"
+      / "break" / "not"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
       / "import" / "export"
       / "if" / "elseif" / "else" / "then" / "is" / "typeof"
