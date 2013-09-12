@@ -20,16 +20,6 @@ function defs.stmt(pos, node)
    node.pos = pos
    return node
 end
-function defs.moduleDecl(name, body)
-   return { type = "ModuleDeclaration", id = name, body = body }
-end
-function defs.exportDecl(stmt)
-   stmt.export = true
-   return stmt
-end
-function defs.importStmt(names, from)
-   return { type = "ImportStatement", names = names, from = from }
-end
 function defs.error(src, pos)
    local loc = string.sub(src, pos, pos)
    if loc == '' then

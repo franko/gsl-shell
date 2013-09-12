@@ -52,8 +52,6 @@ local match = { }
 function match:Chunk(node)
    self.hoist = { }
    self.scope = { }
-   local export = B.identifier('export')
-   self.scope[#self.scope + 1] = B.localDeclaration({ export }, { B.table({}) })
    for i=1, #node.body do
       local stmt = self:get(node.body[i])
       self.scope[#self.scope + 1] = stmt
@@ -61,61 +59,7 @@ function match:Chunk(node)
    for i=#self.hoist, 1, -1 do
       table.insert(self.scope, 1, self.hoist[i])
    end
-   self.scope[#self.scope + 1] = B.returnStatement({ export })
    return B.chunk(self.scope)
-end
-function match:ImportStatement(node)
-   local args = { B.literal(node.from) }
-   for i=1, #node.names do
-      args[#args + 1] = B.literal(node.names[i].name)
-   end
-   return B.localDeclaration(self:list(node.names), {
-      B.callExpression(B.identifier('import'), args)
-   })
-end
-function match:ModuleDeclaration(node)
-   local name = self:get(node.id)
-   self.hoist[#self.hoist + 1] = B.localDeclaration({ name }, { })
-
-   local outer_scope = self.scope
-   local outer_hoist = self.hoist
-
-   self.scope = { }
-   self.hoist = { }
-
-   local export = B.identifier('export')
-   self.scope[#self.scope + 1] = B.localDeclaration({ export }, { B.table({}) })
-
-   for i=1, #node.body do
-      local stmt = self:get(node.body[i])
-      self.scope[#self.scope + 1] = stmt
-   end
-   for i=#self.hoist, 1, -1 do
-      table.insert(self.scope, 1, self.hoist[i])
-   end
-
-   local body = self.scope
-
-   self.scope = outer_scope
-   self.hoist = outer_hoist
-
-   body[#body + 1] = B.returnStatement({ export })
-
-   local init = B.callExpression(
-      B.parenExpression{
-         B.functionExpression({ }, B.blockStatement(body))
-      }, { }
-   )
-
-   if node.export then
-      local expr = B.memberExpression(B.identifier('export'), name)
-      self.scope[#self.scope + 1] = B.assignmentExpression(
-         { expr }, { init }
-      )
-      init = expr
-   end
-
-   return B.assignmentExpression({ name }, { init })
 end
 function match:Literal(node)
    return B.literal(node.value)
@@ -125,17 +69,6 @@ function match:Identifier(node)
 end
 function match:VariableDeclaration(node)
    local inits = node.inits and self:list(node.inits) or { }
-   if node.export then
-      for i=1, #node.names do
-         local expr = B.memberExpression(
-            B.identifier('export'), self:get(node.names[i])
-         )
-         self.scope[#self.scope + 1] = B.assignmentExpression(
-            { expr }, { inits[i] }
-         )
-         inits[i] = expr
-      end
-   end
    for i=1, #node.names do
       local n = node.names[i]
       if n.type == 'Identifier' and not self.ctx:lookup(n.name) then
@@ -312,14 +245,6 @@ function match:FunctionDeclaration(node)
    end
    if node.expression then
       return func
-   end
-   if node.export then
-      local expr = B.memberExpression(
-         B.identifier('export'), name
-      )
-      self.scope[#self.scope + 1] = B.assignmentExpression(
-         { expr }, { func }
-      )
    end
    return B.localDeclaration({ name }, { func })
 end

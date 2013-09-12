@@ -6,7 +6,7 @@ lpeg.setmaxstack(1024)
 
 local patt = [[
    chunk  <- {|
-      s (<main_stmt> (<sep> s <main_stmt>)* <sep>?)? s (!. / '' => error)
+      s (<stmt> (<sep> s <stmt>)* <sep>?)? s (!. / '' => error)
    |} -> chunk
 
    close    <- ']' =eq ']' / . close
@@ -23,11 +23,10 @@ local patt = [[
    word     <- (%alpha / "_") (%alnum / "_")*
 
    keyword  <- (
-      "local" / "function" / "module"
+      "local" / "function"
       / "nil" / "true" / "false" / "return" / "end"
       / "break" / "not"
       / "while" / "do" / "for" / "in" / "of" / "and" / "or"
-      / "import" / "export"
       / "if" / "elseif" / "else" / "then" / "is" / "typeof"
       / "repeat" / "until"
    ) <idsafe>
@@ -62,31 +61,9 @@ local patt = [[
 
    literal <- ( <number> / <string> / <boolean> ) -> literal
 
-   main_stmt <- (
-        <module_decl>
-      / <import_stmt>
-      / <export_decl>
-      / <stmt>
-   )
-
    in  <- "in"  <idsafe>
    end <- "end" <idsafe>
    do  <- "do"  <idsafe>
-
-   module_decl <- (
-      "module" <idsafe> s <ident> s
-         {| (<main_stmt> (<sep> s <main_stmt>)*)? |} s
-      <end>
-   ) -> moduleDecl
-
-   export_decl <- (
-      "export" <idsafe> s (<decl_stmt> / <module_decl>)
-   ) -> exportDecl
-
-   import_stmt <- (
-      "import" <idsafe> s {| {"*"} / "{" s <ident> (s "," s <ident>)* s "}" |} s
-      "from" <idsafe> s <string>
-   ) -> importStmt
 
    stmt <- ({} (
       <if_stmt>
