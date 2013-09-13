@@ -78,22 +78,9 @@ function match:VariableDeclaration(node)
    return B.localDeclaration(self:list(node.names), inits)
 end
 function match:AssignmentExpression(node)
-   local body = { }
-   local decl = { }
-   for i=1, #node.left do
-      local n = node.left[i]
-      if n.type == 'Identifier' and not self.ctx:lookup(n.name) then
-         self.ctx:define(n.name)
-         decl[#decl + 1] = self:get(n)
-      end
-   end
-   if #decl > 0 then
-      body[#body + 1] = B.localDeclaration(decl, { })
-   end
-   body[#body + 1] = B.assignmentExpression(
+   return B.assignmentExpression(
       self:list(node.left), self:list(node.right)
    )
-   return B.blockStatement(body)
 end
 function match:UpdateExpression(node)
    local oper = string.sub(node.operator, 1, 1)
