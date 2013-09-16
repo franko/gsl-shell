@@ -26,8 +26,8 @@ local patt = [[
       "local" / "function"
       / "nil" / "true" / "false" / "return" / "end"
       / "break" / "not"
-      / "while" / "do" / "for" / "in" / "of" / "and" / "or"
-      / "if" / "elseif" / "else" / "then" / "is" / "typeof"
+      / "while" / "do" / "for" / "in" / "and" / "or"
+      / "if" / "elseif" / "else" / "then"
       / "repeat" / "until"
    ) <idsafe>
 
@@ -202,7 +202,7 @@ local patt = [[
    binop <- {
       "+" / "-" / "~" / "/" / "**" / "*" / "%" / "^" / "|" / "&"
       / ">>>" / ">>" / ">=" / ">" / "<<" / "<=" / "<" / ".."
-      / "!=" / "==" / ("or" / "and" / "is") <idsafe>
+      / "!=" / "==" / ("or" / "and") <idsafe>
    }
 
    infix_expr  <- (
@@ -210,7 +210,7 @@ local patt = [[
    ) -> infixExpr / <prefix_expr>
 
    prefix_expr <- (
-      { "#" / "~" / "+" / "-" / "!" / ("not" / "typeof") <idsafe> } s <prefix_expr>
+      { "#" / "~" / "+" / "-" / "!" / "not" <idsafe> } s <prefix_expr>
    ) -> prefixExpr / <postfix_expr>
 
    postfix_expr <- {|
