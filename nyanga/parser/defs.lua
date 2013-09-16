@@ -103,7 +103,7 @@ end
 function defs.spreadExpr(arg)
    return { type = "SpreadExpression", argument = arg }
 end
-function defs.funcDecl(name, head, body)
+function defs.funcDecl(localkw, name, head, body)
    if body.type ~= "BlockStatement" then
       body = defs.blockStmt{ defs.returnStmt{ body } }
    end
@@ -123,6 +123,7 @@ function defs.funcDecl(name, head, body)
    decl.params   = params
    decl.defaults = defaults
    decl.rest     = rest
+   decl.is_local = (localkw ~= "")
    return decl
 end
 function defs.funcExpr(head, body)

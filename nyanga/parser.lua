@@ -111,7 +111,7 @@ local patt = [[
    |}
 
    func_decl <- (
-      "function" <idsafe> s <func_path> s <func_head> s <func_body>
+      {"local" <idsafe> s / ""} "function" <idsafe> s <func_path> s <func_head> s <func_body>
    ) -> funcDecl
 
    func_head <- (

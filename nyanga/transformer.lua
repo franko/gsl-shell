@@ -239,7 +239,11 @@ function match:FunctionDeclaration(node)
    if node.expression then
       return func
    end
-   return B.localDeclaration({ name }, { func })
+   if node.is_local then
+      return B.localDeclaration({ name }, { func })
+   else
+      return B.assignmentExpression({ name }, { func })
+   end
 end
 
 function match:SpreadExpression(node)
