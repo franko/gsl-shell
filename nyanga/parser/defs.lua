@@ -127,7 +127,7 @@ function defs.funcDecl(localkw, name, head, body)
    return decl
 end
 function defs.funcExpr(head, body)
-   local decl = defs.funcDecl(nil, head, body)
+   local decl = defs.funcDecl("", nil, head, body)
    decl.expression = true
    return decl
 end
