@@ -125,9 +125,8 @@ local patt = [[
 
    func_body <- <block_stmt> s <end> / <expr>
 
-   param <- {|
-      {:name: <ident> :} (s "=" s {:default: <expr> :})?
-   |}
+   param <- {| {:name: <ident> :} |}
+
    param_list <- (
         <param> s "," s <param_list>
       / <param> s "," s <param_rest>

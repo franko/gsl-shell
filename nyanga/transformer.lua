@@ -153,14 +153,6 @@ function match:FunctionDeclaration(node)
       local name = self:get(node.params[i])
       self.ctx:define(name.name)
       params[#params + 1] = name
-      if node.defaults[i] then
-         local test = B.binaryExpression("==", name, B.literal(nil))
-         local expr = self:get(node.defaults[i])
-         local cons = B.blockStatement{
-            B.assignmentExpression({ name }, { expr })
-         }
-         prelude[#prelude + 1] = B.ifStatement(test, cons)
-      end
    end
 
    if node.rest then

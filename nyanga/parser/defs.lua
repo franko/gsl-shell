@@ -108,20 +108,16 @@ function defs.funcDecl(localkw, name, head, body)
       body = defs.blockStmt{ defs.returnStmt{ body } }
    end
    local decl = { type = "FunctionDeclaration", id = name, body = body }
-   local defaults, params, rest = { }, { }, nil
+   local params, rest = { }, nil
    for i=1, #head do
       local p = head[i]
       if p.rest then
          rest = p.name
       else
          params[#params + 1] = p.name
-         if p.default then
-            defaults[i] = p.default
-         end
       end 
    end
    decl.params   = params
-   decl.defaults = defaults
    decl.rest     = rest
    decl.is_local = (localkw ~= "")
    return decl
