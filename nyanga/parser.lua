@@ -196,7 +196,7 @@ local patt = [[
    ) -> nilExpr
 
    expr_stmt <- (
-      {} (<assign_expr> / <update_expr> / <expr>)
+      {} (<assign_expr> / <expr>)
    ) -> exprStmt
 
    binop <- {
@@ -238,11 +238,6 @@ local patt = [[
       / { "[" } s <expr> s ("]" / '' => error)
    |}
 
-   assop <- {
-      "+=" / "-=" / "~=" / "**=" / "*=" / "/=" / "%="
-      / "|=" / "&=" / "^=" / "<<=" / ">>>=" / ">>="
-   }
-
    left_expr <- (
       <member_expr> / <ident>
    )
@@ -250,10 +245,6 @@ local patt = [[
    assign_expr <- (
       {| <left_expr> (s "," s <left_expr>)* |} s "=" s {| <expr_list> |}
    ) -> assignExpr
-
-   update_expr <- (
-      <left_expr> s <assop> s <expr>
-   ) -> updateExpr
 
    table_expr <- (
       "{" s {| <table_members>? |} s "}"

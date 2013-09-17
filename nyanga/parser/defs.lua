@@ -183,9 +183,6 @@ end
 function defs.assignExpr(lhs, rhs)
    return { type = "AssignmentExpression", left = lhs, right = rhs }
 end
-function defs.updateExpr(left, op, right)
-   return { type = "UpdateExpression", left = left, operator = op, right = right }
-end
 function defs.localDecl(lhs, rhs)
    return { type = "VariableDeclaration", names = lhs, inits = rhs }
 end

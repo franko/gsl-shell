@@ -82,14 +82,6 @@ function match:AssignmentExpression(node)
       self:list(node.left), self:list(node.right)
    )
 end
-function match:UpdateExpression(node)
-   local oper = string.sub(node.operator, 1, 1)
-   return B.assignmentExpression({
-      self:get(node.left)
-   }, {
-      B.binaryExpression(oper, self:get(node.left), self:get(node.right))
-   })
-end
 function match:MemberExpression(node)
    return B.memberExpression(
       self:get(node.object), self:get(node.property), node.computed
