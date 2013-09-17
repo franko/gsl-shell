@@ -262,9 +262,9 @@ local patt = [[
    table_members <- (
       <table_member> (hs (","/";"/%nl) s <table_member>)* (hs (","/";"/%nl))?
    )
-   table_member <- ({|
+   table_member <- {|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
-   |} / <ident>)
+    / {:value: <member_expr> :} |}
 ]]
 
 local grammar = re.compile(patt, defs)

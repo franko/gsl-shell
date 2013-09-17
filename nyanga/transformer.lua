@@ -302,6 +302,7 @@ function match:ForInStatement(node)
 end
 function match:TableExpression(node)
    local properties = { }
+   local index = 0
    for i=1, #node.members do
       local prop = node.members[i]
 
@@ -313,18 +314,11 @@ function match:TableExpression(node)
             key = prop.key.value
          end
       else
-         assert(prop.type == "Identifier")
-         key = prop.name
+         index = index + 1
+         key = index
       end
 
-      local desc
-      if prop.value then
-         desc = self:get(prop.value)
-      else
-         desc = B.identifier(key)
-      end
-
-      properties[key] = desc
+      properties[key] = self:get(prop.value)
    end
 
    return B.table(properties)
