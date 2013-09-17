@@ -200,9 +200,9 @@ local patt = [[
    ) -> exprStmt
 
    binop <- {
-      "+" / "-" / "~" / "/" / "**" / "*" / "%" / "^" / "|" / "&"
-      / ">>>" / ">>" / ">=" / ">" / "<<" / "<=" / "<" / ".."
-      / "!=" / "==" / ("or" / "and") <idsafe>
+      "+" / "-" / "/" / "^" / "*" / "%"
+      / ">=" / ">" / "<=" / "<" / ".."
+      / "~=" / "==" / ("or" / "and") <idsafe>
    }
 
    infix_expr  <- (
@@ -210,7 +210,7 @@ local patt = [[
    ) -> infixExpr / <prefix_expr>
 
    prefix_expr <- (
-      { "#" / "~" / "+" / "-" / "!" / "not" <idsafe> } s <prefix_expr>
+      { "#" / "+" / "-" / "not" <idsafe> } s <prefix_expr>
    ) -> prefixExpr / <postfix_expr>
 
    postfix_expr <- {|

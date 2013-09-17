@@ -138,47 +138,12 @@ function match:LogicalExpression(node)
    )
 end
 
-local bitop = {
-   [">>"]  = 'rshift',
-   [">>>"] = 'arshift',
-   ["<<"]  = 'lshift',
-   ["|"]   = 'bor',
-   ["&"]   = 'band',
-   ["^"]   = 'bxor',
-}
 function match:BinaryExpression(node)
    local o = node.operator
-   if bitop[o] then
-      local call = B.memberExpression(
-         B.identifier('bit'),
-         B.identifier(bitop[o])
-      )
-      local args = { self:get(node.left), self:get(node.right) }
-      return B.callExpression(call, args)
-   end
-   if o == 'is' then
-      return B.callExpression(B.identifier('__is__'), {
-         self:get(node.left), self:get(node.right)
-      })
-   end
-   if o == '..' then
-      return B.callExpression(B.identifier('__range__'), {
-         self:get(node.left), self:get(node.right)
-      })
-   end
-   if o == '**' then o = '^'  end
-   if o == '~'  then o = '..' end
-   if o == '!=' then o = '~=' end
-
    return B.binaryExpression(o, self:get(node.left), self:get(node.right))
 end
 function match:UnaryExpression(node)
-   local o = node.operator
-   local a = self:get(node.argument)
-   if o == 'typeof' then
-      return B.callExpression(B.identifier('__typeof__'), { a })
-   end
-   return B.unaryExpression(o, a)
+   return B.unaryExpression(node.operator, self:get(node.argument))
 end
 function match:FunctionDeclaration(node)
    local name
@@ -334,11 +299,6 @@ function match:ForInStatement(node)
    self.loop = save
 
    return B.forInStatement(B.forNames(left), iter, body)
-end
-function match:RangeExpression(node)
-   return B.callExpression(B.identifier('__range__'), {
-      self:get(node.min), self:get(node.max)
-   })
 end
 function match:TableExpression(node)
    local properties = { }

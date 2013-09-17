@@ -75,7 +75,24 @@ set(20)
 print(f(13))
 ]]
 
-src = src_global
+src_expr = [[
+local function foo(a, b, c)
+  local delta = b^2 - 4*a*c
+  local x1 = (-b + math.sqrt(delta))/(2*a)
+  local x2 = (-b - math.sqrt(delta))/(2*a)
+  return x1 + x2
+end
+
+map = {pi = 3.14, greet = 'ciao'}
+ls = {2,3,4}
+
+print(foo(1, -5, 6))
+print('length', #ls)
+print(2 < 3 or 2 >= 3)
+print(2 < 3 and 2 >= 3)
+]]
+
+src = src_expr
 
 ntree = parser.parse(src)
 ltree = transformer.transform(ntree, src)
