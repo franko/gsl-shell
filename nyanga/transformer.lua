@@ -67,6 +67,9 @@ end
 function match:Identifier(node)
    return B.identifier(node.name)
 end
+function match:Ellipses(node)
+   return B.vararg()
+end
 function match:VariableDeclaration(node)
    local inits = node.inits and self:list(node.inits) or { }
    for i=1, #node.names do
@@ -144,8 +147,7 @@ function match:FunctionDeclaration(node)
    end
 
    local params  = { }
-   local prelude = { }
-   local vararg  = false
+   local vararg = node.vararg
 
    self.ctx:enter()
 
@@ -155,33 +157,12 @@ function match:FunctionDeclaration(node)
       params[#params + 1] = name
    end
 
-   if node.rest then
+   if vararg then
       params[#params + 1] = B.vararg()
-      prelude[#prelude + 1] = B.localDeclaration(
-         { B.identifier(node.rest.name) },
-         { B.callExpression(B.identifier('Array'), { B.vararg() }) }
-      )
    end
 
    local body = self:get(node.body)
-   for i=#prelude, 1, -1 do
-      table.insert(body.body, 1, prelude[i])
-   end
-
-   local func
-   if node.generator then
-      local inner = B.functionExpression({ }, body, vararg)
-      func = B.functionExpression(params, B.blockStatement{
-         B.returnStatement{
-            B.callExpression(
-               B.memberExpression(B.identifier("coroutine"), B.identifier("wrap")),
-               { inner }
-            )
-         }
-      }, vararg)
-   else
-      func = B.functionExpression(params, body, vararg)
-   end
+   local func = B.functionExpression(params, body, vararg)
 
    self.ctx:leave()
 
@@ -195,11 +176,6 @@ function match:FunctionDeclaration(node)
    end
 end
 
-function match:SpreadExpression(node)
-   return B.callExpression(
-      B.identifier('__spread__'), { self:get(node.argument) }
-   )
-end
 function match:NilExpression(node)
    return B.literal(nil)
 end
@@ -225,7 +201,6 @@ function match:CallExpression(node)
       end
    else
       local args = self:list(node.arguments)
-      --table.insert(args, 1, B.literal(nil))
       return B.callExpression(self:get(callee), args)
    end
 end

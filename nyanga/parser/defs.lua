@@ -71,6 +71,9 @@ end
 function defs.identifier(name)
    return { type = "Identifier", name = name }
 end
+function defs.varargExpr(name)
+   return { type = "Ellipses" }
+end
 
 function defs.tableExpr(members)
    return { type = "TableExpression", members = members }
@@ -100,25 +103,22 @@ end
 function defs.forInStmt(left, right, body)
    return { type = "ForInStatement", left = left, right = right, body = body }
 end
-function defs.spreadExpr(arg)
-   return { type = "SpreadExpression", argument = arg }
-end
 function defs.funcDecl(localkw, name, head, body)
    if body.type ~= "BlockStatement" then
       body = defs.blockStmt{ defs.returnStmt{ body } }
    end
    local decl = { type = "FunctionDeclaration", id = name, body = body }
-   local params, rest = { }, nil
+   local params, vararg = { }, false
    for i=1, #head do
       local p = head[i]
-      if p.rest then
-         rest = p.name
+      if p.vararg then
+         vararg = true
       else
          params[#params + 1] = p.name
       end 
    end
    decl.params   = params
-   decl.rest     = rest
+   decl.vararg   = vararg
    decl.is_local = (localkw ~= "")
    return decl
 end

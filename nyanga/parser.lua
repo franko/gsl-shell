@@ -102,8 +102,11 @@ local patt = [[
       <ident> (s "," s <ident>)*
    )
 
+   vararg_expr <- "..." -> varargExpr
+
    expr_list <- (
-      <expr> (s "," s <expr>)*
+        <vararg_expr>
+      / <expr> (s "," s <expr>)* (s "," s <vararg_expr>)?
    )
 
    func_path <- {|
@@ -129,12 +132,9 @@ local patt = [[
 
    param_list <- (
         <param> s "," s <param_list>
-      / <param> s "," s <param_rest>
       / <param>
-      / <param_rest>
+      / {| "..." {:vararg: '' -> 'true' :} |}
    )
-
-   param_rest <- {| "..." {:name: <ident> :} {:rest: '' -> 'true' :} |}
 
    block_stmt <- (
       {| (<stmt> (<sep> s <stmt>)* <sep>?)? |}
@@ -184,12 +184,6 @@ local patt = [[
       / "(" s <expr> s ")"
    )
 
-   expr <- <infix_expr> / <spread_expr>
-
-   spread_expr <- (
-      "..." <postfix_expr>
-   ) -> spreadExpr
-
    nil_expr <- (
       "nil" <idsafe>
    ) -> nilExpr
@@ -204,7 +198,7 @@ local patt = [[
       / "~=" / "==" / ("or" / "and") <idsafe>
    }
 
-   infix_expr  <- (
+   expr  <- (
       {| <prefix_expr> (s <binop> s <prefix_expr>)+ |}
    ) -> infixExpr / <prefix_expr>
 
