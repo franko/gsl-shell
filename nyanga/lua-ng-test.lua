@@ -12,7 +12,7 @@ end
 print(x)
 ]]
 
-src_2 = [[
+src_sqrt = [[
 function mysqrt(a)
    local x1, x2 = a, a/2
    while math.abs(x1 - x2) > 1e-8 do
@@ -92,15 +92,45 @@ print(2 < 3 or 2 >= 3)
 print(2 < 3 and 2 >= 3)
 ]]
 
-src = src_expr
+src_vararg = [[
+local function foo(a, b, ...)
+  local sum = a + b
+  for i = 1, select('#', ...) do
+    sum = sum + select(i, ...)
+  end
+  return sum
+end
 
-ntree = parser.parse(src)
-ltree = transformer.transform(ntree, src)
+local function boo(...)
+  local sum = 0
+  for i = 1, select('#', ...) do
+    sum = sum + select(i, ...)
+  end
+  return sum
+end
 
-print(generator.source(ltree, "test.lua"))
+local function moo(a, ...)
+  local b, c = ...
+  return a + b + c
+end
 
-code = generator.bytecode(ltree, "test.lua")
+print(foo(3,4,5), boo(3,4,5), moo(3,4,5))
+]]
 
-f, err = loadstring(code)
-if not f then error(err) end
-out = f()
+local function nyanga_test(src)
+  local ntree = parser.parse(src)
+  local ltree = transformer.transform(ntree, src)
+
+  print(generator.source(ltree, "test.lua"))
+
+  local code = generator.bytecode(ltree, "test.lua")
+
+  local f, err = loadstring(code)
+  if not f then error(err) end
+  return f()
+end
+
+nyanga_test(src_sqrt)
+nyanga_test(src_qs)
+nyanga_test(src_expr)
+nyanga_test(src_vararg)
