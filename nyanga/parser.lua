@@ -17,8 +17,6 @@ local patt = [[
    idsafe   <- !(%alnum / "_")
    s        <- (<comment> / %s)*
    S        <- (<comment> / %s)+
-   hs       <- (!%nl %s)*
-   HS       <- (!%nl %s)+
    digits   <- %digit (%digit / (&('_' %digit) '_') %digit)*
    word     <- (%alpha / "_") (%alnum / "_")*
 
@@ -215,7 +213,8 @@ local patt = [[
       / { ":" } s (<ident> / '' => error)
       / { "[" } s <expr> s ("]" / '' => error)
       / { "(" } s {| <expr_list>? |} s (")" / '' => error)
-      / {~ HS -> "(" ~} {| !<binop> <expr_list> |}
+      / {~ '' -> "(" ~} s {| <table_expr> |}
+      / {~ '' -> "(" ~} s {| <string> -> literal |}
    |}
 
    member_expr <- {|
@@ -244,7 +243,7 @@ local patt = [[
    ) -> tableExpr
 
    table_members <- (
-      <table_member> (hs (","/";"/%nl) s <table_member>)* (hs (","/";"/%nl))?
+      <table_member> (s (","/";") s <table_member>)* (s (","/";"))?
    )
    table_member <- {|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
