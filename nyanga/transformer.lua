@@ -95,19 +95,6 @@ function match:SelfExpression(node)
 end
 
 function match:ReturnStatement(node)
-   if self.retsig then
-      return B.doStatement(
-         B.blockStatement{
-            B.assignmentExpression(
-               { self.retsig }, { B.literal(true) }
-            );
-            B.assignmentExpression(
-               { self.retval }, self:list(node.arguments)
-            );
-            B.returnStatement{ self.retval }
-         }
-      )
-   end
    return B.returnStatement(self:list(node.arguments))
 end
 
