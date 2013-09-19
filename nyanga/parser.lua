@@ -119,9 +119,12 @@ local patt = [[
       "(" s {| <param_list>? |} s ")"
    )
 
+   lambda_func_expr <- (
+      "|" s {| <param_list>? |} s "|" s <expr>
+   ) -> lambdaFuncExpr
+
    func_expr <- (
       "function" <idsafe> s <func_head> s <func_body>
-      / (<func_head> / {| |}) s "=>" s <func_body>
    ) -> funcExpr
 
    func_body <- <block_stmt> s <end> / <expr>
@@ -175,6 +178,7 @@ local patt = [[
 
    term <- (
         <func_expr>
+      / <lambda_func_expr>
       / <nil_expr>
       / <table_expr>
       / <ident>

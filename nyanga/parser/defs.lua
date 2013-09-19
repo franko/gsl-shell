@@ -104,9 +104,7 @@ function defs.forInStmt(left, right, body)
    return { type = "ForInStatement", left = left, right = right, body = body }
 end
 function defs.funcDecl(localkw, name, head, body)
-   if body.type ~= "BlockStatement" then
-      body = defs.blockStmt{ defs.returnStmt{ body } }
-   end
+   assert(body.type == "BlockStatement")
    local decl = { type = "FunctionDeclaration", id = name, body = body }
    local params, vararg = { }, false
    for i=1, #head do
@@ -123,6 +121,13 @@ function defs.funcDecl(localkw, name, head, body)
    return decl
 end
 function defs.funcExpr(head, body)
+   local decl = defs.funcDecl("", nil, head, body)
+   decl.expression = true
+   return decl
+end
+function defs.lambdaFuncExpr(head, expr)
+   print('expr', expr)
+   local body = defs.blockStmt{ defs.returnStmt{ expr } }
    local decl = defs.funcDecl("", nil, head, body)
    decl.expression = true
    return decl
