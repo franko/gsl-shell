@@ -200,10 +200,7 @@ function match:WhileStatement(node)
    local loop = B.identifier(util.genid())
    local save = self.loop
    self.loop = loop
-   local body = B.blockStatement{
-      self:get(node.body);
-      B.labelStatement(loop);
-   }
+   local body = self:get(node.body)
    self.loop = save
    return B.whileStatement(self:get(node.test), body)
 end
@@ -216,10 +213,7 @@ function match:ForStatement(node)
    local init = self:get(node.init)
    local last = self:get(node.last)
    local step = B.literal(node.step)
-   local body = B.blockStatement{
-      self:get(node.body);
-      B.labelStatement(loop)
-   }
+   local body = self:get(node.body)
    self.loop = save
 
    return B.forStatement(B.forInit(name, init), last, step, body)
@@ -238,10 +232,7 @@ function match:ForInStatement(node)
       left[i] = self:get(node.left[i])
    end
 
-   local body = B.blockStatement{
-      self:get(node.body);
-      B.labelStatement(loop);
-   }
+   local body = self:get(node.body);
    self.loop = save
 
    return B.forInStatement(B.forNames(left), iter, body)
