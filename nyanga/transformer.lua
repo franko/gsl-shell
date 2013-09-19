@@ -225,7 +225,7 @@ function match:ForInStatement(node)
 
    local none = B.tempnam()
    local temp = B.tempnam()
-   local iter = B.callExpression(B.identifier('__each__'), { self:get(node.right) })
+   local iter = self:get(node.right)
 
    local left = { }
    for i=1, #node.left do
