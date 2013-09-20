@@ -27,7 +27,8 @@ local Context = { }
 Context.__index = Context
 function Context.new()
    local self = {
-      scope = Scope.new()
+      scope = Scope.new(),
+      gen_index = {0, 0, 0}
    }
    return setmetatable(self, Context)
 end
@@ -45,6 +46,34 @@ end
 function Context:lookup(name)
    local info = self.scope:lookup(name)
    return info
+end
+local function gen_index_incr(index)
+   local ascii_a = string.byte('a')
+   local ascii_z = string.byte('z')
+   for k = #index, 0, -1 do
+      if k == 0 then return false end
+      if index[k] < ascii_z - ascii_a - 1 then
+         index[k] = index[k] + 1
+         break
+      else
+         index[k] = 0
+      end
+   end
+   return true
+end
+function Context:generateVar(main_ctx)
+   local ascii_a = string.byte('a')
+   while true do
+      local var_name = "_"
+      for k = 1, #self.gen_index, 1 do
+         var_name = var_name .. string.char(ascii_a + self.gen_index[k])
+      end
+      if not main_ctx:lookup(var_name) then
+         return var_name
+      end
+      local okinc = gen_index_incr(self.gen_index)
+      if not okinc then error("temporary veriable names exhausted") end
+   end
 end
 
 local match = { }
@@ -80,6 +109,27 @@ function match:AssignmentExpression(node)
    return B.assignmentExpression(
       self:list(node.left), self:list(node.right)
    )
+end
+
+local function matrixElementRef(self, obj, row, col)
+   local comp_obj = B.memberExpression(obj, B.identifier("data"), false)
+   local tda = B.memberExpression(obj, B.identifier("tda"), false)
+   local iminus = B.binaryExpression("-", self:get(row), B.literal(1))
+   local tda_i = B.binaryExpression("*", tda, iminus)
+   local jminus = B.binaryExpression("-", self:get(col), B.literal(1))
+   local comp_prop = B.binaryExpression("+", tda_i, jminus)
+   return B.memberExpression(comp_obj, comp_prop, true)
+end
+
+function match:MatrixMemberExpression(node)
+   if node.object.type ~= "Identifier" then
+      local temp = self.genctx:generateVar(self.ctx)
+      --  B.identifier(randomVarName("_"))
+      self.genctx:define(temp, self:get(node.object))
+      return matrixElementRef(self, temp, node.row, node.column)
+   else
+      return matrixElementRef(self, self:get(node.object), node.row, node.column)
+   end
 end
 function match:MemberExpression(node)
    return B.memberExpression(
@@ -167,7 +217,16 @@ function match:PropertyDefinition(node)
    return self:get(node.value)
 end
 function match:BlockStatement(node)
-   return B.blockStatement(self:list(node.body))
+   self.genctx:enter()
+   local stmts = self:list(node.body)
+   local entries = self.genctx.scope.entries
+   print('ENTRIES', entries)
+   for id, info in pairs(entries) do
+      local decl = B.localDeclaration({ id }, { info })
+      table.insert(stmts, 1, decl)
+   end
+   self.genctx:leave()
+   return B.blockStatement(stmts)
 end
 function match:ExpressionStatement(node)
    return B.expressionStatement(self:get(node.expression))
@@ -277,6 +336,7 @@ local function transform(tree, src)
    self.pos  = 0
 
    self.ctx = Context.new()
+   self.genctx = Context.new()
 
    function self:sync(node)
       local pos = node.pos

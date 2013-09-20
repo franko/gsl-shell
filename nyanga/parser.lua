@@ -215,7 +215,7 @@ local patt = [[
    postfix_tail <- {|
       s { "." } s <ident>
       / { ":" } s (<ident> / '' => error)
-      / { "[" } s <expr> s ("]" / '' => error)
+      / { "[" } s <expr> (s "," s <expr>)? s ("]" / '' => error)
       / { "(" } s {| <expr_list>? |} s (")" / '' => error)
       / {~ '' -> "(" ~} s {| <table_expr> |}
       / {~ '' -> "(" ~} s {| <string> -> literal |}
@@ -231,7 +231,7 @@ local patt = [[
    member_tail <- {|
       s { "." } s <ident>
       / { ":" } s <ident>
-      / { "[" } s <expr> s ("]" / '' => error)
+      / { "[" } s <expr> (s "," s <expr>)? s ("]" / '' => error)
    |}
 
    left_expr <- (

@@ -80,7 +80,7 @@ local function foo(a, b, c)
   local delta = b^2 - 4*a*c
   local x1 = (-b + math.sqrt(delta))/(2*a)
   local x2 = (-b - math.sqrt(delta))/(2*a)
-  return x1 + x2
+  return x1, x2
 end
 
 map = {pi = 3.14, greet = 'ciao'}
@@ -117,10 +117,42 @@ end
 print(foo(3,4,5), boo(3,4,5), moo(3,4,5))
 ]]
 
+src_x = [[
+print('concat',
+   table.concat{3, 4, 5, 6})
+print('upper', string.upper 'ciao')
+]]
+
+src_lambda = [[
+local ft = function(x) return 2*x+1 end
+local f = |x| 2*x + 1
+print(f(3))
+]]
+
+src_matrix_1 = [[
+m = matrix.new(3, 3, |i,j| 1/(i+j))
+
+for i = 1, 3 do
+  m[i, i] = 5
+end
+print(m)
+]]
+
+src_matrix_2 = [[
+ls = {mat = matrix.new(3, 3, |i,j| 1/(i+j))}
+
+for i = 1, 3 do
+  ls.mat[i, i] = 5
+end
+print(m)
+]]
+
 local function nyanga_test(src)
   local ntree = parser.parse(src)
+  print(util.dump(ntree))
   local ltree = transformer.transform(ntree, src)
 
+  print(util.dump(ltree))
   print(generator.source(ltree, "test.lua"))
 
   local code = generator.bytecode(ltree, "test.lua")
@@ -130,7 +162,11 @@ local function nyanga_test(src)
   return f()
 end
 
-nyanga_test(src_sqrt)
-nyanga_test(src_qs)
-nyanga_test(src_expr)
-nyanga_test(src_vararg)
+-- nyanga_test(src_sqrt)
+-- nyanga_test(src_qs)
+-- nyanga_test(src_expr)
+-- nyanga_test(src_vararg)
+-- nyanga_test(src_x)
+-- nyanga_test(src_lambda)
+nyanga_test(src_matrix_2)
+
