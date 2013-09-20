@@ -50,14 +50,10 @@ end
 local match = { }
 
 function match:Chunk(node)
-   self.hoist = { }
    self.scope = { }
    for i=1, #node.body do
       local stmt = self:get(node.body[i])
       self.scope[#self.scope + 1] = stmt
-   end
-   for i=#self.hoist, 1, -1 do
-      table.insert(self.scope, 1, self.hoist[i])
    end
    return B.chunk(self.scope)
 end
