@@ -159,7 +159,12 @@ function defs.postfixExpr(expr)
       if expr[i][1] == "(" then
          base = defs.callExpr(base, expr[i][2])
       else
-         base = defs.memberExpr(base, expr[i][2], expr[i][1] == "[")
+         local index_nb = #expr[i] - 1
+         if index_nb == 1 then
+            base = defs.memberExpr(base, expr[i][2], expr[i][1] == "[")
+         else
+            base = defs.matrixMemberExpr(base, expr[i][2], expr[i][3])
+         end
          base.namespace = (expr[i][1] == ".")
       end
    end
@@ -167,6 +172,9 @@ function defs.postfixExpr(expr)
 end
 function defs.memberExpr(b, e, c)
    return { type = "MemberExpression", object = b, property = e, computed = c }
+end
+function defs.matrixMemberExpr(b, row, col)
+   return { type = "MatrixMemberExpression", object = b, row = row, column = col }
 end
 function defs.callExpr(expr, args)
    return { type = "CallExpression", callee = expr, arguments = args } 
