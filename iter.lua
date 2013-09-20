@@ -56,7 +56,7 @@ local function key_tos(k)
    if type(k) == 'string' then
       return string.match(k, "[%a_][%a%d_]*") and k or fmt('[%q]', k)
    else
-      return '[' .. tos(k) .. ']'
+      return '[' .. tos(k, 1) .. ']'
    end
 end
 
@@ -91,7 +91,7 @@ tos = function (t, depth)
       end
       for k, v in pairs(t) do
          if not skip[k] then
-            ls[#ls+1] = key_tos(k, 1) .. '= ' .. tos(v, depth + 1)
+            ls[#ls+1] = key_tos(k) .. '= ' .. tos(v, depth + 1)
          end
       end
       return '{' .. cat(ls, ', ') .. '}'
