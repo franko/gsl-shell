@@ -126,7 +126,6 @@ function defs.funcExpr(head, body)
    return decl
 end
 function defs.lambdaFuncExpr(head, expr)
-   print('expr', expr)
    local body = defs.blockStmt{ defs.returnStmt{ expr } }
    local decl = defs.funcDecl("", nil, head, body)
    decl.expression = true
