@@ -205,7 +205,7 @@ local patt = [[
    ) -> infixExpr / <prefix_expr>
 
    prefix_expr <- (
-      { "#" / "+" / "-" / "not" <idsafe> } s <prefix_expr>
+      { "`" / "#" / "+" / "-" / "not" <idsafe> } s <prefix_expr>
    ) -> prefixExpr / <postfix_expr>
 
    postfix_expr <- {|

@@ -74,6 +74,13 @@ function Context:generateVar(main_ctx)
    end
 end
 
+local builtin = {
+   transpose = {
+      name = B.identifier("__transpose__"),
+      value = B.memberExpression(B.identifier("matrix"), B.identifier("transpose"), false),
+   }
+}
+
 local match = { }
 
 function match:Chunk(node)
@@ -81,6 +88,11 @@ function match:Chunk(node)
    for i=1, #node.body do
       local stmt = self:get(node.body[i])
       self.scope[#self.scope + 1] = stmt
+   end
+   for prop in pairs(self.use) do
+      local item = builtin[prop]
+      local decl = B.localDeclaration({ item.name }, { item.value })
+     table.insert(self.scope, 1, decl)
    end
    return B.chunk(self.scope)
 end
@@ -168,6 +180,11 @@ function match:BinaryExpression(node)
    return B.binaryExpression(o, self:get(node.left), self:get(node.right))
 end
 function match:UnaryExpression(node)
+   if node.operator == "`" then
+      self.use.transpose = true
+      local transpose = builtin.transpose.name
+      return B.callExpression(transpose, { self:get(node.argument) })
+   end
    return B.unaryExpression(node.operator, self:get(node.argument))
 end
 function match:FunctionDeclaration(node)
@@ -331,6 +348,7 @@ local function transform(tree, src)
    self.line = 1
    self.pos  = 0
 
+   self.use = {}
    self.ctx = Context.new()
    self.genctx = Context.new()
 
