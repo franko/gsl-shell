@@ -178,7 +178,6 @@ local patt = [[
 
    term <- (
         <func_expr>
-      / <lambda_func_expr>
       / <nil_expr>
       / <table_expr>
       / <ident>
@@ -202,7 +201,7 @@ local patt = [[
 
    expr  <- (
       {| <prefix_expr> (s <binop> s <prefix_expr>)+ |}
-   ) -> infixExpr / <prefix_expr>
+   ) -> infixExpr / <prefix_expr> / <lambda_func_expr>
 
    prefix_expr <- (
       { "`" / "#" / "+" / "-" / "not" <idsafe> } s <prefix_expr>
