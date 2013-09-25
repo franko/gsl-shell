@@ -78,7 +78,11 @@ local builtin = {
    transpose = {
       name = B.identifier("__transpose__"),
       value = B.memberExpression(B.identifier("matrix"), B.identifier("transpose"), false),
-   }
+   },
+   matrix = {
+      name = B.identifier("__matrix__"),
+      value = B.memberExpression(B.identifier("matrix"), B.identifier("def"), false),
+   },
 }
 
 local match = { }
@@ -186,6 +190,16 @@ function match:UnaryExpression(node)
       return B.callExpression(transpose, { self:get(node.argument) })
    end
    return B.unaryExpression(node.operator, self:get(node.argument))
+end
+function match:MatrixLiteral(node)
+   local n = #node.body
+   local body = {}
+   for i = 1, n do
+      body[i] = B.table(self:list(node.body[i]))
+   end
+   self.use.matrix = true
+   local matrix = builtin.matrix.name
+   return B.callExpression(matrix, { B.table(body) })
 end
 function match:FunctionDeclaration(node)
    local name

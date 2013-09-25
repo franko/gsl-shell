@@ -176,12 +176,21 @@ local patt = [[
       !<keyword> { <word> }
    ) -> identifier
 
+   expr_row <- {|
+      <expr> (s "," s <expr>)*
+   |}
+
+   matrix_literal <- {|
+      '[' s <expr_row> (s ';' s <expr_row>)* s ']'
+   |} -> matrixLiteral
+
    term <- (
         <func_expr>
       / <nil_expr>
       / <table_expr>
       / <ident>
       / <literal>
+      / <matrix_literal>
       / "(" s <expr> s ")"
    )
 

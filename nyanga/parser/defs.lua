@@ -125,6 +125,14 @@ function defs.funcExpr(head, body)
    decl.expression = true
    return decl
 end
+function defs.matrixLiteral(body)
+   local n = #body
+   local m = #body[1]
+   for i = 2, n do
+      if #body[i] ~= m then error('columns number mismatch') end
+   end
+   return { type = "MatrixLiteral", body = body}
+end
 function defs.lambdaFuncExpr(head, expr)
    local body = defs.blockStmt{ defs.returnStmt{ expr } }
    local decl = defs.funcDecl("", nil, head, body)
