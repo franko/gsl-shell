@@ -250,7 +250,7 @@ local patt = [[
    )
    table_member <- {|
       {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
-    / {:value: <member_expr> :} |}
+    / {:value: <expr> :} |}
 ]]
 
 local grammar = re.compile(patt, defs)
