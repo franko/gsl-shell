@@ -25,7 +25,7 @@ local prefix_priority = {
    ['not'] = 12, ['#'] = 12, ['-'] = 12,
 }
 
-local literal_priority = 100
+local term_priority = 100
 
 local Writer = { }
 Writer.__index = Writer
@@ -63,10 +63,8 @@ function get_priority(node)
       return infix_priority[node.operator]
    elseif node.kind == 'UnaryExpression' then
       return prefix_priority[node.operator]
-   elseif node.kind == 'Identifier' or node.kind == 'Literal' then
-      return literal_priority
    end
-   return 0
+   return term_priority
 end
 
 local match = { }
@@ -182,7 +180,7 @@ function match:SendExpression(node)
 end
 function match:Literal(node)
    if type(node.value) == "string" then
-      self:write(string.format("(%q)", node.value))
+      self:write(string.format("%q", node.value))
    else
       self:write(tostring(node.value))
    end
