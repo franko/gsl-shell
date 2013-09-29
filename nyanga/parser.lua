@@ -220,10 +220,16 @@ local patt = [[
       <term> <postfix_tail>+
    |} -> postfixExpr / <term>
 
+   range <- {|
+      {:start: <expr>? :} (s {:range: "~" :} s {:stop: <expr>? :} )?
+   |}
+
+   expr_r <- {| {:start: <expr> :} |}
+
    postfix_tail <- {|
       s { "." } s <ident>
       / { ":" } s (<ident> / '' => error)
-      / { "[" } s <expr> (s "," s <expr>)? s ("]" / '' => error)
+      / { "[" } s <range> (s "," s <range>)? s ("]" / '' => error)
       / { "(" } s {| <expr_list>? |} s (")" / '' => error)
       / {~ '' -> "(" ~} s {| <table_expr> |}
       / {~ '' -> "(" ~} s {| <string> -> literal |}
@@ -239,7 +245,7 @@ local patt = [[
    member_tail <- {|
       s { "." } s <ident>
       / { ":" } s <ident>
-      / { "[" } s <expr> (s "," s <expr>)? s ("]" / '' => error)
+      / { "[" } s <expr_r> (s "," s <expr_r>)? s ("]" / '' => error)
    |}
 
    left_expr <- (

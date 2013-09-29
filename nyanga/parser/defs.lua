@@ -160,19 +160,36 @@ end
 function defs.prefixExpr(o, a)
    return { type = "UnaryExpression", operator = o, argument = a }
 end
+local function fix_range_expr(r)
+   if r.start == "" then r.start = nil end
+   if r.stop  == "" then r.stop  = nil end
+   if not r.start and not r.stop then r.range = '~' end
+end
 function defs.postfixExpr(expr)
    local base = expr[1]
    for i=2, #expr do
-      if expr[i][1] == "(" then
-         base = defs.callExpr(base, expr[i][2])
+      local term = expr[i]
+      if term[1] == "(" then
+         base = defs.callExpr(base, term[2])
+      elseif term[1] == "." then
+         base = defs.memberExpr(base, term[2], false)
+         base.namespace = true
       else
-         local index_nb = #expr[i] - 1
+         local index_nb = #term - 1
+         fix_range_expr(term[2])
          if index_nb == 1 then
-            base = defs.memberExpr(base, expr[i][2], expr[i][1] == "[")
+            if term[2].range == "~" then error('range not allowed with single index') end
+            base = defs.memberExpr(base, term[2].start, true)
+            base.namespace = false
          else
-            base = defs.matrixMemberExpr(base, expr[i][2], expr[i][3])
+            fix_range_expr(term[3])
+            local row, col = term[2], term[3]
+            if row.range ~= "~" and col.range ~= "~" then
+               base = defs.matrixMemberExpr(base, row.start, col.start)
+            else
+               base = defs.matrixRangeExpr(base, row, col)
+            end
          end
-         base.namespace = (expr[i][1] == ".")
       end
    end
    return base
@@ -182,6 +199,9 @@ function defs.memberExpr(b, e, c)
 end
 function defs.matrixMemberExpr(b, row, col)
    return { type = "MatrixMemberExpression", object = b, row = row, column = col }
+end
+function defs.matrixRangeExpr(b, row, col)
+   return { type = "MatrixRangeExpression", object = b, row = row, column = col }
 end
 function defs.callExpr(expr, args)
    return { type = "CallExpression", callee = expr, arguments = args } 

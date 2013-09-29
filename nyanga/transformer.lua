@@ -83,6 +83,10 @@ local builtin = {
       name = B.identifier("__matrix__"),
       value = B.memberExpression(B.identifier("matrix"), B.identifier("def"), false),
    },
+   slice = {
+      name = B.identifier("__slice__"),
+      value = B.memberExpression(B.identifier("matrix"), B.identifier("slice"), false),
+   },
 }
 
 local match = { }
@@ -143,6 +147,26 @@ function match:MatrixMemberExpression(node)
    else
       return matrixElementRef(self, self:get(node.object), node.row, node.column)
    end
+end
+local function get_range(self, t, stop_expr)
+   local start = t.start and self:get(t.start) or B.literal(1)
+   local stop  = t.stop  and self:get(t.stop)  or stop_expr
+   return start, stop
+end
+function match:MatrixRangeExpression(node)
+   local need_hoist = (node.object.type ~= "Identifier") and (not node.row.stop or not node.column.stop)
+   local object
+   if need_hoist then
+      object = self.genctx:generateVar(self.ctx)
+      self.genctx:define(object, self:get(node.object))
+   else
+      object = self:get(node.object)
+   end
+   self.use.slice = true
+   local slice = builtin.slice.name
+   local rs, re = get_range(self, node.row, B.memberExpression(object, B.identifier('size1'), false))
+   local cs, ce = get_range(self, node.column, B.memberExpression(object, B.identifier('size2'), false))
+   return B.callExpression(slice, { object, rs, re, cs, ce })
 end
 function match:MemberExpression(node)
    return B.memberExpression(

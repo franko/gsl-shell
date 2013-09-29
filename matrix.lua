@@ -1013,6 +1013,10 @@ matrix.tr = function(a)
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
 
+function matrix.slice(m, i1, i2, j1, j2)
+   return m:slice(i1, j1, i2 - i1 + 1, j2 - j1 + 1)
+end
+
 local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 
 register_ffi_type(gsl_complex, "complex")
