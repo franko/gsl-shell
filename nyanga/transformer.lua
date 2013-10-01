@@ -91,12 +91,47 @@ local builtin = {
 
 local match = { }
 
-function match:Chunk(node)
-   self.scope = { }
-   for i=1, #node.body do
-      local stmt = self:get(node.body[i])
-      self.scope[#self.scope + 1] = stmt
+local function pop_context_vars(ctx)
+   local decls = { }
+   local entries = ctx.scope.entries
+   for id, info in pairs(entries) do
+      local decl = B.localDeclaration({ id }, { info })
+      decls[#decls+1] = decl
    end
+   return decls
+end
+local function stmt_decl_block(stmt, decls)
+   if #decls > 0 then
+      decls[#decls + 1] = stmt
+      return B.blockStatement(decls)
+   else
+      return stmt
+   end
+end
+local function stmt_decl_append(stmts, stmt, decls)
+   for i = 1, #decls do
+      stmts[#stmts+1] = decls[i]
+   end
+   stmts[#stmts+1] = stmt
+end
+local function expr_context_stmt_list(self, body)
+   local stmts = { }
+   for i = 1, #body do
+      self.genctx:enter()
+      local stmt = self:get(body[i])
+      local decls = pop_context_vars(self.genctx)
+      self.genctx:leave()
+      if i < #body then
+         stmts[i] = stmt_decl_block(stmt, decls)
+      else
+         stmt_decl_append(stmts, stmt, decls)
+      end
+   end
+   return stmts
+end
+
+function match:Chunk(node)
+   self.scope = expr_context_stmt_list(self, node.body)
    for prop in pairs(self.use) do
       local item = builtin[prop]
       local decl = B.localDeclaration({ item.name }, { item.value })
@@ -269,15 +304,7 @@ function match:PropertyDefinition(node)
    return self:get(node.value)
 end
 function match:BlockStatement(node)
-   self.genctx:enter()
-   local stmts = self:list(node.body)
-   local entries = self.genctx.scope.entries
-   for id, info in pairs(entries) do
-      local decl = B.localDeclaration({ id }, { info })
-      table.insert(stmts, 1, decl)
-   end
-   self.genctx:leave()
-   return B.blockStatement(stmts)
+   return B.blockStatement(expr_context_stmt_list(self, node.body))
 end
 function match:ExpressionStatement(node)
    return B.expressionStatement(self:get(node.expression))
