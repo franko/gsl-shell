@@ -87,6 +87,10 @@ local builtin = {
       name = B.identifier("__slice__"),
       value = B.memberExpression(B.identifier("matrix"), B.identifier("slice"), false),
    },
+   set = {
+      name = B.identifier("__set__"),
+      value = B.memberExpression(B.identifier("matrix"), B.identifier("set"), false),
+   },
 }
 
 local match = { }
@@ -182,6 +186,11 @@ function match:MatrixMemberExpression(node)
    else
       return matrixElementRef(self, self:get(node.object), node.row, node.column)
    end
+end
+function match:ContentAssignment(node)
+   self.use.set = true
+   local set = builtin.set.name
+   return B.callExpression(set, { self:get(node.left), self:get(node.right) })
 end
 local function get_range(self, t, stop_expr)
    local start = t.start and self:get(t.start) or B.literal(1)

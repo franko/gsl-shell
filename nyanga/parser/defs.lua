@@ -219,6 +219,9 @@ end
 function defs.assignExpr(lhs, rhs)
    return { type = "AssignmentExpression", left = lhs, right = rhs }
 end
+function defs.contentAssign(pos, lhs, rhs)
+   return { type = "ContentAssignment", left = lhs, right = rhs, pos = pos }
+end
 function defs.localDecl(lhs, rhs)
    return { type = "VariableDeclaration", names = lhs, inits = rhs }
 end

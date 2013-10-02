@@ -199,10 +199,10 @@ local patt = [[
    ) -> nilExpr
 
    expr_stmt <- (
-      {} (<assign_expr> / <expr>)
+      {} (<content_assign> / <assign_expr> / <expr>)
    ) -> exprStmt
 
-   binop <- {
+   binop <- !"<-" {
       "+" / "-" / "/" / "^" / "*" / "%"
       / ">=" / ">" / "<=" / "<" / ".."
       / "~=" / "==" / ("or" / "and") <idsafe>
@@ -255,6 +255,10 @@ local patt = [[
    assign_expr <- (
       {| <left_expr> (s "," s <left_expr>)* |} s "=" s {| <expr_list> |}
    ) -> assignExpr
+
+   content_assign <- (
+      {} <left_expr> s "<-" s <expr>
+   ) -> contentAssign
 
    table_expr <- (
       "{" s {| <table_members>? |} s "}"
