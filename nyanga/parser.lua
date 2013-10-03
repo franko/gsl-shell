@@ -256,8 +256,18 @@ local patt = [[
       {| <left_expr> (s "," s <left_expr>)* |} s "=" s {| <expr_list> |}
    ) -> assignExpr
 
+   range_expr <- {|
+      <term> <range_tail>+
+   |} -> postfixExpr / <term>
+
+   range_tail <- {|
+      s { "." } s <ident>
+      / { ":" } s (<ident> / '' => error)
+      / { "[" } s <range> (s "," s <range>)? s ("]" / '' => error)
+   |}
+
    content_assign <- (
-      {} <left_expr> s "<-" s <expr>
+      {} <range_expr> s "<-" s <expr>
    ) -> contentAssign
 
    table_expr <- (
