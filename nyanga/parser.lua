@@ -226,10 +226,20 @@ local patt = [[
 
    expr_r <- {| {:start: <expr> :} |}
 
-   postfix_tail <- {|
+   member_postfix <- (
       s { "." } s <ident>
       / { ":" } s (<ident> / '' => error)
-      / { "[" } s <range> (s "," s <range>)? s ("]" / '' => error)
+   )
+
+   index_postfix <-
+      { "[" } s <expr_r> (s "," s <expr_r>)? s ("]" / '' => error)
+
+   range_postfix <-
+      { "[" } s <range> (s "," s <range>)? s ("]" / '' => error)
+
+   postfix_tail <- {|
+        <member_postfix>
+      / <range_postfix>
       / { "(" } s {| <expr_list>? |} s (")" / '' => error)
       / {~ '' -> "(" ~} s {| <table_expr> |}
       / {~ '' -> "(" ~} s {| <string> -> literal |}
@@ -243,9 +253,8 @@ local patt = [[
       <postfix_tail> <member_next> / <member_tail>
    )
    member_tail <- {|
-      s { "." } s <ident>
-      / { ":" } s <ident>
-      / { "[" } s <expr_r> (s "," s <expr_r>)? s ("]" / '' => error)
+        <member_postfix>
+      / <index_postfix>
    |}
 
    left_expr <- (
@@ -261,9 +270,8 @@ local patt = [[
    |} -> postfixExpr / <term>
 
    range_tail <- {|
-      s { "." } s <ident>
-      / { ":" } s (<ident> / '' => error)
-      / { "[" } s <range> (s "," s <range>)? s ("]" / '' => error)
+        <member_postfix>
+      / <range_postfix>
    |}
 
    content_assign <- (
