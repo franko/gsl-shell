@@ -257,12 +257,8 @@ local patt = [[
       / <index_postfix>
    |}
 
-   left_expr <- (
-      <member_expr> / <ident>
-   )
-
    assign_expr <- (
-      {| <left_expr> (s "," s <left_expr>)* |} s "=" s {| <expr_list> |}
+      {| <member_expr> (s "," s <member_expr>)* |} s "=" s {| <expr_list> |}
    ) -> assignExpr
 
    range_expr <- {|
