@@ -6,43 +6,42 @@
 #include "language.h"
 #include "fatal.h"
 
-struct gs_language {
-    lua_State *L;
-};
+lua_State *parser_L;
 
-void *
+int
 language_init() {
-    struct gs_language *gs = malloc(sizeof(struct gs_language));
-    if (unlikely(gs == NULL)) {
-        fatal_exception("virtual memory exhausted");
-    }
-    gs->L = lua_open();
-      if (unlikely(gs->L == NULL)) {
+    parser_L = lua_open();
+      if (unlikely(parser_L == NULL)) {
         fatal_exception("cannot create state: not enough memory");
     }
-    luaL_openlibs(gs->L);
-    int status = luaL_loadfile(gs->L, "gslang.lua");
+    luaL_openlibs(parser_L);
+    int status = luaL_loadfile(parser_L, "gslang.lua");
     if (status != 0) {
         fatal_exception("unable to load \"gslang.lua\"");
     }
-    lua_pcall(gs->L, 0, 1, 0);
-    return (void *) gs;
+    int load_status = lua_pcall(parser_L, 0, 1, 0);
+    if (!lua_isfunction(parser_L, -1)) {
+        load_status = LUA_ERRRUN;
+    }
+    return load_status;
 }
 
 int
-language_loadbuffer(void *_gs, lua_State *L, const char *buff, size_t sz, const char *name)
+language_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *name)
 {
-    struct gs_language *gs = _gs;
-    lua_pushvalue(gs->L, -1);
-    lua_pushlstring(gs->L, buff, sz);
-    lua_pushstring(gs->L, name);
-    int parse_status = lua_pcall(gs->L, 2, 1, 0);
+    lua_pushvalue(parser_L, -1);
+    lua_pushlstring(parser_L, buff, sz);
+    lua_pushstring(parser_L, name);
+    int parse_status = lua_pcall(parser_L, 2, 1, 0);
     if (parse_status != 0) {
-        return parse_status;
+        const char *msg = lua_tostring(parser_L, -1);
+        lua_pushstring(L, msg);
+        lua_pop(parser_L, 1);
+        return LUA_ERRSYNTAX;
     }
     size_t code_len;
-    const char *code = lua_tolstring(gs->L, -1, &code_len);
+    const char *code = lua_tolstring(parser_L, -1, &code_len);
     int status = luaL_loadbuffer(L, code, code_len, name);
-    lua_pop(gs->L, 1);
+    lua_pop(parser_L, 1);
     return status;
 }

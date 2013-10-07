@@ -37,12 +37,14 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "fatal.h"
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
 #include "lua-graph.h"
 #include "window_hooks.h"
 #include "window.h"
+#include "language.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -341,7 +343,7 @@ static int yield_expr(lua_State* L, int index, const char* line, size_t len)
     }
 
     lua_pushfstring(L, "return %s", line);
-    status = luaL_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
+    status = language_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
     if (status == 0)
     {
         my_saveline(L, index);
@@ -373,7 +375,7 @@ static int loadline(lua_State *L)
         return 0;
 
     /* try to load it as a simple Lua chunk */
-    status = luaL_loadbuffer(L, line, len, "=stdin");
+    status = language_loadbuffer(L, line, len, "=stdin");
 
     if (incomplete(L, status))
     {
@@ -684,6 +686,11 @@ int main(int argc, char **argv)
     gsl_shell_open(gsl_shell);
 
     pthread_mutex_lock(&gsl_shell->exec_mutex);
+
+    int parser_status = language_init();
+    if (parser_status != 0) {
+        fatal_exception("error in parser initialization");
+    }
 
     s.argc = argc;
     s.argv = argv;
