@@ -77,7 +77,7 @@ LUA_BASE_FILES += $(HELP_FILES:%=help/%.lua)
 
 EXAMPLES_FILES := $(EXAMPLES_FILES_SRC:%=examples/%.csv)
 
-C_SRC_FILES += language-gs.c gsl-shell-jit.c
+C_SRC_FILES += gsl-shell-jit.c
 
 TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI) $(LUA_MODULES)
 

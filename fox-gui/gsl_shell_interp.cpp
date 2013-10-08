@@ -15,6 +15,7 @@ extern "C" {
 #include "lua-gsl.h"
 #include "lua-graph.h"
 #include "fatal.h"
+#include "language.h"
 
 static void stderr_message(const char *pname, const char *msg)
 {
@@ -108,7 +109,7 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     }
 
     str mline = str::print("return %s", line);
-    status = luaL_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+    status = language_loadbuffer(L, mline.cstr(), len+7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
     return status;
 }
@@ -131,6 +132,11 @@ static int incomplete(lua_State *L, int status)
 
 void gsl_shell::init()
 {
+    int parser_status = language_init();
+    if (parser_status != 0) {
+        fatal_exception("error in parser initialization");
+    }
+
     gsl_shell_open(this);
 
     int status = lua_cpcall(this->L, pinit, NULL);
@@ -171,7 +177,7 @@ int gsl_shell::exec(const char *line)
 
     if (status != 0)
     {
-        status = luaL_loadbuffer(L, line, len, "=<user input>");
+        status = language_loadbuffer(L, line, len, "=<user input>");
 
         if (incomplete(L, status))
             return incomplete_input;
