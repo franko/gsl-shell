@@ -261,13 +261,13 @@ static int getargs(lua_State *L, char **argv, int n)
 
 static int dofile(lua_State *L, const char *name)
 {
-    int status = luaL_loadfile(L, name) || docall(L, 0, 1);
+    int status = language_loadfile(L, name) || docall(L, 0, 1);
     return report(L, status);
 }
 
 static int dostring(lua_State *L, const char *s, const char *name)
 {
-    int status = luaL_loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
+    int status = language_loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
     return report(L, status);
 }
 
@@ -387,7 +387,7 @@ static int loadline(lua_State *L)
             lua_concat(L, 3);  /* join them */
 
             line = lua_tolstring(L, 1, &len);
-            status = luaL_loadbuffer(L, line, len, "=stdin");
+            status = language_loadbuffer(L, line, len, "=stdin");
             if (!incomplete(L, status)) break;  /* cannot try to add lines? */
         }
 
@@ -441,7 +441,7 @@ static int handle_script(lua_State *L, char **argv, int n)
     fname = argv[n];
     if (strcmp(fname, "-") == 0 && strcmp(argv[n-1], "--") != 0)
         fname = NULL;  /* stdin */
-    status = luaL_loadfile(L, fname);
+    status = language_loadfile(L, fname);
     lua_insert(L, -(narg+1));
     if (status == 0)
         status = docall(L, narg, 0);

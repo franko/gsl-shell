@@ -1,4 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "lua.h"
 #include "lauxlib.h"
@@ -43,5 +46,70 @@ language_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *name)
     const char *code = lua_tolstring(parser_L, -1, &code_len);
     int status = luaL_loadbuffer(L, code, code_len, name);
     lua_pop(parser_L, 1);
+    return status;
+}
+
+static char *
+read_file_content(lua_State *L, const char *filename, long *plength)
+{
+    FILE *f = fopen(filename, "rb");
+    if (f == NULL) {
+        lua_pushfstring(L, "cannot open %s: %s", filename, strerror(errno));
+        return NULL;
+    }
+    fseek(f, 0, SEEK_END);
+    *plength = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char *buffer = malloc(*plength);
+    if (buffer == NULL) {
+        lua_pushfstring(L, "not enough memory to open: %s", filename);
+        return NULL;
+    }
+    fread(buffer, 1, *plength, f);
+    fclose(f);
+    return buffer;
+}
+
+static char *
+read_stdin(lua_State *L, long *plength)
+{
+#define inputBufSize 1024
+    unsigned char *msg = NULL;
+    size_t len = 0;
+    unsigned char buffer[inputBufSize];
+    size_t br = 0;
+
+    while ((br = fread(buffer, sizeof(buffer), 1, stdin)) > 0) {
+        unsigned char *tmp = realloc(msg, len + br);
+        if (tmp) {
+            msg = tmp;
+            memmove(&msg[len], buffer, br);
+            len += br;
+        } else {
+            lua_pushstring(L, "out of memory");
+            free(msg);
+            return NULL;
+        }
+    }
+    *plength = (long)len;
+    return msg;
+}
+
+int
+language_loadfile(lua_State *L, const char *filename)
+{
+    char *buffer;
+    long length;
+    if (filename != NULL) {
+        buffer = read_file_content(L, filename, &length);
+        if (!buffer) {
+            return LUA_ERRFILE;
+        }
+    } else {
+        buffer = read_stdin(L, &length);
+    }
+
+    int status = language_loadbuffer(L, buffer, length, filename);
+    free(buffer);
     return status;
 }
