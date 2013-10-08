@@ -113,3 +113,24 @@ language_loadfile(lua_State *L, const char *filename)
     free(buffer);
     return status;
 }
+
+int
+language_lua_dofile(lua_State* L)
+{
+    const char *filename;
+    if (lua_isnoneornil(L, 1)) {
+        filename = NULL;
+    } else {
+        filename = lua_tostring(L, 1);
+        if (!filename) {
+            return luaL_error(L, "filename is not a string");
+        }
+    }
+
+    int status = language_loadfile(L, filename);
+    if (status != 0) {
+        return lua_error(L);
+    }
+    lua_call(L, 0, LUA_MULTRET);
+    return lua_gettop(L) - 1;
+}
