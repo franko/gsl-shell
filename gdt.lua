@@ -383,7 +383,7 @@ local cursor_mt = {
 
 ffi.metatype(gdt_table_cursor, cursor_mt)
 
-local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
+local register_ffi_type = debug.getregistry().__gsl_shell.register_ffi_type
 register_ffi_type(gdt_table, "data table")
 
 gdt = {

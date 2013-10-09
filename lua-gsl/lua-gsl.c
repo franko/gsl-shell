@@ -28,6 +28,7 @@
 #include "gs-types.h"
 #include "lua-utils.h"
 #include "fatal.h"
+#include "language.h"
 
 #include "gdt/gdt_table.h"
 
@@ -70,8 +71,16 @@ luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
+  lua_newtable(L);
   lua_pushcfunction (L, gs_type_string);
-  lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
+  lua_setfield(L, -2, "gsl_type");
+  lua_pushcfunction (L, language_lua_dofile);
+  lua_setfield(L, -2, "dofile");
+  lua_pushcfunction (L, language_lua_loadfile);
+  lua_setfield(L, -2, "loadfile");
+  lua_pushcfunction (L, language_lua_package_loader);
+  lua_setfield(L, -2, "loaders_lua");
+  lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_shell");
 
   return 0;
 }

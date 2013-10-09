@@ -24,25 +24,33 @@ local tostring = tostring
 
 do
    local ffi = require('ffi')
-   local reg = debug.getregistry()
+   local reg = debug.getregistry().__gsl_shell
 
-   reg.__gsl_ffi_types = {}
+   if not reg then error("cannot initialize GSL Shell") end
 
-   function reg.__gsl_reg_ffi_type(ctype, name)
-      local t = reg.__gsl_ffi_types
+   reg.ffi_types = {}
+
+   function reg.register_ffi_type(ctype, name)
+      local t = reg.ffi_types
       t[#t + 1] = {ctype, name}
    end
 
    gsl_type = function(obj)
-      local s = reg.__gsl_type(obj)
+      local s = reg.gsl_type(obj)
       if s == "cdata" then
-         for _, item in ipairs(reg.__gsl_ffi_types) do
+         for _, item in ipairs(reg.ffi_types) do
             local ctype, name = unpack(item)
             if ffi.istype(ctype, obj) then return name end
           end
       end
       return s
    end
+
+   lua = { dofile = dofile, loadfile = loadfile, loaders_lua = package.loaders[2] }
+
+   dofile = reg.dofile
+   loadfile = reg.loadfile
+   -- package.loaders[2] = reg.loaders_lua
 end
 
 function math.divmod(n, p)
@@ -127,6 +135,7 @@ local function myprint(...)
    io.write('\n')
 end
 
+lua.print = print
 print = myprint
 
 local function sequence(f, a, b)

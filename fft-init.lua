@@ -300,7 +300,7 @@ ffi.metatype(fft_radix2_hc, {
              }
           )
 
-local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
+local register_ffi_type = debug.getregistry().__gsl_shell.register_ffi_type
 
 register_ffi_type(fft_radix2_hc, "radix2 half-complex vector")
 register_ffi_type(fft_hc, "half-complex vector")
