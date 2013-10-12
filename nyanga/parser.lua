@@ -217,7 +217,7 @@ local patt = [[
    ) -> prefixExpr / <postfix_expr>
 
    postfix_expr <- {|
-      <term> <postfix_tail>+
+      <term> (s <postfix_tail>)+
    |} -> postfixExpr / <term>
 
    range <- {|
@@ -227,7 +227,7 @@ local patt = [[
    expr_r <- {| {:start: <expr> :} |}
 
    member_postfix <- (
-      s { "." } s <ident>
+        { "." } s <ident>
       / { ":" } s (<ident> / '' => error)
    )
 
@@ -246,11 +246,11 @@ local patt = [[
    |}
 
    member_expr <- {|
-      <term> <member_next>?
+      <term> (s <member_next>)?
    |} -> postfixExpr / <term>
 
    member_next <- (
-      <postfix_tail> <member_next> / <member_tail>
+      <postfix_tail> s <member_next> / <member_tail>
    )
    member_tail <- {|
         <member_postfix>
@@ -262,7 +262,7 @@ local patt = [[
    ) -> assignExpr
 
    range_expr <- {|
-      <term> <range_tail>+
+      <term> (s <range_tail>)+
    |} -> postfixExpr / <term>
 
    range_tail <- {|
