@@ -195,9 +195,9 @@ function defs.postfixExpr(expr)
       local term = expr[i]
       if term[1] == "(" then
          base = defs.callExpr(base, term[2])
-      elseif term[1] == "." then
+      elseif term[1] == "." or term[1] == ":" then
          base = defs.memberExpr(base, term[2], false)
-         base.namespace = true
+         base.namespace = (term[1] == ".")
       else
          local index_nb = #term - 1
          fix_range_expr(term[2])
