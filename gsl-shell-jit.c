@@ -732,9 +732,6 @@ int main(int argc, char **argv)
     smain.argc = argc;
     smain.argv = argv;
     status = lua_cpcall(gsl_shell->L, pmain, NULL);
-    smain.argc = argc;
-    smain.argv = argv;
-    status = lua_cpcall(gsl_shell->L, pmain, NULL);
     report(gsl_shell->L, status);
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
