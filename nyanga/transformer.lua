@@ -338,6 +338,9 @@ function match:NewExpression(node)
       self:get(node.callee), unpack(self:list(node.arguments))
    })
 end
+function match:RepeatStatement(node)
+   return B.repeatStatement(self:get(node.test), self:get(node.body))
+end
 function match:WhileStatement(node)
    local loop = B.identifier(util.genid())
    local save = self.loop
