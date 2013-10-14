@@ -136,7 +136,7 @@ int
 language_lua_dofile(lua_State* L)
 {
     language_lua_loadfile(L);
-    int n = lua_gettop(L);
+    int n = lua_gettop(L) - 1;
     lua_call(L, 0, LUA_MULTRET);
     return lua_gettop(L) - n;
 }
