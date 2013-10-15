@@ -78,8 +78,6 @@ luaopen_gsl (lua_State *L)
   lua_setfield(L, -2, "dofile");
   lua_pushcfunction (L, language_lua_loadfile);
   lua_setfield(L, -2, "loadfile");
-  lua_pushcfunction (L, language_lua_package_loader);
-  lua_setfield(L, -2, "loaders_lua");
   lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_shell");
 
   return 0;

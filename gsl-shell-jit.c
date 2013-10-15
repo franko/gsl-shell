@@ -37,6 +37,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "lj_lib.h"
 #include "fatal.h"
 #include "lua-gsl.h"
 #include "gsl-shell.h"
@@ -682,6 +683,7 @@ static int pmain(lua_State *L)
     gsl_shell_openlibs(L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
+    lj_register_lua_loadfile(language_loadfile);
     s->keep_windows = 1;
     if (!(flags & FLAGS_NOENV)) {
         s->status = handle_luainit(L);

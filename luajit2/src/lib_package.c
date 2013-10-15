@@ -177,6 +177,13 @@ static const char *ll_bcsym(void *lib, const char *sym)
 
 /* ------------------------------------------------------------------------ */
 
+static loadfile_func_ptr lj_user_loadfile = luaL_loadfile;
+
+void lj_register_lua_loadfile(loadfile_func_ptr user_loadfile)
+{
+  lj_user_loadfile = user_loadfile;
+}
+
 static void **ll_register(lua_State *L, const char *path)
 {
   void **plib;
@@ -342,7 +349,7 @@ static int lj_cf_package_loader_lua(lua_State *L)
   const char *name = luaL_checkstring(L, 1);
   filename = findfile(L, name, "path");
   if (filename == NULL) return 1;  /* library not found in this path */
-  if (luaL_loadfile(L, filename) != 0)
+  if ((*lj_user_loadfile)(L, filename) != 0)
     loaderror(L, filename);
   return 1;  /* library loaded successfully */
 }
