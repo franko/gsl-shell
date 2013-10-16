@@ -179,7 +179,7 @@ static const char *ll_bcsym(void *lib, const char *sym)
 
 static loadfile_func_ptr lj_user_loadfile = luaL_loadfile;
 
-void lj_register_lua_loadfile(loadfile_func_ptr user_loadfile)
+LUALIB_API void lj_register_lua_loadfile(loadfile_func_ptr user_loadfile)
 {
   lj_user_loadfile = user_loadfile;
 }

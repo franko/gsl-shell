@@ -111,6 +111,6 @@ LJ_FUNC uint64_t LJ_FASTCALL lj_math_random_step(RandomState *rs);
 
 
 typedef int (*loadfile_func_ptr)(lua_State *, const char *);
-extern void lj_register_lua_loadfile(loadfile_func_ptr user_loadfile);
+LUALIB_API void lj_register_lua_loadfile(loadfile_func_ptr user_loadfile);
 
 #endif
