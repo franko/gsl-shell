@@ -9,6 +9,7 @@ extern "C" {
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "lj_lib.h"
 }
 
 #include "gsl_shell_interp.h"
@@ -87,6 +88,7 @@ static int pinit(lua_State *L)
     register_graph (L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
+    lj_register_lua_loadfile(language_loadfile);
     return 0;
 }
 
