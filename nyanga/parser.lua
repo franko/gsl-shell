@@ -17,7 +17,6 @@ local patt = [[
    idsafe   <- !(%alnum / "_")
    s        <- (<comment> / %s)*
    S        <- (<comment> / %s)+
-   digits   <- %digit (%digit / (&('_' %digit) '_') %digit)*
    word     <- (%alpha / "_") (%alnum / "_")*
 
    keyword  <- (
@@ -41,16 +40,18 @@ local patt = [[
 
    hexnum <- "-"? "0x" %xdigit+
 
-   decexp <- ("e"/"E") "-"? <digits>
+   decexp <- ("e"/"E") ("-"/"+")? %digit+
 
-   decimal <- "-"? <digits> ("." <digits> <decexp>? / <decexp>)
+   decimal_base <- (
+      %digit+ ("." %digit*)? / "." %digit+
+   )
 
-   integer <- "-"? <digits>
+   decimal_number <- "-"? <decimal_base> <decexp>?
 
    octal   <- {~ { "-"? "0" [0-7]+ } -> octal ~}
 
    number  <- {~
-      <hexnum> / <octal> / <decimal> / <integer>
+      <hexnum> / <octal> / <decimal_number>
    ~} -> tonumber
 
    boolean <- (
