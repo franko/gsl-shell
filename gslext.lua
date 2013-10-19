@@ -37,3 +37,6 @@ function demo(name)
       entry.f()
    end
 end
+
+local reg = debug.getregistry().__gsl_shell
+reg.set_language_hooks()

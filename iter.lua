@@ -46,11 +46,21 @@ do
       return s
    end
 
-   lua = { dofile = dofile, loadfile = loadfile, loaders_lua = package.loaders[2] }
+   lua = { }
 
-   dofile = reg.dofile
-   loadfile = reg.loadfile
-   -- package.loaders[2] = reg.loaders_lua
+   function reg.set_language_hooks()
+     lua = {
+        dofile     = dofile,
+        loadfile   = loadfile,
+        loadstring = loadstring,
+        load       = load,
+      }
+
+     dofile     = reg.dofile
+     loadfile   = reg.loadfile
+     loadstring = reg.loadstring
+     load       = reg.load
+   end
 end
 
 function math.divmod(n, p)
