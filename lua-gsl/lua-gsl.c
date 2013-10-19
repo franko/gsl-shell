@@ -74,10 +74,7 @@ luaopen_gsl (lua_State *L)
   lua_newtable(L);
   lua_pushcfunction (L, gs_type_string);
   lua_setfield(L, -2, "gsl_type");
-  lua_pushcfunction (L, language_lua_dofile);
-  lua_setfield(L, -2, "dofile");
-  lua_pushcfunction (L, language_lua_loadfile);
-  lua_setfield(L, -2, "loadfile");
+  luaopen_language(L);
   lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_shell");
 
   return 0;

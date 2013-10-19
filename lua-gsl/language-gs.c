@@ -9,6 +9,7 @@
 #include "language.h"
 #include "fatal.h"
 #include "luaconf.h"
+#include "str.h"
 
 lua_State *parser_L;
 
@@ -115,7 +116,7 @@ language_loadfile(lua_State *L, const char *filename)
     return status;
 }
 
-int
+static int
 language_lua_loadfile(lua_State* L)
 {
     const char *filename;
@@ -132,11 +133,86 @@ language_lua_loadfile(lua_State* L)
     return 1;
 }
 
-int
+static int
 language_lua_dofile(lua_State* L)
 {
     language_lua_loadfile(L);
     int n = lua_gettop(L) - 1;
     lua_call(L, 0, LUA_MULTRET);
     return lua_gettop(L) - n;
+}
+
+static int
+language_lua_loadstring(lua_State* L)
+{
+    const char *s = luaL_checkstring(L, 1);
+    const char *name;
+    if (lua_isnoneornil(L, 2)) {
+        name = NULL;
+    } else {
+        name = luaL_checkstring(L, 2);
+    }
+    int status = language_loadbuffer(L, s, strlen(s), name);
+    if (status != 0) {
+        return lua_error(L);
+    }
+    return 1;
+}
+
+static int
+language_lua_load(lua_State* L)
+{
+    if (lua_gettop(L) == 0 || !lua_isfunction(L, 1)) {
+        char msg[64];
+        sprintf(msg, "function expected, got %s", lua_typename(L, lua_type(L, 1)));
+        return luaL_argerror(L, 1, msg);
+    }
+    str_t buffer;
+    str_init(buffer, 1024);
+    for (;;) {
+        lua_pushvalue(L, 1);
+        int status = lua_pcall(L, 0, 1, 0);
+        if (status != 0) {
+            lua_pushnil(L);
+            lua_insert(L, -2);
+            return 2;
+        }
+        if (lua_isnil(L, -1)) {
+            break;
+        }
+        const char *chunk = lua_tostring(L, -1);
+        if (!chunk) {
+            lua_pushnil(L);
+            lua_pushfstring(L, "reader function must return a string");
+            return 2;
+        }
+        str_append_c(buffer, chunk, 0);
+        lua_pop(L, 1);
+    }
+    const char *name;
+    if (lua_gettop(L) > 1 && lua_isstring(L, 2)) {
+        name = lua_tostring(L, 2);
+    } else {
+        name = NULL;
+    }
+    int status = language_loadbuffer(L, CSTR(buffer), STR_LENGTH(buffer), name);
+    str_free(buffer);
+    if (status != 0) {
+        return lua_error(L);
+    }
+    return 1;
+}
+
+static const luaL_Reg language_lib[] = {
+  { "load",        language_lua_load },
+  { "loadstring",  language_lua_loadstring },
+  { "loadfile",    language_lua_loadfile },
+  { "dofile",      language_lua_dofile },
+  { NULL, NULL }
+};
+
+int luaopen_language(lua_State *L)
+{
+    luaL_register(L, NULL, language_lib);
+    return 0;
 }
