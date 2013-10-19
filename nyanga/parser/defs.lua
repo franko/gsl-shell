@@ -31,7 +31,8 @@ function defs.escape(s)
    local n = tonumber(t)
    if n then return string.char(n) end
    if escape_lookup[t] then return escape_lookup[t] end
-   error("invalid escape sequence")
+   if t == "\n" then return "\n" end
+   error("invalid escape sequence : \\" .. t)
 end
 function defs.chunk(body)
    return { type = "Chunk", body = body }
