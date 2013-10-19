@@ -76,13 +76,13 @@ static char *
 read_stdin(lua_State *L, long *plength)
 {
 #define inputBufSize 1024
-    unsigned char *msg = NULL;
+    char *msg = NULL;
     size_t len = 0;
-    unsigned char buffer[inputBufSize];
+    char buffer[inputBufSize];
     size_t br = 0;
 
     while ((br = fread(buffer, sizeof(buffer), 1, stdin)) > 0) {
-        unsigned char *tmp = realloc(msg, len + br);
+        char *tmp = realloc(msg, len + br);
         if (tmp) {
             msg = tmp;
             memmove(&msg[len], buffer, br);
