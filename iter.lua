@@ -49,12 +49,12 @@ do
    lua = { }
 
    function reg.set_language_hooks()
-     lua = {
-        dofile     = dofile,
-        loadfile   = loadfile,
-        loadstring = loadstring,
-        load       = load,
-      }
+     if not reg.loadstring then return end
+
+     lua.dofile     = dofile
+     lua.loadfile   = loadfile
+     lua.loadstring = loadstring
+     lua.load       = load
 
      dofile     = reg.dofile
      loadfile   = reg.loadfile

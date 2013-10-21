@@ -84,7 +84,7 @@ static int pinit(lua_State *L)
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
-    luaopen_gsl (L);
+    luaopen_gsl (L, 0);
     register_graph (L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");

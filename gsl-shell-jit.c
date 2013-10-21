@@ -115,9 +115,25 @@ struct window_hooks app_window_hooks[1] = {{
     }
 };
 
-static void gsl_shell_openlibs(lua_State *L)
+struct language_hooks {
+    int (*init)();
+    int (*loadfile)(lua_State *, const char *);
+    int (*loadbuffer)(lua_State *, const char *, size_t, const char *);
+};
+
+static struct language_hooks lang_lua = {
+    NULL, luaL_loadfile, luaL_loadbuffer,
+};
+
+static struct language_hooks lang_gsl_shell = {
+    language_init, language_loadfile, language_loadbuffer,
+};
+
+static struct language_hooks *lang;
+
+static void gsl_shell_openlibs(lua_State *L, int disable_lang_ext)
 {
-    luaopen_gsl (L);
+    luaopen_gsl (L, disable_lang_ext);
     register_graph (L);
 }
 
@@ -257,13 +273,13 @@ static int getargs(lua_State *L, char **argv, int n)
 
 static int dofile(lua_State *L, const char *name)
 {
-    int status = language_loadfile(L, name) || docall(L, 0, 1);
+    int status = lang->loadfile(L, name) || docall(L, 0, 1);
     return report(L, status);
 }
 
 static int dostring(lua_State *L, const char *s, const char *name)
 {
-    int status = language_loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
+    int status = lang->loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
     return report(L, status);
 }
 
@@ -339,7 +355,7 @@ static int yield_expr(lua_State* L, int index, const char* line, size_t len)
     }
 
     lua_pushfstring(L, "return %s", line);
-    status = language_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
+    status = lang->loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
     if (status == 0)
     {
         my_saveline(L, index);
@@ -371,7 +387,7 @@ static int loadline(lua_State *L)
         return 0;
 
     /* try to load it as a simple Lua chunk */
-    status = language_loadbuffer(L, line, len, "=stdin");
+    status = lang->loadbuffer(L, line, len, "=stdin");
 
     if (incomplete(L, status))
     {
@@ -383,7 +399,7 @@ static int loadline(lua_State *L)
             lua_concat(L, 3);  /* join them */
 
             line = lua_tolstring(L, 1, &len);
-            status = language_loadbuffer(L, line, len, "=stdin");
+            status = lang->loadbuffer(L, line, len, "=stdin");
             if (!incomplete(L, status)) break;  /* cannot try to add lines? */
         }
 
@@ -437,7 +453,7 @@ static int handle_script(lua_State *L, char **argv, int n)
     fname = argv[n];
     if (strcmp(fname, "-") == 0 && strcmp(argv[n-1], "--") != 0)
         fname = NULL;  /* stdin */
-    status = language_loadfile(L, fname);
+    status = lang->loadfile(L, fname);
     lua_insert(L, -(narg+1));
     if (status == 0)
         status = docall(L, narg, 0);
@@ -550,6 +566,7 @@ static int dobytecode(lua_State *L, char **argv)
 #define FLAGS_EXEC		4
 #define FLAGS_OPTION		8
 #define FLAGS_NOENV		16
+#define FLAGS_NOGSEXT   32
 
 static int collectargs(char **argv, int *flags)
 {
@@ -589,6 +606,9 @@ static int collectargs(char **argv, int *flags)
             return 0;
         case 'E':
             *flags |= FLAGS_NOENV;
+            break;
+        case 'n':
+            *flags |= FLAGS_NOGSEXT;
             break;
         default:
             return -1;  /* invalid option */
@@ -678,12 +698,24 @@ static int pmain(lua_State *L)
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     }
+
+    lang = (flags & FLAGS_NOGSEXT) ? &lang_lua : &lang_gsl_shell;
+
+    if (lang->init) {
+        int parser_status = lang->init();
+        if (parser_status != 0) {
+            fatal_exception("error in parser initialization");
+        }
+    }
+
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
-    gsl_shell_openlibs(L);
+    gsl_shell_openlibs(L, flags & FLAGS_NOGSEXT);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
-    lj_register_lua_loadfile(language_loadfile);
+    if (!(flags & FLAGS_NOGSEXT)) {
+        lj_register_lua_loadfile(lang->loadfile);
+    }
     s->keep_windows = 1;
     if (!(flags & FLAGS_NOENV)) {
         s->status = handle_luainit(L);
@@ -725,11 +757,6 @@ int main(int argc, char **argv)
     gsl_shell_open(gsl_shell);
 
     pthread_mutex_lock(&gsl_shell->exec_mutex);
-
-    int parser_status = language_init();
-    if (parser_status != 0) {
-        fatal_exception("error in parser initialization");
-    }
 
     smain.argc = argc;
     smain.argv = argv;

@@ -67,14 +67,16 @@ gsl_shell_free (struct gsl_shell_state *gs)
 }
 
 int
-luaopen_gsl (lua_State *L)
+luaopen_gsl (lua_State *L, int disable_lang_ext)
 {
   gsl_set_error_handler_off ();
 
   lua_newtable(L);
   lua_pushcfunction (L, gs_type_string);
   lua_setfield(L, -2, "gsl_type");
-  luaopen_language(L);
+  if (disable_lang_ext == 0) {
+    luaopen_language(L);
+  }
   lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_shell");
 
   return 0;
