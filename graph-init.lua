@@ -307,16 +307,20 @@ local function legend_symbol(sym, dx, dy)
    end
 end
 
-local function plot_legend(self, text, color, symspec, trans)
-   local lg = self:get_legend()
-   local env = debug.getfenv(self)
-
+local function get_plot_legend(p)
+   local lg = p:get_legend()
    if not lg then
       lg = graph.plot()
       lg.units = false
       lg.clip = false
-      self:set_legend(lg)
+      p:set_legend(lg)
    end
+   return lg
+end
+
+local function plot_legend(self, text, color, symspec, trans)
+   local lg = get_plot_legend(self)
+   local env = debug.getfenv(p)
 
    local k = env.__lg_count or 0
    local y = -k * 20
@@ -332,13 +336,24 @@ local function plot_legend(self, text, color, symspec, trans)
    self:update()
 end
 
+local function plot_legend_title(self, text, color)
+   color = color or graph.rgb(0, 0, 120)
+   local lg = get_plot_legend(self)
+   lg:add(graph.textshape(25, 30, text, 14), color)
+   self:update()
+end
+
 local function redirect_plot()
    local reg = debug.getregistry()
    local mt = reg['GSL.plot']
    local plot_index = mt.__index
 
    local function index_redirect(t, k)
-      if k == 'legend' then return plot_legend end
+      if k == 'legend' then
+         return plot_legend
+      elseif k == 'legend_title' then
+         return plot_legend_title
+      end
       return plot_index(t, k)
    end
 
