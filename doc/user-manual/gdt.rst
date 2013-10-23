@@ -118,8 +118,8 @@ GDT Functions
 
 .. function:: filter(t, f)
 
-    Returns a new table obtained from ``t`` by filtering the rows selon the predicate function ``f``.
-    The predicate function will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
+    Returns a new table obtained from ``t`` by filtering the rows using the predicate function ``f``.
+    This latter will be called for each row with two arguments: ``f(r, i)`` where the first is a cursor pointing to the current row and the second is the index.
     The row will be retained if and only if the predicate function returns true.
 
 .. function:: reduce(t, description)

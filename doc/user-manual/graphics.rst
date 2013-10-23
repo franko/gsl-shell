@@ -575,6 +575,10 @@ You can add elements to a plot at any time, even when it is already shown. GSL S
          p:legend('cosinus', 'blue', 'line', {{'stroke'},{'dash',7,3}})
          p:show()
 
+   .. method:: legend_title(text, color)
+
+      Define a title for the default plot's legend with the given text and color.
+
    .. method:: set_categories(axis, categories)
 
       Configure the given ``axis`` (a letter, 'x' or 'y') to use a custom set of labels specified by ``categories``.
