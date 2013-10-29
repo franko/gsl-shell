@@ -383,18 +383,7 @@ function Proto.__index:write(buf)
       end
    end
 
-   local last_inst = self.code[#self.code][1]
-
-   if self.need_close then
-      self:emit(BC.UCLO, 0, 0) -- close upvals
-   end
-
    local body = Buf.new()
-   if not (last_inst >= BC.CALLMT and last_inst <= BC.CALLT) and
-      not (last_inst >= BC.RETM and last_inst <= BC.RET1) then
-      self:emit(BC.RET0, 0, 1)
-   end
-
    self:write_body(body)
 
    local offs = body.offs
@@ -773,7 +762,6 @@ end
 function Proto.__index:close_block_uvals(reg)
    if self.need_close then
       self:emit(BC.UCLO, reg, 0)
-      self.need_close = nil
    end
 end
 function Proto.__index:close_uvals()

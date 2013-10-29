@@ -202,11 +202,17 @@ function match:Vararg(node, base, want)
    return MULTIRES
 end
 function match:BlockStatement(node)
-   local bfreereg = self.ctx.freereg
+   local free = self.ctx.freereg
    for i=1, #node.body do
       self:emit(node.body[i])
    end
-   self.ctx:close_block_uvals(bfreereg)
+
+   -- check if local variables were declared inside the block
+   if free < self.ctx.freereg then
+      -- emit a UCLO instruction for the block's variables
+      -- if needed
+      self.ctx:close_block_uvals(free)
+   end
 end
 function match:DoStatement(node)
    self.ctx:enter()
@@ -626,6 +632,10 @@ end
 function match:Chunk(tree, name)
    for i=1, #tree.body do
       self:emit(tree.body[i])
+   end
+   self.ctx:close_uvals()
+   if not self.ctx.explret then
+      self.ctx:op_ret0()
    end
 end
 
