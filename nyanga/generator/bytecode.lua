@@ -240,7 +240,9 @@ function match:IfStatement(node, nest, exit)
    end
    self.ctx:here(altl)
    if node.alternate then
+      self.ctx:enter()
       self:emit(node.alternate, true, exit)
+      self.ctx:leave()
    end
    if not nest then
       self.ctx:here(exit)
