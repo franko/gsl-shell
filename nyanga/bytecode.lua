@@ -770,6 +770,12 @@ function Proto.__index:is_tcall()
    local prev_inst = self.code[#self.code][1]
    return prev_inst == BC.CALLMT or prev_inst == BC.CALLT
 end
+function Proto.__index:close_block_uvals(reg)
+   if self.need_close then
+      self:emit(BC.UCLO, reg, 0)
+      self.need_close = nil
+   end
+end
 function Proto.__index:close_uvals()
    if self.need_close then
       self:emit(BC.UCLO, #self.actvars, 0)

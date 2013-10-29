@@ -202,9 +202,11 @@ function match:Vararg(node, base, want)
    return MULTIRES
 end
 function match:BlockStatement(node)
+   local bfreereg = self.ctx.freereg
    for i=1, #node.body do
       self:emit(node.body[i])
    end
+   self.ctx:close_block_uvals(bfreereg)
 end
 function match:DoStatement(node)
    self.ctx:enter()
