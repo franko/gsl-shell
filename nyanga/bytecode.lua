@@ -554,7 +554,6 @@ function Proto.__index:jump(name)
       -- backward jump
       local offs = self.labels[name]
       if self.need_close then
-         self.need_close = nil
          return self:emit(BC.UCLO, self.freereg, offs - #self.code)
       else
          return self:emit(BC.JMP, self.freereg, offs - #self.code)
@@ -767,7 +766,6 @@ end
 function Proto.__index:close_uvals()
    if self.need_close then
       self:emit(BC.UCLO, #self.actvars, 0)
-      self.need_close = nil
    end
 end
 function Proto.__index:op_ret(base, rnum)
