@@ -549,6 +549,17 @@ function Proto.__index:here(name)
    end
    return name
 end
+function Proto.__index:enable_jump(name)
+   if type(name) == 'number' then
+      error("bad label")
+   end
+   local here = self.tohere[name]
+   if not here then
+      here = { }
+      self.tohere[name] = here
+   end
+   here[#here + 1] = #self.code + 1
+end
 function Proto.__index:jump(name)
    if self.labels[name] then
       -- backward jump
@@ -560,15 +571,7 @@ function Proto.__index:jump(name)
       end
    else
       -- forward jump
-      if type(name) == 'number' then
-         error("bad label")
-      end
-      local here = self.tohere[name]
-      if not here then
-         here = { }
-         self.tohere[name] = here
-      end
-      here[#here + 1] = #self.code + 1
+      self:enable_jump(name)
       return self:emit(BC.JMP, self.freereg, NO_JMP)
    end
 end
@@ -579,12 +582,7 @@ function Proto.__index:loop(name)
       return self:emit(BC.LOOP, self.freereg, offs - #self.code)
    else
       -- forward jump
-      local here = self.tohere[name]
-      if not here then
-         here = { }
-         self.tohere[name] = here
-      end
-      here[#here + 1] = #self.code + 1
+      self:enable_jump(name)
       return self:emit(BC.LOOP, self.freereg, NO_JMP)
    end
 end
