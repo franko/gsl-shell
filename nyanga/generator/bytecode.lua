@@ -202,6 +202,7 @@ function match:Vararg(node, base, want)
    return MULTIRES
 end
 function match:BlockStatement(node)
+   local exit = self.block_exit
    local free = self.ctx.freereg
    for i=1, #node.body do
       self:emit(node.body[i])
@@ -211,8 +212,11 @@ function match:BlockStatement(node)
    if free < self.ctx.freereg then
       -- emit a UCLO instruction for the block's variables
       -- if needed
-      self.ctx:close_block_uvals(free)
+      self.ctx:close_block_uvals(free, exit)
+   elseif exit then
+      self.ctx:jump(exit)
    end
+   self.block_exit = nil
 end
 function match:DoStatement(node)
    self.ctx:enter()
@@ -239,13 +243,11 @@ function match:IfStatement(node, nest, exit)
       end
    end
 
+   self.block_exit = (node.alternate or not nest) and exit
    self.ctx:enter()
    self:emit(node.consequent)
    self.ctx:leave()
 
-   if node.alternate then
-      self.ctx:jump(exit)
-   end
    self.ctx:here(altl)
    if node.alternate then
       self.ctx:enter()
