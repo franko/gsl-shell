@@ -626,7 +626,6 @@ function match:Chunk(tree, name)
    for i=1, #tree.body do
       self:emit(tree.body[i])
    end
-   self.ctx:close_uvals()
    if not self.ctx.explret then
       self.ctx:op_ret0()
    end
