@@ -757,12 +757,23 @@ function Proto.__index:is_tcall()
    return prev_inst == BC.CALLMT or prev_inst == BC.CALLT
 end
 function Proto.__index:close_block_uvals(reg, exit)
-   if self.need_close then
+   -- the condition on reg ensure that UCLO is emitted only if
+   -- local variables were declared in the block
+   local block_uclo = (reg < self.freereg) and not self:is_root_scope()
+
+   if self.need_close and block_uclo then
       if exit then
+         assert(not self.labels[name], "expected forward jump")
          self:enable_jump(exit)
          self:emit(BC.UCLO, reg, NO_JMP)
       else
          self:emit(BC.UCLO, reg, 0)
+      end
+   else
+      if exit then
+         assert(not self.labels[name], "expected forward jump")
+         self:enable_jump(exit)
+         return self:emit(BC.JMP, reg, NO_JMP)
       end
    end
 end

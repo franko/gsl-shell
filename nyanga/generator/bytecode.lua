@@ -203,20 +203,16 @@ function match:Vararg(node, base, want)
 end
 function match:BlockStatement(node)
    local exit = self.block_exit
+   self.block_exit = nil
+
    local free = self.ctx.freereg
    for i=1, #node.body do
       self:emit(node.body[i])
    end
 
-   -- check if local variables were declared inside the block
-   if free < self.ctx.freereg then
-      -- emit a UCLO instruction for the block's variables
-      -- if needed
-      self.ctx:close_block_uvals(free, exit)
-   elseif exit then
-      self.ctx:jump(exit)
-   end
-   self.block_exit = nil
+   -- emit a UCLO instruction for the block's variables
+   -- if needed
+   self.ctx:close_block_uvals(free, exit)
 end
 function match:DoStatement(node)
    self.ctx:enter()
