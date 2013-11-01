@@ -109,7 +109,7 @@ local patt = [[
    )
 
    func_path <- {|
-      <ident> (s {"."/":"} s <ident>)*
+      <ident> (s {"."} s <ident>)* (s {":"} s <ident>)?
    |}
 
    func_decl <- (

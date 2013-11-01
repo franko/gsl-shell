@@ -269,16 +269,36 @@ function match:MatrixLiteral(node)
    local matrix = builtin.matrix.name
    return B.callExpression(matrix, { B.table(body) })
 end
+local function get_function_path(self, path)
+   local require_self = false
+   local exp = self:get(path[1])
+   local i = 2
+   while path[i] == '.' do
+      exp = B.memberExpression(exp, self:get(path[i+1]), false)
+      i = i + 2
+   end
+   if path[i] == ':' then
+      exp = B.memberExpression(exp, self:get(path[i+1]), false)
+      require_self = true
+   end
+   return exp, require_self
+end
 function match:FunctionDeclaration(node)
    local name
+   local require_self = false
    if not node.expression then
-      name = self:get(node.id[1])
+      name, require_self = get_function_path(self, node.id)
    end
 
    local params  = { }
    local vararg = node.vararg
 
    self.ctx:enter()
+
+   if require_self then
+      params[1] = B.identifier("self")
+      self.ctx:define("self")
+   end
 
    for i=1, #node.params do
       local name = self:get(node.params[i])
