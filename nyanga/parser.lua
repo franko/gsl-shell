@@ -54,11 +54,19 @@ local patt = [[
       <hexnum> / <octal> / <decimal_number>
    ~} -> tonumber
 
+   imaginary <- ( { <decimal_number> } "i" <idsafe> ) -> complex
+
+   uint64 <- ( { %digit+ } "ULL" <idsafe> ) -> uint64
+
+   int64 <- ( { "-"? %digit+ } "LL" <idsafe> ) -> int64
+
+   cdata <- <imaginary> / <uint64> / <int64>
+
    boolean <- (
       {"true"/"false"} <idsafe>
    ) -> boolean
 
-   literal <- ( <number> / <string> / <boolean> ) -> literal
+   literal <- ( <cdata> / <number> / <boolean> / <string> ) -> literal
 
    in  <- "in"  <idsafe>
    end <- "end" <idsafe>

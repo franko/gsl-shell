@@ -186,7 +186,7 @@ local syntax = {
       base = "Expression",
       properties = {
          value = {
-            type = { "string", "number", "nil", "boolean" }
+            type = { "string", "number", "nil", "boolean", "cdata" }
          }
       }
    },

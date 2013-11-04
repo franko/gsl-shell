@@ -1,3 +1,5 @@
+local ffi = require 'ffi'
+
 local defs = { }
 local util = require('nyanga.util')
 
@@ -9,6 +11,15 @@ defs.tostring = tostring
 
 function defs.octal(s)
    return tostring(tonumber(s, 8))
+end
+function defs.complex(s)
+   return ffi.new('double complex', 0, tonumber(s))
+end
+function defs.uint64(s)
+   return ffi.new('uint64_t', tonumber(s))
+end
+function defs.int64(s)
+   return ffi.new('int64_t', tonumber(s))
 end
 function defs.quote(s)
    return string.format("%q", s)
