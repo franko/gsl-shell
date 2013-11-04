@@ -369,6 +369,9 @@ function match:WhileStatement(node)
    self.loop = save
    return B.whileStatement(self:get(node.test), body)
 end
+function match:DoStatement(node)
+   return B.doStatement(self:get(node.body))
+end
 function match:ForStatement(node)
    local loop = B.identifier(util.genid())
    local save = self.loop
