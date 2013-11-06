@@ -320,7 +320,7 @@ end
 
 local function plot_legend(self, text, color, symspec, trans)
    local lg = get_plot_legend(self)
-   local env = debug.getfenv(p)
+   local env = debug.getfenv(self)
 
    local k = env.__lg_count or 0
    local y = -k * 20
