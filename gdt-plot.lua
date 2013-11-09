@@ -65,16 +65,21 @@ local stat_lookup = {
 }
 
 local function stat_filter(y, opts, mean, sd)
-    if opts.maxrdev then
-        if abs(y - mean) > sd * opts.maxrdev then return false end
+    local keep = true
+    for spec, value in pairs(opts) do
+        if spec == 'maxrdev' then
+            keep = keep and (abs(y - mean) < sd * value)
+        elseif spec == 'maxdev' then
+            keep = keep and (abs(y - mean) < value)
+        elseif spec == 'max' then
+            keep = keep and (y <= value)
+        elseif spec == 'min' then
+            keep = keep and (y >= value)
+        else
+            error('invalid aggregate function parameter: ' .. spec)
+        end
     end
-    if opts.max then
-        if y > opts.max then return false end
-    end
-    if opts.min then
-        if y < opts.min then return false end
-    end
-    return true
+    return keep
 end
 
 local function stat_fini_gen(stat, opts)
