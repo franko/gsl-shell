@@ -184,10 +184,8 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
             local fy, fini = jp.f, jp.fini
             local f0 = jp.f0 and jp.f0() or 0
             local e = collate_factors(t, i, jes)
+            e[#e+1] = jp.name
             e.p = p
-            if #jys > 1 then
-                e[#e+1] = jp.name
-            end
 
             local v = expr_print.eval(jp.expr, table_scope, t, i)
             local pass = eval_conditions(conds, t, i)
@@ -219,6 +217,26 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
     algo.quicksort_mirror(labels, val, 1, #labels, sort_labels_func)
 
     return labels, enums, val
+end
+
+local function extract_parameter_title(enums)
+    if #enums == 0 then return end
+    local first = enums[1]
+    local ptitle = first[#first]
+    for i = 1, #enums do
+        local enum = enums[i]
+        if enum[#enum] ~= ptitle then
+            ptitle = nil
+            break
+        end
+    end
+    if ptitle then
+        for i = 1, #enums do
+            local enum = enums[i]
+            enum[#enum] = nil
+        end
+        return ptitle
+    end
 end
 
 local function get_stat(expr)
@@ -324,9 +342,10 @@ end
 
 local lineplot = {xlabels = gen_xlabels}
 
-function lineplot.create(labels, enums, val)
+function lineplot.create(labels, enums, val, title)
     local plt = graph.plot()
     plt.pad, plt.clip = true, false
+    if title then plt.title = title end
 
     for q, en in ipairs(enums) do
         local ln = path()
@@ -436,10 +455,10 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local jes = idents_get_column_indexes(t, schema.enums)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes, schema.conds)
-
+    local param_title = extract_parameter_title(enums)
     local legend_title = get_legend_title(t, jys, jes)
 
-    local plt = plotter.create(labels, enums, val)
+    local plt = plotter.create(labels, enums, val, param_title)
     plotter.xlabels(plt, labels)
     plotter.legend(plt, labels, enums, legend_title)
 
