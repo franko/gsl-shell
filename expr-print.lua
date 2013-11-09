@@ -85,6 +85,9 @@ local function eval(expr, scope, ...)
     elseif expr.literal then
         return expr.literal
     elseif expr.func then
+        if expr.options then
+            error('cannot use keyword options in non-aggregate functions')
+        end
         local arg_value = eval(expr.arg, scope, ...)
         if arg_value then
             local f = scope.func(expr)
