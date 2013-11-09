@@ -34,6 +34,15 @@ end
 
 local high_prio = expr_lexer.max_oper_prio + 1
 
+local function options_print(options)
+    if not options then return '' end
+    local ls = {}
+    for k, v in pairs(options) do
+        ls[#ls+1] = format("%s = %s", k, tostring(v))
+    end
+    return " : " .. concat(ls, " , ")
+end
+
 function ex_print(e)
     if type(e) == 'number' then
         return e, high_prio
@@ -45,7 +54,8 @@ function ex_print(e)
         return format('%q', e.literal), high_prio
     elseif e.func then
         local arg_str = ex_print(e.arg)
-        return format('%s(%s)', e.func, arg_str), high_prio
+        local opt_str = options_print(e.options)
+        return format('%s(%s%s)', e.func, arg_str, opt_str), high_prio
     else
         local prio = oper_table[e.operator]
         local s = op_print(e, prio)
