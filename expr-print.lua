@@ -34,7 +34,7 @@ end
 
 local high_prio = expr_lexer.max_oper_prio + 1
 
-ex_print = function(e)
+function ex_print(e)
     if type(e) == 'number' then
         return e, high_prio
     elseif type(e) == 'string' then
