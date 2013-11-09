@@ -93,7 +93,7 @@ end
 
 local max_oper_prio = expr_lexer.max_oper_prio
 
-expr = function(lexer, actions, prio)
+function expr(lexer, actions, prio)
     if prio > max_oper_prio then
         return factor(lexer, actions)
     end
