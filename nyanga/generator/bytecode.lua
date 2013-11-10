@@ -21,11 +21,11 @@ local cmpop2 = {
 }
 
 
-local match = { }
+local StatementRule = { }
 
 local MULTIRES = -1
 
-function match:CallExpression(node, base, want, tail)
+function StatementRule:CallExpression(node, base, want, tail)
    local free = self.ctx.freereg
 
    want = want or 0
@@ -66,7 +66,7 @@ function match:CallExpression(node, base, want, tail)
    return want == MULTIRES and MULTIRES or base
 end
 
-function match:SendExpression(node, base, want, tail)
+function StatementRule:SendExpression(node, base, want, tail)
    local free = self.ctx.freereg
    local narg = #node.arguments
 
@@ -120,19 +120,19 @@ function match:SendExpression(node, base, want, tail)
    return base
 end
 
-function match:LabelStatement(node)
+function StatementRule:LabelStatement(node)
    return self.ctx:here(node.label)
 end
-function match:GotoStatement(node)
+function StatementRule:GotoStatement(node)
    return self.ctx:jump(node.label)
 end
 
-function match:Literal(node, dest)
+function StatementRule:Literal(node, dest)
    dest = dest or self.ctx:nextreg()
    self.ctx:op_load(dest, node.value)
    return dest
 end
-function match:Table(node, dest)
+function StatementRule:Table(node, dest)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local narry, nhash = 0, 0
@@ -171,7 +171,7 @@ function match:Table(node, dest)
    self.ctx.freereg = free
    return dest
 end
-function match:Identifier(node, dest, want)
+function StatementRule:Identifier(node, dest, want)
    dest = dest or self.ctx:nextreg()
    want = want or 0
    local info, uval = self.ctx:lookup(node.name)
@@ -189,22 +189,22 @@ function match:Identifier(node, dest, want)
    end
    return dest
 end
-function match:Vararg(node, base, want)
+function StatementRule:Vararg(node, base, want)
    assert(base, "Vararg needs a base")
    self.ctx:op_varg(base, want)
    return MULTIRES
 end
-function match:BlockStatement(node)
+function StatementRule:BlockStatement(node)
    for i=1, #node.body do
       self:emit(node.body[i])
    end
 end
-function match:DoStatement(node)
+function StatementRule:DoStatement(node)
    self:block_enter()
    self:emit(node.body)
    self:block_leave()
 end
-function match:IfStatement(node, nest, exit)
+function StatementRule:IfStatement(node, nest, exit)
    local free = self.ctx.freereg
    exit = exit or util.genid()
    local altl = util.genid()
@@ -241,10 +241,10 @@ function match:IfStatement(node, nest, exit)
    end
    self.ctx.freereg = free
 end
-function match:ExpressionStatement(node, dest, ...)
+function StatementRule:ExpressionStatement(node, dest, ...)
    return self:emit(node.expression, dest, ...)
 end
-function match:BinaryExpression(node, dest, want)
+function StatementRule:BinaryExpression(node, dest, want)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local o = node.operator
@@ -280,7 +280,7 @@ function match:BinaryExpression(node, dest, want)
    self.ctx.freereg = free
    return dest
 end
-function match:UnaryExpression(node, dest, want)
+function StatementRule:UnaryExpression(node, dest, want)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local o = node.operator
@@ -297,7 +297,7 @@ function match:UnaryExpression(node, dest, want)
    self.ctx.freereg = free
    return dest
 end
-function match:ListExpression(node, dest, want)
+function StatementRule:ListExpression(node, dest, want)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local o = node.operator
@@ -316,10 +316,10 @@ function match:ListExpression(node, dest, want)
    self.ctx.freereg = free
    return dest
 end
-function match:ParenExpression(node, dest, want)
+function StatementRule:ParenExpression(node, dest, want)
    return self:emit(node.expressions[1], dest, 1)
 end
-function match:LocalDeclaration(node)
+function StatementRule:LocalDeclaration(node)
    local base = self.ctx:nextreg(#node.names)
 
    local want = #node.expressions
@@ -334,7 +334,7 @@ function match:LocalDeclaration(node)
    end
 end
 
-function match:AssignmentExpression(node)
+function StatementRule:AssignmentExpression(node)
    local free = self.ctx.freereg
    local want = #node.left
 
@@ -375,7 +375,7 @@ function match:AssignmentExpression(node)
 
    self.ctx.freereg = free
 end
-function match:LogicalExpression(node, dest, want)
+function StatementRule:LogicalExpression(node, dest, want)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local a = self:emit(node.left, dest, 1)
@@ -392,7 +392,7 @@ function match:LogicalExpression(node, dest, want)
    self.ctx.freereg = free
    return dest
 end
-function match:MemberExpression(node, base, want)
+function StatementRule:MemberExpression(node, base, want)
    local free = self.ctx.freereg
    base = base or self.ctx:nextreg()
    local base = self:emit(node.object, base, 1)
@@ -408,7 +408,7 @@ function match:MemberExpression(node, base, want)
    self.ctx.freereg = free
    return base
 end
-function match:FunctionDeclaration(node)
+function StatementRule:FunctionDeclaration(node)
    local free = self.ctx.freereg
 
    local func = self.ctx:child()
@@ -434,7 +434,7 @@ function match:FunctionDeclaration(node)
 
    return dest
 end
-function match:FunctionExpression(node, dest)
+function StatementRule:FunctionExpression(node, dest)
    local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
    local func = self.ctx:child()
@@ -457,7 +457,7 @@ function match:FunctionExpression(node, dest)
 
    return dest
 end
-function match:WhileStatement(node)
+function StatementRule:WhileStatement(node)
    local free = self.ctx.freereg
    self:block_enter()
 
@@ -490,7 +490,7 @@ function match:WhileStatement(node)
    self.exit = saveexit
    self.ctx.freereg = free
 end
-function match:RepeatStatement(node)
+function StatementRule:RepeatStatement(node)
    local free = self.ctx.freereg
    self:block_enter()
 
@@ -524,14 +524,14 @@ function match:RepeatStatement(node)
    self.exit = saveexit
    self.ctx.freereg = free
 end
-function match:BreakStatement()
+function StatementRule:BreakStatement()
    if self.exit then
       return self.ctx:jump(self.exit)
    else
       error("no loop to break")
    end
 end
-function match:ForStatement(node)
+function StatementRule:ForStatement(node)
    local free = self.ctx.freereg
    self:block_enter(3)
    local init = node.init
@@ -558,7 +558,7 @@ function match:ForStatement(node)
    self:block_leave()
    self.ctx.freereg = free
 end
-function match:ForInStatement(node)
+function StatementRule:ForInStatement(node)
    local free = self.ctx.freereg
    self:block_enter(3)
 
@@ -590,7 +590,7 @@ function match:ForInStatement(node)
    self:block_leave()
    self.ctx.freereg = free
 end
-function match:ReturnStatement(node)
+function StatementRule:ReturnStatement(node)
    local free = self.ctx.freereg
    local base = self.ctx:nextreg(#node.arguments)
    local narg = #node.arguments
@@ -614,7 +614,7 @@ function match:ReturnStatement(node)
       self.ctx.explret = true
    end
 end
-function match:Chunk(tree, name)
+function StatementRule:Chunk(tree, name)
    for i=1, #tree.body do
       self:emit(tree.body[i])
    end
@@ -650,13 +650,13 @@ local function generate(tree, name)
       if not node.kind then
          error("don't know what to do with: "..util.dump(node))
       end
-      if not match[node.kind] then
+      if not StatementRule[node.kind] then
          error("no handler for "..node.kind)
       end
       if node.line then
          self.ctx:line(node.line)
       end
-      return match[node.kind](self, node, ...)
+      return StatementRule[node.kind](self, node, ...)
    end
    self:emit(tree)
    return self.dump:pack()
