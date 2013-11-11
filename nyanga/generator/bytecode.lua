@@ -371,28 +371,6 @@ end
 function StatementRule:ExpressionStatement(node, dest, ...)
    return self:emit(node.expression, dest, ...)
 end
-function StatementRule:ListExpression(node, dest, want)
-   local free = self.ctx.freereg
-   dest = dest or self.ctx:nextreg()
-   local o = node.operator
-   local rbot = self.ctx:nextreg(#node.expressions)
-   local rtop = rbot + #node.expressions - 1
-   for i=1, #node.expressions do
-      self:emit(node.expressions[i], rbot + (i - 1), 1)
-   end
-   if o == '..' then
-      self.ctx:op_cat(dest, rbot, rtop)
-   elseif o == ',' then
-      -- hmm... not sure
-   else
-      error("bad list operator: "..o, 2)
-   end
-   self.ctx.freereg = free
-   return dest
-end
-function StatementRule:ParenExpression(node, dest, want)
-   return self:emit(node.expressions[1], dest, 1)
-end
 function StatementRule:LocalDeclaration(node)
    local base = self.ctx:nextreg(#node.names)
 
