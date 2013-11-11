@@ -25,11 +25,6 @@ function exports.unaryExpression(op, arg, loc)
       operator = op, argument = arg, loc = loc
    })
 end
-function exports.listExpression(op, exprs, loc)
-   return syntax.build("ListExpression", {
-      operator = op, expressions = exprs, loc = loc
-   })
-end
 
 function exports.parenExpression(exprs, loc)
    return syntax.build("ParenExpression", {

@@ -75,30 +75,6 @@ local syntax = {
          }
       }
    },
-   ListExpression = {
-      kind = "ListExpression",
-      base = "Expression",
-      properties = {
-         operator = {
-            type   = "enum",
-            values = { "..", "," }
-         },
-         expressions = {
-            type = "list",
-            kind = "Expression"
-         }
-      }
-   },
-   ParenExpression = {
-      kind = "ParenExpression",
-      base = "Expression",
-      properties = {
-         expressions = {
-            type = "list",
-            kind = "Expression"
-         }
-      }
-   },
    AssignmentExpression = {
       kind = "AssignmentExpression",
       base = "Statement",
