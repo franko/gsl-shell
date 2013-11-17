@@ -712,6 +712,9 @@ end
 function Proto.__index:op_len(dest, var1)
    return self:emit(BC.LEN, dest, var1)
 end
+function Proto.__index:op_nils(dest, want)
+   return self:emit(BC.KNIL, dest, dest + want - 1)
+end
 
 function Proto.__index:op_move(dest, from)
    return self:emit(BC.MOV, dest, from)
