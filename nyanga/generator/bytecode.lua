@@ -99,27 +99,13 @@ function ExpressionRule:Table(node, dest)
    return dest
 end
 
-function ExpressionRule:BinaryExpression(node, dest, want)
-   dest = dest or self.ctx:nextreg()
-   local free = self.ctx.freereg
+function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
-   local a = self:expr_emit(node.left, nil, 1)
-   local b = self:expr_emit(node.right, nil, 1)
-   if o == '+' then
-      self.ctx:op_add(dest, a, b)
-   elseif o == '-' then
-      self.ctx:op_sub(dest, a, b)
-   elseif o == '/' then
-      self.ctx:op_div(dest, a, b)
-   elseif o == '*' then
-      self.ctx:op_mul(dest, a, b)
-   elseif o == '^' then
-      self.ctx:op_pow(dest, a, b)
-   elseif o == '%' then
-      self.ctx:op_mod(dest, a, b)
-   elseif o == '..' then
-      self.ctx:op_cat(dest, a, b)
-   elseif cmpop[o] then
+   if cmpop[o] then
+      dest = dest or self.ctx:nextreg()
+      local free = self.ctx.freereg
+      local a = self:expr_emit(node.left)
+      local b = self:expr_emit(node.right)
       local j1 = util.genid()
       local j2 = util.genid()
       self.ctx:op_comp(cmpop2[o], a, b, j1)
@@ -128,18 +114,42 @@ function ExpressionRule:BinaryExpression(node, dest, want)
       self.ctx:here(j1)
       self.ctx:op_load(dest, true)
       self.ctx:here(j2)
+      self.ctx.freereg = free
    else
-      error("bad binary operator: "..o, 2)
+      print('>>> operator: ', o, "dest:", dest, "free:", self.ctx.freereg)
+      local free = self.ctx.freereg
+      local a = self:expr_emit(node.left)
+      local b = self:expr_emit(node.right)
+      print('>>> a: ', a, "b:", b, "free:", self.ctx.freereg)
+      self.ctx.freereg = free
+      dest = dest or self.ctx:nextreg()
+      print('>>> dest: ', dest)
+      if o == '+' then
+         self.ctx:op_add(dest, a, b)
+      elseif o == '-' then
+         self.ctx:op_sub(dest, a, b)
+      elseif o == '/' then
+         self.ctx:op_div(dest, a, b)
+      elseif o == '*' then
+         self.ctx:op_mul(dest, a, b)
+      elseif o == '^' then
+         self.ctx:op_pow(dest, a, b)
+      elseif o == '%' then
+         self.ctx:op_mod(dest, a, b)
+      elseif o == '..' then
+         self.ctx:op_cat(dest, a, b)
+      else
+         error("bad binary operator: "..o, 2)
+      end
    end
-   self.ctx.freereg = free
    return dest
 end
 
-function ExpressionRule:UnaryExpression(node, dest, want)
+function ExpressionRule:UnaryExpression(node, dest)
    dest = dest or self.ctx:nextreg()
    local free = self.ctx.freereg
    local o = node.operator
-   local a = self:expr_emit(node.argument, nil, want)
+   local a = self:expr_emit(node.argument)
    if o == '-' then
       self.ctx:op_unm(dest, a)
    elseif o == '#' then
@@ -153,11 +163,10 @@ function ExpressionRule:UnaryExpression(node, dest, want)
    return dest
 end
 
--- TO BE FIXED
-function ExpressionRule:LogicalExpression(node, dest, want)
-   local free = self.ctx.freereg
+function ExpressionRule:LogicalExpression(node, dest)
    dest = dest or self.ctx:nextreg()
-   local a = self:expr_emit(node.left, dest, 1)
+   local free = self.ctx.freereg
+   local a = self:expr_emit(node.left)
    local l = util.genid()
    if node.operator == 'or' then
       self.ctx:op_test(true, a, l)
@@ -166,22 +175,22 @@ function ExpressionRule:LogicalExpression(node, dest, want)
    else
       error("bad operator in logical expression: "..node.operator)
    end
-   self:expr_emit(node.right, dest, 1)
+   self:expr_emit(node.right)
    self.ctx:here(l)
    self.ctx.freereg = free
    return dest
 end
+
 function ExpressionRule:MemberExpression(node, base, want)
-   local free = self.ctx.freereg
    base = base or self.ctx:nextreg()
-   local base = self:expr_emit(node.object, base, 1)
-   local expr = self.ctx:nextreg()
-   if node.computed then
-      expr = self:expr_emit(node.property, expr, 1)
-   elseif node.property.kind == 'Identifier' then
-      self.ctx:op_load(expr, node.property.name)
+   local free = self.ctx.freereg
+   local base = self:expr_emit(node.object, base)
+   local expr
+   if not node.computed and node.property.kind == 'Identifier' then
+      local reg = self.ctx:nextreg()
+      expr = self.ctx:op_load(reg, node.property.name)
    else
-      expr = self:expr_emit(node.property, expr, 1)
+      expr = self:expr_emit(node.property)
    end
    self.ctx:op_tget(base, base, expr)
    self.ctx.freereg = free
@@ -189,8 +198,8 @@ function ExpressionRule:MemberExpression(node, base, want)
 end
 
 function ExpressionRule:FunctionExpression(node, dest)
-   local free = self.ctx.freereg
    dest = dest or self.ctx:nextreg()
+   local free = self.ctx.freereg
    local func = self.ctx:child()
    self.ctx = func
    for i=1, #node.params do
@@ -217,7 +226,7 @@ function ExpressionRule:CallExpression(node, base, want, tail)
 
    want = want or 0
    base = base or self.ctx:nextreg()
-   self:expr_emit(node.callee, base, 1)
+   self:expr_emit(node.callee, base)
 
    local narg = #node.arguments
    self.ctx:nextreg(narg)
@@ -320,6 +329,7 @@ local function is_pure_exprs(node)
 end
 
 local function can_multi_return(node)
+   if not node then print(debug.traceback()) end
    return multi_returns[node.kind]
 end
 
@@ -357,15 +367,14 @@ function StatementRule:IfStatement(node, nest, exit)
    local altl = util.genid()
    if node.test then
       local test = node.test
-      local treg = self.ctx:nextreg()
       local o = test.operator
       if test.kind == 'BinaryExpression' and cmpop[o] then
-         local a = self:expr_emit(test.left, self.ctx:nextreg())
-         local b = self:expr_emit(test.right, self.ctx:nextreg())
+         local a = self:expr_emit(test.left)
+         local b = self:expr_emit(test.right)
          self.ctx.freereg = free
          self.ctx:op_comp(cmpop[o], a, b, altl)
       else
-         self:expr_emit(test, treg, 1)
+         local treg = self:expr_emit(test)
          self.ctx.freereg = free
          self.ctx:op_test(false, treg, altl)
       end
@@ -394,16 +403,21 @@ end
 function StatementRule:LocalDeclaration(node)
    local nvars = #node.names
    local nexps = #node.expressions
-   local base = self.ctx:nextreg(nvars)
+   local base = self.ctx.freereg
    local slots = nvars
    for i=1, nexps do
       if slots > 0 then
          local w = (i == nexps and slots or 1)
          self:expr_emit(node.expressions[i], base + (i - 1), w)
+         self.ctx:nextreg()
          slots = slots - w
       else
          self:expr_emit(node.expressions[i], nil, 0)
       end
+   end
+
+   if slots > 0 then
+      self.ctx:op_nils(base + nexps, slots)
    end
 
    for i=1, nvars do
@@ -412,7 +426,7 @@ function StatementRule:LocalDeclaration(node)
    end
 end
 
-local function as_local_var(ctx, node)
+local function is_local_var(ctx, node)
    if node.kind == 'Identifier' then
       local info, uval = ctx:lookup(node.name)
       if info and not uval then
@@ -426,17 +440,19 @@ function StatementRule:AssignmentExpression(node)
    local nvars = #node.left
    local nexps = #node.right
 
-   local lastreg = nexps >= nvars and as_local_var(self.ctx, node.left[nvars])
-   local nregs = lastreg and nvars - 1 or nvars
+   local regs = { }
+   for i = 1, nvars - 1 do
+      if is_local_var(self.ctx, node.left[i]) then
+         regs[i] = self.ctx:nextreg()
+      end
+   end
 
-   local base = self.ctx:nextreg(nregs)
    local slots = nvars
    local exprs = { }
    for i=1, nexps do
       if slots > 0 then
          local w = (i == nexps and slots or 1)
-         local reg = (i == nvars and lastreg or base + (i - 1))
-         exprs[i] = self:expr_emit(node.right[i], reg, w)
+         exprs[i] = self:expr_emit(node.right[i], regs[i], w)
          slots = slots - w
       else
          self:expr_emit(node.right[i], nil, 0)
@@ -460,13 +476,13 @@ function StatementRule:AssignmentExpression(node)
             self.ctx:op_gset(expr, lhs.name)
          end
       elseif lhs.kind == 'MemberExpression' then
-         local obj = self:expr_emit(lhs.object, nil, 1)
+         local obj = self:expr_emit(lhs.object)
          local key
          if lhs.property.kind == 'Identifier' and not lhs.computed then
             key = self.ctx:nextreg()
             self.ctx:op_load(key, lhs.property.name)
          else
-            key = self:expr_emit(lhs.property, nil, 1)
+            key = self:expr_emit(lhs.property)
          end
          self.ctx:op_tset(obj, key, expr)
       else
@@ -513,16 +529,15 @@ function StatementRule:WhileStatement(node)
    self.exit = exit
 
    self.ctx:here(loop)
-   local treg = self.ctx:nextreg()
    local test = node.test
    local o = test.operator
    if test.kind == 'BinaryExpression' and cmpop[o] then
-      local a = self:expr_emit(test.left, self.ctx:nextreg())
-      local b = self:expr_emit(test.right, self.ctx:nextreg())
+      local a = self:expr_emit(test.left)
+      local b = self:expr_emit(test.right)
       self.ctx.freereg = free
       self.ctx:op_comp(cmpop[o], a, b, exit)
    else
-      self:expr_emit(test, treg, 1)
+      local treg = self:expr_emit(test)
       self.ctx.freereg = free
       self.ctx:op_test(false, treg, exit)
    end
@@ -549,16 +564,15 @@ function StatementRule:RepeatStatement(node)
    self.ctx:loop(exit)
    self:emit(node.body)
 
-   local treg = self.ctx:nextreg()
    local test = node.test
    if test.kind == 'BinaryExpression' and cmpop[o] then
       local o = test.operator
-      local a = self:expr_emit(test.left, self.ctx:nextreg())
-      local b = self:expr_emit(test.right, self.ctx:nextreg())
+      local a = self:expr_emit(test.left)
+      local b = self:expr_emit(test.right)
       self.ctx.freereg = free
       self.ctx:op_comp(cmpop[o], a, b)
    else
-      self:expr_emit(test, treg, 1)
+      local treg = self:expr_emit(test)
       self.ctx.freereg = free
       self.ctx:op_test(false, treg)
    end
@@ -646,7 +660,10 @@ function StatementRule:ReturnStatement(node)
    end
    local last = node.arguments[narg]
    local slot = base + narg - 1
-   local _, mret = self:expr_emit(last, slot, MULTIRES, true)
+   local reg, mret
+   if narg > 0 then
+      reg, mret = self:expr_emit(last, slot, MULTIRES, true)
+   end
    if mret then
       self.ctx:op_retm(base, narg - 1)
    elseif narg == 0 then
@@ -712,9 +729,8 @@ local function generate(tree, name)
    end
 
    function self:expr_emit(node, base, want, tail)
-      if want == 0 and is_pure_exprs(node) then
-         return
-      end
+      want = want or 1
+      if want == 0 and is_pure_exprs(node) then return end
       if can_multi_return(node) then
          return dispatch(self, ExpressionRule, node, base, want, tail)
       else
