@@ -421,6 +421,7 @@ function StatementRule:LocalDeclaration(node)
 
    if slots > 0 then
       self.ctx:op_nils(base + nexps, slots)
+      self.ctx:nextreg(slots)
    end
 
    for i=1, nvars do
@@ -447,19 +448,15 @@ function StatementRule:AssignmentExpression(node)
    local nvars = #node.left
    local nexps = #node.right
 
-   local regs = { }
-   for i = 1, nvars - 1 do
-      if is_local_var(self.ctx, node.left[i]) then
-         regs[i] = self.ctx:nextreg()
-      end
-   end
-
    local slots = nvars
    local exprs = { }
    for i=1, nexps do
       if slots > 0 then
          local w = (i == nexps and slots or 1)
-         exprs[i] = self:expr_emit(node.right[i], regs[i], w)
+         local use_reg = is_local_var(self.ctx, node.left[i])
+         local reg = use_reg and self.ctx.freereg or nil
+         exprs[i] = self:expr_emit(node.right[i], reg, w)
+         if use_reg then self.ctx:nextreg(w) end
          slots = slots - w
       else
          self:expr_emit(node.right[i], nil, 0)
@@ -468,7 +465,7 @@ function StatementRule:AssignmentExpression(node)
 
    for i = nvars, 1, -1 do
       local lhs  = node.left[i]
-      local expr = exprs[i]
+      local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
       if lhs.kind == 'Identifier' then
          local info, uval = self.ctx:lookup(lhs.name)
          if info then
@@ -659,17 +656,19 @@ end
 
 function StatementRule:ReturnStatement(node)
    local free = self.ctx.freereg
-   local base = self.ctx:nextreg(#node.arguments)
+   local base = free
    local narg = #node.arguments
    for i=1, narg - 1 do
       local arg = node.arguments[i]
       self:expr_emit(arg, base + i - 1, 1)
+      self.ctx:nextreg()
    end
    local last = node.arguments[narg]
    local slot = base + narg - 1
    local reg, mret
    if narg > 0 then
       reg, mret = self:expr_emit(last, slot, MULTIRES, true)
+      self.ctx:nextreg()
    end
    if mret then
       self.ctx:op_retm(base, narg - 1)
