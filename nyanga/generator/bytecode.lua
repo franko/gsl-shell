@@ -409,7 +409,8 @@ function StatementRule:LocalDeclaration(node)
       if slots > 0 then
          local w = (i == nexps and slots or 1)
          self:expr_emit(node.expressions[i], base + (i - 1), w)
-         self.ctx:nextreg()
+         assert(base + (i - 1) == self.ctx.freereg)
+         self.ctx:nextreg(w)
          slots = slots - w
       else
          self:expr_emit(node.expressions[i], nil, 0)
