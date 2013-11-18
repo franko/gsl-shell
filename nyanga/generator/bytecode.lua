@@ -99,6 +99,14 @@ function ExpressionRule:Table(node, dest)
    return dest
 end
 
+local dirop = {
+   ['+'] = 'ADD',
+   ['*'] = 'MUL',
+   ['-'] = 'SUB',
+   ['/'] = 'DIV',
+   ['%'] = 'MOD',
+}
+
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
    if cmpop[o] then
@@ -115,24 +123,21 @@ function ExpressionRule:BinaryExpression(node, dest)
       self.ctx:op_load(dest, true)
       self.ctx:here(j2)
       self.ctx.freereg = free
+   elseif dirop[o] then
+      local free = self.ctx.freereg
+      local atag, a = self:direct_expr_emit(node.left)
+      local btag, b = self:direct_expr_emit(node.right)
+      self.ctx.freereg = free
+      dest = dest or self.ctx:nextreg()
+      self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
    else
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
       local b = self:expr_emit(node.right)
       self.ctx.freereg = free
       dest = dest or self.ctx:nextreg()
-      if o == '+' then
-         self.ctx:op_add(dest, a, b)
-      elseif o == '-' then
-         self.ctx:op_sub(dest, a, b)
-      elseif o == '/' then
-         self.ctx:op_div(dest, a, b)
-      elseif o == '*' then
-         self.ctx:op_mul(dest, a, b)
-      elseif o == '^' then
+      if o == '^' then
          self.ctx:op_pow(dest, a, b)
-      elseif o == '%' then
-         self.ctx:op_mod(dest, a, b)
       elseif o == '..' then
          self.ctx:op_cat(dest, a, b)
       else
@@ -422,6 +427,10 @@ function StatementRule:LocalDeclaration(node)
       local lhs = node.names[i]
       self.ctx:newvar(lhs.name, base + (i - 1))
    end
+end
+
+local function is_literal(node)
+   return node.kind == 'Literal'
 end
 
 local function is_local_var(ctx, node)
@@ -738,6 +747,20 @@ local function generate(tree, name)
          end
          return reg, false
       end
+   end
+
+   function self:direct_expr_emit(node, base)
+      local tag, reg
+      if can_multi_return(node) then
+         tag, reg = 'V', dispatch(self, ExpressionRule, node, base, 1, false)
+      else
+         if is_literal(node) then
+            tag, reg = 'N', self.ctx:const(node.value)
+         else
+            tag, reg = 'V', dispatch(self, ExpressionRule, node, base)
+         end
+      end
+      return tag, reg
    end
 
    self:emit(tree)
