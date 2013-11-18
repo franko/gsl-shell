@@ -116,14 +116,11 @@ function ExpressionRule:BinaryExpression(node, dest)
       self.ctx:here(j2)
       self.ctx.freereg = free
    else
-      print('>>> operator: ', o, "dest:", dest, "free:", self.ctx.freereg)
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
       local b = self:expr_emit(node.right)
-      print('>>> a: ', a, "b:", b, "free:", self.ctx.freereg)
       self.ctx.freereg = free
       dest = dest or self.ctx:nextreg()
-      print('>>> dest: ', dest)
       if o == '+' then
          self.ctx:op_add(dest, a, b)
       elseif o == '-' then
