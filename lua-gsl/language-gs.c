@@ -51,6 +51,25 @@ language_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *name)
     return status;
 }
 
+static void l_message(const char *pname, const char *msg)
+{
+    if (pname) fprintf(stderr, "%s: ", pname);
+    fprintf(stderr, "%s\n", msg);
+    fflush(stderr);
+}
+
+int language_report(lua_State *_L, int status)
+{
+    lua_State *L = parser_L;
+    if (status && !lua_isnil(L, -1)) {
+        const char *msg = lua_tostring(L, -1);
+        if (msg == NULL) msg = "(error object is not a string)";
+        l_message("<Nyanga parser>", msg);
+        lua_pop(L, 1);
+    }
+    return status;
+}
+
 static char *
 read_file_content(lua_State *L, const char *filename, long *plength)
 {

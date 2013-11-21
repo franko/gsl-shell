@@ -117,16 +117,17 @@ struct window_hooks app_window_hooks[1] = {{
 
 struct language_hooks {
     int (*init)();
+    int (*report)(lua_State *L, int status);
     int (*loadfile)(lua_State *, const char *);
     int (*loadbuffer)(lua_State *, const char *, size_t, const char *);
 };
 
 static struct language_hooks lang_lua = {
-    NULL, luaL_loadfile, luaL_loadbuffer,
+    NULL, NULL, luaL_loadfile, luaL_loadbuffer,
 };
 
 static struct language_hooks lang_gsl_shell = {
-    language_init, language_loadfile, language_loadbuffer,
+    language_init, language_report, language_loadfile, language_loadbuffer,
 };
 
 static struct language_hooks *lang;
@@ -704,7 +705,10 @@ static int pmain(lua_State *L)
     if (lang->init) {
         int parser_status = lang->init();
         if (parser_status != 0) {
-            fatal_exception("error in parser initialization");
+            if (lang->report) {
+                lang->report(L, parser_status);
+            }
+            exit(EXIT_FAILURE);
         }
     }
 
