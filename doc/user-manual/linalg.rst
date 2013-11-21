@@ -16,6 +16,10 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
 
    Returns the inverse of the matrix m.
 
+.. function:: det(m)
+
+   Returns the determinant of the matrix m.
+
 .. function:: solve(A, b)
 
    Solve the square system A x = b where A is a square matrix, b
