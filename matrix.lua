@@ -967,6 +967,79 @@ local function matrix_complex_det(m)
   return det
 end
 
+local function extract_lu_matrix(lu)
+   local zero = 0
+   local l
+   local u
+   if ffi.istype(gsl_matrix, lu) then
+      l = matrix.unit(tonumber(lu.size1))
+      u = matrix_copy(lu)      
+   else
+      l = matrix.cunit(tonumber(lu.size1))      
+      u = matrix_complex_copy(lu)
+      zero = 0 +0i
+   end
+
+   for i = 1, tonumber(lu.size1) do
+         for j = 1,i-1 do
+            l[i][j] = u[i][j]
+            u[i][j] = zero
+         end
+      end
+   return l,u
+end
+
+function matrix_lu(m)
+  local n = m.size1
+  local lu = matrix_copy(m)
+  local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+  gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
+  return extract_lu_matrix(lu)
+end
+
+function matrix_complex_lu(m)
+  local n = m.size1
+  local lu = matrix_complex_copy(m)
+  local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+  gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum)) 
+  return extract_lu_matrix(lu)
+end
+
+function matrix_td_decomp(m)
+  local n1 = tonumber(m.size1)
+  local n2 = tonumber(m.size2)
+
+  local tau = ffi.gc(gsl.gsl_vector_alloc(n1-1), gsl.gsl_vector_free)
+  local diag = matrix_alloc(n1,1)
+  local sdiag = matrix_alloc(n1-1,1)
+  
+  local dvec = gsl.gsl_matrix_column(diag, 0)
+  local sdvec = gsl.gsl_matrix_column(sdiag, 0)
+  local A = matrix_copy(m)
+  local Q = matrix_alloc(n1,n2)
+  gsl_check(gsl.gsl_linalg_symmtd_decomp(A,tau))
+  gsl_check(gsl.gsl_linalg_symmtd_unpack(A, tau, Q,  dvec, sdvec))
+  return Q,diag, sdiag
+end
+
+function matrix_complex_td_decomp(m)
+  local n1 = tonumber(m.size1)
+  local n2 = tonumber(m.size2)
+
+  local tau = ffi.gc(gsl.gsl_vector_complex_alloc(n1-1), gsl.gsl_vector_complex_free)
+  local diag = matrix_alloc(n1,1)
+  local sdiag = matrix_alloc(n1-1,1)
+  local Q = matrix_calloc(n1,n2)
+  
+  local dvec = gsl.gsl_matrix_column(diag, 0)
+  local sdvec = gsl.gsl_matrix_column(sdiag, 0)
+  local A = matrix_complex_copy(m)
+  
+  gsl_check(gsl_linalg_hermtd_decomp(A,tau))
+  gsl_check(gsl_linalg_hermtd_unpack(A, tau, Q,  dvec, sdvec))
+  return Q,diag, sdiag
+end
+
 function matrix.det(m)
   if ffi.istype(gsl_matrix, m) then
       return matrix_det(m)
@@ -1016,6 +1089,78 @@ function matrix.svd(a)
    local wv = ffi.gc(gsl.gsl_vector_alloc(n), gsl.gsl_vector_free)
    gsl_check(gsl.gsl_linalg_SV_decomp (u, v, sv, wv))
    return u, s, v
+end
+
+function matrix.lu(m)
+   if ffi.istype(gsl_matrix, m) then
+      return matrix_lu(m)
+   else
+      return matrix_complex_lu(m)
+   end
+end
+
+function matrix.qr(m)
+   local M,N = m.size1, m.size2
+   local QR = matrix_copy(m)
+   local t = matrix_alloc(math.min(tonumber(M),tonumber(N)), 1)
+   local tau = gsl.gsl_matrix_column(t, 0)
+   gsl_check(gsl.gsl_linalg_QR_decomp(QR, tau))
+   local Q = matrix_alloc(M, M)
+   local R = matrix_alloc(M,N)
+   gsl_check(gsl.gsl_linalg_QR_unpack (QR, tau, Q,R))
+   return Q,R
+end
+
+function matrix.cholesky(m)
+   local LT
+   local chol
+   if ffi.istype(gsl_matrix, m) then
+      chol = matrix_copy(m)
+      gsl_check(gsl.gsl_linalg_cholesky_decomp(chol))
+      LT = matrix_copy(chol)
+   else
+      chol = matrix_complex_copy(m)       
+      gsl_check(gsl.gsl_linalg_complex_cholesky_decomp(chol))
+      LT = matrix_complex_copy(chol)
+   end
+   for i = 1, tonumber(m.size1) do
+      for j = i+1,tonumber(m.size2) do
+         chol[i][j] = 0
+         LT[j][i] = 0
+      end
+   end
+   return chol,LT
+end
+
+function matrix.td_decomp(m)
+   if ffi.istype(gsl_matrix, m) then   
+      return matrix_td_decomp(m)
+   else
+      return matrix_complex_td_decomp(m)
+   end
+end
+
+function matrix.hessenberg_decomp(m)
+   local n1 = tonumber(m.size1)
+   local n2 = tonumber(m.size2)  
+   local tau = ffi.gc(gsl.gsl_vector_alloc(n1), gsl.gsl_vector_free)
+   local A = matrix_copy(m)
+   local U = matrix_alloc(n1,n2)
+   gsl_check(gsl.gsl_linalg_hessenberg_decomp(A,tau))
+   gsl_check(gsl.gsl_linalg_hessenberg_unpack(A, tau, U))
+   gsl_check(gsl.gsl_linalg_hessenberg_set_zero(A))
+   return A,U
+end
+
+function matrix.hesstri_decomp(a, b)
+   local A = matrix_copy(a)
+   local U = matrix_alloc(a.size1, a.size2)
+   local B = matrix_copy(b)
+   local V = matrix_alloc(b.size1, b.size2)
+   local work = matrix_alloc(a.size1,1)
+   local workvec = gsl.gsl_matrix_column(work, 0)
+   gsl_check(gsl.gsl_linalg_hesstri_decomp(A,B,U,V,workvec))
+   return A,B, U, V
 end
 
 matrix.diag = function(t)

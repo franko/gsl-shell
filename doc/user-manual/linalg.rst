@@ -18,7 +18,8 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
 
 .. function:: det(m)
 
-   Returns the determinant of the matrix m.
+   This function computes the determinant of a matrix m from its LU decomposition, LU.
+   The determinant is computed as the product of the diagonal elements of U and the sign of the row permutation signum.
 
 .. function:: solve(A, b)
 
@@ -64,3 +65,70 @@ GSL Shell gives access to some functions of linear algebra based on GSL itself o
    write something like this::
 
       u, s, v = svd(m)
+
+.. function:: lu(m)
+
+   These functions factorize the square matrix A into the LU decomposition PA = LU.
+
+   Optionally you can use `extract` to get L and U seperately::
+      
+      L,U = matrix.lu(m)
+
+.. function:: qr(m)
+
+   This function factorizes the M-by-N matrix A into the QR decomposition A = Q R::
+   
+      Q,R = matrix.qr(m)
+
+.. function:: cholesky(m)
+
+   A symmetric, positive definite square matrix A has a Cholesky decomposition into a product of a
+   lower triangular matrix L and its transpose L^T,
+
+   real: :math:`A = L L^T`
+   complex: :math:`A = L L^\star`
+
+   This is sometimes referred to as taking the square-root of a matrix.
+   The Cholesky decomposition can only be carried out when all the eigenvalues of the matrix are positive.
+   This decomposition can be used to convert the linear system A x = b into a pair of triangular systems (L y = b, L^T x = y),
+   which can be solved by forward and back-substitution.
+
+   These functions factorize the symmetric, positive-definite square matrix A into the Cholesky decomposition.
+   On input, the values from the diagonal and lower-triangular part of the matrix A are used (the upper triangular part is ignored).
+   If the matrix is not positive-definite then the decomposition will fail.
+
+.. function:: td_decomp(m)
+
+   A matrix A can be factorized by similarity transformations into the form,
+
+   real: :math:`A = Q T Q^T`
+   complex: :math:`A = U T U^T`
+
+   where
+
+   real: Q is an orthogonal matrix and T is a symmetric tridiagonal matrix.
+   complex: U is a unitary matrix and T is a real symmetric tridiagonal matrix.
+
+   This function calculates this decomposition and returns Q/U, the diagonal vector and the sub-diagonal vector.
+
+.. function:: hessenberg_decomp(m)
+
+   A general real matrix A can be decomposed by orthogonal similarity transformations into the form
+
+   :math:`A = U H U^T`
+
+   where U is orthogonal and H is an upper Hessenberg matrix, meaning that it has zeros below the first subdiagonal.
+   The Hessenberg reduction is the first step in the Schur decomposition for the nonsymmetric eigenvalue problem,
+   but has applications in other areas as well.
+   The function returns ``H`` and ``U``.
+
+.. function:: hesstri_decomp(a,b)
+
+   A general real matrix pair (A, B) can be decomposed by orthogonal similarity transformations into the form
+
+     A = U H V^T
+     B = U R V^T
+
+   where U and V are orthogonal, H is an upper Hessenberg matrix, and R is upper triangular.
+   The Hessenberg-Triangular reduction is the first step in the generalized Schur decomposition for the generalized eigenvalue problem.
+   The function returns H, R, U and V.
