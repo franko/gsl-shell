@@ -947,6 +947,34 @@ local function matrix_complex_solve(m, b)
    return x
 end
 
+local function matrix_det(m)
+  local n = m.size1
+  local lu = matrix_copy(m)
+  local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+  gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
+
+  local det = gsl.gsl_linalg_LU_det(lu, signum[0])
+  return det
+end
+
+local function matrix_complex_det(m)
+  local n = m.size1
+  local lu = matrix_complex_copy(m)
+  local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
+  gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum))
+
+  local det = gsl.gsl_linalg_complex_LU_det(lu, signum[0])
+  return det
+end
+
+function matrix.det(m)
+  if ffi.istype(gsl_matrix, m) then
+      return matrix_det(m)
+   else
+      return matrix_complex_det(m)
+   end
+end
+
 function matrix.inv(m)
    if ffi.istype(gsl_matrix, m) then
       return matrix_inv(m)
