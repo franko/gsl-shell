@@ -183,19 +183,21 @@ function ExpressionRule:LogicalExpression(node, dest)
    return dest
 end
 
-function ExpressionRule:MemberExpression(node, base, want)
-   base = base or self.ctx:nextreg()
+function ExpressionRule:MemberExpression(node, base)
    local free = self.ctx.freereg
-   local base = self:expr_emit(node.object, base)
-   local expr
-   if not node.computed and node.property.kind == 'Identifier' then
-      local reg = self.ctx:nextreg()
-      expr = self.ctx:op_load(reg, node.property.name)
+   local obj = self:expr_emit(node.object)
+   local prop
+   if node.computed then
+      prop = self:expr_emit(node.property)
+   elseif node.property.kind == 'Identifier' then
+      prop = self.ctx:nextreg()
+      self.ctx:op_load(prop, node.property.name)
    else
-      expr = self:expr_emit(node.property)
+      prop = self:expr_emit(node.property)
    end
-   self.ctx:op_tget(base, base, expr)
    self.ctx.freereg = free
+   base = base or self.ctx:nextreg()
+   self.ctx:op_tget(base, obj, prop)
    return base
 end
 
