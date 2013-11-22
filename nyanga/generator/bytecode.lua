@@ -60,7 +60,7 @@ function ExpressionRule:Vararg(node, base, want)
 end
 
 function ExpressionRule:Table(node, dest)
-   dest = dest or self.ctx:nextreg()
+   dest = self.ctx:nextreg()
    local free = self.ctx.freereg
    local narry, nhash = 0, 0
    local seen = { }
@@ -74,22 +74,20 @@ function ExpressionRule:Table(node, dest)
       end
    end
    self.ctx:op_tnew(dest, narry, nhash)
-   local vtop = self.ctx.freereg
+   local vtop = free
    for k,v in pairs(node.value) do
       self.ctx.freereg = vtop
       local kreg, vreg
       if type(k) == 'table' then
-         kreg = self.ctx:nextreg()
-         kreg = self:expr_emit(k, kreg, 1)
+         kreg = self:expr_emit(k)
       elseif type(k) == 'string' then
          kreg = k
       else
          kreg = self.ctx:nextreg()
          self.ctx:op_load(kreg, k)
       end
-      vreg = self.ctx:nextreg()
       if type(v) == 'table' then
-         self:expr_emit(v, vreg, 1)
+         vreg = self:expr_emit(v)
       else
          self.ctx:op_load(vreg, v)
       end
@@ -225,25 +223,24 @@ function ExpressionRule:FunctionExpression(node, dest)
    return dest
 end
 
-function ExpressionRule:CallExpression(node, base, want, tail)
-   local free = self.ctx.freereg
-
+function ExpressionRule:CallExpression(node, dest, want, tail)
    want = want or 0
-   base = base or self.ctx:nextreg()
+   local base = self.ctx.freereg
    self:expr_emit(node.callee, base)
+   self.ctx:nextreg()
 
    local narg = #node.arguments
-   self.ctx:nextreg(narg)
 
    local args = { }
    for i=1, narg - 1 do
-      args[i] = self:expr_emit(node.arguments[i], base + i, 1)
+      args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
+      self.ctx:nextreg()
    end
    local mres
    local i = narg
-   args[i], mres = self:expr_emit(node.arguments[i], base + i, MULTIRES)
+   args[i], mres = self:expr_emit(node.arguments[i], self.ctx.freereg, MULTIRES)
 
-   self.ctx.freereg = free
+   self.ctx.freereg = base
    if mres then
       if tail then
          self.ctx:op_callmt(base, narg - 1)
@@ -267,10 +264,11 @@ function ExpressionRule:SendExpression(node, base, want, tail)
    local narg = #node.arguments
 
    want = want or 0
-   base = base or self.ctx:nextreg()
-   base = self:expr_emit(node.receiver, base, 1)
+   base = self.ctx.freereg
+   self:expr_emit(node.receiver, base)
+   self.ctx:nextreg()
 
-   self.ctx:nextreg(narg + 1)
+   -- self.ctx:nextreg(narg + 1)
 
    local recv = base + 1
    local meth = recv + 1
@@ -278,42 +276,34 @@ function ExpressionRule:SendExpression(node, base, want, tail)
    self.ctx:op_load(meth, node.method.name)
    self.ctx:op_tget(base, base, meth)
 
+   self.ctx:nextreg()
+
    local args = { }
    local mres = false
-   for i=1, narg do
-      if i == narg then
-         args[#args + 1] = self:expr_emit(node.arguments[i], recv + i, MULTIRES)
-      else
-         args[#args + 1] = self:expr_emit(node.arguments[i], recv + i, 1)
-      end
-      if args[#args] == MULTIRES then
-         mres = true
-      end
+   for i=1, narg - 1 do
+      args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
+      self.ctx:nextreg()
    end
+   local mres
+   local i = narg
+   args[i], mres = self:expr_emit(node.arguments[i], self.ctx.freereg, MULTIRES)
 
    self.ctx.freereg = free
-   if want == MULTIRES then
+   if mres then
       if tail then
-         self.ctx:op_callt(base, narg + 1)
+         self.ctx:op_callmt(base, narg - 1)
       else
-         self.ctx:op_call(base, want, narg + 1)
-      end
-      return MULTIRES
-   elseif mres then
-      if tail then
-         self.ctx:op_callmt(base, narg)
-      else
-         self.ctx:op_callm(base, want, narg)
+         self.ctx:op_callm(base, want, narg - 1)
       end
    else
       if tail then
-         self.ctx:op_callt(base, narg + 1)
+         self.ctx:op_callt(base, narg)
       else
-         self.ctx:op_call(base, want, narg + 1)
+         self.ctx:op_call(base, want, narg)
       end
    end
 
-   return base
+   return base, want == MULTIRES
 end
 
 local multi_returns = {
@@ -456,6 +446,7 @@ function StatementRule:AssignmentExpression(node)
       if slots > 0 then
          local w = (i == nexps and slots or 1)
          local use_reg = is_local_var(self.ctx, node.left[i])
+         use_reg = use_reg and not (i == nexps and w == 1)
          local reg = use_reg and self.ctx.freereg or nil
          exprs[i] = self:expr_emit(node.right[i], reg, w)
          if use_reg then self.ctx:nextreg(w) end
