@@ -322,6 +322,85 @@ function add_category_legend(plt, symbol, labels, enums, legend_title)
     end
 end
 
+local function empty_report()
+    return {undef = {}, undef_func = {}, bad_aggregate = {}}
+end
+
+local function report_errors(report)
+    local msg = {}
+    if #report.undef > 0 then
+        msg[#msg+1] = "the following variables are undefined: " .. concat(report.undef, ", ")
+    end
+    if #report.undef_func > 0 then
+        msg[#msg+1] = "the following functions are unknown: " .. concat(report.undef_func, ", ")
+    end
+    if #report.bad_aggregate > 0 then
+        msg[#msg+1] = "the following aggregate functions cannot be used in partial expressions: " .. table.concat(report.bad_aggregate, ", ")
+    end
+    if #msg > 0 then
+        return concat(msg, "\n")
+    end
+end
+
+local function list_add_unique(ls, x)
+    local n = #ls
+    for k = 1, n do
+        if ls[k] == x then return k end
+    end
+    ls[n+1] = x
+    return n+1
+end
+
+local function check_expr(t, node, report, aggregate)
+    if AST.is_number(node) then return
+    elseif AST.is_variable(node) then
+        local _, name = AST.is_variable(node)
+        if not table_scope.defined(name, t) then
+            list_add_unique(report.undef, node)
+        end
+    elseif node.operator then
+        local a, b = node[1], node[2]
+        if a then check_expr(t, a, report) end
+        if b then check_expr(t, b, report) end
+    elseif node.func then
+        if not table_scope.func(node) then
+            local is_stat = stat_lookup[node.func]
+            if is_stat and not aggregate then
+                list_add_unique(report.bad_aggregate, node.func)
+            elseif not is_stat then
+                list_add_unique(report.undef_func, node.func)
+            end
+        end
+        check_expr(t, node.arg, report)
+    end
+end
+
+local function check_expr_list(t, ls, report, aggregate)
+    for k = 1, #ls do
+        check_expr(t, ls[k], report, aggregate)
+    end
+end
+
+local function check_schema_multivar(t, schema)
+    local report = empty_report()
+    check_expr_list(t, schema.y, report, true)
+    check_expr_list(t, schema.x, report)
+    check_expr_list(t, schema.conds, report)
+    check_expr_list(t, schema.enums, report)
+    local error_msg = report_errors(report)
+    if error_msg then error(error_msg, 3) end
+end
+
+local function check_schema(t, schema)
+    local report = empty_report()
+    check_expr(t, schema.y, report, true)
+    check_expr_list(t, schema.x, report)
+    check_expr_list(t, schema.conds, report)
+    check_expr_list(t, schema.enums, report)
+    local error_msg = report_errors(report)
+    if error_msg then error(error_msg, 3) end
+end
+
 local barplot = {xlabels = gen_xlabels}
 
 function barplot.create(labels, enums, val)
@@ -479,6 +558,7 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = get_option(opt, xyplot_default, "show")
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
+    check_schema_multivar(t, schema)
     local jxs = idents_get_column_indexes(t, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -499,6 +579,7 @@ end
 
 function gdt.xyline(t, plot_descr)
     local schema = expr_parse.schema(plot_descr, AST)
+    check_schema(t, schema)
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions({ schema.y })
 
@@ -532,6 +613,7 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     local marker_size = get_option(opt, xyplot_default, "marker_size")
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
+    check_schema_multivar(t, schema)
     local jxs = expr_get_functions(schema.x)
     local jys = expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
@@ -601,6 +683,7 @@ end
 
 function gdt.reduce(t_src, schema_descr)
     local schema = expr_parse.schema_multivar(schema_descr, AST)
+    check_schema_multivar(t_src, schema)
     local jxs = idents_get_column_indexes(t_src, schema.x)
     local jys = stat_expr_get_functions(schema.y)
     local jes = idents_get_column_indexes(t_src, schema.enums)
@@ -633,6 +716,7 @@ end
 
 local function is_simple_numeric(t, plot_descr)
     local schema = expr_parse.schema_multivar(plot_descr, AST)
+    check_schema_multivar(t, schema)
     local xs = gdt_factors.compute(t, schema.x)
     if #xs == 1 then
         return (xs[1].factor == nil)

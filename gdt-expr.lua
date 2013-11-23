@@ -35,6 +35,12 @@ local function add_expr_refs(expr, refs, factor_refs)
     end
 end
 
+local function table_defined(expr, t)
+    if type(expr) == "string" then
+        return t:col_index(expr)
+    end
+end
+
 local function table_var_resolve(expr, t, i)
     return t:get(i, expr)
 end
@@ -44,6 +50,7 @@ local function math_func_resolve(expr)
 end
 
 local table_scope = {
+    defined = table_defined,
     ident = table_var_resolve,
     func = math_func_resolve,
 }
