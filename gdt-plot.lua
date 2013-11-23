@@ -46,6 +46,11 @@ local function f_var_fini(accu)
     if n > 0 then return Q / n end
 end
 
+local function f_mean(accu, x, n)
+    local p = n > 1 and accu * (n-1) or 0
+    return (p + x) / n
+end
+
 local function f_accu(accu, x)
     accu[#accu + 1] = x
     return accu
@@ -56,7 +61,7 @@ local function f_accu_start()
 end
 
 local stat_lookup = {
-    mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
+    mean    = {f = f_mean,   f0 = || nil},
     stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
     stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
     var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
@@ -82,10 +87,14 @@ local function stat_filter(y, opts, mean, sd)
     return keep
 end
 
+local function get_stat_f0(stat, default)
+    if stat.f0 then return stat.f0() else return default end
+end
+
 local function stat_fini_gen(stat, opts)
     local f = stat.f
-    local accu = stat.f0 and stat.f0() or 0
     return function(ls)
+        local accu = get_stat_f0(stat, 0)
         local n = #ls
         local mean = 0
         for i = 1, n do mean = mean + ls[i] end
@@ -187,7 +196,7 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
         for p = 1, #jys do
             local jp = jys[p]
             local fy, fini = jp.f, jp.fini
-            local f0 = jp.f0 and jp.f0() or 0
+            local f0 = get_stat_f0(jp, 0)
             local e = collate_factors(t, i, jes)
             e.p = p
             e[#e+1] = jp.name
@@ -212,7 +221,7 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
         local fini = jys[p].fini
         if fini then
             for ix = 1, #labels do
-                local v = vec2d_get(val, ix, ie)
+                local v = vec2d_get(val, ix, ie) or get_stat_f0(jys[p], 0)
                 local v_fin = fini(v)
                 vec2d_set(val, ix, ie, v_fin)
             end
