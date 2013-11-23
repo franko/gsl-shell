@@ -451,6 +451,30 @@ local function get_legend_title(t, jys, jes)
     return table.concat(names, " / ")
 end
 
+-- sort the array "a" in the order a[index[1]], a[index[2]], ...
+-- using the array "temp" as temporary storage
+local function index_sort(a, index, temp)
+    for i = 1, #index do
+        local p = index[i]
+        temp[i] = a[i]
+        a[i] = (p >= i and a[p] or temp[p])
+    end
+end
+
+-- sort the columns of the bidimensional array "val" on the base of the
+-- columns' headers "enums"
+local function sort_enums(val, enums)
+    local index = {}
+    for i = 1, #enums do index[i] = i end
+    local function f(a, b) return sort_labels_func(enums[a], enums[b]) end
+    algo.quicksort(index, 1, #enums, f)
+    local temp = {}
+    for i = 1, #val do
+        index_sort(val[i], index, temp)
+    end
+    index_sort(enums, index, temp)
+end
+
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local show_plot = get_option(opt, xyplot_default, "show")
 
@@ -460,6 +484,8 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local jes = idents_get_column_indexes(t, schema.enums)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes, schema.conds)
+    sort_enums(val, enums)
+
     local param_title = extract_parameter_title(enums)
     local legend_title = get_legend_title(t, jys, jes)
 
@@ -580,6 +606,7 @@ function gdt.reduce(t_src, schema_descr)
     local jes = idents_get_column_indexes(t_src, schema.enums)
 
     local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes, schema.conds)
+    sort_enums(val, enums)
 
     local n, p, q = #labels, #enums, #labels[1]
     local t = gdt.alloc(n, q + p)
