@@ -464,7 +464,7 @@ function lineplot.legend(plt, labels, enums, legend_title)
 end
 
 local function idents_get_column_indexes(t, exprs)
-    local jxs = {}
+    local jxs, names = {}, {}
     for i, expr in ipairs(exprs) do
         local is_var, var_name = AST.is_variable(expr)
         if not is_var then
@@ -472,8 +472,9 @@ local function idents_get_column_indexes(t, exprs)
             error('invalid enumeration factor: ' .. repr)
         end
         jxs[i] = t:col_index(var_name)
+        names[i] = var_name
     end
-    return jxs
+    return jxs, names
 end
 
 local function stat_expr_get_functions(exprs)
@@ -690,12 +691,20 @@ local function gdt_table_xyplot(t, plot_descr, opt)
     return plt
 end
 
+local function enum_full_name(hs, en)
+    local t = {}
+    for k = 1, #en do
+        t[k] = hs[k] and string.format("%s_%s", hs[k], en[k]) or string.format("%s", en[k])
+    end
+    return concat(t, "/")
+end
+
 function gdt.reduce(t_src, schema_descr)
     local schema = expr_parse.schema_multivar(schema_descr, AST)
     check_schema_multivar(t_src, schema)
     local jxs = idents_get_column_indexes(t_src, schema.x)
     local jys = stat_expr_get_functions(schema.y)
-    local jes = idents_get_column_indexes(t_src, schema.enums)
+    local jes, en_headers = idents_get_column_indexes(t_src, schema.enums)
 
     local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes, schema.conds)
     sort_enums(val, enums)
@@ -707,7 +716,7 @@ function gdt.reduce(t_src, schema_descr)
         t:set_header(k, t_src:header(jxs[k]))
     end
     for k, en in ipairs(enums) do
-        t:set_header(q + k, collate(en, "/"))
+        t:set_header(q + k, enum_full_name(en_headers, en))
     end
 
     local set = t.set
