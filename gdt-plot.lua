@@ -541,8 +541,8 @@ local function get_legend_title(t, jys, jes)
 end
 
 -- sort the array "a" in the order a[index[1]], a[index[2]], ...
--- using the array "temp" as temporary storage
-local function index_sort(a, index, temp)
+local function index_sort(a, index)
+    local temp = {}
     for i = 1, #index do
         local p = index[i]
         temp[i] = a[i]
@@ -557,11 +557,10 @@ local function sort_enums(val, enums)
     for i = 1, #enums do index[i] = i end
     local function f(a, b) return sort_labels_func(enums[a], enums[b]) end
     algo.quicksort(index, 1, #enums, f)
-    local temp = {}
     for i = 1, #val do
-        index_sort(val[i], index, temp)
+        index_sort(val[i], index)
     end
-    index_sort(enums, index, temp)
+    index_sort(enums, index)
 end
 
 local function gdt_table_category_plot(plotter, t, plot_descr, opt)
@@ -708,6 +707,7 @@ function gdt.reduce(t_src, schema_descr)
 
     local labels, enums, val = rect_funcbin(t_src, jxs, jys, jes, schema.conds)
     sort_enums(val, enums)
+
 
     local n, p, q = #labels, #enums, #labels[1]
     local t = gdt.alloc(n, q + p)
