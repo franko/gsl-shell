@@ -262,7 +262,7 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
       self.ctx:op_move(dest, base)
    end
 
-   return base, want == MULTIRES
+   return dest, want == MULTIRES
 end
 
 -- TO BE FIXED like :CallExpression
