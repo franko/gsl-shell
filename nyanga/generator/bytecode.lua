@@ -215,7 +215,6 @@ function ExpressionRule:MemberExpression(node, base)
 end
 
 function ExpressionRule:FunctionExpression(node, dest)
-   dest = dest or self.ctx:nextreg()
    local free = self.ctx.freereg
    local func = self.ctx:child()
    self.ctx = func
@@ -232,8 +231,8 @@ function ExpressionRule:FunctionExpression(node, dest)
    end
 
    self.ctx = self.ctx.outer
-   self.ctx:op_fnew(dest, func.idx)
    self.ctx.freereg = free
+   self.ctx:op_fnew(dest or free, func.idx)
 
    return dest
 end
@@ -512,30 +511,35 @@ function StatementRule:AssignmentExpression(node)
    self.ctx.freereg = free
 end
 function StatementRule:FunctionDeclaration(node)
-   local free = self.ctx.freereg
+   local name = node.id.name
+   local dest
+   if node.locald then
+      dest = self.ctx:newvar(name).idx
+   else
+      dest = self.ctx.freereg
+   end
 
+   local free = self.ctx.freereg
    local func = self.ctx:child()
    self.ctx = func
-
    for i=1, #node.params do
-      self.ctx:param(node.params[i].name)      
+      if node.params[i].kind == 'Vararg' then
+         self.ctx.flags = bit.bor(self.ctx.flags, bc.Proto.VARARG)
+      else
+         self.ctx:param(node.params[i].name)
+      end
    end
    self:emit(node.body)
-
-   self.ctx = self.ctx.outer
-
-   local dest
-   if node.recursive then
-      dest = self.ctx:newvar(node.id.name).idx
-      self.ctx:op_fnew(dest, func.idx)
-   else
-      dest = self.ctx:nextreg()
-      self.ctx:op_fnew(dest, func.idx)
-      self.ctx:op_gset(dest, node.id.name)
-      self.ctx.freereg = free
+   if not self.ctx.explret then
+      self.ctx:op_ret0()
    end
 
-   return dest
+   self.ctx = self.ctx.outer
+   self.ctx.freereg = free
+   self.ctx:op_fnew(dest, func.idx)
+   if not node.locald then
+      var_assign(self.ctx, name, dest)
+   end
 end
 function StatementRule:WhileStatement(node)
    local free = self.ctx.freereg
