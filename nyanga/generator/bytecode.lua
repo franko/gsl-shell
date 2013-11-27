@@ -225,6 +225,7 @@ end
 function ExpressionRule:CallExpression(node, dest, want, tail)
    want = want or 0
    local base = self.ctx.freereg
+   dest = dest or base
    self:expr_emit(node.callee, base)
    self.ctx:nextreg()
 
@@ -239,7 +240,7 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
    local lastarg = node.arguments[narg]
    args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
 
-   local use_tail = tail and (not dest or base == dest)
+   local use_tail = tail and (base == dest)
 
    self.ctx.freereg = base
    if mres then
@@ -256,7 +257,7 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
       end
    end
 
-   if dest and dest ~= base then
+   if dest ~= base then
       assert(want == 1, "CallExpression cannot return multiple values into inner register")
       self.ctx:op_move(dest, base)
    end
@@ -267,6 +268,7 @@ end
 function ExpressionRule:SendExpression(node, dest, want, tail)
    want = want or 0
    local base = self.ctx.freereg
+   dest = dest or base
    self:expr_emit(node.receiver, base)
    self.ctx:nextreg()
 
@@ -290,7 +292,7 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
    local lastarg = node.arguments[narg]
    args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
 
-   local use_tail = tail and (not dest or base == dest)
+   local use_tail = tail and (base == dest)
 
    self.ctx.freereg = base
    if mres then
@@ -307,7 +309,7 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
       end
    end
 
-   if dest and dest ~= base then
+   if dest ~= base then
       assert(want == 1, "CallExpression cannot return multiple values into inner register")
       self.ctx:op_move(dest, base)
    end
