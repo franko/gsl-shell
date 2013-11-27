@@ -61,12 +61,12 @@ local function f_accu_start()
 end
 
 local stat_lookup = {
-    mean    = {f = f_mean,   f0 = || nil},
+    mean    = {f = f_mean},
     stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
     stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
     var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
-    sum     = {f = function(accu, x, n) return accu + x end},
-    count   = {f = function(accu, x, n) return n end},
+    sum     = {f = function(accu, x, n) return accu + x end, f0 = || 0},
+    count   = {f = function(accu, x, n) return n end, f0 = || 0},
 }
 
 local function stat_filter(y, opts, mean, sd)
@@ -87,14 +87,14 @@ local function stat_filter(y, opts, mean, sd)
     return keep
 end
 
-local function get_stat_f0(stat, default)
-    if stat.f0 then return stat.f0() else return default end
+local function get_stat_f0(stat)
+    if stat.f0 then return stat.f0() end
 end
 
 local function stat_fini_gen(stat, opts)
     local f = stat.f
     return function(ls)
-        local accu = get_stat_f0(stat, 0)
+        local accu = get_stat_f0(stat)
         local n = #ls
         local mean = 0
         for i = 1, n do mean = mean + ls[i] end
@@ -196,7 +196,7 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
         for p = 1, #jys do
             local jp = jys[p]
             local fy, fini = jp.f, jp.fini
-            local f0 = get_stat_f0(jp, 0)
+            local f0 = get_stat_f0(jp)
             local e = collate_factors(t, i, jes)
             e.p = p
             e[#e+1] = jp.name
@@ -219,12 +219,10 @@ local function rect_funcbin(t, jxs, jys, jes, conds)
     for ie, enum in ipairs(enums) do
         local p = enum.p
         local fini = jys[p].fini
-        if fini then
-            for ix = 1, #labels do
-                local v = vec2d_get(val, ix, ie) or get_stat_f0(jys[p], 0)
-                local v_fin = fini(v)
-                vec2d_set(val, ix, ie, v_fin)
-            end
+        for ix = 1, #labels do
+            local v = vec2d_get(val, ix, ie) or get_stat_f0(jys[p])
+            local v_fin = fini and fini(v) or v
+            vec2d_set(val, ix, ie, v_fin)
         end
     end
 
