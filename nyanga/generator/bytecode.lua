@@ -20,21 +20,6 @@ local cmpop2 = {
    ['<' ] = 'LT',
 }
 
-local function var_assign(ctx, name, expr)
-   local info, uval = ctx:lookup(name)
-   if info then
-      if uval then
-         ctx:op_uset(name, expr)
-      else
-         if info.idx ~= expr then
-            ctx:op_move(info.idx, expr)
-          end
-      end
-   else
-      ctx:op_gset(expr, name)
-   end
-end
-
 local MULTIRES = -1
 
 local StatementRule = { }
@@ -492,7 +477,7 @@ function StatementRule:AssignmentExpression(node)
       local lhs  = node.left[i]
       local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
       if lhs.kind == 'Identifier' then
-         var_assign(self.ctx, lhs.name, expr)
+         self:var_assign(lhs.name, expr)
       elseif lhs.kind == 'MemberExpression' then
          local obj = self:expr_emit(lhs.object)
          local key
@@ -538,7 +523,7 @@ function StatementRule:FunctionDeclaration(node)
    self.ctx.freereg = free
    self.ctx:op_fnew(dest, func.idx)
    if not node.locald then
-      var_assign(self.ctx, name, dest)
+      self:var_assign(name, dest)
    end
 end
 function StatementRule:WhileStatement(node)
@@ -735,6 +720,22 @@ local function generate(tree, name)
    self.dump = bc.Dump.new(self.main, name)
    self.ctx = self.main
    self.savereg = { }
+
+   function self:var_assign(name, expr)
+      local ctx = self.ctx
+      local info, uval = ctx:lookup(name)
+      if info then
+         if uval then
+            ctx:op_uset(name, expr)
+         else
+            if info.idx ~= expr then
+               ctx:op_move(info.idx, expr)
+             end
+         end
+      else
+         ctx:op_gset(expr, name)
+      end
+   end
 
    function self:block_enter(used_reg)
       used_reg = used_reg or 0
