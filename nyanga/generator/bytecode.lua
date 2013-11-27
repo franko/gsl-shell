@@ -334,7 +334,6 @@ local function is_pure_exprs(node)
 end
 
 local function can_multi_return(node)
-   if not node then print(debug.traceback()) end
    return multi_returns[node.kind]
 end
 
