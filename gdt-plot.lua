@@ -9,7 +9,7 @@ local algo = require 'algorithm'
 
 local concat = table.concat
 local unpack, ipairs = unpack, ipairs
-local sqrt, abs = math.sqrt, math.abs
+local sqrt, abs, min, max = math.sqrt, math.abs, math.min, math.max
 
 local line_width = 2.5
 
@@ -66,6 +66,8 @@ local stat_lookup = {
     stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
     var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
     sum     = {f = function(accu, x, n) return accu + x end, f0 = || 0},
+    min     = {f = function(accu, x, n) return accu and min(accu, x) or x end},
+    max     = {f = function(accu, x, n) return accu and max(accu, x) or x end},
     count   = {f = function(accu, x, n) return n end, f0 = || 0},
 }
 
