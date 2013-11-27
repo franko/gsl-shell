@@ -20,6 +20,21 @@ local cmpop2 = {
    ['<' ] = 'LT',
 }
 
+local function var_assign(ctx, name, expr)
+   local info, uval = ctx:lookup(name)
+   if info then
+      if uval then
+         ctx:op_uset(name, expr)
+      else
+         if info.idx ~= expr then
+            ctx:op_move(info.idx, expr)
+          end
+      end
+   else
+      ctx:op_gset(expr, name)
+   end
+end
+
 local MULTIRES = -1
 
 local StatementRule = { }
@@ -478,18 +493,7 @@ function StatementRule:AssignmentExpression(node)
       local lhs  = node.left[i]
       local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
       if lhs.kind == 'Identifier' then
-         local info, uval = self.ctx:lookup(lhs.name)
-         if info then
-            if uval then
-               self.ctx:op_uset(lhs.name, expr)
-            else
-               if info.idx ~= expr then
-                  self.ctx:op_move(info.idx, expr)
-               end
-            end
-         else
-            self.ctx:op_gset(expr, lhs.name)
-         end
+         var_assign(self.ctx, lhs.name, expr)
       elseif lhs.kind == 'MemberExpression' then
          local obj = self:expr_emit(lhs.object)
          local key
