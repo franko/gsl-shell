@@ -126,14 +126,14 @@ function ExpressionRule:BinaryExpression(node, dest)
       local atag, a = self:direct_expr_emit(node.left)
       local btag, b = self:direct_expr_emit(node.right)
       self.ctx.freereg = free
-      dest = dest or self.ctx:nextreg()
+      dest = dest or free
       self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
    else
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
       local b = self:expr_emit(node.right)
       self.ctx.freereg = free
-      dest = dest or self.ctx:nextreg()
+      dest = dest or free
       if o == '^' then
          self.ctx:op_pow(dest, a, b)
       elseif o == '..' then
