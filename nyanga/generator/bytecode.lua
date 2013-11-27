@@ -264,17 +264,13 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
    return dest, want == MULTIRES
 end
 
--- TO BE FIXED like :CallExpression
-function ExpressionRule:SendExpression(node, base, want, tail)
-   local free = self.ctx.freereg
-   local narg = #node.arguments
-
+function ExpressionRule:SendExpression(node, dest, want, tail)
    want = want or 0
-   base = self.ctx.freereg
+   local base = self.ctx.freereg
    self:expr_emit(node.receiver, base)
    self.ctx:nextreg()
 
-   -- self.ctx:nextreg(narg + 1)
+   local narg = #node.arguments
 
    local recv = base + 1
    local meth = recv + 1
@@ -291,25 +287,32 @@ function ExpressionRule:SendExpression(node, base, want, tail)
       self.ctx:nextreg()
    end
    local mres
-   local i = narg
-   args[i], mres = self:expr_emit(node.arguments[i], self.ctx.freereg, MULTIRES)
+   local lastarg = node.arguments[narg]
+   args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
 
-   self.ctx.freereg = free
+   local use_tail = tail and (not dest or base == dest)
+
+   self.ctx.freereg = base
    if mres then
-      if tail then
+      if use_tail then
          self.ctx:op_callmt(base, narg - 1)
       else
          self.ctx:op_callm(base, want, narg - 1)
       end
    else
-      if tail then
+      if use_tail then
          self.ctx:op_callt(base, narg)
       else
          self.ctx:op_call(base, want, narg)
       end
    end
 
-   return base, want == MULTIRES
+   if dest and dest ~= base then
+      assert(want == 1, "CallExpression cannot return multiple values into inner register")
+      self.ctx:op_move(dest, base)
+   end
+
+   return dest, want == MULTIRES
 end
 
 local multi_returns = {
