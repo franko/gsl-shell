@@ -239,6 +239,25 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         setCursorPos(m_input_begin);
         return 1;
     }
+    case KEY_Escape:
+    {
+        FXint line_len = get_input_length();
+        if (line_len < 0)
+        {
+            line_len = getLength() - m_input_begin;
+            if (line_len > 0)
+            {
+                removeText(m_input_begin, line_len);
+            }
+            makePositionVisible(m_input_begin);
+            setCursorPos(m_input_begin);
+        }
+        else
+        {
+            removeText(m_input_begin, line_len);
+            setCursorPos(m_input_begin);
+        }
+    }
     }
 
     return FXText::onKeyPress(obj, sel, ptr);
