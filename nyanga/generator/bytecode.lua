@@ -297,15 +297,15 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
    self.ctx.freereg = base
    if mres then
       if use_tail then
-         self.ctx:op_callmt(base, narg - 1)
+         self.ctx:op_callmt(base, narg)
       else
-         self.ctx:op_callm(base, want, narg - 1)
+         self.ctx:op_callm(base, want, narg)
       end
    else
       if use_tail then
-         self.ctx:op_callt(base, narg)
+         self.ctx:op_callt(base, narg + 1)
       else
-         self.ctx:op_call(base, want, narg)
+         self.ctx:op_call(base, want, narg + 1)
       end
    end
 
