@@ -663,31 +663,29 @@ function StatementRule:ForInStatement(node)
 end
 
 function StatementRule:ReturnStatement(node)
-   local free = self.ctx.freereg
-   local base = free
    local narg = #node.arguments
-   for i=1, narg - 1 do
-      local arg = node.arguments[i]
-      self:expr_emit(arg, base + i - 1, 1)
-      self.ctx:nextreg()
-   end
-   local last = node.arguments[narg]
-   local slot = base + narg - 1
-   local reg, mret
-   if narg > 0 then
-      reg, mret = self:expr_emit(last, slot, MULTIRES, true)
-      self.ctx:nextreg()
-   end
-   if mret then
-      self.ctx:op_retm(base, narg - 1)
-   elseif narg == 0 then
+   if narg == 0 then
       self.ctx:op_ret0()
    elseif narg == 1 then
-      self.ctx:op_ret1(base)
+      local dest = self:expr_emit(node.arguments[1], nil, 1, true)
+      self.ctx:op_ret1(dest)
    else
-      self.ctx:op_ret(base, narg)
+      local base = self.ctx.freereg
+      local current = base
+      for i=1, narg - 1 do
+         self:expr_emit(node.arguments[i], current, 1)
+         self.ctx:nextreg()
+         current = current + 1
+      end
+      local lastarg = node.arguments[narg]
+      local _, mret = self:expr_emit(lastarg, current, MULTIRES, true)
+      self.ctx.freereg = base
+      if mret then
+         self.ctx:op_retm(base, narg - 1)
+      else
+         self.ctx:op_ret(base, narg)
+      end
    end
-   self.ctx.freereg = free
    if self.ctx:is_root_scope() then
       self.ctx.explret = true
    end
