@@ -678,6 +678,11 @@ function Proto.__index:op_comp(cond, a, b, here)
    return inst, here
 end
 
+function Proto.__index:op_infix(opname, dest, v1tag, var1, v2tag, var2)
+   local ins = BC[opname .. v1tag .. v2tag]
+   assert(ins, "Invalid operation: " .. opname)
+   return self:emit(ins, dest, var1, var2)
+end
 function Proto.__index:op_add(dest, var1, var2)
    return self:emit(BC.ADDVV, dest, var1, var2)
 end
