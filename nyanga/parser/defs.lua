@@ -141,9 +141,9 @@ function defs.funcDecl(localkw, name, head, body)
          params[#params + 1] = p.name
       end 
    end
-   decl.params   = params
-   decl.vararg   = vararg
-   decl.is_local = (localkw ~= "")
+   decl.params = params
+   decl.vararg = vararg
+   decl.locald = (localkw ~= "")
    return decl
 end
 function defs.funcExpr(head, body)

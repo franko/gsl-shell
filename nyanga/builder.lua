@@ -122,13 +122,13 @@ function exports.localDeclaration(names, exprs, loc)
       names = names, expressions = exprs, loc = loc
    })
 end
-function exports.functionDeclaration(name, params, body, vararg, rec, loc)
+function exports.functionDeclaration(name, params, body, vararg, local_decl, loc)
    return syntax.build("FunctionDeclaration", {
       id         = name,
       body       = body,
       params     = params or { },
       vararg     = vararg,
-      recursive  = rec,
+      locald     = local_decl,
       loc        = loc
    })
 end

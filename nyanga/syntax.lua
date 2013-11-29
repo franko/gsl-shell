@@ -392,7 +392,7 @@ local syntax = {
             type = "boolean",
             default = false
          },
-         recursive = {
+         locald = {
             type = "boolean",
             default = false
          }

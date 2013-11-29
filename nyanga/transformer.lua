@@ -311,18 +311,14 @@ function match:FunctionDeclaration(node)
    end
 
    local body = self:get(node.body)
-   local func = B.functionExpression(params, body, vararg)
-
-   self.ctx:leave()
-
+   local func
    if node.expression then
-      return func
-   end
-   if node.is_local then
-      return B.localDeclaration({ name }, { func })
+      func = B.functionExpression(params, body, vararg)
    else
-      return B.assignmentExpression({ name }, { func })
+      func = B.functionDeclaration(name, params, body, vararg, node.locald)
    end
+   self.ctx:leave()
+   return func
 end
 
 function match:NilExpression(node)
