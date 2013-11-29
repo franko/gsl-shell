@@ -810,10 +810,6 @@ function Proto.__index:op_uget(dest, name)
    local slot = self:upval(name)
    return self:emit(BC.UGET, dest, slot)
 end
-function Proto.__index:is_tcall()
-   local prev_inst = #self.code > 0 and self.code[#self.code][1] or BC.CALL
-   return prev_inst == BC.CALLMT or prev_inst == BC.CALLT
-end
 function Proto.__index:close_block_uvals(reg, exit)
    -- the condition on reg ensure that UCLO is emitted only if
    -- local variables were declared in the block
@@ -841,22 +837,18 @@ function Proto.__index:close_uvals()
    end
 end
 function Proto.__index:op_ret(base, rnum)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET, base, rnum + 1)
 end
 function Proto.__index:op_ret0()
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET0, 0, 1)
 end
 function Proto.__index:op_ret1(base)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET1, base, 2)
 end
 function Proto.__index:op_retm(base, rnum)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RETM, base, rnum)
 end

@@ -262,7 +262,7 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
       self.ctx:op_move(dest, base)
    end
 
-   return dest, want == MULTIRES
+   return dest, want == MULTIRES, use_tail
 end
 
 function ExpressionRule:SendExpression(node, dest, want, tail)
@@ -314,7 +314,7 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
       self.ctx:op_move(dest, base)
    end
 
-   return dest, want == MULTIRES
+   return dest, want == MULTIRES, use_tail
 end
 
 local multi_returns = {
@@ -667,8 +667,10 @@ function StatementRule:ReturnStatement(node)
    if narg == 0 then
       self.ctx:op_ret0()
    elseif narg == 1 then
-      local dest = self:expr_emit(node.arguments[1], nil, 1, true)
-      self.ctx:op_ret1(dest)
+      local dest, _, tail = self:expr_emit(node.arguments[1], nil, 1, true)
+      if not tail then
+         self.ctx:op_ret1(dest)
+      end
    else
       local base = self.ctx.freereg
       local current = base
@@ -678,12 +680,14 @@ function StatementRule:ReturnStatement(node)
          current = current + 1
       end
       local lastarg = node.arguments[narg]
-      local _, mret = self:expr_emit(lastarg, current, MULTIRES, true)
+      local _, mret, tail = self:expr_emit(lastarg, current, MULTIRES, true)
       self.ctx.freereg = base
-      if mret then
-         self.ctx:op_retm(base, narg - 1)
-      else
-         self.ctx:op_ret(base, narg)
+      if not tail then
+         if mret then
+            self.ctx:op_retm(base, narg - 1)
+         else
+            self.ctx:op_ret(base, narg)
+         end
       end
    end
    if self.ctx:is_root_scope() then
