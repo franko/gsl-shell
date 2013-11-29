@@ -284,10 +284,10 @@ local function get_function_path(self, path)
    return exp, require_self
 end
 function match:FunctionDeclaration(node)
-   local name
+   local path
    local require_self = false
    if not node.expression then
-      name, require_self = get_function_path(self, node.id)
+      path, require_self = get_function_path(self, node.id)
    end
 
    local params  = { }
@@ -301,9 +301,9 @@ function match:FunctionDeclaration(node)
    end
 
    for i=1, #node.params do
-      local name = self:get(node.params[i])
-      self.ctx:define(name.name)
-      params[#params + 1] = name
+      local param = self:get(node.params[i])
+      self.ctx:define(param.name)
+      params[#params + 1] = param
    end
 
    if vararg then
@@ -311,18 +311,18 @@ function match:FunctionDeclaration(node)
    end
 
    local body = self:get(node.body)
-   local func = B.functionExpression(params, body, vararg)
-
-   self.ctx:leave()
-
+   local func
    if node.expression then
-      return func
-   end
-   if node.is_local then
-      return B.localDeclaration({ name }, { func })
+      func = B.functionExpression(params, body, vararg)
+   elseif node.locald then
+      assert(path.kind == 'Identifier', "Invalid local function declaration")
+      func = B.functionDeclaration(path, params, body, vararg, node.locald)
    else
-      return B.assignmentExpression({ name }, { func })
+      local expr = B.functionExpression(params, body, vararg)
+      func = B.assignmentExpression({ path }, { expr })
    end
+   self.ctx:leave()
+   return func
 end
 
 function match:NilExpression(node)
