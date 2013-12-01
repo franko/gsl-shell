@@ -647,40 +647,19 @@ function Proto.__index:op_test(cond, a, here)
    if here then here = self:jump(here) end
    return inst, here
 end
--- branch if comparison
-function Proto.__index:op_comp(cond, a, b, here)
-   if cond == 'LE' then
-      cond = 'GE'
-      a, b = b, a
-   elseif cond == 'LT' then
-      cond = 'GT'
-      a, b = b, a
-   elseif cond == 'EQ' or cond == 'NE' then
-      local tb = type(b)
-      if tb == 'nil' or tb == 'boolean' then
-         cond = cond..'P'
-         if tb == 'nil' then
-            b = VKNIL
-         else
-            b = b == true and VKTRUE or VKFALSE
-         end
-      -- XXX: we can't differentiate between a number and a register
-      --elseif tb == 'number' then
-      --   cond = cond..'N'
-      elseif tb == 'string' then
-         cond = cond..'S'
-      else
-         cond = cond..'V'
-      end
-   end
-   local inst = self:emit(BC['IS'..cond], a, b)
-   if here then here = self:jump(here) end
-   return inst, here
+function Proto.__index:op_comp(cond, a, btag, b, here, swap)
+   local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
+   local ins = BC['IS'..cond..suffix]
+   if swap then self:emit(ins, b, a) else self:emit(ins, a, b) end
+   self:jump(here)
 end
 
 function Proto.__index:op_infix(opname, dest, v1tag, var1, v2tag, var2)
    local ins = BC[opname .. v1tag .. v2tag]
    assert(ins, "Invalid operation: " .. opname)
+   if v1tag == 'N' then
+      var1, var2 = var2, var1
+   end
    return self:emit(ins, dest, var1, var2)
 end
 function Proto.__index:op_add(dest, var1, var2)

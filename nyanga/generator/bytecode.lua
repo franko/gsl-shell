@@ -1,29 +1,29 @@
 local bc   = require('nyanga.bytecode')
 local util = require('nyanga.util')
 
--- invert these since usually we branch if *not* condition
 local cmpop = {
-   ['=='] = 'NE',
-   ['~='] = 'EQ',
-   ['>='] = 'LT',
-   ['<='] = 'GT',
-   ['>' ] = 'LE',
-   ['<' ] = 'GE',
+   ['<' ] = { 'LT', false, false },
+   ['>' ] = { 'LT', true , false },
+   ['<='] = { 'LE', false, false },
+   ['>='] = { 'LE', true , false },
+   ['=='] = { 'EQ', false, true  },
+   ['~='] = { 'NE', false, true  },
 }
--- comparisons in expression context
-local cmpop2 = {
-   ['=='] = 'EQ',
-   ['~='] = 'NE',
-   ['>='] = 'GE',
-   ['<='] = 'LE',
-   ['>' ] = 'GT',
-   ['<' ] = 'LT',
+
+local cmpopinv = {
+   ['<' ] = { 'GE', false, false },
+   ['>' ] = { 'GE', true , false },
+   ['<='] = { 'GT', false, false },
+   ['>='] = { 'GT', true , false },
+   ['=='] = { 'NE', false, true  },
+   ['~='] = { 'EQ', false, true  },
 }
 
 local MULTIRES = -1
 
 local StatementRule = { }
 local ExpressionRule = { }
+local TestRule = { }
 
 function ExpressionRule:Literal(node, dest)
    dest = dest or self.ctx:nextreg()
@@ -97,6 +97,7 @@ function ExpressionRule:Table(node, dest)
    return dest
 end
 
+-- TODO: rename dirop to "infixop"
 local dirop = {
    ['+'] = 'ADD',
    ['*'] = 'MUL',
@@ -108,32 +109,29 @@ local dirop = {
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
    if cmpop[o] then
-      dest = dest or self.ctx:nextreg()
-      local free = self.ctx.freereg
-      local a = self:expr_emit(node.left)
-      local b = self:expr_emit(node.right)
       local j1 = util.genid()
       local j2 = util.genid()
-      self.ctx:op_comp(cmpop2[o], a, b, j1)
+      self:test_emit(node, j1, true)
+      dest = dest or self.ctx:nextreg()
       self.ctx:op_load(dest, false)
       self.ctx:jump(j2)
       self.ctx:here(j1)
       self.ctx:op_load(dest, true)
       self.ctx:here(j2)
-      self.ctx.freereg = free
    elseif dirop[o] then
       local free = self.ctx.freereg
       local atag, a = self:direct_expr_emit(node.left)
       local btag, b = self:direct_expr_emit(node.right)
+      -- TODO: manage the case when both operands are constants
       self.ctx.freereg = free
-      dest = dest or free
+      dest = dest or self.ctx:nextreg()
       self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
    else
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
       local b = self:expr_emit(node.right)
       self.ctx.freereg = free
-      dest = dest or free
+      dest = dest or self.ctx:nextreg()
       if o == '^' then
          self.ctx:op_pow(dest, a, b)
       elseif o == '..' then
@@ -146,10 +144,11 @@ function ExpressionRule:BinaryExpression(node, dest)
 end
 
 function ExpressionRule:UnaryExpression(node, dest)
-   dest = dest or self.ctx:nextreg()
-   local free = self.ctx.freereg
    local o = node.operator
+   local free = self.ctx.freereg
    local a = self:expr_emit(node.argument)
+   self.ctx.freereg = free
+   dest = dest or free
    if o == '-' then
       self.ctx:op_unm(dest, a)
    elseif o == '#' then
@@ -159,14 +158,12 @@ function ExpressionRule:UnaryExpression(node, dest)
    else
       error("bad unary operator: "..o, 2)
    end
-   self.ctx.freereg = free
    return dest
 end
 
 function ExpressionRule:LogicalExpression(node, dest)
-   dest = dest or self.ctx:nextreg()
-   local free = self.ctx.freereg
-   local a = self:expr_emit(node.left)
+   local result = dest or self.ctx.freereg
+   local a = self:expr_emit(node.left, result)
    local l = util.genid()
    if node.operator == 'or' then
       self.ctx:op_test(true, a, l)
@@ -175,10 +172,10 @@ function ExpressionRule:LogicalExpression(node, dest)
    else
       error("bad operator in logical expression: "..node.operator)
    end
-   self:expr_emit(node.right)
+   self:expr_emit(node.right, result)
    self.ctx:here(l)
-   self.ctx.freereg = free
-   return dest
+   if not dest then self.ctx:nextreg() end
+   return result
 end
 
 function ExpressionRule:MemberExpression(node, base)
@@ -223,9 +220,10 @@ function ExpressionRule:FunctionExpression(node, dest)
 end
 
 function ExpressionRule:CallExpression(node, dest, want, tail)
-   want = want or 0
+   -- want = want or 0
+   assert(want, "CallExpression whould be called with explicit want")
    local base = self.ctx.freereg
-   dest = dest or base
+   local free = (not dest and want == 1) and base + 1 or base
    self:expr_emit(node.callee, base)
    self.ctx:nextreg()
 
@@ -240,9 +238,10 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
    local lastarg = node.arguments[narg]
    args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
 
+   dest = dest or base
    local use_tail = tail and (base == dest)
 
-   self.ctx.freereg = base
+   self.ctx.freereg = free
    if mres then
       if use_tail then
          self.ctx:op_callmt(base, narg - 1)
@@ -317,6 +316,47 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
    return dest, want == MULTIRES, use_tail
 end
 
+function TestRule:BinaryExpression(node, jmp, negate)
+   local o = node.operator
+   if cmpop[o] then
+      local lookup = negate and cmpop or cmpopinv
+      local test, swap, var = unpack(lookup[o])
+      local free = self.ctx.freereg
+      local a = self:expr_emit(node.left)
+      local btag, b = self:expr_emit_testop(node.right)
+      self.ctx.freereg = free
+      self.ctx:op_comp(test, a, btag, b, jmp, swap)
+   else
+      self:expr_test(node, jmp, negate)
+   end
+end
+
+function TestRule:UnaryExpression(node, jmp, negate)
+   if node.operator == 'not' then
+      self:test_emit(node.argument, jmp, true)
+   else
+      local free = self.ctx.freereg
+      local expr = self:expr_emit(node)
+      self.ctx.freereg = free
+      self.ctx:op_test(negate, expr, jmp)
+   end
+end
+
+function TestRule:LogicalExpression(node, jmp, negate)
+   local o = node.operator
+   local and_like = (o == 'and' and not negate) or (o == 'or' and negate)
+   if and_like then
+      self:test_emit(node.left, jmp, negate)
+      self:test_emit(node.right, jmp, negate)
+   else
+      assert(node.operator == 'or', "bad operator in logical expression")
+      local l = util.genid()
+      self:test_emit(node.left, l, not negate)
+      self:test_emit(node.right, jmp, negate)
+      self.ctx:here(l)
+   end
+end
+
 local multi_returns = {
    CallExpression = true,
    SendExpression = true,
@@ -370,22 +410,10 @@ function StatementRule:IfStatement(node, nest, exit)
    exit = exit or util.genid()
    local altl = util.genid()
    if node.test then
-      local test = node.test
-      local o = test.operator
-      if test.kind == 'BinaryExpression' and cmpop[o] then
-         local a = self:expr_emit(test.left)
-         local b = self:expr_emit(test.right)
-         self.ctx.freereg = free
-         self.ctx:op_comp(cmpop[o], a, b, altl)
-      else
-         local treg = self:expr_emit(test)
-         self.ctx.freereg = free
-         self.ctx:op_test(false, treg, altl)
-      end
+      self:test_emit(node.test, altl)
    end
 
    local block_exit = node.alternate and exit
-
    self:block_enter()
    self:emit(node.consequent)
    self:block_leave(block_exit)
@@ -541,19 +569,7 @@ function StatementRule:WhileStatement(node)
    self.exit = exit
 
    self.ctx:here(loop)
-   local test = node.test
-   local o = test.operator
-   if test.kind == 'BinaryExpression' and cmpop[o] then
-      local a = self:expr_emit(test.left)
-      local b = self:expr_emit(test.right)
-      self.ctx.freereg = free
-      self.ctx:op_comp(cmpop[o], a, b, exit)
-   else
-      local treg = self:expr_emit(test)
-      self.ctx.freereg = free
-      self.ctx:op_test(false, treg, exit)
-   end
-
+   self:test_emit(node.test, exit)
    self.ctx:loop(exit)
    self:emit(node.body)
    self.ctx:jump(loop)
@@ -575,21 +591,7 @@ function StatementRule:RepeatStatement(node)
    self.ctx:here(loop)
    self.ctx:loop(exit)
    self:emit(node.body)
-
-   local test = node.test
-   if test.kind == 'BinaryExpression' and cmpop[o] then
-      local o = test.operator
-      local a = self:expr_emit(test.left)
-      local b = self:expr_emit(test.right)
-      self.ctx.freereg = free
-      self.ctx:op_comp(cmpop[o], a, b)
-   else
-      local treg = self:expr_emit(test)
-      self.ctx.freereg = free
-      self.ctx:op_test(false, treg)
-   end
-
-   self.ctx:jump(loop)
+   self:test_emit(node.test, loop, true)
    self.ctx:here(exit)
    self:block_leave()
    self.exit = saveexit
@@ -706,6 +708,8 @@ end
 
 local function dispatch(self, lookup, node, ...)
    if type(node) ~= "table" then
+      print(debug.traceback())
+      print(util.dump(node))
       error("not a table: "..tostring(node))
    end
    if not node.kind then
@@ -760,6 +764,23 @@ local function generate(tree, name)
       return dispatch(self, StatementRule, node, ...)
    end
 
+   -- emit code to test an expression as a boolean value
+   function self:expr_test(node, jmp, negate)
+      local free = self.ctx.freereg
+      local expr = self:expr_emit(node)
+      self.ctx:op_test(negate, expr, jmp)
+      self.ctx.freereg = free
+   end
+
+   function self:test_emit(node, jmp, negate)
+      local rule = TestRule[node.kind]
+      if rule then
+         rule(self, node, jmp, negate)
+      else
+         self:expr_test(node, jmp, negate)
+      end
+   end
+
    function self:expr_emit(node, base, want, tail)
       want = want or 1
       if want == 0 and is_pure_exprs(node) then return end
@@ -772,6 +793,11 @@ local function generate(tree, name)
          end
          return reg, false
       end
+   end
+
+   function self:expr_emit_testop(node)
+      -- TODO: this is just a sub implementation
+      return 'V', self:expr_emit(node)
    end
 
    function self:direct_expr_emit(node, base)
