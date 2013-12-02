@@ -88,7 +88,7 @@ function restore_env()
 end
 
 function use(...)
-   local level = debug.getinfo(3, "") and 2 or 0
+   local level = getinfo(2, "") and 2 or 0
    local env = new_env()
    env.use(...)
    setfenv(level, env)
