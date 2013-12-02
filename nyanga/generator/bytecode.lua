@@ -349,7 +349,6 @@ function TestRule:LogicalExpression(node, jmp, negate)
       self:test_emit(node.left, jmp, negate)
       self:test_emit(node.right, jmp, negate)
    else
-      assert(node.operator == 'or', "bad operator in logical expression")
       local l = util.genid()
       self:test_emit(node.left, l, not negate)
       self:test_emit(node.right, jmp, negate)
