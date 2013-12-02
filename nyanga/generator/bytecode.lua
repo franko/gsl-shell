@@ -163,15 +163,9 @@ end
 
 function ExpressionRule:LogicalExpression(node, dest)
    local result = dest or self.ctx.freereg
-   local a = self:expr_emit(node.left, result)
+   local negate = (node.operator == 'or')
    local l = util.genid()
-   if node.operator == 'or' then
-      self.ctx:op_test(true, a, l)
-   elseif node.operator == 'and' then
-      self.ctx:op_test(false, a, l)
-   else
-      error("bad operator in logical expression: "..node.operator)
-   end
+   self:expr_test(node.left, l, negate, result)
    self:expr_emit(node.right, result)
    self.ctx:here(l)
    if not dest then self.ctx:nextreg() end
@@ -764,9 +758,9 @@ local function generate(tree, name)
    end
 
    -- emit code to test an expression as a boolean value
-   function self:expr_test(node, jmp, negate)
+   function self:expr_test(node, jmp, negate, dest)
       local free = self.ctx.freereg
-      local expr = self:expr_emit(node)
+      local expr = self:expr_emit(node, dest)
       self.ctx:op_test(negate, expr, jmp)
       self.ctx.freereg = free
    end
