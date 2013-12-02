@@ -967,42 +967,36 @@ local function matrix_complex_det(m)
   return det
 end
 
-local function extract_lu_matrix(lu)
-   local zero = 0
-   local l
-   local u
-   if ffi.istype(gsl_matrix, lu) then
-      l = matrix.unit(tonumber(lu.size1))
-      u = matrix_copy(lu)      
-   else
-      l = matrix.cunit(tonumber(lu.size1))      
-      u = matrix_complex_copy(lu)
-      zero = 0 +0i
-   end
-
-   for i = 1, tonumber(lu.size1) do
-         for j = 1,i-1 do
-            l[i][j] = u[i][j]
-            u[i][j] = zero
-         end
-      end
-   return l,u
-end
-
 function matrix_lu(m)
-  local n = m.size1
+  local n = tonumber(m.size1)
   local lu = matrix_copy(m)
   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
   gsl_check(gsl.gsl_linalg_LU_decomp(lu, p, signum))
-  return extract_lu_matrix(lu)
+  local l = matrix.unit(n)
+  local u = matrix_copy(lu)
+  for i = 1, n do
+    for j = 1,i-1 do
+      l:set(i,j,u:get(i,j))
+      u:set(i,j,0)
+    end
+  end
+  return l,u
 end
 
 function matrix_complex_lu(m)
-  local n = m.size1
+  local n = tonumber(m.size1)
   local lu = matrix_complex_copy(m)
   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
   gsl_check(gsl.gsl_linalg_complex_LU_decomp(lu, p, signum)) 
-  return extract_lu_matrix(lu)
+  local l = matrix.cunit(n)      
+  local u = matrix_complex_copy(lu)
+  for i = 1, n do
+    for j = 1,i-1 do
+      l:set(i,j,u:get(i,j))
+      u:set(i,j,0)
+    end
+  end
+  return l,u
 end
 
 function matrix_td_decomp(m)
@@ -1125,8 +1119,8 @@ function matrix.cholesky(m)
    end
    for i = 1, tonumber(m.size1) do
       for j = i+1,tonumber(m.size2) do
-         chol[i][j] = 0
-         LT[j][i] = 0
+         chol:set(i,j,0)
+         LT:set(j,i,0)
       end
    end
    return chol,LT
