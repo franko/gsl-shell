@@ -3,5 +3,4 @@ local function foo(x, y)
 	return a
 end
 
-local x, y = 3, 7
-print(foo(x, y))
+print(foo(3, 7), foo(7, 3))

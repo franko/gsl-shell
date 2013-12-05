@@ -1,11 +1,13 @@
 local function foo(a, b)
-	if a < b  then print('lt') end
-	if a > b  then print('gt') end
-	if a <= b then print('le') end
-	if a >= b then print('ge') end
-	if a == b then print('eq') end
-	if a ~= b then print('ne') end
-	if not (a < b) then print('not lt') end
+	local x
+	if a < b  then x = 0 end
+	if a > b  then x = 1 end
+	if a <= b then x = 2 end
+	if a >= b then x = 3 end
+	if a == b then x = 4 end
+	if a ~= b then x = 5 end
+	if not (a < b) then x = 6 end
+	return x
 end
 
 local x, y = 7, 3
