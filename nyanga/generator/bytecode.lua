@@ -1,3 +1,4 @@
+local bit  = require('bit')
 local bc   = require('nyanga.bytecode')
 local util = require('nyanga.util')
 
@@ -19,7 +20,14 @@ local cmpopinv = {
    ['~='] = { 'EQ', false, true  },
 }
 
+local band = bit.band
+
 local MULTIRES = -1
+
+-- this should be considered like binary values to perform
+-- bitfield operations
+local EXPR_RESULT_TRUE, EXPR_RESULT_FALSE = 1, 2
+local EXPR_RESULT_BOTH = 3
 
 local StatementRule = { }
 local ExpressionRule = { }
@@ -109,15 +117,11 @@ local dirop = {
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
    if cmpop[o] then
-      local j1 = util.genid()
-      local j2 = util.genid()
-      self:test_emit(node, j1, true)
-      dest = dest or self.ctx:nextreg()
-      self.ctx:op_load(dest, false)
-      self.ctx:jump(j2)
-      self.ctx:here(j1)
-      self.ctx:op_load(dest, true)
-      self.ctx:here(j2)
+      local l = util.genid()
+      local result = dest or self.ctx.freereg
+      self:test_emit(node, l, false, EXPR_RESULT_BOTH, result)
+      self.ctx:here(l)
+      dest = dest or result
    elseif dirop[o] then
       local free = self.ctx.freereg
       local atag, a = self:direct_expr_emit(node.left)
@@ -164,8 +168,9 @@ end
 function ExpressionRule:LogicalExpression(node, dest)
    local result = dest or self.ctx.freereg
    local negate = (node.operator == 'or')
+   local lstore = (node.operator == 'or' and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
    local l = util.genid()
-   self:expr_test(node.left, l, negate, result)
+   self:test_emit(node.left, l, negate, lstore, result)
    self:expr_emit(node.right, result)
    self.ctx:here(l)
    if not dest then self.ctx:nextreg() end
@@ -310,43 +315,60 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
    return dest, want == MULTIRES, use_tail
 end
 
-function TestRule:BinaryExpression(node, jmp, negate)
+local function lookup_test(negate, op)
+   local lookup = negate and cmpop or cmpopinv
+   return unpack(lookup[op])
+end
+
+function TestRule:BinaryExpression(node, jmp, negate, store, dest)
    local o = node.operator
    if cmpop[o] then
-      local lookup = negate and cmpop or cmpopinv
-      local test, swap, var = unpack(lookup[o])
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
       local btag, b = self:expr_emit_testop(node.right)
       self.ctx.freereg = free
-      self.ctx:op_comp(test, a, btag, b, jmp, swap)
+      local branch_bit = (negate and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
+      local falltr_bit = (negate and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE)
+      local use_imbranch = (dest and band(branch_bit, store) ~= 0)
+      if use_imbranch then
+         local test, swap, var = lookup_test(not negate, o)
+         local altlabel = util.genid()
+         self.ctx:op_comp(test, a, btag, b, altlabel, swap)
+         self.ctx:op_load(dest, negate)
+         self.ctx:jump(jmp)
+         self.ctx:here(altlabel)
+      else
+         local test, swap, var = lookup_test(negate, o)
+         self.ctx:op_comp(test, a, btag, b, jmp, swap)
+      end
+      if band(falltr_bit, store) ~= 0 then
+         self.ctx:op_load(dest, not negate)
+      end
    else
       self:expr_test(node, jmp, negate)
    end
 end
 
-function TestRule:UnaryExpression(node, jmp, negate)
-   if node.operator == 'not' then
-      self:test_emit(node.argument, jmp, true)
-   else
-      local free = self.ctx.freereg
-      local expr = self:expr_emit(node)
-      self.ctx.freereg = free
-      self.ctx:op_test(negate, expr, jmp)
+function TestRule:UnaryExpression(node, jmp, negate, store, dest)
+   self:test_emit(node.argument, jmp, not negate, store, dest)
+   if dest and store ~= 0 then
+      self:op_not(dest, dest)
    end
 end
 
-function TestRule:LogicalExpression(node, jmp, negate)
+function TestRule:LogicalExpression(node, jmp, negate, store, dest)
    local o = node.operator
-   local and_like = (o == 'and' and not negate) or (o == 'or' and negate)
-   if and_like then
-      self:test_emit(node.left, jmp, negate)
-      self:test_emit(node.right, jmp, negate)
+   local lbit = o == 'and' and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE
+   local lstore = band(store, lbit)
+   local imbranch = (o == 'and' and negate) or (o == 'or' and not negate)
+   if imbranch then
+      local templ = util.genid()
+      self:test_emit(node.left, templ, not negate, lstore, dest)
+      self:test_emit(node.right, jmp, negate, store, dest)
+      self.ctx:here(templ)
    else
-      local l = util.genid()
-      self:test_emit(node.left, l, not negate)
-      self:test_emit(node.right, jmp, negate)
-      self.ctx:here(l)
+      self:test_emit(node.left, jmp, negate, lstore, dest)
+      self:test_emit(node.right, jmp, negate, store, dest)
    end
 end
 
@@ -760,12 +782,12 @@ local function generate(tree, name)
       self.ctx.freereg = free
    end
 
-   function self:test_emit(node, jmp, negate)
+   function self:test_emit(node, jmp, negate, store, dest)
       local rule = TestRule[node.kind]
       if rule then
-         rule(self, node, jmp, negate)
+         rule(self, node, jmp, negate, store or 0, dest)
       else
-         self:expr_test(node, jmp, negate)
+         self:expr_test(node, jmp, negate, dest)
       end
    end
 
