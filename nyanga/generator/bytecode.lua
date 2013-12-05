@@ -434,10 +434,7 @@ function StatementRule:LocalDeclaration(node)
       if slots > 0 then
          local w = (i == nexps and slots or 1)
          self:expr_emit(node.expressions[i], base + (i - 1), w)
-         if base + (i - 1) ~= self.ctx.freereg then
-            print(debug.traceback())
-            error('does not work!')
-         end
+         assert(base + (i - 1) == self.ctx.freereg)
          self.ctx:nextreg(w)
          slots = slots - w
       else
@@ -701,8 +698,6 @@ end
 
 local function dispatch(self, lookup, node, ...)
    if type(node) ~= "table" then
-      print(debug.traceback())
-      print(util.dump(node))
       error("not a table: "..tostring(node))
    end
    if not node.kind then
