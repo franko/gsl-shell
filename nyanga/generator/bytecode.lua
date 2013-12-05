@@ -148,7 +148,7 @@ function ExpressionRule:UnaryExpression(node, dest)
    local free = self.ctx.freereg
    local a = self:expr_emit(node.argument)
    self.ctx.freereg = free
-   dest = dest or free
+   dest = dest or self.ctx:nextreg()
    if o == '-' then
       self.ctx:op_unm(dest, a)
    elseif o == '#' then
