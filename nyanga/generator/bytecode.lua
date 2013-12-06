@@ -3,21 +3,21 @@ local bc   = require('nyanga.bytecode')
 local util = require('nyanga.util')
 
 local cmpop = {
-   ['<' ] = { 'LT', false, false },
-   ['>' ] = { 'LT', true , false },
-   ['<='] = { 'LE', false, false },
-   ['>='] = { 'LE', true , false },
-   ['=='] = { 'EQ', false, true  },
-   ['~='] = { 'NE', false, true  },
+   ['<' ] = { 'LT', false },
+   ['>' ] = { 'LT', true  },
+   ['<='] = { 'LE', false },
+   ['>='] = { 'LE', true  },
+   ['=='] = { 'EQ', false },
+   ['~='] = { 'NE', false },
 }
 
 local cmpopinv = {
-   ['<' ] = { 'GE', false, false },
-   ['>' ] = { 'GE', true , false },
-   ['<='] = { 'GT', false, false },
-   ['>='] = { 'GT', true , false },
-   ['=='] = { 'NE', false, true  },
-   ['~='] = { 'EQ', false, true  },
+   ['<' ] = { 'GE', false },
+   ['>' ] = { 'GE', true  },
+   ['<='] = { 'GT', false },
+   ['>='] = { 'GT', true  },
+   ['=='] = { 'NE', false },
+   ['~='] = { 'EQ', false },
 }
 
 local band = bit.band
@@ -331,14 +331,14 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       local falltr_bit = (negate and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE)
       local use_imbranch = (dest and band(branch_bit, store) ~= 0)
       if use_imbranch then
-         local test, swap, var = lookup_test(not negate, o)
+         local test, swap = lookup_test(not negate, o)
          local altlabel = util.genid()
          self.ctx:op_comp(test, a, btag, b, altlabel, swap)
          self.ctx:op_load(dest, negate)
          self.ctx:jump(jmp)
          self.ctx:here(altlabel)
       else
-         local test, swap, var = lookup_test(negate, o)
+         local test, swap = lookup_test(negate, o)
          self.ctx:op_comp(test, a, btag, b, jmp, swap)
       end
       if band(falltr_bit, store) ~= 0 then
