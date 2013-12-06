@@ -1,4 +1,3 @@
-local bit  = require('bit')
 local bc   = require('nyanga.bytecode')
 local util = require('nyanga.util')
 
@@ -19,8 +18,6 @@ local cmpopinv = {
    ['=='] = { 'NE', false },
    ['~='] = { 'EQ', false },
 }
-
-local band = bit.band
 
 local MULTIRES = -1
 
@@ -329,7 +326,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       self.ctx.freereg = free
       local branch_bit = (negate and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
       local falltr_bit = (negate and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE)
-      local use_imbranch = (dest and band(branch_bit, store) ~= 0)
+      local use_imbranch = (dest and bit.band(branch_bit, store) ~= 0)
       if use_imbranch then
          local test, swap = lookup_test(not negate, o)
          local altlabel = util.genid()
@@ -341,7 +338,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
          local test, swap = lookup_test(negate, o)
          self.ctx:op_comp(test, a, btag, b, jmp, swap)
       end
-      if band(falltr_bit, store) ~= 0 then
+      if bit.band(falltr_bit, store) ~= 0 then
          self.ctx:op_load(dest, not negate)
       end
    else
@@ -359,7 +356,7 @@ end
 function TestRule:LogicalExpression(node, jmp, negate, store, dest)
    local o = node.operator
    local lbit = o == 'and' and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE
-   local lstore = band(store, lbit)
+   local lstore = bit.band(store, lbit)
    local imbranch = (o == 'and' and negate) or (o == 'or' and not negate)
    if imbranch then
       local templ = util.genid()
