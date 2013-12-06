@@ -1,6 +1,8 @@
 local bc   = require('nyanga.bytecode')
 local util = require('nyanga.util')
 
+-- comparison operators with corresponding instruction.
+-- the boolean value indicate if the operands should be swapped.
 local cmpop = {
    ['<' ] = { 'LT', false },
    ['>' ] = { 'LT', true  },
@@ -10,6 +12,7 @@ local cmpop = {
    ['~='] = { 'NE', false },
 }
 
+-- the same of above but for the inverse tests
 local cmpopinv = {
    ['<' ] = { 'GE', false },
    ['>' ] = { 'GE', true  },
@@ -771,14 +774,14 @@ local function generate(tree, name)
       return dispatch(self, StatementRule, node, ...)
    end
 
-   -- emit code to test an expression as a boolean value
-   function self:expr_test(node, jmp, negate, dest)
-      local free = self.ctx.freereg
-      local expr = self:expr_emit(node, dest)
-      self.ctx:op_test(negate, expr, jmp)
-      self.ctx.freereg = free
-   end
-
+   -- Emit the code to evaluate "node" and perform a conditional
+   -- jump based on its value. The argument "jmp" is the jump location.
+   -- If "negate" is false the jump on FALSE and viceversa.
+   -- The argument "store" is a bitfield that specifies which
+   -- computed epxression should be stored. The bit EXPR_RESULT_TRUE
+   -- means that the value should be stored when its value is "true".
+   -- If "store" is not ZERO than dest should be the register
+   -- destination for the result.
    function self:test_emit(node, jmp, negate, store, dest)
       local rule = TestRule[node.kind]
       if rule then
@@ -786,6 +789,14 @@ local function generate(tree, name)
       else
          self:expr_test(node, jmp, negate, dest)
       end
+   end
+
+   -- Emit code to test an expression as a boolean value
+   function self:expr_test(node, jmp, negate, dest)
+      local free = self.ctx.freereg
+      local expr = self:expr_emit(node, dest)
+      self.ctx:op_test(negate, expr, jmp)
+      self.ctx.freereg = free
    end
 
    function self:expr_emit(node, base, want, tail)
