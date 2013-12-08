@@ -553,9 +553,6 @@ function StatementRule:FunctionDeclaration(node)
    self.ctx = self.ctx.outer
    self.ctx.freereg = free
    self.ctx:op_fnew(dest, func.idx)
-   if not node.locald then
-      self:var_assign(name, dest)
-   end
 end
 function StatementRule:WhileStatement(node)
    local free = self.ctx.freereg
