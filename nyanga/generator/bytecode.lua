@@ -233,30 +233,38 @@ function ExpressionRule:FunctionExpression(node, dest)
    return dest
 end
 
-function ExpressionRule:CallExpression(node, dest, want, tail)
-   -- want = want or 0
-   assert(want, "CallExpression whould be called with explicit want")
+local function emit_call_expression(self, node, dest, want, tail, use_self)
    local base = self.ctx.freereg
    local free = (not dest and want == 1) and base + 1 or base
-   self:expr_emit(node.callee, base)
+   local callee = use_self and node.receiver or node.callee
+   self:expr_emit(callee, base)
    self.ctx:nextreg()
 
-   local narg = #node.arguments
+   if use_self then
+      local recv = base + 1
+      local meth = recv + 1
+      self.ctx:op_move(recv, base)
+      self.ctx:op_load(meth, node.method.name)
+      self.ctx:op_tget(base, base, meth)
+      self.ctx:nextreg()
+   end
 
-   local args = { }
+   local narg = #node.arguments
    for i=1, narg - 1 do
-      args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
+      self:expr_emit(node.arguments[i], self.ctx.freereg)
       self.ctx:nextreg()
    end
    local mres = false
    if narg > 0 then
       local lastarg = node.arguments[narg]
-      args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
+      local ret
+      ret, mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
    end
 
    dest = dest or base
    local use_tail = tail and (base == dest)
 
+   if use_self then narg = narg + 1 end
    self.ctx.freereg = free
    if mres then
       if use_tail then
@@ -280,58 +288,12 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
    return dest, want == MULTIRES, use_tail
 end
 
+function ExpressionRule:CallExpression(node, dest, want, tail)
+   return emit_call_expression(self, node, dest, want, tail, false)
+end
+
 function ExpressionRule:SendExpression(node, dest, want, tail)
-   want = want or 0
-   local base = self.ctx.freereg
-   dest = dest or base
-   self:expr_emit(node.receiver, base)
-   self.ctx:nextreg()
-
-   local narg = #node.arguments
-
-   local recv = base + 1
-   local meth = recv + 1
-   self.ctx:op_move(recv, base)
-   self.ctx:op_load(meth, node.method.name)
-   self.ctx:op_tget(base, base, meth)
-
-   self.ctx:nextreg()
-
-   local args = { }
-   local mres = false
-   for i=1, narg - 1 do
-      args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
-      self.ctx:nextreg()
-   end
-   local mres = false
-   if narg > 0 then
-      local lastarg = node.arguments[narg]
-      args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
-   end
-
-   local use_tail = tail and (base == dest)
-
-   self.ctx.freereg = base
-   if mres then
-      if use_tail then
-         self.ctx:op_callmt(base, narg)
-      else
-         self.ctx:op_callm(base, want, narg)
-      end
-   else
-      if use_tail then
-         self.ctx:op_callt(base, narg + 1)
-      else
-         self.ctx:op_call(base, want, narg + 1)
-      end
-   end
-
-   if dest ~= base then
-      assert(want == 1, "CallExpression cannot return multiple values into inner register")
-      self.ctx:op_move(dest, base)
-   end
-
-   return dest, want == MULTIRES, use_tail
+   return emit_call_expression(self, node, dest, want, tail, true)
 end
 
 local function lookup_test(negate, op)
