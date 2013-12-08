@@ -312,7 +312,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
    if cmpop[o] then
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
-      local btag, b = self:expr_emit_testop(node.right)
+      local btag, b = self:expr_emit_testop(o, node.right)
       self.ctx.freereg = free
       local use_imbranch = (dest and has_branch(store, negate))
       if use_imbranch then
@@ -803,8 +803,8 @@ local function generate(tree, name)
       end
    end
 
-   function self:expr_emit_testop(node)
-      if is_literal(node) then
+   function self:expr_emit_testop(o, node)
+      if (o == 'NE' or o == 'EQ') and is_literal(node) then
          local value = node.value
          local tp = type(value)
          if tp == 'string' then
