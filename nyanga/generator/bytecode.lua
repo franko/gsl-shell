@@ -248,9 +248,11 @@ function ExpressionRule:CallExpression(node, dest, want, tail)
       args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
       self.ctx:nextreg()
    end
-   local mres
-   local lastarg = node.arguments[narg]
-   args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
+   local mres = false
+   if narg > 0 then
+      local lastarg = node.arguments[narg]
+      args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
+   end
 
    dest = dest or base
    local use_tail = tail and (base == dest)
@@ -301,9 +303,11 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
       args[i] = self:expr_emit(node.arguments[i], self.ctx.freereg)
       self.ctx:nextreg()
    end
-   local mres
-   local lastarg = node.arguments[narg]
-   args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
+   local mres = false
+   if narg > 0 then
+      local lastarg = node.arguments[narg]
+      args[narg], mres = self:expr_emit(lastarg, self.ctx.freereg, MULTIRES)
+   end
 
    local use_tail = tail and (base == dest)
 
