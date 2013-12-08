@@ -320,6 +320,12 @@ local function lookup_test(negate, op)
    return unpack(lookup[op])
 end
 
+-- Return true IFF the variable "store" has the EXPR_RESULT_FALSE bit
+-- set. If "negate" is true check the EXPR_RESULT_TRUE bit instead.
+local function has_branch(store, negate)
+   return bit.band(store, negate and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE) ~= 0
+end
+
 function TestRule:BinaryExpression(node, jmp, negate, store, dest)
    local o = node.operator
    if cmpop[o] then
@@ -327,9 +333,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       local a = self:expr_emit(node.left)
       local btag, b = self:expr_emit_testop(node.right)
       self.ctx.freereg = free
-      local branch_bit = (negate and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
-      local falltr_bit = (negate and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE)
-      local use_imbranch = (dest and bit.band(branch_bit, store) ~= 0)
+      local use_imbranch = (dest and has_branch(store, negate))
       if use_imbranch then
          local test, swap = lookup_test(not negate, o)
          local altlabel = util.genid()
@@ -341,7 +345,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
          local test, swap = lookup_test(negate, o)
          self.ctx:op_comp(test, a, btag, b, jmp, swap)
       end
-      if bit.band(falltr_bit, store) ~= 0 then
+      if has_branch(store, not negate) then
          self.ctx:op_load(dest, not negate)
       end
    else
