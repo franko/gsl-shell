@@ -347,6 +347,12 @@ function Proto.__index:nextreg(num)
    end
    return reg
 end
+function Proto.__index:setreg(reg)
+   self.freereg = reg
+   if self.freereg >= self.framesize then
+      self.framesize = self.freereg
+   end
+end
 function Proto.__index:enter()
    local outer = self.actvars
    self.actvars = setmetatable({ }, {
