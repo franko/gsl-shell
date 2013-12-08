@@ -105,7 +105,7 @@ function ExpressionRule:Table(node, dest)
    return dest
 end
 
--- TODO: rename dirop to "infixop"
+-- Operations that admit instructions in the form ADDVV, ADDVN, ADDNV
 local dirop = {
    ['+'] = 'ADD',
    ['*'] = 'MUL',
@@ -113,6 +113,17 @@ local dirop = {
    ['/'] = 'DIV',
    ['%'] = 'MOD',
 }
+
+local function dirop_compute(o, a_node, b_node)
+   local a, b = a_node.value, b_node.value
+   if     o == '+' then return a + b
+   elseif o == '-' then return a - b
+   elseif o == '*' then return a * b
+   elseif o == '/' then return a / b
+   elseif o == '%' then return a % b
+   elseif o == '^' then return a ^ b
+   end
+end
 
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
@@ -126,10 +137,14 @@ function ExpressionRule:BinaryExpression(node, dest)
       local free = self.ctx.freereg
       local atag, a = self:direct_expr_emit(node.left)
       local btag, b = self:direct_expr_emit(node.right)
-      -- TODO: manage the case when both operands are constants
       self.ctx.freereg = free
       dest = dest or self.ctx:nextreg()
-      self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
+      if atag == 'N' and btag == 'N' then
+         local value = dirop_compute(o, node.left, node.right)
+         self.ctx:op_load(dest, value)
+      else
+         self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
+      end
    else
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
