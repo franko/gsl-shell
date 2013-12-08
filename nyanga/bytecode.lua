@@ -370,6 +370,12 @@ function Proto.__index:child(flags)
    self.kobj[#self.kobj + 1] = child
    return child
 end
+function Proto.__index:kpri(val)
+   if val == nil then return VKNIL
+   elseif val == true then return VKTRUE
+   elseif val == false then return VKFALSE
+   else error('Invalid primitive value: '..val) end
+end
 function Proto.__index:const(val)
    if type(val) == 'string' then
       if not self.kcache[val] then
