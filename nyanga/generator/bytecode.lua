@@ -836,7 +836,18 @@ local function generate(tree, name)
    end
 
    function self:expr_emit_testop(node)
-      -- TODO: this is just a sub implementation
+      if is_literal(node) then
+         local value = node.value
+         local tp = type(value)
+         if tp == 'string' then
+            return 'S', self.ctx:const(value)
+         elseif tp == 'number' then
+            return 'N', self.ctx:const(value)
+         elseif tp == 'boolean' or tp == nil then
+            return 'P', self.ctx:kpri(value)
+         end
+         -- fall through
+      end
       return 'V', self:expr_emit(node)
    end
 
