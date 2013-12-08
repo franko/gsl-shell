@@ -228,7 +228,8 @@ function ExpressionRule:FunctionExpression(node, dest)
 
    self.ctx = self.ctx.outer
    self.ctx.freereg = free
-   self.ctx:op_fnew(dest or free, func.idx)
+   dest = dest or self.ctx:nextreg()
+   self.ctx:op_fnew(dest, func.idx)
 
    return dest
 end
