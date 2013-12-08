@@ -353,9 +353,12 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
          local test, swap = lookup_test(not negate, o)
          local altlabel = util.genid()
          self.ctx:op_comp(test, a, btag, b, altlabel, swap)
+         -- increment register to ensure next jump's rbase is correct
+         self.ctx:nextreg()
          self.ctx:op_load(dest, negate)
          self.ctx:jump(jmp)
          self.ctx:here(altlabel)
+         self.ctx.freereg = free
       else
          local test, swap = lookup_test(negate, o)
          self.ctx:op_comp(test, a, btag, b, jmp, swap)
