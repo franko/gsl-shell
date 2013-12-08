@@ -120,8 +120,8 @@ function ExpressionRule:BinaryExpression(node, dest)
       local l = util.genid()
       local result = dest or self.ctx.freereg
       self:test_emit(node, l, false, EXPR_RESULT_BOTH, result)
+      dest = dest or self.ctx:nextreg()
       self.ctx:here(l)
-      dest = dest or result
    elseif dirop[o] then
       local free = self.ctx.freereg
       local atag, a = self:direct_expr_emit(node.left)
