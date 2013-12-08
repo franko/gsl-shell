@@ -236,16 +236,15 @@ end
 local function emit_call_expression(self, node, dest, want, tail, use_self)
    local base = self.ctx.freereg
    local free = (not dest and want == 1) and base + 1 or base
-   local callee = use_self and node.receiver or node.callee
-   self:expr_emit(callee, base)
-   self.ctx:nextreg()
 
    if use_self then
-      local recv = base + 1
-      local meth = recv + 1
-      self.ctx:op_move(recv, base)
-      self.ctx:op_load(meth, node.method.name)
-      self.ctx:op_tget(base, base, meth)
+      local obj = self:expr_emit(node.receiver)
+      self.ctx:setreg(base + 1)
+      self.ctx:op_move(base + 1, obj)
+      self.ctx:op_tget(base, obj, node.method.name)
+      self.ctx:nextreg()
+   else
+      self:expr_emit(node.callee, base)
       self.ctx:nextreg()
    end
 
