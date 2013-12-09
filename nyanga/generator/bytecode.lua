@@ -806,6 +806,9 @@ local function generate(tree, name)
             prop = self:expr_emit(node.property)
          else
             prop = node.property.name
+            -- Register the literal property as a constant.
+            -- Not required but let us behave like luajit.
+            self.ctx:const(prop)
          end
          return tgt, prop
       end
