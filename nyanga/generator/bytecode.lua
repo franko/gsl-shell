@@ -481,6 +481,13 @@ function StatementRule:AssignmentExpression(node)
    local nvars = #node.left
    local nexps = #node.right
 
+   local target = { }
+   local index = { }
+   for i = 1, nvars do
+      local tgt, idx = self:expr_tail_emit(node.left[i])
+      target[i], index[i] = tgt, idx
+   end
+
    local slots = nvars
    local exprs = { }
    for i=1, nexps - 1 do
@@ -506,27 +513,18 @@ function StatementRule:AssignmentExpression(node)
    end
 
    for i = nvars, 1, -1 do
-      local lhs  = node.left[i]
       local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
-      if lhs.kind == 'Identifier' then
-         self:var_assign(lhs.name, expr)
-      elseif lhs.kind == 'MemberExpression' then
-         local obj = self:expr_emit(lhs.object)
-         local key
-         if lhs.property.kind == 'Identifier' and not lhs.computed then
-            key = self.ctx:nextreg()
-            self.ctx:op_load(key, lhs.property.name)
-         else
-            key = self:expr_emit(lhs.property)
-         end
-         self.ctx:op_tset(obj, key, expr)
+      if target[i] then
+         self.ctx:op_tset(target[i], index[i], expr)
       else
-         error("Invalid left-hand side in assignment")
+         local lhs  = node.left[i]
+         self:var_assign(lhs.name, expr)
       end
    end
 
    self.ctx.freereg = free
 end
+
 function StatementRule:FunctionDeclaration(node)
    local name = node.id.name
    local dest
@@ -800,6 +798,19 @@ local function generate(tree, name)
             self.ctx:op_nils(base + 1, want - 1)
          end
          return reg, false
+      end
+   end
+
+   function self:expr_tail_emit(node)
+      if node.kind == 'MemberExpression' then
+         local tgt = self:expr_emit(node.object)
+         local prop
+         if node.computed then
+            prop = self:expr_emit(node.property)
+         else
+            prop = node.property.name
+         end
+         return tgt, prop
       end
    end
 
