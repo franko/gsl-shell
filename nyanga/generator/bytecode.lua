@@ -198,11 +198,8 @@ function ExpressionRule:MemberExpression(node, base)
    local prop
    if node.computed then
       prop = self:expr_emit(node.property)
-   elseif node.property.kind == 'Identifier' then
-      prop = self.ctx:nextreg()
-      self.ctx:op_load(prop, node.property.name)
    else
-      prop = self:expr_emit(node.property)
+      prop = node.property.name
    end
    self.ctx.freereg = free
    base = base or self.ctx:nextreg()
