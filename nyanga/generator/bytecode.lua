@@ -114,19 +114,41 @@ local dirop = {
    ['%'] = 'MOD',
 }
 
-local function dirop_compute(o, a_node, b_node)
-   local a, b = a_node.value, b_node.value
+local function infix_is_const(node)
+   local l, r = node.left, node.right
+   local tl, tr = type(l.value), type(r.value)
+   return (l.kind == 'Literal' and tl == 'number') and (r.kind == 'Literal' and tr == 'number')
+end
+
+local function dirop_compute(o, a, b)
    if     o == '+' then return a + b
    elseif o == '-' then return a - b
    elseif o == '*' then return a * b
-   elseif o == '/' then return a / b
+   elseif o == '/' and b ~= 0 then return a / b
    elseif o == '%' then return a % b
    elseif o == '^' then return a ^ b
    end
 end
 
+local function infix_compute(o, anode, bnode)
+   local a, b = anode.value, bnode.value
+   local ta, tb = type(anode.value), type(bnode.value)
+   if dirop[o] or o == '^' then
+      return dirop_compute(o, a, b)
+   end
+end
+
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
+   if infix_is_const(node) and o ~= '..' then
+      local value = infix_compute(o, node.left, node.right)
+      if value then
+         dest = dest or self.ctx:nextreg()
+         self.ctx:op_load(dest, value)
+         return dest
+      end
+      -- fall through
+   end
    if cmpop[o] then
       local l = util.genid()
       local result = dest or self.ctx.freereg
@@ -139,12 +161,8 @@ function ExpressionRule:BinaryExpression(node, dest)
       local btag, b = self:direct_expr_emit(node.right)
       self.ctx.freereg = free
       dest = dest or self.ctx:nextreg()
-      if atag == 'N' and btag == 'N' then
-         local value = dirop_compute(o, node.left, node.right)
-         self.ctx:op_load(dest, value)
-      else
-         self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
-      end
+      assert(not (atag == 'N' and btag == 'N'), "operands are both constants")
+      self.ctx:op_infix(dirop[o], dest, atag, a, btag, b)
    else
       local free = self.ctx.freereg
       local a = self:expr_emit(node.left)
