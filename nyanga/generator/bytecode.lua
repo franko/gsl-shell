@@ -311,6 +311,28 @@ function ExpressionRule:SendExpression(node, dest, want, tail)
    return emit_call_expression(self, node, dest, want, tail, true)
 end
 
+local function is_literal(node)
+   return node.kind == 'Literal'
+end
+
+local function is_local_var(ctx, node)
+   if node.kind == 'Identifier' then
+      local info, uval = ctx:lookup(node.name)
+      if info and not uval then
+         return info.idx
+      end
+   end
+end
+
+function TestRule:Identifier(node, jmp, negate, store, dest)
+   local var = is_local_var(self.ctx, node)
+   if var and store ~= 0 then
+      self.ctx:op_testmov(negate, dest, var, jmp)
+   else
+      self:expr_test(node, jmp, negate, dest)
+   end
+end
+
 local function lookup_test(negate, op)
    local lookup = negate and cmpop or cmpopinv
    return unpack(lookup[op])
@@ -475,19 +497,6 @@ function StatementRule:LocalDeclaration(node)
    for i=1, nvars do
       local lhs = node.names[i]
       self.ctx:newvar(lhs.name, base + (i - 1))
-   end
-end
-
-local function is_literal(node)
-   return node.kind == 'Literal'
-end
-
-local function is_local_var(ctx, node)
-   if node.kind == 'Identifier' then
-      local info, uval = ctx:lookup(node.name)
-      if info and not uval then
-         return info.idx
-      end
    end
 end
 

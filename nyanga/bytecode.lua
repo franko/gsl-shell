@@ -659,6 +659,11 @@ function Proto.__index:op_test(cond, a, here)
    if here then here = self:jump(here) end
    return inst, here
 end
+function Proto.__index:op_testmov(cond, dest, var, here)
+   local inst = self:emit(cond and BC.ISTC or BC.ISFC, dest, var)
+   if here then here = self:jump(here) end
+   return inst, here
+end
 function Proto.__index:op_comp(cond, a, btag, b, here, swap)
    local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
    local ins = BC['IS'..cond..suffix]
