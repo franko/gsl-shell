@@ -548,7 +548,8 @@ function StatementRule:AssignmentExpression(node)
    for i = nvars, 1, -1 do
       local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
       if target[i] then
-         self.ctx:op_tset(target[i], index[i], expr)
+         local suffix = (type(index[i]) == 'string' and 'S' or 'V')
+         self.ctx:op_tset(target[i], index[i], expr, suffix)
       else
          local lhs  = node.left[i]
          self:var_assign(lhs.name, expr)
