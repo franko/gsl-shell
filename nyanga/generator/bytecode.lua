@@ -33,6 +33,23 @@ local StatementRule = { }
 local ExpressionRule = { }
 local TestRule = { }
 
+local function is_literal(node)
+   return node.kind == 'Literal'
+end
+
+local function is_local_var(ctx, node)
+   if node.kind == 'Identifier' then
+      local info, uval = ctx:lookup(node.name)
+      if info and not uval then
+         return info.idx
+      end
+   end
+end
+
+local function is_byte_number(v)
+   return type(v) == 'number' and v % 1 == 0 and v >= 0 and v < 256
+end
+
 function ExpressionRule:Literal(node, dest)
    dest = dest or self.ctx:nextreg()
    self.ctx:op_load(dest, node.value)
@@ -99,7 +116,8 @@ function ExpressionRule:Table(node, dest)
       else
          self.ctx:op_load(vreg, v)
       end
-      self.ctx:op_tset(dest, kreg, vreg)
+      local suffix = (type(kreg) == 'string' and 'S' or 'V')
+      self.ctx:op_tset(dest, kreg, vreg, suffix)
    end
    self.ctx.freereg = free
    return dest
@@ -213,15 +231,19 @@ end
 function ExpressionRule:MemberExpression(node, base)
    local free = self.ctx.freereg
    local obj = self:expr_emit(node.object)
-   local prop
+   local prop, suffix
    if node.computed then
-      prop = self:expr_emit(node.property)
+      if is_literal(node.property) and is_byte_number(node.property.value) then
+         prop, suffix = node.value, 'B'
+      else
+         prop, suffix = self:expr_emit(node.property), 'V'
+      end
    else
-      prop = node.property.name
+      prop, suffix = node.property.name, 'S'
    end
    self.ctx.freereg = free
    base = base or self.ctx:nextreg()
-   self.ctx:op_tget(base, obj, prop)
+   self.ctx:op_tget(base, obj, prop, suffix)
    return base
 end
 
@@ -257,7 +279,7 @@ local function emit_call_expression(self, node, dest, want, tail, use_self)
       local obj = self:expr_emit(node.receiver)
       self.ctx:setreg(base + 1)
       self.ctx:op_move(base + 1, obj)
-      self.ctx:op_tget(base, obj, node.method.name)
+      self.ctx:op_tget(base, obj, node.method.name, 'S')
       self.ctx:nextreg()
    else
       self:expr_emit(node.callee, base)
@@ -309,19 +331,6 @@ end
 
 function ExpressionRule:SendExpression(node, dest, want, tail)
    return emit_call_expression(self, node, dest, want, tail, true)
-end
-
-local function is_literal(node)
-   return node.kind == 'Literal'
-end
-
-local function is_local_var(ctx, node)
-   if node.kind == 'Identifier' then
-      local info, uval = ctx:lookup(node.name)
-      if info and not uval then
-         return info.idx
-      end
-   end
 end
 
 function TestRule:Identifier(node, jmp, negate, store, dest)

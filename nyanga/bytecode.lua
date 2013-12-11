@@ -757,25 +757,15 @@ function Proto.__index:op_tnew(dest, narry, nhash)
    end
    return self:emit(BC.TNEW, dest, bit.bor(narry, bit.lshift(nhash, 11)))
 end
-function Proto.__index:op_tget(dest, tab, key)
-   if type(key) == 'string' then
-      return self:emit(BC.TGETS, dest, tab, self:const(key))
-   else
-      return self:emit(BC.TGETV, dest, tab, key)
-   end
+function Proto.__index:op_tget(dest, tab, key, suffix)
+   local ins_name = 'TGET' .. (suffix or 'V')
+   local keyval = (suffix == 'S' and self:const(key) or key)
+   return self:emit(BC[ins_name], dest, tab, keyval)
 end
-function Proto.__index:op_tgetb(dest, tab, key)
-   return self:emit(BC.TGETB, dest, tab, key)
-end
-function Proto.__index:op_tset(tab, key, val)
-   if type(key) == 'string' then
-      return self:emit(BC.TSETS, val, tab, self:const(key))
-   else
-      return self:emit(BC.TSETV, val, tab, key)
-   end
-end
-function Proto.__index:op_tsetb(tab, key, val)
-   return self:emit(BC.TSETB, val, tab, key)
+function Proto.__index:op_tset(tab, key, val, suffix)
+   local ins_name = 'TSET' .. (suffix or 'V')
+   local keyval = (suffix == 'S' and self:const(key) or key)
+   return self:emit(BC[ins_name], val, tab, keyval)
 end
 function Proto.__index:op_tsetm(base, vnum)
    local knum = double_new(0)
