@@ -32,6 +32,7 @@ local EXPR_RESULT_BOTH = 3
 local StatementRule = { }
 local ExpressionRule = { }
 local TestRule = { }
+local ConstRule = { }
 
 local function is_literal(node)
    return node.kind == 'Literal'
@@ -132,12 +133,6 @@ local dirop = {
    ['%'] = 'MOD',
 }
 
-local function infix_is_const(node)
-   local l, r = node.left, node.right
-   local tl, tr = type(l.value), type(r.value)
-   return (l.kind == 'Literal' and tl == 'number') and (r.kind == 'Literal' and tr == 'number')
-end
-
 local function dirop_compute(o, a, b)
    if     o == '+' then return a + b
    elseif o == '-' then return a - b
@@ -148,25 +143,8 @@ local function dirop_compute(o, a, b)
    end
 end
 
-local function infix_compute(o, anode, bnode)
-   local a, b = anode.value, bnode.value
-   local ta, tb = type(anode.value), type(bnode.value)
-   if dirop[o] or o == '^' then
-      return dirop_compute(o, a, b)
-   end
-end
-
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
-   if infix_is_const(node) and o ~= '..' then
-      local value = infix_compute(o, node.left, node.right)
-      if value then
-         dest = dest or self.ctx:nextreg()
-         self.ctx:op_load(dest, value)
-         return dest
-      end
-      -- fall through
-   end
    if cmpop[o] then
       local l = util.genid()
       local result = dest or self.ctx.freereg
@@ -403,6 +381,31 @@ function TestRule:LogicalExpression(node, jmp, negate, store, dest)
    else
       self:test_emit(node.left, jmp, negate, lstore, dest)
       self:test_emit(node.right, jmp, negate, store, dest)
+   end
+end
+
+function ConstRule:Literal(node)
+   local v = node.value
+   if type(v) == 'number' then return v end
+end
+
+function ConstRule:BinaryExpression(node)
+   local o = node.operator
+   if o == '..' then return end
+   local a = self:const_eval_try(node.left)
+   if a then
+      local b = self:const_eval_try(node.right)
+      if b then
+         return dirop_compute(o, a, b)
+      end
+   end
+end
+
+function ConstRule:UnaryExpression(node)
+   local o = node.operator
+   if o == '-' then
+      local v = self:const_eval_try(node.argument)
+      if v then return -v end
    end
 end
 
@@ -833,11 +836,18 @@ local function generate(tree, name)
       if can_multi_return(node) then
          return dispatch(self, ExpressionRule, node, base, want, tail)
       else
-         local reg = dispatch(self, ExpressionRule, node, base)
+         local const_val = self:const_eval_try(node)
+         local dest
+         if const_val and want == 1 then
+            dest = base or self.ctx:nextreg()
+            self.ctx:op_load(dest, const_val)
+         else
+            dest = dispatch(self, ExpressionRule, node, base)
+         end
          if want > 1 then
             self.ctx:op_nils(base + 1, want - 1)
          end
-         return reg, false
+         return dest, false
       end
    end
 
@@ -873,13 +883,21 @@ local function generate(tree, name)
       return 'V', self:expr_emit(node)
    end
 
+   function self:const_eval_try(node)
+      local rule = ConstRule[node.kind]
+      if rule then
+         return rule(self, node)
+      end
+   end
+
    function self:direct_expr_emit(node, base)
       local tag, reg
       if can_multi_return(node) then
          tag, reg = 'V', dispatch(self, ExpressionRule, node, base, 1, false)
       else
-         if is_literal(node) then
-            tag, reg = 'N', self.ctx:const(node.value)
+         local const_val = self:const_eval_try(node)
+         if const_val then
+            tag, reg = 'N', self.ctx:const(const_val)
          else
             tag, reg = 'V', dispatch(self, ExpressionRule, node, base)
          end
