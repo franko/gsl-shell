@@ -629,7 +629,7 @@ function StatementRule:RepeatStatement(node)
    self.ctx:here(loop)
    self.ctx:loop(exit)
    self:emit(node.body)
-   self:test_emit(node.test, loop, true)
+   self:test_emit(node.test, loop)
    self.ctx:here(exit)
    self:block_leave()
    self.exit = saveexit
