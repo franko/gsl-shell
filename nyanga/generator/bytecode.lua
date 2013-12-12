@@ -525,8 +525,14 @@ function StatementRule:AssignmentExpression(node)
    local exprs = { }
    for i=1, nexps - 1 do
       if slots > 0 then
+         -- LuaJIT compatibility:
+         -- Use a temporary register even the LHS is not an immediate local
+         -- variable.
+         local use_reg = true
+         --[[
          local use_reg = is_local_var(self.ctx, node.left[i])
-         local reg = use_reg and self.ctx.freereg or nil
+         ]]
+         local reg = use_reg and self.ctx.freereg
          exprs[i] = self:expr_emit(node.right[i], reg)
          if use_reg then self.ctx:nextreg() end
          slots = slots - 1
