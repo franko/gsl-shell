@@ -838,7 +838,7 @@ local function generate(tree, name)
       else
          local const_val = self:const_eval_try(node)
          local dest
-         if const_val and want == 1 then
+         if const_val and (want == 1 or want == MULTIRES) then
             dest = base or self.ctx:nextreg()
             self.ctx:op_load(dest, const_val)
          else
