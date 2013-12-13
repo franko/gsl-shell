@@ -212,7 +212,7 @@ function ExpressionRule:MemberExpression(node, base)
    local prop, suffix
    if node.computed then
       if is_literal(node.property) and is_byte_number(node.property.value) then
-         prop, suffix = node.value, 'B'
+         prop, suffix = node.property.value, 'B'
       else
          prop, suffix = self:expr_emit(node.property), 'V'
       end
