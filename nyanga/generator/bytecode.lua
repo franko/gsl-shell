@@ -38,6 +38,10 @@ local function is_literal(node)
    return node.kind == 'Literal'
 end
 
+local function is_identifier(node)
+   return node.kind == 'Identifier'
+end
+
 local function is_local_var(ctx, node)
    if node.kind == 'Identifier' then
       local info, uval = ctx:lookup(node.name)
@@ -512,16 +516,19 @@ function StatementRule:LocalDeclaration(node)
    end
 end
 
+local function lhs_member_assign(target, index, expr)
+   local suffix = (type(index) == 'string' and 'S' or 'V')
+   self.ctx:op_tset(target, index, expr, suffix)
+end
+
 function StatementRule:AssignmentExpression(node)
    local free = self.ctx.freereg
    local nvars = #node.left
    local nexps = #node.right
 
-   local target = { }
-   local index = { }
+   local target, index = { }, { }
    for i = 1, nvars do
-      local tgt, idx = self:expr_tail_emit(node.left[i])
-      target[i], index[i] = tgt, idx
+      target[i], index[i] = self:expr_tail_emit(node.left[i])
    end
 
    local slots = nvars
@@ -548,20 +555,39 @@ function StatementRule:AssignmentExpression(node)
    if slots == 0 then
       self:expr_emit(node.right[i], nil, 0)
    elseif slots == 1 then
-      local reg = is_local_var(self.ctx, node.left[i])
-      exprs[i] = self:expr_emit(node.right[i], reg)
+      local info, uval, var_name
+      if is_identifier(node.left[i]) then
+         var_name = node.left[i].name
+         info, uval = self.ctx:lookup(var_name)
+      end
+      if uval then
+         local tag, expr = self:expr_emit_uset(node.right[i])
+         self.ctx:op_usetx(var_name, tag, expr)
+         nvars = nvars - 1
+      elseif info then
+         self:expr_emit(node.right[i], info.idx)
+         nvars = nvars - 1
+      else
+         exprs[i] = self:expr_emit(node.right[i])
+      end
    else
-      exprs[i] = self:expr_emit(node.right[i], self.ctx.freereg, slots)
+      local exp_base = self:expr_emit(node.right[i], self.ctx.freereg, slots)
+      for k = slots - 1, 0, -1 do
+         local ip = i + k
+         if target[ip] then
+            lhs_member_assign(target[ip], index[ip], exp_base + k)
+         else
+            self:var_assign(node.left[ip].name, exp_base + k)
+         end
+      end
+      nvars = nvars - slots
    end
 
    for i = nvars, 1, -1 do
-      local expr = (i <= nexps and exprs[i] or exprs[nexps] + (i - nexps))
       if target[i] then
-         local suffix = (type(index[i]) == 'string' and 'S' or 'V')
-         self.ctx:op_tset(target[i], index[i], expr, suffix)
+         lhs_member_assign(target[i], index[i], exprs[i])
       else
-         local lhs  = node.left[i]
-         self:var_assign(lhs.name, expr)
+         self:var_assign(node.left[i].name, exprs[i])
       end
    end
 
@@ -849,6 +875,23 @@ local function generate(tree, name)
          end
          return dest, false
       end
+   end
+
+   function self:expr_emit_uset(node)
+      local const_val = self:const_eval_try(node)
+      if const_val then
+         return 'N', const_val
+      elseif node.kind == 'Literal' then
+         local value = node.value
+         local tv = type(value)
+         if tv == 'nil' or tv == 'boolean' then
+            return 'P', value
+         elseif tv == 'string' then
+            return 'S', value
+         end
+         -- fall through
+      end
+      return 'V', self:expr_emit(node)
    end
 
    function self:expr_tail_emit(node)

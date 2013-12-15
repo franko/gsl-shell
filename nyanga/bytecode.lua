@@ -798,6 +798,18 @@ function Proto.__index:op_uset(name, val)
       return self:emit(BC.USETV, slot, val)
    end
 end
+function Proto.__index:op_usetx(name, tag, val)
+   local ins = BC['USET' .. tag]
+   local slot = self:upval(name)
+   if tag == 'S' or tag == 'N' then
+      self:emit(ins, slot, self:const(val))
+   elseif tag == 'P' then
+      local pri = val and VKTRUE or (val == false and VKFALSE or VKNIL)
+      self:emit(ins, slot, pri)
+   else
+      return self:emit(ins, slot, val)
+   end
+end
 function Proto.__index:op_uget(dest, name)
    local slot = self:upval(name)
    return self:emit(BC.UGET, dest, slot)
