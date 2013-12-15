@@ -516,19 +516,14 @@ function StatementRule:LocalDeclaration(node)
    end
 end
 
-local function lhs_member_assign(target, index, expr)
-   local suffix = (type(index) == 'string' and 'S' or 'V')
-   self.ctx:op_tset(target, index, expr, suffix)
-end
-
 function StatementRule:AssignmentExpression(node)
    local free = self.ctx.freereg
    local nvars = #node.left
    local nexps = #node.right
 
-   local target, index = { }, { }
+   local lhs = { }
    for i = 1, nvars do
-      target[i], index[i] = self:expr_tail_emit(node.left[i])
+      lhs[i] = self:expr_tail_emit(node.left[i])
    end
 
    local slots = nvars
@@ -555,17 +550,12 @@ function StatementRule:AssignmentExpression(node)
    if slots == 0 then
       self:expr_emit(node.right[i], nil, 0)
    elseif slots == 1 then
-      local info, uval, var_name
-      if is_identifier(node.left[i]) then
-         var_name = node.left[i].name
-         info, uval = self.ctx:lookup(var_name)
-      end
-      if uval then
+      if lhs[i].tag == 'upval' then
          local tag, expr = self:expr_emit_uset(node.right[i])
-         self.ctx:op_usetx(var_name, tag, expr)
+         self.ctx:op_usetx(lhs[i].name, tag, expr)
          nvars = nvars - 1
-      elseif info then
-         self:expr_emit(node.right[i], info.idx)
+      elseif lhs[i].tag == 'local' then
+         self:expr_emit(node.right[i], lhs[i].target)
          nvars = nvars - 1
       else
          exprs[i] = self:expr_emit(node.right[i])
@@ -573,22 +563,13 @@ function StatementRule:AssignmentExpression(node)
    else
       local exp_base = self:expr_emit(node.right[i], self.ctx.freereg, slots)
       for k = slots - 1, 0, -1 do
-         local ip = i + k
-         if target[ip] then
-            lhs_member_assign(target[ip], index[ip], exp_base + k)
-         else
-            self:var_assign(node.left[ip].name, exp_base + k)
-         end
+         self:assign(lhs[i + k], exp_base + k)
       end
       nvars = nvars - slots
    end
 
    for i = nvars, 1, -1 do
-      if target[i] then
-         lhs_member_assign(target[i], index[i], exprs[i])
-      else
-         self:var_assign(node.left[i].name, exprs[i])
-      end
+      self:assign(lhs[i], exprs[i])
    end
 
    self.ctx.freereg = free
@@ -798,22 +779,6 @@ local function generate(tree, name)
    self.ctx = self.main
    self.savereg = { }
 
-   function self:var_assign(name, expr)
-      local ctx = self.ctx
-      local info, uval = ctx:lookup(name)
-      if info then
-         if uval then
-            ctx:op_uset(name, expr)
-         else
-            if info.idx ~= expr then
-               ctx:op_move(info.idx, expr)
-             end
-         end
-      else
-         ctx:op_gset(expr, name)
-      end
-   end
-
    function self:block_enter(used_reg)
       used_reg = used_reg or 0
       self.savereg[#self.savereg + 1] = self.ctx.freereg + used_reg
@@ -825,6 +790,22 @@ local function generate(tree, name)
       self.savereg[#self.savereg] = nil
       self.ctx:close_block_uvals(free, exit)
       self.ctx:leave()
+   end
+
+   function self:assign(lhs, expr)
+      if lhs.tag == 'member' then
+         local suffix = (type(lhs.property) == 'string' and 'S' or 'V')
+         self.ctx:op_tset(lhs.target, lhs.property, expr, suffix)
+      elseif lhs.tag == 'upval' then
+         self.ctx:op_uset(lhs.name, expr)
+      elseif lhs.tag == 'local' then
+         local dest = lhs.target
+         if dest ~= expr then
+            self.ctx:op_move(dest, expr)
+         end
+      else
+         ctx:op_gset(expr, lhs.name)
+      end
    end
 
    function self:emit(node, ...)
@@ -906,7 +887,17 @@ local function generate(tree, name)
             -- Not required but let us behave like luajit.
             self.ctx:const(prop)
          end
-         return tgt, prop
+         return {tag = 'member', target = tgt, property = prop}
+      elseif is_identifier(node) then
+         local info, uval = self.ctx:lookup(node.name)
+         if uval then
+            self.ctx:upval(node.name)
+            return {tag = 'upval', name = node.name}
+         elseif info then
+            return {tag = 'local', target = info.idx}
+         else
+            return {tag = 'global', name = node.name}
+         end
       end
    end
 
