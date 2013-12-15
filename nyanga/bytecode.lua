@@ -667,6 +667,12 @@ end
 function Proto.__index:op_comp(cond, a, btag, b, here, swap)
    local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
    local ins = BC['IS'..cond..suffix]
+   if suffix == 'S' or suffix == 'N' then
+      b = self:const(b)
+   elseif suffix == 'P' then
+      b = b and VKTRUE or (b == false and VKFALSE or VKNIL)
+   end
+   assert(suffix == '' or not swap, "Cannot swap comparison for VN equality test")
    if swap then self:emit(ins, b, a) else self:emit(ins, a, b) end
    self:jump(here)
 end
