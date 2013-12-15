@@ -339,8 +339,19 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
    local o = node.operator
    if cmpop[o] then
       local free = self.ctx.freereg
-      local a = self:expr_emit(node.left)
-      local btag, b = self:expr_emit_testop(o, node.right)
+      local atag, a, btag, b
+      if o == '==' or o == '~=' then
+         atag, a = self:expr_emit_uset(node.left)
+         if atag == 'V' then
+            btag, b = self:expr_emit_uset(node.right)
+         else
+            btag, b = atag, a
+            atag, a = 'V', self:expr_emit(node.right)
+         end
+      else
+         a = self:expr_emit(node.left)
+         b = self:expr_emit(node.right)
+      end
       self.ctx.freereg = free
       local use_imbranch = (dest and has_branch(store, negate))
       if use_imbranch then
@@ -899,22 +910,6 @@ local function generate(tree, name)
             return {tag = 'global', name = node.name}
          end
       end
-   end
-
-   function self:expr_emit_testop(o, node)
-      if (o == 'NE' or o == 'EQ') and is_literal(node) then
-         local value = node.value
-         local tp = type(value)
-         if tp == 'string' then
-            return 'S', self.ctx:const(value)
-         elseif tp == 'number' then
-            return 'N', self.ctx:const(value)
-         elseif tp == 'boolean' or tp == nil then
-            return 'P', self.ctx:kpri(value)
-         end
-         -- fall through
-      end
-      return 'V', self:expr_emit(node)
    end
 
    function self:const_eval_try(node)
