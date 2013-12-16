@@ -116,13 +116,13 @@ function ExpressionRule:Table(node, dest)
    local vtop = self.ctx.freereg
    for k,v in pairs(node.value) do
       self.ctx.freereg = vtop
-      local kreg, vreg
+      local ktag, kreg, vreg
       if type(k) == 'table' then
-         kreg = self:expr_emit(k)
+         ktag, kreg = 'V', self:expr_emit(k)
       elseif type(k) == 'string' then
-         kreg = k
+         ktag, kreg = 'S', self.ctx:const(k)
       else
-         kreg = self.ctx:nextreg()
+         ktag, kreg = 'V', self.ctx:nextreg()
          self.ctx:op_load(kreg, k)
       end
       if type(v) == 'table' then
@@ -130,8 +130,7 @@ function ExpressionRule:Table(node, dest)
       else
          self.ctx:op_load(vreg, v)
       end
-      local suffix = (type(kreg) == 'string' and 'S' or 'V')
-      self.ctx:op_tset(dest, kreg, vreg, suffix)
+      self.ctx:op_tset(dest, ktag, kreg, vreg)
    end
    self.ctx.freereg = free
    return dest
@@ -224,7 +223,7 @@ function ExpressionRule:MemberExpression(node, base)
    local lhs = self:lhs_expr_emit(node)
    self.ctx.freereg = free
    base = base or self.ctx:nextreg()
-   self.ctx:op_tgetx(base, lhs.target, lhs.key_type, lhs.key)
+   self.ctx:op_tget(base, lhs.target, lhs.key_type, lhs.key)
    return base
 end
 
@@ -260,7 +259,8 @@ local function emit_call_expression(self, node, dest, want, tail, use_self)
       local obj = self:expr_emit(node.receiver)
       self.ctx:setreg(base + 1)
       self.ctx:op_move(base + 1, obj)
-      self.ctx:op_tget(base, obj, node.method.name, 'S')
+      local method = self.ctx:const(node.method.name)
+      self.ctx:op_tget(base, obj, 'S', method)
       self.ctx:nextreg()
    else
       self:expr_emit(node.callee, base)
@@ -807,7 +807,7 @@ local function generate(tree, name)
          -- SET instructions with a Primitive "P" index are not accepted.
          -- The method self:lhs_expr_emit does never generate such requests.
          assert(lhs.key_type ~= 'P', "invalid assignment instruction")
-         self.ctx:op_tsetx(lhs.target, lhs.key, lhs.key_type, expr)
+         self.ctx:op_tset(lhs.target, lhs.key_type, lhs.key, expr)
       elseif lhs.tag == 'upval' then
          self.ctx:op_uset(lhs.name, expr)
       elseif lhs.tag == 'local' then
