@@ -816,7 +816,7 @@ local function generate(tree, name)
             self.ctx:op_move(dest, expr)
          end
       else
-         ctx:op_gset(expr, lhs.name)
+         self.ctx:op_gset(expr, lhs.name)
       end
    end
 
