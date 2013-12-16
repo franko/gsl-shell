@@ -816,8 +816,8 @@ local function generate(tree, name)
       if lhs.tag == 'member' then
          -- SET instructions with a Primitive "P" index are not accepted.
          -- The method self:expr_tail_emit does never generate such requests.
-         assert(lhs.property_kind ~= 'P', "invalid assignment instruction")
-         self.ctx:op_tsetx(lhs.target, lhs.property, lhs.property_kind, expr)
+         assert(lhs.key_type ~= 'P', "invalid assignment instruction")
+         self.ctx:op_tsetx(lhs.target, lhs.key, lhs.key_type, expr)
       elseif lhs.tag == 'upval' then
          self.ctx:op_uset(lhs.name, expr)
       elseif lhs.tag == 'local' then
@@ -902,15 +902,14 @@ local function generate(tree, name)
 
    function self:expr_tail_emit(node)
       if node.kind == 'MemberExpression' then
-         local tgt = self:expr_emit(node.object)
-         local prop_tag, prop
+         local target = self:expr_emit(node.object)
+         local key_type, key
          if node.computed then
-            prop_tag, prop = self:expr_emit_tagged(node.property, EXPR_EMIT_VSB)
+            key_type, key = self:expr_emit_tagged(node.property, EXPR_EMIT_VSB)
          else
-            prop_tag, prop = 'S', self.ctx:const(node.property.name)
+            key_type, key = 'S', self.ctx:const(node.property.name)
          end
-         return {tag = 'member', target = tgt,
-                 property_kind = prop_tag, property = prop}
+         return { tag = 'member', target = target, key = key, key_type = key_type }
       elseif is_identifier(node) then
          local info, uval = self.ctx:lookup(node.name)
          if uval then
