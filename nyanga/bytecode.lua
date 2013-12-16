@@ -780,25 +780,8 @@ end
 function Proto.__index:op_uclo(jump)
    return self:emit(BC.UCLO, #self.actvars, jump or 0)
 end
-function Proto.__index:op_uset(name, val)
-   local slot = self:upval(name)
-   local tv   = type(val)
-   if tv == 'string' then
-      return self:emit(BC.USETS, slot, self:const(val))
-   elseif tv == 'nil' or tv == 'boolean' then
-      local pri
-      if tv == 'nil' then
-         pri = VKNIL
-      else
-         pri = val and VKTRUE or VKFALSE
-      end
-      return self:emit(BC.USETP, slot, pri)
-   else
-      return self:emit(BC.USETV, slot, val)
-   end
-end
-function Proto.__index:op_usetx(name, tag, val)
-   local ins = BC['USET' .. tag]
+function Proto.__index:op_uset(name, vtag, val)
+   local ins = BC['USET' .. vtag]
    local slot = self:upval(name)
    self:emit(ins, slot, val)
 end

@@ -562,7 +562,7 @@ function StatementRule:AssignmentExpression(node)
    elseif slots == 1 then
       if lhs[i].tag == 'upval' then
          local tag, expr = self:expr_emit_tagged(node.right[i], EXPR_EMIT_VSNP)
-         self.ctx:op_usetx(lhs[i].name, tag, expr)
+         self.ctx:op_uset(lhs[i].name, tag, expr)
          nvars = nvars - 1
       elseif lhs[i].tag == 'local' then
          self:expr_emit(node.right[i], lhs[i].target)
@@ -809,7 +809,7 @@ local function generate(tree, name)
          assert(lhs.key_type ~= 'P', "invalid assignment instruction")
          self.ctx:op_tset(lhs.target, lhs.key_type, lhs.key, expr)
       elseif lhs.tag == 'upval' then
-         self.ctx:op_uset(lhs.name, expr)
+         self.ctx:op_uset(lhs.name, 'V', expr)
       elseif lhs.tag == 'local' then
          local dest = lhs.target
          if dest ~= expr then
