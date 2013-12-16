@@ -448,7 +448,7 @@ function StatementRule:CallExpression(node)
 end
 
 function StatementRule:SendExpression(node)
-   self:expr_emit(node)
+   self:expr_emit(node, nil, 0)
 end
 
 function StatementRule:LabelStatement(node)
