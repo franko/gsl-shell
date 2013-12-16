@@ -541,9 +541,10 @@ function Proto.__index:lookup(name)
    if self.actvars[name] then
       return self.actvars[name], false
    elseif self.outer then
-      return self.outer:lookup(name), true
+      local v = self.outer:lookup(name)
+      if v then return v, true end
    end
-   return nil
+   return nil, false
 end
 function Proto.__index:getvar(name)
    local info = self.actvars[name]
