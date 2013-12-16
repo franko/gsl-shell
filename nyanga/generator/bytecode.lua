@@ -221,7 +221,7 @@ end
 
 function ExpressionRule:MemberExpression(node, base)
    local free = self.ctx.freereg
-   local lhs = self:expr_tail_emit(node)
+   local lhs = self:lhs_expr_emit(node)
    self.ctx.freereg = free
    base = base or self.ctx:nextreg()
    self.ctx:op_tgetx(base, lhs.target, lhs.key_type, lhs.key)
@@ -533,7 +533,7 @@ function StatementRule:AssignmentExpression(node)
 
    local lhs = { }
    for i = 1, nvars do
-      lhs[i] = self:expr_tail_emit(node.left[i])
+      lhs[i] = self:lhs_expr_emit(node.left[i])
    end
 
    local slots = nvars
@@ -805,7 +805,7 @@ local function generate(tree, name)
    function self:assign(lhs, expr)
       if lhs.tag == 'member' then
          -- SET instructions with a Primitive "P" index are not accepted.
-         -- The method self:expr_tail_emit does never generate such requests.
+         -- The method self:lhs_expr_emit does never generate such requests.
          assert(lhs.key_type ~= 'P', "invalid assignment instruction")
          self.ctx:op_tsetx(lhs.target, lhs.key, lhs.key_type, expr)
       elseif lhs.tag == 'upval' then
@@ -890,7 +890,7 @@ local function generate(tree, name)
       return 'V', self:expr_emit(node)
    end
 
-   function self:expr_tail_emit(node)
+   function self:lhs_expr_emit(node)
       if node.kind == 'MemberExpression' then
          local target = self:expr_emit(node.object)
          local key_type, key
