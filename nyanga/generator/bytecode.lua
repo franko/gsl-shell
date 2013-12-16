@@ -29,6 +29,15 @@ local MULTIRES = -1
 local EXPR_RESULT_TRUE, EXPR_RESULT_FALSE = 1, 2
 local EXPR_RESULT_BOTH = 3
 
+-- Infix arithmetic instructions
+local EXPR_EMIT_VN   = { value = true, number = true }
+
+-- USETx, ISEQx and ISNEx instructions
+local EXPR_EMIT_VSNP = { value = true, string = true, number = true, primitive = true }
+
+-- TGETx/TSETx instructions
+local EXPR_EMIT_VSB  = { value = true, string = true, byte = true }
+
 local StatementRule = { }
 local ExpressionRule = { }
 local TestRule = { }
@@ -157,8 +166,8 @@ function ExpressionRule:BinaryExpression(node, dest)
       self.ctx:here(l)
    elseif dirop[o] then
       local free = self.ctx.freereg
-      local atag, a = self:direct_expr_emit(node.left)
-      local btag, b = self:direct_expr_emit(node.right)
+      local atag, a = self:expr_emit_tagged(node.left, EXPR_EMIT_VN)
+      local btag, b = self:expr_emit_tagged(node.right, EXPR_EMIT_VN)
       self.ctx.freereg = free
       dest = dest or self.ctx:nextreg()
       assert(not (atag == 'N' and btag == 'N'), "operands are both constants")
@@ -341,9 +350,9 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       local free = self.ctx.freereg
       local atag, a, btag, b
       if o == '==' or o == '~=' then
-         atag, a = self:expr_emit_uset(node.left)
+         atag, a = self:expr_emit_tagged(node.left, EXPR_EMIT_VSNP)
          if atag == 'V' then
-            btag, b = self:expr_emit_uset(node.right)
+            btag, b = self:expr_emit_tagged(node.right, EXPR_EMIT_VSNP)
          else
             btag, b = atag, a
             atag, a = 'V', self:expr_emit(node.right)
@@ -562,7 +571,7 @@ function StatementRule:AssignmentExpression(node)
       self:expr_emit(node.right[i], nil, 0)
    elseif slots == 1 then
       if lhs[i].tag == 'upval' then
-         local tag, expr = self:expr_emit_uset(node.right[i])
+         local tag, expr = self:expr_emit_tagged(node.right[i], EXPR_EMIT_VSNP)
          self.ctx:op_usetx(lhs[i].name, tag, expr)
          nvars = nvars - 1
       elseif lhs[i].tag == 'local' then
@@ -805,8 +814,10 @@ local function generate(tree, name)
 
    function self:assign(lhs, expr)
       if lhs.tag == 'member' then
-         local suffix = (type(lhs.property) == 'string' and 'S' or 'V')
-         self.ctx:op_tset(lhs.target, lhs.property, expr, suffix)
+         -- SET instructions with a Primitive "P" index are not accepted.
+         -- The method self:expr_tail_emit does never generate such requests.
+         assert(lhs.property_kind ~= 'P', "invalid assignment instruction")
+         self.ctx:op_tsetx(lhs.target, lhs.property, lhs.property_kind, expr)
       elseif lhs.tag == 'upval' then
          self.ctx:op_uset(lhs.name, expr)
       elseif lhs.tag == 'local' then
@@ -869,17 +880,20 @@ local function generate(tree, name)
       end
    end
 
-   function self:expr_emit_uset(node)
+   function self:expr_emit_tagged(node, emit)
       local const_val = self:const_eval_try(node)
-      if const_val then
-         return 'N', const_val
-      elseif node.kind == 'Literal' then
+      if emit.byte and const_val and is_byte_number(const_val) then
+         return 'B', const_val
+      elseif emit.number and const_val then
+         return 'N', self.ctx:const(const_val)
+      end
+      if node.kind == 'Literal' then
          local value = node.value
          local tv = type(value)
-         if tv == 'nil' or tv == 'boolean' then
-            return 'P', value
-         elseif tv == 'string' then
-            return 'S', value
+         if emit.primitive and (tv == 'nil' or tv == 'boolean') then
+            return 'P', self.ctx:kpri(value)
+         elseif emit.string and tv == 'string' then
+            return 'S', self.ctx:const(value)
          end
          -- fall through
       end
@@ -889,16 +903,14 @@ local function generate(tree, name)
    function self:expr_tail_emit(node)
       if node.kind == 'MemberExpression' then
          local tgt = self:expr_emit(node.object)
-         local prop
+         local prop_tag, prop
          if node.computed then
-            prop = self:expr_emit(node.property)
+            prop_tag, prop = self:expr_emit_tagged(node.property, EXPR_EMIT_VSB)
          else
-            prop = node.property.name
-            -- Register the literal property as a constant.
-            -- Not required but let us behave like luajit.
-            self.ctx:const(prop)
+            prop_tag, prop = 'S', self.ctx:const(node.property.name)
          end
-         return {tag = 'member', target = tgt, property = prop}
+         return {tag = 'member', target = tgt,
+                 property_kind = prop_tag, property = prop}
       elseif is_identifier(node) then
          local info, uval = self.ctx:lookup(node.name)
          if uval then
@@ -917,21 +929,6 @@ local function generate(tree, name)
       if rule then
          return rule(self, node)
       end
-   end
-
-   function self:direct_expr_emit(node, base)
-      local tag, reg
-      if can_multi_return(node) then
-         tag, reg = 'V', dispatch(self, ExpressionRule, node, base, 1, false)
-      else
-         local const_val = self:const_eval_try(node)
-         if const_val then
-            tag, reg = 'N', self.ctx:const(const_val)
-         else
-            tag, reg = 'V', dispatch(self, ExpressionRule, node, base)
-         end
-      end
-      return tag, reg
    end
 
    self:emit(tree)

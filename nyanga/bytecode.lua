@@ -667,11 +667,6 @@ end
 function Proto.__index:op_comp(cond, a, btag, b, here, swap)
    local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
    local ins = BC['IS'..cond..suffix]
-   if suffix == 'S' or suffix == 'N' then
-      b = self:const(b)
-   elseif suffix == 'P' then
-      b = b and VKTRUE or (b == false and VKFALSE or VKNIL)
-   end
    assert(suffix == '' or not swap, "Cannot swap comparison for VN equality test")
    if swap then self:emit(ins, b, a) else self:emit(ins, a, b) end
    self:jump(here)
@@ -773,6 +768,10 @@ function Proto.__index:op_tset(tab, key, val, suffix)
    local keyval = (suffix == 'S' and self:const(key) or key)
    return self:emit(BC[ins_name], val, tab, keyval)
 end
+function Proto.__index:op_tsetx(tab, key, vtag, val)
+   local ins_name = 'TSET' .. vtag
+   self:emit(BC[ins_name], val, tab, key)
+end
 function Proto.__index:op_tsetm(base, vnum)
    local knum = double_new(0)
    local vint = ffi.cast('uint8_t*', knum)
@@ -807,14 +806,7 @@ end
 function Proto.__index:op_usetx(name, tag, val)
    local ins = BC['USET' .. tag]
    local slot = self:upval(name)
-   if tag == 'S' or tag == 'N' then
-      self:emit(ins, slot, self:const(val))
-   elseif tag == 'P' then
-      local pri = val and VKTRUE or (val == false and VKFALSE or VKNIL)
-      self:emit(ins, slot, pri)
-   else
-      return self:emit(ins, slot, val)
-   end
+   self:emit(ins, slot, val)
 end
 function Proto.__index:op_uget(dest, name)
    local slot = self:upval(name)
