@@ -221,20 +221,10 @@ end
 
 function ExpressionRule:MemberExpression(node, base)
    local free = self.ctx.freereg
-   local obj = self:expr_emit(node.object)
-   local prop, suffix
-   if node.computed then
-      if is_literal(node.property) and is_byte_number(node.property.value) then
-         prop, suffix = node.property.value, 'B'
-      else
-         prop, suffix = self:expr_emit(node.property), 'V'
-      end
-   else
-      prop, suffix = node.property.name, 'S'
-   end
+   local lhs = self:expr_tail_emit(node)
    self.ctx.freereg = free
    base = base or self.ctx:nextreg()
-   self.ctx:op_tget(base, obj, prop, suffix)
+   self.ctx:op_tgetx(base, lhs.target, lhs.key_type, lhs.key)
    return base
 end
 

@@ -763,6 +763,10 @@ function Proto.__index:op_tget(dest, tab, key, suffix)
    local keyval = (suffix == 'S' and self:const(key) or key)
    return self:emit(BC[ins_name], dest, tab, keyval)
 end
+function Proto.__index:op_tgetx(dest, tab, ktag, key)
+   local ins_name = 'TGET' .. ktag
+   self:emit(BC[ins_name], dest, tab, key)
+end
 function Proto.__index:op_tset(tab, key, val, suffix)
    local ins_name = 'TSET' .. (suffix or 'V')
    local keyval = (suffix == 'S' and self:const(key) or key)
