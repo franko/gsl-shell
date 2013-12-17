@@ -316,8 +316,12 @@ end
 
 function TestRule:Identifier(node, jmp, negate, store, dest)
    local var = is_local_var(self.ctx, node)
-   if var and store ~= 0 then
-      self.ctx:op_testmov(negate, dest, var, jmp)
+   if var then
+      if store ~= 0 then
+         self.ctx:op_testmov(negate, dest, var, jmp)
+      else
+         self.ctx:op_test(negate, var, jmp)
+      end
    else
       self:expr_test(node, jmp, negate, dest)
    end
