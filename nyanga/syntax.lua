@@ -61,6 +61,16 @@ local syntax = {
          }
       }
    },
+   ConcatenateExpression = {
+      kind = "ConcatenateExpression",
+      base = "Expression",
+      properties = {
+         terms = {
+            type = "list",
+            kind = "Expression",
+         }
+      }
+   },
    UnaryExpression = {
       kind = "UnaryExpression",
       base = "Expression",

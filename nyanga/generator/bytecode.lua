@@ -155,6 +155,18 @@ local function dirop_compute(o, a, b)
    end
 end
 
+function ExpressionRule:ConcatenateExpression(node, dest)
+   local free = self.ctx.freereg
+   for i = 0, #node.terms - 1 do
+      self:expr_emit(node.terms[i + 1], free + i)
+      self.ctx:setreg(free + i + 1)
+   end
+   self.ctx.freereg = free
+   dest = dest or self.ctx:nextreg()
+   self.ctx:op_cat(dest, free, free + #node.terms - 1)
+   return dest
+end
+
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
    if cmpop[o] then
@@ -179,8 +191,6 @@ function ExpressionRule:BinaryExpression(node, dest)
       dest = dest or self.ctx:nextreg()
       if o == '^' then
          self.ctx:op_pow(dest, a, b)
-      elseif o == '..' then
-         self.ctx:op_cat(dest, a, b)
       else
          error("bad binary operator: "..o, 2)
       end
@@ -426,7 +436,6 @@ end
 
 function ConstRule:BinaryExpression(node)
    local o = node.operator
-   if o == '..' then return end
    local a = self:const_eval_try(node.left)
    if a then
       local b = self:const_eval_try(node.right)
