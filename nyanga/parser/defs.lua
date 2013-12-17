@@ -252,6 +252,22 @@ end
 function defs.logicalExpr(op, lhs, rhs)
    return { type = "LogicalExpression", operator = op, left = lhs, right = rhs }
 end
+function defs.concatenateExpr(lhs, rhs)
+   local ls = { }
+   if lhs.type == 'ConcatenateExpression' then
+      local lts = lhs.terms
+      for i = 1, #lts do ls[#ls+1] = lts[i] end
+   else
+      ls[#ls+1] = lhs
+   end
+   if rhs.type == "ConcatenateExpression" then
+      local rts = rhs.terms
+      for i = 1, #rts do ls[#ls+1] = rts[i] end
+   else
+      ls[#ls+1] = rhs
+   end
+   return { type = "ConcatenateExpression", terms = ls }
+end
 function defs.assignExpr(lhs, rhs)
    return { type = "AssignmentExpression", left = lhs, right = rhs }
 end
@@ -319,6 +335,8 @@ local function fold_expr(exp, min)
       local rhs = fold_expr(exp, prec)
       if op == "or" or op == "and" then
          lhs = defs.logicalExpr(op, lhs, rhs)
+      elseif op == '..' then
+         lhs = defs.concatenateExpr(lhs, rhs)
       else
          lhs = defs.binaryExpr(op, lhs, rhs)
       end

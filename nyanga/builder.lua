@@ -15,6 +15,11 @@ end
 function exports.vararg(loc)
    return syntax.build("Vararg", { loc = loc })
 end
+function exports.concatenateExpression(terms, loc)
+   return syntax.build("ConcatenateExpression", {
+      terms = terms, loc = loc
+   })
+end
 function exports.binaryExpression(op, left, right, loc)
    return syntax.build("BinaryExpression", {
       operator = op, left = left, right = right, loc = loc

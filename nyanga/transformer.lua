@@ -246,7 +246,9 @@ function match:LogicalExpression(node)
       node.operator, self:get(node.left), self:get(node.right)
    )
 end
-
+function match:ConcatenateExpression(node)
+   return B.concatenateExpression(self:list(node.terms))
+end
 function match:BinaryExpression(node)
    local o = node.operator
    return B.binaryExpression(o, self:get(node.left), self:get(node.right))
