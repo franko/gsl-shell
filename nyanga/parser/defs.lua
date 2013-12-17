@@ -287,24 +287,36 @@ local op_info = {
    ["/"]   = { 8, 'L' },
    ["%"]   = { 8, 'L' },
 
-   ["^"]   = { 9, 'R' },
+   ["^"]   = { 16, 'R' },
+}
+
+local unary_op_info = {
+   ["-"]   = { 10, 'R' },
+   ["+"]   = { 10, 'R' },
+   ["not"] = { 10, 'R' },
+
+   ["#"]   = { 18, 'R' },
 }
 
 local shift = table.remove
 
-local function fold_infix(exp, lhs, min)
+local function fold_expr(exp, min)
+   local lhs = shift(exp, 1)
+   if type(lhs) == 'table' and lhs.type == 'UnaryExpression' then
+      local op = lhs.operator
+      local info = unary_op_info[op]
+      if not info then print('>>> ', op) end
+      table.insert(exp, 1, lhs.argument)
+      lhs.argument = fold_expr(exp, info[1])
+   end
    while op_info[exp[1]] ~= nil and op_info[exp[1]][1] >= min do
-      local op   = shift(exp, 1)
-      local rhs  = shift(exp, 1)
-      while op_info[exp[1]] ~= nil do
-         local info = op_info[exp[1]]
-         local prec, assoc = info[1], info[2]
-         if prec > op_info[op][1] or (assoc == 'R' and prec == op_info[op][1]) then
-            rhs = fold_infix(exp, rhs, prec)
-         else
-            break
-         end
+      local op = shift(exp, 1)
+      local info = op_info[op]
+      local prec, assoc = info[1], info[2]
+      if assoc == 'L' then
+         prec = prec + 1
       end
+      local rhs = fold_expr(exp, prec)
       if op == "or" or op == "and" then
          lhs = defs.logicalExpr(op, lhs, rhs)
       else
@@ -315,7 +327,7 @@ local function fold_infix(exp, lhs, min)
 end
 
 function defs.infixExpr(exp)
-   return fold_infix(exp, shift(exp, 1), 0)
+   return fold_expr(exp, 0)
 end
 
 return defs
