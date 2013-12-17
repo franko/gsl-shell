@@ -327,6 +327,17 @@ function TestRule:Identifier(node, jmp, negate, store, dest)
    end
 end
 
+function TestRule:Literal(node, jmp, negate, store, dest)
+   local free = self.ctx.freereg
+   local value = node.value
+   if bit.band(store, value and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE) ~= 0 then
+      self:expr_emit(node, dest)
+      self.ctx:nextreg()
+   end
+   if (negate and value) or (not negate and not value) then self.ctx:jump(jmp) end
+   self.ctx.freereg = free
+end
+
 local function lookup_test(negate, op)
    local lookup = negate and cmpop or cmpopinv
    return unpack(lookup[op])
