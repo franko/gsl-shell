@@ -483,9 +483,9 @@ function StatementRule:GotoStatement(node)
    return self.ctx:jump(node.label)
 end
 
-function StatementRule:BlockStatement(node)
+function StatementRule:BlockStatement(node, ...)
    for i=1, #node.body do
-      self:emit(node.body[i])
+      self:emit(node.body[i], ...)
    end
 end
 
@@ -495,26 +495,26 @@ function StatementRule:DoStatement(node)
    self:block_leave()
 end
 
-function StatementRule:IfStatement(node, nest, exit)
+function StatementRule:IfStatement(node, root_exit)
    local free = self.ctx.freereg
-   exit = exit or util.genid()
+   local local_exit = node.alternate and util.genid()
+   local exit = root_exit or local_exit
    local altl = util.genid()
    if node.test then
       self:test_emit(node.test, altl)
    end
 
-   local block_exit = node.alternate and exit
    self:block_enter()
-   self:emit(node.consequent)
-   self:block_leave(block_exit)
+   self:emit(node.consequent, exit)
+   self:block_leave(exit)
 
    self.ctx:here(altl)
    if node.alternate then
       self:block_enter()
-      self:emit(node.alternate, true, exit)
+      self:emit(node.alternate)
       self:block_leave()
    end
-   if not nest then
+   if exit and exit == local_exit then
       self.ctx:here(exit)
    end
    self.ctx.freereg = free
