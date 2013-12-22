@@ -651,7 +651,7 @@ function StatementRule:WhileStatement(node)
    self:test_emit(node.test, exit)
    self.ctx:loop(exit)
    self:emit(node.body)
-   self.ctx:jump(loop)
+   self.ctx:jump(loop, free)
    self.ctx:here(exit)
    self:loop_leave(save_exit, save_exit_reg)
    self.ctx.freereg = free
