@@ -667,7 +667,7 @@ function StatementRule:RepeatStatement(node)
 end
 function StatementRule:BreakStatement()
    if self.exit then
-      return self.ctx:jump(self.exit)
+      return self.ctx:jump(self.exit, self.exit_reg)
    else
       error("no loop to break")
    end
