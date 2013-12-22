@@ -642,41 +642,27 @@ function StatementRule:FunctionDeclaration(node)
 end
 function StatementRule:WhileStatement(node)
    local free = self.ctx.freereg
-   self:block_enter()
-
-   local loop = util.genid()
-   local exit = util.genid()
-
-   local saveexit = self.exit
-   self.exit = exit
-
+   local loop, exit = util.genid(), util.genid()
+   local save_exit, save_exit_reg = self:loop_enter(exit, free)
    self.ctx:here(loop)
    self:test_emit(node.test, exit)
    self.ctx:loop(exit)
    self:emit(node.body)
    self.ctx:jump(loop)
    self.ctx:here(exit)
-   self:block_leave()
-   self.exit = saveexit
+   self:loop_leave(save_exit, save_exit_reg)
    self.ctx.freereg = free
 end
 function StatementRule:RepeatStatement(node)
    local free = self.ctx.freereg
-   self:block_enter()
-
-   local loop = util.genid()
-   local exit = util.genid()
-
-   local saveexit = self.exit
-   self.exit = exit
-
+   local loop, exit = util.genid(), util.genid()
+   local save_exit, save_exit_reg = self:loop_enter(exit, free)
    self.ctx:here(loop)
    self.ctx:loop(exit)
    self:emit(node.body)
    self:test_emit(node.test, loop)
    self.ctx:here(exit)
-   self:block_leave()
-   self.exit = saveexit
+   self:loop_leave(save_exit, save_exit_reg)
    self.ctx.freereg = free
 end
 function StatementRule:BreakStatement()
@@ -688,16 +674,15 @@ function StatementRule:BreakStatement()
 end
 function StatementRule:ForStatement(node)
    local free = self.ctx.freereg
-   self:block_enter(3)
+   local base, iter = free, free + 3
+
+   local exit = util.genid()
+   local save_exit, save_exit_reg = self:loop_enter(exit, free, 3)
+
    local init = node.init
-   local base = self.ctx.freereg
-   local var_base = base + 3
    local name = init.id.name
 
-   local saveexit = self.exit
-   self.exit = util.genid()
-
-   self.ctx:newvar(name, var_base)
+   self.ctx:newvar(name, iter)
    self:expr_emit(init.value, base, 1)
    self.ctx:setreg(base + 1)
    self:expr_emit(node.last, base + 1, 1)
@@ -711,24 +696,19 @@ function StatementRule:ForStatement(node)
    local loop = self.ctx:op_fori(base)
    self:emit(node.body)
    self.ctx:op_forl(base, loop)
-   self.ctx:here(self.exit)
-   self.exit = saveexit
-   self:block_leave()
+   self.ctx:here(exit)
+   self:loop_leave(save_exit, save_exit_reg)
    self.ctx.freereg = free
 end
 function StatementRule:ForInStatement(node)
    local free = self.ctx.freereg
-   self:block_enter(3)
+   local base, iter = free, free + 3
+
+   local loop, exit = util.genid(), util.genid()
+   local save_exit, save_exit_reg = self:loop_enter(exit, free, 3)
 
    local vars = node.init.names
    local expr = node.iter
-   local loop = util.genid()
-
-   local base = self.ctx.freereg
-   local iter = base + 3
-
-   local saveexit = self.exit
-   self.exit = util.genid()
 
    self:expr_emit(expr, base, 3) -- func, state, ctl
    self.ctx:nextreg(3)
@@ -745,9 +725,8 @@ function StatementRule:ForInStatement(node)
    self.ctx:here(loop)
    self.ctx:op_iterc(iter, #vars)
    self.ctx:op_iterl(iter, ltop)
-   self.ctx:here(self.exit)
-   self.exit = saveexit
-   self:block_leave()
+   self.ctx:here(exit)
+   self:loop_leave(save_exit, save_exit_reg)
    self.ctx.freereg = free
 end
 
@@ -827,6 +806,18 @@ local function generate(tree, name)
       self.savereg[#self.savereg] = nil
       self.ctx:close_block_uvals(free, exit)
       self.ctx:leave()
+   end
+
+   function self:loop_enter(exit, exit_reg, used_reg)
+      self:block_enter(used_reg)
+      local prev_exit, prev_exit_reg = self.exit, self.exit_reg
+      self.exit, self.exit_reg = exit, exit_reg
+      return prev_exit, prev_exit_reg
+   end
+
+   function self:loop_leave(exit, exit_reg)
+      self:block_leave()
+      self.exit, self.exit_reg = exit, exit_reg
    end
 
    function self:assign(lhs, expr)
