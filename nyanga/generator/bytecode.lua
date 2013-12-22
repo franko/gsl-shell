@@ -399,6 +399,9 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
          self.ctx:op_load(dest, not negate)
       end
    else
+      -- LuaJIT compatibility rule: set store to a non zero
+      -- value so that the register is counted on test jump
+      store, dest = EXPR_RESULT_BOTH, self.ctx.freereg
       self:expr_test(node, jmp, negate, store, dest)
    end
 end
@@ -856,6 +859,9 @@ local function generate(tree, name)
       if rule then
          rule(self, node, jmp, negate, store, dest)
       else
+         -- LuaJIT compatibility rule: set store to a non zero
+         -- value so that the register is counted on test jump
+         store, dest = EXPR_RESULT_BOTH, self.ctx.freereg
          self:expr_test(node, jmp, negate, store, dest)
       end
    end
