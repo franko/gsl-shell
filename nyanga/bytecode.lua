@@ -621,19 +621,20 @@ function Proto.__index:enable_jump(name)
    end
    here[#here + 1] = #self.code + 1
 end
-function Proto.__index:jump(name)
+function Proto.__index:jump(name, freereg)
+   freereg = freereg or self.freereg
    if self.labels[name] then
       -- backward jump
       local offs = self.labels[name]
       if self.need_close then
-         return self:emit(BC.UCLO, self.freereg, offs - #self.code)
+         return self:emit(BC.UCLO, freereg, offs - #self.code)
       else
-         return self:emit(BC.JMP, self.freereg, offs - #self.code)
+         return self:emit(BC.JMP, freereg, offs - #self.code)
       end
    else
       -- forward jump
       self:enable_jump(name)
-      return self:emit(BC.JMP, self.freereg, NO_JMP)
+      return self:emit(BC.JMP, freereg, NO_JMP)
    end
 end
 function Proto.__index:loop(name)
@@ -655,22 +656,22 @@ function Proto.__index:op_loop(delta)
 end
 
 -- branch if condition
-function Proto.__index:op_test(cond, a, here)
+function Proto.__index:op_test(cond, a, here, freereg)
    local inst = self:emit(cond and BC.IST or BC.ISF, 0, a)
-   if here then here = self:jump(here) end
+   if here then here = self:jump(here, freereg) end
    return inst, here
 end
-function Proto.__index:op_testmov(cond, dest, var, here)
+function Proto.__index:op_testmov(cond, dest, var, here, freereg)
    local inst = self:emit(cond and BC.ISTC or BC.ISFC, dest, var)
-   if here then here = self:jump(here) end
+   if here then here = self:jump(here, freereg) end
    return inst, here
 end
-function Proto.__index:op_comp(cond, a, btag, b, here, swap)
+function Proto.__index:op_comp(cond, a, btag, b, here, freereg, swap)
    local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
    local ins = BC['IS'..cond..suffix]
    assert(suffix == '' or not swap, "Cannot swap comparison for VN equality test")
    if swap then self:emit(ins, b, a) else self:emit(ins, a, b) end
-   self:jump(here)
+   self:jump(here, freereg)
 end
 
 function Proto.__index:op_infix(opname, dest, v1tag, var1, v2tag, var2)

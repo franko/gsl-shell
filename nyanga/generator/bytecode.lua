@@ -327,13 +327,14 @@ end
 function TestRule:Identifier(node, jmp, negate, store, dest)
    local var = is_local_var(self.ctx, node)
    if var then
+      local jreg = store ~= 0 and dest + 1 or self.ctx.freereg
       if store ~= 0 then
-         self.ctx:op_testmov(negate, dest, var, jmp)
+         self.ctx:op_testmov(negate, dest, var, jmp, jreg)
       else
-         self.ctx:op_test(negate, var, jmp)
+         self.ctx:op_test(negate, var, jmp, jreg)
       end
    else
-      self:expr_test(node, jmp, negate, dest)
+      self:expr_test(node, jmp, negate, store, dest)
    end
 end
 
@@ -344,7 +345,10 @@ function TestRule:Literal(node, jmp, negate, store, dest)
       self:expr_emit(node, dest)
       self.ctx:nextreg()
    end
-   if (negate and value) or (not negate and not value) then self.ctx:jump(jmp) end
+   if (negate and value) or (not negate and not value) then
+      local jreg = store ~= 0 and dest + 1 or free
+      self.ctx:jump(jmp, jreg)
+   end
    self.ctx.freereg = free
 end
 
@@ -379,24 +383,23 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       self.ctx.freereg = free
       local use_imbranch = (dest and has_branch(store, negate))
       if use_imbranch then
+         local jreg = store ~= 0 and dest + 1 or free
          local test, swap = lookup_test(not negate, o)
          local altlabel = util.genid()
-         self.ctx:op_comp(test, a, btag, b, altlabel, swap)
-         -- increment register to ensure next jump's rbase is correct
-         self.ctx:nextreg()
+         self.ctx:op_comp(test, a, btag, b, altlabel, free, swap)
          self.ctx:op_load(dest, negate)
-         self.ctx:jump(jmp)
+         self.ctx:jump(jmp, jreg)
          self.ctx:here(altlabel)
          self.ctx.freereg = free
       else
          local test, swap = lookup_test(negate, o)
-         self.ctx:op_comp(test, a, btag, b, jmp, swap)
+         self.ctx:op_comp(test, a, btag, b, jmp, free, swap)
       end
       if has_branch(store, not negate) then
          self.ctx:op_load(dest, not negate)
       end
    else
-      self:expr_test(node, jmp, negate)
+      self:expr_test(node, jmp, negate, store, dest)
    end
 end
 
@@ -858,18 +861,20 @@ local function generate(tree, name)
    -- destination for the result.
    function self:test_emit(node, jmp, negate, store, dest)
       local rule = TestRule[node.kind]
+      store = store or 0
       if rule then
-         rule(self, node, jmp, negate, store or 0, dest)
+         rule(self, node, jmp, negate, store, dest)
       else
-         self:expr_test(node, jmp, negate, dest)
+         self:expr_test(node, jmp, negate, store, dest)
       end
    end
 
    -- Emit code to test an expression as a boolean value
-   function self:expr_test(node, jmp, negate, dest)
+   function self:expr_test(node, jmp, negate, store, dest)
       local free = self.ctx.freereg
       local expr = self:expr_emit(node, dest)
-      self.ctx:op_test(negate, expr, jmp)
+      local jreg = (store ~= 0 and dest + 1 or free)
+      self.ctx:op_test(negate, expr, jmp, jreg)
       self.ctx.freereg = free
    end
 
