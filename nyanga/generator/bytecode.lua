@@ -328,7 +328,7 @@ function TestRule:Identifier(node, jmp, negate, store, dest)
    local var = is_local_var(self.ctx, node)
    if var then
       local jreg = store ~= 0 and dest + 1 or self.ctx.freereg
-      if store ~= 0 then
+      if store ~= 0 and dest ~= var then
          self.ctx:op_testmov(negate, dest, var, jmp, jreg)
       else
          self.ctx:op_test(negate, var, jmp, jreg)
