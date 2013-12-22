@@ -894,6 +894,9 @@ local function generate(tree, name)
       end
    end
 
+   -- Like "expr_emit" but it can return an expression (register) or
+   -- an immediate constant. It does return a tag and then the value
+   -- itself.
    function self:expr_emit_tagged(node, emit)
       local const_val = self:const_eval_try(node)
       if emit.byte and const_val and is_byte_number(const_val) then
