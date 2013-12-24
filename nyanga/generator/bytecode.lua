@@ -491,7 +491,12 @@ end
 
 function StatementRule:BlockStatement(node, ...)
    for i=1, #node.body do
-      self:emit(node.body[i], ...)
+      local s = node.body[i]
+      if i < #node.body then
+         self:emit(s)
+      else
+         self:emit(s, ...)
+      end
    end
 end
 
