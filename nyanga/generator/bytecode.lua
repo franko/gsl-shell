@@ -489,15 +489,12 @@ function StatementRule:GotoStatement(node)
    return self.ctx:jump(node.label)
 end
 
-function StatementRule:BlockStatement(node, ...)
-   for i=1, #node.body do
-      local s = node.body[i]
-      if i < #node.body then
-         self:emit(s)
-      else
-         self:emit(s, ...)
-      end
+function StatementRule:BlockStatement(node, if_exit)
+   local body = node.body
+   for i=1, #body - 1 do
+      self:emit(body[i])
    end
+   self:emit(body[#body], if_exit)
 end
 
 function StatementRule:DoStatement(node)
@@ -530,8 +527,8 @@ function StatementRule:IfStatement(node, root_exit)
    end
    self.ctx.freereg = free
 end
-function StatementRule:ExpressionStatement(node, dest, ...)
-   return self:emit(node.expression, dest, ...)
+function StatementRule:ExpressionStatement(node)
+   return self:emit(node.expression)
 end
 function StatementRule:LocalDeclaration(node)
    local nvars = #node.names
