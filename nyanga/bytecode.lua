@@ -852,7 +852,7 @@ function Proto.__index:op_callm(base, want, narg)
 end
 function Proto.__index:op_callmt(base, narg)
    self:close_uvals()
-   return self:emit(BC.CALLMT, base, narg + 1)
+   return self:emit(BC.CALLMT, base, narg)
 end
 function Proto.__index:op_fori(base, stop, step)
    local loop = self:emit(BC.FORI, base, NO_JMP)
