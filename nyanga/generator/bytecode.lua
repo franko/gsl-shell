@@ -751,7 +751,7 @@ function StatementRule:ReturnStatement(node)
          current = current + 1
       end
       local lastarg = node.arguments[narg]
-      local _, mret, tail = self:expr_emit(lastarg, current, MULTIRES, true)
+      local _, mret, tail = self:expr_emit(lastarg, current, MULTIRES)
       self.ctx.freereg = base
       if not tail then
          if mret then
