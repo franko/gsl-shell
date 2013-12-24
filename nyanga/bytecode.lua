@@ -717,7 +717,11 @@ function Proto.__index:op_len(dest, var1)
    return self:emit(BC.LEN, dest, var1)
 end
 function Proto.__index:op_nils(dest, want)
-   return self:emit(BC.KNIL, dest, dest + want - 1)
+   if want == 1 then
+      return self:emit(BC.KPRI, dest, VKNIL)
+   elseif want > 1 then
+      return self:emit(BC.KNIL, dest, dest + want - 1)
+   end
 end
 
 function Proto.__index:op_move(dest, from)
