@@ -801,9 +801,8 @@ local function generate(tree, name)
    self.ctx = self.main
    self.savereg = { }
 
-   function self:block_enter(used_reg)
-      used_reg = used_reg or 0
-      self.savereg[#self.savereg + 1] = self.ctx.freereg + used_reg
+   function self:block_enter()
+      self.savereg[#self.savereg + 1] = self.ctx.freereg
       self.ctx:enter()
    end
 
@@ -814,8 +813,8 @@ local function generate(tree, name)
       self.ctx:leave()
    end
 
-   function self:loop_enter(exit, exit_reg, used_reg)
-      self:block_enter(used_reg)
+   function self:loop_enter(exit, exit_reg)
+      self:block_enter()
       local prev_exit, prev_exit_reg = self.exit, self.exit_reg
       self.exit, self.exit_reg = exit, exit_reg
       return prev_exit, prev_exit_reg
