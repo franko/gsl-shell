@@ -541,9 +541,10 @@ function Proto.__index:lookup(name)
    if self.actvars[name] then
       return self.actvars[name], false
    elseif self.outer then
-      return self.outer:lookup(name), true
+      local v = self.outer:lookup(name)
+      if v then return v, true end
    end
-   return nil
+   return nil, false
 end
 function Proto.__index:getvar(name)
    local info = self.actvars[name]
@@ -620,19 +621,20 @@ function Proto.__index:enable_jump(name)
    end
    here[#here + 1] = #self.code + 1
 end
-function Proto.__index:jump(name)
+function Proto.__index:jump(name, freereg)
+   freereg = freereg or self.freereg
    if self.labels[name] then
       -- backward jump
       local offs = self.labels[name]
       if self.need_close then
-         return self:emit(BC.UCLO, self.freereg, offs - #self.code)
+         return self:emit(BC.UCLO, freereg, offs - #self.code)
       else
-         return self:emit(BC.JMP, self.freereg, offs - #self.code)
+         return self:emit(BC.JMP, freereg, offs - #self.code)
       end
    else
       -- forward jump
       self:enable_jump(name)
-      return self:emit(BC.JMP, self.freereg, NO_JMP)
+      return self:emit(BC.JMP, freereg, NO_JMP)
    end
 end
 function Proto.__index:loop(name)
@@ -654,42 +656,32 @@ function Proto.__index:op_loop(delta)
 end
 
 -- branch if condition
-function Proto.__index:op_test(cond, a, here)
+function Proto.__index:op_test(cond, a, here, freereg)
    local inst = self:emit(cond and BC.IST or BC.ISF, 0, a)
-   if here then here = self:jump(here) end
+   if here then here = self:jump(here, freereg) end
    return inst, here
 end
--- branch if comparison
-function Proto.__index:op_comp(cond, a, b, here)
-   if cond == 'LE' then
-      cond = 'GE'
-      a, b = b, a
-   elseif cond == 'LT' then
-      cond = 'GT'
-      a, b = b, a
-   elseif cond == 'EQ' or cond == 'NE' then
-      local tb = type(b)
-      if tb == 'nil' or tb == 'boolean' then
-         cond = cond..'P'
-         if tb == 'nil' then
-            b = VKNIL
-         else
-            b = b == true and VKTRUE or VKFALSE
-         end
-      -- XXX: we can't differentiate between a number and a register
-      --elseif tb == 'number' then
-      --   cond = cond..'N'
-      elseif tb == 'string' then
-         cond = cond..'S'
-      else
-         cond = cond..'V'
-      end
-   end
-   local inst = self:emit(BC['IS'..cond], a, b)
-   if here then here = self:jump(here) end
+function Proto.__index:op_testmov(cond, dest, var, here, freereg)
+   local inst = self:emit(cond and BC.ISTC or BC.ISFC, dest, var)
+   if here then here = self:jump(here, freereg) end
    return inst, here
+end
+function Proto.__index:op_comp(cond, a, btag, b, here, freereg, swap)
+   local suffix = (cond == 'EQ' or cond == 'NE') and btag or ''
+   local ins = BC['IS'..cond..suffix]
+   assert(suffix == '' or not swap, "Cannot swap comparison for VN equality test")
+   if swap then self:emit(ins, b, a) else self:emit(ins, a, b) end
+   self:jump(here, freereg)
 end
 
+function Proto.__index:op_infix(opname, dest, v1tag, var1, v2tag, var2)
+   local ins = BC[opname .. v1tag .. v2tag]
+   assert(ins, "Invalid operation: " .. opname)
+   if v1tag == 'N' then
+      var1, var2 = var2, var1
+   end
+   return self:emit(ins, dest, var1, var2)
+end
 function Proto.__index:op_add(dest, var1, var2)
    return self:emit(BC.ADDVV, dest, var1, var2)
 end
@@ -723,6 +715,13 @@ function Proto.__index:op_unm(dest, var1)
 end
 function Proto.__index:op_len(dest, var1)
    return self:emit(BC.LEN, dest, var1)
+end
+function Proto.__index:op_nils(dest, want)
+   if want == 1 then
+      return self:emit(BC.KPRI, dest, VKNIL)
+   elseif want > 1 then
+      return self:emit(BC.KNIL, dest, dest + want - 1)
+   end
 end
 
 function Proto.__index:op_move(dest, from)
@@ -765,19 +764,13 @@ function Proto.__index:op_tnew(dest, narry, nhash)
    end
    return self:emit(BC.TNEW, dest, bit.bor(narry, bit.lshift(nhash, 11)))
 end
-function Proto.__index:op_tget(dest, tab, key)
-   if type(key) == 'string' then
-      return self:emit(BC.TGETS, dest, tab, self:const(key))
-   else
-      return self:emit(BC.TGETV, dest, tab, key)
-   end
+function Proto.__index:op_tget(dest, tab, ktag, key)
+   local ins_name = 'TGET' .. ktag
+   self:emit(BC[ins_name], dest, tab, key)
 end
-function Proto.__index:op_tset(tab, key, val)
-   if type(key) == 'string' then
-      return self:emit(BC.TSETS, val, tab, self:const(key))
-   else
-      return self:emit(BC.TSETV, val, tab, key)
-   end
+function Proto.__index:op_tset(tab, ktag, key, val)
+   local ins_name = 'TSET' .. ktag
+   self:emit(BC[ins_name], val, tab, key)
 end
 function Proto.__index:op_tsetm(base, vnum)
    local knum = double_new(0)
@@ -793,30 +786,14 @@ end
 function Proto.__index:op_uclo(jump)
    return self:emit(BC.UCLO, #self.actvars, jump or 0)
 end
-function Proto.__index:op_uset(name, val)
+function Proto.__index:op_uset(name, vtag, val)
+   local ins = BC['USET' .. vtag]
    local slot = self:upval(name)
-   local tv   = type(val)
-   if tv == 'string' then
-      return self:emit(BC.USETS, slot, self:const(val))
-   elseif tv == 'nil' or tv == 'boolean' then
-      local pri
-      if tv == 'nil' then
-         pri = VKNIL
-      else
-         pri = val and VKTRUE or VKFALSE
-      end
-      return self:emit(BC.USETP, slot, pri)
-   else
-      return self:emit(BC.USETV, slot, val)
-   end
+   self:emit(ins, slot, val)
 end
 function Proto.__index:op_uget(dest, name)
    local slot = self:upval(name)
    return self:emit(BC.UGET, dest, slot)
-end
-function Proto.__index:is_tcall()
-   local prev_inst = self.code[#self.code][1]
-   return prev_inst == BC.CALLMT or prev_inst == BC.CALLT
 end
 function Proto.__index:close_block_uvals(reg, exit)
    -- the condition on reg ensure that UCLO is emitted only if
@@ -845,22 +822,18 @@ function Proto.__index:close_uvals()
    end
 end
 function Proto.__index:op_ret(base, rnum)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET, base, rnum + 1)
 end
 function Proto.__index:op_ret0()
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET0, 0, 1)
 end
 function Proto.__index:op_ret1(base)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RET1, base, 2)
 end
 function Proto.__index:op_retm(base, rnum)
-   if self:is_tcall() then return end
    self:close_uvals()
    return self:emit(BC.RETM, base, rnum)
 end
