@@ -14,6 +14,10 @@ setmetatable(_G, {
     }
 )
 
+local function lex_error(ls, token, msg)
+    error("boum:" .. msg)
+end
+
 local function char_isident(c)
     if type(c) == 'string' then
         -- print('char:'.. c .. '.')
@@ -111,18 +115,6 @@ local function lex_setup(read_func)
     return ls
 end
 
---[[
-    local match = string.match
-    local s, p = ls.data, ls.p
-    local b = match(s, '^%d*%.%d+', p) or match(s, '^%d+%.%d*', p) or match(s, '%d+', p)
-    if b then
-        skip(ls, #b)
-        local e = match(ls.data, '^[eE][+%-]?%d+', ls.p)
-        return tonumber(e and b..e or b)
-    end
-end
-]]
-
 local function resetbuf(ls)
     ls.save_buf = ''
 end
@@ -162,25 +154,23 @@ local function skip_sep(ls)
 end
 
 local function lex_number(ls)
-    while char_isdigit(ls.current) do
+    local xp = 'e'
+    local c = ls.current
+    if c == '0' then
+        save_and_next(ls)
+        local xc = ls.current
+        if xc == 'x' or xc == 'X' then xp = 'p' end
+    end
+    while char_isident(ls.current) or ls.current == '.' or
+        ((ls.current == '-' or ls.current == '+') and string.lower(c) == xp) do
+        c = ls.current
         save_and_next(ls)
     end
-    if ls.current == '.' then
-        save_and_next(ls)
-        while char_isdigit(ls) do
-            save_and_next(ls)
-        end
+    local eval, err = loadstring('return '.. ls.save_buf)
+    if not eval then
+        lex_error(ls, 'TK_number', "malformed number")
     end
-    if ls.current == 'e' or ls.curr_is_newline == 'E' then
-        save_and_next(ls)
-        if ls.current == '+' or ls.current == '-' then
-            save_and_next(ls)
-        end
-        while char_isdigit(ls) do
-            save_and_next(ls)
-        end
-    end
-    return tonumber(get_string(ls, 0, 0))
+    return eval()
 end
 
 local function read_long_string(ls, sep, ret_value)
@@ -224,10 +214,6 @@ local function hex_char(c)
         if not char_isdigit(c) then b = b + 9 end
         return b
     end
-end
-
-local function lex_error(ls, token, msg)
-    error("boum:" .. msg)
 end
 
 local function read_string(ls, delim)
