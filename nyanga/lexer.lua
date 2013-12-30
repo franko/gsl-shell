@@ -74,8 +74,8 @@ end
 
 local function next(ls)
     local c = ls.n > 0 and pop(ls) or fillbuf(ls)
-    -- print('>>>', c, ls.n)
     ls.current = c
+    return c
 end
 
 local function curr_is_newline(ls)
@@ -137,7 +137,7 @@ local function save_and_next(ls)
 end    
 
 local function get_string(ls, init_skip, end_skip)
-    return string.sub(ls.save_buf, init_skip, - (end_skip + init_skip + 1))
+    return string.sub(ls.save_buf, init_skip + 1, - (end_skip + 1))
 end
 
 local function inclinenumber(ls)
@@ -188,19 +188,22 @@ local function read_long_string(ls, sep, ret_value)
     if curr_is_newline(ls) then -- string starts with a newline?
         inclinenumber(ls) -- skip it
     end
-    local loops = true
-    while loops do
+    while true do
         local c = ls.current
         if c == END_OF_STREAM then
             lex_error(ls, 'TK_eof', ret_value and "unfinished long string" or "unfinished long comment")
         elseif c == ']' then
             if skip_sep(ls) == sep then
                 save_and_next(ls) -- skip 2nd `['
-                loops = false
+                break
             end
         elseif c == '\n' or c == '\r' then
             save(ls, '\n')
             inclinenumber(ls)
+            if not ret_value then
+                resetbuf(ls) -- avoid wasting space
+            end
+        else
             if ret_value then save_and_next(ls)
             else next(ls) end
         end
@@ -236,7 +239,7 @@ local function read_string(ls, delim)
         elseif c == '\n' or c == '\r' then
             lex_error(ls, 'TK_string', "unfinished string")
         elseif c == '\\' then
-            local c = next(ls) -- Skip the '\\'.
+            c = next(ls) -- Skip the '\\'.
             local esc = Escapes[c]
             if esc then
                 c = esc
@@ -265,18 +268,17 @@ local function read_string(ls, delim)
                 if not char_isdigit(c) then
                     lex_error(ls, 'TK_string', "invalid escape sequence")
                 end
-                c = band(string.byte(c), 15) -- Decimal escape '\ddd'.
+                local bc = band(string.byte(c), 15) -- Decimal escape '\ddd'.
                 if char_isdigit(next(ls)) then
-                    c = c * 10 + band(string.byte(ls.current), 15)
+                    bc = bc * 10 + band(string.byte(ls.current), 15)
                     if char_isdigit(next(ls)) then
-                        c = c * 10 + band(string.byte(ls.current), 15)
-                        if c > 255 then
+                        bc = bc * 10 + band(string.byte(ls.current), 15)
+                        if bc > 255 then
                             lex_error(ls, 'TK_string', "invalid escape sequence")
                         end
-                        next(ls)
                     end
                 end
-                save(ls, c)
+                c = string.char(bc)
             end
             save(ls, c)
             next(ls)
@@ -312,6 +314,7 @@ local function llex(ls)
         elseif current == ' ' or current == '\t' or current == '\b' or current == '\f' then
             next(ls)
         elseif current == '-' then
+            next(ls)
             if ls.current ~= '-' then return '-' end
             -- else is a comment
             next(ls)
@@ -335,7 +338,6 @@ local function llex(ls)
                 return '['
             else
                 lex_error(ls, 'TK_string', "delimiter error")
-                -- continue
             end
         elseif current == '=' then
             next(ls)
@@ -355,6 +357,20 @@ local function llex(ls)
         elseif current == '"' or current == "'" then
             local str = read_string(ls, current)
             return 'TK_string', str
+        elseif current == '.' then
+            save_and_next(ls)
+            if ls.current == '.' then
+                next(ls)
+                if ls.current == '.' then
+                    next(ls)
+                    return 'TK_dots' -- ...
+                end
+                return 'TK_concat' -- ..
+            elseif not char_isdigit(ls.current) then
+                return '.'
+            else
+                return 'TK_number', lex_number(ls)
+            end
         elseif current == END_OF_STREAM then
             return 'TK_eof'
         else
@@ -374,5 +390,9 @@ local ls = lex_setup(DEBUG_READ_FILE)
 local token, value
 repeat
     token, value = llex(ls)
-    print('>>>', token, value)
+    if value then
+        print(string.format('* %s:', token), value)
+    else
+        print(string.format('* %s', token))
+    end
 until token == 'TK_eof'
