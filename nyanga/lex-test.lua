@@ -5,6 +5,10 @@ local ASCII_a, ASCII_z = 97, 122
 local ASCII_A, ASCII_Z = 65, 90
 
 local tricky_string = 'ciao \x6aason \106ack \t\r\n\v'
+local hex_num = 0xffee
+local dec_num = 1.23e-12
+local img_num = 3 + 4i
+local ll, ull = 12LL, 12ULL
 
 local END_OF_STREAM = -1
 
