@@ -1,5 +1,27 @@
 local parse_block
 
+local LJ_52 = false
+
+-- var_lookup
+-- expr
+-- err_syntax
+
+local function expr_primary(ast, ls)
+	local v
+	if ls.token == '(' then
+		local line = ls.linenumber
+		ls:next()
+		local _ = expr(ast, ls)
+		ls:match(')', '(', line)
+		-- discarge the resulting expression
+	elseif ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
+		v = var_lookup(ast, ls)
+	else
+		err_syntax(ls, "unexpected symbol")
+	end
+    -- CONTINUE HERE !!!
+end
+
 local function parse_assignment(ast, ls, vlist, var, vk)
 	checkcond(ls, vk >= VLOCAL and vk <= VINDEXED, 'syntax error')
 	ast:add_assign_lhs_var(vlist, var)

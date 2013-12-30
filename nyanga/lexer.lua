@@ -366,6 +366,19 @@ local function llex(ls)
     end
 end
 
+local Lexer = { }
+
+function Lexer.next(ls)
+    ls.lastline = ls.linenumber
+    if ls.lookahead == 'TK_eof' then -- No lookahead token?
+        ls.token = llex(ls) -- Get next token.
+    else
+        ls.token = ls.lookahead
+        ls.lookahead == 'TK_eof'
+        ls.tokenval = ls.lookaheadval
+    end
+end
+
 local debug_file = io.open('lex-test.lua')
 
 local function DEBUG_READ_FILE(ls)
