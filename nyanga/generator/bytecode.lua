@@ -99,8 +99,14 @@ function ExpressionRule:Vararg(node, base, want)
 end
 
 function ExpressionRule:Table(node, dest)
-   local free = self.ctx.freereg
-   dest = self.ctx:nextreg()
+   local free
+   if dest then
+      free = self.ctx.freereg
+      if dest + 1 > free then self.ctx:setreg(dest + 1) end
+   else
+      dest = self.ctx:nextreg()
+      free = self.ctx.freereg
+   end
    local narry, nhash = 0, 0
    local seen = { }
    for i=1, #node.value do
