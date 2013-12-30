@@ -374,7 +374,7 @@ function Lexer.next(ls)
         ls.token = llex(ls) -- Get next token.
     else
         ls.token = ls.lookahead
-        ls.lookahead == 'TK_eof'
+        ls.lookahead = 'TK_eof'
         ls.tokenval = ls.lookaheadval
     end
 end
