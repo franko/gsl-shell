@@ -371,11 +371,10 @@ local Lexer = { }
 function Lexer.next(ls)
     ls.lastline = ls.linenumber
     if ls.lookahead == 'TK_eof' then -- No lookahead token?
-        ls.token = llex(ls) -- Get next token.
+        ls.token, ls.tokenval = llex(ls) -- Get next token.
     else
-        ls.token = ls.lookahead
+        ls.token, ls.tokenval = ls.lookahead, ls.lookaheadval
         ls.lookahead = 'TK_eof'
-        ls.tokenval = ls.lookaheadval
     end
 end
 
