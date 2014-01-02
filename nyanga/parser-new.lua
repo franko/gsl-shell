@@ -162,7 +162,6 @@ local function expr_primary(ast, ls)
         ls:next()
         vk, v = 'expr', expr(ast, ls)
         lex_match(ls, ')', '(', line)
-        -- discarge the resulting expression
     elseif ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
         vk, v = 'var', ast:expr_var(ls.tokenval)
     else
@@ -278,27 +277,27 @@ local function parse_while(ast, ls, line)
     return ast:new_while_statement(cond, b, ls.linenumber)
 end
 
-local function parse_then(ast, ls, if_stmt)
+local function parse_then(ast, ls, branches)
     ls:next()
     local cond = expr_cond(ast, ls)
     ls:check('TK_then')
     local b = parse_block(ast, ls)
-    ast:add_if_then_block(if_stmt, cond, b, ls.linenumber)
+    branches[#branches + 1] = {cond, b}
 end
 
 local function parse_if(ast, ls, line)
-    local if_stmt = ast:new_if_statement(ls.linenumber)
-    parse_then(ast, ls, if_stmt)
+    local branches = { }
+    parse_then(ast, ls, branches)
     while ls.token == 'TK_elseif' do
-        parse_then(ast, ls, if_stmt)
+        parse_then(ast, ls, branches)
     end
+    local else_branch
     if ls.token == 'TK_else' then
         ls:next() -- Skip 'else'.
-        local b = parse_block(ast, ls)
-        ast:add_if_else_block(if_stmt, b, ls.linenumber)
+        else_branch = parse_block(ast, ls)
     end
     lex_match(ls, 'TK_end', 'TK_if', line)
-    return if_stmt
+    return ast:if_stmt(branches, else_branch, line)
 end
 
 local IsLastStatement = {
