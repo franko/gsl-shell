@@ -1,5 +1,3 @@
-local parse_block
-
 local LJ_52 = false
 
 setmetatable(_G, {
@@ -10,7 +8,6 @@ setmetatable(_G, {
 
 --[[
 err_syntax
-parse_args
 err_token
 ]]
 
@@ -50,7 +47,7 @@ local function lex_str(ls)
 	return s
 end
 
-local expr
+local expr, parse_body, parse_block
 
 local function expr_field(ast, v, ls)
 	ls:next() -- Skip dot or colon.
@@ -119,6 +116,15 @@ local function expr_simple(ast, ls)
     return e
 end
 
+local function expr_list(ast, ls)
+    local exps = { }
+    exps[1] = expr(ast, ls)
+    while lex_opt(ls, ',') do
+        exps[#exps + 1] = exor(ast, ls)
+    end
+    return exps
+end
+
 local function expr_unop(ast, ls)
     local tk = ls.token
     if tk == 'TK_not' or tk == '-' or tk == '#' then
@@ -147,60 +153,119 @@ function expr(ast, ls)
 	return expr_binop(ast, ls, 0) -- Priority 0: parse whole expression.
 end
 
+-- Parse primary expression.
 local function expr_primary(ast, ls)
-    local v
+    local v, vk
+    -- Parse prefix expression.
     if ls.token == '(' then
         local line = ls.linenumber
         ls:next()
-        local _ = expr(ast, ls)
+        vk, v = 'expr', expr(ast, ls)
         lex_match(ls, ')', '(', line)
         -- discarge the resulting expression
     elseif ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
-        v = ast:expr_var(ls.tokenval)
+        vk, v = 'var', ast:expr_var(ls.tokenval)
     else
         err_syntax(ls, "unexpected symbol")
     end
-    while true do
+    while true do -- Parse multiple expression suffixes.
         if ls.token == '.' then
-            v = expr_field(ast, v, ls)
+            vk, v = 'indexed', expr_field(ast, v, ls)
         elseif ls.token == '[' then
             local key = expr_bracket(ast, ls)
-            v = ast:expr_index(v, key)
+            vk, v = 'indexed', ast:expr_index(v, key)
         elseif ls.token == ':' then
             ls:next()
             local key = lex_str(ls)
             local args = parse_args(ast, ls)
-            v = ast:expr_method_call(v, key, args)
+            vk, v = 'call', ast:expr_method_call(v, key, args)
         elseif ls.token == '(' or ls.token == 'TK_string' or ls.token == '{' then
             local args = parse_args(ast, ls)
-            v = ast:expr_function_call(v, args)
+            vk, v = 'call', ast:expr_function_call(v, args)
         else
             break
         end
     end
+    return v, vk
+end
+
+-- Parse 'return' statement.
+local function parse_return(ast, ls, line)
+    ls:next() -- Skip 'return'.
+    ls.fs.proto_has_return = true
+    local exps
+    if EndOfBlock(ls.token) or ls.token == ';' then -- Base return.
+        exps = { }
+    else -- Return with one or more values.
+        exps = expr_list(ast, ls)
+    end
+    return ast:return_stmt(exps, line)
+end
+
+-- Parse function argument list.
+local function parse_args(ast, ls, line)
+    local line = ls.linenumber
+    local args
+    if ls.token == '(' then
+        if not LJ_52 and line ~= ls.lastline then
+            err_syntax(ls, "ambiguous syntax (function call x new statement)")
+        end
+        ls:next()
+        if ls.token ~= ')' then -- Not f().
+            args = expr_list(ast, ls)
+        end
+        lex_match(ls, ')', '(', line)
+    elseif ls.token == '{' then
+        local a = expr_table(ast, ls)
+        args = { a }
+    elseif ls.token == 'TK_string' then
+        local a = lex_str(ls)
+        args = { ast:expr_string(a) }
+    else
+        err_syntax(ls, "function arguments expected")
+    end
+    return args
 end
 
 local function parse_assignment(ast, ls, vlist, var, vk)
-    checkcond(ls, vk >= VLOCAL and vk <= VINDEXED, 'syntax error')
-    ast:add_assign_lhs_var(vlist, var, ls.linenumber)
+    checkcond(ls, vk == 'var' or vk == 'indexed', 'syntax error')
+    vlist[#vlist+1] = var
     if lex_opt(ls, ',') then
         local n_var, n_vk = expr_primary(ast, ls)
-        parse_assignment(ast, ls, vlist, n_var, n_vk)
+        return parse_assignment(ast, ls, vlist, n_var, n_vk)
     else -- Parse RHS.
         ls:check('=')
-        local els = expr_list(ast, ls)
-        ast:add_assign_exprs(els, ls.linenumber)
+        local exps = expr_list(ast, ls)
+        return ast:assignment_expr(vlist, exps, ls.linenumber)
     end
 end
 
 local function parse_call_assign(ast, ls)
     local var, vk = expr_primary(ast, ls)
-    if vk == VCALL then
+    if vk == 'call' then
         return ast:new_statement_expr(var, ls.linenumber)
     else
-        local vlist = ast:new_assignment(ls.linenumber)
-        parse_assignment(ast, ls, vlist)
-        return vlist
+        local vlist = { }
+        return parse_assignment(ast, ls, vlist)
+    end
+end
+
+-- Parse 'local' statement.
+local function parse_local(ast, ls, line)
+    if lex_opt(ls, 'TK_function') then -- Local function declaration.
+        return parse_body(ast, ls, line)
+    else -- Local variable declaration.
+        local vl = { }
+        repeat -- Collect LHS.
+            vl[#vl+1] = lex_str(ls)
+        until not lex_opt(ls, ',')
+        local exps
+        if lex_opt(ls, '=') then -- Optional RHS.
+            exps = expr_list(ast, ls)
+        else
+            exps = { }
+        end
+        return ast:local_decl(vl, exps, line)
     end
 end
 
@@ -236,11 +301,6 @@ local function parse_if(ast, ls, line)
     return if_stmt
 end
 
-local StatementRule = {
-    ['TK_if']    = parse_if,
-    ['TK_while'] = parse_while,
-}
-
 local IsLastStatement = {
     ['TK_return'] = true,
     ['TK_break']  = true,
@@ -250,18 +310,64 @@ local EndOfBlock = { TK_else = true, TK_elseif = true, TK_end = true, TK_until =
 
 local function parse_stmt(ast, ls)
     local line = ls.linenumber
-    local parse_rule = StatementRule[ls.token]
-    if parse_rule then
-        local islast = IsLastStatement[ls.token]
-        local stmt = parse_rule(ast, ls, line)
-        return stmt, islast
+    local stmt
+    if ls.token == 'TK_if' then
+        stmt = parse_if(ast, ls, line)
+    elseif ls.token == 'TK_while' then
+        stmt = parse_while(ast, ls, line)
+    elseif ls.token == 'TK_return' then
+        stmt = parse_return(ast, ls, line)
+        return stmt, true
+    elseif ls.token == 'TK_local' then
+        ls:next()
+        stmt = parse_local(ast, ls, line)
     else
-        local stmt = parse_call_assign(ast, ls)
-        return stmt, false
+        stmt = parse_call_assign(ast, ls)
     end
+    return stmt, false
 end
 
-function parse_block(ast, ls)
+local function parse_params(ast, ls, needself)
+    lex_check(ls, '(')
+    local args = { }
+    if needself then
+        args[1] = ast:expr_var("self")
+    end
+    if ls.token ~= ')' then
+        repeat
+            if ls.token == 'TK_name' || (not LJ_52 and ls.token == 'TK_goto') then
+                args[#args+1] = ast:expr_var(lex_str(ls))
+            elseif ls.token == 'TK_dots' then
+                ls:next()
+                ls.fs.proto_varargs = true
+            else
+                err_syntax(ls, "<name> or \"...\" expected")
+            end
+        until not lex_opt(ls, ',')
+    end
+    lex_check(ls, ')')
+    return args
+end
+
+local function new_proto(ls, varargs)
+    return { proto_varargs = varargs }
+end
+
+-- Parse body of a function.
+function parse_body(ast, ls, line, needself)
+    local pfs = ls.fs
+    ls.fs = new_proto(ls, false)
+    local args = parse_params(ls, needself)
+    local body = parse_chunk(ls)
+    if ls.token ~= 'TK_end' then
+        lex_match(ls, 'TK_end', 'TK_function', line)
+    end
+    ls:next()
+    ls.fs = pfs
+    return ast:new_function(args, body, line)
+end
+
+local function parse_chunk(ast, ls)
     local islast = false
     local chunk = ast:new_block(ls.linenumber)
     while not islast and not EndOfBlock(ls.token) do
@@ -273,7 +379,13 @@ function parse_block(ast, ls)
     return chunk
 end
 
+function parse_block(ast, ls)
+    return parse_chunk(ast, ls)
+end
+
 local function parse(ast, ls)
+    ls.fs = new_proto(ls, true)
     ls:next()
-    local chunk = parse_block(ast, ls)
+    local chunk = parse_chunk(ast, ls)
+    return chunk
 end

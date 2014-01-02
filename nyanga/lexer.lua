@@ -87,34 +87,6 @@ local function curr_is_newline(ls)
     return (c == '\n' or c == '\r')
 end
 
-local function lex_setup(read_func)
-    local header = false
-    local ls = {
-        n = 0,
-        lookahead = 'TK_eof', -- No look-ahead token. 
-        linenumber = 1,
-        lastline = 1,
-        read_func = read_func,
-    }
-    next(ls)
-    if ls.current == '\xef' and ls.n >= 2 and
-        byte(ls, 0) == '\xbb' and byte(ls, 1) == '\xbf' then -- Skip UTF-8 BOM (if buffered).
-        ls.n = ls.n - 2
-        ls.p = ls.p + 2
-        next(ls)
-        header = true
-    end
-    if ls.current == '#' then
-        repeat
-            next(ls)
-            if ls.current == END_OF_STREAM then return ls end
-        until curr_is_newline(ls)
-        inclinenumber(ls)
-        header = true
-    end
-    return ls
-end
-
 local function resetbuf(ls)
     ls.save_buf = ''
 end
@@ -378,19 +350,48 @@ function Lexer.next(ls)
     end
 end
 
-local debug_file = io.open('lex-test.lua')
+local LexerClass = { __index = Lexer }
+
+local function lex_setup(read_func)
+    local header = false
+    local ls = {
+        n = 0,
+        lookahead = 'TK_eof', -- No look-ahead token.
+        linenumber = 1,
+        lastline = 1,
+        read_func = read_func,
+    }
+    next(ls)
+    if ls.current == '\xef' and ls.n >= 2 and
+        byte(ls, 0) == '\xbb' and byte(ls, 1) == '\xbf' then -- Skip UTF-8 BOM (if buffered).
+        ls.n = ls.n - 2
+        ls.p = ls.p + 2
+        next(ls)
+        header = true
+    end
+    if ls.current == '#' then
+        repeat
+            next(ls)
+            if ls.current == END_OF_STREAM then return ls end
+        until curr_is_newline(ls)
+        inclinenumber(ls)
+        header = true
+    end
+    return setmetatable(ls, LexerClass)
+end
+
+local debug_file = io.open('parse-test.lua')
 
 local function DEBUG_READ_FILE(ls)
     return debug_file:read(64)
 end
 
 local ls = lex_setup(DEBUG_READ_FILE)
-local token, value
 repeat
-    token, value = llex(ls)
-    if value then
-        print(string.format('* %s:', token), value)
+    ls:next()
+    if ls.tokenval then
+        print(string.format('* %s:', ls.token), ls.tokenval)
     else
-        print(string.format('* %s', token))
+        print(string.format('* %s', ls.token))
     end
-until token == 'TK_eof'
+until ls.token == 'TK_eof'
