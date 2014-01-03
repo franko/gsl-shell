@@ -1,3 +1,5 @@
+local util = require 'nyanga.util'
+
 local LJ_52 = false
 
 setmetatable(_G, {
@@ -5,6 +7,9 @@ setmetatable(_G, {
     __newindex = function(t, k, v) error('undefined global ' .. k) end
     }
 )
+
+local IsLastStatement = { TK_return = true, TK_break  = true }
+local EndOfBlock = { TK_else = true, TK_elseif = true, TK_end = true, TK_until = true, TK_eof = true }
 
 --[[
 err_syntax
@@ -47,12 +52,14 @@ local function lex_str(ls)
 	return s
 end
 
-local expr, parse_body, parse_block
+local expr_primary, expr, expr_unop, expr_binop, expr_simple
+local expr_list, expr_table
+local parse_body, parse_block, parse_args
 
 local function expr_field(ast, v, ls)
 	ls:next() -- Skip dot or colon.
 	local key = lex_str(ls)
-	return ast:expr_index(v, key)
+	return ast:expr_property(v, key)
 end
 
 local function expr_bracket(ast, ls)
@@ -82,11 +89,12 @@ local function right_priority(op)
     return bit.band(op, 0xff)
 end
 
-local function expr_table(ast, ls)
+function expr_table(ast, ls)
     error('NYI: expr_table')
 end
 
-local function expr_simple(ast, ls)
+function expr_simple(ast, ls)
+    print('... expr_simple')
     local tk, val = ls.token, ls.tokenval
     local e
     if tk == 'TK_number' then
@@ -100,7 +108,7 @@ local function expr_simple(ast, ls)
     elseif tk == 'TK_false' then
         e = ast:expr_boolean(false)
     elseif tk == 'TK_dots' then
-        if not ls.fs.proto_varargs then
+        if not ls.fs.varargs then
             err_syntax(ls, "cannot use \"...\" outside a vararg function")
         end
         e = ast:expr_vararg()
@@ -108,7 +116,8 @@ local function expr_simple(ast, ls)
         e = expr_table(ast, ls)
     elseif tk == 'TK_function' then
         ls:next()
-        return parse_body(ast, ls, ls.linenumber)
+        local args, body, proto = parse_body(ast, ls, ls.linenumber, false)
+        return ast:expr_function(args, body, proto, ls.linenumber)
     else
         return expr_primary(ast, ls)
     end
@@ -116,16 +125,17 @@ local function expr_simple(ast, ls)
     return e
 end
 
-local function expr_list(ast, ls)
+function expr_list(ast, ls)
+    print('... expr_list')
     local exps = { }
     exps[1] = expr(ast, ls)
     while lex_opt(ls, ',') do
-        exps[#exps + 1] = exor(ast, ls)
+        exps[#exps + 1] = expr(ast, ls)
     end
     return exps
 end
 
-local function expr_unop(ast, ls)
+function expr_unop(ast, ls)
     local tk = ls.token
     if tk == 'TK_not' or tk == '-' or tk == '#' then
         ls:next()
@@ -137,15 +147,18 @@ local function expr_unop(ast, ls)
 end
 
 -- Parse binary expressions with priority higher than the limit.
-local function expr_binop(ast, ls, limit)
+function expr_binop(ast, ls, limit)
+    print('... expr_binop', limit)
 	local v = expr_unop(ast, ls)
     local op = ls.token
     while BinOp[op] and left_priority(BinOp[op]) > limit do
+        print('+++ operation', op)
         ls:next()
         local v2, nextop = expr_binop(ast, ls, right_priority(BinOp[op]))
         v = ast:expr_binop(op, v, v2)
         op = nextop
     end
+    print('+++ end expr_binop')
     return v, op
 end
 
@@ -154,7 +167,8 @@ function expr(ast, ls)
 end
 
 -- Parse primary expression.
-local function expr_primary(ast, ls)
+function expr_primary(ast, ls)
+    print('... expr_primary')
     local v, vk
     -- Parse prefix expression.
     if ls.token == '(' then
@@ -163,7 +177,9 @@ local function expr_primary(ast, ls)
         vk, v = 'expr', expr(ast, ls)
         lex_match(ls, ')', '(', line)
     elseif ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
-        vk, v = 'var', ast:expr_var(ls.tokenval)
+        local name = lex_str(ls)
+        print('+++ variable', name)
+        vk, v = 'var', ast:expr_var(name)
     else
         err_syntax(ls, "unexpected symbol")
     end
@@ -185,24 +201,27 @@ local function expr_primary(ast, ls)
             break
         end
     end
+    print('+++ end of expr_primary')
     return v, vk
 end
 
 -- Parse 'return' statement.
 local function parse_return(ast, ls, line)
+    print('*** parse_return')
     ls:next() -- Skip 'return'.
-    ls.fs.proto_has_return = true
+    ls.fs.has_return = true
     local exps
-    if EndOfBlock(ls.token) or ls.token == ';' then -- Base return.
+    if EndOfBlock[ls.token] or ls.token == ';' then -- Base return.
         exps = { }
     else -- Return with one or more values.
+        print('--- calling expr_list')
         exps = expr_list(ast, ls)
     end
     return ast:return_stmt(exps, line)
 end
 
 -- Parse function argument list.
-local function parse_args(ast, ls, line)
+function parse_args(ast, ls, line)
     local line = ls.linenumber
     local args
     if ls.token == '(' then
@@ -252,7 +271,9 @@ end
 -- Parse 'local' statement.
 local function parse_local(ast, ls, line)
     if lex_opt(ls, 'TK_function') then -- Local function declaration.
-        return parse_body(ast, ls, line)
+        local name = lex_str(ls)
+        local args, body, proto = parse_body(ast, ls, ls.linenumber, false)
+        return ast:local_function_decl(name, args, body, proto, ls.linenumber)
     else -- Local variable declaration.
         local vl = { }
         repeat -- Collect LHS.
@@ -300,13 +321,6 @@ local function parse_if(ast, ls, line)
     return ast:if_stmt(branches, else_branch, line)
 end
 
-local IsLastStatement = {
-    ['TK_return'] = true,
-    ['TK_break']  = true,
-}
-
-local EndOfBlock = { TK_else = true, TK_elseif = true, TK_end = true, TK_until = true, TK_eof = true }
-
 local function parse_stmt(ast, ls)
     local line = ls.linenumber
     local stmt
@@ -334,11 +348,12 @@ local function parse_params(ast, ls, needself)
     end
     if ls.token ~= ')' then
         repeat
-            if ls.token == 'TK_name' || (not LJ_52 and ls.token == 'TK_goto') then
-                args[#args+1] = ast:expr_var(lex_str(ls))
+            if ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
+                local name = lex_str(ls)
+                args[#args+1] = ast:expr_var(name)
             elseif ls.token == 'TK_dots' then
                 ls:next()
-                ls.fs.proto_varargs = true
+                ls.fs.varargs = true
             else
                 err_syntax(ls, "<name> or \"...\" expected")
             end
@@ -349,33 +364,34 @@ local function parse_params(ast, ls, needself)
 end
 
 local function new_proto(ls, varargs)
-    return { proto_varargs = varargs }
+    return { varargs = varargs }
+end
+
+local function parse_chunk(ast, ls)
+    local islast = false
+    local body = { }
+    while not islast and not EndOfBlock[ls.token] do
+        local stmt
+        stmt, islast = parse_stmt(ast, ls)
+        body[#body + 1] = stmt
+        lex_opt(ls, ';')
+    end
+    return ast:block_stmt(body, ls.linenumber)
 end
 
 -- Parse body of a function.
 function parse_body(ast, ls, line, needself)
     local pfs = ls.fs
     ls.fs = new_proto(ls, false)
-    local args = parse_params(ls, needself)
-    local body = parse_chunk(ls)
+    local args = parse_params(ast, ls, needself)
+    local body = parse_chunk(ast, ls)
+    local proto = ls.fs
     if ls.token ~= 'TK_end' then
         lex_match(ls, 'TK_end', 'TK_function', line)
     end
     ls:next()
     ls.fs = pfs
-    return ast:new_function(args, body, line)
-end
-
-local function parse_chunk(ast, ls)
-    local islast = false
-    local chunk = ast:new_block(ls.linenumber)
-    while not islast and not EndOfBlock(ls.token) do
-        local stmt
-        stmt, islast = parse_stmt(ast, ls)
-        ast:add_block_stmt(stmt, islast, ls.linenumber)
-        lex_opt(ls, ';')
-    end
-    return chunk
+    return args, body, proto
 end
 
 function parse_block(ast, ls)
@@ -384,7 +400,23 @@ end
 
 local function parse(ast, ls)
     ls.fs = new_proto(ls, true)
+    local line = ls.linenumber
     ls:next()
-    local chunk = parse_chunk(ast, ls)
-    return chunk
+    local args = { ast:expr_vararg(ast) }
+    local body = parse_chunk(ast, ls)
+    return ast:expr_function(args, body, ls.fs, line)
 end
+
+local debug_file = io.open('nyanga/parse-test.lua')
+
+local function DEBUG_READ_FILE(ls)
+    return debug_file:read(64)
+end
+
+local lex_setup = require('nyanga.lexer')
+local AST = require('nyanga.parser-ast')
+
+local ls = lex_setup(DEBUG_READ_FILE)
+local ast = AST.New()
+local ptree = parse(ast, ls)
+print(util.dump(ptree))
