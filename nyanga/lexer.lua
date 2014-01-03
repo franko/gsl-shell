@@ -7,12 +7,13 @@ local ASCII_A, ASCII_Z = 65, 90
 local END_OF_STREAM = -1
 
 local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, ['elseif'] = 5, ['end'] = 6, ['false'] = 7, ['for'] = 8, ['function'] = 9, ['goto'] = 10, ['if'] = 11, ['in'] = 12, ['local'] = 13, ['nil'] = 14, ['not'] = 15, ['or'] = 16, ['repeat'] = 17, ['return'] = 18, ['then'] = 19, ['true'] = 20, ['until'] = 21, ['while'] = 22 }
-
+--[[
 setmetatable(_G, {
     __index = function(t, x) error('undefined global ' .. x) end,
     __newindex = function(t, k, v) error('undefined global ' .. k) end
     }
 )
+--]]
 
 local function lex_error(ls, token, msg)
     error("boum:" .. msg)
@@ -348,6 +349,7 @@ function Lexer.next(ls)
         ls.token, ls.tokenval = ls.lookahead, ls.lookaheadval
         ls.lookahead = 'TK_eof'
     end
+    print('>>>', ls.token, ls.tokenval)
 end
 
 local LexerClass = { __index = Lexer }
@@ -380,18 +382,4 @@ local function lex_setup(read_func)
     return setmetatable(ls, LexerClass)
 end
 
-local debug_file = io.open('parse-test.lua')
-
-local function DEBUG_READ_FILE(ls)
-    return debug_file:read(64)
-end
-
-local ls = lex_setup(DEBUG_READ_FILE)
-repeat
-    ls:next()
-    if ls.tokenval then
-        print(string.format('* %s:', ls.token), ls.tokenval)
-    else
-        print(string.format('* %s', ls.token))
-    end
-until ls.token == 'TK_eof'
+return lex_setup
