@@ -1,4 +1,6 @@
-local band = bit.band
+local ffi = require('ffi')
+
+local band, bor = bit.band, bit.bor
 
 local ASCII_0, ASCII_9 = 48, 57
 local ASCII_a, ASCII_z = 97, 122
@@ -15,13 +17,15 @@ setmetatable(_G, {
 )
 --]]
 
+local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
+local complex = ffi.typeof('complex')
+
 local function lex_error(ls, token, msg)
     error("boum:" .. msg)
 end
 
 local function char_isident(c)
     if type(c) == 'string' then
-        -- print('char:'.. c .. '.')
         local b = string.byte(c)
         if b >= ASCII_0 and b <= ASCII_9 then
             return true
@@ -69,7 +73,6 @@ end
 
 local function fillbuf(ls)
     local data = ls:read_func()
-    -- print('+++', data)
     if not data then
         return END_OF_STREAM
     end
@@ -126,6 +129,30 @@ local function skip_sep(ls)
     return ls.current == s and count or (-count - 1)
 end
 
+local function build_64int(str)
+    local u = str[#str - 2]
+    local x = (u == 117 and uint64(0) or int64(0))
+    local i = 1
+    while str[i] <= ASCII_9 do
+        x = 10 * x + (str[i] - ASCII_0)
+        i = i + 1
+    end
+    return x
+end
+
+local function strnumdump(str)
+    local t = {}
+    for i = 1, #str do
+        local c = string.sub(str, i, i)
+        if char_isident(c) then
+            t[i] = string.byte(c)
+        else
+            return nil
+        end
+    end
+    return t
+end
+
 local function lex_number(ls)
     local xp = 'e'
     local c = ls.current
@@ -136,14 +163,26 @@ local function lex_number(ls)
     end
     while char_isident(ls.current) or ls.current == '.' or
         ((ls.current == '-' or ls.current == '+') and string.lower(c) == xp) do
-        c = ls.current
-        save_and_next(ls)
+        c = string.lower(ls.current)
+        save(ls, c)
+        next(ls)
     end
-    local eval, err = loadstring('return '.. ls.save_buf)
-    if not eval then
+    local str = ls.save_buf
+    local x
+    if string.sub(str, -1, -1) == 'i' then
+        local img = tonumber(string.sub(str, 1, -2))
+        if img then x = complex(0, img) end
+    elseif string.sub(str, -2, -1) == 'll' then
+        local t = strnumdump(str)
+        if t then x = build_64int(t) end
+    else
+        x = tonumber(str)
+    end
+    if x then
+        return x
+    else
         lex_error(ls, 'TK_number', "malformed number")
     end
-    return eval()
 end
 
 local function read_long_string(ls, sep, ret_value)
@@ -349,7 +388,6 @@ function Lexer.next(ls)
         ls.token, ls.tokenval = ls.lookahead, ls.lookaheadval
         ls.lookahead = 'TK_eof'
     end
-    print('>>>', ls.token, ls.tokenval)
 end
 
 local LexerClass = { __index = Lexer }
