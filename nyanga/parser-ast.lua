@@ -12,6 +12,19 @@ function AST.local_function_decl(ast, name, args, body, proto, line)
     return b.functionDeclaration(id, args, body, proto.varargs, true, line)
 end
 
+function AST.function_decl(ast, path, args, body, proto, line)
+    if path.kind == 'Identifier' then
+        return b.functionDeclaration(path, args, body, proto.varargs, false, line)
+    else
+        local fn = b.functionExpression(args, body, proto.varargs, line)
+        return b.assignmentExpression({ path }, { fn }, line)
+    end
+end
+
+function AST.chunk(ast, body, line)
+    return b.chunk(body, line)
+end
+
 function AST.block_stmt(ast, body, line)
     return b.blockStatement(body, line)
 end
@@ -30,7 +43,7 @@ function AST.expr_index(ast, v, index, line)
     return b.memberExpression(v, index, true, line)
 end
 
-function AST.expr_property(ast, prop, line)
+function AST.expr_property(ast, v, prop, line)
     local index = ast:expr_var(prop)
     return b.memberExpression(v, index, false, line)
 end
