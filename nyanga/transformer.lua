@@ -408,27 +408,31 @@ function match:ForInStatement(node)
    return B.forInStatement(B.forNames(left), iter, body)
 end
 function match:TableExpression(node)
-   local properties = { }
+   local hash_keys, hash_values, array_entries = { }, { }, { }
    local index = 0
    for i=1, #node.members do
       local prop = node.members[i]
 
       local key, val
-      if prop.key then
-         if prop.key.type == 'Identifier' then
-            key = prop.key.name
-         elseif prop.key.type == "Literal" then
-            key = prop.key.value
-         end
+      if prop.keyid then
+         key = B.literal(prop.keyid.name)
+      elseif prop.key then
+         key = self:get(prop.key)
       else
          index = index + 1
          key = index
       end
 
-      properties[key] = self:get(prop.value)
+      local value = self:get(prop.value)
+      if key == index then
+         array_entries[#array_entries + 1] = value
+      else
+         hash_keys[#hash_keys + 1] = key
+         hash_values[#hash_values + 1] = value
+      end
    end
 
-   return B.table(properties)
+   return B.table(array_entries, hash_keys, hash_values)
 end
 
 local function countln(src, pos, idx)

@@ -107,37 +107,29 @@ function ExpressionRule:Table(node, dest)
       dest = self.ctx:nextreg()
       free = self.ctx.freereg
    end
-   local narry, nhash = 0, 0
-   local seen = { }
-   for i=1, #node.value do
-      seen[i] = true
-      narry = narry + 1
-   end
-   for k,v in pairs(node.value) do
-      if not seen[k] then
-         nhash = nhash + 1
-      end
-   end
-   self.ctx:op_tnew(dest, narry, nhash)
+   self.ctx:op_tnew(dest)
    local vtop = self.ctx.freereg
-   for k,v in pairs(node.value) do
+   for k = 1, #node.array_entries do
+      local ktag, kval
+      if k < 256 then
+         ktag, kval = 'B', k
+      else
+         ktag, kval = 'V', self.ctx:nextreg()
+         self.ctx:op_load(kval, k)
+      end
+      local v = self:expr_emit(node.array_entries[k])
+      self.ctx:op_tset(dest, ktag, kval, v)
       self.ctx.freereg = vtop
-      local ktag, kreg, vreg
-      if type(k) == 'table' then
-         ktag, kreg = 'V', self:expr_emit(k)
-      elseif type(k) == 'string' then
-         ktag, kreg = 'S', self.ctx:const(k)
-      else
-         ktag, kreg = 'V', self.ctx:nextreg()
-         self.ctx:op_load(kreg, k)
-      end
-      if type(v) == 'table' then
-         vreg = self:expr_emit(v)
-      else
-         self.ctx:op_load(vreg, v)
-      end
-      self.ctx:op_tset(dest, ktag, kreg, vreg)
    end
+
+   for i = 1, #node.hash_keys do
+      local key, value = node.hash_keys[i], node.hash_values[i]
+      local ktag, kval = self:expr_emit_tagged(key, EXPR_EMIT_VSB)
+      local v = self:expr_emit(value)
+      self.ctx:op_tset(dest, ktag, kval, v)
+      self.ctx.freereg = vtop
+   end
+
    self.ctx.freereg = free
    return dest
 end

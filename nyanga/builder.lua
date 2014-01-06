@@ -64,8 +64,13 @@ end
 function exports.literal(val, loc)
    return syntax.build("Literal", { value = val, loc = loc })
 end
-function exports.table(val, loc)
-   return syntax.build("Table", { value = val, loc = loc })
+--[[
+  The arguments are, in the given order:
+    * the "array" terms (without explicit index)
+    * the "hash" keys
+    * the "hash" values ]]
+function exports.table(as, hks, hvs, loc)
+   return syntax.build("Table", { array_entries = as, hash_keys = hks, hash_values = hvs, loc = loc })
 end
 function exports.expressionStatement(expr, loc)
    return syntax.build("ExpressionStatement", { expression = expr, loc = loc })

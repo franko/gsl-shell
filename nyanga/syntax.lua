@@ -180,9 +180,18 @@ local syntax = {
       kind = "Table",
       base = "Expression",
       properties = {
-         value = {
-            type = "table"
-         }
+         array_entries = {
+            type = "list",
+            kind = "Expression",
+         },
+         hash_keys = {
+            type = "list",
+            kind = "Expression",
+         },
+         hash_values = {
+            type = "list",
+            kind = "Expression",
+         },
       }
    },
    ExpressionStatement = {

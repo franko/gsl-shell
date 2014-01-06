@@ -291,7 +291,8 @@ local patt = [[
       <table_member> (s (","/";") s <table_member>)* (s (","/";"))?
    )
    table_member <- {|
-      {:key: ("[" s <expr> s "]" / <ident>) :} s "=" s {:value: <expr> :}
+      {:keyid: <ident> :} s "=" s {:value: <expr> :}
+    / {:key: "[" s <expr> s "]" :} s "=" s {:value: <expr> :}
     / {:value: <expr> :} |}
 ]]
 
