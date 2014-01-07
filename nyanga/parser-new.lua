@@ -71,6 +71,7 @@ local function expr_bracket(ast, ls)
 	ls:next() -- Skip '['.
 	local v = expr(ast, ls)
 	lex_check(ls, ']')
+    return v
 end
 
 -- Priorities for each binary operator.
