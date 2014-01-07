@@ -384,12 +384,18 @@ local Lexer = { }
 
 function Lexer.next(ls)
     ls.lastline = ls.linenumber
-    if ls.lookahead == 'TK_eof' then -- No lookahead token?
+    if ls.tklookahead == 'TK_eof' then -- No lookahead token?
         ls.token, ls.tokenval = llex(ls) -- Get nextchar token.
     else
-        ls.token, ls.tokenval = ls.lookahead, ls.lookaheadval
-        ls.lookahead = 'TK_eof'
+        ls.token, ls.tokenval = ls.tklookahead, ls.tklookaheadval
+        ls.tklookahead = 'TK_eof'
     end
+end
+
+function Lexer.lookahead(ls)
+    assert(ls.tklookahead == 'TK_eof')
+    ls.tklookahead, ls.tklookaheadval = llex(ls)
+    return ls.tklookahead
 end
 
 local LexerClass = { __index = Lexer }
@@ -398,7 +404,7 @@ local function lex_setup(read_func)
     local header = false
     local ls = {
         n = 0,
-        lookahead = 'TK_eof', -- No look-ahead token.
+        tklookahead = 'TK_eof', -- No look-ahead token.
         linenumber = 1,
         lastline = 1,
         read_func = read_func,
