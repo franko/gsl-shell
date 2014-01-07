@@ -96,7 +96,31 @@ local function right_priority(op)
 end
 
 function expr_table(ast, ls)
-    error('NYI: expr_table')
+    local line = ls.linenumber
+    local hkeys, hvals = { }, { }
+    local avals = { }
+    lex_check(ls, '{')
+    while ls.token ~= '}' do
+        local key
+        if ls.token == '[' then
+            key = expr_bracket(ast, ls)
+            lex_check(ls, '=')
+        elseif (ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto')) and ls:lookahead() == '=' then
+            local name = lex_str(ls)
+            key = ast:expr_string(name)
+            lex_check(ls, '=')
+        end
+        local val = expr(ast, ls)
+        if key then
+            hkeys[#hkeys + 1] = key
+            hvals[#hvals + 1] = val
+        else
+            avals[#avals + 1] = val
+        end
+        if not lex_opt(ls, ',') and not lex_opt(ls, ';') then break end
+    end
+    lex_match(ls, '}', '{', line)
+    return ast:expr_table(avals, hkeys, hvals, line)
 end
 
 function expr_simple(ast, ls)
@@ -118,7 +142,7 @@ function expr_simple(ast, ls)
         end
         e = ast:expr_vararg()
     elseif tk == '{' then
-        e = expr_table(ast, ls)
+        return expr_table(ast, ls)
     elseif tk == 'TK_function' then
         ls:next()
         local args, body, proto = parse_body(ast, ls, ls.linenumber, false)

@@ -54,6 +54,10 @@ function AST.expr_nil(ast) return b.literal(nil) end
 function AST.expr_boolean(ast, v) return b.literal(v) end
 function AST.expr_vararg(ast) return b.vararg() end
 
+function AST.expr_table(ast, avals, hkeys, hvals, line)
+    return b.table(avals, hkeys, hvals, line)
+end
+
 function AST.expr_unop(ast, op, v)
     return b.unaryExpression(op == 'TK_not' and 'not' or op, v)
 end
