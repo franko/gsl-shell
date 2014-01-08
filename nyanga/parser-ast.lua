@@ -104,6 +104,18 @@ function AST.while_stmt(ast, cond, body, line)
     return b.whileStatement(cond, body, line)
 end
 
+function AST.for_stmt(ast, var, init, last, step, body, line)
+    local for_init = b.forInit(var, init, line)
+    return b.forStatement(for_init, last, step, body, line)
+end
+
+function AST.for_iter_stmt(ast, vars, exps, body, line)
+    local init = b.forNames(vars, line)
+    if #exps > 1 then error('NYI: iter with multiple expression list') end
+    local iter = exps[1]
+    return b.forInStatement(init, iter, body, line)
+end
+
 local ASTClass = { __index = AST }
 
 local function new_ast()

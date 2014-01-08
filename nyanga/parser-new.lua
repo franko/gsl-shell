@@ -246,6 +246,54 @@ local function parse_return(ast, ls, line)
     return ast:return_stmt(exps, line)
 end
 
+-- Parse numeric 'for'.
+local function parse_for_num(ast, ls, varname, line)
+    lex_check(ls, '=')
+    local init = expr(ast, ls)
+    lex_check(ls, ',')
+    local last = expr(ast, ls)
+    local step
+    if lex_opt(ls, ',') then
+        step = expr(ast, ls)
+    else
+        step = ast:expr_number(1)
+    end
+    lex_check(ls, 'TK_do')
+    local body = parse_block(ast, ls)
+    local var = ast:expr_var(varname)
+    return ast:for_stmt(var, init, last, step, body, line)
+end
+
+-- Parse 'for' iterator.
+local function parse_for_iter(ast, ls, indexname)
+    local vars = { ast:expr_var(indexname) }
+    while lex_opt(ls, ',') do
+        vars[#vars + 1] = ast:expr_var(lex_str(ls))
+    end
+    lex_check(ls, 'TK_in')
+    local line = ls.linenumber
+    local exps = expr_list(ast, ls)
+    lex_check(ls, 'TK_do')
+    local body = parse_block(ast, ls)
+    return ast:for_iter_stmt(vars, exps, body, line)
+end
+
+-- Parse 'for' statement.
+local function parse_for(ast, ls, line)
+    ls:next()  -- Skip 'for'.
+    local varname = lex_str(ls)  -- Get first variable name.
+    local stmt
+    if ls.token == '=' then
+        stmt = parse_for_num(ast, ls, varname, line)
+    elseif ls.token == ',' or ls.token == 'TK_in' then
+        stmt = parse_for_iter(ast, ls, varname)
+    else
+        err_syntax(ls, '"=" or "in" expected')
+    end
+    lex_match(ls, 'TK_end', 'TK_for', line)
+    return stmt
+end
+
 -- Parse function argument list.
 function parse_args(ast, ls)
     local line = ls.linenumber
@@ -390,6 +438,14 @@ local function parse_stmt(ast, ls)
         stmt = parse_if(ast, ls, line)
     elseif ls.token == 'TK_while' then
         stmt = parse_while(ast, ls, line)
+    elseif ls.token == 'TK_do' then
+        ls:next()
+        stmt = parse_block(ast, ls)
+        lex_match(ls, 'TK_end', 'TK_do', line)
+    elseif ls.token == 'TK_for' then
+        stmt = parse_for(ast, ls, line)
+    elseif ls.token == 'TK_repeat' then
+        stmt = parse_repeat(ast, ls, line)
     elseif ls.token == 'TK_function' then
         stmt = parse_func(ast, ls, line)
     elseif ls.token == 'TK_local' then
