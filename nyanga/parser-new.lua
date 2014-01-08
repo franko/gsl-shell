@@ -16,6 +16,10 @@ err_syntax
 err_token
 ]]
 
+local function checkcond(ls, cond, em)
+    if not cond then err_syntax(ls, em) end
+end
+
 local function token2str(tok)
     return string.match(tok, "^TK_") and string.sub(tok, 4) or tok
 end
@@ -226,6 +230,9 @@ function expr_primary(ast, ls)
     return v, vk
 end
 
+-- Parse statements ----------------------------------------------------
+
+
 -- Parse 'return' statement.
 local function parse_return(ast, ls, line)
     ls:next() -- Skip 'return'.
@@ -271,7 +278,7 @@ local function parse_assignment(ast, ls, vlist, var, vk)
         local n_var, n_vk = expr_primary(ast, ls)
         return parse_assignment(ast, ls, vlist, n_var, n_vk)
     else -- Parse RHS.
-        ls:check('=')
+        lex_check(ls, '=')
         local exps = expr_list(ast, ls)
         return ast:assignment_expr(vlist, exps, ls.linenumber)
     end
@@ -283,7 +290,7 @@ local function parse_call_assign(ast, ls)
         return ast:new_statement_expr(var, ls.linenumber)
     else
         local vlist = { }
-        return parse_assignment(ast, ls, vlist)
+        return parse_assignment(ast, ls, vlist, var, vk)
     end
 end
 
@@ -327,17 +334,17 @@ end
 
 local function parse_while(ast, ls, line)
     ls:next() -- Skip 'while'.
-    local cond = expr_cond(ast, ls)
-    ls:check()
-    local b = parse_block(ast, ls)
+    local cond = expr(ast, ls)
+    lex_check(ls, 'TK_do')
+    local body = parse_block(ast, ls)
     lex_match(ls, 'TK_end', 'TK_while', line)
-    return ast:new_while_statement(cond, b, ls.linenumber)
+    return ast:while_stmt(cond, body, ls.linenumber)
 end
 
 local function parse_then(ast, ls, branches)
     ls:next()
-    local cond = expr_cond(ast, ls)
-    ls:check('TK_then')
+    local cond = expr(ast, ls)
+    lex_check(ls, 'TK_then')
     local b = parse_block(ast, ls)
     branches[#branches + 1] = {cond, b}
 end
@@ -357,6 +364,25 @@ local function parse_if(ast, ls, line)
     return ast:if_stmt(branches, else_branch, line)
 end
 
+local function parse_label(ast, ls)
+    ls:next() -- Skip '::'.
+    local name = lex_str(ls)
+    lex_check(ls, 'TK_label')
+    -- Recursively parse trailing statements: labels and ';' (Lua 5.2 only).
+    while true do
+        if ls.token == 'TK_label' then
+            parse_label(ast, ls)
+        elseif LJ_52 and ls.token == ';' then
+            ls:next()
+        else
+            break
+        end
+    end
+    return ast:label_stmt(name, ls.linenumber)
+end
+
+-- Parse a statement. Returns the statement itself and a boolean that tells if it
+-- must be the last one in a chunk.
 local function parse_stmt(ast, ls)
     local line = ls.linenumber
     local stmt
@@ -364,15 +390,32 @@ local function parse_stmt(ast, ls)
         stmt = parse_if(ast, ls, line)
     elseif ls.token == 'TK_while' then
         stmt = parse_while(ast, ls, line)
-    elseif ls.token == 'TK_return' then
-        stmt = parse_return(ast, ls, line)
-        return stmt, true
     elseif ls.token == 'TK_function' then
         stmt = parse_func(ast, ls, line)
     elseif ls.token == 'TK_local' then
         ls:next()
         stmt = parse_local(ast, ls, line)
-    else
+    elseif ls.token == 'TK_return' then
+        stmt = parse_return(ast, ls, line)
+        return stmt, true -- Must be last.
+    elseif ls.token == 'TK_break' then
+        ls:next()
+        stmt = ast:break_stmt(line)
+        return stmt, not LJ_52 -- Must be last in Lua 5.1.
+    elseif LJ_52 and ls.token == ';' then
+        ls:next()
+        return parse_stmt(ast, ls)
+    elseif ls.token == 'TK_label' then
+        stmt = parse_label(ast, ls)
+    elseif ls.token == 'TK_goto' then
+        if LJ_52 or ls:lookahead() == 'TK_name' then
+            ls:next()
+            stmt = parse_goto(ast, ls)
+        end
+    end
+    -- If here 'stmt' is "nil" then ls.token didn't match any of the previous rules.
+    -- Fall back to call/assign rule.
+    if not stmt then
         stmt = parse_call_assign(ast, ls)
     end
     return stmt, false

@@ -1,4 +1,3 @@
-
 local b = require 'nyanga.builder'
 
 local AST = { }
@@ -82,6 +81,15 @@ function AST.return_stmt(ast, exps, line)
     return b.returnStatement(exps, line)
 end
 
+function AST.break_stmt(ast, line)
+    return b.breakStatement(line)
+end
+
+function AST.label_stmt(ast, name, line)
+    local label = ast:expr_var(name)
+    return labelStatement(label, line)
+end
+
 function AST.new_statement_expr(ast, var, line)
     return b.expressionStatement(var, line)
 end
@@ -92,7 +100,7 @@ function AST.if_stmt(ast, test, branches, else_branch, line)
     return b.ifStatement(test, cons, else_branch, line)
 end
 
-function AST.while_stmt(cond, body, line)
+function AST.while_stmt(ast, cond, body, line)
     return b.whileStatement(cond, body, line)
 end
 
