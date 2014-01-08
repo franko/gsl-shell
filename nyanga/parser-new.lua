@@ -294,6 +294,14 @@ local function parse_for(ast, ls, line)
     return stmt
 end
 
+local function parse_repeat(ast, ls, line)
+    ls:next() -- Skip 'repeat'.
+    local body = parse_block(ast, ls)
+    lex_match(ls, 'TK_until', 'TK_repeat', line)
+    local cond = expr(ast, ls) -- Parse condition.
+    return ast:repeat_stmt(cond, body, line)
+end
+
 -- Parse function argument list.
 function parse_args(ast, ls)
     local line = ls.linenumber
@@ -524,7 +532,7 @@ function parse_body(ast, ls, line, needself)
     local pfs = ls.fs
     ls.fs = new_proto(ls, false)
     local args = parse_params(ast, ls, needself)
-    local body = parse_chunk(ast, ls)
+    local body = parse_block(ast, ls)
     local proto = ls.fs
     if ls.token ~= 'TK_end' then
         lex_match(ls, 'TK_end', 'TK_function', line)

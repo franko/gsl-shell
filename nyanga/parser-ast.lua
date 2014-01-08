@@ -104,6 +104,10 @@ function AST.while_stmt(ast, cond, body, line)
     return b.whileStatement(cond, body, line)
 end
 
+function AST.repeat_stmt(ast, cond, body, line)
+    return b.repeatStatement(cond, body, line)
+end
+
 function AST.for_stmt(ast, var, init, last, step, body, line)
     local for_init = b.forInit(var, init, line)
     return b.forStatement(for_init, last, step, body, line)
