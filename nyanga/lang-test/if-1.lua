@@ -1,5 +1,5 @@
 local function foo(x, y)
-	if x == {} then
+	if x < y then
 		return x + y
 	else
 		return x - y

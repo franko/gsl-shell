@@ -94,7 +94,7 @@ function AST.new_statement_expr(ast, var, line)
     return b.expressionStatement(var, line)
 end
 
-function AST.if_stmt(ast, test, branches, else_branch, line)
+function AST.if_stmt(ast, branches, else_branch, line)
     if #branches > 1 then error('NYI') end
     local test, cons = branches[1][1], branches[1][2]
     return b.ifStatement(test, cons, else_branch, line)
