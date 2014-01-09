@@ -12,7 +12,7 @@ local lex_setup = require('nyanga.lexer')
 local parse = require('nyanga.parser-new')
 local AST = require('nyanga.parser-ast')
 
-local ls = lex_setup(DEBUG_READ_FILE)
+local ls = lex_setup(DEBUG_READ_FILE, filename)
 local ast = AST.New()
 local tree = parse(ast, ls)
 

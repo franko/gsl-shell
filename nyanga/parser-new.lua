@@ -20,10 +20,6 @@ local function checkcond(ls, cond, em)
     if not cond then err_syntax(ls, em) end
 end
 
-local function token2str(tok)
-    return string.match(tok, "^TK_") and string.sub(tok, 4) or tok
-end
-
 local function lex_opt(ls, tok)
 	if ls.token == tok then
 		ls:next()
@@ -42,7 +38,8 @@ local function lex_match(ls, what, who, line)
         if line == ls.linenumber then
             err_token(ls, what)
         else
-            lex_error(ls, ls.token, "%s expected (to close %s at line %d)", token2str(what), token2str(who), line)
+            local token2str = ls.token2str
+            ls:error(ls.token, "%s expected (to close %s at line %d)", token2str(what), token2str(who), line)
         end
     end
 end

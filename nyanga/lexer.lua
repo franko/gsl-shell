@@ -10,19 +10,35 @@ local ASCII_A, ASCII_Z = 65, 90
 local END_OF_STREAM = -1
 
 local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, ['elseif'] = 5, ['end'] = 6, ['false'] = 7, ['for'] = 8, ['function'] = 9, ['goto'] = 10, ['if'] = 11, ['in'] = 12, ['local'] = 13, ['nil'] = 14, ['not'] = 15, ['or'] = 16, ['repeat'] = 17, ['return'] = 18, ['then'] = 19, ['true'] = 20, ['until'] = 21, ['while'] = 22 }
---[[
-setmetatable(_G, {
-    __index = function(t, x) error('undefined global ' .. x) end,
-    __newindex = function(t, k, v) error('undefined global ' .. k) end
-    }
-)
---]]
 
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
-local function lex_error(ls, token, msg)
-    error("boum:" .. msg)
+local function token2str(tok)
+    return string.match(tok, "^TK_") and string.sub(tok, 4) or tok
+end
+
+local function error_throw(error_kind, msg)
+    error(string.format("%s: %s", error_kind, msg))
+end
+
+local function error_lex(chunkname, tok, line, em, ...)
+    local emfmt = string.format(em, ...)
+    local msg = string.format("%s:%d: %s", chunkname, line, emfmt)
+    if tok then
+        msg = string.format("%s near '%s'", msg, tok)
+    end
+    error_throw("syntax error", msg)
+end
+
+local function lex_error(ls, token, em, ...)
+    local tok
+    if token == 'TK_name' or token == 'TK_string' or token == 'TK_number' then
+        tok = ls.save_buf
+    elseif token then
+        tok = token2str(token)
+    end
+    error_lex(ls.chunkname, tok, ls.linenumber, em, ...)
 end
 
 local function char_isident(c)
@@ -380,7 +396,10 @@ local function llex(ls)
     end
 end
 
-local Lexer = { }
+local Lexer = {
+    token2str = token2str,
+    error = lex_error,
+}
 
 function Lexer.next(ls)
     ls.lastline = ls.linenumber
@@ -400,7 +419,7 @@ end
 
 local LexerClass = { __index = Lexer }
 
-local function lex_setup(read_func)
+local function lex_setup(read_func, chunkname)
     local header = false
     local ls = {
         n = 0,
@@ -408,6 +427,7 @@ local function lex_setup(read_func)
         linenumber = 1,
         lastline = 1,
         read_func = read_func,
+        chunkname = chunkname,
     }
     nextchar(ls)
     if ls.current == '\xef' and ls.n >= 2 and
