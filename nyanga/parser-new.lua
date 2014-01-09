@@ -1,20 +1,15 @@
 local LJ_52 = false
 
---[[
-setmetatable(_G, {
-    __index = function(t, x) error('undefined global ' .. x) end,
-    __newindex = function(t, k, v) error('undefined global ' .. k) end
-    }
-)
---]]
-
 local IsLastStatement = { TK_return = true, TK_break  = true }
 local EndOfBlock = { TK_else = true, TK_elseif = true, TK_end = true, TK_until = true, TK_eof = true }
 
---[[
-err_syntax
-err_token
-]]
+local function err_syntax(ls, em)
+  ls:error(ls.token, em)
+end
+
+local function err_token(ls, token)
+  ls:error(ls.token, "'%s' expected", ls.token2str(token))
+end
 
 local function checkcond(ls, cond, em)
     if not cond then err_syntax(ls, em) end
@@ -285,7 +280,7 @@ local function parse_for(ast, ls, line)
     elseif ls.token == ',' or ls.token == 'TK_in' then
         stmt = parse_for_iter(ast, ls, varname)
     else
-        err_syntax(ls, '"=" or "in" expected')
+        err_syntax(ls, "'=' or 'in' expected")
     end
     lex_match(ls, 'TK_end', 'TK_for', line)
     return stmt
