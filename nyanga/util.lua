@@ -11,7 +11,7 @@ local function dump(node, level)
    if type(node) == "number" then
       return node
    end
-   if type(node) == "boolean" then
+   if type(node) == "boolean" or type(node) == "cdata" then
       return tostring(node)
    end
    if type(node) == "function" then
