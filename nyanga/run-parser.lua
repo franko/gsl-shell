@@ -9,8 +9,8 @@ local function DEBUG_READ_FILE(ls)
 end
 
 local lex_setup = require('nyanga.lexer')
-local parse = require('nyanga.parser-new')
-local AST = require('nyanga.parser-ast')
+local parse = require('nyanga.parser')
+local AST = require('nyanga.lua-ast')
 
 local ls = lex_setup(DEBUG_READ_FILE, filename)
 local ast = AST.New()

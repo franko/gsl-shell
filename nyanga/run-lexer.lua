@@ -5,7 +5,7 @@ local function DEBUG_READ_FILE(ls)
     return debug_file:read(64)
 end
 
-local lex_setup = require('nyanga.lexer')
+local lex_setup = require('nyanga.lexer', filename)
 local ls = lex_setup(DEBUG_READ_FILE)
 repeat
 	ls:next()
