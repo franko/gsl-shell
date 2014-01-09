@@ -35,7 +35,7 @@ function AST.local_decl(ast, vlist, exps, line)
 end
 
 function AST.assignment_expr(ast, vlist, exps, line)
-    return b.assignmentExpression(vlist, exps, loc)
+    return b.assignmentExpression(vlist, exps, line)
 end
 
 function AST.expr_index(ast, v, index, line)
