@@ -2,15 +2,6 @@ local build = require('nyanga.syntax').build
 
 local AST = { }
 
-function AST.expr_function(ast, args, body, proto, line)
-   return build("FunctionExpression", {
-        body       = body,
-        params     = args,
-        vararg     = proto.varargs,
-        line       = line
-   })
-end
-
 local function func_decl(id, body, params, vararg, locald, line)
     return build("FunctionDeclaration", {
         id         = id,
@@ -26,6 +17,9 @@ local function func_expr(body, params, vararg, line)
     return build("FunctionExpression", { body = body, params = params, vararg = vararg, line = line })
 end
 
+function AST.expr_function(ast, args, body, proto, line)
+   return func_expr(body, args, proto.varargs, line)
+end
 
 function AST.local_function_decl(ast, name, args, body, proto, line)
     local id = ast:identifier(name)
