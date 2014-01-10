@@ -54,7 +54,7 @@ local parse_body, parse_block, parse_args
 
 local function var_lookup(ast, ls)
     local name = lex_str(ls)
-    return ast:expr_var(name)
+    return ast:identifier(name)
 end
 
 local function expr_field(ast, ls, v)
@@ -103,7 +103,7 @@ function expr_table(ast, ls)
             lex_check(ls, '=')
         elseif (ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto')) and ls:lookahead() == '=' then
             local name = lex_str(ls)
-            key = ast:expr_string(name)
+            key = ast:literal(name)
             lex_check(ls, '=')
         end
         local val = expr(ast, ls)
@@ -123,15 +123,15 @@ function expr_simple(ast, ls)
     local tk, val = ls.token, ls.tokenval
     local e
     if tk == 'TK_number' then
-        e = ast:expr_number(val)
+        e = ast:literal(val)
     elseif tk == 'TK_string' then
-        e = ast:expr_string(val)
+        e = ast:literal(val)
     elseif tk == 'TK_nil' then
-        e = ast:expr_nil()
+        e = ast:literal(nil)
     elseif tk == 'TK_true' then
-        e = ast:expr_boolean(true)
+        e = ast:literal(true)
     elseif tk == 'TK_false' then
-        e = ast:expr_boolean(false)
+        e = ast:literal(false)
     elseif tk == 'TK_dots' then
         if not ls.fs.varargs then
             err_syntax(ls, "cannot use \"...\" outside a vararg function")
@@ -248,19 +248,19 @@ local function parse_for_num(ast, ls, varname, line)
     if lex_opt(ls, ',') then
         step = expr(ast, ls)
     else
-        step = ast:expr_number(1)
+        step = ast:literal(1)
     end
     lex_check(ls, 'TK_do')
     local body = parse_block(ast, ls)
-    local var = ast:expr_var(varname)
+    local var = ast:identifier(varname)
     return ast:for_stmt(var, init, last, step, body, line)
 end
 
 -- Parse 'for' iterator.
 local function parse_for_iter(ast, ls, indexname)
-    local vars = { ast:expr_var(indexname) }
+    local vars = { ast:identifier(indexname) }
     while lex_opt(ls, ',') do
-        vars[#vars + 1] = ast:expr_var(lex_str(ls))
+        vars[#vars + 1] = ast:identifier(lex_str(ls))
     end
     lex_check(ls, 'TK_in')
     local line = ls.linenumber
@@ -312,7 +312,7 @@ function parse_args(ast, ls)
         args = { a }
     elseif ls.token == 'TK_string' then
         local a = lex_str(ls)
-        args = { ast:expr_string(a) }
+        args = { ast:literal(a) }
     else
         err_syntax(ls, "function arguments expected")
     end
@@ -481,7 +481,7 @@ local function parse_params(ast, ls, needself)
     lex_check(ls, '(')
     local args = { }
     if needself then
-        args[1] = ast:expr_var("self")
+        args[1] = ast:identifier("self")
     end
     if ls.token ~= ')' then
         repeat
