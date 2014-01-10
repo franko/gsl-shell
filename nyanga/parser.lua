@@ -164,7 +164,7 @@ function expr_unop(ast, ls)
     if tk == 'TK_not' or tk == '-' or tk == '#' then
         ls:next()
         local v = expr_binop(ast, ls, UNARY_PRIORITY)
-        return ast:expr_unop(tk, v)
+        return ast:expr_unop(ls.token2str(tk), v)
     else
         return expr_simple(ast, ls)
     end
@@ -177,7 +177,7 @@ function expr_binop(ast, ls, limit)
     while BinOp[op] and left_priority(BinOp[op]) > limit do
         ls:next()
         local v2, nextop = expr_binop(ast, ls, right_priority(BinOp[op]))
-        v = ast:expr_binop(op, v, v2)
+        v = ast:expr_binop(ls.token2str(op), v, v2)
         op = nextop
     end
     return v, op

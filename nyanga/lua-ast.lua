@@ -81,12 +81,12 @@ function AST.expr_table(ast, avals, hkeys, hvals, line)
 end
 
 function AST.expr_unop(ast, op, v)
-    op = (op == 'TK_not' and 'not' or op)
     return build("UnaryExpression", { operator = op, argument = v, line = line })
 end
 
 function AST.expr_binop(ast, op, expa, expb)
-    return build("BinaryExpression", { operator = op, left = expa, right = expb, line = line })
+    local k = (op == 'and' or op == 'or') and "LogicalExpression" or "BinaryExpression"
+    return build(k, { operator = op, left = expa, right = expb, line = line })
 end
 
 function AST.identifier(ast, s)
