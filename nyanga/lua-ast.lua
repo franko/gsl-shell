@@ -94,7 +94,8 @@ function AST.identifier(ast, s)
 end
 
 function AST.expr_method_call(ast, v, key, args)
-    error('NYI')
+    local m = ast:identifier(key)
+    return build("SendExpression", { receiver = v, method = m, arguments = args })
 end
 
 function AST.expr_function_call(ast, v, args)
