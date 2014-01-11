@@ -233,18 +233,17 @@ local syntax = {
       kind = "IfStatement",
       base = "Statement",
       properties = {
-         test = {
-            type = "node",
+         tests = {
+            type = "list",
             kind = "Expression",
-            optional = true,
          },
-         consequent = {
-            type = "node",
-            kind = "BlockStatement"
+         cons = {
+            type = "list",
+            kind = "BlockStatement",
          },
          alternate = {
             type = "node",
-            kind = { "BlockStatement", "IfStatement" },
+            kind = "BlockStatement",
             optional = true,
          }
       }

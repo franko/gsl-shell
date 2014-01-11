@@ -389,19 +389,18 @@ local function parse_while(ast, ls, line)
     return ast:while_stmt(cond, body, ls.linenumber)
 end
 
-local function parse_then(ast, ls, branches)
+local function parse_then(ast, ls, tests, blocks)
     ls:next()
-    local cond = expr(ast, ls)
+    tests[#tests+1] = expr(ast, ls)
     lex_check(ls, 'TK_then')
-    local b = parse_block(ast, ls)
-    branches[#branches + 1] = {cond, b}
+    blocks[#blocks+1] = parse_block(ast, ls)
 end
 
 local function parse_if(ast, ls, line)
-    local branches = { }
-    parse_then(ast, ls, branches)
+    local tests, blocks = { }, { }
+    parse_then(ast, ls, tests, blocks)
     while ls.token == 'TK_elseif' do
-        parse_then(ast, ls, branches)
+        parse_then(ast, ls, tests, blocks)
     end
     local else_branch
     if ls.token == 'TK_else' then
@@ -409,7 +408,7 @@ local function parse_if(ast, ls, line)
         else_branch = parse_block(ast, ls)
     end
     lex_match(ls, 'TK_end', 'TK_if', line)
-    return ast:if_stmt(branches, else_branch, line)
+    return ast:if_stmt(tests, blocks, else_branch, line)
 end
 
 local function parse_label(ast, ls)

@@ -113,10 +113,8 @@ function AST.new_statement_expr(ast, expr, line)
     return build("ExpressionStatement", { expression = expr, line = line })
 end
 
-function AST.if_stmt(ast, branches, else_branch, line)
-    if #branches > 1 then error('NYI') end
-    local test, cons = branches[1][1], branches[1][2]
-    return build("IfStatement", { test = test, consequent = cons, alternate = else_branch, line = line })
+function AST.if_stmt(ast, tests, cons, else_branch, line)
+    return build("IfStatement", { tests = tests, cons = cons, alternate = else_branch, line = line })
 end
 
 function AST.while_stmt(ast, test, body, line)

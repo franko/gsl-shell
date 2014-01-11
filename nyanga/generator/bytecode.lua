@@ -503,18 +503,31 @@ end
 
 function StatementRule:IfStatement(node, root_exit)
    local free = self.ctx.freereg
-   local local_exit = node.alternate and util.genid()
+   local ncons = #node.tests
+   -- Count the number of branches, including the "else" branch.
+   local count = node.alternate and ncons + 1 or ncons
+   local local_exit = count > 1 and util.genid()
+   -- Set the exit point to the extern exit if given or set to local
+   -- exit (potentially false).
    local exit = root_exit or local_exit
-   local altl = util.genid()
-   if node.test then
-      self:test_emit(node.test, altl)
+
+   for i = 1, ncons do
+      local test, block = node.tests[i], node.cons[i]
+      local next_test = util.genid()
+      -- Set the exit point to jump on at the end of for this block.
+      -- If this is the last branch (count == 1) set to false.
+      local bexit = count > 1 and exit
+
+      self:test_emit(test, next_test)
+
+      self:block_enter()
+      self:emit(block, bexit)
+      self:block_leave(bexit)
+
+      self.ctx:here(next_test)
+      count = count - 1
    end
 
-   self:block_enter()
-   self:emit(node.consequent, exit)
-   self:block_leave(exit)
-
-   self.ctx:here(altl)
    if node.alternate then
       self:block_enter()
       self:emit(node.alternate)
