@@ -14,8 +14,14 @@ local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, [
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
+local LongBinOp = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=' }
+
 local function token2str(tok)
-    return string.match(tok, "^TK_") and string.sub(tok, 4) or tok
+    if string.match(tok, "^TK_") then
+        return LongBinOp[tok] or string.sub(tok, 4)
+    else
+        return tok
+    end
 end
 
 local function error_throw(error_kind, msg)
