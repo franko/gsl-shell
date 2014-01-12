@@ -305,6 +305,8 @@ function parse_args(ast, ls)
         ls:next()
         if ls.token ~= ')' then -- Not f().
             args = expr_list(ast, ls)
+        else
+            args = { }
         end
         lex_match(ls, ')', '(', line)
     elseif ls.token == '{' then
