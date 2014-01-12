@@ -27,12 +27,8 @@ function AST.local_function_decl(ast, name, args, body, proto, line)
 end
 
 function AST.function_decl(ast, path, args, body, proto, line)
-    if path.kind == 'Identifier' then
-        return func_decl(path, body, args, proto.varargs, false, line)
-    else
-        local fn = func_expr(body, args, proto.varargs, line)
-        return build("AssignmentExpression", { left = { path }, right = { fn }, line = line })
-    end
+    local fn = func_expr(body, args, proto.varargs, line)
+    return build("AssignmentExpression", { left = { path }, right = { fn }, line = line })
 end
 
 function AST.chunk(ast, body, line)
