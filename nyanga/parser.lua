@@ -491,6 +491,8 @@ local function parse_params(ast, ls, needself)
             elseif ls.token == 'TK_dots' then
                 ls:next()
                 ls.fs.varargs = true
+                args[#args + 1] = ast:expr_vararg()
+                break
             else
                 err_syntax(ls, "<name> or \"...\" expected")
             end
