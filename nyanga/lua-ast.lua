@@ -74,9 +74,29 @@ function AST.expr_unop(ast, op, v)
     return build("UnaryExpression", { operator = op, argument = v, line = line })
 end
 
+local function concat_append(ts, node)
+    local n = #ts
+    if node.kind == "ConcatenateExpression" then
+        for k = 1, #node.terms do ts[n + k] = node.terms[k] end
+    else
+        ts[n + 1] = node
+    end
+end
+
 function AST.expr_binop(ast, op, expa, expb)
-    local k = (op == 'and' or op == 'or') and "LogicalExpression" or "BinaryExpression"
-    return build(k, { operator = op, left = expa, right = expb, line = line })
+    local binop_body = (op ~= '..' and { operator = op, left = expa, right = expb, line = line })
+    if binop_body then
+        if op == 'and' or op == 'or' then
+            return build("LogicalExpression", binop_body)
+        else
+            return build("BinaryExpression", binop_body)
+        end
+    else
+        local terms = { }
+        concat_append(terms, expa)
+        concat_append(terms, expb)
+        return build("ConcatenateExpression", { terms = terms, line = expa.line })
+    end
 end
 
 function AST.identifier(ast, s)
