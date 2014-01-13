@@ -313,7 +313,8 @@ function parse_args(ast, ls)
         local a = expr_table(ast, ls)
         args = { a }
     elseif ls.token == 'TK_string' then
-        local a = lex_str(ls)
+        local a = ls.tokenval
+        ls:next()
         args = { ast:literal(a) }
     else
         err_syntax(ls, "function arguments expected")
