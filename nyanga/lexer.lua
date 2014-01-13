@@ -14,7 +14,7 @@ local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, [
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
-local LongBinOp = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=' }
+local LongBinOp = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
 
 local function token2str(tok)
     if string.match(tok, "^TK_") then
@@ -24,17 +24,13 @@ local function token2str(tok)
     end
 end
 
-local function error_throw(error_kind, msg)
-    error(string.format("%s: %s", error_kind, msg))
-end
-
 local function error_lex(chunkname, tok, line, em, ...)
     local emfmt = string.format(em, ...)
     local msg = string.format("%s:%d: %s", chunkname, line, emfmt)
     if tok then
         msg = string.format("%s near '%s'", msg, tok)
     end
-    error_throw("syntax error", msg)
+    error(msg)
 end
 
 local function lex_error(ls, token, em, ...)
