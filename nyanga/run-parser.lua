@@ -26,5 +26,7 @@ local jbc = require("jit.bc")
 local fn = assert(loadstring(luacode))
 jbc.dump(fn, nil, true)
 
+if arg and #arg > 0 then table.remove(arg, 1) end
+
 -- rune the code
 return fn()
