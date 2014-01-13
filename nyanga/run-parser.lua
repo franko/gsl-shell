@@ -19,7 +19,7 @@ local tree = parse(ast, ls)
 -- print the AST tree
 print(util.dump(tree))
 
-local luacode = generator.bytecode(tree, filename)
+local luacode = generator(tree, filename)
 
 -- dump the bytecode
 local jbc = require("jit.bc")
