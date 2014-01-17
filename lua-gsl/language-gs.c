@@ -11,7 +11,11 @@
 #include "luaconf.h"
 #include "str.h"
 
-#define LANG_INIT_LUA_FILE "lang-init.lua"
+#define LANG_INIT_FILENAME "lang-init.lua"
+
+/* The position in the Lua stack of the loadstring and loadfile functions. */
+#define MY_LOADSTRING_INDEX 1
+#define MY_LOADFILE_INDEX 2
 
 lua_State *parser_L;
 
@@ -22,35 +26,46 @@ language_init() {
         fatal_exception("cannot create state: not enough memory");
     }
     luaL_openlibs(parser_L);
-    int status = luaL_loadfile(parser_L, LANG_INIT_LUA_FILE);
+    int status = luaL_loadfile(parser_L, LANG_INIT_FILENAME);
     if (status != 0) {
-        fatal_exception("unable to load \"" LANG_INIT_LUA_FILE "\"");
+        fatal_exception("unable to load \"" LANG_INIT_FILENAME "\"");
     }
-    int load_status = lua_pcall(parser_L, 0, 1, 0);
-    if (!lua_isfunction(parser_L, -1)) {
+    int load_status = lua_pcall(parser_L, 0, 2, 0);
+    if (!lua_isfunction(parser_L, MY_LOADSTRING_INDEX) ||
+        !lua_isfunction(parser_L, MY_LOADFILE_INDEX)) {
         load_status = LUA_ERRRUN;
     }
     return load_status;
 }
 
+static int error_xtransfer(lua_State *L)
+{
+    const char *msg = lua_tostring(parser_L, -1);
+    lua_pushstring(L, msg);
+    lua_pop(parser_L, 1);
+    return LUA_ERRSYNTAX;
+}
+
+static int loadbuffer_xtransfer(lua_State *L, const char *filename)
+{
+    size_t code_len;
+    const char *code = lua_tolstring(parser_L, -1, &code_len);
+    int status = luaL_loadbuffer(L, code, code_len, filename);
+    lua_pop(parser_L, 1);
+    return status;
+}
+
 int
 language_loadbuffer(lua_State *L, const char *buff, size_t sz, const char *name)
 {
-    lua_pushvalue(parser_L, -1);
+    lua_pushvalue(parser_L, MY_LOADSTRING_INDEX);
     lua_pushlstring(parser_L, buff, sz);
     lua_pushstring(parser_L, name);
     int parse_status = lua_pcall(parser_L, 2, 1, 0);
     if (parse_status != 0) {
-        const char *msg = lua_tostring(parser_L, -1);
-        lua_pushstring(L, msg);
-        lua_pop(parser_L, 1);
-        return LUA_ERRSYNTAX;
+        return error_xtransfer(L);
     }
-    size_t code_len;
-    const char *code = lua_tolstring(parser_L, -1, &code_len);
-    int status = luaL_loadbuffer(L, code, code_len, name);
-    lua_pop(parser_L, 1);
-    return status;
+    return loadbuffer_xtransfer(L, name);
 }
 
 static void l_message(const char *pname, const char *msg)
@@ -66,73 +81,20 @@ int language_report(lua_State *_L, int status)
     if (status && !lua_isnil(L, -1)) {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        l_message("<Nyanga parser>", msg);
+        l_message("<GSL Shell parser>", msg);
         lua_pop(L, 1);
     }
     return status;
 }
 
-static char *
-read_file_content(lua_State *L, const char *filename, long *plength)
-{
-    FILE *f = fopen(filename, "rb");
-    if (f == NULL) {
-        lua_pushfstring(L, "cannot open %s: %s", filename, strerror(errno));
-        return NULL;
-    }
-    fseek(f, 0, SEEK_END);
-    *plength = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char *buffer = malloc(*plength);
-    if (buffer == NULL) {
-        lua_pushfstring(L, "not enough memory to open: %s", filename);
-        return NULL;
-    }
-    fread(buffer, 1, *plength, f);
-    fclose(f);
-    return buffer;
-}
-
-static char *
-read_stdin(lua_State *L, long *plength)
-{
-#define inputBufSize 1024
-    char *msg = NULL;
-    size_t len = 0;
-    char buffer[inputBufSize];
-    size_t br = 0;
-
-    while ((br = fread(buffer, sizeof(buffer), 1, stdin)) > 0) {
-        char *tmp = realloc(msg, len + br);
-        if (tmp) {
-            msg = tmp;
-            memmove(&msg[len], buffer, br);
-            len += br;
-        } else {
-            lua_pushstring(L, "out of memory");
-            free(msg);
-            return NULL;
-        }
-    }
-    *plength = (long)len;
-    return msg;
-}
-
 int
 language_loadfile(lua_State *L, const char *filename)
 {
-    char *buffer;
-    long length;
-    if (filename != NULL) {
-        buffer = read_file_content(L, filename, &length);
-        if (!buffer) {
-            return LUA_ERRFILE;
-        }
-    } else {
-        buffer = read_stdin(L, &length);
+    lua_pushvalue(parser_L, MY_LOADFILE_INDEX);
+    lua_pushstring(parser_L, filename);
+    int parse_status = lua_pcall(parser_L, 1, 1, 0);
+    if (parse_status != 0) {
+        return error_xtransfer(L);
     }
-
-    int status = language_loadbuffer(L, buffer, length, filename);
-    free(buffer);
-    return status;
+    return loadbuffer_xtransfer(L, filename);
 }
