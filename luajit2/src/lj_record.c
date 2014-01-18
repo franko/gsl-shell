@@ -1,6 +1,6 @@
 /*
 ** Trace recorder (bytecode -> SSA IR).
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_record_c
@@ -722,6 +722,8 @@ void lj_record_ret(jit_State *J, BCReg rbase, ptrdiff_t gotresults)
     ptrdiff_t nresults = bc_b(callins) ? (ptrdiff_t)bc_b(callins)-1 :gotresults;
     BCReg cbase = bc_a(callins);
     GCproto *pt = funcproto(frame_func(frame - (cbase+1)));
+    if ((pt->flags & PROTO_NOJIT))
+      lj_trace_err(J, LJ_TRERR_CJITOFF);
     if (J->framedepth == 0 && J->pt && frame == J->L->base - 1) {
       if (check_downrec_unroll(J, pt)) {
 	J->maxslot = (BCReg)(rbase + gotresults);
@@ -1387,6 +1389,7 @@ static void check_call_unroll(jit_State *J, TraceNo lnk)
   int32_t count = 0;
   if ((J->pt->flags & PROTO_VARARG)) depth--;  /* Vararg frame still missing. */
   for (; depth > 0; depth--) {  /* Count frames with same prototype. */
+    if (frame_iscont(frame)) depth--;
     frame = frame_prev(frame);
     if (mref(frame_func(frame)->l.pc, void) == pc)
       count++;

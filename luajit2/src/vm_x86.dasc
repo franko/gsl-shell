@@ -1,6 +1,6 @@
 |// Low-level VM code for x86 CPUs.
 |// Bytecode interpreter, fast functions and helper functions.
-|// Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+|// Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 |
 |.if P64
 |.arch x64
@@ -4652,7 +4652,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
     |
     |2:  // Upvalue is black. Check if new value is collectable and white.
     |  sub RD, LJ_TISGCV
-    |  cmp RD, LJ_TISNUM - LJ_TISGCV			// tvisgcv(v)
+    |  cmp RD, LJ_TNUMX - LJ_TISGCV			// tvisgcv(v)
     |  jbe <1
     |  test byte GCOBJ:RA->gch.marked, LJ_GC_WHITES	// iswhite(v)
     |  jz <1
