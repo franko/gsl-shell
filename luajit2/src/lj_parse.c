@@ -1833,15 +1833,14 @@ static void expr_table(LexState *ls, ExpDesc *e)
 }
 
 /* Parse function parameters. */
-static BCReg parse_params_ext(LexState *ls, int needself,
-                              int start_token, int end_token)
+static BCReg parse_params(LexState *ls, int needself)
 {
   FuncState *fs = ls->fs;
   BCReg nparams = 0;
-  lex_check(ls, start_token);
+  lex_check(ls, '(');
   if (needself)
     var_new_lit(ls, nparams++, "self");
-  if (ls->token != end_token) {
+  if (ls->token != ')') {
     do {
       if (ls->token == TK_name || (!LJ_52 && ls->token == TK_goto)) {
 	var_new(ls, nparams++, lex_str(ls));
@@ -1857,13 +1856,8 @@ static BCReg parse_params_ext(LexState *ls, int needself,
   var_add(ls, nparams);
   lua_assert(fs->nactvar == nparams);
   bcreg_reserve(fs, nparams);
-  lex_check(ls, end_token);
+  lex_check(ls, ')');
   return nparams;
-}
-
-static BCReg parse_params(LexState *ls, int needself)
-{
-  return parse_params_ext(ls, needself, '(', ')');
 }
 
 /* Forward declaration. */
@@ -1901,50 +1895,6 @@ static void parse_body(LexState *ls, ExpDesc *e, int needself, BCLine line)
   }
   lj_lex_next(ls);
 }
-
-#ifdef GSH_SHORT_FSYNTAX
-static void parse_simple_body (LexState *ls, ExpDesc *fne, int line) {
-  FuncState fs, *pfs = ls->fs;
-  FuncScope bl;
-  BCReg kidx;
-  BCLine lastline;
-  GCproto *pt;
-  ptrdiff_t oldbase = pfs->bcbase - ls->bcstack;
-  BCIns ins;
-  ExpDesc e;
-
-  fs_init(ls, &fs);
-  fscope_begin(&fs, &bl, 0);
-  fs.linedefined = line;
-  fs.numparams = (uint8_t)parse_params_ext(ls, 0, '|', '|');
-  fs.bcbase = pfs->bcbase + pfs->pc;
-  fs.bclim = pfs->bclim - pfs->pc;
-  bcemit_AD(&fs, BC_FUNCF, 0, 0);  /* Placeholder. */
-
-  fs.flags |= PROTO_HAS_RETURN;
-  expr(ls, &e);
-  ins = BCINS_AD(BC_RET1, expr_toanyreg(&fs, &e), 2);
-  if (fs.flags & PROTO_CHILD)
-    bcemit_AJ(&fs, BC_UCLO, 0, 0);  /* May need to close upvalues first. */
-  bcemit_INS(&fs, ins);
-
-  lastline = ls->linenumber;
-  pt = fs_finish(ls, lastline);
-  pfs->bcbase = ls->bcstack + oldbase;  /* May have been reallocated. */
-  pfs->bclim = (BCPos)(ls->sizebcstack - oldbase);
-  /* Store new prototype in the constant array of the parent. */
-  kidx = const_gc(pfs, obj2gco(pt), LJ_TPROTO);
-  expr_init(fne, VRELOCABLE, bcemit_AD(pfs, BC_FNEW, 0, kidx));
-#if LJ_HASFFI
-  pfs->flags |= (fs.flags & PROTO_FFI);
-#endif
-  if (!(pfs->flags & PROTO_CHILD)) {
-    if (pfs->flags & PROTO_HAS_RETURN)
-      pfs->flags |= PROTO_FIXUP_RETURN;
-    pfs->flags |= PROTO_CHILD;
-  }
-}
-#endif
 
 /* Parse expression list. Last expression is left open. */
 static BCReg expr_list(LexState *ls, ExpDesc *v)
@@ -2083,12 +2033,6 @@ static void expr_simple(LexState *ls, ExpDesc *v)
     lj_lex_next(ls);
     parse_body(ls, v, 0, ls->linenumber);
     return;
-#ifdef GSH_SHORT_FSYNTAX
-    case '|': {
-      parse_simple_body(ls, v, ls->linenumber);
-      return;
-    }
-#endif
   default:
     expr_primary(ls, v);
     return;

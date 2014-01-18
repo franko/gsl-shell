@@ -12,19 +12,16 @@
 #include <limits.h>
 #include <stddef.h>
 
-#define QUOTE_(x) #x
-#define QUOTE(x) QUOTE_(x)
-
 /* Default path for loading Lua and C modules with require(). */
 #if defined(_WIN32)
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
 */
-#define LUA_LDIR	"!\\" QUOTE(PACKAGE_NAME) "\\"
-#define LUA_CDIR	"!\\" QUOTE(PACKAGE_NAME) "\\"
+#define LUA_LDIR	"!\\lua\\"
+#define LUA_CDIR	"!\\"
 #define LUA_PATH_DEFAULT \
-  ".\\?.lua;" ".\\templates\\?.lua.in;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;" LUA_LDIR"templates\\?.lua.in"
+  ".\\?.lua;" LUA_LDIR"?.lua;" LUA_LDIR"?\\init.lua;"
 #define LUA_CPATH_DEFAULT \
   ".\\?.dll;" LUA_CDIR"?.dll;" LUA_CDIR"loadall.dll"
 #else
@@ -38,9 +35,8 @@
 #ifndef LUA_LMULTILIB
 #define LUA_LMULTILIB	"lib"
 #endif
-#define LUA_LROOT	QUOTE(SYSTEM_DIR)
-#define LUA_VERSION_DIR QUOTE(PACKAGE_NAME) "/" QUOTE(PACKAGE_VERSION)
-#define LUA_LUADIR	"/" LUA_VERSION_DIR "/"
+#define LUA_LROOT	"/usr/local"
+#define LUA_LUADIR	"/lua/5.1/"
 #define LUA_LJDIR	"/luajit-2.0.2/"
 
 #ifdef LUA_ROOT
@@ -58,11 +54,11 @@
 #define LUA_JPATH	";" LUA_JROOT "/share" LUA_LJDIR "?.lua"
 #define LUA_LLDIR	LUA_LROOT "/share" LUA_LUADIR
 #define LUA_LCDIR	LUA_LROOT "/" LUA_LMULTILIB LUA_LUADIR
-#define LUA_LLPATH	";" LUA_LLDIR "?.lua;" LUA_LLDIR "?/init.lua;" LUA_LLDIR"templates/?.lua.in"
+#define LUA_LLPATH	";" LUA_LLDIR "?.lua;" LUA_LLDIR "?/init.lua"
 #define LUA_LCPATH1	";" LUA_LCDIR "?.so"
 #define LUA_LCPATH2	";" LUA_LCDIR "loadall.so"
 
-#define LUA_PATH_DEFAULT	"./?.lua;" "./templates/?.lua.in;" LUA_JPATH LUA_LLPATH LUA_RLPATH
+#define LUA_PATH_DEFAULT	"./?.lua" LUA_JPATH LUA_LLPATH LUA_RLPATH
 #define LUA_CPATH_DEFAULT	"./?.so" LUA_LCPATH1 LUA_RCPATH LUA_LCPATH2
 #endif
 
