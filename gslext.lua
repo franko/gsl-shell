@@ -1,5 +1,6 @@
 -- load initialization files for GSL Shell
 
+require('init')
 require('iter')
 require('matrix')
 require('eigen')

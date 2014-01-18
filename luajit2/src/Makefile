@@ -34,7 +34,7 @@ CC= gcc
 # to slow down the C part by not omitting it. Debugging, tracebacks and
 # unwinding are not affected -- the assembler part has frame unwind
 # information and GCC emits it where needed (x64) or with -g (see CCDEBUG).
-CCOPT= -O2 -fomit-frame-pointer -ffast-math
+CCOPT= -O2 -fomit-frame-pointer
 # Use this if you want to generate a smaller binary (but it's slower):
 #CCOPT= -Os -fomit-frame-pointer
 # Note: it's no longer recommended to use -O3 with GCC 4.x.
@@ -72,7 +72,7 @@ CCWARN= -Wall
 # as dynamic mode.
 #
 # Mixed mode creates a static + dynamic library and a statically linked luajit.
-#BUILDMODE= mixed
+BUILDMODE= mixed
 #
 # Static mode creates a static library and a statically linked luajit.
 #BUILDMODE= static
@@ -148,18 +148,9 @@ XCFLAGS=
 # You probably don't need to change anything below this line!
 ##############################################################################
 
-include ../../makeconfig
-
-GSH_LIBDIR = ../../.libs
-GSH_DLL_LIBDIR = ../..
-
-ifeq ($(strip $(LUA_BUILD)), no)
-  XCFLAGS += -DGSH_SHORT_FSYNTAX -DGSL_SHELL -D_REENTRANT -DPACKAGE_NAME=gsl-shell -DPACKAGE_VERSION=2.3
-else
-  XCFLAGS += -DPACKAGE_NAME=lua -DPACKAGE_VERSION=5.1
-endif
-
-XCFLAGS += -DSYSTEM_DIR=$(PREFIX)
+GSH_DIR = ../..
+GSH_LIBDIR = $(GSH_DIR)/.libs
+GSH_DLL_LIBDIR = $(GSH_DIR)
 
 ##############################################################################
 # Flags and options for host and target.
