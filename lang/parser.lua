@@ -547,7 +547,11 @@ local function parse(ast, ls)
     local line = ls.linenumber
     ls:next()
     local args = { ast:expr_vararg(ast) }
-    return parse_chunk(ast, ls, true)
+    local chunk = parse_chunk(ast, ls, true)
+    if ls.token ~= 'TK_eof' then
+        err_token(ls, 'TK_eof')
+    end
+    return chunk
 end
 
 return parse
