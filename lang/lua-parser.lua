@@ -50,7 +50,7 @@ end
 
 local expr_primary, expr, expr_unop, expr_binop, expr_simple
 local expr_list, expr_table
-local parse_body, parse_simple_body, parse_block, parse_args
+local parse_body, parse_block, parse_args
 
 local function var_lookup(ast, ls)
     local name = lex_str(ls)
@@ -142,9 +142,6 @@ function expr_simple(ast, ls)
     elseif tk == 'TK_function' then
         ls:next()
         local args, body, proto = parse_body(ast, ls, ls.linenumber, false)
-        return ast:expr_function(args, body, proto, ls.linenumber)
-    elseif tk == '|' then
-        local args, body, proto = parse_simple_body(ast, ls, ls.linenumber)
         return ast:expr_function(args, body, proto, ls.linenumber)
     else
         return expr_primary(ast, ls)
@@ -482,13 +479,13 @@ local function parse_stmt(ast, ls)
     return stmt, false
 end
 
-local function parse_params_delim(ast, ls, needself, start_token, end_token)
-    lex_check(ls, start_token)
+local function parse_params(ast, ls, needself)
+    lex_check(ls, '(')
     local args = { }
     if needself then
         args[1] = ast:identifier("self")
     end
-    if ls.token ~= end_token then
+    if ls.token ~= ')' then
         repeat
             if ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
                 args[#args+1] = var_lookup(ast, ls)
@@ -502,12 +499,8 @@ local function parse_params_delim(ast, ls, needself, start_token, end_token)
             end
         until not lex_opt(ls, ',')
     end
-    lex_check(ls, end_token)
+    lex_check(ls, ')')
     return args
-end
-
-local function parse_params(ast, ls, needself)
-    return parse_params_delim(ast, ls, needself, '(', ')')
 end
 
 local function new_proto(ls, varargs)
@@ -541,18 +534,6 @@ function parse_body(ast, ls, line, needself)
         lex_match(ls, 'TK_end', 'TK_function', line)
     end
     ls:next()
-    ls.fs = pfs
-    return args, body, proto
-end
-
-function parse_simple_body(ast, ls, line)
-    local pfs = ls.fs
-    local proto = new_proto(ls, false)
-    ls.fs = proto
-    local args = parse_params_delim(ast, ls, false, '|', '|')
-    local exp = expr(ast, ls)
-    local retstmt = ast:return_stmt({ exp }, line)
-    local body = ast:block_stmt({ retstmt }, line)
     ls.fs = pfs
     return args, body, proto
 end
