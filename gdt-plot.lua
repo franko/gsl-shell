@@ -48,11 +48,13 @@ local function f_var_fini(accu)
     if n > 0 then return Q / n end
 end
 
+local zero_init = function() return {0, 0, 0} end
+
 local stat_lookup = {
     mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
-    stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
-    stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
-    var     = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_var_fini},
+    stddev  = {f = f_stddev, f0 = zero_init, fini = f_stddev_fini},
+    stddevp = {f = f_stddev, f0 = zero_init, fini = f_stddevp_fini},
+    var     = {f = f_stddev, f0 = zero_init, fini = f_var_fini},
     sum     = {f = function(accu, x, n) return accu + x end},
     count   = {f = function(accu, x, n) return n end},
 }
