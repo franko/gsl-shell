@@ -47,7 +47,7 @@ local function linfit_rank(A, b)
     end
     gsl.gsl_vector_free(s)
 
-    local V1t = matrix.new(r, n, |i,j| V:get(j, i))
+    local V1t = matrix.new(r, n, function(i,j) return V:get(j, i) end)
     local Q, R, tau, p = QRPT(V1t)
 
     -- compute the matrix K = A' A taking into account permutation "p".
