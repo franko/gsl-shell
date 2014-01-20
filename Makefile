@@ -95,7 +95,7 @@ ifeq ($(BUILDMODE),dynamic)
   LIBS += -L$(GSH_DLL_LIBDIR) -l$(LUAJIT_DLL)
 endif
 
-LUAGSL_LIBS += $(GSH_LIBDIR)/libluagsl.a $(GSH_LIBDIR)/libgdt.a
+LUAGSL_LIBS += $(GSH_LIBDIR)/libluagsl.a $(GSH_LIBDIR)/liblang.a $(GSH_LIBDIR)/libgdt.a
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o)
 DEP_FILES := $(C_SRC_FILES:%.c=.deps/%.P)
@@ -115,7 +115,7 @@ endif
 
 LIBS += $(GSL_LIBS) -lm
 
-SUBDIRS := $(LUADIR) lua-gsl agg-plot gdt
+SUBDIRS := $(LUADIR) lang lua-gsl agg-plot gdt
 FOXGUI_DIR := fox-gui
 
 FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a

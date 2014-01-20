@@ -30,18 +30,18 @@ LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 CFLAGS += $(LUA_CFLAGS)
 
-LUAGSL_SRC_FILES = lua-properties.c gs-types.c lua-utils.c lua-gsl.c str.c fatal.c
-LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
-DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)
+LANG_SRC_FILES = language-gs.c lua-language-gs.c
+LANG_OBJ_FILES := $(LANG_SRC_FILES:%.c=%.o)
+DEP_FILES := $(LANG_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-TARGETS = libluagsl.a
+TARGETS = liblang.a
 
 all: $(TARGETS)
-	@$(HOST_CP) libluagsl.a $(GSH_LIBDIR)
+	@$(HOST_CP) liblang.a $(GSH_LIBDIR)
 
-libluagsl.a: $(LUAGSL_OBJ_FILES)
+liblang.a: $(LANG_OBJ_FILES)
 	@echo Archive $@
 	@$(AR) $@ $?
 	@$(RANLIB) $@
@@ -51,6 +51,6 @@ include $(GSH_BASE_DIR)/makerules
 .PHONY: clean all
 
 clean:
-	$(HOST_RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+	$(HOST_RM) *.o *.a *.so *.dll $(TARGETS)
 
 -include $(DEP_FILES)

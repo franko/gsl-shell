@@ -43,8 +43,8 @@
 #include "lua-graph.h"
 #include "window_hooks.h"
 #include "window.h"
-#include "language.h"
-#include "lua-language-gs.h"
+#include "lang/language.h"
+#include "lang/lua-language-gs.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>

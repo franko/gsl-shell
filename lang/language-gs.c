@@ -7,11 +7,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include "language.h"
-#include "fatal.h"
-#include "luaconf.h"
-#include "str.h"
 
-#define LANG_INIT_FILENAME "lang-init.lua"
+#define LANG_INIT_FILENAME "lang/init.lua"
 
 /* The position in the Lua stack of the loadstring and loadfile functions. */
 #define MY_LOADSTRING_INDEX 1
@@ -23,12 +20,14 @@ int
 language_init() {
     parser_L = lua_open();
       if (unlikely(parser_L == NULL)) {
-        fatal_exception("cannot create state: not enough memory");
+        lua_pushstring(parser_L, "cannot create state: not enough memory");
+        return LUA_ERRRUN;
     }
     luaL_openlibs(parser_L);
     int status = luaL_loadfile(parser_L, LANG_INIT_FILENAME);
-    if (status != 0) {
-        fatal_exception("unable to load \"" LANG_INIT_FILENAME "\"");
+    if (unlikely(status != 0)) {
+        lua_pushstring(parser_L, "unable to load \"" LANG_INIT_FILENAME "\"");
+        return LUA_ERRRUN;
     }
     int load_status = lua_pcall(parser_L, 0, 2, 0);
     if (!lua_isfunction(parser_L, MY_LOADSTRING_INDEX) ||
