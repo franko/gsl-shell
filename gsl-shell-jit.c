@@ -44,6 +44,7 @@
 #include "window_hooks.h"
 #include "window.h"
 #include "language.h"
+#include "lua-language-gs.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -117,6 +118,7 @@ static void gsl_shell_openlibs(lua_State *L)
 {
     luaopen_gsl (L);
     register_graph (L);
+    luaopen_language(L);
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
