@@ -1,6 +1,8 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
+#include "lua.h"
+
 #include "defs.h"
 
 __BEGIN_DECLS
