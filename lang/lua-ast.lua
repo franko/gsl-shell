@@ -53,6 +53,10 @@ function AST.expr_index(ast, v, index, line)
     return build("MemberExpression", { object = v, property = index, computed = true, line = line })
 end
 
+function AST.expr_index_dual(ast, v, row, col, line)
+    return build("MatrixElementExpression", { object = v, row = row, column = col, line = line })
+end
+
 function AST.expr_property(ast, v, prop, line)
     local index = ast:identifier(prop)
     return build("MemberExpression", { object = v, property = index, computed = false, line = line })
