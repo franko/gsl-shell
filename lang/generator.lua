@@ -235,6 +235,15 @@ function ExpressionRule:MemberExpression(node, base)
    return base
 end
 
+function ExpressionRule:MatrixElementExpression(node, base)
+   local free = self.ctx.freereg
+   local lhs = self:lhs_expr_emit(node)
+   self.ctx.freereg = free
+   base = base or self.ctx:nextreg()
+   self.ctx:op_tget(base, lhs.target, lhs.key_type, lhs.key)
+   return base
+end
+
 function ExpressionRule:FunctionExpression(node, dest)
    local free = self.ctx.freereg
    local func = self.ctx:child()
@@ -946,6 +955,23 @@ local function generate(tree, name)
             key_type, key = 'S', self.ctx:const(node.property.name)
          end
          return { tag = 'member', target = target, key = key, key_type = key_type }
+      elseif node.kind == 'MatrixElementExpression' then
+         local obj = self:expr_emit(node.object)
+         local target = self.ctx:nextreg()
+         self.ctx:op_tget(target, obj, 'S', self.ctx:const('data'))
+         local index = self.ctx:nextreg()
+         self.ctx:op_tget(index, obj, 'S', self.ctx:const('tda'))
+         local row = self.ctx:nextreg()
+         self:expr_emit(node.row, row)
+         self.ctx:op_infix('SUB', row, 'V', row, 'N', self.ctx:const(1))
+         self.ctx:op_infix('MUL', index, 'V', index, 'V', row)
+         self.ctx:setreg(index + 1)
+         local col = self.ctx:nextreg()
+         self:expr_emit(node.column, col)
+         self.ctx:op_infix('SUB', col, 'V', col, 'N', self.ctx:const(1))
+         self.ctx:op_infix('ADD', index, 'V', index, 'V', col)
+         self.ctx:setreg(index + 1)
+         return { tag = 'member', target = target, key = index, key_type = 'V' }
       elseif is_identifier(node) then
          local info, uval = self.ctx:lookup(node.name)
          if uval then
