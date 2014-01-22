@@ -40,6 +40,7 @@ local EXPR_EMIT_VSB  = { value = true, string = true, byte = true }
 
 local StatementRule = { }
 local ExpressionRule = { }
+local LHSExpressionRule = { }
 local TestRule = { }
 local ConstRule = { }
 
@@ -329,6 +330,53 @@ end
 
 function ExpressionRule:SendExpression(node, dest, want, tail)
    return emit_call_expression(self, node, dest, want, tail, true)
+end
+
+function LHSExpressionRule:Identifier(node)
+   local info, uval = self.ctx:lookup(node.name)
+   if uval then
+      self.ctx:upval(node.name)
+      return {tag = 'upval', name = node.name}
+   elseif info then
+      return {tag = 'local', target = info.idx}
+   else
+      return {tag = 'global', name = node.name}
+   end
+end
+
+function LHSExpressionRule:MemberExpression(node)
+   local target = self:expr_emit(node.object)
+   local key_type, key
+   if node.computed then
+      key_type, key = self:expr_emit_tagged(node.property, EXPR_EMIT_VSB)
+   else
+      key_type, key = 'S', self.ctx:const(node.property.name)
+   end
+   return { tag = 'member', target = target, key = key, key_type = key_type }
+end
+
+function LHSExpressionRule:MatrixElementExpression(node)
+   local obj = self:expr_emit(node.object)
+   local target = self.ctx:nextreg()
+   self.ctx:op_tget(target, obj, 'S', self.ctx:const('data')) -- set target to obj.data
+
+   local index = self.ctx:nextreg()
+   self.ctx:op_tget(index, obj, 'S', self.ctx:const('tda')) -- set index to obj.tda
+
+   local row = self.ctx:nextreg()
+   self:expr_emit(node.row, row)
+   self.ctx:op_infix('SUB', row, 'V', row, 'N', self.ctx:const(1)) -- compute row index - 1
+   self.ctx:op_infix('MUL', index, 'V', index, 'V', row) -- set index to obj.tda * (row - 1)
+   self.ctx:setreg(index + 1) -- discard the "row" expression
+
+   local col = self.ctx:nextreg()
+   self:expr_emit(node.column, col)
+   self.ctx:op_infix('SUB', col, 'V', col, 'N', self.ctx:const(1)) -- compute col index - 1
+   -- set index to obj.tda * (row - 1) + (col - 1):
+   self.ctx:op_infix('ADD', index, 'V', index, 'V', col)
+   self.ctx:setreg(index + 1) -- discard the "col" expression
+
+   return { tag = 'member', target = target, key = index, key_type = 'V' }
 end
 
 function TestRule:Identifier(node, jmp, negate, store, dest)
@@ -946,43 +994,8 @@ local function generate(tree, name)
    end
 
    function self:lhs_expr_emit(node)
-      if node.kind == 'MemberExpression' then
-         local target = self:expr_emit(node.object)
-         local key_type, key
-         if node.computed then
-            key_type, key = self:expr_emit_tagged(node.property, EXPR_EMIT_VSB)
-         else
-            key_type, key = 'S', self.ctx:const(node.property.name)
-         end
-         return { tag = 'member', target = target, key = key, key_type = key_type }
-      elseif node.kind == 'MatrixElementExpression' then
-         local obj = self:expr_emit(node.object)
-         local target = self.ctx:nextreg()
-         self.ctx:op_tget(target, obj, 'S', self.ctx:const('data'))
-         local index = self.ctx:nextreg()
-         self.ctx:op_tget(index, obj, 'S', self.ctx:const('tda'))
-         local row = self.ctx:nextreg()
-         self:expr_emit(node.row, row)
-         self.ctx:op_infix('SUB', row, 'V', row, 'N', self.ctx:const(1))
-         self.ctx:op_infix('MUL', index, 'V', index, 'V', row)
-         self.ctx:setreg(index + 1)
-         local col = self.ctx:nextreg()
-         self:expr_emit(node.column, col)
-         self.ctx:op_infix('SUB', col, 'V', col, 'N', self.ctx:const(1))
-         self.ctx:op_infix('ADD', index, 'V', index, 'V', col)
-         self.ctx:setreg(index + 1)
-         return { tag = 'member', target = target, key = index, key_type = 'V' }
-      elseif is_identifier(node) then
-         local info, uval = self.ctx:lookup(node.name)
-         if uval then
-            self.ctx:upval(node.name)
-            return {tag = 'upval', name = node.name}
-         elseif info then
-            return {tag = 'local', target = info.idx}
-         else
-            return {tag = 'global', name = node.name}
-         end
-      end
+      local rule = assert(LHSExpressionRule[node.kind], "undefined assignment rule for node type: \"" .. node.kind .. "\"")
+      return rule(self, node)
    end
 
    function self:const_eval_try(node)
