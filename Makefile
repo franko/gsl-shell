@@ -131,6 +131,7 @@ $(FOXGUI_DIR):
 	$(MAKE) -C $@
 
 $(GSH_LIBDIR)/libluajit.a: $(LUADIR)
+$(GSH_LIBDIR)/liblang.a: lang
 $(GSH_LIBDIR)/libluagsl.a: lua-gsl
 $(GSH_LIBDIR)/libgdt.a: gdt
 $(GSH_LIBDIR)/libaggplot.a: agg-plot
