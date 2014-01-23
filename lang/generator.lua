@@ -405,9 +405,13 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
 end
 
 function TestRule:UnaryExpression(node, jmp, negate, store, dest)
-   self:test_emit(node.argument, jmp, not negate, store, dest)
-   if dest and store ~= 0 then
-      self:op_not(dest, dest)
+   if node.operator == 'not' then
+      self:test_emit(node.argument, jmp, not negate, store, dest)
+      if dest and store ~= 0 then
+         self:op_not(dest, dest)
+      end
+   else
+      self:expr_test(node, jmp, negate, store, dest or self.ctx.freereg)
    end
 end
 
