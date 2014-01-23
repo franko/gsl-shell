@@ -14,11 +14,11 @@ local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, [
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
-local TokenSymbol = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
+local LongBinOp = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
 
 local function token2str(tok)
     if string.match(tok, "^TK_") then
-        return TokenSymbol[tok] or string.sub(tok, 4)
+        return LongBinOp[tok] or string.sub(tok, 4)
     else
         return tok
     end
@@ -30,7 +30,6 @@ local function error_lex(chunkname, tok, line, em, ...)
     if tok then
         msg = string.format("%s near '%s'", msg, tok)
     end
-    print(debug.traceback())
     error(msg)
 end
 
@@ -373,7 +372,7 @@ local function llex(ls)
         elseif current == ':' then
             nextchar(ls)
             if ls.current ~= ':' then return ':' else nextchar(ls); return 'TK_label' end
-        elseif current == '"' then
+        elseif current == '"' or current == "'" then
             local str = read_string(ls, current)
             return 'TK_string', str
         elseif current == '.' then

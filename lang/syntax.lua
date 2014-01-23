@@ -77,7 +77,7 @@ local syntax = {
       properties = {
          operator = {
             type   = "enum",
-            values = { "not", "-", "#" },
+            values = { "not", "-", "#", "'" },
          },
          argument = {
             type = "node",
