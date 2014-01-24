@@ -30,7 +30,6 @@ local function error_lex(chunkname, tok, line, em, ...)
     if tok then
         msg = string.format("%s near '%s'", msg, tok)
     end
-    print(debug.traceback())
     error(msg)
 end
 
