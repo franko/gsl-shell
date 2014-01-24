@@ -99,6 +99,32 @@ function ExpressionRule:Vararg(node, base, want)
    return base, true
 end
 
+function ExpressionRule:Matrix(node, dest)
+   local free
+   if dest then
+      free = self.ctx.freereg
+      if dest + 1 > free then self.ctx:setreg(dest + 1) end
+   else
+      dest = self.ctx:nextreg()
+      free = self.ctx.freereg
+   end
+   self.ctx:op_gget(dest, "matrix")
+   self.ctx:op_tget(dest, dest, "S", self.ctx:const("alloc"))
+   self.ctx:op_load(dest + 1, node.nrows)
+   self.ctx:op_load(dest + 2, node.ncols)
+   self.ctx:op_call(dest, 1, 2)
+   local data = self.ctx:nextreg()
+   self.ctx:op_tget(data, dest, "S", self.ctx:const("data"))
+   local top = self.ctx.freereg
+   for i = 1, #node.terms do
+      local val = self:expr_emit(node.terms[i])
+      self.ctx:op_tset(data, 'B', i - 1, val)
+      self.ctx.freereg = top
+   end
+   self.ctx.freereg = free
+   return dest
+end
+
 function ExpressionRule:Table(node, dest)
    local free
    if dest then
