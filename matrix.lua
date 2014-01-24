@@ -1157,6 +1157,28 @@ function matrix.hesstri_decomp(a, b)
    return A,B, U, V
 end
 
+function matrix.build(t, ncols)
+   local nrows = #t / ncols
+   local type = type
+   local use_complex = false
+   for i = 1, #t do
+      if type(t[i]) ~= "number" then
+         use_complex = true
+         break
+      end
+   end
+   local m
+   if use_complex then
+      m = matrix.calloc(nrows, ncols)
+      local data = m.data
+      for i = 0, #t - 1 do data[2*i], data[2*i+1] = cartesian(t[i + 1]) end
+   else
+      m = matrix.alloc(nrows, ncols)
+      for i = 0, #t - 1 do m.data[i]= t[i + 1] end
+   end
+   return m
+end
+
 matrix.diag = function(t)
                  local n = #t
                  local m = matrix.alloc(n, n)

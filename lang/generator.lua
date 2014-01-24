@@ -109,18 +109,17 @@ function ExpressionRule:Matrix(node, dest)
       free = self.ctx.freereg
    end
    self.ctx:op_gget(dest, "matrix")
-   self.ctx:op_tget(dest, dest, "S", self.ctx:const("alloc"))
-   self.ctx:op_load(dest + 1, node.nrows)
-   self.ctx:op_load(dest + 2, node.ncols)
-   self.ctx:op_call(dest, 1, 2)
+   self.ctx:op_tget(dest, dest, "S", self.ctx:const("build"))
    local data = self.ctx:nextreg()
-   self.ctx:op_tget(data, dest, "S", self.ctx:const("data"))
+   self.ctx:op_tnew(data)
    local top = self.ctx.freereg
    for i = 1, #node.terms do
       local val = self:expr_emit(node.terms[i])
-      self.ctx:op_tset(data, 'B', i - 1, val)
+      self.ctx:op_tset(data, 'B', i, val)
       self.ctx.freereg = top
    end
+   self.ctx:op_load(dest + 2, node.ncols)
+   self.ctx:op_call(dest, 1, 2)
    self.ctx.freereg = free
    return dest
 end
