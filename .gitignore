@@ -4,7 +4,8 @@
 *.dll
 luajit2/lib/vmdef.lua
 *~
-*.sublime*
+*.sublime-project
+*.sublime-workspace
 gsl-shell
 gsl-shell.exe
 .deps
