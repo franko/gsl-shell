@@ -325,10 +325,12 @@ local function parse_for(ast, ls, line)
 end
 
 local function parse_repeat(ast, ls, line)
+    ast:fscope_begin()
     ls:next() -- Skip 'repeat'.
     local body = parse_block(ast, ls)
     lex_match(ls, 'TK_until', 'TK_repeat', line)
     local cond = expr(ast, ls) -- Parse condition.
+    ast:fscope_end()
     return ast:repeat_stmt(cond, body, line)
 end
 
@@ -424,9 +426,11 @@ end
 local function parse_while(ast, ls, line)
     ls:next() -- Skip 'while'.
     local cond = expr(ast, ls)
+    ast:fscope_begin()
     lex_check(ls, 'TK_do')
     local body = parse_block(ast, ls)
     lex_match(ls, 'TK_end', 'TK_while', line)
+    ast:fscope_end()
     return ast:while_stmt(cond, body, ls.linenumber)
 end
 
@@ -469,12 +473,21 @@ local function parse_label(ast, ls)
     return ast:label_stmt(name, ls.linenumber)
 end
 
+local function parse_use(ast, ls, line)
+    ls:next()
+    local name = lex_str(ls)
+    lex_opt(ls, ';')
+    return ast:use_stmt(name, line)
+end
+
 -- Parse a statement. Returns the statement itself and a boolean that tells if it
 -- must be the last one in a chunk.
 local function parse_stmt(ast, ls)
     local line = ls.linenumber
     local stmt
-    if ls.token == 'TK_if' then
+    if ls.token == 'TK_use' then
+        stmt = parse_use(ast, ls, line)
+    elseif ls.token == 'TK_if' then
         stmt = parse_if(ast, ls, line)
     elseif ls.token == 'TK_while' then
         stmt = parse_while(ast, ls, line)
@@ -521,12 +534,13 @@ local function parse_params_delim(ast, ls, needself, start_token, end_token)
     lex_check(ls, start_token)
     local args = { }
     if needself then
-        args[1] = ast:identifier("self")
+        args[1] = ast:var_declare("self")
     end
     if ls.token ~= end_token then
         repeat
             if ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
-                args[#args+1] = var_lookup(ast, ls)
+                local name = lex_str(ls)
+                args[#args+1] = ast:var_declare(name)
             elseif ls.token == 'TK_dots' then
                 ls:next()
                 ls.fs.varargs = true
@@ -569,8 +583,10 @@ end
 function parse_body(ast, ls, line, needself)
     local pfs = ls.fs
     ls.fs = new_proto(ls, false)
+    ast:fscope_begin()
     local args = parse_params(ast, ls, needself)
     local body = parse_block(ast, ls)
+    ast:fscope_end()
     local proto = ls.fs
     if ls.token ~= 'TK_end' then
         lex_match(ls, 'TK_end', 'TK_function', line)
@@ -593,15 +609,20 @@ function parse_simple_body(ast, ls, line)
 end
 
 function parse_block(ast, ls)
-    return parse_chunk(ast, ls)
+    ast:fscope_begin()
+    local block = parse_chunk(ast, ls)
+    ast:fscope_end()
+    return block
 end
 
 local function parse(ast, ls)
-    ls.fs = new_proto(ls, true)
     local line = ls.linenumber
     ls:next()
+    ls.fs = new_proto(ls, true)
+    ast:fscope_begin()
     local args = { ast:expr_vararg(ast) }
     local chunk = parse_chunk(ast, ls, true)
+    ast:fscope_end()
     if ls.token ~= 'TK_eof' then
         err_token(ls, 'TK_eof')
     end

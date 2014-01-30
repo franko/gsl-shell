@@ -1,5 +1,9 @@
 local build = require('lang.syntax').build
 
+local function ident(name, line)
+    return build("Identifier", { name = name, line = line })
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, line)
@@ -17,12 +21,19 @@ local function func_expr(body, params, vararg, line)
     return build("FunctionExpression", { body = body, params = params, vararg = vararg, line = line })
 end
 
+function AST.use_stmt(ast, name, line)
+    local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
+    local mod = { vars = _G[name], id = ident(name), vids = node.names, exps = node.expressions }
+    ast:fscope_register_use(mod)
+    return node
+end
+
 function AST.expr_function(ast, args, body, proto, line)
    return func_expr(body, args, proto.varargs, line)
 end
 
 function AST.local_function_decl(ast, name, args, body, proto, line)
-    local id = ast:identifier(name)
+    local id = ast:var_declare(name)
     return func_decl(id, body, args, proto.varargs, true, line)
 end
 
@@ -41,7 +52,9 @@ end
 
 function AST.local_decl(ast, vlist, exps, line)
     local ids = {}
-    for k = 1, #vlist do ids[k] = ast:identifier(vlist[k]) end
+    for k = 1, #vlist do
+        ids[k] = ast:var_declare(vlist[k])
+    end
     return build("LocalDeclaration", { names = ids, expressions = exps, line = line })
 end
 
@@ -58,7 +71,7 @@ function AST.expr_index_dual(ast, v, row, col, line)
 end
 
 function AST.expr_property(ast, v, prop, line)
-    local index = ast:identifier(prop)
+    local index = ident(prop, line)
     return build("MemberExpression", { object = v, property = index, computed = false, line = line })
 end
 
@@ -108,12 +121,16 @@ function AST.expr_binop(ast, op, expa, expb)
     end
 end
 
-function AST.identifier(ast, s)
-    return build("Identifier", { name = s, line = line })
+function AST.identifier(ast, name)
+    local found, mod = ast:lookup(name)
+    if found == 'use' then
+        ast:add_used_var(mod, name)
+    end
+    return ident(name)
 end
 
 function AST.expr_method_call(ast, v, key, args)
-    local m = ast:identifier(key)
+    local m = ident(key)
     return build("SendExpression", { receiver = v, method = m, arguments = args })
 end
 
@@ -130,7 +147,7 @@ function AST.break_stmt(ast, line)
 end
 
 function AST.label_stmt(ast, name, line)
-    local label = ast:identifier(name)
+    local label = ident(name)
     return build("LabelStatement", { label = label, line = line })
 end
 
@@ -160,6 +177,53 @@ function AST.for_iter_stmt(ast, vars, exps, body, line)
     if #exps > 1 then error('NYI: iter with multiple expression list') end
     local iter = exps[1]
     return build("ForInStatement", { init = init, iter = iter, body = body, line = line })
+end
+
+local function new_scope(parent_scope)
+    return {
+        vars = { },
+        parent = parent_scope,
+    }
+end
+
+function AST.lookup(ast, name)
+    local current = ast.current
+    while current do
+        if current.vars[name] then return 'local' end
+        if current.imports then
+            for k = 1, #current.imports do
+                local mod = current.imports[k]
+                if mod.vars[name] then return 'use', mod end
+            end
+        end
+        current = current.parent
+    end
+    return false
+end
+
+function AST.add_used_var(ast, mod, name)
+    local var_id = ident(name)
+    mod.vids[#mod.vids + 1] = var_id
+    mod.exps[#mod.exps + 1] = build("MemberExpression", { object = mod.id, property = var_id, computed = false })
+end
+
+function AST.var_declare(ast, name)
+    local id = ident(name)
+    ast.current.vars[name] = true
+    return id
+end
+
+function AST.fscope_begin(ast)
+    ast.current = new_scope(ast.current)
+end
+
+function AST.fscope_end(ast)
+    ast.current = ast.current.parent
+end
+
+function AST.fscope_register_use(ast, mod)
+    if not ast.current.imports then ast.current.imports = { } end
+    ast.current.imports[#ast.current.imports + 1] = mod
 end
 
 local ASTClass = { __index = AST }
