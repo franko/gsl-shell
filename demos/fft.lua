@@ -30,13 +30,13 @@ local function demo1()
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
-   local ft = fft(sq)
+   local ft = rfft(sq)
 
-   local pf = fibars(|k| complex.abs(ft[k]), 0, n/2, 'black')
+   local pf = fibars(|k| complex.abs(ft[k]), 1, n/2+1, 'black')
    pf.title = 'FFT Power Spectrum'
 
-   for k=ncut, n - ncut do ft[k] = 0 end
-   sqt = fftinv(ft)
+   for k=ncut, n/2+1 do ft[k] = 0 end
+   local sqt = rfftinv(ft)/n
 
    pt:addline(filine(|i| sqt[i], n), 'red')
    pt:show()
@@ -54,14 +54,14 @@ local function demo2()
 
    pt:addline(filine(|i| sq[i], n), 'black')
 
-   ft = fft(sq, true)
+   ft = rfft(sq)
 
-   pf:add(ibars(iter.isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
+   pf:add(ibars(iter.isample(|k| complex.abs(ft[k]), 1, #ft)), 'black')
 
-   for k=ncut, n - ncut do ft[k] = 0 end
-   fftinv(ft, true)
+   for k=ncut, #ft do ft[k] = 0 end
+   local sqt = rfftinv(ft)/n
 
-   pt:addline(filine(|i| sq[i], n), 'red')
+   pt:addline(filine(|i| sqt[i], n), 'red')
 
    pf:show()
    pt:show()
@@ -79,15 +79,15 @@ local function demo3()
    local p = plot('Original signal / reconstructed')
    p:addline(filine(|i| bess[i], n), 'black')
 
-   local ft = fft(bess)
+   local ft = rfft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(iter.isample(|k| complex.abs(ft[k]), 0, 60))
+   bars = ibars(iter.isample(|k| complex.abs(ft[k]), 1, 60))
    fftplot:add(bars, 'black')
    fftplot:show()
 
-   for k=ncut, n/2 do ft[k] = 0 end
-   local bessr = fftinv(ft)
+   for k=ncut, #ft do ft[k] = 0 end
+   local bessr = rfftinv(ft)/n
 
    p:addline(filine(|i| bessr[i], n), 'red', {{'dash', 7, 3}})
    p:show()
