@@ -38,7 +38,7 @@ function num.rfft(vec)
 		local n = tonumber(vec.size1)
 		local outvec = matrix.calloc(math.floor(n/2)+1, 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
-		local plan = fftw.plan_dft_r2c_1d(n, vec.data, output, fftw.MEASURE )
+		local plan = ffi.gc(fftw.plan_dft_r2c_1d(n, vec.data, output, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -52,7 +52,7 @@ function num.rfftinv(vec)
 		local nnew = (n-1)*2
 		local outvec = matrix.alloc(nnew, 1)
 		local input = ffi.cast("fftw_complex*",vec.data)
-		local plan = fftw.plan_dft_c2r_1d(nnew, input, outvec.data, fftw.MEASURE )
+		local plan = ffi.gc(fftw.plan_dft_c2r_1d(nnew, input, outvec.data, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec,plan
 	else
@@ -69,7 +69,7 @@ function num.fft2(mat)
 		local outmat = matrix.calloc(n1, n2)
 		local output = ffi.cast("fftw_complex*",outmat.data)
 		local input = ffi.cast("fftw_complex*", mat.data)
-		local plan = fftw.plan_dft_2d(n1,n2, input, output, fftw.FORWARD, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_2d(n1,n2, input, output, fftw.FORWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outmat, plan
 	else
@@ -84,7 +84,7 @@ function num.fft2inv(mat)
 		local outmat = matrix.calloc(n1, n2)
 		local output = ffi.cast("fftw_complex*",outmat.data)
 		local input = ffi.cast("fftw_complex*", mat.data)
-		local plan = fftw.plan_dft_2d(n1,n2, input, output, fftw.BACKWARD, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_2d(n1,n2, input, output, fftw.BACKWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outmat, plan
 	else
@@ -98,7 +98,7 @@ function num.rfft2(mat)
 		local n2 = tonumber(mat.size2)
 		local outmat = matrix.calloc(n1, math.floor(n2/2)+1)
 		local output = ffi.cast("fftw_complex*",outmat.data)
-		local plan = fftw.plan_dft_r2c_2d(n1,n2, mat.data, output,fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_r2c_2d(n1,n2, mat.data, output,fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outmat, plan
 	else
@@ -113,7 +113,7 @@ function num.rfft2inv(mat)
 		local n2new = (n2-1)*2
 		local outmat = matrix.alloc(n1, n2new)
 		local input = ffi.cast("fftw_complex*",mat.data)
-		local plan = fftw.plan_dft_c2r_2d(n1,n2new, input, outmat.data,fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_c2r_2d(n1,n2new, input, outmat.data,fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outmat, plan
 	else
@@ -128,7 +128,7 @@ function num.fftn(datavec, dimvec)
 		local outvec = matrix.calloc(tonumber(datavec.size1), 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
 		local input = ffi.cast("fftw_complex*", datavec.data)
-		local plan = fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.FORWARD, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.FORWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -141,7 +141,7 @@ function num.fftninv(datavec, dimvec)
 		local outvec = matrix.calloc(tonumber(datavec.size1), 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
 		local input = ffi.cast("fftw_complex*", datavec.data)
-		local plan = fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.BACKWARD, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.BACKWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -160,7 +160,7 @@ function num.rfftn(datavec, dimvec)
 
 		local outvec = matrix.calloc(newsize, 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
-		local plan = fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -178,7 +178,7 @@ function num.rfftninv(datavec, dimvec)
 
 		local outvec = matrix.alloc(newsize, 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
-		local plan = fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE)
+		local plan = ffi.gc(fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec
 	else
