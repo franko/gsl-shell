@@ -1,4 +1,5 @@
 fftw = require'fftw3.init'
+ffi = require'ffi'
 local gsl_matrix = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
 
@@ -12,12 +13,12 @@ function num.fft(vec)
 		local input = ffi.cast("fftw_complex*",vec.data)
 		local plan = fftw.plan_dft_1d(n, input, output, fftw.FORWARD, fftw.MEASURE)
 		fftw.execute(plan)
-		fftw.destroy_plan(plan)
+		--fftw.destroy_plan(plan)
 		return outvec
 	end
 end
 
-function num.fft_inv(vec)
+function num.fftinv(vec)
 	if ffi.istype(gsl_matrix, vec) then
 		return num.rfft_inv(vec)
 	else
@@ -39,14 +40,14 @@ function num.rfft(vec)
 		local output = ffi.cast("fftw_complex*",outvec.data)
 		local plan = fftw.plan_dft_r2c_1d(n, vec.data, output, fftw.MEASURE )
 		fftw.execute(plan)
-		fftw.destroy_plan(plan)
+		--fftw.destroy_plan(plan)
 		return outvec
 	else
 		error("Cannot handle nonreal input data.")
 	end
 end
 
-function num.rfft_inv(vec)
+function num.rfftinv(vec)
 	if ffi.istype(gsl_matrix_complex, vec) then
 		local n = tonumber(vec.size1)
 		local nnew = (n-1)*2
@@ -79,7 +80,7 @@ function num.fft2(mat)
 	end
 end
 
-function num.fft2_inv(mat)
+function num.fft2inv(mat)
 	if ffi.istype(gsl_matrix, mat) then
 		return num.rfft2_inv(mat)
 	else
@@ -110,7 +111,7 @@ function num.rfft2(mat)
 	end
 end
 
-function num.rfft2_inv(mat)
+function num.rfft2inv(mat)
 	if ffi.istype(gsl_matrix_complex, mat) then
 		local n1 = tonumber(mat.size1)
 		local n2 = tonumber(mat.size2)
@@ -142,7 +143,7 @@ function num.fft3(datavec, n1, n2, n3)
 	end
 end
 
-function num.fft3_inv(datavec, n1, n2, n3)
+function num.fft3inv(datavec, n1, n2, n3)
 	if ffi.istype(gsl_matrix, datavec) then
 		return num.rfft3_inv(datavec, n1, n2, n3)
 	else
@@ -169,7 +170,7 @@ function num.rfft3(datavec, n1, n2, n3)
 	end
 end
 
-function num.rfft3_inv(datavec, n1, n2, n3)
+function num.rfft3inv(datavec, n1, n2, n3)
 	if ffi.istype(gsl_matrix, datavec) then
 		local outvec = matrix.new(n1*n2*n3, 1)
 		local input = ffi.cast("fftw_complex*",datavec.data)
@@ -198,7 +199,7 @@ function num.fftn(datavec, dimensionvec)
 	end
 end
 
-function num.fftn_inv(datavec, dimensionvec)
+function num.fftninv(datavec, dimensionvec)
 	if ffi.istype(gsl_matrix, datavec) then
 		return num.rfftn_inv(datavec, dimensionvec)
 	else
@@ -232,7 +233,7 @@ function num.rfftn(datavec, dimensionvec)
 	end
 end
 
-function num.rfftn_inv(datavec, dimensionvec)
+function num.rfftninv(datavec, dimensionvec)
 	if ffi.istype(gsl_matrix, datavec) then
 		local d = #dimensionvec
 		local newsize = 1
