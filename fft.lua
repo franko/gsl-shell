@@ -123,12 +123,12 @@ end
 
 --------------------------------------
 
-function num.fftn(datavec, dimvec)
+function num.fftn(datavec, dimlist)
 	if ffi.istype(gsl_matrix_complex, datavec) then
 		local outvec = matrix.calloc(tonumber(datavec.size1), 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
 		local input = ffi.cast("fftw_complex*", datavec.data)
-		local plan = ffi.gc(fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.FORWARD, fftw.MEASURE), fftw.destroy_plan)
+		local plan = ffi.gc(fftw.plan_dft(#dimlist, ffi.new("int[?]", #dimlist, dimlist), input, output, fftw.FORWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -136,12 +136,13 @@ function num.fftn(datavec, dimvec)
 	end
 end
 
-function num.fftninv(datavec, dimvec)
+function num.fftninv(datavec, dimlist)
 	if ffi.istype(gsl_matrix_complex, datavec) then
 		local outvec = matrix.calloc(tonumber(datavec.size1), 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
 		local input = ffi.cast("fftw_complex*", datavec.data)
-		local plan = ffi.gc(fftw.plan_dft(#dimvec, dimvec.data, input, output, fftw.BACKWARD, fftw.MEASURE), fftw.destroy_plan)
+
+		local plan = ffi.gc(fftw.plan_dft(#dimlist, ffi.new("int[?]", #dimlist, dimlist), input, output, fftw.BACKWARD, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -149,18 +150,18 @@ function num.fftninv(datavec, dimvec)
 	end
 end
 
-function num.rfftn(datavec, dimvec)
+function num.rfftn(datavec, dimlist)
 	if ffi.istype(gsl_matrix, datavec) then
-		local d = #dimvec
+		local d = #dimlist
 		local newsize = 1
 		for i=1,d-1 do
-			newsize = newsize * dimvec[i]
+			newsize = newsize * dimlist[i]
 		end
-		newsize = newsize * math.floor(dimvec[d]/2)+1
+		newsize = newsize * math.floor(dimlist[d]/2)+1
 
 		local outvec = matrix.calloc(newsize, 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
-		local plan = ffi.gc(fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
+		local plan = ffi.gc(fftw.plan_dft_r2c(d, ffi.new("int[?]", #dimlist, dimlist), datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec, plan
 	else
@@ -168,17 +169,17 @@ function num.rfftn(datavec, dimvec)
 	end
 end
 
-function num.rfftninv(datavec, dimvec)
+function num.rfftninv(datavec, dimlist)
 	if ffi.istype(gsl_matrix_complex, datavec) then
-		local d = #dimvec
+		local d = #dimlist
 		local newsize = 1
 		for i=1,d do
-			newsize = newsize * dimvec[i]
+			newsize = newsize * dimlist[i]
 		end
 
 		local outvec = matrix.alloc(newsize, 1)
 		local output = ffi.cast("fftw_complex*",outvec.data)
-		local plan = ffi.gc(fftw.plan_dft_r2c(d, dimvec.data, datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
+		local plan = ffi.gc(fftw.plan_dft_r2c(d, ffi.new("int[?]", #dimlist, dimlist), datavec.data, output, fftw.MEASURE), fftw.destroy_plan)
 		fftw.execute(plan)
 		return outvec
 	else
