@@ -82,72 +82,6 @@ ffi.cdef [[
                                    const gsl_fft_halfcomplex_wavetable * wavetable,
                                    gsl_fft_real_workspace * work);
 
-typedef double *       gsl_complex_packed_array ;
-typedef float *        gsl_complex_packed_array_float  ;
-typedef long double *  gsl_complex_packed_array_long_double ;
-
-  int gsl_fft_complex_radix2_forward (gsl_complex_packed_array data,
-                                      const size_t stride,
-                                      const size_t n);
-
-  int gsl_fft_complex_radix2_backward (gsl_complex_packed_array data,
-                                       const size_t stride,
-                                       const size_t n);
-
-  int gsl_fft_complex_radix2_inverse (gsl_complex_packed_array data,
-                                      const size_t stride,
-                                      const size_t n);
-
-typedef struct
-  {
-    size_t n;
-    size_t nf;
-    size_t factor[64];
-    gsl_complex *twiddle[64];
-    gsl_complex *trig;
-  }
-gsl_fft_complex_wavetable;
-
-typedef struct
-{
-  size_t n;
-  double *scratch;
-}
-gsl_fft_complex_workspace;
-
-
-gsl_fft_complex_wavetable *gsl_fft_complex_wavetable_alloc (size_t n);
-
-void gsl_fft_complex_wavetable_free (gsl_fft_complex_wavetable * wavetable);
-
-gsl_fft_complex_workspace *gsl_fft_complex_workspace_alloc (size_t n);
-
-void gsl_fft_complex_workspace_free (gsl_fft_complex_workspace * workspace);
-
-int gsl_fft_complex_memcpy (gsl_fft_complex_wavetable * dest,
-                            gsl_fft_complex_wavetable * src);
-
-
-int gsl_fft_complex_forward (gsl_complex_packed_array data,
-                             const size_t stride,
-                             const size_t n,
-                             const gsl_fft_complex_wavetable * wavetable,
-                             gsl_fft_complex_workspace * work);
-
-int gsl_fft_complex_backward (gsl_complex_packed_array data,
-                              const size_t stride,
-                              const size_t n,
-                              const gsl_fft_complex_wavetable * wavetable,
-                              gsl_fft_complex_workspace * work);
-
-int gsl_fft_complex_inverse (gsl_complex_packed_array data,
-                             const size_t stride,
-                             const size_t n,
-                             const gsl_fft_complex_wavetable * wavetable,
-                             gsl_fft_complex_workspace * work);
-
-
-
 ]]
 
 local fft_hc        = ffi.typeof('fft_hc')
@@ -176,9 +110,7 @@ end
 local cache_allocator = {
    real_wavetable        = res_allocator('real_wavetable'),
    halfcomplex_wavetable = res_allocator('halfcomplex_wavetable'),
-   real_workspace        = res_allocator('real_workspace'),
-   complex_wavetable     = res_allocator('complex_wavetable'),
-   complex_workspace     = res_allocator('complex_workspace')
+   real_workspace        = res_allocator('real_workspace')
 }
 
 local function get_resource(name, n)
@@ -247,97 +179,6 @@ function num.fftinv(ft, ip)
    end
    return gsl_matrix(n, 1, stride, data, b, 1)
 end
-
-function num.fft2(mat)
-    local n1 = tonumber(mat.size1)
-    local n2 = tonumber(mat.size2)
-
-    if ffi.istype(gsl_matrix, mat) then
-      return num.fft2(matrix.cnew(n1, n2, |i,j| mat:get(i,j)))
-    else
-      mat = mat:copy()
-    end
-
-    local newm = {}
-    local finm = {}
-    local wt,ws
-
-    for i = 1,n2 do
-      local vec = mat:col(i)       
-      local b,data,stride = vec.block, vec.data, vec.tda
-      if is_two_power(n1) then
-        gsl_check(gsl.gsl_fft_complex_radix2_forward(data, stride, n1 ))
-      else
-        wt = get_resource('complex_wavetable', n1)
-        ws = get_resource('complex_workspace', n1)
-        gsl_check(gsl.gsl_fft_complex_forward(data, stride, n1, wt, ws))
-      end
-      table.insert(newm, vec)
-    end
-    newm = matrix.cdef(newm)
-      
-    for i = 1,n1 do
-      local vec = newm:col(i)
-      local b, data, stride = vec.block, vec.data, vec.tda
-      if is_two_power(n2) then
-        gsl_check(gsl.gsl_fft_complex_radix2_forward(data, stride, n2 ))
-      else
-        if n1 ~= n2 then
-          wt = get_resource('complex_wavetable', n2)
-          ws = get_resource('complex_workspace', n2)
-        end
-        gsl_check(gsl.gsl_fft_complex_forward(data, stride, n2, wt, ws))
-      end
-      table.insert(finm, vec)
-    end
-    return matrix.cdef(finm)
-end
-
-function num.fft2_inv(mat)
-    local n1 = tonumber(mat.size1)
-    local n2 = tonumber(mat.size2)
-
-    if ffi.istype(gsl_matrix, mat) then
-      return num.fft2_inv(matrix.cnew(n1, n2, |i,j| mat:get(i,j)))
-    else
-      mat = mat:copy()
-    end
-
-    local newm = {}
-    local finm = {}
-    local wt,ws
-
-    for i = 1,n2 do
-      local vec = mat:col(i)       
-      local b,data,stride = vec.block, vec.data, vec.tda
-      if is_two_power(n1) then
-        gsl_check(gsl.gsl_fft_complex_radix2_inverse(data, stride, n1 ))
-      else
-        wt = get_resource('complex_wavetable', n1)
-        ws = get_resource('complex_workspace', n1)
-        gsl_check(gsl.gsl_fft_complex_inverse(data, stride, n1, wt, ws))
-      end
-      table.insert(newm, vec)
-    end
-    newm = matrix.cdef(newm)
-      
-    for i = 1,n1 do
-      local vec = newm:col(i)
-      local b, data, stride = vec.block, vec.data, vec.tda
-      if is_two_power(n2) then
-        gsl_check(gsl.gsl_fft_complex_radix2_inverse(data, stride, n2 ))
-      else
-        if n1 ~= n2 then
-          wt = get_resource('complex_wavetable', n2)
-          ws = get_resource('complex_workspace', n2)
-        end
-        gsl_check(gsl.gsl_fft_complex_inverse(data, stride, n2, wt, ws))
-      end
-      table.insert(finm, vec)
-    end
-    return matrix.cdef(finm)
-end
-
 
 local function halfcomplex_radix2_index(n, stride, k)
    if k < 0 or k >= n then error('invalid halfcomplex index', 2) end

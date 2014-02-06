@@ -130,21 +130,6 @@ As shown in the example above, you can use the Lua operator '#' to obtain the si
       vt = num.fftinv(ft) -- we perform the inverse Fourier transform
       -- now vt is a vector of the same size of v
 
-.. function:: fft2(mat)
-   
-   Calculates the 2D Fourier transformation of the real or complex matrix ``mat``. The result is returned as a complex matrix.
-   Typical usage is::
-
-      --creating a real or complex matrix
-      mat = matrix.new(5,5, |i,j| i+j)
-
-      --calling the fft2 function
-      num.fft2(mat)
-
-.. function:: fft2_inv(mat)
-
-    Calculates the inverse 2D Fourier transformation of the real or complex matrix ``mat``. The result is returned as a complex matrix. See :func:`fft2` for usage.
-
 FFT example
 -----------
 

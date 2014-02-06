@@ -164,31 +164,9 @@ local function test1_stride()
    end
 end
 
-local function test_fft2()
-   local realmat_radix = matrix.new(4,4, |i,j|i)
-   local realmat_notradix = matrix.new(5,5, |i,j|i)
-
-   local compmat_radix = matrix.cnew(4,4, |i,j|i+j*1i)
-   local compmat_notradix = matrix.cnew(5,5, |i,j|i+j*1i)
-
-   print(num.fft2(realmat_radix))
-   print(num.fft2(realmat_notradix))
-
-   print(num.fft2(compmat_radix))
-   print(num.fft2(compmat_notradix))
-
-   print(num.fft2_inv(realmat_radix))
-   print(num.fft2_inv(realmat_notradix))
-
-   print(num.fft2_inv(compmat_radix))
-   print(num.fft2_inv(compmat_notradix))
-
-end
-
 return {test1= test1, 
 	test2= test1_radix2, 
 	test3= test1_ip_radix2, 
 	test4= test1_ip, 
 	test5= test2, 
-	test6= test1_stride,
-   test7 = test_fft2}
+	test6= test1_stride}
