@@ -55,4 +55,8 @@ local function lang_loadfile(filename)
     return compile(file_reader, filename)
 end
 
+ast.probe = select(1, ...)
+
+assert(ast.probe and type(ast.probe) == "function", "invalid probing function")
+
 return lang_loadstring, lang_loadfile

@@ -22,10 +22,15 @@ local function func_expr(body, params, vararg, line)
 end
 
 function AST.use_stmt(ast, name, line)
-    local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
-    local mod = { vars = _G[name], id = ident(name), vids = node.names, exps = node.expressions }
-    ast:fscope_register_use(mod)
-    return node
+    local defs = ast.probe(name)
+    if defs then
+        local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
+        local mod = { vars = defs, id = ident(name), vids = node.names, exps = node.expressions }
+        ast:fscope_register_use(mod)
+        return node
+    else
+        error(string.format("invalid module name: \"%s\" in line %d", name, line))
+    end
 end
 
 function AST.expr_function(ast, args, body, proto, line)

@@ -16,8 +16,40 @@
 
 lua_State *parser_L;
 
+/* This is a Lua function that take one argument, a module name, and
+   extracts all the string keys from the global table of the
+   corresponding name. The module is probed from an extern Lua State
+   stored as an upvalue.
+*/
+static int
+table_keys_xtransfer(lua_State *L) {
+    lua_State *xL = lua_touserdata(L, lua_upvalueindex(1));
+    const char *mod_name = lua_tostring(L, 1);
+    if (xL == NULL || mod_name == NULL) {
+        return 0;
+    }
+    lua_getfield(xL, LUA_GLOBALSINDEX, mod_name);
+    if (!lua_istable(xL, -1)) {
+        lua_pop(xL, 1);
+        return 0;
+    }
+    lua_newtable(L); /* Create the new table to store the names. */
+    lua_pushnil(xL); /* Push the first key (nil) in xL to cann lua_next. */
+    while (lua_next(xL, -2) != 0) {
+        if (lua_type(xL, -2) == LUA_TSTRING) { /* The key is a string. */
+            const char *key = lua_tostring(xL, -2);
+            lua_pushstring(L, key);
+            lua_pushboolean(L, 1);
+            lua_rawset(L, -3); /* Store the string as t[name] = true. */
+        }
+        lua_pop(xL, 1);
+    }
+    lua_pop(xL, 1);
+    return 1;
+}
+
 int
-language_init() {
+language_init(lua_State *L) {
     parser_L = lua_open();
       if (unlikely(parser_L == NULL)) {
         lua_pushstring(parser_L, "cannot create state: not enough memory");
@@ -29,7 +61,9 @@ language_init() {
         lua_pushstring(parser_L, "unable to load \"" LANG_INIT_FILENAME "\"");
         return LUA_ERRRUN;
     }
-    int load_status = lua_pcall(parser_L, 0, 2, 0);
+    lua_pushlightuserdata(parser_L, (void*) L);
+    lua_pushcclosure(parser_L, table_keys_xtransfer, 1);
+    int load_status = lua_pcall(parser_L, 1, 2, 0);
     if (!lua_isfunction(parser_L, MY_LOADSTRING_INDEX) ||
         !lua_isfunction(parser_L, MY_LOADFILE_INDEX)) {
         load_status = LUA_ERRRUN;

@@ -680,7 +680,7 @@ static int pmain(lua_State *L)
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     }
 
-    parser_status = language_init();
+    parser_status = language_init(L);
     if (parser_status != 0) {
         language_report(L, parser_status);
         exit(EXIT_FAILURE);
