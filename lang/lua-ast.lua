@@ -202,6 +202,10 @@ function AST.lookup(ast, name)
 end
 
 function AST.add_used_var(ast, mod, name)
+    local vids = mod.vids
+    for k = 1, #vids do
+        if vids[k].name == name then return end
+    end
     local var_id = ident(name)
     mod.vids[#mod.vids + 1] = var_id
     mod.exps[#mod.exps + 1] = build("MemberExpression", { object = mod.id, property = var_id, computed = false })
