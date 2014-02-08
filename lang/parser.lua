@@ -475,8 +475,9 @@ end
 
 local function parse_use(ast, ls, line)
     ls:next()
-    local name = lex_str(ls)
-    lex_opt(ls, ';')
+    if ls.token ~= 'TK_string' then err_token(ls, 'TK_string') end
+    local name = ls.tokenval
+    ls:next()
     return ast:use_stmt(name, line)
 end
 
