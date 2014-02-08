@@ -485,9 +485,7 @@ end
 local function parse_stmt(ast, ls)
     local line = ls.linenumber
     local stmt
-    if ls.token == 'TK_use' then
-        stmt = parse_use(ast, ls, line)
-    elseif ls.token == 'TK_if' then
+    if ls.token == 'TK_if' then
         stmt = parse_if(ast, ls, line)
     elseif ls.token == 'TK_while' then
         stmt = parse_while(ast, ls, line)
@@ -511,6 +509,8 @@ local function parse_stmt(ast, ls)
         ls:next()
         stmt = ast:break_stmt(line)
         return stmt, not LJ_52 -- Must be last in Lua 5.1.
+    elseif ls.token == 'TK_use' then
+        stmt = parse_use(ast, ls, line)
     elseif LJ_52 and ls.token == ';' then
         ls:next()
         return parse_stmt(ast, ls)
