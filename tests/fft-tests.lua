@@ -1,172 +1,37 @@
-use 'math'
-use 'graph'
-use 'gsl'
+--This is a test for all the fft functions in the library
 
-local function test1()
-   local n, ncut = 8*3*5, 16
+local size = 10
+local size2 = 5
 
-   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
+local r1d = matrix.new(size, 1, |i,j|i)
+local c1d = matrix.cnew(size,1, |i,j|i)
 
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
+local r2d = matrix.new(size,size, |i,j|i)
+local c2d = matrix.cnew(size,size, |i,j|i)
 
-   pt:addline(filine(|i| sq[i], n), 'black')
+local r2dasym = matrix.new(size,5, |i,j|i)
+local c2dasym = matrix.new(size,5, |i,j|i)
 
-   local ft = fft(sq)
+local r3d = matrix.new(size2*size2*size2, 1, |i,j|i)
+local c3d = matrix.cnew(size2*size2*size2,1, |i,j|i)
 
-   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
+-- 1D test
 
-   for k=ncut, n - ncut do ft:set(k,0) end
-   sqt = fftinv(ft)
+print(num.fftinv(num.fft(c1d))/size)
+print('---')
+print(num.rfftinv(num.rfft(r1d))/size)
+print('---')
 
-   pt:addline(filine(|i| sqt[i], n), 'red')
+-- 2D tests
 
-   pf:show()
-   pt:show()
+print(num.fft2inv(num.fft2(c2d))/(size*size))
+print('---')
+print(num.rfft2inv(num.rfft2(r2d))/(size*size))
+print('---')
 
-   return pt, pf
-end
+-- 3D tests
 
-local function test1_radix2()
-   local n, ncut = 256, 16
-
-   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
-
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
-
-   pt:addline(filine(|i| sq[i], n), 'black')
-
-   local ft = fft(sq)
-
-   pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
-
-   for k=ncut, n - ncut do ft:set(k,0) end
-   sqt = fftinv(ft)
-
-   pt:addline(filine(|i| sqt[i], n), 'red')
-
-   pf:show()
-   pt:show()
-
-   return pt, pf
-end
-
-local function test1_ip_radix2()
-   local hcget, hcset = gsl.halfcomplex_radix2_get, gsl.halfcomplex_radix2_set
-
-   local n, ncut = 256, 16
-
-   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
-
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
-
-   pt:addline(filine(|i| sq[i], n), 'black')
-
-   fft_radix2(sq)
-
-   pf:add(ibars(isample(|k| complex.abs(hcget(sq, k)), 0, n/2)), 'black')
-
-   for k=ncut, n - ncut do hcset(sq, k, 0) end
-   fft_radix2_inverse(sq)
-
-   pt:addline(filine(|i| sq[i], n), 'red')
-
-   pf:show()
-   pt:show()
-
-   return pt, pf
-end
-
-local function test1_ip()
-   local hcget, hcset = gsl.halfcomplex_get, gsl.halfcomplex_set
-
-   local n, ncut = 8*3*5, 16
-
-   local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
-
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
-
-   pt:addline(filine(|i| sq[i], n), 'black')
-
-   fft_real(sq)
-
-   pf:add(ibars(isample(|k| complex.abs(hcget(sq, k)), 0, n/2)), 'black')
-
-   for k=ncut, n - ncut do hcset(sq, k, 0) end
-   fft_halfcomplex_inverse(sq)
-
-   pt:addline(filine(|i| sq[i], n), 'red')
-
-   pf:show()
-   pt:show()
-
-   return pt, pf
-end
-
-local function test2()
-   local n, ncut, order = 512, 11, 8
-   local x1 = besselJ_zero(order, 14)
-   local xsmp = |k| x1*(k-1)/(n-1)
-
-   local bess = matrix.new(n, 1, |i| besselJ(order, xsmp(i)))
-
-   local p = plot('Original signal / reconstructed')
-   p:addline(filine(|i| bess[i], n), 'black')
-
-   local ft = fft(bess)
-
-   fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| complex.abs(ft:get(k)), 0, 60))
-   fftplot:add(bars, 'darkgreen')
-   fftplot:addline(bars, 'black')
-   fftplot:show()
-
-   for k=ncut, n/2 do ft:set(k,0) end
-   local bessr = fftinv(ft)
-
-   p:addline(filine(|i| bessr[i], n), 'red', {{'dash', 7, 3}})
-   p:show()
-
-   return p, fftplot
-end
-
-
-local function test1_stride()
-   local n, ncut, nb = 256, 16, 3
-
-   local function squaref(i, n1, n2)
-      return i < n1 and 0 or (i < n2 and 1 or 0)
-   end
-
-   local sq = matrix.new(n, nb, |i, j| squaref(i, n/(3*j), 2*n/(3*j)))
-
-   local w = window('v' .. string.rep('.', nb))
-   local ftt = {}
-   for j=1, nb do
-      local ft = fft(sq:col(j))
-      local pf = plot()
-      pf:add(ibars(isample(|k| complex.abs(ft:get(k)), 0, n/2)), 'black')
-      w:attach(pf, j)
-      ftt[j] = ft
-   end
-
-   local w = window('v' .. string.rep('.', nb))
-   for j, ft in ipairs(ftt) do
-      local pt = plot('Original signal / reconstructed')
-      for k=ncut, n - ncut do ft:set(k,0) end
-      local sqt = fftinv(ft)
-      pt:addline(filine(|i| sq:get(i,j), n), 'black')
-      pt:addline(filine(|i| sqt[i], n))
-      w:attach(pt, j)
-   end
-end
-
-return {test1= test1, 
-	test2= test1_radix2, 
-	test3= test1_ip_radix2, 
-	test4= test1_ip, 
-	test5= test2, 
-	test6= test1_stride}
+print('---')
+print(num.fftninv(num.fftn(c3d, {size2, size2, size2}), {size2, size2, size2})/(size2*size2*size2))
+print('---')
+print(num.rfftninv(num.rfftn(r3d, {size2, size2, size2}), {size2, size2, size2})/(size2*size2*size2))
