@@ -1,5 +1,5 @@
-ffi = require'ffi'
-fftw = require'fftw3.init'
+local ffi = require'ffi'
+local fftw = require'fftw3.init'
 local gsl_matrix = ffi.typeof('gsl_matrix')
 local gsl_matrix_complex = ffi.typeof('gsl_matrix_complex')
 
@@ -24,12 +24,10 @@ local function dft(invec, dimlist, outvec, direction)
 		local size = 1
 		for i=1,rank do size = size * dimlist[i] end
 		local direction = direction or FORWARD
-
-		local outvec = outvec or nil
 		local output_supplied = true
 
 		--First check if output vector is given by the user, otherwise allocate it
-		if outvec == nil then
+		if not outvec then
 			output_supplied = false
 			outvec = matrix.calloc(size, 1)
 		end
@@ -49,7 +47,7 @@ local function dft(invec, dimlist, outvec, direction)
 			local inputtest = ffi.new("fftw_complex[?]", size)
 
 			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft(rank, ffi.new("int[?]", rank, dimlist), inputtest, output, direction == FORWARD and fftw.FORWARD or fftw.BACKWARD, fftw.MEASURE), fftw.destroy_plan)
+			local plan = ffi.gc(fftw.plan_dft(rank, ffi.new("int[?]", rank, dimlist), inputtest, output, direction == FORWARD and fftw.FORWARD or fftw.BACKWARD, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if dftplans[rank] == nil then dftplans[rank] = {} end
@@ -74,12 +72,10 @@ local function rdft(invec, dimlist, outvec)
 		local outputsize = size/dimlist[rank]*(math.floor(dimlist[rank]/2)+1)
 
 		local direction = FORWARD
-
-		local outvec = outvec or nil
 		local output_supplied = true
 
 		--First check if output vector is given by the user, otherwise allocate it
-		if outvec == nil then
+		if not outvec then
 			output_supplied = false
 			outvec = matrix.calloc(outputsize, 1)
 		end
@@ -96,10 +92,11 @@ local function rdft(invec, dimlist, outvec)
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
-			local inputtest = ffi.new("double[?]", size)
+            local inputtest = ffi.new("double[?]", size)
+			-- local inputtest = ffi.gc(fftw.malloc(size * ffi.sizeof(double)), fftw.free)
 
 			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft_r2c(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, fftw.MEASURE), fftw.destroy_plan)
+			local plan = ffi.gc(fftw.plan_dft_r2c(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
@@ -123,12 +120,10 @@ local function rdftinv(invec, dimlist, outvec)
 		local inputsize = size/dimlist[rank]*(math.floor(dimlist[rank]/2)+1)
 
 		local direction = BACKWARD
-
-		local outvec = outvec or nil
 		local output_supplied = true
 
 		--First check if output vector is given by the user, otherwise allocate it
-		if outvec == nil then
+		if not outvec then
 			output_supplied = false
 			outvec = matrix.alloc(size, 1)
 		end
@@ -148,7 +143,7 @@ local function rdftinv(invec, dimlist, outvec)
 			local inputtest = ffi.new("fftw_complex[?]", inputsize)
 
 			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft_c2r(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, fftw.MEASURE), fftw.destroy_plan)
+			local plan = ffi.gc(fftw.plan_dft_c2r(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
