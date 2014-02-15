@@ -285,6 +285,37 @@ function ExpressionRule:MatrixElementExpression(node, base)
    return base
 end
 
+local function emit_slice_arguments(self, node, base)
+   self:expr_emit(node.object, base)
+   self.ctx:setreg(base + 1)
+   self:expr_emit(node.row_start, base + 1)
+   self.ctx:setreg(base + 2)
+   self:expr_emit(node.row_end, base + 2)
+   self.ctx:setreg(base + 3)
+   self:expr_emit(node.col_start, base + 3)
+   self.ctx:setreg(base + 4)
+   self:expr_emit(node.col_end, base + 4)
+   self.ctx:setreg(base + 5)
+end
+
+function ExpressionRule:MatrixSliceExpression(node, base)
+   local dest = self.ctx:nextreg()
+   self.ctx:op_gget(dest, "matrix")
+   self.ctx:op_tget(dest, dest, "S", self.ctx:const("__slice"))
+   emit_slice_arguments(self, node, dest + 1)
+   self.ctx:op_call(dest, 1, 5)
+   if not base then
+      self.ctx:setreg(dest + 1)
+      return dest
+   else
+      if dest ~= base then
+         self.ctx:op_move(base, dest)
+      end
+      self.ctx.freereg = dest
+      return base
+   end
+end
+
 function ExpressionRule:FunctionExpression(node, dest)
    local free = self.ctx.freereg
    local func = self.ctx:child()
@@ -417,6 +448,14 @@ function LHSExpressionRule:MatrixElementExpression(node)
    self.ctx:setreg(index + 1) -- discard the "col" expression
 
    return { tag = 'member', target = target, key = index, key_type = 'V' }
+end
+
+function LHSExpressionRule:MatrixSliceExpression(node)
+   local dest = self.ctx:nextreg()
+   self.ctx:op_gget(dest, "matrix")
+   self.ctx:op_tget(dest, dest, "S", self.ctx:const("__slice_assign"))
+   emit_slice_arguments(self, node, dest + 1)
+   return { tag = 'slice', target = dest }
 end
 
 function TestRule:Identifier(node, jmp, negate, store, dest)
@@ -950,6 +989,21 @@ local function generate(tree, name)
          if dest ~= expr then
             self.ctx:op_move(dest, expr)
          end
+      elseif lhs.tag == 'slice' then
+         local free = self.ctx.freereg
+         local base
+         if lhs.target + 6 ~= expr then
+            base = free
+            self.ctx:setreg(base + 7)
+            for i = 0, 5 do
+               self.ctx:op_move(base + i, lhs.target + i)
+            end
+            self.ctx:op_move(base + 6, expr)
+         else
+            base = self.target
+         end
+         self.ctx:op_call(base, 0, 6)
+         self.ctx.freereg = free
       else
          self.ctx:op_gset(expr, lhs.name)
       end

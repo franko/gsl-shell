@@ -1157,6 +1157,59 @@ function matrix.hesstri_decomp(a, b)
    return A,B, U, V
 end
 
+local function check_slicing_indexes(m, ia, ib, ja, jb)
+   local r, c = matrix_dim(m)
+   if ia < 1 or ib > r or ja < 1 or jb > c then
+      error("slicing index out of bounds")
+   end
+   local ni, nj = ib - ia + 1, jb - ja + 1
+   if ni <= 0 or nj <= 0 then error("negative or zero slicing range") end
+   return ni, nj
+end
+
+function matrix.__slice(m, ia, ib, ja, jb)
+   local ni, nj = check_slicing_indexes(m, ia, ib, ja, jb)
+   if ffi.istype(gsl_matrix, m) then
+      local mb = m.block
+      local r = gsl_matrix(ni, nj, m.tda, m.data + (ia - 1)*m.tda + (ja - 1), mb, 1)
+      mb.ref_count = mb.ref_count + 1
+      return r
+   else
+      local mb = m.block
+      local r = gsl_matrix_complex(ni, nj, m.tda, m.data + 2*(ia-1)*m.tda + 2*(ja-1), mb, 1)
+      mb.ref_count = mb.ref_count + 1
+      return r
+   end
+end
+
+function matrix.__slice_assign(dst, ia, ib, ja, jb, src)
+   local ni, nj = check_slicing_indexes(m, ia, ib, ja, jb)
+   if ffi.istype(gsl_matrix, dst) then
+      if ffi.istype(gsl_matrix_complex, src) then
+         error("cannot assign a complex values to a real matrix")
+      end
+      for i = 0, ni - 1 do
+         for j = 0, nj - 1 do
+            gsl.gsl_matrix_set(dst, ia - 1 + i, ja - 1 + j, gsl.gsl_matrix_get(src, i, j))
+         end
+      end
+   else
+      if ffi.istype(gsl_matrix_complex, src) then
+         for i = 0, ni - 1 do
+            for j = 0, nj - 1 do
+               gsl.gsl_matrix_complex_set(dst, ia - 1 + i, ja - 1 + j, gsl.gsl_matrix_complex_get(src, i, j))
+            end
+         end
+      else
+         for i = 0, ni - 1 do
+            for j = 0, nj - 1 do
+               gsl.gsl_matrix_complex_set(dst, ia - 1 + i, ja - 1 + j, gsl.gsl_matrix_get(src, i, j))
+            end
+         end
+      end
+   end
+end
+
 function matrix.build(t, ncols)
    local nrows = #t / ncols
    local type = type

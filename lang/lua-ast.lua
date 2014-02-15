@@ -1,5 +1,7 @@
 local build = require('lang.syntax').build
 
+local CONCAT_OP = '~'
+
 local function ident(name, line)
     return build("Identifier", { name = name, line = line })
 end
@@ -75,6 +77,12 @@ function AST.expr_index_dual(ast, v, row, col, line)
     return build("MatrixElementExpression", { object = v, row = row, column = col, line = line })
 end
 
+function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
+    row_end = row_end or row_start
+    col_end = col_end or col_start
+    return build("MatrixSliceExpression", { object = v, row_start = row_start, row_end = row_end, col_start = col_start, col_end = col_end, line = line })
+end
+
 function AST.expr_property(ast, v, prop, line)
     local index = ident(prop, line)
     return build("MemberExpression", { object = v, property = index, computed = false, line = line })
@@ -111,7 +119,7 @@ local function concat_append(ts, node)
 end
 
 function AST.expr_binop(ast, op, expa, expb)
-    local binop_body = (op ~= '..' and { operator = op, left = expa, right = expb, line = line })
+    local binop_body = (op ~= CONCAT_OP and { operator = op, left = expa, right = expb, line = line })
     if binop_body then
         if op == 'and' or op == 'or' then
             return build("LogicalExpression", binop_body)
