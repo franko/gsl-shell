@@ -36,22 +36,34 @@ local function dft(invec, dimlist, outvec, direction)
 		local input = ffi.cast("fftw_complex*",invec.data)
 
 		--Check if plan is existing, then use it
-		if dftplans[rank] ~= nil and dftplans[rank][direction] ~= nil and compare_dimensions(dimlist, dftplans[rank][direction].dimlist) then
+		if dftplans[rank] ~= nil and dftplans[rank][direction] ~= nil and
+		   compare_dimensions(dimlist, dftplans[rank][direction].dimlist) and
+		   invec.tda == dftplans[rank][direction].itda and
+		   outvec.tda == dftplans[rank][direction].otda then
+
 			local plan = dftplans[rank][direction].plan
 			fftw.execute_dft(plan, input, output)
 			if not output_supplied then return outvec end
-
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
 			local inputtest = ffi.new("fftw_complex[?]", size)
 
-			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft(rank, ffi.new("int[?]", rank, dimlist), inputtest, output, direction == FORWARD and fftw.FORWARD or fftw.BACKWARD, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
+			local howmany = 1
+			local idist,odist = 0,0
+			local istride = invec.tda
+			local ostride = outvec.tda
+			local dim = ffi.new("int[?]", rank, dimlist)
+			local inembed = dim
+			local onembed = dim
+			local plan = ffi.gc(fftw.plan_many_dft(rank, dim ,howmany,
+											inputtest,inembed, istride, idist,
+											output,onembed,ostride,odist,
+											direction == FORWARD and fftw.FORWARD or fftw.BACKWARD, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if dftplans[rank] == nil then dftplans[rank] = {} end
-			dftplans[rank][direction] = {plan=plan, dimlist=dimlist}
+			dftplans[rank][direction] = {plan=plan, dimlist=dimlist, itda=invec.tda, otda=outvec.tda}
 
 			--Execute the plan with the supplied input
 			fftw.execute_dft(plan, input, output)
@@ -84,7 +96,11 @@ local function rdft(invec, dimlist, outvec)
 		local input = invec.data
 
 		--Check if plan is existing, then use it
-		if rdftplans[rank] ~= nil and rdftplans[rank][direction] ~= nil and compare_dimensions(dimlist, rdftplans[rank][direction].dimlist) then
+		if rdftplans[rank] ~= nil and rdftplans[rank][direction] ~= nil and
+		   compare_dimensions(dimlist, rdftplans[rank][direction].dimlist) and
+		   invec.tda == rdftplans[rank][direction].itda and
+		   outvec.tda == rdftplans[rank][direction].otda then
+
 			local plan = rdftplans[rank][direction].plan
 			fftw.execute_dft_r2c(plan, input, output)
 			if not output_supplied then return outvec end
@@ -95,12 +111,21 @@ local function rdft(invec, dimlist, outvec)
             local inputtest = ffi.new("double[?]", size)
 			-- local inputtest = ffi.gc(fftw.malloc(size * ffi.sizeof(double)), fftw.free)
 
-			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft_r2c(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
+			local howmany = 1
+			local idist,odist = 0,0
+			local istride = invec.tda
+			local ostride = outvec.tda
+			local dim = ffi.new("int[?]", rank, dimlist)
+			local inembed = dim
+			local onembed = dim
+			local plan = ffi.gc(fftw.plan_many_dft_r2c(rank, dim, howmany,
+											 inputtest,inembed,istride, idist,
+											 output,onembed, ostride, odist,
+											 bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
-			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist}
+			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist, itda=invec.tda, otda=outvec.tda}
 
 			--Execute the plan with the supplied input
 			fftw.execute_dft_r2c(plan, input, output)
@@ -132,7 +157,11 @@ local function rdftinv(invec, dimlist, outvec)
 		local input = ffi.cast("fftw_complex*",invec.data)
 
 		--Check if plan is existing, then use it
-		if rdftplans[rank] ~= nil and rdftplans[rank][direction] ~= nil and compare_dimensions(dimlist, rdftplans[rank][direction].dimlist) then
+		if rdftplans[rank] ~= nil and rdftplans[rank][direction] ~= nil and
+		   compare_dimensions(dimlist, rdftplans[rank][direction].dimlist) and
+		   invec.tda == rdftplans[rank][direction].itda and
+		   outvec.tda == rdftplans[rank][direction].otda then
+
 			local plan = rdftplans[rank][direction].plan
 			fftw.execute_dft_c2r(plan, input, output)
 			if not output_supplied then return outvec end
@@ -142,12 +171,21 @@ local function rdftinv(invec, dimlist, outvec)
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
 			local inputtest = ffi.new("fftw_complex[?]", inputsize)
 
-			--Create plan via MEASURE
-			local plan = ffi.gc(fftw.plan_dft_c2r(rank, ffi.new("int[?]", rank,  dimlist), inputtest, output, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
+			local howmany = 1
+			local idist,odist = 0,0
+			local istride = invec.tda
+			local ostride = outvec.tda
+			local dim = ffi.new("int[?]", rank, dimlist)
+			local inembed = dim
+			local onembed = dim
+			local plan = ffi.gc(fftw.plan_many_dft_c2r(rank, dim, howmany,
+											inputtest, inembed, istride, idist,
+											output, onembed, ostride, odist,
+											bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
-			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist}
+			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist, itda=invec.tda, otda=outvec.tda}
 
 			--Execute the plan with the supplied input
 			fftw.execute_dft_c2r(plan, input, output)
