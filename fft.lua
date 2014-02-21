@@ -54,11 +54,9 @@ local function dft(invec, dimlist, outvec, direction)
 			local istride = invec.tda
 			local ostride = outvec.tda
 			local dim = ffi.new("int[?]", rank, dimlist)
-			local inembed = dim
-			local onembed = dim
 			local plan = ffi.gc(fftw.plan_many_dft(rank, dim ,howmany,
-											inputtest,inembed, istride, idist,
-											output,onembed,ostride,odist,
+											inputtest,nil, istride, idist,
+											output,nil,ostride,odist,
 											direction == FORWARD and fftw.FORWARD or fftw.BACKWARD, bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
@@ -116,11 +114,9 @@ local function rdft(invec, dimlist, outvec)
 			local istride = invec.tda
 			local ostride = outvec.tda
 			local dim = ffi.new("int[?]", rank, dimlist)
-			local inembed = dim
-			local onembed = dim
 			local plan = ffi.gc(fftw.plan_many_dft_r2c(rank, dim, howmany,
-											 inputtest,inembed,istride, idist,
-											 output,onembed, ostride, odist,
+											 inputtest,nil,istride, idist,
+											 output,nil, ostride, odist,
 											 bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
@@ -176,11 +172,9 @@ local function rdftinv(invec, dimlist, outvec)
 			local istride = invec.tda
 			local ostride = outvec.tda
 			local dim = ffi.new("int[?]", rank, dimlist)
-			local inembed = dim
-			local onembed = dim
 			local plan = ffi.gc(fftw.plan_many_dft_c2r(rank, dim, howmany,
-											inputtest, inembed, istride, idist,
-											output, onembed, ostride, odist,
+											inputtest, nil, istride, idist,
+											output, nil, ostride, odist,
 											bit.bor(fftw.MEASURE, fftw.UNALIGNED)), fftw.destroy_plan)
 
 			--Save the plan for next time
