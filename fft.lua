@@ -47,7 +47,7 @@ local function dft(invec, dimlist, outvec, direction)
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
-			local inputtest = ffi.new("fftw_complex[?]", size)
+			local inputtest = ffi.new("fftw_complex[?]", size * invec.tda)
 
 			local howmany = 1
 			local idist,odist = 0,0
@@ -106,8 +106,7 @@ local function rdft(invec, dimlist, outvec)
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
-            local inputtest = ffi.new("double[?]", size)
-			-- local inputtest = ffi.gc(fftw.malloc(size * ffi.sizeof(double)), fftw.free)
+            local inputtest = ffi.new("double[?]", size * invec.tda)
 
 			local howmany = 1
 			local idist,odist = 0,0
@@ -165,7 +164,7 @@ local function rdftinv(invec, dimlist, outvec)
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
-			local inputtest = ffi.new("fftw_complex[?]", inputsize)
+			local inputtest = ffi.new("fftw_complex[?]", inputsize * invec.tda)
 
 			local howmany = 1
 			local idist,odist = 0,0
