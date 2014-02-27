@@ -386,7 +386,7 @@ end
 
 function eigen.herm(m, order, eigenvalues_only)
    local size = m.size1
-   local A = matrix_complex.copy(m)
+   local A = matrix.copy(m)
    local eval = matrix.alloc(size, 1)
    local xeval = gsl.gsl_matrix_column(eval, 0)
    local evec = matrix.calloc (size, size)
