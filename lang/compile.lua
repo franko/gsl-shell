@@ -6,7 +6,7 @@ local reader = require('reader')
 
 local function lang_toolkit_error(msg)
    if string.sub(msg, 1, 9) == "LLT-ERROR" then
-        return false, "luajit-lang-toolkit: " .. string.sub(msg, 10)
+        return false, string.sub(msg, 10)
     else
         error(msg)
     end
@@ -35,4 +35,4 @@ local function lang_loadfile(filename, options)
     return compile(reader.file, filename, options)
 end
 
-return { string = lang_loadstring, file = lang_loadfile }
+return lang_loadstring, lang_loadfile

@@ -143,3 +143,14 @@ end
 path_list[#path_list + 1] = package.path
 
 package.path = table.concat(path_list, ';')
+
+local function lang_loader_fn(modname)
+   return lang.dofile(modname .. '.gs')
+end
+
+local function lang_loader(modname)
+   local f = io.open(modname .. '.gs')
+   if f then return lang_loader_fn end
+end
+
+package.loaders[#package.loaders + 1] = lang_loader
