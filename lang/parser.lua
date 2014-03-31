@@ -208,8 +208,18 @@ function expr_primary(ast, ls)
         if ls.token == '.' then
             vk, v = 'indexed', expr_field(ast, ls, v)
         elseif ls.token == '[' then
-            local key = expr_bracket(ast, ls)
-            vk, v = 'indexed', ast:expr_index(v, key)
+            ls:next()
+            local key = expr(ast, ls)
+            local key_col
+            if lex_opt(ls, ',') then
+                key_col = expr(ast, ls)
+            end
+            lex_check(ls, ']')
+            if key_col then
+                vk, v = 'indexed', ast:expr_index_dual(v, key, key_col)
+            else
+                vk, v = 'indexed', ast:expr_index(v, key)
+            end
         elseif ls.token == ':' then
             ls:next()
             local key = lex_str(ls)
