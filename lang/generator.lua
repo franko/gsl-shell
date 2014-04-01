@@ -226,7 +226,6 @@ end
 
 function ExpressionRule:Matrix(node, dest)
    local free = self.ctx.freereg
-   -- if dest + 1 > free then self.ctx:setreg(dest + 1) end
    local base = self.ctx:nextreg()
    self.ctx:op_gget(base, "matrix")
    self.ctx:op_tget(base, base, "S", self.ctx:const("build"))
