@@ -81,6 +81,11 @@ function AST.expr_table(ast, avals, hkeys, hvals, line)
     return build("Table", { array_entries = avals, hash_keys = hkeys, hash_values = hvals, line = line })
 end
 
+function AST.expr_matrix(ast, ncols, terms, line)
+    local nrows = #terms / ncols
+    return build("Matrix", { terms = terms, ncols = ncols, nrows = nrows, line = line })
+end
+
 function AST.expr_unop(ast, op, v)
     return build("UnaryExpression", { operator = op, argument = v, line = line })
 end

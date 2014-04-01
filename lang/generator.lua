@@ -224,6 +224,27 @@ function ExpressionRule:Table(node, dest)
    self.ctx.freereg = free
 end
 
+function ExpressionRule:Matrix(node, dest)
+   local free = self.ctx.freereg
+   -- if dest + 1 > free then self.ctx:setreg(dest + 1) end
+   local base = self.ctx:nextreg()
+   self.ctx:op_gget(base, "matrix")
+   self.ctx:op_tget(base, base, "S", self.ctx:const("build"))
+   local data = self.ctx:nextreg()
+   self.ctx:op_tnew(data)
+   local top = self.ctx.freereg
+   for i = 1, #node.terms do
+      local val = self:expr_toanyreg(node.terms[i])
+      self.ctx:op_tset(data, 'B', i, val)
+      self.ctx.freereg = top
+   end
+   self.ctx:nextreg()
+   self.ctx:op_load(base + 2, node.ncols)
+   self.ctx:op_call(base, 1, 2)
+   self.ctx.freereg = free
+   mov_toreg(self.ctx, dest, base)
+end
+
 -- Operations that admit instructions in the form ADDVV, ADDVN, ADDNV
 local dirop = {
    ['+'] = 'ADD',

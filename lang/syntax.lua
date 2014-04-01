@@ -213,6 +213,18 @@ local syntax = {
          },
       }
    },
+   Matrix = {
+      kind = "Matrix",
+      base = "Expression",
+      properties = {
+         terms = {
+            type = "list",
+            kind = "Expression",
+         },
+         nrows = { type = "number" },
+         ncols = { type = "number" },
+      }
+   },
    ExpressionStatement = {
       kind = "ExpressionStatement",
       base = "Statement",

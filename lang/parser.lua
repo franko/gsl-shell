@@ -119,6 +119,25 @@ function expr_table(ast, ls)
     return ast:expr_table(avals, hkeys, hvals, line)
 end
 
+local function expr_matrix(ast, ls)
+    local line = ls.linenumber
+    lex_check(ls, '[')
+    local ncol
+    local t = { }
+    while ls.token ~= ']' do
+        local n = 0
+        while true do
+            t[#t + 1], n = expr(ast, ls), n + 1
+            if not lex_opt(ls, ',') then break end
+        end
+        lex_opt(ls, ';')
+        ncol = ncol or n
+        if ncol ~= n then err_syntax(ls, "mismatching number of columns") end
+    end
+    lex_match(ls, ']', '[', line)
+    return ast:expr_matrix(ncol, t, line)
+end
+
 function expr_simple(ast, ls)
     local tk, val = ls.token, ls.tokenval
     local e
@@ -139,6 +158,8 @@ function expr_simple(ast, ls)
         e = ast:expr_vararg()
     elseif tk == '{' then
         return expr_table(ast, ls)
+    elseif tk == '[' then
+        return expr_matrix(ast, ls)
     elseif tk == 'TK_function' then
         ls:next()
         local args, body, proto = parse_body(ast, ls, ls.linenumber, false)
