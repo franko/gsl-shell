@@ -280,18 +280,30 @@ function ExpressionRule:BinaryExpression(node, dest)
 end
 
 function ExpressionRule:UnaryExpression(node, dest)
-   local free = self.ctx.freereg
-   local a = self:expr_toanyreg(node.argument)
-   self.ctx.freereg = free
    local o = node.operator
-   if o == '-' then
-      self.ctx:op_unm(dest, a)
-   elseif o == '#' then
-      self.ctx:op_len(dest, a)
-   elseif o == 'not' then
-      self.ctx:op_not(dest, a)
+   local free = self.ctx.freereg
+   if o == "'" then
+      local base = self.ctx:nextreg()
+      self.ctx:op_gget(base, "matrix")
+      self.ctx:op_tget(base, base, "S", self.ctx:const("transpose"))
+      self.ctx:setreg(base + 2)
+      self:expr_toreg(node.argument, base + 1)
+      self.ctx:op_call(base, 1, 1)
+      if base ~= dest then
+         self.ctx:op_move(dest, base)
+      end
+      self.ctx.freereg = free
    else
-      error("bad unary operator: "..o, 2)
+      local a = self:expr_toanyreg(node.argument)
+      self.ctx.freereg = free
+      local o = node.operator
+      if o == '-' then
+         self.ctx:op_unm(dest, a)
+      elseif o == '#' then
+         self.ctx:op_len(dest, a)
+      elseif o == 'not' then
+         self.ctx:op_not(dest, a)
+      end
    end
 end
 

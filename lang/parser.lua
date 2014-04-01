@@ -169,7 +169,11 @@ function expr_unop(ast, ls)
         local v = expr_binop(ast, ls, UNARY_PRIORITY)
         return ast:expr_unop(ls.token2str(tk), v)
     else
-        return expr_simple(ast, ls)
+        local exp = expr_simple(ast, ls)
+        if lex_opt(ls, "'") then
+            exp = ast:expr_unop("'", exp)
+        end
+        return exp
     end
 end
 

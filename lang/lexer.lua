@@ -372,7 +372,7 @@ local function llex(ls)
         elseif current == ':' then
             nextchar(ls)
             if ls.current ~= ':' then return ':' else nextchar(ls); return 'TK_label' end
-        elseif current == '"' or current == "'" then
+        elseif current == '"' then
             local str = read_string(ls, current)
             return 'TK_string', str
         elseif current == '.' then
