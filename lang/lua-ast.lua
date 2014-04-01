@@ -4,6 +4,10 @@ local function ident(name, line)
     return build("Identifier", { name = name, line = line })
 end
 
+local function ident(name, line)
+    return build("Identifier", { name = name, line = line })
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, firstline, lastline)
@@ -20,6 +24,18 @@ end
 
 local function func_expr(body, params, vararg, firstline, lastline)
     return build("FunctionExpression", { body = body, params = params, vararg = vararg, firstline = firstline, lastline = lastline })
+end
+
+function AST.use_stmt(ast, name, line)
+    local defs = ast.probe(name)
+    if defs then
+        local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
+        local mod = { vars = defs, id = ident(name), vids = node.names, exps = node.expressions }
+        ast:fscope_register_use(mod)
+        return node
+    else
+        error(string.format("invalid module name: \"%s\" in line %d", name, line))
+    end
 end
 
 function AST.expr_function(ast, args, body, proto)
@@ -116,6 +132,10 @@ function AST.expr_binop(ast, op, expa, expb)
 end
 
 function AST.identifier(ast, name)
+    local found, mod = ast:lookup(name)
+    if found == 'use' then
+        ast:add_used_var(mod, name)
+    end
     return ident(name)
 end
 
@@ -193,6 +213,57 @@ end
 
 function AST.fscope_end(ast)
     ast.current = ast.current.parent
+end
+
+local function new_scope(parent_scope)
+    return {
+        vars = { },
+        parent = parent_scope,
+    }
+end
+
+function AST.lookup(ast, name)
+    local current = ast.current
+    while current do
+        if current.vars[name] then return 'local' end
+        if current.imports then
+            for k = 1, #current.imports do
+                local mod = current.imports[k]
+                if mod.vars[name] then return 'use', mod end
+            end
+        end
+        current = current.parent
+    end
+    return false
+end
+
+function AST.add_used_var(ast, mod, name)
+    local vids = mod.vids
+    for k = 1, #vids do
+        if vids[k].name == name then return end
+    end
+    local var_id = ident(name)
+    mod.vids[#mod.vids + 1] = var_id
+    mod.exps[#mod.exps + 1] = build("MemberExpression", { object = mod.id, property = var_id, computed = false })
+end
+
+function AST.var_declare(ast, name)
+    local id = ident(name)
+    ast.current.vars[name] = true
+    return id
+end
+
+function AST.fscope_begin(ast)
+    ast.current = new_scope(ast.current)
+end
+
+function AST.fscope_end(ast)
+    ast.current = ast.current.parent
+end
+
+function AST.fscope_register_use(ast, mod)
+    if not ast.current.imports then ast.current.imports = { } end
+    ast.current.imports[#ast.current.imports + 1] = mod
 end
 
 local ASTClass = { __index = AST }

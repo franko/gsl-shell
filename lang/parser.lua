@@ -479,6 +479,14 @@ local function parse_goto(ast, ls)
     return ast:goto_stmt(name, line)
 end
 
+local function parse_use(ast, ls, line)
+    ls:next()
+    if ls.token ~= 'TK_string' then err_token(ls, 'TK_string') end
+    local name = ls.tokenval
+    ls:next()
+    return ast:use_stmt(name, line)
+end
+
 -- Parse a statement. Returns the statement itself and a boolean that tells if it
 -- must be the last one in a chunk.
 local function parse_stmt(ast, ls)
@@ -509,6 +517,8 @@ local function parse_stmt(ast, ls)
         ls:next()
         stmt = ast:break_stmt(line)
         return stmt, not LJ_52 -- Must be last in Lua 5.1.
+    elseif ls.token == 'TK_use' then
+        stmt = parse_use(ast, ls, line)
     elseif LJ_52 and ls.token == ';' then
         ls:next()
         return parse_stmt(ast, ls)
