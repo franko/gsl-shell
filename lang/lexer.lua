@@ -14,7 +14,7 @@ local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, [
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
-local TokenSymbol = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
+local TokenSymbol = { TK_ge = '>=', TK_le = '<=' , TK_range = '..', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
 
 local function token2str(tok)
     if string.match(tok, "^TK_") then
@@ -90,6 +90,15 @@ local function pop(ls)
     return c
 end
 
+local function push_char(ls, c)
+    if ls.p > 1 then
+        ls.p = ls.p - 1
+    else
+        ls.data = c .. ls.data
+    end
+    ls.n = ls.n + 1
+end
+
 local function fillbuf(ls)
     local data = ls:read_func()
     if not data then
@@ -116,6 +125,10 @@ end
 
 local function save(ls, c)
     ls.save_buf = ls.save_buf .. c
+end
+
+local function undo_char(ls)
+    ls.save_buf = strsub(ls.save_buf, 1, -2)
 end
 
 local function save_and_next(ls)
@@ -183,6 +196,11 @@ local function lex_number(ls)
     end
     while char_isident(ls.current) or ls.current == '.' or
         ((ls.current == '-' or ls.current == '+') and lower(c) == xp) do
+        if ls.current == '.' and c == '.' then
+            undo_char(ls)
+            push_char(ls, '.')
+            break
+        end
         c = lower(ls.current)
         save(ls, c)
         nextchar(ls)
@@ -383,7 +401,7 @@ local function llex(ls)
                     nextchar(ls)
                     return 'TK_dots' -- ...
                 end
-                return 'TK_concat' -- ..
+                return 'TK_range' -- ..
             elseif not char_isdigit(ls.current) then
                 return '.'
             else

@@ -75,7 +75,7 @@ end
 -- modulus is your friend
 local BinOp = {
     ['+']  = 6 * 256 + 6, ['-']    = 6 * 256 + 6, ['*'] = 7 * 256 + 7, ['/'] = 7 * 256 + 7, ['%'] = 7 * 256 + 7,
-    ['^']  = 10* 256 + 9, TK_concat= 5 * 256 + 4, -- POW CONCAT (right associative)
+    ['^']  = 10* 256 + 9, ['~']    = 5 * 256 + 4, -- POW CONCAT (right associative)
     TK_eq  = 3 * 256 + 3, TK_ne    = 3 * 256 + 3,
     ['<']  = 3 * 256 + 3, TK_ge    = 3 * 256 + 3, ['>'] = 3 * 256 + 3, TK_le = 3 * 256 + 3,
     TK_and = 2 * 256 + 2, TK_or    = 1 * 256 + 1,
@@ -235,14 +235,26 @@ function expr_primary(ast, ls)
         elseif ls.token == '[' then
             ls:next()
             local key = expr(ast, ls)
-            local key_col
+            local upto
+            if lex_opt(ls, 'TK_range') then
+                upto = expr(ast, ls)
+            end
+            local upto_col, key_col
             if lex_opt(ls, ',') then
                 key_col = expr(ast, ls)
+                if lex_opt(ls, 'TK_range') then
+                    upto_col = expr(ast, ls)
+                end
             end
             lex_check(ls, ']')
             if key_col then
-                vk, v = 'indexed', ast:expr_index_dual(v, key, key_col)
+                if upto or upto_col then
+                    vk, v = 'slice', ast:expr_slice(v, key, upto, key_col, upto_col)
+                else
+                    vk, v = 'indexed', ast:expr_index_dual(v, key, key_col)
+                end
             else
+                if upto then err_syntax(ls, "slicing with non-matrix indexing") end
                 vk, v = 'indexed', ast:expr_index(v, key)
             end
         elseif ls.token == ':' then
@@ -363,7 +375,7 @@ function parse_args(ast, ls)
 end
 
 local function parse_assignment(ast, ls, vlist, var, vk)
-    checkcond(ls, vk == 'var' or vk == 'indexed', 'syntax error')
+    checkcond(ls, vk == 'var' or vk == 'indexed' or vk == 'slice', 'syntax error')
     vlist[#vlist+1] = var
     if lex_opt(ls, ',') then
         local n_var, n_vk = expr_primary(ast, ls)
