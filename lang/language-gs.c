@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include "lua.h"
+#include "luaconf.h"
 #include "lauxlib.h"
 #include "lualib.h"
 #include "language.h"
@@ -51,8 +52,8 @@ table_keys_xtransfer(lua_State *L) {
 static void
 path_pushstring_sub(lua_State *L, const char *s, size_t len)
 {
-    if (len == 7 && strncmp(s, "./?.lua", 7) == 0) {
-        lua_pushstring(L, "lang/?.lua");
+    if (len == 7 && strncmp(s, "." LUA_DIRSEP "?.lua", 7) == 0) {
+        lua_pushstring(L, "lang" LUA_DIRSEP "?.lua");
     } else {
         lua_pushlstring(L, s, len);
     }
