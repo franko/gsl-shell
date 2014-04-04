@@ -10,6 +10,18 @@ local function literal(value)
     return build("Literal", { value = value })
 end
 
+local function binop(op, left, right)
+    return build("BinaryExpression", { operator = op, left = left, right = right })
+end
+
+local function field(obj, name)
+    return build("MemberExpression", { object = obj, property = ident(name), computed = false })
+end
+
+local function tget(obj, index)
+    return build("MemberExpression", { object = obj, property = index, computed = true })
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, firstline, lastline)
@@ -80,13 +92,9 @@ end
 
 function AST.expr_index_dual(ast, v, row, col, line)
     local one = literal(1)
-    local index = build("BinaryExpression", { operator = "-", left = row, right = one })
-    local tda = build("MemberExpression", { object = v, property = ident("tda"), computed = false })
-    index = build("BinaryExpression", { operator = "*", left = tda, right = index })
-    local colmm = build("BinaryExpression", { operator = "-", left = col, right = one })
-    index = build("BinaryExpression", { operator = "+", left = index, right = colmm })
-    local data = build("MemberExpression", { object = v, property = ident("data"), computed = false })
-    return build("MemberExpression", { object = data, property = index, computed = true })
+    local index = binop("*", field(v, "tda"), binop("-", row, one))
+    index = binop("+", index, binop("-", col, one))
+    return tget(field(v, "data"), index)
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
