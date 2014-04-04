@@ -6,6 +6,10 @@ local function ident(name, line)
     return build("Identifier", { name = name, line = line })
 end
 
+local function literal(value)
+    return build("Literal", { value = value })
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, firstline, lastline)
@@ -75,7 +79,14 @@ function AST.expr_index(ast, v, index, line)
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
-    return build("MatrixElementExpression", { object = v, row = row, column = col, line = line })
+    local one = literal(1)
+    local index = build("BinaryExpression", { operator = "-", left = row, right = one })
+    local tda = build("MemberExpression", { object = v, property = ident("tda"), computed = false })
+    index = build("BinaryExpression", { operator = "*", left = tda, right = index })
+    local colmm = build("BinaryExpression", { operator = "-", left = col, right = one })
+    index = build("BinaryExpression", { operator = "+", left = index, right = colmm })
+    local data = build("MemberExpression", { object = v, property = ident("data"), computed = false })
+    return build("MemberExpression", { object = data, property = index, computed = true })
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
@@ -90,7 +101,7 @@ function AST.expr_property(ast, v, prop, line)
 end
 
 function AST.literal(ast, val)
-    return build("Literal", { value = val })
+    return literal(val)
 end
 
 function AST.expr_vararg(ast)

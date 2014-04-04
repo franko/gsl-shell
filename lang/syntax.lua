@@ -92,7 +92,7 @@ local syntax = {
       properties = {
          left = {
             type = "list",
-            kind = { "MatrixSliceExpression", "MatrixElementExpression", "MemberExpression", "Identifier" },
+            kind = { "MatrixSliceExpression", "MemberExpression", "Identifier" },
          },
          right = {
             type = "list",
@@ -116,24 +116,6 @@ local syntax = {
             type = "node",
             kind = "Expression"
          }
-      }
-   },
-   MatrixElementExpression = {
-      kind = "MatrixElementExpression",
-      base = "Expression",
-      properties = {
-         object = {
-            type = "node",
-            kind = "Expression"
-         },
-         row = {
-            type = "node",
-            kind = "Expression"
-         },
-         column = {
-            type = "node",
-            kind = "Expression"
-         },
       }
    },
    MatrixSliceExpression = {
