@@ -1,9 +1,5 @@
 local build = require('syntax').build
 
-local function ident(name, line)
-    return build("Identifier", { name = name, line = line })
-end
-
 local CONCAT_OP = '~'
 
 local function ident(name, line)
