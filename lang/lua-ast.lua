@@ -2,6 +2,10 @@ local build = require('syntax').build
 
 local function build_stmt(ast, kind, prop)
     local stmt = build(kind, prop)
+    if #ast.gen_stmts > 0 then
+        stmt.pre_stms = ast.gen_stmts
+        ast.gen_stmts = { }
+    end
     return stmt
 end
 
@@ -25,6 +29,21 @@ end
 
 local function tget(obj, index)
     return build("MemberExpression", { object = obj, property = index, computed = true })
+end
+
+local function recollect_stmts(stmts)
+    local ls = { }
+    for i = 1, #stmts do
+        local s = stmts[i]
+        if s.pre_stms then
+            for k = 1, #s.pre_stms do
+                ls[#ls + 1] = s.pre_stms[k]
+            end
+            s.pre_stms = nil
+        end
+        ls[#ls + 1] = s
+    end
+    return ls
 end
 
 local AST = { }
@@ -72,11 +91,13 @@ function AST.function_decl(ast, path, args, body, proto)
 end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
-    return build("Chunk", { body = body, chunkname = chunkname, firstline = firstline, lastline = lastline })
+    local body_stmts = recollect_stmts(body)
+    return build("Chunk", { body = body_stmts, chunkname = chunkname, firstline = firstline, lastline = lastline })
 end
 
 function AST.block_stmt(ast, body, firstline, lastline)
-    return build("BlockStatement", { body = body, firstline = firstline, lastline = lastline })
+    local body_stmts = recollect_stmts(body)
+    return build("BlockStatement", { body = body_stmts, firstline = firstline, lastline = lastline })
 end
 
 function AST.local_decl(ast, vlist, exps, line)
@@ -297,7 +318,8 @@ end
 local ASTClass = { __index = AST }
 
 local function new_ast()
-    return setmetatable({ }, ASTClass)
+    local ast = { gen_stmts = { } }
+    return setmetatable(ast, ASTClass)
 end
 
 return { New = new_ast }
