@@ -118,6 +118,7 @@ function AST.local_decl(ast, vlist, exps, line)
 end
 
 function AST.assignment_expr(ast, vars, exps, line)
+    ast:mark_mutable(vars)
     return build_stmt(ast, "AssignmentExpression", { left = vars, right = exps, line = line })
 end
 
@@ -278,7 +279,8 @@ end
 
 function AST.var_declare(ast, name)
     local id = ident(name)
-    ast.current.vars[name] = true
+    local vinfo = { id = id, mutable = false }
+    ast.current.vars[name] = vinfo
     return id
 end
 
@@ -293,7 +295,7 @@ end
 function AST.lookup(ast, name)
     local current = ast.current
     while current do
-        if current.vars[name] then return 'local' end
+        if current.vars[name] then return 'local', current end
         if current.imports then
             for k = 1, #current.imports do
                 local mod = current.imports[k]
@@ -313,6 +315,19 @@ function AST.add_used_var(ast, mod, name)
     local var_id = ident(name)
     mod.vids[#mod.vids + 1] = var_id
     mod.exps[#mod.exps + 1] = build("MemberExpression", { object = mod.id, property = var_id, computed = false })
+end
+
+function AST.mark_mutable(ast, vars)
+    for i = 1, #vars do
+        local v = vars[i]
+        if v.kind == "Identifier" then
+            local usage, scope = ast:lookup(v.name)
+            if usage == "local" then
+                local vinfo = scope.vars[v.name]
+                vinfo.mutable = true
+            end
+        end
+    end
 end
 
 function AST.fscope_register_use(ast, mod)
