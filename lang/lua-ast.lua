@@ -290,13 +290,6 @@ function AST.fscope_end(ast)
     ast.current = ast.current.parent
 end
 
-local function new_scope(parent_scope)
-    return {
-        vars = { },
-        parent = parent_scope,
-    }
-end
-
 function AST.lookup(ast, name)
     local current = ast.current
     while current do
@@ -320,20 +313,6 @@ function AST.add_used_var(ast, mod, name)
     local var_id = ident(name)
     mod.vids[#mod.vids + 1] = var_id
     mod.exps[#mod.exps + 1] = build("MemberExpression", { object = mod.id, property = var_id, computed = false })
-end
-
-function AST.var_declare(ast, name)
-    local id = ident(name)
-    ast.current.vars[name] = true
-    return id
-end
-
-function AST.fscope_begin(ast)
-    ast.current = new_scope(ast.current)
-end
-
-function AST.fscope_end(ast)
-    ast.current = ast.current.parent
 end
 
 function AST.fscope_register_use(ast, mod)
