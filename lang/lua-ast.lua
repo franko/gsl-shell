@@ -1,5 +1,10 @@
 local build = require('syntax').build
 
+local function build_stmt(ast, kind, prop)
+    local stmt = build(kind, prop)
+    return stmt
+end
+
 local CONCAT_OP = '~'
 
 local function ident(name, line)
@@ -63,7 +68,7 @@ end
 
 function AST.function_decl(ast, path, args, body, proto)
     local fn = func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
-    return build("AssignmentExpression", { left = { path }, right = { fn }, line = line })
+    return build_stmt(ast, "AssignmentExpression", { left = { path }, right = { fn }, line = line })
 end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
@@ -79,11 +84,11 @@ function AST.local_decl(ast, vlist, exps, line)
     for k = 1, #vlist do
         ids[k] = ast:var_declare(vlist[k])
     end
-    return build("LocalDeclaration", { names = ids, expressions = exps, line = line })
+    return build_stmt(ast, "LocalDeclaration", { names = ids, expressions = exps, line = line })
 end
 
 function AST.assignment_expr(ast, vars, exps, line)
-    return build("AssignmentExpression", { left = vars, right = exps, line = line })
+    return build_stmt(ast, "AssignmentExpression", { left = vars, right = exps, line = line })
 end
 
 function AST.expr_index(ast, v, index, line)
@@ -172,49 +177,49 @@ function AST.expr_function_call(ast, v, args)
 end
 
 function AST.return_stmt(ast, exps, line)
-    return build("ReturnStatement", { arguments = exps, line = line })
+    return build_stmt(ast, "ReturnStatement", { arguments = exps, line = line })
 end
 
 function AST.break_stmt(ast, line)
-    return build("BreakStatement", { line = line })
+    return build_stmt(ast, "BreakStatement", { line = line })
 end
 
 function AST.label_stmt(ast, name, line)
-    return build("LabelStatement", { label = name, line = line })
+    return build_stmt(ast, "LabelStatement", { label = name, line = line })
 end
 
 function AST.new_statement_expr(ast, expr, line)
-    return build("ExpressionStatement", { expression = expr, line = line })
+    return build_stmt(ast, "ExpressionStatement", { expression = expr, line = line })
 end
 
 function AST.if_stmt(ast, tests, cons, else_branch, line)
-    return build("IfStatement", { tests = tests, cons = cons, alternate = else_branch, line = line })
+    return build_stmt(ast, "IfStatement", { tests = tests, cons = cons, alternate = else_branch, line = line })
 end
 
 function AST.do_stmt(ast, body, line)
-    return build("DoStatement", { body = body, line = line })
+    return build_stmt(ast, "DoStatement", { body = body, line = line })
 end
 
 function AST.while_stmt(ast, test, body, line)
-    return build("WhileStatement", { test = test, body = body, line = line })
+    return build_stmt(ast, "WhileStatement", { test = test, body = body, line = line })
 end
 
 function AST.repeat_stmt(ast, test, body, line)
-    return build("RepeatStatement", { test = test, body = body, line = line })
+    return build_stmt(ast, "RepeatStatement", { test = test, body = body, line = line })
 end
 
 function AST.for_stmt(ast, var, init, last, step, body, line)
     local for_init = build("ForInit", { id = var, value = init, line = line })
-    return build("ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
+    return build_stmt(ast, "ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
 end
 
 function AST.for_iter_stmt(ast, vars, exps, body, line)
     local names = build("ForNames", { names = vars, line = line })
-    return build("ForInStatement", { namelist = names, explist = exps, body = body, line = line })
+    return build_stmt(ast, "ForInStatement", { namelist = names, explist = exps, body = body, line = line })
 end
 
 function AST.goto_stmt(ast, name, line)
-    return build("GotoStatement", { label = name, line = line })
+    return build_stmt(ast, "GotoStatement", { label = name, line = line })
 end
 
 local function new_scope(parent_scope)
