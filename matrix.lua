@@ -71,7 +71,8 @@ end
 
 local function matrix_calloc(n1, n2)
    local b = block_calloc(n1 * n2)
-   local m = gsl_matrix_complex(n1, n2, n2, b.data, b, 1)
+   local cdata = ffi.cast('gsl_complex *', b.data)
+   local m = gsl_matrix_complex(n1, n2, n2, cdata, b, 1)
    return m
 end
 
@@ -104,9 +105,7 @@ local function matrix_cnew(n1, n2, f)
       for i=0, n1-1 do
          for j=0, n2-1 do
             local z = f(i+1, j+1)
-            local x, y = cartesian(z)
-            m.data[2*i*n2+2*j  ] = x
-            m.data[2*i*n2+2*j+1] = y
+            m.data[i*n2+j] = z
          end
       end
    else
@@ -332,7 +331,7 @@ end
 local function matrix_complex_col(m, j)
    j = check_col_index (m, j)
    local mb = m.block
-   local r = gsl_matrix_complex(m.size1, 1, m.tda, m.data + 2*j, mb, 1)
+   local r = gsl_matrix_complex(m.size1, 1, m.tda, m.data + j, mb, 1)
    mb.ref_count = mb.ref_count + 1
    return r
 end
@@ -340,7 +339,7 @@ end
 local function matrix_complex_row(m, i)
    i = check_row_index (m, i)
    local mb = m.block
-   local r = gsl_matrix_complex(1, m.size2, 1, m.data + 2*i*m.tda, mb, 1)
+   local r = gsl_matrix_complex(1, m.size2, 1, m.data + i*m.tda, mb, 1)
    mb.ref_count = mb.ref_count + 1
    return r
 end
@@ -348,7 +347,7 @@ end
 local function matrix_complex_row_as_column(m, i)
    i = check_row_index (m, i)
    local mb = m.block
-   local r = gsl_matrix_complex(m.size2, 1, 1, m.data + 2*i*m.tda, mb, 1)
+   local r = gsl_matrix_complex(m.size2, 1, 1, m.data + i*m.tda, mb, 1)
    mb.ref_count = mb.ref_count + 1
    return r
 end
@@ -357,7 +356,7 @@ local function matrix_complex_slice(m, i, j, ni, nj)
    check_indices (m, i+ni-1, j+nj-1)
    i, j = check_indices (m, i, j)
    local mb = m.block
-   local r = gsl_matrix_complex(ni, nj, m.tda, m.data + 2*i*m.tda + 2*j, mb, 1)
+   local r = gsl_matrix_complex(ni, nj, m.tda, m.data + i*m.tda + j, mb, 1)
    mb.ref_count = mb.ref_count + 1
    return r
 end
@@ -372,21 +371,11 @@ local function matrix_vect_def(t)
       end
    end
 
-   if isr then
-      local m = matrix_alloc(n, 1)
-      for i=0, n-1 do
-         m.data[i] = t[i+1]
-      end
-      return m
-   else
-      local m = matrix_calloc(n, 1)
-      for i=0, n-1 do
-         local x, y = cartesian(t[i+1])
-         m.data[2*i  ] = x
-         m.data[2*i+1] = y
-      end
-      return m
+   local m = isr and matrix_alloc(n, 1) or matrix_calloc(n, 1)
+   for i=0, n-1 do
+      m.data[i] = t[i+1]
    end
+   return m
 end
 
 local function mat_op_gen(n1, n2, opa, a, opb, b, oper)
@@ -408,8 +397,7 @@ local function mat_comp_op_gen(n1, n2, opa, a, opb, b, oper)
          local ar, ai = opa(a,i,j)
          local br, bi = opb(b,i,j)
          local zr, zi = oper(ar, br, ai, bi)
-         c.data[2*i*n2+2*j  ] = zr
-         c.data[2*i*n2+2*j+1] = zi
+         c.data[i*n2+j] = gsl_complex(zr, zi)
       end
    end
    return c
@@ -420,8 +408,8 @@ local function complex_get(z) return z[0], z[1] end
 local function mat_real_get(m,i,j) return m.data[i*m.tda+j], 0 end
 
 local function mat_complex_get(m,i,j)
-   local idx = 2*i*m.tda+2*j
-   return m.data[idx],  m.data[idx+1]
+   local z = m.data[i*m.tda+j]
+   return z[0], z[1]
 end
 
 local function selector(r, s)
@@ -437,8 +425,7 @@ local function mat_complex_of_real(m)
    local mc = matrix_calloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
-         mc.data[2*i*n2+2*j  ] = m.data[i*n2+j]
-         mc.data[2*i*n2+2*j+1] = 0
+         mc.data[i*n2+j] = m.data[i*n2+j]
       end
    end
    return mc
@@ -527,8 +514,7 @@ local function matrix_complex_unm(a)
    local m = matrix_calloc(n1, n2)
    for i=0, n1-1 do
       for j=0, n2-1 do
-         m.data[2*n2*i+2*j  ] = -a.data[2*n2*i+2*j  ]
-         m.data[2*n2*i+2*j+1] = -a.data[2*n2*i+2*j+1]
+         m.data[n2*i+j] = -a.data[n2*i+j]
       end
    end
    return m
@@ -558,10 +544,10 @@ local function matrix_complex_norm2(m)
    local ssq, idx = 0, 0
    for i = 0, r-1 do
       for j = 0, c-1 do
-         local x, y = m.data[idx+2*j], m.data[idx+2*j+1]
-         ssq = ssq + x*x + y*y
+         local z = m.data[idx+j]
+         ssq = ssq + z[0]*z[0] + z[1]*z[1]
       end
-      idx = idx + 2*tda
+      idx = idx + tda
    end
    return ssq
 end
@@ -787,7 +773,7 @@ local function matrix_complex_index(m, i)
    if is_integer(i) then
       if m.size2 == 1 then
          i = check_row_index (m, i)
-         return gsl_complex(m.data[2*i*m.tda], m.data[2*i*m.tda+1])
+         return m.data[i*m.tda]
       else
          return matrix_complex_row_as_column(m, i)
       end
@@ -802,9 +788,7 @@ local function matrix_complex_newindex(m, k, v)
       k = check_row_index (m, k)
       if nc == 1 then
          if not iss then error('invalid assignment: expecting a scalar') end
-         local vx, vy = cartesian(v)
-         m.data[2*k*m.tda  ] = vx
-         m.data[2*k*m.tda+1] = vy
+         m.data[k*m.tda] = v
       else
          if iss then error('invalid assignment: expecting a row matrix') end
          if v.size1 ~= nc or v.size2 ~= 1 then
@@ -813,8 +797,7 @@ local function matrix_complex_newindex(m, k, v)
          local sel = selector(isr, iss)
          for j = 0, nc-1 do
             local vx, vy = sel(v, j, 0)
-            m.data[2*k*m.tda+2*j  ] = vx
-            m.data[2*k*m.tda+2*j+1] = vy
+            m.data[k*m.tda+j] = gsl_complex(vx, vy)
          end
       end
    else
@@ -893,9 +876,7 @@ local function matrix_cdef(t)
    for i= 0, r-1 do
       local row = t[i+1]
       for j = 0, c-1 do
-         local x, y = cartesian(row[j+1])
-         m.data[2*i*c+2*j  ] = x
-         m.data[2*i*c+2*j+1] = y
+         m.data[i*c+j] = row[j+1]
       end
    end
    return m
@@ -1176,7 +1157,7 @@ function matrix.__slice(m, ia, ib, ja, jb)
       return r
    else
       local mb = m.block
-      local r = gsl_matrix_complex(ni, nj, m.tda, m.data + 2*(ia-1)*m.tda + 2*(ja-1), mb, 1)
+      local r = gsl_matrix_complex(ni, nj, m.tda, m.data + (ia-1)*m.tda + (ja-1), mb, 1)
       mb.ref_count = mb.ref_count + 1
       return r
    end
@@ -1223,12 +1204,10 @@ function matrix.build(t, ncols)
    local m
    if use_complex then
       m = matrix.calloc(nrows, ncols)
-      local data = m.data
-      for i = 0, #t - 1 do data[2*i], data[2*i+1] = cartesian(t[i + 1]) end
    else
       m = matrix.alloc(nrows, ncols)
-      for i = 0, #t - 1 do m.data[i]= t[i + 1] end
    end
+   for i = 0, #t - 1 do m.data[i] = t[i + 1] end
    return m
 end
 
