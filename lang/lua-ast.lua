@@ -23,12 +23,21 @@ local function binop(op, left, right)
     return build("BinaryExpression", { operator = op, left = left, right = right })
 end
 
+local function logical(op, left, right)
+    return build("LogicalExpression", { operator = op, left = left, right = right })
+end
+
 local function field(obj, name)
     return build("MemberExpression", { object = obj, property = ident(name), computed = false })
 end
 
 local function tget(obj, index)
     return build("MemberExpression", { object = obj, property = index, computed = true })
+end
+
+local function error_stmt(msg)
+    local expr = build("CallExpression", { callee = ident("error"), arguments = { literal(msg) } })
+    return build("ExpressionStatement", { expression = expr })
 end
 
 local function recollect_stmts(stmts)
@@ -116,8 +125,25 @@ function AST.expr_index(ast, v, index, line)
     return build("MemberExpression", { object = v, property = index, computed = true, line = line })
 end
 
+local function bound_check(index, inf, sup, line)
+    local clow = binop("<", index, inf)
+    local cupp = binop(">", index, sup)
+    local cond = logical("or", clow, cupp)
+    local err_stmt = error_stmt("index out of bounds")
+    local err_stmt_block = build("BlockStatement", { body = { err_stmt } })
+    return build("IfStatement", { tests = { cond }, cons = { err_stmt_block }, line = line })
+end
+
+function AST:add_generated_stmt(stmt)
+    self.gen_stmts[#self.gen_stmts+1] = stmt
+end
+
 function AST.expr_index_dual(ast, v, row, col, line)
     local one = literal(1)
+    local rowcheck = bound_check(row, one, field(v, "size1"), line)
+    local colcheck = bound_check(col, one, field(v, "size2"), line)
+    ast:add_generated_stmt(rowcheck)
+    ast:add_generated_stmt(colcheck)
     local index = binop("*", field(v, "tda"), binop("-", row, one))
     index = binop("+", index, binop("-", col, one))
     return tget(field(v, "data"), index)
