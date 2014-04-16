@@ -1,6 +1,6 @@
 /*
 ** Target architecture selection.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_ARCH_H
@@ -66,8 +66,8 @@
 #define LUAJIT_OS	LUAJIT_OS_LINUX
 #elif defined(__MACH__) && defined(__APPLE__)
 #define LUAJIT_OS	LUAJIT_OS_OSX
-#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
-      defined(__NetBSD__) || defined(__OpenBSD__)
+#elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
+       defined(__NetBSD__) || defined(__OpenBSD__)) && !defined(__ORBIS__)
 #define LUAJIT_OS	LUAJIT_OS_BSD
 #elif (defined(__sun__) && defined(__svr4__)) || defined(__CYGWIN__)
 #define LUAJIT_OS	LUAJIT_OS_POSIX
@@ -102,6 +102,13 @@
 #ifdef __CELLOS_LV2__
 #define LJ_TARGET_PS3		1
 #define LJ_TARGET_CONSOLE	1
+#endif
+
+#ifdef __ORBIS__
+#define LJ_TARGET_PS4		1
+#define LJ_TARGET_CONSOLE	1
+#undef NULL
+#define NULL ((void*)0)
 #endif
 
 #if _XBOX_VER >= 200
@@ -227,6 +234,7 @@
 
 #elif LUAJIT_TARGET == LUAJIT_ARCH_PPCSPE
 
+#error "The PPC/e500 port is broken and will be abandoned with LuaJIT 2.1"
 #define LJ_ARCH_NAME		"ppcspe"
 #define LJ_ARCH_BITS		32
 #define LJ_ARCH_ENDIAN		LUAJIT_BE
@@ -363,6 +371,21 @@
 #define LJ_HASFFI		0
 #else
 #define LJ_HASFFI		1
+#endif
+
+#if defined(LUAJIT_DISABLE_PROFILE)
+#define LJ_HASPROFILE		0
+#elif LJ_TARGET_POSIX
+#define LJ_HASPROFILE		1
+#define LJ_PROFILE_SIGPROF	1
+#elif LJ_TARGET_PS3
+#define LJ_HASPROFILE		1
+#define LJ_PROFILE_PTHREAD	1
+#elif LJ_TARGET_WINDOWS || LJ_TARGET_XBOX360
+#define LJ_HASPROFILE		1
+#define LJ_PROFILE_WTHREAD	1
+#else
+#define LJ_HASPROFILE		0
 #endif
 
 #ifndef LJ_ARCH_HASFPU

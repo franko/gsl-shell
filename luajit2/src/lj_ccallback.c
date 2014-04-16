@@ -1,6 +1,6 @@
 /*
 ** FFI C callback handling.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #include "lj_obj.h"
@@ -529,7 +529,7 @@ lua_State * LJ_FASTCALL lj_ccallback_enter(CTState *cts, void *cf)
   lua_State *L = cts->L;
   global_State *g = cts->g;
   lua_assert(L != NULL);
-  if (gcref(g->jit_L)) {
+  if (tvref(g->jit_base)) {
     setstrV(L, L->top++, lj_err_str(L, LJ_ERR_FFI_BADCBACK));
     if (g->panic) g->panic(L);
     exit(EXIT_FAILURE);
@@ -562,9 +562,9 @@ void LJ_FASTCALL lj_ccallback_leave(CTState *cts, TValue *o)
   }
   callback_conv_result(cts, L, o);
   /* Finally drop C frame and continuation frame. */
-  L->cframe = cframe_prev(L->cframe);
   L->top -= 2;
   L->base = obase;
+  L->cframe = cframe_prev(L->cframe);
   cts->cb.slot = 0;  /* Blacklist C function that called the callback. */
 }
 

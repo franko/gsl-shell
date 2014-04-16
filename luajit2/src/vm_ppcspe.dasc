@@ -1,6 +1,6 @@
 |// Low-level VM code for PowerPC/e500 CPUs.
 |// Bytecode interpreter, fast functions and helper functions.
-|// Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+|// Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 |
 |.arch ppc
 |.section code_op, code_sub
@@ -1455,12 +1455,6 @@ static void build_subroutines(BuildCtx *ctx)
   |  math_extern2 pow
   |  math_extern2 atan2
   |  math_extern2 fmod
-  |
-  |->ff_math_deg:
-  |.ffunc_n math_rad
-  |  evldd CARG2, CFUNC:RB->upvalue[0]
-  |  efdmul CRET1, CARG1, CARG2
-  |  b ->fff_restv
   |
   |.ffunc math_ldexp
   |  cmplwi NARGS8:RC, 16

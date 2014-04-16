@@ -1,6 +1,6 @@
 /*
 ** FFI C call handling.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #include "lj_obj.h"
@@ -9,7 +9,6 @@
 
 #include "lj_gc.h"
 #include "lj_err.h"
-#include "lj_str.h"
 #include "lj_tab.h"
 #include "lj_ctype.h"
 #include "lj_cconv.h"
