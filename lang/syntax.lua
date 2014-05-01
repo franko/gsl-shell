@@ -144,6 +144,26 @@ local syntax = {
          },
       }
    },
+   CheckIndex = {
+      kind = "CheckIndex",
+      base = "Statement",
+      properties = {
+         index = {
+            type = "node",
+            kind = "Expression"
+         },
+         inf = {
+            type = "node",
+            kind = "Expression",
+            optional = true,
+         },
+         sup = {
+            type = "node",
+            kind = "Expression",
+            optional = true,
+         },
+      }
+   },
    MemberExpression = {
       kind = "MemberExpression",
       base = "Expression",
@@ -586,6 +606,7 @@ local function validate(meta, node)
       else
          local ok, er = validate_any(spec, prop)
          if not ok then
+            print(debug.traceback())
             error(er.." for "..(node.kind or "?").."."..name)
          end
       end

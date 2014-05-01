@@ -343,6 +343,32 @@ function ExpressionRule:MemberExpression(node, dest)
    self.ctx:op_tget(dest, lhs.target, lhs.key_type, lhs.key)
 end
 
+function StatementRule:CheckIndex(node)
+   local free = self.ctx.freereg
+   local index = self:expr_toanyreg(node.index)
+   local doerror, exit = util.genid(), util.genid()
+   local base = self.ctx.freereg
+   if node.inf then
+      local inf = self:expr_toanyreg(node.inf)
+      self.ctx:op_comp('LT', index, nil, inf, doerror, free, false)
+      self.ctx.freereg = base
+   end
+   if node.sup then
+      local sup = self:expr_toanyreg(node.sup)
+      self.ctx:op_comp('LE', index, nil, sup, exit, free, false)
+   else
+      self.ctx:jump(exit, free)
+   end
+   self.ctx:here(doerror)
+   self.ctx.freereg = free
+   self.ctx:nextreg(2)
+   self.ctx:op_gget(free, "error")
+   self.ctx:op_load(free + 1, "index error")
+   self.ctx:op_call(free, 0, 1)
+   self.ctx.freereg = free
+   self.ctx:here(exit)
+end
+
 function StatementRule:FunctionDeclaration(node)
    local name = node.id.name
    local dest

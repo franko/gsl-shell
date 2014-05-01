@@ -50,7 +50,7 @@ end
 
 local expr_primary, expr, expr_unop, expr_binop, expr_simple
 local expr_list, expr_table
-local parse_body, parse_simple_body, parse_block, parse_args
+local parse_body, parse_simple_body, parse_block, parse_chunk, parse_args
 
 local function var_lookup(ast, ls)
     local name = lex_str(ls)
@@ -301,9 +301,12 @@ local function parse_for_num(ast, ls, varname, line)
         step = ast:literal(1)
     end
     lex_check(ls, 'TK_do')
-    local body = parse_block(ast, ls)
+    ast:fscope_begin()
+    local body = parse_chunk(ast, ls, false)
     local var = ast:identifier(varname)
-    return ast:for_stmt(var, init, last, step, body, line)
+    local stmt = ast:for_stmt(var, init, last, step, body, line)
+    ast:fscope_end()
+    return stmt
 end
 
 -- Parse 'for' iterator.
@@ -583,7 +586,7 @@ local function new_proto(ls, varargs)
     return { varargs = varargs }
 end
 
-local function parse_chunk(ast, ls, top_level)
+function parse_chunk(ast, ls, top_level)
     local firstline = ls.linenumber
     local islast = false
     local body = { }

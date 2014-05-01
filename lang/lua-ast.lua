@@ -1,9 +1,19 @@
 local build = require('syntax').build
+local libexpr = require('expr-utils')
+
+local function add_pre_stmts(stmt, pre_stmts)
+    if not stmt.pre_stmts then stmt.pre_stmts = { } end
+    local n = #stmt.pre_stmts
+    for i = 1, #pre_stmts do
+        stmt.pre_stmts[n + i] = pre_stmts[i]
+    end
+end
 
 local function build_stmt(ast, kind, prop)
     local stmt = build(kind, prop)
     if #ast.gen_stmts > 0 then
-        stmt.pre_stms = ast.gen_stmts
+        print(">>> adding generated statements", kind)
+        stmt.pre_stmts = ast.gen_stmts
         ast.gen_stmts = { }
     end
     return stmt
@@ -41,14 +51,15 @@ local function error_stmt(msg)
 end
 
 local function recollect_stmts(stmts)
+    print(">>> recollect_stmts")
     local ls = { }
     for i = 1, #stmts do
         local s = stmts[i]
-        if s.pre_stms then
-            for k = 1, #s.pre_stms do
-                ls[#ls + 1] = s.pre_stms[k]
+        if s.pre_stmts then
+            for k = 1, #s.pre_stmts do
+                ls[#ls + 1] = s.pre_stmts[k]
             end
-            s.pre_stms = nil
+            s.pre_stmts = nil
         end
         ls[#ls + 1] = s
     end
@@ -112,7 +123,7 @@ end
 function AST.local_decl(ast, vlist, exps, line)
     local ids = {}
     for k = 1, #vlist do
-        ids[k] = ast:var_declare(vlist[k])
+        ids[k] = ast:var_declare(vlist[k], exps[k])
     end
     return build_stmt(ast, "LocalDeclaration", { names = ids, expressions = exps, line = line })
 end
@@ -127,12 +138,7 @@ function AST.expr_index(ast, v, index, line)
 end
 
 local function bound_check(index, inf, sup, line)
-    local clow = binop("<", index, inf)
-    local cupp = binop(">", index, sup)
-    local cond = logical("or", clow, cupp)
-    local err_stmt = error_stmt("index out of bounds")
-    local err_stmt_block = build("BlockStatement", { body = { err_stmt } })
-    return build("IfStatement", { tests = { cond }, cons = { err_stmt_block }, line = line })
+    return build("CheckIndex", { index = index, inf = inf, sup = sup, line = line })
 end
 
 function AST:add_generated_stmt(stmt)
@@ -140,6 +146,7 @@ function AST:add_generated_stmt(stmt)
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
+    print(">>> expr_index_dual")
     local one = literal(1)
     local rowcheck = bound_check(row, one, field(v, "size1"), line)
     local colcheck = bound_check(col, one, field(v, "size2"), line)
@@ -256,9 +263,78 @@ function AST.repeat_stmt(ast, test, body, line)
     return build_stmt(ast, "RepeatStatement", { test = test, body = body, line = line })
 end
 
+local function check_index(index, inf, sup, line)
+    local index_const = libexpr.is_const(index)
+    if index_const then
+        local inf_const = inf and libexpr.is_const(inf)
+        if inf_const and index_const >= inf_const then
+            inf = nil
+        end
+        local sup_const = sup and libexpr.is_const(sup)
+        if sup_const and index_const <= sup_const then
+            sup = nil
+        end
+    end
+    if inf or sup then
+        return build("CheckIndex", { index = index, inf = inf, sup = sup, line = line })
+    end
+end
+
+function AST.for_post_process(ast, body, var, init, last, step)
+    print(">>> for post process", body, body.kind)
+    local for_scope = ast.current
+    local function var_context(var)
+        local name = var.name
+        local result, scope = ast:lookup(name)
+        local vinfo = result == "local" and scope.vars[name]
+        print(">>> var_context", var.name, result, vinfo and vinfo.mutable, for_scope == scope)
+        if result == "local" and vinfo.mutable == false then
+            if scope == for_scope then
+                return true, false, vinfo.value
+            else
+                return false, true
+            end
+        end
+        return false, false
+    end
+    local rstmts = { }
+    local i = 1
+    while body[i] do
+        local stmt = body[i]
+        print(">>> statement", i, stmt.kind)
+        if stmt.kind == "CheckIndex" then
+            print(">>> found check index statement")
+            local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context)
+            print(">>> linear:", lin, coeff)
+            if lin and libexpr.context_free(stmt.inf, var_context) and
+                       libexpr.context_free(stmt.sup, var_context) then
+                print(">>> relocating")
+                local index_inf = libexpr.eval(index, var, init)
+                local index_sup = libexpr.eval(index, var, last)
+                local util = require "util"
+                print(">>> index_inf\n", util.dump(index_inf))
+                print(">>> index_sup\n", util.dump(index_sup))
+                if coeff < 0 then index_inf, index_sup = index_sup, index_inf end
+                local icheck = check_index(index_inf, stmt.inf, nil, stmt.line)
+                if icheck then rstmts[#rstmts+1] = icheck end
+                local scheck = check_index(index_sup, nil, stmt.sup, stmt.line)
+                if scheck then rstmts[#rstmts+1] = scheck end
+                table.remove(body, i)
+                i = i - 1
+            end
+        end
+        i = i + 1
+    end
+    return rstmts
+end
+
 function AST.for_stmt(ast, var, init, last, step, body, line)
+    print(">>> for statement")
+    local pre_stmts = ast:for_post_process(body.body, var, init, last, step)
     local for_init = build("ForInit", { id = var, value = init, line = line })
-    return build_stmt(ast, "ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
+    local stmt = build_stmt(ast, "ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
+    add_pre_stmts(stmt, pre_stmts)
+    return stmt
 end
 
 function AST.for_iter_stmt(ast, vars, exps, body, line)
@@ -277,18 +353,21 @@ local function new_scope(parent_scope)
     }
 end
 
-function AST.var_declare(ast, name)
+function AST.var_declare(ast, name, value)
+    print(">>> VAR DECLARE", name, value)
     local id = ident(name)
-    local vinfo = { id = id, mutable = false }
+    local vinfo = { id = id, mutable = false, value = value }
     ast.current.vars[name] = vinfo
     return id
 end
 
 function AST.fscope_begin(ast)
+    print(">>> NEW SCOPE")
     ast.current = new_scope(ast.current)
 end
 
 function AST.fscope_end(ast)
+    print(">>> LEAVE SCOPE")
     ast.current = ast.current.parent
 end
 
@@ -325,6 +404,7 @@ function AST.mark_mutable(ast, vars)
             if usage == "local" then
                 local vinfo = scope.vars[v.name]
                 vinfo.mutable = true
+                vinfo.value = false
             end
         end
     end
@@ -338,7 +418,7 @@ end
 local ASTClass = { __index = AST }
 
 local function new_ast()
-    local ast = { gen_stmts = { } }
+    local ast = { gen_stmts = { }, for_stack = { } }
     return setmetatable(ast, ASTClass)
 end
 
