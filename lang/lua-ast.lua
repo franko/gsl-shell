@@ -306,8 +306,9 @@ function AST.for_post_process(ast, body, var, init, last, step)
             print(">>> found check index statement")
             local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context)
             print(">>> linear:", lin, coeff)
-            if lin and libexpr.context_free(stmt.inf, var_context) and
-                       libexpr.context_free(stmt.sup, var_context) then
+            local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context))
+            local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context))
+            if inf_cf and sup_cf then
                 print(">>> relocating")
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
