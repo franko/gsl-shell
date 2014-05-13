@@ -103,7 +103,7 @@ ffi.cdef[[
 	size_t size1;
 	size_t size2;
 	size_t tda;
-	double * data;
+	gsl_complex * data;
 	gsl_block_complex * block;
 	int owner;
      } gsl_matrix_complex;
