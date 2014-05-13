@@ -3,7 +3,7 @@
 ** AA: Alias Analysis using high-level semantic disambiguation.
 ** FWD: Load Forwarding (L2L) + Store Forwarding (S2L).
 ** DSE: Dead-Store Elimination.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_opt_mem_c
@@ -618,16 +618,17 @@ static AliasRet aa_xref(jit_State *J, IRIns *refa, IRIns *xa, IRIns *xb)
     basea = IR(refa->op1);
     ofsa = (LJ_64 && irk->o == IR_KINT64) ? (ptrdiff_t)ir_k64(irk)->u64 :
 					    (ptrdiff_t)irk->i;
-    if (basea == refb && ofsa != 0)
-      return ALIAS_NO;  /* base+-ofs vs. base. */
   }
   if (refb->o == IR_ADD && irref_isk(refb->op2)) {
     IRIns *irk = IR(refb->op2);
     baseb = IR(refb->op1);
     ofsb = (LJ_64 && irk->o == IR_KINT64) ? (ptrdiff_t)ir_k64(irk)->u64 :
 					    (ptrdiff_t)irk->i;
-    if (refa == baseb && ofsb != 0)
-      return ALIAS_NO;  /* base vs. base+-ofs. */
+  }
+  /* Treat constified pointers like base vs. base+offset. */
+  if (basea->o == IR_KPTR && baseb->o == IR_KPTR) {
+    ofsb += (char *)ir_kptr(baseb) - (char *)ir_kptr(basea);
+    baseb = basea;
   }
   /* This implements (very) strict aliasing rules.
   ** Different types do NOT alias, except for differences in signedness.
@@ -739,21 +740,19 @@ retry:
     case ALIAS_MUST:
       /* Emit conversion if the loaded type doesn't match the forwarded type. */
       if (!irt_sametype(fins->t, IR(store->op2)->t)) {
-	IRType st = irt_type(fins->t);
-	if (st == IRT_I8 || st == IRT_I16) {  /* Trunc + sign-extend. */
-	  st |= IRCONV_SEXT;
-	} else if (st == IRT_U8 || st == IRT_U16) {  /* Trunc + zero-extend. */
-	} else if (st == IRT_INT) {
-	  st = irt_type(IR(store->op2)->t);  /* Needs dummy CONV.int.*. */
-	} else {  /* I64/U64 are boxed, U32 is hidden behind a CONV.num.u32. */
-	  goto store_fwd;
+	IRType dt = irt_type(fins->t), st = irt_type(IR(store->op2)->t);
+	if (dt == IRT_I8 || dt == IRT_I16) {  /* Trunc + sign-extend. */
+	  st = dt | IRCONV_SEXT;
+	  dt = IRT_INT;
+	} else if (dt == IRT_U8 || dt == IRT_U16) {  /* Trunc + zero-extend. */
+	  st = dt;
+	  dt = IRT_INT;
 	}
-	fins->ot = IRTI(IR_CONV);
+	fins->ot = IRT(IR_CONV, dt);
 	fins->op1 = store->op2;
-	fins->op2 = (IRT_INT<<5)|st;
+	fins->op2 = (dt<<5)|st;
 	return RETRYFOLD;
       }
-    store_fwd:
       return store->op2;  /* Store forwarding. */
     }
     ref = store->prev;

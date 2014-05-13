@@ -7,12 +7,12 @@
 # Also works with MinGW and Cygwin on Windows.
 # Please check msvcbuild.bat for building with MSVC on Windows.
 #
-# Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+# Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 ##############################################################################
 
 MAJVER=  2
 MINVER=  0
-RELVER=  2
+RELVER=  3
 ABIVER=  5.1
 NODOTABIVER= 51
 
@@ -122,8 +122,10 @@ XCFLAGS=
 #
 # Use the system provided memory allocator (realloc) instead of the
 # bundled memory allocator. This is slower, but sometimes helpful for
-# debugging. It's helpful for Valgrind's memcheck tool, too. This option
-# cannot be enabled on x64, since the built-in allocator is mandatory.
+# debugging. This option cannot be enabled on x64, since realloc usually
+# doesn't return addresses in the right address range.
+# OTOH this option is mandatory for Valgrind's memcheck tool on x64 and
+# the only way to get useful results from it for all other architectures.
 #XCFLAGS+= -DLUAJIT_USE_SYSMALLOC
 #
 # This define is required to run LuaJIT under Valgrind. The Valgrind
@@ -299,7 +301,9 @@ ifeq (Darwin,$(TARGET_SYS))
   endif
   TARGET_STRIP+= -x
   TARGET_AR+= 2>/dev/null
-  TARGET_XCFLAGS+= -fno-stack-protector
+  ifeq (,$(shell $(TARGET_CC) -o /dev/null -c -x c /dev/null -fno-stack-protector 2>/dev/null || echo 1))
+    TARGET_XCFLAGS+= -fno-stack-protector
+  endif
   TARGET_XSHLDFLAGS= -dynamiclib -single_module -undefined dynamic_lookup -fPIC
   TARGET_DYNXLDOPTS=
   TARGET_XSHLDFLAGS+= -install_name $(TARGET_DYLIBPATH) -compatibility_version $(MAJVER).$(MINVER) -current_version $(MAJVER).$(MINVER).$(RELVER)

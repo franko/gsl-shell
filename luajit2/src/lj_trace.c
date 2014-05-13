@@ -1,6 +1,6 @@
 /*
 ** Trace management.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_trace_c
@@ -607,6 +607,7 @@ static TValue *trace_state(lua_State *L, lua_CFunction dummy, void *ud)
       }
       lj_opt_split(J);
       lj_opt_sink(J);
+      if (!J->loopref) J->cur.snap[J->cur.nsnap-1].count = SNAPCOUNT_DONE;
       J->state = LJ_TRACE_ASM;
       break;
 
@@ -778,7 +779,7 @@ int LJ_FASTCALL lj_trace_exit(jit_State *J, void *exptr)
   setcframe_pc(cf, pc);
   if (G(L)->gc.state == GCSatomic || G(L)->gc.state == GCSfinalize) {
     if (!(G(L)->hookmask & HOOK_GC))
-      lj_gc_check(L);  /* Exited because of GC: drive GC forward. */
+      lj_gc_step(L);  /* Exited because of GC: drive GC forward. */
   } else {
     trace_hotside(J, pc);
   }
