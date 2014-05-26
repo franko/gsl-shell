@@ -58,7 +58,7 @@ ifeq ($(strip $(USE_READLINE)),yes)
   C_SRC_FILES += completion.c
 endif
 
-LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua \
+LUA_BASE_FILES = bspline.lua fft.lua fftw3/init.lua fftw3/cdefs.lua fftw3/defines.lua integ-init.lua template.lua check.lua \
 	graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua \
 	roots.lua contour.lua gsl.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua \
 	import.lua plot3d.lua sf.lua vegas.lua eigen.lua help.lua cgdt.lua expr-actions.lua \
