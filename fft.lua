@@ -147,7 +147,23 @@ local function rdftinv(invec, dimlist, outvec)
 		end
 
 		local output = outvec.data
-		local input = ffi.cast("fftw_complex*",invec.data)
+		
+		--[[Copying over the input because according to FFTW docs:
+		"Second, the inverse transform (complex to real) has the side-effect of overwriting its input array,
+		by default. Neither of these inconveniences should pose a serious problem for users,
+		but it is important to be aware of them."
+
+		and also
+
+		"As noted above, the c2r transform destroys its input array even for out-of-place transforms.
+		This can be prevented, if necessary, by including FFTW_PRESERVE_INPUT in the flags,
+		with unfortunately some sacrifice in performance.
+		This flag is also not currently supported for multi-dimensional real DFTs (next section)."
+
+		For reason of generality here we always copy over the input for the c2r transformation.
+		]]--
+		local input = ffi.new("fftw_complex[?]",size)
+		ffi.copy(input, invec.data, size*ffi.sizeof("fftw_complex"))
 
 		--Check if plan is existing, then use it
 		if rdftplans[rank] ~= nil and rdftplans[rank][direction] ~= nil and

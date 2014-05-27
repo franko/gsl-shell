@@ -78,7 +78,7 @@ The FFT implementation in gsl-shell is an interface to the `FFTW library <http:/
 
 .. function:: rfftinv(input[, output])
 
-    Performs the inverse Fourier transformation with complex-valued input and real-valued output.
+    Performs the inverse Fourier transformation with complex-valued input and real-valued output. Due to the implementation of the FFTW library, changes in the input matrix can occur which is why it is copied internally.
     For the input of :math:`n`, the output has size :math:`(n-1)\times2`.
     This is the direct inversion of :func:`num.rfft` as see in the example::
 
@@ -99,7 +99,7 @@ The FFT implementation in gsl-shell is an interface to the `FFTW library <http:/
 
 .. function:: rfft2inv(input, [output])
 
-    Performs the 2D inverse Fourier transformation with complex-valued input matrix ``input``.
+    Performs the 2D inverse Fourier transformation with complex-valued input matrix ``input``. Due to the implementation of the FFTW library, changes in the input matrix can occur which is why it is copied internally.
     Returns the real-valued output with increased dimension. Giving a preallocated output matrix as a second argument speeds up repetitive transformations.
 
 .. function:: fftn(input, dimlist, [output])
@@ -118,7 +118,7 @@ The FFT implementation in gsl-shell is an interface to the `FFTW library <http:/
 
     For forward transformations the real-valued input has size :math:`n_1 \times n_2 \times ... \times n_N` and the complex-valued output is of size :math:`n_1 \times n_2 \times ... \times n_N/2+1`.
 
-    For the backward transformation the complex-valued input has size :math:`n_1 \times n_2 \times ... \times n_N/2+1` and the real-valued output has size :math:`n_1 \times n_2 \times ... \times n_N` consequently.
+    For the backward transformation the complex-valued input has size :math:`n_1 \times n_2 \times ... \times n_N/2+1` and the real-valued output has size :math:`n_1 \times n_2 \times ... \times n_N` consequently. Due to the implementation of the FFTW library, changes in the input matrix can occur for backward transformations which is why the input matrix is copied internally.
 
 Examples
 -----------
