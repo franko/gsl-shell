@@ -9,6 +9,7 @@ GSL Shell needs the following external libraries:
 - GSL Library, version 1.14 or 1.15
 - GNU readline library (on Linux only)
 - Freetype2 library, version 2.4.10
+- FFTW shared library, version 3.3+
 
 To build the Graphical user interface you will need also the FOX 1.6 library.
 
