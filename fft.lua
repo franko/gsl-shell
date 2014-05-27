@@ -102,7 +102,6 @@ local function rdft(invec, dimlist, outvec)
 			local plan = rdftplans[rank][direction].plan
 			fftw.execute_dft_r2c(plan, input, output)
 			if not output_supplied then return outvec end
-
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
@@ -121,7 +120,6 @@ local function rdft(invec, dimlist, outvec)
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
 			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist, itda=invec.tda, otda=outvec.tda}
-
 			--Execute the plan with the supplied input
 			fftw.execute_dft_r2c(plan, input, output)
 			if not output_supplied then return outvec end
@@ -160,7 +158,6 @@ local function rdftinv(invec, dimlist, outvec)
 			local plan = rdftplans[rank][direction].plan
 			fftw.execute_dft_c2r(plan, input, output)
 			if not output_supplied then return outvec end
-
 		--Or create a new plan
 		else
 			--allcoate input for plan making but planning can invalidate input, therefore we use extra array
@@ -179,7 +176,6 @@ local function rdftinv(invec, dimlist, outvec)
 			--Save the plan for next time
 			if rdftplans[rank] == nil then rdftplans[rank] = {} end
 			rdftplans[rank][direction] = {plan=plan, dimlist=dimlist, itda=invec.tda, otda=outvec.tda}
-
 			--Execute the plan with the supplied input
 			fftw.execute_dft_c2r(plan, input, output)
 			if not output_supplied then return outvec end
