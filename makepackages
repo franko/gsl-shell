@@ -8,7 +8,7 @@
 ##############################################################################
 
 ifeq ($(HOST_SYS),Windows)
-  USER_LIBS_HOME = C:/fra/sviluppo
+  USER_LIBS_HOME = C:/fra/local
   USER_INCLUDE = $(USER_LIBS_HOME)/include
 
   INCLUDES += -I$(USER_INCLUDE)
@@ -21,9 +21,9 @@ ifeq ($(HOST_SYS),Windows)
   FOX_LIBS = -lfox -lgdi32
 
   GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lblas
+  GSL_LIBS = -lgsl -lgslcblas
 
-  FREETYPE_INCLUDES =
+  FREETYPE_INCLUDES = -I$(USER_INCLUDE)/freetype
   FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthread
