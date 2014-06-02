@@ -1,11 +1,11 @@
-@rem Script to build LuaJIT with the Xbox 360 SDK.
+@rem Script to build LuaJIT with the PS Vita SDK.
 @rem Donated to the public domain.
 @rem
 @rem Open a "Visual Studio .NET Command Prompt" (32 bit host compiler)
 @rem Then cd to this directory and run this script.
 
 @if not defined INCLUDE goto :FAIL
-@if not defined XEDK goto :FAIL
+@if not defined SCE_PSP2_SDK_DIR goto :FAIL
 
 @setlocal
 @rem ---- Host compiler ----
@@ -23,22 +23,22 @@
 if exist minilua.exe.manifest^
   %LJMT% -manifest minilua.exe.manifest -outputresource:minilua.exe
 
-@rem Error out for 64 bit host compiler
+@rem Check for 32 bit host compiler.
 @minilua
 @if errorlevel 8 goto :FAIL
 
-@set DASMFLAGS=-D GPR64 -D FRAME32 -D PPE -D SQRT -D DUALNUM
-minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_ppc.dasc
+@set DASMFLAGS=-D FPU -D HFABI
+minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_arm.dasc
 @if errorlevel 1 goto :BAD
 
-%LJCOMPILE% /I "." /I %DASMDIR% /D_XBOX_VER=200 /DLUAJIT_TARGET=LUAJIT_ARCH_PPC  host\buildvm*.c
+%LJCOMPILE% /I "." /I %DASMDIR% -DLUAJIT_TARGET=LUAJIT_ARCH_ARM -DLUAJIT_OS=LUAJIT_OS_OTHER -DLUAJIT_DISABLE_JIT -DLUAJIT_DISABLE_FFI -DLJ_TARGET_PSVITA=1 host\buildvm*.c
 @if errorlevel 1 goto :BAD
 %LJLINK% /out:buildvm.exe buildvm*.obj
 @if errorlevel 1 goto :BAD
 if exist buildvm.exe.manifest^
   %LJMT% -manifest buildvm.exe.manifest -outputresource:buildvm.exe
 
-buildvm -m peobj -o lj_vm.obj
+buildvm -m elfasm -o lj_vm.s
 @if errorlevel 1 goto :BAD
 buildvm -m bcdef -o lj_bcdef.h %ALL_LIB%
 @if errorlevel 1 goto :BAD
@@ -54,30 +54,31 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @if errorlevel 1 goto :BAD
 
 @rem ---- Cross compiler ----
-@set LJCOMPILE="%XEDK%\bin\win32\cl" /nologo /c /MT /O2 /W3 /GF /Gm- /GR- /GS- /Gy /openmp- /D_CRT_SECURE_NO_DEPRECATE /DNDEBUG /D_XBOX /D_LIB /DLUAJIT_USE_SYSMALLOC
-@set LJLIB="%XEDK%\bin\win32\lib" /nologo
-@set "INCLUDE=%XEDK%\include\xbox"
+@set LJCOMPILE="%SCE_PSP2_SDK_DIR%\host_tools\build\bin\psp2snc" -c -w -DLUAJIT_DISABLE_FFI -DLUAJIT_USE_SYSMALLOC
+@set LJLIB="%SCE_PSP2_SDK_DIR%\host_tools\build\bin\psp2ld32" -r --output=
+@set INCLUDE=""
+
+"%SCE_PSP2_SDK_DIR%\host_tools\build\bin\psp2as" -o lj_vm.o lj_vm.s
 
 @if "%1" neq "debug" goto :NODEBUG
 @shift
-@set "LJCOMPILE=%LJCOMPILE% /Zi"
+@set LJCOMPILE=%LJCOMPILE% -g -O0
+@set TARGETLIB=libluajitD.a
+goto :BUILD
 :NODEBUG
-@if "%1"=="amalg" goto :AMALG
-%LJCOMPILE% /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
-@if errorlevel 1 goto :BAD
-%LJLIB% /OUT:luajit20.lib lj_*.obj lib_*.obj
-@if errorlevel 1 goto :BAD
-@goto :NOAMALG
-:AMALG
-%LJCOMPILE% /DLUA_BUILD_AS_DLL ljamalg.c
-@if errorlevel 1 goto :BAD
-%LJLIB% /OUT:luajit20.lib ljamalg.obj lj_vm.obj
-@if errorlevel 1 goto :BAD
-:NOAMALG
+@set LJCOMPILE=%LJCOMPILE% -O2
+@set TARGETLIB=libluajit.a
+:BUILD
+del %TARGETLIB%
 
-@del *.obj *.manifest minilua.exe buildvm.exe
+%LJCOMPILE% ljamalg.c
+@if errorlevel 1 goto :BAD
+%LJLIB%%TARGETLIB% ljamalg.o lj_vm.o
+@if errorlevel 1 goto :BAD
+
+@del *.o *.obj *.manifest minilua.exe buildvm.exe
 @echo.
-@echo === Successfully built LuaJIT for Xbox 360 ===
+@echo === Successfully built LuaJIT for PS Vita ===
 
 @goto :END
 :BAD
@@ -88,5 +89,5 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @goto :END
 :FAIL
 @echo To run this script you must open a "Visual Studio .NET Command Prompt"
-@echo (32 bit host compiler). The Xbox 360 SDK must be installed, too.
+@echo (32 bit host compiler). The PS Vita SDK must be installed, too.
 :END

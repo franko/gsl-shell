@@ -1,11 +1,14 @@
 /*
 ** Configuration header.
-** Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef luaconf_h
 #define luaconf_h
 
+#ifndef WINVER
+#define WINVER 0x0501
+#endif
 #include <limits.h>
 #include <stddef.h>
 
@@ -38,7 +41,7 @@
 #define LUA_LROOT	QUOTE(SYSTEM_DIR)
 #define LUA_VERSION_DIR QUOTE(PACKAGE_NAME) "/" QUOTE(PACKAGE_VERSION)
 #define LUA_LUADIR	"/" LUA_VERSION_DIR "/"
-#define LUA_LJDIR	"/luajit-2.0.2/"
+#define LUA_LJDIR	"/luajit-2.0.3/"
 
 #ifdef LUA_ROOT
 #define LUA_JROOT	LUA_ROOT
