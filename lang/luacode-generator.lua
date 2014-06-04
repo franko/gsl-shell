@@ -158,6 +158,20 @@ function StatementRule:CallExpression(node)
     self:add_line(line)
 end
 
+function StatementRule:CheckIndex(node)
+    local index = self:expr_emit(node.index)
+    if node.inf then
+        local inf = self:expr_emit(node.inf)
+        local line = format("assert(%s >= %s, 'invalid index')", index, inf)
+        self:add_line(line)
+    end
+    if node.sup then
+        local sup = self:expr_emit(node.sup)
+        local line = format("assert(%s <= %s, 'invalid index')", index, sup)
+        self:add_line(line)
+    end
+end
+
 function StatementRule:ForStatement(node)
     local init = node.init
     local istart = self:expr_emit(init.value)
@@ -331,7 +345,9 @@ local function generate(tree, name)
     end
 
     function self:expr_emit(node)
+        if not node then print(debug.traceback()) end
         local rule = ExpressionRule[node.kind]
+        if not rule then error("Missing ExpressionRule: ", node.kind) end
         return rule(self, node)
     end
 
