@@ -132,17 +132,6 @@ local syntax = {
          right = "Expression",
       }
    },
-   MatrixSliceExpression = {
-      kind = "MatrixSliceExpression",
-      base = "Expression",
-      properties = {
-         object    = "Expression",
-         row_start = "Expression",
-         row_end   = "Expression",
-         col_start = "Expression",
-         col_end   = "Expression",
-      }
-   },
    CheckIndex = {
       kind = "CheckIndex",
       base = "Statement",
@@ -225,15 +214,6 @@ local syntax = {
             type = "list",
             kind = "Expression",
          },
-      }
-   },
-   Matrix = {
-      kind = "Matrix",
-      base = "Expression",
-      properties = {
-         terms = { type = "list", kind = "Expression" },
-         nrows = { type = "literal", value = "number" },
-         ncols = { type = "literal", value = "number" },
       }
    },
    ExpressionStatement = {

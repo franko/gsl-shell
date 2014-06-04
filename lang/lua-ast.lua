@@ -156,9 +156,9 @@ function AST.expr_index_dual(ast, v, row, col, line)
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
-    row_end = row_end or row_start
-    col_end = col_end or col_start
-    return build("MatrixSliceExpression", { object = v, row_start = row_start, row_end = row_end, col_start = col_start, col_end = col_end, line = line })
+    local slice_fun = field(ident("matrix"), "__slice")
+    local arguments = { v, row_start, row_end, col_start, col_end }
+    return build("CallExpression", { callee = slice_fun, arguments = arguments })
 end
 
 function AST.expr_property(ast, v, prop, line)
@@ -179,8 +179,10 @@ function AST.expr_table(ast, avals, hkeys, hvals, line)
 end
 
 function AST.expr_matrix(ast, ncols, terms, line)
-    local nrows = #terms / ncols
-    return build("Matrix", { terms = terms, ncols = ncols, nrows = nrows, line = line })
+    local build_fun = field(ident("matrix"), "build")
+    local t = build("Table", { array_entries = terms, hash_keys = {}, hash_values = {} })
+    local arguments = { t, literal(ncols) }
+    return build("CallExpression", { callee = build_fun, arguments = arguments })
 end
 
 function AST.expr_unop(ast, op, v)
