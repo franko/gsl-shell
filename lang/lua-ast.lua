@@ -106,8 +106,7 @@ function AST.local_function_decl(ast, name, args, body, proto)
 end
 
 function AST.function_decl(ast, path, args, body, proto)
-    local fn = func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
-    return build_stmt(ast, "AssignmentExpression", { left = { path }, right = { fn }, line = line })
+   return func_decl(path, body, args, proto.varargs, false, proto.firstline, proto.lastline)
 end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
@@ -116,8 +115,7 @@ function AST.chunk(ast, body, chunkname, firstline, lastline)
 end
 
 function AST.block_stmt(ast, body, firstline, lastline)
-    local body_stmts = recollect_stmts(body)
-    return build("BlockStatement", { body = body_stmts, firstline = firstline, lastline = lastline })
+    return recollect_stmts(body)
 end
 
 function AST.local_decl(ast, vlist, exps, line)
@@ -281,7 +279,7 @@ local function check_index(index, inf, sup, line)
 end
 
 function AST.for_post_process(ast, body, var, init, last, step)
-    print(">>> for post process", body, body.kind)
+    print(">>> for post process")
     local for_scope = ast.current
     local function var_context(var)
         local name = var.name
@@ -331,7 +329,7 @@ end
 
 function AST.for_stmt(ast, var, init, last, step, body, line)
     print(">>> for statement")
-    local pre_stmts = ast:for_post_process(body.body, var, init, last, step)
+    local pre_stmts = ast:for_post_process(body, var, init, last, step)
     local for_init = build("ForInit", { id = var, value = init, line = line })
     local stmt = build_stmt(ast, "ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
     add_pre_stmts(stmt, pre_stmts)

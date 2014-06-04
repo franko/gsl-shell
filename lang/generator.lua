@@ -12,6 +12,8 @@
 local bc   = require('bytecode')
 local util = require('util')
 
+local const_eval = require("ast-const-eval")
+
 local BC = bc.BC
 
 -- comparison operators with corresponding instruction.
@@ -60,7 +62,6 @@ local ExpressionRule = { }
 local MultiExprRule = { }
 local LHSExpressionRule = { }
 local TestRule = { }
-local ConstRule = { }
 
 local function is_literal(node)
    return node.kind == 'Literal'
@@ -136,7 +137,7 @@ function MultiExprRule:Vararg(node, want)
 end
 
 local function expr_isk(self, node)
-   local const = self:const_eval_try(node)
+   local const = const_eval(node)
    if const then
       return true, const
    elseif node.kind == "Literal" then
@@ -253,16 +254,6 @@ local dirop = {
    ['%'] = 'MOD',
 }
 
-local function dirop_compute(o, a, b)
-   if     o == '+' then return a + b
-   elseif o == '-' then return a - b
-   elseif o == '*' then return a * b
-   elseif o == '/' and b ~= 0 then return a / b
-   elseif o == '%' then return a % b
-   elseif o == '^' then return a ^ b
-   end
-end
-
 function ExpressionRule:ConcatenateExpression(node, dest)
    local free = self.ctx.freereg
    for i = 0, #node.terms - 1 do
@@ -370,15 +361,12 @@ function StatementRule:CheckIndex(node)
 end
 
 function StatementRule:FunctionDeclaration(node)
-   local name = node.id.name
-   local dest
+   local path = node.id
    if node.locald then
-      dest = self.ctx:newvar(name).idx
-   else
-      dest = self.ctx.freereg
+      self.ctx:newvar(path.name)
    end
-
-   ExpressionRule.FunctionExpression(self, node, dest)
+   local lhs = self:lhs_expr_emit(path)
+   self:expr_tolhs(lhs, node)
 end
 
 local function emit_slice_arguments(self, node, base)
@@ -415,7 +403,7 @@ function ExpressionRule:FunctionExpression(node, dest)
          self.ctx:param(node.params[i].name)
       end
    end
-   self:emit(node.body)
+   self:block_emit(node.body)
    self:close_proto()
    self.ctx:set_line(node.firstline, node.lastline)
 
@@ -423,6 +411,8 @@ function ExpressionRule:FunctionExpression(node, dest)
    self.ctx.freereg = free
    self.ctx:op_fnew(dest, func.idx)
 end
+
+ExpressionRule.FunctionDeclaration = ExpressionRule.FunctionExpression
 
 local function emit_call_expression(self, node, want, use_tail, use_self)
    local base = self.ctx.freereg
@@ -625,30 +615,6 @@ function TestRule:LogicalExpression(node, jmp, negate, store, dest)
    end
 end
 
-function ConstRule:Literal(node)
-   local v = node.value
-   if type(v) == 'number' then return v end
-end
-
-function ConstRule:BinaryExpression(node)
-   local o = node.operator
-   local a = self:const_eval_try(node.left)
-   if a then
-      local b = self:const_eval_try(node.right)
-      if b then
-         return dirop_compute(o, a, b)
-      end
-   end
-end
-
-function ConstRule:UnaryExpression(node)
-   local o = node.operator
-   if o == '-' then
-      local v = self:const_eval_try(node.argument)
-      if v then return -v end
-   end
-end
-
 function StatementRule:CallExpression(node)
    self:expr_tomultireg(node, 0, false)
 end
@@ -668,17 +634,9 @@ function StatementRule:GotoStatement(node)
    self.ctx:goto_jump(node.label, node.line)
 end
 
-function StatementRule:BlockStatement(node, if_exit)
-   local body = node.body
-   for i=1, #body - 1 do
-      self:emit(body[i])
-   end
-   self:emit(body[#body], if_exit)
-end
-
 function StatementRule:DoStatement(node)
    self:block_enter()
-   self:emit(node.body)
+   self:block_emit(node.body)
    self:block_leave()
 end
 
@@ -702,7 +660,7 @@ function StatementRule:IfStatement(node, root_exit)
       self:test_emit(test, next_test)
 
       self:block_enter()
-      self:emit(block, bexit)
+      self:block_emit(block, bexit)
       self:block_leave(bexit)
 
       self.ctx:here(next_test)
@@ -711,7 +669,7 @@ function StatementRule:IfStatement(node, root_exit)
 
    if node.alternate then
       self:block_enter()
-      self:emit(node.alternate)
+      self:block_emit(node.alternate)
       self:block_leave()
    end
    if exit and exit == local_exit then
@@ -778,26 +736,19 @@ function StatementRule:AssignmentExpression(node)
 
    local i = nexps
    if slots == 1 then
-      if lhs[i].tag == 'upval' then
-         local tag, expr = self:expr_toanyreg_tagged(node.right[i], EXPR_EMIT_VSNP)
-         self.ctx:op_uset(lhs[i].uv, tag, expr)
-         nvars = nvars - 1
-      elseif lhs[i].tag == 'local' then
-         self:expr_toreg(node.right[i], lhs[i].target)
-         nvars = nvars - 1
-      else
-         exprs[i] = self:expr_toanyreg(node.right[i])
-      end
+      -- Case where (nb of expression) >= (nb of variables).
+      self:expr_tolhs(lhs[i], node.right[i])
    else
+      -- Case where (nb of expression) < (nb of variables). In this case
+      -- we cosider that the last expression can generate multiple values.
       local exp_base = self.ctx.freereg
       self:expr_tomultireg(node.right[i], slots)
       for k = slots - 1, 0, -1 do
          self:assign(lhs[i + k], exp_base + k)
       end
-      nvars = nvars - slots
    end
 
-   for i = nvars, 1, -1 do
+   for i = nvars - slots, 1, -1 do
       self:assign(lhs[i], exprs[i])
    end
 
@@ -810,7 +761,7 @@ function StatementRule:WhileStatement(node)
    self.ctx:here(loop)
    self:test_emit(node.test, exit)
    self.ctx:loop(exit)
-   self:emit(node.body)
+   self:block_emit(node.body)
    self.ctx:jump(loop, free)
    self.ctx:here(exit)
    self:loop_leave()
@@ -822,7 +773,7 @@ function StatementRule:RepeatStatement(node)
    self:loop_enter(exit, free)
    self.ctx:here(loop)
    self.ctx:loop(exit)
-   self:emit(node.body)
+   self:block_emit(node.body)
    self:test_emit(node.test, loop)
    self.ctx:here(exit)
    self:loop_leave()
@@ -856,7 +807,7 @@ function StatementRule:ForStatement(node)
    self:loop_enter(exit, free)
    self.ctx:newvar(name)
    self:block_enter()
-   self:emit(node.body)
+   self:block_emit(node.body)
    self:block_leave()
    self:loop_leave()
    self.ctx:op_forl(base, loop)
@@ -893,7 +844,7 @@ function StatementRule:ForInStatement(node)
    end
 
    local ltop = self.ctx:here(util.genid())
-   self:emit(node.body)
+   self:block_emit(node.body)
    self:loop_leave()
    self.ctx:here(loop)
    self.ctx:op_iterc(iter, #vars)
@@ -937,10 +888,8 @@ function StatementRule:ReturnStatement(node)
    end
 end
 
-function StatementRule:Chunk(tree, name)
-   for i=1, #tree.body do
-      self:emit(tree.body[i])
-   end
+function StatementRule:Chunk(node, name)
+   self:block_emit(node.body)
    self:close_proto()
 end
 
@@ -1006,6 +955,16 @@ local function generate(tree, name)
       if node.line then self.ctx:line(node.line) end
    end
 
+   function self:block_emit(stmts, if_exit)
+      local n = #stmts
+      for i = 1, n - 1 do
+         self:emit(stmts[i])
+      end
+      if n > 0 then
+         self:emit(stmts[n], if_exit)
+      end
+   end
+
    -- Emit the code to evaluate "node" and perform a conditional
    -- jump based on its value. The argument "jmp" is the jump location.
    -- If "negate" is false the jump on FALSE and viceversa.
@@ -1061,7 +1020,7 @@ local function generate(tree, name)
    -- to indicate if a tail call was used.
    -- This function always leave the freereg counter to its initial value.
    function self:expr_toreg(node, dest, tail)
-      local const_val = self:const_eval_try(node)
+      local const_val = const_eval(node)
       if const_val then
          self.ctx:op_load(dest, const_val)
       else
@@ -1106,7 +1065,7 @@ local function generate(tree, name)
    -- an immediate constant. It does return a tag and then the value
    -- itself.
    function self:expr_toanyreg_tagged(node, emit)
-      local const_val = self:const_eval_try(node)
+      local const_val = const_eval(node)
       if emit.byte and const_val and is_byte_number(const_val) then
          return 'B', const_val
       elseif emit.number and const_val then
@@ -1125,16 +1084,24 @@ local function generate(tree, name)
       return 'V', self:expr_toanyreg(node)
    end
 
+   -- Emit code to store an expression in the given LHS.
+   function self:expr_tolhs(lhs, expr)
+      local free = self.ctx.freereg
+      if lhs.tag == 'upval' then
+         local tag, expr = self:expr_toanyreg_tagged(expr, EXPR_EMIT_VSNP)
+         self.ctx:op_uset(lhs.uv, tag, expr)
+      elseif lhs.tag == 'local' then
+         self:expr_toreg(expr, lhs.target)
+      else
+         local reg = self:expr_toanyreg(expr)
+         self:assign(lhs, reg)
+      end
+      self.ctx.freereg = free
+   end
+
    function self:lhs_expr_emit(node)
       local rule = assert(LHSExpressionRule[node.kind], "undefined assignment rule for node type: \"" .. node.kind .. "\"")
       return rule(self, node)
-   end
-
-   function self:const_eval_try(node)
-      local rule = ConstRule[node.kind]
-      if rule then
-         return rule(self, node)
-      end
    end
 
    function self:close_proto()
