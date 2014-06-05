@@ -12,6 +12,7 @@
 local bc   = require('bytecode')
 local util = require('util')
 
+local matrix_trans = require('matrix-transform')
 local const_eval = require("ast-const-eval")
 
 local BC = bc.BC
@@ -225,26 +226,6 @@ function ExpressionRule:Table(node, dest)
    self.ctx.freereg = free
 end
 
-function ExpressionRule:Matrix(node, dest)
-   local free = self.ctx.freereg
-   local base = self.ctx:nextreg()
-   self.ctx:op_gget(base, "matrix")
-   self.ctx:op_tget(base, base, "S", self.ctx:const("build"))
-   local data = self.ctx:nextreg()
-   self.ctx:op_tnew(data)
-   local top = self.ctx.freereg
-   for i = 1, #node.terms do
-      local val = self:expr_toanyreg(node.terms[i])
-      self.ctx:op_tset(data, 'B', i, val)
-      self.ctx.freereg = top
-   end
-   self.ctx:nextreg()
-   self.ctx:op_load(base + 2, node.ncols)
-   self.ctx:op_call(base, 1, 2)
-   self.ctx.freereg = free
-   mov_toreg(self.ctx, dest, base)
-end
-
 -- Operations that admit instructions in the form ADDVV, ADDVN, ADDNV
 local dirop = {
    ['+'] = 'ADD',
@@ -380,16 +361,6 @@ local function emit_slice_arguments(self, node, base)
    self.ctx:setreg(base + 4)
    self:expr_toreg(node.col_end, base + 4)
    self.ctx:setreg(base + 5)
-end
-
-function ExpressionRule:MatrixSliceExpression(node, dest)
-   local base = self.ctx:nextreg()
-   self.ctx:op_gget(base, "matrix")
-   self.ctx:op_tget(base, baset, "S", self.ctx:const("__slice"))
-   emit_slice_arguments(self, node, base + 1)
-   self.ctx:op_call(base, 1, 5)
-   mov_toreg(self.ctx, dest, base)
-   self.ctx.freereg = dest
 end
 
 function ExpressionRule:FunctionExpression(node, dest)
@@ -1025,6 +996,12 @@ local function generate(tree, name)
          self.ctx:op_load(dest, const_val)
       else
          local rule = ExpressionRule[node.kind]
+         if not rule then
+            local node_trans = matrix_trans.expression(node)
+            if node_trans then
+               return self:expr_toreg(node_trans, dest, tail)
+            end
+         end
          if rule then
             rule(self, node, dest)
          elseif MultiExprRule[node.kind] then

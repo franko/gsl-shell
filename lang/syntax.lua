@@ -132,6 +132,17 @@ local syntax = {
          right = "Expression",
       }
    },
+   MatrixSliceExpression = {
+      kind = "MatrixSliceExpression",
+      base = "Expression",
+      properties = {
+         object    = "Expression",
+         row_start = "Expression",
+         row_end   = "Expression",
+         col_start = "Expression",
+         col_end   = "Expression",
+      }
+   },
    CheckIndex = {
       kind = "CheckIndex",
       base = "Statement",
@@ -214,6 +225,15 @@ local syntax = {
             type = "list",
             kind = "Expression",
          },
+      }
+   },
+   Matrix = {
+      kind = "Matrix",
+      base = "Expression",
+      properties = {
+         terms = { type = "list", kind = "Expression" },
+         nrows = { type = "literal", value = "number" },
+         ncols = { type = "literal", value = "number" },
       }
    },
    ExpressionStatement = {
@@ -554,7 +574,36 @@ local function build(kind, props)
    return validate(meta, props)
 end
 
+local function ident(name, line)
+    return build("Identifier", { name = name, line = line })
+end
+
+local function literal(value)
+    return build("Literal", { value = value })
+end
+
+local function binop(op, left, right)
+    return build("BinaryExpression", { operator = op, left = left, right = right })
+end
+
+local function logical(op, left, right)
+    return build("LogicalExpression", { operator = op, left = left, right = right })
+end
+
+local function field(obj, name)
+    return build("MemberExpression", { object = obj, property = ident(name), computed = false })
+end
+
+local function tget(obj, index)
+    return build("MemberExpression", { object = obj, property = index, computed = true })
+end
+
 return {
-   syntax = syntax,
-   build  = build,
+   ident   = ident,
+   literal = literal,
+   binop   = binop,
+   logical = logical,
+   field   = field,
+   tget    = tget,
+   build   = build,
 }

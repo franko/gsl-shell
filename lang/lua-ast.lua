@@ -1,5 +1,7 @@
-local build = require('syntax').build
+local syntax = require('syntax')
 local libexpr = require('expr-utils')
+
+local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
 local function add_pre_stmts(stmt, pre_stmts)
     if not stmt.pre_stmts then stmt.pre_stmts = { } end
@@ -20,30 +22,6 @@ local function build_stmt(ast, kind, prop)
 end
 
 local CONCAT_OP = '~'
-
-local function ident(name, line)
-    return build("Identifier", { name = name, line = line })
-end
-
-local function literal(value)
-    return build("Literal", { value = value })
-end
-
-local function binop(op, left, right)
-    return build("BinaryExpression", { operator = op, left = left, right = right })
-end
-
-local function logical(op, left, right)
-    return build("LogicalExpression", { operator = op, left = left, right = right })
-end
-
-local function field(obj, name)
-    return build("MemberExpression", { object = obj, property = ident(name), computed = false })
-end
-
-local function tget(obj, index)
-    return build("MemberExpression", { object = obj, property = index, computed = true })
-end
 
 local function error_stmt(msg)
     local expr = build("CallExpression", { callee = ident("error"), arguments = { literal(msg) } })
@@ -144,7 +122,6 @@ function AST:add_generated_stmt(stmt)
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
-    print(">>> expr_index_dual")
     local one = literal(1)
     local rowcheck = bound_check(row, one, field(v, "size1"), line)
     local colcheck = bound_check(col, one, field(v, "size2"), line)
@@ -156,9 +133,9 @@ function AST.expr_index_dual(ast, v, row, col, line)
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
-    local slice_fun = field(ident("matrix"), "__slice")
-    local arguments = { v, row_start, row_end, col_start, col_end }
-    return build("CallExpression", { callee = slice_fun, arguments = arguments })
+    row_end = row_end or row_start
+    col_end = col_end or col_start
+    return build("MatrixSliceExpression", { object = v, row_start = row_start, row_end = row_end, col_start = col_start, col_end = col_end, line = line })
 end
 
 function AST.expr_property(ast, v, prop, line)
@@ -179,10 +156,8 @@ function AST.expr_table(ast, avals, hkeys, hvals, line)
 end
 
 function AST.expr_matrix(ast, ncols, terms, line)
-    local build_fun = field(ident("matrix"), "build")
-    local t = build("Table", { array_entries = terms, hash_keys = {}, hash_values = {} })
-    local arguments = { t, literal(ncols) }
-    return build("CallExpression", { callee = build_fun, arguments = arguments })
+    local nrows = #terms / ncols
+    return build("Matrix", { terms = terms, ncols = ncols, nrows = nrows, line = line })
 end
 
 function AST.expr_unop(ast, op, v)
