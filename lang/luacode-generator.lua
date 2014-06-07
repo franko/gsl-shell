@@ -8,9 +8,15 @@
 
 local operator = require("operator")
 local matrix_trans = require('matrix-transform')
+local syntax = require('syntax')
+
+local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
+
+local genid = require("util").genid
 
 local StatementRule = { }
 local ExpressionRule = { }
+local LHSExpressionRule = { }
 
 local concat = table.concat
 local format = string.format
@@ -134,6 +140,19 @@ function ExpressionRule:SendExpression(node)
     return exp, operator.ident_priority
 end
 
+LHSExpressionRule.Identifier = ExpressionRule.Identifier
+LHSExpressionRule.MemberExpression = ExpressionRule.MemberExpression
+
+function LHSExpressionRule:MatrixSliceExpression(node, assign_ctx)
+    local var_name = genid()
+    local obj = node.object
+    local slice_fun = field(ident("matrix"), "__slice_assign")
+    local arguments = { obj, node.row_start, node.row_end, node.col_start, node.col_end, ident(var_name) }
+    local fcall = build("CallExpression", { callee = slice_fun, arguments = arguments })
+    assign_ctx[#assign_ctx+1] = build("ExpressionStatement", { expression = fcall })
+    return var_name
+end
+
 function StatementRule:FunctionDeclaration(node)
     self:proto_enter()
     local name = self:expr_emit(node.id)
@@ -241,8 +260,14 @@ function StatementRule:LocalDeclaration(node)
 end
 
 function StatementRule:AssignmentExpression(node)
-    local line = format("%s = %s", self:expr_list(node.left), self:expr_list(node.right))
+    local assign_ctx = { }
+    local lhs = {}
+    for i = 1, #node.left do
+        lhs[i] = self:lhs_expr_emit(node.left[i], assign_ctx)
+    end
+    local line = format("%s = %s", comma_sep_list(lhs), self:expr_list(node.right))
     self:add_line(line)
+    self:post_assignment_do(assign_ctx)
 end
 
 function StatementRule:Chunk(node)
@@ -345,6 +370,18 @@ local function generate(tree, name)
         end
     end
 
+    function self:lhs_expr_emit(node, assign_ctx)
+        local rule = LHSExpressionRule[node.kind]
+        if not rule then
+            local node_trans = matrix_trans.lhs_expression(node)
+            if node_trans then
+                return self:lhs_expr_emit(node_trans, assign_ctx)
+            end
+        end
+        if not rule then error("Missing LHS Expression Rule: ", node.kind) end
+        return rule(self, node, assign_ctx)
+    end
+
     function self:expr_emit(node)
         local rule = ExpressionRule[node.kind]
          if not rule then
@@ -371,6 +408,12 @@ local function generate(tree, name)
     function self:list_emit(node_list)
         for i = 1, #node_list do
             self:emit(node_list[i])
+        end
+    end
+
+    function self:post_assignment_do(assign_ctx)
+        for i = 1, #assign_ctx do
+            self:emit(assign_ctx[i])
         end
     end
 
