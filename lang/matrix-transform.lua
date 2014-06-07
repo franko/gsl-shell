@@ -6,7 +6,7 @@ local ExpressionRule = { }
 local LHSExpressionRule = { }
 
 function ExpressionRule.MatrixSliceExpression(node)
-	local obj = node.object
+    local obj = node.object
     local slice_fun = field(ident("matrix"), "__slice")
     local arguments = { obj, node.row_start, node.row_end, node.col_start, node.col_end }
     return build("CallExpression", { callee = slice_fun, arguments = arguments })
@@ -30,10 +30,10 @@ end
 LHSExpressionRule.MatrixIndex = ExpressionRule.MatrixIndex
 
 local function transform(rule_lookup, node)
-	local rule = rule_lookup[node.kind]
-	if rule then
-		return rule(node)
-	end
+    local rule = rule_lookup[node.kind]
+    if rule then
+        return rule(node)
+    end
 end
 
 local function lookup(rule_lookup)

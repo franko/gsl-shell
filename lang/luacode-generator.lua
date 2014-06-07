@@ -140,6 +140,14 @@ function ExpressionRule:SendExpression(node)
     return exp, operator.ident_priority
 end
 
+function ExpressionRule:FunctionExpression(node)
+    self:proto_enter()
+    local header = format("function(%s)", comma_sep_list(node.params, as_parameter))
+    self:add_section(header, node.body)
+    local child_proto = self:proto_leave()
+    return child_proto:inline(self.proto.indent), 0
+end
+
 LHSExpressionRule.Identifier = ExpressionRule.Identifier
 LHSExpressionRule.MemberExpression = ExpressionRule.MemberExpression
 
@@ -163,14 +171,6 @@ function StatementRule:FunctionDeclaration(node)
     self:add_section(header, node.body)
     local child_proto = self:proto_leave()
     self.proto:merge(child_proto)
-end
-
-function ExpressionRule:FunctionExpression(node)
-    self:proto_enter()
-    local header = format("function(%s)", comma_sep_list(node.params, as_parameter))
-    self:add_section(header, node.body)
-    local child_proto = self:proto_leave()
-    return child_proto:inline(self.proto.indent), 0
 end
 
 function StatementRule:CallExpression(node)
@@ -384,13 +384,13 @@ local function generate(tree, name)
 
     function self:expr_emit(node)
         local rule = ExpressionRule[node.kind]
-         if not rule then
+        if not rule then
             local node_trans = matrix_trans.expression(node)
             if node_trans then
-               return self:expr_emit(node_trans)
+                return self:expr_emit(node_trans)
             end
             error("Missing ExpressionRule: ", node.kind)
-         end
+        end
         return rule(self, node)
     end
 
@@ -400,9 +400,9 @@ local function generate(tree, name)
 
     function self:emit(node)
         local rule = StatementRule[node.kind]
-          if not rule then error("cannot find a statement rule for " .. node.kind) end
-          rule(self, node)
-          if node.line then self:line(node.line) end
+        if not rule then error("cannot find a statement rule for " .. node.kind) end
+        rule(self, node)
+        if node.line then self:line(node.line) end
     end
 
     function self:list_emit(node_list)
