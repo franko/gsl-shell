@@ -127,9 +127,7 @@ function AST.expr_index_dual(ast, v, row, col, line)
     local colcheck = bound_check(col, one, field(v, "size2"), line)
     ast:add_generated_stmt(rowcheck)
     ast:add_generated_stmt(colcheck)
-    local index = binop("*", field(v, "tda"), binop("-", row, one))
-    index = binop("+", index, binop("-", col, one))
-    return tget(field(v, "data"), index)
+    return build("MatrixIndex", { object = v, row = row, col = col, line = line})
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)

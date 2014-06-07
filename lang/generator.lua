@@ -1077,7 +1077,14 @@ local function generate(tree, name)
    end
 
    function self:lhs_expr_emit(node)
-      local rule = assert(LHSExpressionRule[node.kind], "undefined assignment rule for node type: \"" .. node.kind .. "\"")
+      local rule = LHSExpressionRule[node.kind]
+      if not rule then
+         local node_trans = matrix_trans.lhs_expression(node)
+         if node_trans then
+            return self:lhs_expr_emit(node_trans)
+         end
+         error("undefined assignment rule for node type: \"" .. node.kind .. "\"")
+      end
       return rule(self, node)
    end
 

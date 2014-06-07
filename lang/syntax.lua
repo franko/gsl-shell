@@ -173,6 +173,15 @@ local syntax = {
          },
       }
    },
+   MatrixIndex = {
+      kind = "MatrixIndex",
+      base = "Expression",
+      properties = {
+         object = "Expression",
+         row = "Expression",
+         col = "Expression",
+      }
+   },
    CallExpression = {
       kind = "CallExpression",
       base = "Expression",

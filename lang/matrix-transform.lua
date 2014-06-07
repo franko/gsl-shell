@@ -3,6 +3,7 @@ local syntax = require('syntax')
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
 local ExpressionRule = { }
+local LHSExpressionRule = { }
 
 function ExpressionRule.MatrixSliceExpression(node)
 	local obj = node.object
@@ -18,11 +19,25 @@ function ExpressionRule.Matrix(node)
     return build("CallExpression", { callee = build_fun, arguments = arguments })
 end
 
-local function transform_expression(node)
-	local rule = ExpressionRule[node.kind]
+function ExpressionRule.MatrixIndex(node)
+    local obj = node.object
+    local one = literal(1)
+    local index = binop("*", field(obj, "tda"), binop("-", node.row, one))
+    index = binop("+", index, binop("-", node.col, one))
+    return tget(field(obj, "data"), index)
+end
+
+LHSExpressionRule.MatrixIndex = ExpressionRule.MatrixIndex
+
+local function transform(rule_lookup, node)
+	local rule = rule_lookup[node.kind]
 	if rule then
 		return rule(node)
 	end
 end
 
-return { expression = transform_expression }
+local function lookup(rule_lookup)
+    return function(node) return transform(rule_lookup, node) end
+end
+
+return { expression = lookup(ExpressionRule), lhs_expression = lookup(LHSExpressionRule) }

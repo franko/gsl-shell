@@ -7,6 +7,7 @@
 -- Can be used as an alternative to the bytecode generator.
 
 local operator = require("operator")
+local matrix_trans = require('matrix-transform')
 
 local StatementRule = { }
 local ExpressionRule = { }
@@ -58,13 +59,6 @@ function ExpressionRule:MemberExpression(node)
         exp = format("%s.%s", object, node.property.name)
     end
     return exp, operator.ident_priority
-end
-
-function ExpressionRule:MatrixSliceExpression(node)
-    local obj = self:expr_emit(node.object)
-    local rs, re = self:expr_emit(node.row_start), self:expr_emit(node.row_end)
-    local cs, ce = self:expr_emit(node.col_start), self:expr_emit(node.col_end)
-    return format("matrix.__slice(%s, %s, %s, %s, %s)", obj, rs, re, cs, ce)
 end
 
 function ExpressionRule:Vararg()
@@ -119,11 +113,6 @@ function ExpressionRule:Table(node)
         content = content ~= "" and (content .. ", " .. hash_str) or hash_str
     end
     return "{" .. content .. "}", operator.ident_priority
-end
-
-function ExpressionRule:Matrix(node)
-    local terms = self:expr_list(node.terms)
-    return format("matrix.build({%s}, %s)", terms, tostring(node.ncols))
 end
 
 function ExpressionRule:CallExpression(node)
@@ -357,9 +346,14 @@ local function generate(tree, name)
     end
 
     function self:expr_emit(node)
-        if not node then print(debug.traceback()) end
         local rule = ExpressionRule[node.kind]
-        if not rule then error("Missing ExpressionRule: ", node.kind) end
+         if not rule then
+            local node_trans = matrix_trans.expression(node)
+            if node_trans then
+               return self:expr_emit(node_trans)
+            end
+            error("Missing ExpressionRule: ", node.kind)
+         end
         return rule(self, node)
     end
 
