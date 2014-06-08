@@ -80,7 +80,6 @@ end
 
 local function linear_ctxfree(expr, var, ctx)
     if is_ident(expr) then
-        print(">>> linear_ctxfree identifier", expr.name, var.name)
         if expr.name == var.name then
             return expr, true, 1
         else
@@ -131,7 +130,6 @@ local function linear_ctxfree(expr, var, ctx)
 end
 
 local function expr_is_context_free(expr, ctx)
-    print(">>> expr_is_context_free", expr.kind)
     if is_ident(expr) then
         local for_local, outer_local, var_value = ctx(var)
         if for_local and var_value then
@@ -149,15 +147,12 @@ local function expr_is_context_free(expr, ctx)
         local a = expr_is_context_free(expr.argument, ctx)
         if a then return unop(expr.operator, a) end
     elseif expr.kind == "MemberExpression" then
-        print(">>> MemberExpression")
         local _, obj_outer = ctx(expr.object)
-        print(">>> obj_outer", obj_outer)
         if obj_outer then
             local prop_outer = not expr.computed
             if expr.computed then
                 _, prop_outer = ctx(expr.prop_outer)
             end
-            print(">>> prop_outer", prop_outer)
             return prop_outer and expr
         end
     end

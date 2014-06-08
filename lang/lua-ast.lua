@@ -14,7 +14,6 @@ end
 local function build_stmt(ast, kind, prop)
     local stmt = build(kind, prop)
     if #ast.gen_stmts > 0 then
-        print(">>> adding generated statements", kind)
         stmt.pre_stmts = ast.gen_stmts
         ast.gen_stmts = { }
     end
@@ -29,7 +28,6 @@ local function error_stmt(msg)
 end
 
 local function recollect_stmts(stmts)
-    print(">>> recollect_stmts")
     local ls = { }
     for i = 1, #stmts do
         local s = stmts[i]
@@ -253,14 +251,25 @@ local function check_index(index, inf, sup, line)
     end
 end
 
+-- DEBUG ONLY
+local function ast_print(node)
+    local codegen = require("luacode-generator")
+    return codegen.chunk(node)
+end
+
+-- DEBUG ONLY
+local function ast_expr_print(node)
+    local codegen = require("luacode-generator")
+    local str = codegen.expr(node)
+    return str
+end
+
 function AST.for_post_process(ast, body, var, init, last, step)
-    print(">>> for post process")
     local for_scope = ast.current
     local function var_context(var)
         local name = var.name
         local result, scope = ast:lookup(name)
         local vinfo = result == "local" and scope.vars[name]
-        print(">>> var_context", var.name, result, vinfo and vinfo.mutable, for_scope == scope)
         if result == "local" and vinfo.mutable == false then
             if scope == for_scope then
                 return true, false, vinfo.value
@@ -272,30 +281,32 @@ function AST.for_post_process(ast, body, var, init, last, step)
     end
     local rstmts = { }
     local i = 1
+    local DEBUG_PRINT_FOR = false
     while body[i] do
         local stmt = body[i]
-        print(">>> statement", i, stmt.kind)
         if stmt.kind == "CheckIndex" then
-            print(">>> found check index statement")
+            if not DEBUG_PRINT_FOR then
+                print(">> For body, var:", ast_expr_print(var), ast_expr_print(init), ast_expr_print(last))
+                DEBUG_PRINT_FOR = true
+            end
+            print(">> CheckIndex statement: ", ast_print(stmt))
             local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context)
-            print(">>> linear:", lin, coeff)
             local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context))
             local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context))
+            print(">> Index is " .. (lin and "linear" or "NOT linear"))
+            if lin then print(">> Inferior bound", inf_cf); print(">> Upper bound", inf_cf); end
             if inf_cf and sup_cf then
-                print(">>> relocating")
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
-                local util = require "util"
-                print(">>> index_inf\n", util.dump(index_inf))
-                print(">>> index_sup\n", util.dump(index_sup))
                 if coeff < 0 then index_inf, index_sup = index_sup, index_inf end
                 local icheck = check_index(index_inf, stmt.inf, nil, stmt.line)
-                if icheck then rstmts[#rstmts+1] = icheck end
+                if icheck then print(">> Relocating: ", ast_print(icheck)); rstmts[#rstmts+1] = icheck end
                 local scheck = check_index(index_sup, nil, stmt.sup, stmt.line)
-                if scheck then rstmts[#rstmts+1] = scheck end
+                if scheck then print(">> Relocating: ", ast_print(scheck));rstmts[#rstmts+1] = scheck end
                 table.remove(body, i)
                 i = i - 1
             end
+            print("")
         end
         i = i + 1
     end
@@ -303,7 +314,6 @@ function AST.for_post_process(ast, body, var, init, last, step)
 end
 
 function AST.for_stmt(ast, var, init, last, step, body, line)
-    print(">>> for statement")
     local pre_stmts = ast:for_post_process(body, var, init, last, step)
     local for_init = build("ForInit", { id = var, value = init, line = line })
     local stmt = build_stmt(ast, "ForStatement", { init = for_init, last = last, step = step, body = body, line = line })
@@ -328,7 +338,6 @@ local function new_scope(parent_scope)
 end
 
 function AST.var_declare(ast, name, value)
-    print(">>> VAR DECLARE", name, value)
     local id = ident(name)
     local vinfo = { id = id, mutable = false, value = value }
     ast.current.vars[name] = vinfo
@@ -336,12 +345,10 @@ function AST.var_declare(ast, name, value)
 end
 
 function AST.fscope_begin(ast)
-    print(">>> NEW SCOPE")
     ast.current = new_scope(ast.current)
 end
 
 function AST.fscope_end(ast)
-    print(">>> LEAVE SCOPE")
     ast.current = ast.current.parent
 end
 
