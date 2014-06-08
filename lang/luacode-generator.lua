@@ -316,110 +316,116 @@ local function proto_new(parent)
     return proto
 end
 
-local function generate(tree, name)
+local Generator = {}
 
-    local self = { line = 0 }
-    self.proto = proto_new()
-    self.chunkname = tree.chunkname
-
-    function self:proto_enter()
-        self.proto = proto_new(self.proto)
-    end
-
-    function self:proto_leave()
-        local proto = self.proto
-        self.proto = proto.parent
-        return proto
-    end
-
-    local function to_expr(node)
-        return self:expr_emit(node)
-    end
-
-    function self:compile_code()
-        return concat(self.code, "\n")
-    end
-
-    function self:indent_more()
-        local proto = self.proto
-        proto.indent = proto.indent + 1
-    end
-
-    function self:indent_less()
-        local proto = self.proto
-        proto.indent = proto.indent - 1
-    end
-
-    function self:line(line)
-        -- FIXME: ignored for the moment
-    end
-
-    function self:add_line(line)
-        local proto = self.proto
-        local indent = string.rep("    ", proto.indent)
-        proto.code[#proto.code + 1] = indent .. line
-    end
-
-    function self:add_section(header, body, omit_end)
-        self:add_line(header)
-        self:indent_more()
-        self:list_emit(body)
-        self:indent_less()
-        if not omit_end then
-            self:add_line("end")
-        end
-    end
-
-    function self:lhs_expr_emit(node, assign_ctx)
-        local rule = LHSExpressionRule[node.kind]
-        if not rule then
-            local node_trans = matrix_trans.lhs_expression(node)
-            if node_trans then
-                return self:lhs_expr_emit(node_trans, assign_ctx)
-            end
-        end
-        if not rule then error("Missing LHS Expression Rule: ", node.kind) end
-        return rule(self, node, assign_ctx)
-    end
-
-    function self:expr_emit(node)
-        local rule = ExpressionRule[node.kind]
-        if not rule then
-            local node_trans = matrix_trans.expression(node)
-            if node_trans then
-                return self:expr_emit(node_trans)
-            end
-            error("Missing ExpressionRule: ", node.kind)
-        end
-        return rule(self, node)
-    end
-
-    function self:expr_list(exps)
-        return comma_sep_list(exps, to_expr)
-    end
-
-    function self:emit(node)
-        local rule = StatementRule[node.kind]
-        if not rule then error("cannot find a statement rule for " .. node.kind) end
-        rule(self, node)
-        if node.line then self:line(node.line) end
-    end
-
-    function self:list_emit(node_list)
-        for i = 1, #node_list do
-            self:emit(node_list[i])
-        end
-    end
-
-    function self:post_assignment_do(assign_ctx)
-        for i = 1, #assign_ctx do
-            self:emit(assign_ctx[i])
-        end
-    end
-
-    self:emit(tree)
-
-    return self:proto_leave():inline(0)
+function Generator:proto_enter()
+    self.proto = proto_new(self.proto)
 end
 
-return generate
+function Generator:proto_leave()
+    local proto = self.proto
+    self.proto = proto.parent
+    return proto
+end
+
+function Generator:compile_code()
+    return concat(self.code, "\n")
+end
+
+function Generator:indent_more()
+    local proto = self.proto
+    proto.indent = proto.indent + 1
+end
+
+function Generator:indent_less()
+    local proto = self.proto
+    proto.indent = proto.indent - 1
+end
+
+function Generator:line(line)
+    -- FIXME: ignored for the moment
+end
+
+function Generator:add_line(line)
+    local proto = self.proto
+    local indent = string.rep("    ", proto.indent)
+    proto.code[#proto.code + 1] = indent .. line
+end
+
+function Generator:add_section(header, body, omit_end)
+    self:add_line(header)
+    self:indent_more()
+    self:list_emit(body)
+    self:indent_less()
+    if not omit_end then
+        self:add_line("end")
+    end
+end
+
+function Generator:lhs_expr_emit(node, assign_ctx)
+    local rule = LHSExpressionRule[node.kind]
+    if not rule then
+        local node_trans = matrix_trans.lhs_expression(node)
+        if node_trans then
+            return self:lhs_expr_emit(node_trans, assign_ctx)
+        end
+    end
+    if not rule then error("Missing LHS Expression Rule: ", node.kind) end
+    return rule(self, node, assign_ctx)
+end
+
+function Generator:expr_emit(node)
+    local rule = ExpressionRule[node.kind]
+    if not rule then
+        local node_trans = matrix_trans.expression(node)
+        if node_trans then
+            return self:expr_emit(node_trans)
+        end
+        error("Missing ExpressionRule: ", node.kind)
+    end
+    return rule(self, node)
+end
+
+function Generator:expr_list(exps)
+    return comma_sep_list(exps, self.to_expr)
+end
+
+function Generator:emit(node)
+    local rule = StatementRule[node.kind]
+    if not rule then error("cannot find a statement rule for " .. node.kind) end
+    rule(self, node)
+    if node.line then self:line(node.line) end
+end
+
+function Generator:list_emit(node_list)
+    for i = 1, #node_list do
+        self:emit(node_list[i])
+    end
+end
+
+function Generator:post_assignment_do(assign_ctx)
+    for i = 1, #assign_ctx do
+        self:emit(assign_ctx[i])
+    end
+end
+
+local function generator_new(tree, name)
+    local self = { }
+    self.proto = proto_new()
+    self.chunkname = tree.chunkname
+    self.to_expr = function(node) return self:expr_emit(node) end
+    return setmetatable(self, { __index = Generator })
+end
+
+local function generate(tree, name)
+    local gen = generator_new(tree, name)
+    gen:emit(tree)
+    return gen:proto_leave():inline(0)
+end
+
+local function generate_expr(node)
+    local gen = generator_new(node)
+    return gen:expr_emit(node)
+end
+
+return { chunk = generate, expr = generate_expr }
