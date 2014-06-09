@@ -180,6 +180,7 @@ local syntax = {
          object = "Expression",
          row = "Expression",
          col = "Expression",
+         safe = { type = "literal", value = "boolean" },
       }
    },
    CallExpression = {

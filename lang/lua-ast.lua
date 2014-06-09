@@ -14,8 +14,7 @@ end
 local function build_stmt(ast, kind, prop)
     local stmt = build(kind, prop)
     if #ast.gen_stmts > 0 then
-        stmt.pre_stmts = ast.gen_stmts
-        ast.gen_stmts = { }
+        stmt.pre_stmts = ast:commit_generated_stmts()
     end
     return stmt
 end
@@ -111,21 +110,44 @@ function AST.expr_index(ast, v, index, line)
     return build("MemberExpression", { object = v, property = index, computed = true, line = line })
 end
 
-local function bound_check(index, inf, sup, line)
-    return build("CheckIndex", { index = index, inf = inf, sup = sup, line = line })
+local function bound_check(node, index, inf, sup, line)
+    return build("CheckIndex", { index = index, inf = inf, sup = sup, reference = node, line = line })
 end
 
 function AST:add_generated_stmt(stmt)
     self.gen_stmts[#self.gen_stmts+1] = stmt
 end
 
+function AST:void_generated_stmts()
+    self.gen_stmts = {}
+end
+
+-- Mark as "safe" the corresponding "MatrixIndex" reference node of each
+-- generated statement and return the generated statements list. The gen_stmts
+-- field of the AST object ("self") is set to the emty list.
+-- We assume here that each generated statement is of type "CheckIndex" or
+-- at least, have a "reference" node that accept a boolean "safe" attribute.
+-- The logic is that the CheckIndex nodes are going to be taken into account
+-- and so the MatrixIndex nodes can be considered safe to access the matrix
+-- without checks.
+function AST:commit_generated_stmts()
+    local ls = self.gen_stmts
+    for i = 1, #ls do
+        local check = ls[i]
+        check.reference.safe = true
+    end
+    self.gen_stmts = {}
+    return ls
+end
+
 function AST.expr_index_dual(ast, v, row, col, line)
+    local node = build("MatrixIndex", { object = v, row = row, col = col, safe = false, line = line})
     local one = literal(1)
-    local rowcheck = bound_check(row, one, field(v, "size1"), line)
-    local colcheck = bound_check(col, one, field(v, "size2"), line)
+    local rowcheck = bound_check(node, row, one, field(v, "size1"), line)
+    local colcheck = bound_check(node, col, one, field(v, "size2"), line)
     ast:add_generated_stmt(rowcheck)
     ast:add_generated_stmt(colcheck)
-    return build("MatrixIndex", { object = v, row = row, col = col, line = line})
+    return node
 end
 
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
@@ -173,6 +195,10 @@ function AST.expr_binop(ast, op, expa, expb)
     local binop_body = (op ~= CONCAT_OP and { operator = op, left = expa, right = expb, line = line })
     if binop_body then
         if op == 'and' or op == 'or' then
+            -- Logical operators voids the generated statements because they
+            -- cannot be hoisted to the statement level. The reason is that
+            -- logical expressions are conditionally executed.
+            ast:void_generated_stmts()
             return build("LogicalExpression", binop_body)
         else
             return build("BinaryExpression", binop_body)

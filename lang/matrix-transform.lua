@@ -21,10 +21,15 @@ end
 
 function ExpressionRule.MatrixIndex(node)
     local obj = node.object
-    local one = literal(1)
-    local index = binop("*", field(obj, "tda"), binop("-", node.row, one))
-    index = binop("+", index, binop("-", node.col, one))
-    return tget(field(obj, "data"), index)
+    if node.safe then
+        local one = literal(1)
+        local index = binop("*", field(obj, "tda"), binop("-", node.row, one))
+        index = binop("+", index, binop("-", node.col, one))
+        return tget(field(obj, "data"), index)
+    else
+        local args = { node.row, node.col }
+        return build("SendExpression", { receiver = obj, method = ident("get"), arguments = args })
+    end
 end
 
 LHSExpressionRule.MatrixIndex = ExpressionRule.MatrixIndex
