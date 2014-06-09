@@ -277,19 +277,6 @@ local function check_index(index, inf, sup, line)
     end
 end
 
--- DEBUG ONLY
-local function ast_print(node)
-    local codegen = require("luacode-generator")
-    return codegen.chunk(node)
-end
-
--- DEBUG ONLY
-local function ast_expr_print(node)
-    local codegen = require("luacode-generator")
-    local str = codegen.expr(node)
-    return str
-end
-
 function AST.for_post_process(ast, body, var, init, last, step)
     local for_scope = ast.current
     local function var_context(var)
@@ -307,32 +294,23 @@ function AST.for_post_process(ast, body, var, init, last, step)
     end
     local rstmts = { }
     local i = 1
-    local DEBUG_PRINT_FOR = false
     while body[i] do
         local stmt = body[i]
         if stmt.kind == "CheckIndex" then
-            if not DEBUG_PRINT_FOR then
-                print(">> For body, var:", ast_expr_print(var), ast_expr_print(init), ast_expr_print(last))
-                DEBUG_PRINT_FOR = true
-            end
-            print(">> CheckIndex statement: ", ast_print(stmt))
             local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context)
             local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context))
             local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context))
-            print(">> Index is " .. (lin and "linear" or "NOT linear"))
-            if lin then print(">> Inferior bound", inf_cf); print(">> Upper bound", inf_cf); end
             if inf_cf and sup_cf then
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
                 if coeff < 0 then index_inf, index_sup = index_sup, index_inf end
                 local icheck = check_index(index_inf, stmt.inf, nil, stmt.line)
-                if icheck then print(">> Relocating: ", ast_print(icheck)); rstmts[#rstmts+1] = icheck end
+                if icheck then rstmts[#rstmts+1] = icheck end
                 local scheck = check_index(index_sup, nil, stmt.sup, stmt.line)
-                if scheck then print(">> Relocating: ", ast_print(scheck));rstmts[#rstmts+1] = scheck end
+                if scheck then rstmts[#rstmts+1] = scheck end
                 table.remove(body, i)
                 i = i - 1
             end
-            print("")
         end
         i = i + 1
     end
