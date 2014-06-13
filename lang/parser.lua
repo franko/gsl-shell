@@ -1,54 +1,14 @@
 local operator = require("operator")
+local parser_base = require("parser-base")
+
+local err_syntax, err_token = parser_base.err_syntax, parser_base.err_token
+local lex_opt, lex_check, lex_str, lex_match = parser_base.lex_opt, parser_base.lex_check, parser_base.lex_str, parser_base.lex_match
+local checkcond = parser_base.checkcond
 
 local LJ_52 = false
 
 local IsLastStatement = { TK_return = true, TK_break  = true }
 local EndOfBlock = { TK_else = true, TK_elseif = true, TK_end = true, TK_until = true, TK_eof = true }
-
-local function err_syntax(ls, em)
-  ls:error(ls.token, em)
-end
-
-local function err_token(ls, token)
-  ls:error(ls.token, "'%s' expected", ls.token2str(token))
-end
-
-local function checkcond(ls, cond, em)
-    if not cond then err_syntax(ls, em) end
-end
-
-local function lex_opt(ls, tok)
-	if ls.token == tok then
-		ls:next()
-		return true
-	end
-	return false
-end
-
-local function lex_check(ls, tok)
-	if ls.token ~= tok then err_token(ls, tok) end
-	ls:next()
-end
-
-local function lex_match(ls, what, who, line)
-    if not lex_opt(ls, what) then
-        if line == ls.linenumber then
-            err_token(ls, what)
-        else
-            local token2str = ls.token2str
-            ls:error(ls.token, "%s expected (to close %s at line %d)", token2str(what), token2str(who), line)
-        end
-    end
-end
-
-local function lex_str(ls)
-	if ls.token ~= 'TK_name' and (LJ_52 or ls.token ~= 'TK_goto') then
-		err_token(ls, 'TK_name')
-	end
-	local s = ls.tokenval
-	ls:next()
-	return s
-end
 
 local expr_primary, expr, expr_unop, expr_binop, expr_simple
 local expr_list, expr_table
