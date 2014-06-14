@@ -1,6 +1,7 @@
 local syntax = require('syntax')
 local libexpr = require('expr-utils')
 local lua_interface = require('lua-interface')
+local util = require('util')
 
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
@@ -74,7 +75,10 @@ function AST.use_stmt(ast, name, line)
     local defs = interface_symbols(inodes)
     if defs then
         local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
-        local mod = { vars = defs, id = ident(name), vids = node.names, exps = node.expressions }
+        local mod = { vars = defs, id = ident(util.genid()), vids = node.names, exps = node.expressions }
+        local req = build("CallExpression", { callee = ident("require"), arguments = { literal(name) } })
+        local mod_local = build("LocalDeclaration", { names = { mod.id }, expressions = { req } })
+        add_pre_stmts(node, { mod_local })
         ast:fscope_register_use(mod)
         return node
     else
