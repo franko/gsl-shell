@@ -44,8 +44,4 @@ local function lang_loadfile(filename, options)
     return compile(reader.file, filename, options)
 end
 
-ast.probe = select(1, ...)
-
-assert(ast.probe and type(ast.probe) == "function", "invalid probing function")
-
 return lang_loadstring, lang_loadfile

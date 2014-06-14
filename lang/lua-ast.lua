@@ -1,5 +1,6 @@
 local syntax = require('syntax')
 local libexpr = require('expr-utils')
+local lua_interface = require('lua-interface')
 
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
@@ -59,8 +60,18 @@ local function func_expr(body, params, vararg, firstline, lastline)
     return build("FunctionExpression", { body = body, params = params, vararg = vararg, firstline = firstline, lastline = lastline })
 end
 
+local function interface_symbols(inodes)
+    local defs = { }
+    for i = 1, #inodes do
+        local name = inodes[i].name
+        defs[name] = true
+    end
+    return defs
+end
+
 function AST.use_stmt(ast, name, line)
-    local defs = ast.probe(name)
+    local inodes = lua_interface.read(name)
+    local defs = interface_symbols(inodes)
     if defs then
         local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
         local mod = { vars = defs, id = ident(name), vids = node.names, exps = node.expressions }

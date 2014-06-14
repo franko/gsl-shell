@@ -1,4 +1,6 @@
+local lex_setup = require('lexer')
 local parser_base = require("parser-base")
+local reader = require('reader')
 
 local err_syntax, err_token = parser_base.err_syntax, parser_base.err_token
 local lex_opt, lex_check, lex_str, lex_match = parser_base.lex_opt, parser_base.lex_check, parser_base.lex_str, parser_base.lex_match
@@ -18,9 +20,9 @@ local function parse_params(ls)
         repeat
             local name = lex_str(ls)
             if optional then
-                args_opt[#args_opt] = name
+                args_opt[#args_opt+1] = name
             else
-                args_fix[#args_fix] = name
+                args_fix[#args_fix+1] = name
                 optional = lex_opt(ls, "[")
             end
         until not lex_opt(ls, ",")
@@ -58,4 +60,25 @@ local function parse_interface(ls)
     return sym
 end
 
-return parse_interface
+local function luaname_lookup(name)
+    for path in string.gmatch(package.origin_path, "[^;]+") do
+        local ipath, n = string.gsub(path, "%?%.lua$", name .. ".ilua")
+        if n > 0 then
+            local f = io.open(ipath)
+            if f then
+                io.close(f)
+                return ipath
+            end
+        end
+    end
+end
+
+local function interface_read(name)
+    local filename = assert(luaname_lookup(name), "cannot find \""..name..".ilua\"")
+    reader.file_init(filename)
+    local ls = lex_setup(reader.file, name .. ".ilua")
+    return parse_interface(ls)
+end
+
+return { read = interface_read }
+
