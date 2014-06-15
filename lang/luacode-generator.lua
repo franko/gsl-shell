@@ -251,6 +251,7 @@ function StatementRule:IfStatement(node)
 end
 
 function StatementRule:LocalDeclaration(node)
+    if #node.names == 0 then return end -- AST can contail a local statement with no vars.
     local line
     local names = comma_sep_list(node.names, as_parameter)
     if #node.expressions > 0 then
