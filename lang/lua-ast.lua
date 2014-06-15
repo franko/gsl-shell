@@ -1,7 +1,7 @@
 local syntax = require('syntax')
 local libexpr = require('expr-utils')
 local lua_interface = require('lua-interface')
-local util = require('util')
+local genid_lib = require('genid')
 
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
@@ -75,7 +75,7 @@ function AST.use_stmt(ast, name, line)
     local defs = interface_symbols(inodes)
     if defs then
         local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
-        local mod = { vars = defs, id = ident(util.genid()), vids = node.names, exps = node.expressions }
+        local mod = { vars = defs, id = ast:genid(), vids = node.names, exps = node.expressions }
         local req = build("CallExpression", { callee = ident("require"), arguments = { literal(name) } })
         local mod_local = build("LocalDeclaration", { names = { mod.id }, expressions = { req } })
         add_pre_stmts(node, { mod_local })
@@ -101,6 +101,7 @@ end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
     local body_stmts = recollect_stmts(body)
+    ast:normalize_genids()
     return build("Chunk", { body = body_stmts, chunkname = chunkname, firstline = firstline, lastline = lastline })
 end
 
@@ -227,6 +228,7 @@ function AST.expr_binop(ast, op, expa, expb)
 end
 
 function AST.identifier(ast, name)
+    ast:ident_report(name)
     local found, mod = ast:lookup(name)
     if found == 'use' then
         ast:add_used_var(mod, name)
@@ -363,6 +365,26 @@ function AST.var_declare(ast, name, value)
     return id
 end
 
+function AST.ident_report(ast, name)
+    -- Declare the identifier to the lexical genid to avoid possible
+    -- conflicts.
+    ast.lex_genid.var_declare(name)
+end
+
+function AST.genid(ast)
+    local name = ast.lex_genid.new()
+    local id = ident(name)
+    ast.genid_list[#ast.genid_list+1] = id
+    return id
+end
+
+function AST.normalize_genids(ast)
+    for i = 1, #ast.genid_list do
+        local id = ast.genid_list[i]
+        id.name = ast.lex_genid.normalize(id.name)
+    end
+end
+
 function AST.fscope_begin(ast)
     ast.current = new_scope(ast.current)
 end
@@ -418,7 +440,7 @@ end
 local ASTClass = { __index = AST }
 
 local function new_ast()
-    local ast = { gen_stmts = { }, for_stack = { } }
+    local ast = { gen_stmts = { }, for_stack = { } , lex_genid = genid_lib.lexical(), genid_list = { } }
     return setmetatable(ast, ASTClass)
 end
 
