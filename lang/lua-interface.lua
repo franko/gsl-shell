@@ -16,28 +16,37 @@ local function parse_params(ls)
     lex_check(ls, "(")
     local args_fix, args_opt = { }, { }
     local optional = lex_opt(ls, "[")
+    local vararg = false
     if optional or ls.token ~= ")" then
         repeat
-            local name = lex_str(ls)
-            if optional then
-                args_opt[#args_opt+1] = name
+            if ls.token == 'TK_name' then
+                local name = lex_str(ls)
+                if optional then
+                    args_opt[#args_opt+1] = name
+                else
+                    args_fix[#args_fix+1] = name
+                    optional = lex_opt(ls, "[")
+                end
+            elseif ls.token == 'TK_dots' then
+                ls:next()
+                vararg = true
+                break
             else
-                args_fix[#args_fix+1] = name
-                optional = lex_opt(ls, "[")
+                err_syntax(ls, "<name> or \"...\" expected")
             end
         until not lex_opt(ls, ",")
     end
     if optional then lex_check(ls, "]") end
     lex_check(ls, ")")
-    return args_fix, args_opt
+    return args_fix, args_opt, vararg
 end
 
 local function parse_function(ls)
     ls:next() -- Skip 'function'.
     -- Parse function name.
     local name = lex_str(ls)
-    local args, args_opt = parse_params(ls)
-    return { kind = "Function", name = name, arguments = args, optional_arguments = args_opt }
+    local args, args_opt, vararg = parse_params(ls)
+    return { kind = "Function", name = name, arguments = args, optional_arguments = args_opt, vararg = vararg }
 end
 
 local function parse_entry(ls)
