@@ -227,6 +227,8 @@ function AST.expr_binop(ast, op, expa, expb)
     end
 end
 
+-- Only identifier that appears in expressions should be declared here. Variable
+-- declarations should use "var_declare" instead.
 function AST.identifier(ast, name)
     ast:ident_report(name)
     local found, mod = ast:lookup(name)
@@ -358,7 +360,11 @@ local function new_scope(parent_scope)
     }
 end
 
+-- All the lexical variable declaration should pass from this function.
+-- The functions fscope_start/end will be called appropriately before and after
+-- to ensure that variables are declared in the correct lexical scope.
 function AST.var_declare(ast, name, value)
+    ast:ident_report(name)
     local id = ident(name)
     local vinfo = { id = id, mutable = false, value = value }
     ast.current.vars[name] = vinfo
