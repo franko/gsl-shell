@@ -243,8 +243,8 @@ local function parse_for_num(ast, ls, varname, line)
     end
     lex_check(ls, 'TK_do')
     ast:fscope_begin()
+    local var = ast:var_declare(varname)
     local body = parse_chunk(ast, ls, false)
-    local var = ast:identifier(varname)
     local stmt = ast:for_stmt(var, init, last, step, body, line)
     ast:fscope_end()
     return stmt
@@ -252,16 +252,19 @@ end
 
 -- Parse 'for' iterator.
 local function parse_for_iter(ast, ls, indexname)
-    local vars = { ast:identifier(indexname) }
+    ast:fscope_begin()
+    local vars = { ast:var_declare(indexname) }
     while lex_opt(ls, ',') do
-        vars[#vars + 1] = ast:identifier(lex_str(ls))
+        vars[#vars + 1] = ast:var_declare(lex_str(ls))
     end
     lex_check(ls, 'TK_in')
     local line = ls.linenumber
     local exps = expr_list(ast, ls)
     lex_check(ls, 'TK_do')
     local body = parse_block(ast, ls)
-    return ast:for_iter_stmt(vars, exps, body, line)
+    local stmt = ast:for_iter_stmt(vars, exps, body, line)
+    ast:fscope_end()
+    return stmt
 end
 
 -- Parse 'for' statement.
@@ -573,6 +576,7 @@ function parse_simple_body(ast, ls, line)
     local exp = expr(ast, ls)
     local retstmt = ast:return_stmt({ exp }, line)
     local body = ast:block_stmt({ retstmt }, line)
+    ast:fscope_end()
     ls.fs.lastline = ls.linenumber
     local proto = ls.fs
     ls.fs = pfs
