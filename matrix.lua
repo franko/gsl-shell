@@ -1180,6 +1180,8 @@ matrix.tr = function(a)
 matrix.def  = matrix_def
 matrix.cdef = matrix_cdef
 
+package.loaded["complex"] = complex
+
 local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 
 register_ffi_type(gsl_complex, "complex")
