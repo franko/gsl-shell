@@ -10,7 +10,7 @@
 --
 
 local bc   = require('bytecode')
-local util = require('util')
+local genid = require('genid').create()
 
 local const_eval = require("ast-const-eval")
 
@@ -247,7 +247,7 @@ end
 function ExpressionRule:BinaryExpression(node, dest)
    local o = node.operator
    if cmpop[o] then
-      local l = util.genid()
+      local l = genid.new()
       self:test_emit(node, l, false, EXPR_RESULT_BOTH, dest)
       self.ctx:here(l)
    elseif dirop[o] then
@@ -289,7 +289,7 @@ end
 function ExpressionRule:LogicalExpression(node, dest)
    local negate = (node.operator == 'or')
    local lstore = (node.operator == 'or' and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
-   local l = util.genid()
+   local l = genid.new()
    self:test_emit(node.left, l, negate, lstore, dest)
    self:expr_toreg(node.right, dest)
    self.ctx:here(l)
@@ -478,7 +478,7 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
       if use_imbranch then
          local jreg = store ~= 0 and dest + 1 or free
          local test, swap = lookup_test(not negate, o)
-         local altlabel = util.genid()
+         local altlabel = genid.new()
          self.ctx:op_comp(test, a, btag, b, altlabel, free, swap)
          self.ctx:op_load(dest, negate)
          self.ctx:jump(jmp, jreg)
@@ -516,7 +516,7 @@ function TestRule:LogicalExpression(node, jmp, negate, store, dest)
    local lstore = bit.band(store, lbit)
    local imbranch = (o == 'and' and negate) or (o == 'or' and not negate)
    if imbranch then
-      local templ = util.genid()
+      local templ = genid.new()
       self:test_emit(node.left, templ, not negate, lstore, dest)
       self:test_emit(node.right, jmp, negate, store, dest)
       self.ctx:here(templ)
@@ -556,14 +556,14 @@ function StatementRule:IfStatement(node, root_exit)
    local ncons = #node.tests
    -- Count the number of branches, including the "else" branch.
    local count = node.alternate and ncons + 1 or ncons
-   local local_exit = count > 1 and util.genid()
+   local local_exit = count > 1 and genid.new()
    -- Set the exit point to the extern exit if given or set to local
    -- exit (potentially false).
    local exit = root_exit or local_exit
 
    for i = 1, ncons do
       local test, block = node.tests[i], node.cons[i]
-      local next_test = util.genid()
+      local next_test = genid.new()
       -- Set the exit point to jump on at the end of for this block.
       -- If this is the last branch (count == 1) set to false.
       local bexit = count > 1 and exit
@@ -667,7 +667,7 @@ function StatementRule:AssignmentExpression(node)
 end
 function StatementRule:WhileStatement(node)
    local free = self.ctx.freereg
-   local loop, exit = util.genid(), util.genid()
+   local loop, exit = genid.new(), genid.new()
    self:loop_enter(exit, free)
    self.ctx:here(loop)
    self:test_emit(node.test, exit)
@@ -680,7 +680,7 @@ function StatementRule:WhileStatement(node)
 end
 function StatementRule:RepeatStatement(node)
    local free = self.ctx.freereg
-   local loop, exit = util.genid(), util.genid()
+   local loop, exit = genid.new(), genid.new()
    self:loop_enter(exit, free)
    self.ctx:here(loop)
    self.ctx:loop(exit)
@@ -699,7 +699,7 @@ function StatementRule:ForStatement(node)
    local free = self.ctx.freereg
    local base = free
 
-   local exit = util.genid()
+   local exit = genid.new()
 
    local init = node.init
    local name = init.id.name
@@ -729,7 +729,7 @@ function StatementRule:ForInStatement(node)
    local free = self.ctx.freereg
    local iter = free + 3
 
-   local loop, exit = util.genid(), util.genid()
+   local loop, exit = genid.new(), genid.new()
 
    local vars = node.namelist.names
    local iter_list = node.explist
@@ -754,7 +754,7 @@ function StatementRule:ForInStatement(node)
       self.ctx:setreg(iter + i)
    end
 
-   local ltop = self.ctx:here(util.genid())
+   local ltop = self.ctx:here(genid.new())
    self:block_emit(node.body)
    self:loop_leave()
    self.ctx:here(loop)
