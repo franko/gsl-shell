@@ -14,39 +14,46 @@ end
 
 local function parse_params(ls)
     lex_check(ls, "(")
-    local args_fix, args_opt = { }, { }
-    local optional = lex_opt(ls, "[")
-    local vararg = false
-    if optional or ls.token ~= ")" then
-        repeat
-            if ls.token == 'TK_name' then
-                local name = lex_str(ls)
-                if optional then
-                    args_opt[#args_opt+1] = name
-                else
-                    args_fix[#args_fix+1] = name
-                    optional = lex_opt(ls, "[")
-                end
-            elseif ls.token == 'TK_dots' then
-                ls:next()
-                vararg = true
-                break
-            else
-                err_syntax(ls, "<name> or \"...\" expected")
-            end
-        until not lex_opt(ls, ",")
+    local params = { }
+    local opt = 0
+    if lex_opt(ls, "[") then
+        params[#params+1] = " ["
+        opt = opt + 1
     end
-    if optional then lex_check(ls, "]") end
+    if ls.token == ")" then goto parse_end end
+    ::name::
+    if ls.token == 'TK_name' then
+        params[#params+1] = lex_str(ls)
+    elseif ls.token == 'TK_dots' then
+        ls:next()
+        params[#params+1] = "..."
+        goto parse_end
+    else
+        err_syntax(ls, "<name> or \"...\" expected")
+    end
+    if lex_opt(ls, "[") then
+        params[#params+1] = " ["
+        opt = opt + 1
+    end
+    if lex_opt(ls, ",") then
+        params[#params+1] = ", "
+        goto name
+    end
+    ::parse_end::
+    for k = 1, opt do
+        lex_check(ls, "]")
+        params[#params+1] = "]"
+    end
     lex_check(ls, ")")
-    return args_fix, args_opt, vararg
+    return "(" .. table.concat(params) .. ")"
 end
 
 local function parse_function(ls)
     ls:next() -- Skip 'function'.
     -- Parse function name.
     local name = lex_str(ls)
-    local args, args_opt, vararg = parse_params(ls)
-    return { kind = "Function", name = name, arguments = args, optional_arguments = args_opt, vararg = vararg }
+    local params = parse_params(ls)
+    return { kind = "Function", name = name, parameters = params }
 end
 
 local function parse_entry(ls)
