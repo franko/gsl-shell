@@ -9,6 +9,8 @@ extern "C" {
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "lang/language.h"
+#include "lang/lua-language-gs.h"
 }
 
 #include "gsl_shell_interp.h"
@@ -80,10 +82,18 @@ static int dolibrary(lua_State *L, const char *name)
 static int pinit(lua_State *L)
 {
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
+
+    int parser_status = language_init(L);
+    if (parser_status != 0) {
+        language_report(L, parser_status);
+        exit(EXIT_FAILURE);
+    }
+
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
-    luaopen_gsl (L);
-    register_graph (L);
+    luaopen_gsl(L);
+    register_graph(L);
+    luaopen_language(L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
     return 0;
@@ -108,7 +118,7 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     }
 
     str mline = str::print("return %s", line);
-    status = luaL_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+    status = language_loadbuffer(L, mline.cstr(), len+7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
     return status;
 }
@@ -171,7 +181,7 @@ int gsl_shell::exec(const char *line)
 
     if (status != 0)
     {
-        status = luaL_loadbuffer(L, line, len, "=<user input>");
+        status = language_loadbuffer(L, line, len, "=<user input>");
 
         if (incomplete(L, status))
             return incomplete_input;
