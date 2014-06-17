@@ -421,7 +421,7 @@ window_new (lua_State *L)
     const char *spec = lua_tostring (L, 1);
     int defer_show = (lua_gettop(L) >= 2 ? lua_toboolean(L, 2) : 0);
 
-    window *win = push_new_object<window>(L, GS_WINDOW, global_state);
+    window *win = push_new_object<window>(L, GS_WINDOW, global_gs);
 
     if (spec)
     {

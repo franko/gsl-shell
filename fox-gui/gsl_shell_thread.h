@@ -7,9 +7,9 @@ extern "C" {
 
 #include "gsl_shell_interp.h"
 #include "pthreadpp.h"
-#include "str.h"
+#include "strpp.h"
 
-class gsl_shell_thread : public gsl_shell
+class gsl_shell_thread
 {
     enum thread_cmd_e { thread_cmd_exec, thread_cmd_exit, thread_cmd_continue };
 public:
@@ -30,12 +30,12 @@ public:
 
     void lock()
     {
-        pthread_mutex_lock(&this->exec_mutex);
+        gsl_shell_interp_lock(this->m_gsl_shell);
     }
 
     void unlock()
     {
-        pthread_mutex_unlock(&this->exec_mutex);
+        gsl_shell_interp_unlock(this->m_gsl_shell);
     }
 
     int eval_status() const
@@ -48,6 +48,13 @@ public:
         return m_eval;
     }
 
+    const char* error_msg() const
+    {
+        return gsl_shell_interp_error_msg(this->m_gsl_shell);
+    }
+
+    gsl_shell_interp * interp() { return m_gsl_shell; }
+
     // asyncronous request
     void interrupt_request();
 
@@ -55,6 +62,7 @@ private:
     thread_cmd_e process_request();
 
     pthread_t m_thread;
+    gsl_shell_interp m_gsl_shell[1];
     engine_status_e m_status;
     pthread::cond m_eval;
     str m_line_pending;

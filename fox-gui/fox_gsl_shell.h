@@ -16,7 +16,6 @@ public:
 
     ~fox_gsl_shell() { delete m_close; }
 
-    virtual void init();
     virtual void close();
 
     virtual void before_eval();

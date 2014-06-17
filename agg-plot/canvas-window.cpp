@@ -105,14 +105,14 @@ canvas_thread_function (void *_inf)
 
     win->unlock();
 
-    gsl_shell_state* gs = win->state();
+    gsl_shell_interp* gs = win->interp();
 
     pthread_mutex_lock (&gs->shutdown_mutex);
     if (!gs->is_shutting_down)
     {
-        pthread_mutex_lock(&gs->exec_mutex);
+        gsl_shell_interp_lock(gs);
         window_index_remove (gs->L, inf->window_id);
-        pthread_mutex_unlock(&gs->exec_mutex);
+        gsl_shell_interp_unlock(gs);
     }
     pthread_mutex_unlock (&gs->shutdown_mutex);
 
@@ -130,7 +130,7 @@ canvas_window::shutdown_close(bool send_close_request)
         }
         unlock();
 
-        gsl_shell_state* gs = this->m_gsl_shell;
+        gsl_shell_interp* gs = this->interp();
         pthread_mutex_unlock (&gs->shutdown_mutex);
         pthread_join(m_thread, NULL);
         pthread_mutex_lock (&gs->shutdown_mutex);

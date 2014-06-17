@@ -5,15 +5,11 @@
 #include "window_registry.h"
 #include "lua-graph.h"
 
-void fox_gsl_shell::init()
-{
-    gsl_shell_thread::init();
-}
-
 void fox_gsl_shell::close()
 {
-    graph_close_windows(L);
-    gsl_shell_thread::close();
+    gsl_shell_interp *gs = interp();
+    graph_close_windows(gs->L);
+    gsl_shell_interp_close(gs);
 }
 
 void
@@ -23,7 +19,7 @@ fox_gsl_shell::before_eval()
     unsigned n = m_window_close_queue.size();
     for (unsigned k = 0; k < n; k++)
     {
-        window_index_remove (L, m_window_close_queue[k]);
+        window_index_remove (interp()->L, m_window_close_queue[k]);
     }
     m_window_close_queue.clear();
     m_window_close_queue.unlock();

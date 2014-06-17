@@ -87,7 +87,8 @@ void fx_console::prepare_input()
 
 void fx_console::show_errors()
 {
-    if (m_engine->eval_status() == gsl_shell::eval_error)
+    int status = m_engine->eval_status();
+    if (status != 0 &&  (status >> 8) == 0)
     {
         FXchar const * const em = "error reported: ";
         appendStyledText(em, strlen(em), error_style);
@@ -287,7 +288,7 @@ long fx_console::on_lua_output(FXObject* obj, FXSelector sel, void* ptr)
     {
         int status = m_engine->eval_status();
 
-        if (status == gsl_shell::incomplete_input)
+        if (status >> 8 == incomplete_input)
         {
             m_history.remove_last();
             m_status = input_mode;

@@ -77,14 +77,14 @@ LUA_BASE_FILES += $(HELP_FILES:%=help/%.lua)
 
 EXAMPLES_FILES := $(EXAMPLES_FILES_SRC:%=examples/%.csv)
 
-C_SRC_FILES += gsl-shell-jit.c
+C_SRC_FILES += gsl-shell.c
 
 TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI)
 
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
 INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
-LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a
+LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a $(GSH_LIBDIR)/libluagsl.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
 ifneq ($(BUILDMODE),dynamic)

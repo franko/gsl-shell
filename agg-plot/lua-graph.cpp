@@ -36,6 +36,8 @@ extern "C" {
 #define MLUA_GRAPHLIBNAME "graph"
 #endif
 
+const graphics_lib graphics[1] = {{ register_graph, graph_close_windows, graph_wait_windows }};
+
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
 pthread_mutex_t agg_mutex[1];
@@ -46,7 +48,7 @@ graph_close_windows (lua_State *L)
     window_index_apply_all (L, app_window_hooks->close);
 }
 
-static void
+void
 graph_wait_windows (lua_State *L)
 {
     window_index_apply_all (L, app_window_hooks->wait);
@@ -69,19 +71,4 @@ register_graph (lua_State *L)
     initialize_fonts (L);
 
     lua_pop(L, 1);
-}
-
-void
-gsl_shell_close_with_graph (struct gsl_shell_state* gs, int send_close_req)
-{
-    pthread_mutex_lock (&gs->shutdown_mutex);
-    gs->is_shutting_down = 1;
-    pthread_mutex_lock(&gs->exec_mutex);
-    if (send_close_req)
-        graph_close_windows(gs->L);
-    else
-        graph_wait_windows(gs->L);
-    lua_close(gs->L);
-    pthread_mutex_unlock(&gs->shutdown_mutex);
-    pthread_mutex_unlock(&gs->exec_mutex);
 }

@@ -2,6 +2,8 @@
 #include <stdio.h>
 
 #include "gsl_shell_thread.h"
+#include "graphics-hooks.h"
+#include "lua-graph.h"
 
 extern "C" void * luajit_eval_thread (void *userdata);
 
@@ -10,7 +12,7 @@ luajit_eval_thread (void *userdata)
 {
     gsl_shell_thread* eng = (gsl_shell_thread*) userdata;
     eng->lock();
-    eng->init();
+    gsl_shell_interp_open(eng->interp(), graphics);
     eng->run();
     pthread_exit(NULL);
     return NULL;
@@ -45,8 +47,9 @@ gsl_shell_thread::process_request()
     }
     else if (m_request == gsl_shell_thread::restart_request)
     {
-        this->close();
-        this->init();
+        graph_close_windows(m_gsl_shell->L);
+        gsl_shell_interp_close(m_gsl_shell);
+        gsl_shell_interp_open(m_gsl_shell, graphics);
         restart_callback();
         cmd = thread_cmd_continue;
     }
@@ -97,13 +100,14 @@ gsl_shell_thread::run()
 
         if (cmd == thread_cmd_exec)
         {
-            m_eval_status = this->exec(line.cstr());
+            m_eval_status = gsl_shell_interp_exec(m_gsl_shell, line.cstr());
             fputc(eot_character, stdout);
             fflush(stdout);
         }
     }
 
-    this->close();
+    graph_close_windows(m_gsl_shell->L);
+    gsl_shell_interp_close(m_gsl_shell);
     this->unlock();
     quit_callback();
 }
@@ -114,8 +118,7 @@ gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
     m_eval.lock();
     m_request = req;
     if (line) m_line_pending = line;
-    if (m_status == waiting)
-    {
+    if (m_status == waiting) {
         m_eval.signal();
     }
     m_eval.unlock();
@@ -126,7 +129,8 @@ void
 gsl_shell_thread::interrupt_request()
 {
     m_eval.lock();
-    if (m_status == busy)
-        this->interrupt();
+    if (m_status == busy) {
+        gsl_shell_interp_interrupt(m_gsl_shell);
+    }
     m_eval.unlock();
 }
