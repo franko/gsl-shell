@@ -57,13 +57,19 @@ local function parse_function(ls)
 end
 
 local function parse_entry(ls)
+    local e
     if ls.token == 'TK_function' then
-        return parse_function(ls)
+        e = parse_function(ls)
     elseif ls.token == 'TK_local' then
-        return parse_local(ls)
+        e = parse_local(ls)
     else
         err_syntax(ls, 'expect function or local variable declaration')
     end
+    if ls.token == "TK_string" then
+        e.help = ls.tokenval
+        ls:next()
+    end
+    return e
 end
 
 local function parse_interface(ls)
