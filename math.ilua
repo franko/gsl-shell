@@ -1,30 +1,67 @@
-function abs(x)
-function acos(x)
-function asin(x)
-function atan(x)
-function atan2(y, x)
-function ceil(x)
-function cos(x)
-function cosh(x)
-function deg(x)
-function exp(x)
-function floor(x)
-function fmod(x, y)
-function frexp(x)
-function ldexp(x, e)
-function log(x)
-function log10(x)
-function max(...)
-function min(...)
-function modf(x)
-function pow(x, y)
-function rad(x)
-function random([m, n])
-function randomseed(x)
-function sin(x)
-function sinh(x)
+-- General purpose mathematical functions
 function sqrt(x)
-function tan(x)
-function tanh(x)
-local pi
+	"Returns the square root of x"
+function abs(x)
+	"Returns the absolute value of x"
+function floor(x)
+	"Returns the largest integer smaller than or equal to x"
+function ceil(x)
+	"Returns the smallest integer larger than or equal to x"
+function modf(x)
+	"Returns two numbers, the integral part of x and the fractional part of x"
+function fmod(x, y)
+	"Returns the remainder of the division of x by y that rounds the quotient towards zero"
+function frexp(x)
+	"Returns m and e such that x = m 2^e, e is an integer and the absolute value of m is in the range [0.5, 1) (or zero when x is zero)"
+function ldexp(m, e)
+	"Returns m 2^e (e should be an integer)"
+function max(...)
+	"Returns the maximum value among its arguments"
+function min(...)
+	"Returns the minimum value among its arguments"
+function random([m [, n]])
+	"Return a random number in [0, 1) or an integer in [m, n] if given"
+function randomseed(x)
+	"Sets x as the \"seed\" for the pseudo-random generator"
 local huge
+	"The value HUGE_VAL, a value larger than or equal to any other numerical value"
+
+-- Trigonometric functions
+function deg(x)
+	"Returns the angle x (given in radians) in degrees"
+function rad(x)
+	"Returns the angle x (given in degrees) in radians"
+function sin(x)
+	"Returns the sine of x (assumed to be in radians)"
+function cos(x)
+	"Returns the cosine of x (assumed to be in radians)"
+function tan(x)
+	"Returns the tangent of x (assumed to be in radians)"
+function acos(x)
+	"Returns the arc cosine of x (in radians)"
+function asin(x)
+	"Returns the arc sine of x (in radians)"
+function atan(x)
+	"Returns the arc tangent of x (in radians)"
+function atan2(y, x)
+	"Return the arc in radians corresponding to the point (x,y)"
+local pi
+	"The value of pi"
+
+-- Hyperbolic functions
+function cosh(x)
+	"Returns the hyperbolic cosine of x"
+function sinh(x)
+	"Returns the hyperbolic sine of x"
+function tanh(x)
+	"Returns the hyperbolic tangent of x"
+
+-- Exponential functions
+function pow(x, y)
+	"Returns the power of x raised to y, equivalent to x^y"
+function exp(x)
+	"Return the exponential of x"
+function log(x)
+	"Returns the natural logarithm of x"
+function log10(x)
+	"Returns the base-10 logarithm of x"
