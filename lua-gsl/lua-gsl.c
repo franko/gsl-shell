@@ -21,13 +21,13 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include <gsl/gsl_types.h>
+// #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
 
 #include "lua-gsl.h"
 #include "gs-types.h"
-#include "lua-utils.h"
-#include "fatal.h"
+//#include "lua-utils.h"
+//#include "fatal.h"
 
 #include "gdt/gdt_table.h"
 
@@ -36,42 +36,13 @@
 extern gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc);
 gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc) = gdt_table_new;
 
-struct gsl_shell_state* global_state;
-
-void
-gsl_shell_open (struct gsl_shell_state *gs)
-{
-  gs->L = lua_open();  /* create state */
-
-  if (unlikely(gs->L == NULL))
-    fatal_exception("cannot create state: not enough memory");
-
-  global_state = gs;
-}
-
-void
-gsl_shell_init (struct gsl_shell_state *gs)
-{
-  pthread_mutex_init (&gs->exec_mutex, NULL);
-  pthread_mutex_init (&gs->shutdown_mutex, NULL);
-  gs->is_shutting_down = 0;
-  gs->L = NULL;
-}
-
-void
-gsl_shell_free (struct gsl_shell_state *gs)
-{
-  pthread_mutex_destroy (&gs->exec_mutex);
-  pthread_mutex_destroy (&gs->shutdown_mutex);
-}
-
 int
 luaopen_gsl (lua_State *L)
 {
-  gsl_set_error_handler_off ();
+    gsl_set_error_handler_off ();
 
-  lua_pushcfunction (L, gs_type_string);
-  lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
+    lua_pushcfunction (L, gs_type_string);
+    lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
 
-  return 0;
+    return 0;
 }

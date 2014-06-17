@@ -68,9 +68,9 @@
 
 #if defined(USE_READLINE)
 static char *
-my_readline (lua_State *L, char *b, const char *p)
+my_readline (const char *p)
 {
-    return readline (p);
+    return readline(p);
 }
 
 static void
@@ -81,7 +81,7 @@ my_saveline (lua_State *L, int idx)
 }
 
 static void
-my_freeline (lua_State *L, char *b)
+my_freeline(char *b)
 {
     free (b);
 }
@@ -89,20 +89,25 @@ my_freeline (lua_State *L, char *b)
 #else
 
 static char *
-my_readline (lua_State *L, char *b, const char *p)
+my_readline (const char *p)
 {
+    char *str = malloc(LUA_MAXINPUT);
+    if (unlikely(str == NULL)) {
+        l_message(progname, "memory allocation failed");
+        exit(1);
+    }
     fputs(p, stdout);
     fflush(stdout);  /* show prompt */
-    return fgets(b, LUA_MAXINPUT, stdin);  /* get line */
+    return fgets(str, LUA_MAXINPUT, stdin);  /* get line */
 }
 
 static void my_saveline (lua_State *L, int idx) { }
-static void my_freeline (lua_State *L, char *b) { }
+static void my_freeline (char *b) { free(b); }
 
 #endif
 
 lua_State *globalL = NULL;
-struct gsl_shell_state gsl_shell[1];
+gsl_shell_interp gsl_shell[1];
 static const char *progname = LUA_PROGNAME;
 
 struct window_hooks app_window_hooks[1] = {{
@@ -114,6 +119,7 @@ struct window_hooks app_window_hooks[1] = {{
     }
 };
 
+#if 0
 static void gsl_shell_openlibs(lua_State *L)
 {
     luaopen_gsl (L);
@@ -130,6 +136,7 @@ static void lstop(lua_State *L, lua_Debug *ar)
     lua_pushfstring(L, "%sinterrupted!", lua_tostring(L, -1));
     lua_error(L);
 }
+#endif
 
 static void laction(int i)
 {
@@ -299,14 +306,13 @@ static int incomplete(lua_State *L, int status)
     return 0;  /* else... */
 }
 
-static int pushline (lua_State *L, int firstline) {
-    char buffer[LUA_MAXINPUT];
+static const char *getline(lua_State *L, int firstline) {
     char *b;
     size_t l;
     const char *prmt = get_prompt(L, firstline);
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
-    b = my_readline(L, buffer, prmt);
+    b = my_readline(prmt);
     pthread_mutex_lock(&gsl_shell->exec_mutex);
 
     if (b == NULL)
@@ -315,9 +321,10 @@ static int pushline (lua_State *L, int firstline) {
     l = strlen(b);
     if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
         b[l-1] = '\0';  /* remove it */
-    lua_pushstring(L, b);
-    my_freeline(L, b);
-    return 1;
+    return b;
+    // lua_pushstring(L, b);
+    // my_freeline(L, b);
+    // return 1;
 }
 
 /* If the input is an expression we load it preceded by "return" so
@@ -351,6 +358,7 @@ static int yield_expr(lua_State* L, int index, const char* line, size_t len)
     return 1;
 }
 
+#if 0
 static int loadline(lua_State *L)
 {
     int status;
@@ -401,12 +409,16 @@ static int loadline(lua_State *L)
     lua_remove(L, 1);  /* remove line */
     return status;
 }
+#endif
 
 static void dotty(lua_State *L)
 {
     int status;
     const char *oldprogname = progname;
     progname = NULL;
+    while (1) {
+        const char *line = getline(L, 0);
+        gsl_shell_interp_exec()
     while ((status = loadline(L)) != -1) {
         if (status == 0) status = docall(L, 0, 0);
         report(L, status);
