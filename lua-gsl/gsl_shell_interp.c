@@ -6,6 +6,7 @@
 #include "lua-utils.h"
 #include "fatal.h"
 
+/*
 static void stderr_message(const char *pname, const char *msg)
 {
     if (pname) fprintf(stderr, "%s: ", pname);
@@ -24,26 +25,31 @@ static int stderr_report(lua_State *L, int status)
     }
     return status;
 }
+*/
+
+static int report_error_msg(gsl_shell_interp *gs, int status)
+{
+    lua_State* L = gs->L;
+    if (status && !lua_isnil(L, -1))
+    {
+        const char *msg = lua_tostring(L, -1);
+        if (msg == NULL) msg = "(error object is not a string)";
+        str_copy_c(m_error_msg, msg);
+        lua_pop(L, 1);
+    }
+    return status;
+}
 
 static int traceback(lua_State *L)
 {
-    if (!lua_isstring(L, 1))  /* 'message' not a string? */
-        return 1;  /* keep it intact */
-    lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-    if (!lua_istable(L, -1))
-    {
-        lua_pop(L, 1);
-        return 1;
+    if (!lua_isstring(L, 1)) { /* Non-string error object? Try metamethod. */
+        if (lua_isnoneornil(L, 1) ||
+                !luaL_callmeta(L, 1, "__tostring") ||
+                !lua_isstring(L, -1))
+            return 1;  /* Return non-string error object. */
+        lua_remove(L, 1);  /* Replace object by result of __tostring metamethod. */
     }
-    lua_getfield(L, -1, "traceback");
-    if (!lua_isfunction(L, -1))
-    {
-        lua_pop(L, 2);
-        return 1;
-    }
-    lua_pushvalue(L, 1);  /* pass error message */
-    lua_pushinteger(L, 2);  /* skip this function and traceback */
-    lua_call(L, 2, 1);  /* call debug.traceback */
+    luaL_traceback(L, L, lua_tostring(L, 1), 1);
     return 1;
 }
 
@@ -64,31 +70,31 @@ static int dolibrary(lua_State *L, const char *name)
 {
     lua_getglobal(L, "require");
     lua_pushstring(L, name);
-    return stderr_report(L, docall(L, 1, 1));
+    return docall(L, 1, 1);
 }
 
+/* Lua C function that perform initialization. */
 static int pinit(lua_State *L)
 {
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
 
-    graphics_lib *graphics = lua_touserdata(L, 1);
+    gsl_shell_interp *gs = lua_touserdata(L, 1);
 
     int parser_status = language_init(L);
     if (parser_status != 0) {
-        language_report(L, parser_status);
-        exit(EXIT_FAILURE);
+        report_error_msg(gs, parser_status);
+        return parser_status;
     }
 
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
     /* TODO: perform other library using a use defined callback. */
     luaopen_gsl(L);
-    if (graphics_lib)
-        graphics_lib->init(L);
+    if (gs->graphics)
+        gs->graphics->init(L);
     luaopen_language(L);
     lua_gc(L, LUA_GCRESTART, -1);
-    dolibrary (L, "gslext");
-    return 0;
+    return dolibrary(L, "gslext");
 }
 
 /* If the input is an expression we load it preceded by "return" so
@@ -109,9 +115,15 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
             break;
     }
 
-    str mline = str::print("return %s", line);
-    status = language_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+    char *mline = malloc(len + 7 + 1);
+    if (mline == NULL) {
+        return 1;
+    }
+    memcpy(mline, "return ");
+    memcpy(mline + 7, line, len + 1);
+    status = language_loadbuffer(L, mline, len + 7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
+    free(mline);
     return status;
 }
 
@@ -131,43 +143,32 @@ static int incomplete(lua_State *L, int status)
     return 0;  /* else... */
 }
 
-static int report_error_msg(gsl_shell_interp *gs, int status)
-{
-    lua_State* L = gs->L;
-    if (status && !lua_isnil(L, -1))
-    {
-        const char *msg = lua_tostring(L, -1);
-        if (msg == NULL) msg = "(error object is not a string)";
-        str_copy_c(m_error_msg, msg);
-        lua_pop(L, 1);
-    }
-    return status;
-}
-
-void
+int
 gsl_shell_interp_open(gsl_shell_interp *gs, graphics_lib *graphics)
 {
-    pthread_mutex_init (&gs->exec_mutex, NULL);
-    pthread_mutex_init (&gs->shutdown_mutex, NULL);
-
-    str_init(gs->m_error_msg);
-
-    gs->m_graphics = graphics;
-
     gs->L = lua_open();  /* create state */
 
-    if (unlikely(gs->L == NULL))
-        fatal_exception("cannot create state: not enough memory");
-
-    int status = lua_cpcall(gs->L, pinit, gs->m_graphics);
-
-    if (unlikely(stderr_report(gs->L, status)))
-    {
-        lua_close(gs->L);
-        fatal_exception("cannot initialize Lua state");
+    if (unlikely(gs->L == NULL)) {
+        str_copy_c(gs->m_error_msg, "cannot create state: not enough memory");
+        return LUA_ERRRUN;
     }
 
+    gs->graphics = graphics;
+
+    int status = lua_cpcall(gs->L, pinit, gs);
+
+    if (status != 0)
+    {
+        lua_close(gs->L);
+        gs->L = NULL;
+        return LUA_ERRRUN;
+    }
+
+    pthread_mutex_init(&gs->exec_mutex, NULL);
+    pthread_mutex_init(&gs->shutdown_mutex, NULL);
+    str_init(gs->m_error_msg);
     gs->is_shutting_down = 0;
+    return 0;
     // global_state = gs;
 }
 
@@ -185,13 +186,13 @@ gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
         status = language_loadbuffer(L, line, len, "=<user input>");
 
         if (incomplete(L, status))
-            return incomplete_input;
+            return status + (incomplete_input << 8);
     }
 
     if (status == 0)
     {
         status = docall(L, 0, 0);
-        error_report(status);
+        report_error_msg(gs, status);
         if (status == 0 && lua_gettop(L) > 0)   /* any result to print? */
         {
             lua_pushvalue(L, -1);
@@ -204,9 +205,41 @@ gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
         }
     }
 
-    report_error_msg(status);
+    report_error_msg(gs, status);
 
-    return (status == 0 ? eval_success : eval_error);
+    return status;
+}
+
+int
+gsl_shell_interp_dostring(gsl_shell_interp *gs, const char *s, const char *name)
+{
+    int status = language_loadbuffer(L, s, strlen(s), name);
+    if (status == 0) {
+        status = docall(L, 0, 1);
+    };
+    report_error_msg(gs, status);
+    return status;
+}
+
+int
+gsl_shell_interp_dofile(gsl_shell_interp *gs, const char *name)
+{
+    int status = language_loadfile(L, name);
+    if (status == 0) {
+        status = docall(L, 0, 1);
+    };
+    report_error_msg(gs, status);
+    return status;
+}
+
+int
+gsl_shell_interp_dolibrary(gsl_shell_interp *gs, const char *name)
+{
+    lua_getglobal(L, "require");
+    lua_pushstring(L, name);
+    int status = docall(L, 1, 1);
+    report_error_msg(gs, status);
+    return status;
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -239,6 +272,7 @@ gsl_shell_interp_close(gsl_shell_interp *gs)
 
     pthread_mutex_destroy (&gs->exec_mutex);
     pthread_mutex_destroy (&gs->shutdown_mutex);
+    str_free(gs->m_error_msg);
 }
 
 void
@@ -248,9 +282,9 @@ gsl_shell_interp_close_with_graph (gsl_shell_interp* gs, int send_close_req)
     gs->is_shutting_down = 1;
     pthread_mutex_lock(&gs->exec_mutex);
     if (send_close_req) {
-        m_graphics->close_windows(gs->L);
+        gs->graphics->close_windows(gs->L);
     } else {
-        m_graphics->wait_windows(gs->L);
+        gs->graphics->wait_windows(gs->L);
     }
     lua_close(gs->L);
     gs->L = NULL;

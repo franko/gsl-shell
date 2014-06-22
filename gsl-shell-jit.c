@@ -262,6 +262,7 @@ static int getargs(lua_State *L, char **argv, int n)
     return narg;
 }
 
+/*
 static int dofile(lua_State *L, const char *name)
 {
     int status = language_loadfile(L, name) || docall(L, 0, 1);
@@ -280,6 +281,7 @@ static int dolibrary(lua_State *L, const char *name)
     lua_pushstring(L, name);
     return report(L, docall(L, 1, 1));
 }
+*/
 
 static const char *
 get_prompt(lua_State *L, int firstline)
@@ -411,27 +413,44 @@ static int loadline(lua_State *L)
 }
 #endif
 
+static const char *concat_string(const char *a, const char *b, int sep)
+{
+    size_t len = strlen(a);
+    char *accu = malloc(len + strlen(b) + 2);
+    if (accu == NULL) {
+        goto cat_return;
+    }
+    memcpy(accu, line, len);
+    accu[len] = sep;
+    memcpy(accu + len + 1, b, strlen(b) + 1);
+cat_return:
+    free(a);
+    free(b);
+    return accu;
+}
+
 static void dotty(lua_State *L)
 {
     int status;
     const char *oldprogname = progname;
     progname = NULL;
+    int firstline = 1;
     while (1) {
-        const char *line = getline(L, 0);
-        gsl_shell_interp_exec()
-    while ((status = loadline(L)) != -1) {
-        if (status == 0) status = docall(L, 0, 0);
-        report(L, status);
-        if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
-            lua_pushvalue(L, -1);
-            lua_setfield(L, LUA_GLOBALSINDEX, "_");
-
-            lua_getglobal(L, "print");
-            lua_insert(L, 1);
-            if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-                l_message(progname,
-                          lua_pushfstring(L, "error calling " LUA_QL("print") " (%s)",
-                                          lua_tostring(L, -1)));
+        const char *line = getline(L, firstline);
+        if (line == NULL) {
+            break;
+        }
+        int exec_status = gsl_shell_interp_exec(gsl_shell, line);
+        if (exec_status >> 8 == incomplete_input) {
+            const char *new_line = getline(L, firstline);
+            if (new_line == NULL) {
+                break;
+            }
+            line = concat_string(line, new_line, '\n');
+            firstline = 0;
+        } else if (exec_status != 0) {
+            const char *msg = gsl_shell_interp_error_msg(gsl_shell);
+            l_message(progname, msg);
         }
     }
     lua_settop(L, 0);  /* clear stack */
