@@ -1,10 +1,13 @@
-#include <lua.h>
-#include <lauxlib.h>
+#include <string.h>
 
 #include "gsl_shell_interp.h"
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
 #include "lua-gsl.h"
 #include "lua-utils.h"
-#include "fatal.h"
+#include "lang/language.h"
+#include "lang/lua-language-gs.h"
 
 /*
 static void stderr_message(const char *pname, const char *msg)
@@ -34,7 +37,7 @@ static int report_error_msg(gsl_shell_interp *gs, int status)
     {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        str_copy_c(m_error_msg, msg);
+        str_copy_c(gs->m_error_msg, msg);
         lua_pop(L, 1);
     }
     return status;
@@ -119,7 +122,7 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     if (mline == NULL) {
         return 1;
     }
-    memcpy(mline, "return ");
+    memcpy(mline, "return ", 7);
     memcpy(mline + 7, line, len + 1);
     status = language_loadbuffer(L, mline, len + 7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
@@ -166,7 +169,7 @@ gsl_shell_interp_open(gsl_shell_interp *gs, graphics_lib *graphics)
 
     pthread_mutex_init(&gs->exec_mutex, NULL);
     pthread_mutex_init(&gs->shutdown_mutex, NULL);
-    str_init(gs->m_error_msg);
+    str_init(gs->m_error_msg, 64);
     gs->is_shutting_down = 0;
     return 0;
     // global_state = gs;
@@ -213,9 +216,9 @@ gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
 int
 gsl_shell_interp_dostring(gsl_shell_interp *gs, const char *s, const char *name)
 {
-    int status = language_loadbuffer(L, s, strlen(s), name);
+    int status = language_loadbuffer(gs->L, s, strlen(s), name);
     if (status == 0) {
-        status = docall(L, 0, 1);
+        status = docall(gs->L, 0, 1);
     };
     report_error_msg(gs, status);
     return status;
@@ -224,9 +227,9 @@ gsl_shell_interp_dostring(gsl_shell_interp *gs, const char *s, const char *name)
 int
 gsl_shell_interp_dofile(gsl_shell_interp *gs, const char *name)
 {
-    int status = language_loadfile(L, name);
+    int status = language_loadfile(gs->L, name);
     if (status == 0) {
-        status = docall(L, 0, 1);
+        status = docall(gs->L, 0, 1);
     };
     report_error_msg(gs, status);
     return status;
@@ -235,6 +238,7 @@ gsl_shell_interp_dofile(gsl_shell_interp *gs, const char *name)
 int
 gsl_shell_interp_dolibrary(gsl_shell_interp *gs, const char *name)
 {
+    lua_State *L = gs->L;
     lua_getglobal(L, "require");
     lua_pushstring(L, name);
     int status = docall(L, 1, 1);
@@ -261,7 +265,7 @@ gsl_shell_interp_interrupt(gsl_shell_interp *gs)
 const char *
 gsl_shell_interp_error_msg(gsl_shell_interp *gs)
 {
-    return CSTR(m_error_msg);
+    return CSTR(gs->m_error_msg);
 }
 
 void

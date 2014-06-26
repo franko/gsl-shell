@@ -5,7 +5,9 @@
 #include <lua.h>
 
 #include "defs.h"
+#include "luajit.h"
 #include "graphics-hooks.h"
+#include "str.h"
 
 __BEGIN_DECLS
 
