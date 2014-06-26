@@ -20,9 +20,9 @@ function max(...)
 function min(...)
 	"Returns the minimum value among its arguments"
 function random([m [, n]])
-	"Return a random number in [0, 1) or an integer in [m, n] if given"
+	"Return a random number in [0, 1) or an integer in [m, n] are given"
 function randomseed(x)
-	"Sets x as the \"seed\" for the pseudo-random generator"
+	"Sets x as the seed for the pseudo-random generator"
 local huge
 	"The value HUGE_VAL, a value larger than or equal to any other numerical value"
 
@@ -44,7 +44,7 @@ function asin(x)
 function atan(x)
 	"Returns the arc tangent of x (in radians)"
 function atan2(y, x)
-	"Return the arc in radians corresponding to the point (x,y)"
+	"Return the arc (in radians) corresponding to the vector of components (x, y)"
 local pi
 	"The value of pi"
 

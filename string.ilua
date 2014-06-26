@@ -1,14 +1,28 @@
 function byte(s [, i [, j]])
+	"Returns the internal numerical codes of the characters s[i], s[i+1], ···, s[j]"
 function char(...)
+	"Returns a string with characters given by integer code as arguments"
 function dump(f)
+	"Returns a string containing a binary representation of the given function"
 function find(s, pattern [, init [, plain]])
+	"Looks for the first match of pattern in the string s"
 function format(formatstring, ...)
+	"Return a string based of the given formatstring and following arguments"
 function gmatch(s, pattern)
+	"Returns an iterator function that returns each time the next captures from pattern over string s"
 function gsub(s, pattern, repl [, n])
+	"Returns a copy of s in which all (or the first n) occurrences of pattern are replaced by repl"
 function len(s)
+	"Returns the length of the string s"
 function lower(s)
+	"Return a copy of the string s in lowercase"
 function match(s, pattern [, init])
+	"Return captures for the first match of pattern in the string s"
 function rep(s, n)
+	"Returns the concatenation of n copies of the string s"
 function reverse(s)
+	"Returns the string s reversed"
 function sub(s, i [, j])
+	"Returns the substring of s that starts at i and continues until j"
 function upper(s)
+	"Return a copy of the string s in uppercase"
