@@ -110,7 +110,7 @@ language_check_error(lua_State *L, const char *filename, int parse_status)
 {
     if (parse_status != 0) {
         error_xtransfer(L);
-        return LUA_ERRRUN;
+        return LUA_LANGERR;
     }
     int compile_success = lua_toboolean(parser_L, -2);
     if (!compile_success) {

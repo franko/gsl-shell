@@ -17,7 +17,7 @@ local function lang_toolkit_error(msg)
    if string.sub(msg, 1, 9) == "LLT-ERROR" then
         return false, string.sub(msg, 10)
     else
-        error(msg)
+        error(msg, 0) -- Raise an error without line informations
     end
 end
 

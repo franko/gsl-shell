@@ -19,7 +19,12 @@ static int report_error_msg(gsl_shell_interp *gs, int status)
     {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        str_copy_c(gs->m_error_msg, msg);
+        if (status == LUA_LANGERR) {
+            str_copy_c(gs->m_error_msg, "gsl-shell internal error:");
+            str_append_c(gs->m_error_msg, msg, ' ');
+        } else {
+            str_copy_c(gs->m_error_msg, msg);
+        }
         lua_pop(L, 1);
     }
     return status;
@@ -109,7 +114,6 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     memcpy(mline, "return ", 7);
     memcpy(mline + 7, line, len + 1);
     status = language_loadbuffer(L, mline, len + 7, "=stdin");
-    if (status != 0) lua_pop(L, 1); // remove the error message
     free(mline);
     return status;
 }
@@ -179,6 +183,15 @@ gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
 
     /* try to load the string as an expression */
     int status = yield_expr(L, line, len);
+
+    if (status == LUA_LANGERR) { /* Internal language error */
+        /* We fail early because it is an internal error of the
+         * language implementation. */
+        report_error_msg(gs, status);
+        return status;
+    } else if (status != 0) {
+        lua_pop(L, 1); /* Pop error message. */
+    }
 
     if (status != 0)
     {
