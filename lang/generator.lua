@@ -318,7 +318,7 @@ end
 function StatementRule:CheckIndex(node)
    local free = self.ctx.freereg
    local index = self:expr_toanyreg(node.index)
-   local doerror, exit = util.genid(), util.genid()
+   local doerror, exit = genid.new(), genid.new()
    local base = self.ctx.freereg
    if node.inf then
       local inf = self:expr_toanyreg(node.inf)
