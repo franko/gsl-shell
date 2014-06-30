@@ -139,7 +139,7 @@ static void print_usage(void)
 static int report(gsl_shell_interp *gs, int status)
 {
     if (status) {
-        const char *msg = gsl_shell_interp_error_msg(gs);
+        const char *msg = gsl_shell_interp_error(gs);
         l_message(progname, msg);
     }
     return status;
@@ -286,7 +286,7 @@ static void dotty(gsl_shell_interp *gs)
             firstline = 0;
             continue;
         } else if (exec_status != 0) {
-            const char *msg = gsl_shell_interp_error_msg(gs);
+            const char *msg = gsl_shell_interp_error(gs);
             l_message(progname, msg);
         } else {
             my_saveline(line);

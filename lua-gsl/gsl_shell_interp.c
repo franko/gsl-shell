@@ -320,7 +320,7 @@ gsl_shell_interp_interrupt(gsl_shell_interp *gs)
 }
 
 const char *
-gsl_shell_interp_error_msg(const gsl_shell_interp *gs)
+gsl_shell_interp_error(const gsl_shell_interp *gs)
 {
     return CSTR(gs->m_error_msg);
 }

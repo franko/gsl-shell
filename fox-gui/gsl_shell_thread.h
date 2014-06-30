@@ -51,7 +51,7 @@ public:
 
     const char* error_msg() const
     {
-        return gsl_shell_interp_error_msg(this->m_gsl_shell);
+        return gsl_shell_interp_error(this->m_gsl_shell);
     }
 
     gsl_shell_interp * interp() { return m_gsl_shell; }

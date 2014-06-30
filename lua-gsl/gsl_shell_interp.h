@@ -36,7 +36,7 @@ extern void gsl_shell_interp_close(gsl_shell_interp *gs);
 extern void gsl_shell_interp_close_with_graph(gsl_shell_interp* gs, int send_close_req);
 extern int gsl_shell_interp_exec(gsl_shell_interp *gs, const char* line);
 extern void gsl_shell_interp_interrupt(gsl_shell_interp *gs);
-extern const char *gsl_shell_interp_error_msg(const gsl_shell_interp *gs);
+extern const char *gsl_shell_interp_error(const gsl_shell_interp *gs);
 extern int gsl_shell_interp_dostring(gsl_shell_interp *gs, const char *s, const char *name);
 extern int gsl_shell_interp_dofile(gsl_shell_interp *gs, const char *name);
 extern int gsl_shell_interp_dolibrary(gsl_shell_interp *gs, const char *name);
