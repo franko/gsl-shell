@@ -576,6 +576,7 @@ int main(int argc, char **argv)
 #ifdef USE_READLINE
     initialize_readline();
 #endif
+    gsl_shell_interp_init(gs);
     status = gsl_shell_interp_open(gs, graphics);
     if (status != 0) {
         l_message(progname, "failed to initialize gsl shell");
@@ -592,6 +593,7 @@ int main(int argc, char **argv)
 
     gsl_shell_interp_unlock(gs);
     gsl_shell_interp_close_with_graph(gs, !smain->keep_windows);
+    gsl_shell_interp_free(gs);
 
     return (status || smain->status) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

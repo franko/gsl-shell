@@ -134,6 +134,24 @@ static int incomplete(lua_State *L, int status)
     return 0;  /* else... */
 }
 
+void
+gsl_shell_interp_init(gsl_shell_interp *gs)
+{
+    gs->L = NULL;
+    gs->graphics = NULL;
+    pthread_mutex_init(&gs->exec_mutex, NULL);
+    pthread_mutex_init(&gs->shutdown_mutex, NULL);
+    str_init(gs->m_error_msg, 64);
+}
+
+void
+gsl_shell_interp_free(gsl_shell_interp *gs)
+{
+    pthread_mutex_destroy (&gs->exec_mutex);
+    pthread_mutex_destroy (&gs->shutdown_mutex);
+    str_free(gs->m_error_msg);
+}
+
 int
 gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *graphics)
 {
@@ -155,9 +173,6 @@ gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *graphics)
         return LUA_ERRRUN;
     }
 
-    pthread_mutex_init(&gs->exec_mutex, NULL);
-    pthread_mutex_init(&gs->shutdown_mutex, NULL);
-    str_init(gs->m_error_msg, 64);
     gs->is_shutting_down = 0;
     global_gs = gs;
     return 0;
@@ -315,10 +330,6 @@ gsl_shell_interp_close(gsl_shell_interp *gs)
 {
     lua_close(gs->L);
     gs->L = NULL;
-
-    pthread_mutex_destroy (&gs->exec_mutex);
-    pthread_mutex_destroy (&gs->shutdown_mutex);
-    str_free(gs->m_error_msg);
 }
 
 void
@@ -336,6 +347,4 @@ gsl_shell_interp_close_with_graph (gsl_shell_interp* gs, int send_close_req)
     gs->L = NULL;
     pthread_mutex_unlock(&gs->shutdown_mutex);
     pthread_mutex_unlock(&gs->exec_mutex);
-    pthread_mutex_destroy (&gs->exec_mutex);
-    pthread_mutex_destroy (&gs->shutdown_mutex);
 }

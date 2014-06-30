@@ -18,6 +18,7 @@ public:
     enum { eot_character = 0x04 };
 
     gsl_shell_thread();
+    virtual ~gsl_shell_thread();
 
     void set_request(request_e req, const char* line = 0);
 

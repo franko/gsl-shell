@@ -29,6 +29,8 @@ typedef struct __gsl_shell_interp gsl_shell_interp;
 
 extern gsl_shell_interp *global_gs;
 
+extern void gsl_shell_interp_init(gsl_shell_interp *gs);
+extern void gsl_shell_interp_free(gsl_shell_interp *gs);
 extern int gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *g);
 extern void gsl_shell_interp_close(gsl_shell_interp *gs);
 extern void gsl_shell_interp_close_with_graph(gsl_shell_interp* gs, int send_close_req);

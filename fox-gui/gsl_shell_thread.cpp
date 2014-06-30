@@ -21,6 +21,12 @@ luajit_eval_thread (void *userdata)
 gsl_shell_thread::gsl_shell_thread():
     m_status(starting), m_request(no_request)
 {
+    gsl_shell_interp_init(m_gsl_shell);
+}
+
+gsl_shell_thread::~gsl_shell_thread()
+{
+    gsl_shell_interp_free(m_gsl_shell);
 }
 
 void gsl_shell_thread::start()
