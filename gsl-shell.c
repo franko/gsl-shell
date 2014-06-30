@@ -67,6 +67,13 @@
 lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
+static void l_message(const char *pname, const char *msg)
+{
+    if (pname) fprintf(stderr, "%s: ", pname);
+    fprintf(stderr, "%s\n", msg);
+    fflush(stderr);
+}
+
 #if defined(USE_READLINE)
 static char *
 my_readline (const char *p)
@@ -126,13 +133,6 @@ static void print_usage(void)
             "  -         Execute stdin and stop handling options.\n"
             ,
             progname);
-    fflush(stderr);
-}
-
-static void l_message(const char *pname, const char *msg)
-{
-    if (pname) fprintf(stderr, "%s: ", pname);
-    fprintf(stderr, "%s\n", msg);
     fflush(stderr);
 }
 
