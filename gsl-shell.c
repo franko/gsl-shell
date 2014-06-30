@@ -285,6 +285,9 @@ static void dotty(gsl_shell_interp *gs)
         if (exec_status >> 8 == incomplete_input) {
             firstline = 0;
             continue;
+        } else if (exec_status >> 8 == exit_command) {
+            free(line);
+            break;
         } else if (exec_status != 0) {
             const char *msg = gsl_shell_interp_error(gs);
             l_message(progname, msg);

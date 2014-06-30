@@ -190,11 +190,29 @@ gsl_shell_interp_unlock(gsl_shell_interp *gs)
     pthread_mutex_unlock(&gs->exec_mutex);
 }
 
+static int
+is_exit_string(const char *s)
+{
+    while (*s == ' ' || *s == '\t') {
+        s++;
+    }
+    if (strncmp(s, "exit", 4) == 0) {
+        for (s += 4; *s == ' ' || *s == '\t'; s++) {
+        }
+        return (*s == 0 ? 1 : 0);
+    }
+    return 0;
+}
+
 int
 gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
 {
     lua_State* L = gs->L;
     size_t len = strlen(line);
+
+    if (is_exit_string(line)) {
+        return (exit_command << 8);
+    }
 
     /* try to load the string as an expression */
     int status = yield_expr(L, line, len);

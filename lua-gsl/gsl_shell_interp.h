@@ -14,6 +14,7 @@ __BEGIN_DECLS
 enum eval_result {
 	eval_success     = 0,
 	incomplete_input = 1,
+	exit_command     = 2,
 };
 
 struct __gsl_shell_interp {

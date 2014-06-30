@@ -107,6 +107,10 @@ gsl_shell_thread::run()
         if (cmd == thread_cmd_exec)
         {
             m_eval_status = gsl_shell_interp_exec(m_gsl_shell, line.cstr());
+            if (m_eval_status >> 8 == exit_command) {
+                m_status = terminated;
+                break;
+            }
             fputc(eot_character, stdout);
             fflush(stdout);
         }

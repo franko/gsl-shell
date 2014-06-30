@@ -173,18 +173,10 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
             setCursorPos(m_input_begin + line_len);
             appendText("\n");
 
-            if (m_input == "exit")
-            {
-                FXApp* app = getApp();
-                app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
-            }
-            else
-            {
-                const char* input_line = m_input.text();
-                m_history.add(input_line);
-                this->m_status = output_mode;
-                m_engine->set_request(gsl_shell_thread::execute_request, input_line);
-            }
+            const char* input_line = m_input.text();
+            m_history.add(input_line);
+            this->m_status = output_mode;
+            m_engine->set_request(gsl_shell_thread::execute_request, input_line);
         }
         else
         {
