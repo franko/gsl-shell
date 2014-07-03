@@ -16,6 +16,11 @@ extern int language_loadfile(lua_State *L, const char *filename);
  * LUA_ERRERR is supposed to be the last acceptable value from lua.h. */
 #define LUA_LANGERR (LUA_ERRERR + 1)
 
+struct char_list {
+	char *name;
+	struct char_list *next;
+};
+
 __END_DECLS
 
 #endif

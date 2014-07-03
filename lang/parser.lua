@@ -530,10 +530,15 @@ local function new_proto(ls, varargs)
     return { varargs = varargs }
 end
 
-function parse_chunk(ast, ls, top_level)
+function parse_chunk(ast, ls, top_level, use_stmts)
     local firstline = ls.linenumber
     local islast = false
     local body = { }
+    if use_stmts then
+        for i = 1, #use_stmts do
+            body[i] = use_stmts[i]
+        end
+    end
     while not islast and not EndOfBlock[ls.token] do
         local stmt
         stmt, islast = parse_stmt(ast, ls)
@@ -590,12 +595,22 @@ function parse_block(ast, ls)
     return block
 end
 
-local function parse(ast, ls)
+local function load_use_list(ast, use_list)
+    local use_stmts = {}
+    for i = 1, #use_list do
+        local name = use_list[i]
+        use_stmts[i] = ast:use_stmt(name)
+    end
+    return use_stmts
+end
+
+local function parse(ast, ls, use_list)
     ls:next()
     ls.fs = new_proto(ls, true)
     ast:fscope_begin()
     local args = { ast:expr_vararg(ast) }
-    local chunk = parse_chunk(ast, ls, true)
+    local use_stmts = use_list and load_use_list(ast, use_list)
+    local chunk = parse_chunk(ast, ls, true, use_stmts)
     ast:fscope_end()
     if ls.token ~= 'TK_eof' then
         err_token(ls, 'TK_eof')

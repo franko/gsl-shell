@@ -113,7 +113,7 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     }
     memcpy(mline, "return ", 7);
     memcpy(mline + 7, line, len + 1);
-    status = language_loadbuffer(L, mline, len + 7, "=stdin");
+    status = language_loadbuffer_use_ext(L, mline, len + 7, "=stdin", NULL);
     free(mline);
     return status;
 }
@@ -228,7 +228,7 @@ gsl_shell_interp_exec(gsl_shell_interp *gs, const char *line)
 
     if (status != 0)
     {
-        status = language_loadbuffer(L, line, len, "=<user input>");
+        status = language_loadbuffer_use_ext(L, line, len, "=<user input>", NULL);
 
         if (incomplete(L, status))
             return status + (incomplete_input << 8);

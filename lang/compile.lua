@@ -24,7 +24,7 @@ end
 local function compile(reader, filename, options)
     local ls = lex_setup(reader, filename)
     local ast = ast_builder.New()
-    local parse_success, tree = pcall(parse, ast, ls)
+    local parse_success, tree = pcall(parse, ast, ls, options and options.use_list)
     if not parse_success then
         return lang_toolkit_error(tree)
     end
