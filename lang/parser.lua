@@ -604,6 +604,21 @@ local function load_use_list(ast, use_list)
     return use_stmts
 end
 
+local function store_use_list(imports, use_list)
+    for k = 1, #imports do
+        local mod_name = imports[k].name
+        for j = 1, #use_list do
+            if mod_name == use_list[j] then
+                mod_name = nil
+                break
+            end
+        end
+        if mod_name then
+            use_list[#use_list+1] = mod_name
+        end
+    end
+end
+
 local function parse(ast, ls, use_list)
     ls:next()
     ls.fs = new_proto(ls, true)
@@ -611,6 +626,9 @@ local function parse(ast, ls, use_list)
     local args = { ast:expr_vararg(ast) }
     local use_stmts = use_list and load_use_list(ast, use_list)
     local chunk = parse_chunk(ast, ls, true, use_stmts)
+    if use_list and ast.current.imports then
+        store_use_list(ast.current.imports, use_list)
+    end
     ast:fscope_end()
     if ls.token ~= 'TK_eof' then
         err_token(ls, 'TK_eof')

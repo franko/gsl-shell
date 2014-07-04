@@ -75,7 +75,7 @@ function AST.use_stmt(ast, name, line)
     local defs = interface_symbols(inodes)
     if defs then
         local node = build("LocalDeclaration", { names = { }, expressions = { }, line = line })
-        local mod = { vars = defs, id = ast:genid(), vids = node.names, exps = node.expressions }
+        local mod = { vars = defs, id = ast:genid(), vids = node.names, exps = node.expressions, name = name }
         local req = build("CallExpression", { callee = ident("require"), arguments = { literal(name) } })
         local mod_local = build("LocalDeclaration", { names = { mod.id }, expressions = { req } })
         add_pre_stmts(node, { mod_local })

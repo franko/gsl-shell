@@ -21,10 +21,12 @@ local function lang_toolkit_error(msg)
     end
 end
 
-local function compile(reader, filename, options)
+local use_list = {}
+
+local function compile(reader, filename, use_memory)
     local ls = lex_setup(reader, filename)
     local ast = ast_builder.New()
-    local parse_success, tree = pcall(parse, ast, ls, options and options.use_list)
+    local parse_success, tree = pcall(parse, ast, ls, use_memory and use_list)
     if not parse_success then
         return lang_toolkit_error(tree)
     end
