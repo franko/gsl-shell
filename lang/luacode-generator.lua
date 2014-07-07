@@ -12,8 +12,6 @@ local syntax = require('syntax')
 
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
-local genid = require("util").genid
-
 local StatementRule = { }
 local ExpressionRule = { }
 local LHSExpressionRule = { }
@@ -153,14 +151,15 @@ end
 LHSExpressionRule.Identifier = ExpressionRule.Identifier
 LHSExpressionRule.MemberExpression = ExpressionRule.MemberExpression
 
-function LHSExpressionRule:MatrixSliceExpression(node, assign_ctx)
-    local var_name = genid()
+function LHSExpressionRule:MatrixSliceExpression(node, ctx)
+    local var = self.genid.new_ident()
     local obj = node.object
     local slice_fun = field(ident("matrix"), "__slice_assign")
-    local arguments = { obj, node.row_start, node.row_end, node.col_start, node.col_end, ident(var_name) }
+    local arguments = { obj, node.row_start, node.row_end, node.col_start, node.col_end, var }
     local fcall = build("CallExpression", { callee = slice_fun, arguments = arguments })
-    assign_ctx[#assign_ctx+1] = build("ExpressionStatement", { expression = fcall })
-    return var_name
+    ctx.locals[#ctx.locals+1] = var
+    ctx.stmts[#ctx.stmts+1] = build("ExpressionStatement", { expression = fcall })
+    return var.name
 end
 
 function StatementRule:FunctionDeclaration(node)
@@ -263,14 +262,19 @@ function StatementRule:LocalDeclaration(node)
 end
 
 function StatementRule:AssignmentExpression(node)
-    local assign_ctx = { }
+    local assign_ctx = { locals = {}, stmts = {} }
     local lhs = {}
     for i = 1, #node.left do
         lhs[i] = self:lhs_expr_emit(node.left[i], assign_ctx)
     end
     local line = format("%s = %s", comma_sep_list(lhs), self:expr_list(node.right))
+    if #assign_ctx.locals > 0 then
+        local local_names = comma_sep_list(assign_ctx.locals, as_parameter)
+        local local_line = format("local %s", local_names)
+        self:add_line(local_line)
+    end
     self:add_line(line)
-    self:post_assignment_do(assign_ctx)
+    self:post_assignment_do(assign_ctx.stmts)
 end
 
 function StatementRule:Chunk(node)
@@ -412,16 +416,17 @@ function Generator:post_assignment_do(assign_ctx)
     end
 end
 
-local function generator_new(tree, name)
+local function generator_new(tree, name, lexical_genid)
     local self = { }
     self.proto = proto_new()
     self.chunkname = tree.chunkname
+    self.genid = lexical_genid
     self.to_expr = function(node) return self:expr_emit(node) end
     return setmetatable(self, { __index = Generator })
 end
 
-local function generate(tree, name)
-    local gen = generator_new(tree, name)
+local function generate(tree, name, lexical_genid)
+    local gen = generator_new(tree, name, lexical_genid)
     gen:emit(tree)
     return gen:proto_leave():inline(0)
 end

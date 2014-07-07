@@ -33,7 +33,7 @@ local function compile(reader, filename, use_memory)
     if not parse_success then
         return lang_toolkit_error(tree)
     end
-    local success, luacode = pcall(generator, tree, filename)
+    local success, luacode = pcall(generator, tree, filename, lexical_genid)
     if not success then
         return lang_toolkit_error(luacode)
     end
