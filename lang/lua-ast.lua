@@ -1,7 +1,6 @@
 local syntax = require('syntax')
 local libexpr = require('expr-utils')
 local lua_interface = require('lua-interface')
-local genid_lib = require('genid')
 
 local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
 
@@ -437,8 +436,8 @@ end
 
 local ASTClass = { __index = AST }
 
-local function new_ast()
-    local ast = { gen_stmts = { }, for_stack = { } , lex_genid = genid_lib.lexical(ident) }
+local function new_ast(lex_genid)
+    local ast = { gen_stmts = { }, for_stack = { } , lex_genid = lex_genid }
     return setmetatable(ast, ASTClass)
 end
 
