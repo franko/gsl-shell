@@ -910,7 +910,7 @@ local function generate(tree, name)
             end
             self.ctx:op_move(base + 6, expr)
          else
-            base = self.target
+            base = lhs.target
          end
          self.ctx:op_call(base, 0, 6)
          self.ctx.freereg = free
