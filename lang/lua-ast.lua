@@ -101,7 +101,7 @@ end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
     local body_stmts = recollect_stmts(body)
-    ast:normalize_genids()
+    ast.lex_genid.close_lexical()
     return build("Chunk", { body = body_stmts, chunkname = chunkname, firstline = firstline, lastline = lastline })
 end
 
@@ -378,18 +378,10 @@ function AST.ident_report(ast, name)
 end
 
 function AST.genid(ast)
-    local name = ast.lex_genid.new()
-    local id = ident(name)
-    ast.genid_list[#ast.genid_list+1] = id
+    local id = ast.lex_genid.new_ident()
     return id
 end
 
-function AST.normalize_genids(ast)
-    for i = 1, #ast.genid_list do
-        local id = ast.genid_list[i]
-        id.name = ast.lex_genid.normalize(id.name)
-    end
-end
 
 function AST.fscope_begin(ast)
     ast.current = new_scope(ast.current)
@@ -446,7 +438,7 @@ end
 local ASTClass = { __index = AST }
 
 local function new_ast()
-    local ast = { gen_stmts = { }, for_stack = { } , lex_genid = genid_lib.lexical(), genid_list = { } }
+    local ast = { gen_stmts = { }, for_stack = { } , lex_genid = genid_lib.lexical(ident) }
     return setmetatable(ast, ASTClass)
 end
 
