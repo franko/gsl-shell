@@ -1164,7 +1164,7 @@ function matrix.__slice(m, ia, ib, ja, jb)
 end
 
 function matrix.__slice_assign(dst, ia, ib, ja, jb, src)
-   local ni, nj = check_slicing_indexes(m, ia, ib, ja, jb)
+   local ni, nj = check_slicing_indexes(dst, ia, ib, ja, jb)
    if ffi.istype(gsl_matrix, dst) then
       if ffi.istype(gsl_matrix_complex, src) then
          error("cannot assign a complex values to a real matrix")
