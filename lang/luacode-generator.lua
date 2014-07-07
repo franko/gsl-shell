@@ -410,9 +410,9 @@ function Generator:list_emit(node_list)
     end
 end
 
-function Generator:post_assignment_do(assign_ctx)
-    for i = 1, #assign_ctx do
-        self:emit(assign_ctx[i])
+function Generator:post_assignment_do(stmts)
+    for i = 1, #stmts do
+        self:emit(stmts[i])
     end
 end
 
