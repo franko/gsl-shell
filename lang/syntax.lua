@@ -570,7 +570,6 @@ local function validate(meta, node)
       if prop ~= nil or not spec.optional then
          local ok, er = check(spec, prop)
          if not ok then
-            print(debug.traceback())
             error(er.." for "..(node.kind or "?").."."..name)
          end
       end
