@@ -20,8 +20,6 @@ local function build_stmt(ast, kind, prop)
     return stmt
 end
 
-local CONCAT_OP = '~'
-
 local function error_stmt(msg)
     local expr = build("CallExpression", { callee = ident("error"), arguments = { literal(msg) } })
     return build("ExpressionStatement", { expression = expr })
@@ -207,7 +205,7 @@ local function concat_append(ts, node)
 end
 
 function AST.expr_binop(ast, op, expa, expb)
-    local binop_body = (op ~= CONCAT_OP and { operator = op, left = expa, right = expb, line = line })
+    local binop_body = (op ~= '..' and { operator = op, left = expa, right = expb, line = line })
     if binop_body then
         if op == 'and' or op == 'or' then
             -- Logical operators voids the generated statements because they
