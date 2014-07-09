@@ -176,22 +176,38 @@ function expr_primary(ast, ls)
         if ls.token == '.' then
             vk, v = 'indexed', expr_field(ast, ls, v)
         elseif ls.token == '[' then
+            local row_slice, col_slice = false, false
+            local dual_index = false
             ls:next()
-            local key = expr(ast, ls)
-            local upto
+            local key, upto
+            if ls.token ~= RANGE_TOKEN then
+                key = expr(ast, ls)
+            end
             if lex_opt(ls, RANGE_TOKEN) then
-                upto = expr(ast, ls)
+                row_slice = true
+                if ls.token ~= ',' and ls.token ~= ']' then
+                    upto = expr(ast, ls)
+                end
             end
             local upto_col, key_col
-            if lex_opt(ls, ',') then
-                key_col = expr(ast, ls)
+            if row_slice or ls.token == ',' then
+                lex_check(ls, ',')
+                dual_index = true
+                if ls.token ~= RANGE_TOKEN then
+                    key_col = expr(ast, ls)
+                end
                 if lex_opt(ls, RANGE_TOKEN) then
-                    upto_col = expr(ast, ls)
+                    col_slice = true
+                    if ls.token ~= ']' then
+                        upto_col = expr(ast, ls)
+                    end
                 end
             end
             lex_check(ls, ']')
-            if key_col then
-                if upto or upto_col then
+            if dual_index then
+                if row_slice or col_slice then
+                    if not row_slice then upto = key end
+                    if not col_slice then upto_col = key_col end
                     vk, v = 'slice', ast:expr_slice(v, key, upto, key_col, upto_col)
                 else
                     vk, v = 'indexed', ast:expr_index_dual(v, key, key_col)

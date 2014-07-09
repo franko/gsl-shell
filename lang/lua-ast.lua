@@ -163,10 +163,12 @@ function AST.expr_index_dual(ast, v, row, col, line)
     return node
 end
 
+-- The arguments row_start, row_end, etc can be nil to indicate implicitly
+-- to take the slice from the beginning or up to its end.
 function AST.expr_slice(ast, v, row_start, row_end, col_start, col_end)
-    row_end = row_end or row_start
-    col_end = col_end or col_start
-    return build("MatrixSliceExpression", { object = v, row_start = row_start, row_end = row_end, col_start = col_start, col_end = col_end, line = line })
+    local ra, rb = row_start or literal(1), row_end or field(v, "size1")
+    local ca, cb = col_start or literal(1), col_end or field(v, "size2")
+    return build("MatrixSliceExpression", { object = v, row_start = ra, row_end = rb, col_start = ca, col_end = cb, line = line })
 end
 
 function AST.expr_property(ast, v, prop, line)
