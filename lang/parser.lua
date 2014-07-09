@@ -637,6 +637,11 @@ local function store_use_list(imports, use_list)
     end
 end
 
+-- Parse the code chunk referenced from the lexer, "ls" and returns the
+-- AST tree. The last argument can be nil or a list of module's names.
+-- If the "use_list" is actually given the referenced modules will be
+-- "in use". In addition the "use_list" will be completed with any other
+-- module explicitely used in the chunk.
 local function parse(ast, ls, use_list)
     ls:next()
     ls.fs = new_proto(ls, true)
