@@ -14,7 +14,7 @@ local ReservedKeyword = {['and'] = 1, ['break'] = 2, ['do'] = 3, ['else'] = 4, [
 local uint64, int64 = ffi.typeof('uint64_t'), ffi.typeof('int64_t')
 local complex = ffi.typeof('complex')
 
-local TokenSymbol = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_range = ':', TK_eq = '==', TK_ne = '~=', TK_eof = '<eof>' }
+local TokenSymbol = { TK_ge = '>=', TK_le = '<=' , TK_concat = '..', TK_eq = '==', TK_ne = '~=', TK_resolve = '::', TK_eof = '<eof>' }
 
 local function token2str(tok)
     if string.match(tok, "^TK_") then
@@ -371,19 +371,13 @@ local function llex(ls)
             if ls.current ~= '=' then return '~' else nextchar(ls); return 'TK_ne' end
         elseif current == ':' then
             nextchar(ls)
-            -- We make a tweak here: If the lexer find ':' we return TK_range
-            -- but if we find '::' we return ':'. This is therefore a on-the-fly
-            -- token transform.
-            if ls.current ~= ':' then
-                return 'TK_range'
-            else
+            -- If the lexer find ':' we return it as a char but if we find '::' we
+            -- return TK_resolve.
+            if ls.current == ':' then
                 nextchar(ls)
-                if ls.current == ':' then
-                    nextchar(ls)
-                    return 'TK_label'
-                end
-                return ':'
+                return 'TK_resolve'
             end
+            return ':'
         elseif current == '"' then
             local str = read_string(ls, current)
             return 'TK_string', str

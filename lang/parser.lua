@@ -14,6 +14,8 @@ local expr_primary, expr, expr_unop, expr_binop, expr_simple
 local expr_list, expr_table
 local parse_body, parse_simple_body, parse_block, parse_chunk, parse_args
 
+local RANGE_TOKEN, LABEL_TOKEN, RESOLVE_TOKEN = ':', ':', 'TK_resolve'
+
 local function var_lookup(ast, ls)
     local name = lex_str(ls)
     return ast:identifier(name)
@@ -177,13 +179,13 @@ function expr_primary(ast, ls)
             ls:next()
             local key = expr(ast, ls)
             local upto
-            if lex_opt(ls, 'TK_range') then
+            if lex_opt(ls, RANGE_TOKEN) then
                 upto = expr(ast, ls)
             end
             local upto_col, key_col
             if lex_opt(ls, ',') then
                 key_col = expr(ast, ls)
-                if lex_opt(ls, 'TK_range') then
+                if lex_opt(ls, RANGE_TOKEN) then
                     upto_col = expr(ast, ls)
                 end
             end
@@ -198,7 +200,7 @@ function expr_primary(ast, ls)
                 if upto then err_syntax(ls, "slicing with non-matrix indexing") end
                 vk, v = 'indexed', ast:expr_index(v, key)
             end
-        elseif ls.token == ':' then
+        elseif ls.token == RESOLVE_TOKEN then
             ls:next()
             local key = lex_str(ls)
             local args = parse_args(ast, ls)
@@ -374,7 +376,7 @@ local function parse_func(ast, ls, line)
     while ls.token == '.' do -- Multiple dot-separated fields.
         v = expr_field(ast, ls, v)
     end
-    if ls.token == ':' then -- Optional colon to signify method call.
+    if ls.token == RESOLVE_TOKEN then -- Optional colon to signify method call.
         needself = true
         v = expr_field(ast, ls, v)
     end
@@ -418,10 +420,10 @@ end
 local function parse_label(ast, ls)
     ls:next() -- Skip '::'.
     local name = lex_str(ls)
-    lex_check(ls, 'TK_label')
+    lex_check(ls, LABEL_TOKEN)
     -- Recursively parse trailing statements: labels and ';' (Lua 5.2 only).
     while true do
-        if ls.token == 'TK_label' then
+        if ls.token == LABEL_TOKEN then
             parse_label(ast, ls)
         elseif LJ_52 and ls.token == ';' then
             ls:next()
@@ -481,7 +483,7 @@ local function parse_stmt(ast, ls)
     elseif LJ_52 and ls.token == ';' then
         ls:next()
         return parse_stmt(ast, ls)
-    elseif ls.token == 'TK_label' then
+    elseif ls.token == LABEL_TOKEN then
         stmt = parse_label(ast, ls)
     elseif ls.token == 'TK_goto' then
         if LJ_52 or ls:lookahead() == 'TK_name' then
