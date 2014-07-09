@@ -98,7 +98,6 @@ end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)
     local body_stmts = recollect_stmts(body)
-    ast.lex_genid.close_lexical()
     return build("Chunk", { body = body_stmts, chunkname = chunkname, firstline = firstline, lastline = lastline })
 end
 

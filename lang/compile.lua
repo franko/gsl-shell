@@ -30,6 +30,7 @@ local function compile(reader, filename, use_memory)
     local lexical_genid = genid.lexical(syntax.ident)
     local ast = ast_builder.New(lexical_genid)
     local parse_success, tree = pcall(parse, ast, ls, use_memory and use_list)
+    lexical_genid.close_lexical() -- Inform genid module that parsing phase is over.
     if not parse_success then
         return lang_toolkit_error(tree)
     end
