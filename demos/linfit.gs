@@ -1,6 +1,6 @@
-use 'math'
-use 'iter'
-use 'num'
+use "math"
+use "iter"
+use "num"
 
 local function demo1()
    local x0, x1, n = 0, 12.5, 32
@@ -18,8 +18,8 @@ local function demo1()
    local fit = function(x) return c[1]+c[2]*x end
 
    local p = graph.fxplot(fit, x0, x1)
-   p:add(graph.xyline(x, y), 'blue', {{'stroke'}, {'marker', size=5}})
-   p.title = 'Linear Fit'
+   p::add(graph.xyline(x, y), "blue", {{"stroke"}, {"marker", size=5}})
+   p.title = "Linear Fit"
    p.clip = false
    
    return p
@@ -44,7 +44,7 @@ local function demo2()
    local c, chisq = linfit(X, y)
 
    local pc = graph.fibars(|i| c[i], 1, #c)
-   pc.title = 'Legendre polynomials fit coefficients'
+   pc.title = "Legendre polynomials fit coefficients"
    pc.pad = true
 
    local fitleg = function(x)
@@ -52,22 +52,22 @@ local function demo2()
 		  end
 
    local p = graph.fxplot(fitleg, x0, x1)
-   p:addline(graph.xyline(x, y), 'blue', {{'marker', size=5}})
-   p.title = 'Legendre polynomial fit of Bessel J3(x)'
+   p::addline(graph.xyline(x, y), "blue", {{"marker", size=5}})
+   p.title = "Legendre polynomial fit of Bessel J3(x)"
    p.clip = false
    
    return p
 end
 
-return {'Linear Fit', {
+return {"Linear Fit", {
   {
-     name= 'linfit1',
+     name= "linfit1",
      f = demo1,
-     description = 'Simple linear regression example'
+     description = "Simple linear regression example"
   },
   {
-     name= 'linfit2',
+     name= "linfit2",
      f = demo2,
-     description = 'Complex example of a linear fit based on legendre polynomials'
+     description = "Complex example of a linear fit based on legendre polynomials"
   },
 }}

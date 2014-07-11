@@ -16,7 +16,7 @@ local function load_demo(name)
 end
 
 local demo_files = {
-'wave-particle'}
+'wave-particle', 'contour', 'gdt-lm', 'graphics', 'integ', 'ode'}
 -- 'fft', 'bspline', 'wave-particle', 'plot', 'fractals', 'ode', 'nlinfit', 'integ', 'anim', 'linfit', 'contour', 'svg', 'graphics', 'sf', 'vegas', 'gdt-lm'}
 
 for i, name in ipairs(demo_files) do

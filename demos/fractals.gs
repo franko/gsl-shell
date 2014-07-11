@@ -1,6 +1,6 @@
-use 'math'
-use 'graph'
-use 'iter'
+use "math"
+use "graph"
+use "iter"
 
 local function c_generator(n, n_angle, len_frac, g)
    local exp, real, imag = complex.exp, complex.real, complex.imag
@@ -30,12 +30,12 @@ local function c_generator(n, n_angle, len_frac, g)
 end
 
 local function levyc(n)
-   local p = plot('Levy\'s C curve')
+   local p = plot("Levy's C curve")
    local c = ipath(c_generator(n, 4, 1/2, {-1,0,0,1}))
-   p:addline(c, 'red', {}, {{'rotate', angle= -pi/4}})
-   p:addline(c, 'red', {}, {{'translate', x=1/sqrt(2), y=-1/sqrt(2)},{'rotate', angle= pi/4}})
+   p::addline(c, "red", {}, {{"rotate", angle= -pi/4}})
+   p::addline(c, "red", {}, {{"translate", x=1/sqrt(2), y=-1/sqrt(2)},{"rotate", angle= pi/4}})
    p.units = false
-   p:show()
+   p::show()
    return p
 end
 
@@ -43,28 +43,28 @@ local function von_koch_demo()
    local pl = plot()
 
    local t = path()
-   t:move_to(0,0)
-   t:line_to(1,0)
-   t:line_to(0.5,-sqrt(3)/2)
-   t:close()
+   t::move_to(0,0)
+   t::line_to(1,0)
+   t::line_to(0.5,-sqrt(3)/2)
+   t::close()
 
    local v = ipath(c_generator(4, 6, 1/3, {0,1,-1,0}))
    local c = rgba(0,0,180,50)
-   pl:add(v, c)
-   pl:add(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:add(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
-		     {'rotate', angle=-2*2*pi/3}})
-   pl:add(t, c)
+   pl::add(v, c)
+   pl::add(v, c, {}, {{"translate", x=1, y=0}, {"rotate", angle=-2*pi/3}})
+   pl::add(v, c, {}, {{"translate", x=0.5, y=-sqrt(3)/2}, 
+		     {"rotate", angle=-2*2*pi/3}})
+   pl::add(t, c)
 
    c = rgb(0,0,180)
 
-   pl:addline(v, c)
-   pl:addline(v, c, {}, {{'translate', x=1, y=0}, {'rotate', angle=-2*pi/3}})
-   pl:addline(v, c, {}, {{'translate', x=0.5, y=-sqrt(3)/2}, 
-			 {'rotate', angle=-2*2*pi/3}})
+   pl::addline(v, c)
+   pl::addline(v, c, {}, {{"translate", x=1, y=0}, {"rotate", angle=-2*pi/3}})
+   pl::addline(v, c, {}, {{"translate", x=0.5, y=-sqrt(3)/2}, 
+			 {"rotate", angle=-2*2*pi/3}})
 
    pl.units = false
-   pl:show()
+   pl::show()
 end
 
 local levy_curve_demo = function(n) return levyc(n and n or 6) end 
@@ -76,9 +76,9 @@ local function pitag_tree_symm_demo()
 
    local function pitag_tree(pl, x, y, th, ll, depth)
       local col = cf(depth)
-      pl:add(ubox, col, {}, {{'translate', x= x, y= y}, 
-			    {'rotate', angle= th}, 
-			    {'scale', ll}})
+      pl::add(ubox, col, {}, {{"translate", x= x, y= y}, 
+			    {"rotate", angle= th}, 
+			    {"scale", ll}})
       if depth > 0 then
 	 x, y = x - ll*sin(th), y + ll*cos(th)
 	 pitag_tree(pl, x, y, th + pi/4, ll*rdsd, depth-1)
@@ -88,12 +88,12 @@ local function pitag_tree_symm_demo()
    end
 
    local depth = 12
-   local cfgen = color_function('darkgreen', 255)
+   local cfgen = color_function("darkgreen", 255)
    cf = |d| cfgen(1-d/depth)
    local pl = plot()
    pl.units = false
    pitag_tree(pl, 0, 0, 0, 1, depth)
-   pl:show()
+   pl::show()
 end
 
 local function pitag_tree_demo(n)
@@ -103,10 +103,10 @@ local function pitag_tree_demo(n)
 
    local function pitag_tree(pl, x, y, th, ll, depth)
       if depth == 0 then
-	 local tr = {{'translate', x= x, y= y}, {'rotate', angle= th}, 
-		     {'scale', ll}}
-	 pl:add(ubox, col, {}, tr)
-	 pl:add(ubox, coln, {{'stroke', width= 2.5*ll}}, tr)
+	 local tr = {{"translate", x= x, y= y}, {"rotate", angle= th}, 
+		     {"scale", ll}}
+	 pl::add(ubox, col, {}, tr)
+	 pl::add(ubox, coln, {{"stroke", width= 2.5*ll}}, tr)
       end
       if depth > 0 then
 	 x, y = x - ll*sin(th), y + ll*cos(th)
@@ -117,39 +117,39 @@ local function pitag_tree_demo(n)
       end
    end
 
-   local cfgen = color_function('darkgreen', 255)
+   local cfgen = color_function("darkgreen", 255)
 
    local pl = plot()
    pl.sync = false
    pl.clip = false
-   pl:show()
+   pl::show()
 
    for k=0, n do
       col, coln  = cfgen(k/n), cfgen((k+1)/n)
       pitag_tree(pl, 0, 0, 0, 1, k)
-      pl:flush()
+      pl::flush()
    end
 end
 
-return {'Fractals', {
+return {"Fractals", {
   {
-     name = 'vonkoch',
+     name = "vonkoch",
      f = von_koch_demo, 
-     description = 'Von Koch\'s curve',
+     description = "Von Koch's curve",
   },
   {
-     name = 'levyc',
+     name = "levyc",
      f = levy_curve_demo, 
-     description = 'Levy\'s C curve',
+     description = "Levy's C curve",
   },
   {
-     name = 'pitags',
+     name = "pitags",
      f = pitag_tree_symm_demo, 
-     description = 'Pythagorean Tree (symmetric)',
+     description = "Pythagorean Tree (symmetric)",
   },
   {
-     name = 'pitaga',
+     name = "pitaga",
      f = pitag_tree_demo, 
-     description = 'Pythagorean Tree (asymmetric)',
+     description = "Pythagorean Tree (asymmetric)",
   },
 }}
