@@ -97,8 +97,7 @@ end
 
 local function interface_read(name)
     local filename = assert(luaname_lookup(name), "cannot find \""..name..".ilua\"")
-    reader.file_init(filename)
-    local ls = lex_setup(reader.file, name .. ".ilua")
+    local ls = lex_setup(reader.file(filename), name .. ".ilua")
     return parse_interface(ls)
 end
 

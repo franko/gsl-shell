@@ -42,13 +42,11 @@ local function compile(reader, filename, use_memory)
 end
 
 local function lang_loadstring(src, filename, options)
-    reader.string_init(src)
-    return compile(reader.string, filename, options)
+    return compile(reader.string(src), filename, options)
 end
 
 local function lang_loadfile(filename, options)
-    reader.file_init(filename)
-    return compile(reader.file, filename, options)
+    return compile(reader.file(filename), filename, options)
 end
 
 return lang_loadstring, lang_loadfile
