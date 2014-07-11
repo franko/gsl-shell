@@ -1,7 +1,6 @@
-
-use 'math'
-use 'num'
-use 'graph'
+use "math"
+use "num"
+use "graph"
 
 local function demo1()
    local n, br = 200, 10
@@ -22,23 +21,23 @@ local function demo1()
    end
 
    local b = bspline(0, 15, br)
-   local X = b:model(x)
+   local X = b::model(x)
 
    local c, chisq, cov = linfit(X, y, w)
 
-   local p = plot('B-splines curve approximation')
-   p:addline(xyline(x, X * c))
-   p:addline(xyline(x, y), 'blue', {{'marker', size=5}})
+   local p = plot("B-splines curve approximation")
+   p::addline(xyline(x, X * c))
+   p::addline(xyline(x, y), "blue", {{"marker", size=5}})
    p.clip = false
-   p:show()
+   p::show()
 
    return p
 end
 
-return {'B-Splines', {
+return {"B-Splines", {
   {
-     name = 'bspline1',
+     name = "bspline1",
      f = demo1, 
-     description = 'B-Spline approximation of noisy data'
+     description = "B-Spline approximation of noisy data"
   },
 }}

@@ -1,0 +1,32 @@
+function fxplot(f, xi, xs[, color, n])
+	"Plot the function f(x) for x from xi to xs"
+function fxline(f, xi, xs[, n])
+	"Graphical line of f(x) for x from xi to xs"
+function plot([title])
+	"Create an empty plot with the given title"
+function fiplot(f, a, b[, color])
+	"Plot the function f(i) for integers values from a to b"
+function fibars(f, a, b[, color, fill_ratio])
+	"Bar plot the function f(i) for integers values from a to b"
+function filine(f, a, b)
+	"Graphical line of f(i) for integer values from a to b"
+function xyline(x, y)
+	"Graphical line from column matrices x and y"
+function ipath(f)
+	"Graphical path from iterator (x, y) = f()"
+function ipathp(f)
+	"Graphical path from iterator (x, y) = f() with pcall"
+function ibars(f)
+	"Graphical bars from iterator (x, y) = f()"
+function rgb(r, g, b)
+	"Color from RGB values in interval 0 - 255"
+function rgba(r, g, b)
+	"Color from RGBA values in interval 0 - 255"
+function rainbow(n)
+	"Return color of index n from rainbow palette"
+function webcolor(n)
+	"Return color of index n from webcolor palette"
+function path([x, y])
+	"Graphical line empty or with a point (x, y)"
+function rect(x1, y1, x2, y2)
+	"Graphical rectangle with given corners"

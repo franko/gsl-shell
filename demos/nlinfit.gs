@@ -1,5 +1,5 @@
 
-use 'math'
+use "math"
 
 local function demo1()
    local n = 40
@@ -14,9 +14,9 @@ local function demo1()
 		     local e = exp(- lambda * t)
 		     if f then f[i] = (A*e+b - y)/sig end
 		     if J then
-			J:set(i, 1, e / sig)
-			J:set(i, 2, - t * A * e / sig)
-			J:set(i, 3, 1 / sig)
+			J::set(i, 1, e / sig)
+			J::set(i, 2, - t * A * e / sig)
+			J::set(i, 3, 1 / sig)
 		     end
 		  end
 	       end
@@ -29,29 +29,29 @@ local function demo1()
    local xref = matrix.vec {5, 0.1, 1}
 
    local r = rng.new()
-   r:set(0)
+   r::set(0)
 
    yrf = matrix.new(n, 1, |i| model(xref, i-1) + rnd.gaussian(r, 0.1))
 
    local s = num.nlinfit {n= n, p= 3}
 
-   s:set(fdf, matrix.vec {1, 0, 0})
+   s::set(fdf, matrix.vec {1, 0, 0})
    print(s.x, s.chisq)
 
    for i=1, 10 do
-      s:iterate()
-      print('ITER=', i, ': ', s.x, s.chisq)
-      if s:test(0, 1e-8) then break end
+      s::iterate()
+      print("ITER=", i, ": ", s.x, s.chisq)
+      if s::test(0, 1e-8) then break end
    end
 
-   local p = graph.plot('Non-linear fit example')
+   local p = graph.plot("Non-linear fit example")
    local pts = graph.ipath(iter.sequence(function(i) return i-1, yrf[i] end, n))
    local fitln = graph.fxline(function(t) return model(s.x, t) end, 0, n-1)
-   p:addline(pts, 'blue', {{'marker', size=5}})
-   p:addline(fitln)
+   p::addline(pts, "blue", {{"marker", size=5}})
+   p::addline(fitln)
    p.clip = false
    p.pad  = true
-   p:show()
+   p::show()
 end
 
 local function demo2()
@@ -81,41 +81,41 @@ local function demo2()
       end
    end
 
-   local pl = graph.plot('Non-linear fit / A * exp(a t) sin(w t)') 
-   pl:addline(graph.xyline(x, y), 'blue', {{'marker', size= 5, mark="triangle"}})
-   pl:legend('data', 'blue', 'triangle', {{'stroke'}})
+   local pl = graph.plot("Non-linear fit / A * exp(a t) sin(w t)") 
+   pl::addline(graph.xyline(x, y), "blue", {{"marker", size= 5, mark="triangle"}})
+   pl::legend("data", "blue", "triangle", {{"stroke"}})
 
    local s = num.nlinfit {n= n, p= #p0}
 
-   s:set(fdf, p0)
+   s::set(fdf, p0)
    print(s.x, s.chisq)
 
-   pl:addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red', {{'dash', 7, 3, 3, 3}})
-   pl:legend('seed', 'red', 'line', {{'stroke'},{'dash',7,3}})
+   pl::addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), "red", {{"dash", 7, 3, 3, 3}})
+   pl::legend("seed", "red", "line", {{"stroke"},{"dash",7,3}})
 
    for i=1, 10 do
-      s:iterate()
-      print('ITER=', i, ': ', s.x, s.chisq)
-      if s:test(0, 1e-8) then break end
+      s::iterate()
+      print("ITER=", i, ": ", s.x, s.chisq)
+      if s::test(0, 1e-8) then break end
    end
 
-   pl:addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), 'red')
-   pl:legend('best fit', 'red', 'line')
+   pl::addline(graph.fxline(|x| fmodel(s.x, x), 0, xs(n)), "red")
+   pl::legend("best fit", "red", "line")
    pl.pad = true
-   pl:show()
+   pl::show()
 
    return pl
 end
 
-return {'Non-linear fit', {
+return {"Non-linear fit", {
   {
-     name = 'nlfit1',
+     name = "nlfit1",
      f = demo1, 
-     description = 'Simple non-linear fit'
+     description = "Simple non-linear fit"
   },
   {
-     name = 'nlfit2',
+     name = "nlfit2",
      f = demo2, 
-     description = 'Non-linear fit of oscillatory function'
+     description = "Non-linear fit of oscillatory function"
   },
 }}

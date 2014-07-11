@@ -16,7 +16,8 @@ local function load_demo(name)
 end
 
 local demo_files = {
-  'fft', 'bspline', 'wave-particle', 'plot', 'fractals', 'ode', 'nlinfit', 'integ', 'anim', 'linfit', 'contour', 'svg', 'graphics', 'sf', 'vegas', 'gdt-lm'}
+-- missing 'sf' module
+ 'fft', 'bspline', 'wave-particle', 'plot', 'fractals', 'ode', 'nlinfit', 'integ', 'anim', 'linfit', 'contour', 'svg', 'graphics', 'vegas', 'gdt-lm'}
 
 for i, name in ipairs(demo_files) do
    load_demo(name)

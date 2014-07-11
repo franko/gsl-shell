@@ -1,0 +1,8 @@
+function fft(v[, in_place])
+	"Perform the FFT of matrix column v"
+function fftinv(hc[, in_place])
+	"Perform the inverse FFT of an half-complex vector"
+function bspline(a, b, N[, order])
+	"Return a B-spline for interval (a, b) with N points"
+function linfit(X, y[, w])
+	"Perform linear least-squares regression with model matrix X"

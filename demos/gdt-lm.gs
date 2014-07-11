@@ -18,9 +18,9 @@ local function lm_demo()
 			local x = dx * (i - 1) / N
 			local y = a + b * x + rnd.gaussian(r, sigma) + tool_effect[k]
 			local ip = (k-1)*N + i
-			t:set(ip, 1, tool)
-			t:set(ip, 2, x)
-			t:set(ip, 3, y)
+			t::set(ip, 1, tool)
+			t::set(ip, 2, x)
+			t::set(ip, 3, y)
 		end
 	end
 
@@ -31,20 +31,20 @@ local function lm_demo()
 	p.ytitle = "thickness, mm"
 
 	local fit = gdt.lm(t, "y ~ x, tool", {predict= true})
-	fit:summary()
+	fit::summary()
 
 	for k = 1, P do
-		local ln = graph.fxline(|x| fit:eval {tool= tools[k], x= x}, 0, dx)
-		p:addline(ln, graph.webcolor(k), {{'dash', 7, 3}})
+		local ln = graph.fxline(|x| fit::eval {tool= tools[k], x= x}, 0, dx)
+		p::addline(ln, graph.webcolor(k), {{"dash", 7, 3}})
 	end
 
-	p:show()
+	p::show()
 end
 
-return {'Linear Regression', {
+return {"Linear Regression", {
   {
-     name= 'linreg1',
+     name= "linreg1",
      f = lm_demo,
-     description = 'Mixed model regression example'
+     description = "Mixed model regression example"
   },
 }}

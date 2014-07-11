@@ -1,5 +1,5 @@
 
-use 'math'
+use "math"
 
 -- This function generate a function for a given set of parameters p1 ... p3.
 local f_gen = function(p1, p2, p3)
@@ -26,13 +26,13 @@ local function star(r)
    local xv, yv = 0, - hi - he
    local xb, yb = - li, - hi
    local p = graph.path(xv, yv)
-   p:line_to(xb, yb)
+   p::line_to(xb, yb)
    for k=1, 4 do
       local th = 2*pi*k/5
-      p:line_to(xv*cos(th) + yv*sin(th), yv*cos(th) - xv*sin(th))
-      p:line_to(xb*cos(th) + yb*sin(th), yb*cos(th) - xb*sin(th))
+      p::line_to(xv*cos(th) + yv*sin(th), yv*cos(th) - xv*sin(th))
+      p::line_to(xb*cos(th) + yb*sin(th), yb*cos(th) - xb*sin(th))
    end
-   p:close()
+   p::close()
    return p
 end
 
@@ -46,19 +46,19 @@ local function do_plot(save_function, symbol, ssize, outline)
    local x, y = generate_sample(f1, 0.1, n)
 
    -- create a new plot
-   local p = graph.plot('Plot example with dashed lines and markers')
+   local p = graph.plot("Plot example with dashed lines and markers")
 
    -- add the generated points using triangular merker symbols
-   p:add(graph.xyline(x, y), 'blue', {{'marker', size= ssize, mark= symbol, outline= outline}})
+   p::add(graph.xyline(x, y), "blue", {{"marker", size= ssize, mark= symbol, outline= outline}})
 
    -- generate a graphical lines corrisponding to function f0 and add it to
    -- the plot using a thick dashed line
    local f0ln = graph.fxline(f0, 0, xs(n), nsamples)
-   p:add(f0ln, 'red', {{'stroke', width=4}, {'dash', 7, 3, 3, 3}})
+   p::add(f0ln, "red", {{"stroke", width=4}, {"dash", 7, 3, 3, 3}})
 
    -- add a second solid line corresponding to the function f1
    local f1ln = graph.fxline(f1, 0, xs(n), nsamples)
-   p:addline(f1ln, 'red')
+   p::addline(f1ln, "red")
 
    p.pad = true
 
@@ -69,35 +69,35 @@ local function do_plot(save_function, symbol, ssize, outline)
 end
 
 local save_svg = function(p)
-		    p:save_svg('demo.svg', 600, 400)
-		    print 'Plot saved in SVG format in file "demo.svg".'
+		    p::save_svg("demo.svg", 600, 400)
+		    print "Plot saved in SVG format in file \"demo.svg\"."
 		 end
 
 -- create a plot and save in SVG format
 local function demo1()
-   local p = do_plot(save_svg, 'circle', 5, true)
+   local p = do_plot(save_svg, "circle", 5, true)
 
-   p:save('demo', 600, 400)
-   print 'Plot saved in BMP format in demo.bmp (demo.ppm on linux).'
+   p::save("demo", 600, 400)
+   print "Plot saved in BMP format in demo.bmp (demo.ppm on linux)."
 
-   p:show()
+   p::show()
 end
 
 -- create a plot and save in SVG format with star shaped markers
 local function demo2()
    local p = do_plot(save_svg, star(1), 10)
-   p:show()
+   p::show()
 end
 
-return {'Saving a plot in BMP or SVG format', {
+return {"Saving a plot in BMP or SVG format", {
   {
-     name = 'svg1',
+     name = "svg1",
      f = demo1,
-     description = 'Plot example with different line styles'
+     description = "Plot example with different line styles"
   },
   {
-     name = 'svg2',
+     name = "svg2",
      f = demo2,
-     description = 'Like the example above but with user-defined markers'
+     description = "Like the example above but with user-defined markers"
   },
 }}

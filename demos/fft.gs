@@ -17,29 +17,29 @@
  -- along with this program; if not, write to the Free Software
  -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-use 'math'
-use 'graph'
-use 'num'
+use "math"
+use "graph"
+use "num"
 
 local function demo1()
    local n, ncut = 8*3*5, 16
 
    local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
-   local pt = plot('Original signal / reconstructed')
+   local pt = plot("Original signal / reconstructed")
 
-   pt:addline(filine(|i| sq[i], n), 'black')
+   pt::addline(filine(|i| sq[i], n), "black")
 
    local ft = fft(sq)
 
-   local pf = fibars(|k| complex.abs(ft[k]), 0, n/2, 'black')
-   pf.title = 'FFT Power Spectrum'
+   local pf = fibars(|k| complex.abs(ft[k]), 0, n/2, "black")
+   pf.title = "FFT Power Spectrum"
 
    for k=ncut, n - ncut do ft[k] = 0 end
    sqt = fftinv(ft)
 
-   pt:addline(filine(|i| sqt[i], n), 'red')
-   pt:show()
+   pt::addline(filine(|i| sqt[i], n), "red")
+   pt::show()
 
    return pt, pf
 end
@@ -49,22 +49,22 @@ local function demo2()
 
    local sq = matrix.new(n, 1, |i| i < n/3 and 0 or (i < 2*n/3 and 1 or 0))
 
-   local pt = plot('Original signal / reconstructed')
-   local pf = plot('FFT Power Spectrum')
+   local pt = plot("Original signal / reconstructed")
+   local pf = plot("FFT Power Spectrum")
 
-   pt:addline(filine(|i| sq[i], n), 'black')
+   pt::addline(filine(|i| sq[i], n), "black")
 
    ft = fft(sq, true)
 
-   pf:add(ibars(iter.isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
+   pf::add(ibars(iter.isample(|k| complex.abs(ft[k]), 0, n/2)), "black")
 
    for k=ncut, n - ncut do ft[k] = 0 end
    fftinv(ft, true)
 
-   pt:addline(filine(|i| sq[i], n), 'red')
+   pt::addline(filine(|i| sq[i], n), "red")
 
-   pf:show()
-   pt:show()
+   pf::show()
+   pt::show()
 
    return pt, pf
 end
@@ -76,39 +76,39 @@ local function demo3()
 
    local bess = matrix.new(n, 1, |i| sf.besselJ(order, xsmp(i)))
 
-   local p = plot('Original signal / reconstructed')
-   p:addline(filine(|i| bess[i], n), 'black')
+   local p = plot("Original signal / reconstructed")
+   p::addline(filine(|i| bess[i], n), "black")
 
    local ft = fft(bess)
 
-   fftplot = plot('FFT power spectrum')
+   fftplot = plot("FFT power spectrum")
    bars = ibars(iter.isample(|k| complex.abs(ft[k]), 0, 60))
-   fftplot:add(bars, 'black')
-   fftplot:show()
+   fftplot::add(bars, "black")
+   fftplot::show()
 
    for k=ncut, n/2 do ft[k] = 0 end
    local bessr = fftinv(ft)
 
-   p:addline(filine(|i| bessr[i], n), 'red', {{'dash', 7, 3}})
-   p:show()
+   p::addline(filine(|i| bessr[i], n), "red", {{"dash", 7, 3}})
+   p::show()
 
    return p, fftplot
 end
 
-return {'FFT', {
+return {"FFT", {
   {
-     name = 'fft1',
+     name = "fft1",
      f = demo1, 
-     description = 'GSL example with square function and frequency cutoff'
+     description = "GSL example with square function and frequency cutoff"
   },
   {
-     name = 'fft2',
+     name = "fft2",
      f = demo2,
-     description = 'The same as before but the FFT transform is done in place'
+     description = "The same as before but the FFT transform is done in place"
   },
   {
-     name = 'fft3',
+     name = "fft3",
      f = demo3,
-     description = 'frequency cutoff example on bessel function'
+     description = "frequency cutoff example on bessel function"
   },
 }}

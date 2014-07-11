@@ -29,14 +29,14 @@ local function demo1()
   local maxdim = 10
   local lo,hi = 0,2
   local results = {}
-  local p = graph.plot('Integral of sum (i*x_i^2) (i=1..n)')
+  local p = graph.plot("Integral of sum (i*x_i^2) (i=1..n)")
   p.clip, p.pad = false, true
   local exact = graph.filine(|n| n*(n+1)/2 * (hi^3 - lo^3)/3 * (hi-lo)^(n-1),maxdim)
   local computed = graph.filine(testdim,1,maxdim)
-  p:addline(exact)
-  p:add(computed, "blue", {{'marker', size=8}})
+  p::addline(exact)
+  p::add(computed, "blue", {{"marker", size=8}})
   p.xtitle="n"
-  p:show()
+  p::show()
 end
 
 local function getunitsphere(n)
@@ -65,28 +65,28 @@ local function demo2()
       print(string.format(fmt,res*2^d,sig*2^d))
       n=n+1
     end
-    ln:line_to(d,res*2^d)
+    ln::line_to(d,res*2^d)
   end
-  local p = graph.plot('Volume of a unit n-sphere')
+  local p = graph.plot("Volume of a unit n-sphere")
   p.clip, p.pad = false, true
-  p:addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
-  p:legend('exact value', 'red', 'line')
-  p:addline(ln, "blue", {{'marker', size=6}})
-  p:legend('calculated', 'blue', 'circle', {{'stroke'}})
+  p::addline(graph.fxline(|n| math.pi^(n/2) / sf.gamma(1+n/2), 1, max_dim))
+  p::legend("exact value", "red", "line")
+  p::addline(ln, "blue", {{"marker", size=6}})
+  p::legend("calculated", "blue", "circle", {{"stroke"}})
   p.xtitle="n"
   p.ytitle="V"
-  p:show()
+  p::show()
 end
 
-return {'VEGAS Monte Carlo integration', {
+return {"VEGAS Monte Carlo integration", {
   {
-     name= 'vegas',
+     name= "vegas",
      f = demo1,
-     description = 'Integrate 9 n-dimensional functions sum(i*(x_i^2))'
+     description = "Integrate 9 n-dimensional functions sum(i*(x_i^2))"
   },
   {
-     name= 'sphere',
+     name= "sphere",
      f = demo2,
-     description = 'Calculate the volume of a unit n-sphere (n=2..14)'
+     description = "Calculate the volume of a unit n-sphere (n=2..14)"
   }
 }}
