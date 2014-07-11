@@ -12,4 +12,4 @@ repeat
 	else
 		print(ls.token)
 	end
-until ls.token == "TK_end"
+until ls.token == "TK_eof"
