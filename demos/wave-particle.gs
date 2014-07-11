@@ -1,7 +1,7 @@
-local gsl_roots = require 'roots'
+use "math"
 
-local sin, cos, sqrt, exp = math.sin, math.cos, math.sqrt, math.exp
-local atan2, pi = math.atan2, math.pi
+local gsl_roots = require "roots"
+
 local cexp, csqrt = complex.exp, complex.sqrt
 local real, imag = complex.real, complex.imag
 local sequence = iter.sequence
@@ -29,15 +29,15 @@ local bmat = matrix.cnew(4, 1, |i| i == 4 and 1 or 0)
 local function Asget(k1, k2, e)
    local a1, a2 = cexp(1i*k1*x1), cexp(1i*k2*x2)
 
-   smat:set(1,1, 1/a1)
-   smat:set(1,2, a1)
-   smat:set(2,3, 1/a2)
-   smat:set(2,4, a2)
-   smat:set(3,1,  1)
-   smat:set(3,2,  1)
-   smat:set(3,3, -1)
-   smat:set(3,4, -1)
-   smat:set(4,2, 1)
+   smat::set(1,1, 1/a1)
+   smat::set(1,2, a1)
+   smat::set(2,3, 1/a2)
+   smat::set(2,4, a2)
+   smat::set(3,1,  1)
+   smat::set(3,2,  1)
+   smat::set(3,3, -1)
+   smat::set(3,4, -1)
+   smat::set(4,2, 1)
 
    local x = matrix.solve(smat, bmat)
    return x[1], x[2], x[3], x[4]
@@ -55,22 +55,22 @@ end
 
 local function edet_sub(e)
    local k1, g2 = sqrt(2*(e-v1)), sqrt(2*(v2-e))
-   return k1 * math.sinh(g2*x2) * cos(k1*x1) - g2 * sin(k1*x1) * math.cosh(g2*x2)
+   return k1 * sinh(g2*x2) * cos(k1*x1) - g2 * sin(k1*x1) * cosh(g2*x2)
 end
 
 local function edet_sub_scale(e)
    local k1, g2 = sqrt(2*(e-v1)), sqrt(2*(v2-e))
-   return math.max(k1, g2) * exp(g2*x2)
+   return max(k1, g2) * exp(g2*x2)
 end
 
 local function root_grid_search(emax)
    local emin = (pi/x1)^2/2
 
    local s1 = gsl_roots.solver(edet_sub, 1e-8, v2 * 1e-10, edet_sub_scale)
-   local roots = s1:solve(v1 + emin/10, v2 - emin/10)
+   local roots = s1::solve(v1 + emin/10, v2 - emin/10)
 
    local s2 = gsl_roots.solver(edet, 1e-8, v2 * 1e-10, edet_scale)
-   s2:solve(v2 + emin/10, emax, roots)
+   s2::solve(v2 + emin/10, emax, roots)
 
    return matrix.vec(roots)
 end
@@ -146,39 +146,39 @@ local function feval(i, x)
    local e = get_root(i+1)
    if e > v2 then
       if x < 0 then
-	 local k1 = sqrt(2*(e-v1))
-	 local A1r, A1i = As_coeff(i, 0)
-	 local A2r, A2i = As_coeff(i, 1)
-	 local c, s = cos(k1*x), sin(k1*x)
-	 return A1r*c + A1i*s + A2r*c - A2i*s, -A1r*s + A1i*c + A2r*s + A2i*c
+         local k1 = sqrt(2*(e-v1))
+         local A1r, A1i = As_coeff(i, 0)
+         local A2r, A2i = As_coeff(i, 1)
+         local c, s = cos(k1*x), sin(k1*x)
+         return A1r*c + A1i*s + A2r*c - A2i*s, -A1r*s + A1i*c + A2r*s + A2i*c
       else
-	 local k2 = sqrt(2*(e-v2))
-	 local B1r, B1i = As_coeff(i, 2)
-	 local B2r, B2i = As_coeff(i, 3)
-	 local c, s = cos(k2*x), sin(k2*x)
-	 return B1r*c + B1i*s + B2r*c - B2i*s, -B1r*s + B1i*c + B2r*s + B2i*c
+         local k2 = sqrt(2*(e-v2))
+         local B1r, B1i = As_coeff(i, 2)
+         local B2r, B2i = As_coeff(i, 3)
+         local c, s = cos(k2*x), sin(k2*x)
+         return B1r*c + B1i*s + B2r*c - B2i*s, -B1r*s + B1i*c + B2r*s + B2i*c
       end
    else
       if x < 0 then
-	 local k1 = sqrt(2*(e-v1))
-	 local A1r, A1i = As_coeff(i, 0)
-	 local A2r, A2i = As_coeff(i, 1)
-	 local c, s = cos(k1*x), sin(k1*x)
-	 return A1r*c + A1i*s + A2r*c - A2i*s, -A1r*s + A1i*c + A2r*s + A2i*c
+         local k1 = sqrt(2*(e-v1))
+         local A1r, A1i = As_coeff(i, 0)
+         local A2r, A2i = As_coeff(i, 1)
+         local c, s = cos(k1*x), sin(k1*x)
+         return A1r*c + A1i*s + A2r*c - A2i*s, -A1r*s + A1i*c + A2r*s + A2i*c
       else
-	 local g2 = sqrt(2*(v2-e))
-	 local B1r, B1i = As_coeff(i, 2)
-	 local B2r, B2i = As_coeff(i, 3)
-	 local c = exp(g2*x)
-	 return B1r*c + B2r/c, B1i*c + B2i/c
+         local g2 = sqrt(2*(v2-e))
+         local B1r, B1i = As_coeff(i, 2)
+         local B2r, B2i = As_coeff(i, 3)
+         local c = exp(g2*x)
+         return B1r*c + B2r/c, B1i*c + B2i/c
       end
    end
 end
 
 local function coherent_state(x0, p0, sig)
    return function(x)
-	     return cexp(-(x-x0)^2/(4*sig^2) + 1i*p0*x)
-	  end
+             return cexp(-(x-x0)^2/(4*sig^2) + 1i*p0*x)
+          end
 end
 
 local initstate
@@ -192,18 +192,18 @@ local function plot_roots()
    local lnd = graph.fxline(|x| edet_sub(x)/edet_sub_scale(x), ell, v2)
 
    local ps = graph.canvas()
-   ps:addline(lno, 'red')
-   ps:addline(lnd, 'magenta')
+   ps::addline(lno, "red")
+   ps::addline(lnd, "magenta")
 
    local rln = graph.path(get_root(1), 0)
    for i = 2, n do
-      rln:line_to(get_root(i), 0)
+      rln::line_to(get_root(i), 0)
    end
 
-   ps:addline(rln, 'blue', {{'marker', size=5}})
-   ps.title = 'Energy eigenvalues determination / roots'
-   ps:limits(ell, -1, erl, 1)
-   ps:show()
+   ps::addline(rln, "blue", {{"marker", size=5}})
+   ps.title = "Energy eigenvalues determination / roots"
+   ps::limits(ell, -1, erl, 1)
+   ps::show()
 end
 
 local function coeff(i)
@@ -226,20 +226,20 @@ end
 local coeffs
 
 local function plot_coeffs()
-   local w = graph.window('v..', true)
+   local w = graph.window("v..", true)
 
    local ln = graph.ipath(sequence(function(i) return get_root(i+1), coeffs.data[2*i] end, 0, #roots-1))
    local p = graph.plot()
-   p:addline(ln)
-   p.title = 'Initial state coeffs / real part'
-   w:attach(p, 2)
+   p::addline(ln)
+   p.title = "Initial state coeffs / real part"
+   w::attach(p, 2)
 
    ln = graph.ipath(sequence(function(i) return get_root(i+1), coeffs.data[2*i+1] end, 0, #roots-1))
    local p = graph.plot()
-   p:addline(ln)
-   p.title = 'Initial state coeffs / imag part'
-   w:attach(p, 1)
-   w:show()
+   p::addline(ln)
+   p.title = "Initial state coeffs / imag part"
+   w::attach(p, 1)
+   w::show()
 end
 
 local n, p
@@ -258,11 +258,11 @@ local function coeff_inv(cs, fxv, y, t)
    for k=0, p-1 do
       local sr, si = 0, 0
       for i=0, n-1 do
-	 local cr, ci = csexp.data[2*i], csexp.data[2*i+1]
-	 local fr, fi = fxv.data[2*n*k + 2*i], fxv.data[2*n*k + 2*i + 1]
+         local cr, ci = csexp.data[2*i], csexp.data[2*i+1]
+         local fr, fi = fxv.data[2*n*k + 2*i], fxv.data[2*n*k + 2*i + 1]
 
-	 sr = sr + (cr*fr - ci*fi)
-	 si = si + (cr*fi + ci*fr)
+         sr = sr + (cr*fr - ci*fi)
+         si = si + (cr*fi + ci*fr)
       end
 
       y.data[2*k  ] = sr
@@ -277,24 +277,24 @@ local function xsmp(k)
 end
 
 local function state_plot()
-   local px = graph.plot('Eigenstates Waveforms')
+   local px = graph.plot("Eigenstates Waveforms")
    px.sync = false
-   px:show()
+   px::show()
 
-   px:pushlayer()
+   px::pushlayer()
    for i=0, n-1 do
       local e = get_root(i+1)
 
       local sqr = sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i] end, 0, p-1)
       local sqi = sequence(function(k) return xsmp(k), fxv.data[2*n*k+2*i+1] end, 0, p-1)
 
-      print('Energy:', e)
+      print("Energy:", e)
 
-      px:clear()
-      px:addline(graph.ipath(sqr), 'red')
-      px:addline(graph.ipath(sqi), 'blue')
-      px:flush()
-      io.read '*l'
+      px::clear()
+      px::addline(graph.ipath(sqr), "red")
+      px::addline(graph.ipath(sqi), "blue")
+      px::flush()
+      io.read "*l"
    end
 end
 
@@ -307,34 +307,34 @@ local function anim(pcs)
    local col = graph.rgba(0, 180, 0, 230)
    for t= 0, 22, 0.125/8 do
       coeff_inv(coeffs, fxv, y, t)
-      pcs:clear()
+      pcs::clear()
       local ln = graph.ipath(sequence(y_samp, 0, p-1))
-      pcs:add(ln, col)
-      pcs:flush()
+      pcs::add(ln, col)
+      pcs::flush()
    end
 end
 
 local function wave_demo()
-   info 'Finding energy eigenvalues (roots)...'
+   info "Finding energy eigenvalues (roots)..."
    roots = root_grid_search(energy_limit)
-   print 'done'
+   print "done"
 
-   info 'Calculating energy eigenstates...'
+   info "Calculating energy eigenstates..."
    As_mat = As_mat_compute(roots)
-   print 'done'
+   print "done"
 
    initstate = {x0= -14, p0= 8, sigma= 1.5}
 
    fcs = coherent_state(initstate.x0, initstate.p0, initstate.sigma)
 
-   info 'Calculating initial state coefficients...'
+   info "Calculating initial state coefficients..."
    coeffs = matrix.alloc(2 * #roots, 1)
    for i = 0, #roots - 1 do
       local cr, ci = coeff(i)
       coeffs.data[2*i  ] = cr
       coeffs.data[2*i+1] = ci
    end
-   print 'done'
+   print "done"
 
    n = #roots
    p = 512
@@ -344,24 +344,24 @@ local function wave_demo()
    fxv = matrix.alloc(2 * n * p, 1)
    y = matrix.alloc(2 * p, 1)
 
-   info 'Computing eigenstates x representation...'
+   info "Computing eigenstates x representation..."
    for k= 0, p-1 do
       local x = xsmp(k)
       for i= 0, n-1 do
-	 local fr, fi = feval(i, x)
-	 fxv.data[2*n*k + 2*i    ] = fr
-	 fxv.data[2*n*k + 2*i + 1] = fi
+         local fr, fi = feval(i, x)
+         fxv.data[2*n*k + 2*i    ] = fr
+         fxv.data[2*n*k + 2*i + 1] = fi
       end
    end
-   print 'done'
+   print "done"
 
    local pcs = graph.canvas()
-   pcs:limits(x1, 0, x2, 1.4)
-   pcs:addline(graph.fxline(|x| (csqrn(fcs(x))), x1, x2))
-   pcs.title = 'Wave function density'
-   pcs:show()
+   pcs::limits(x1, 0, x2, 1.4)
+   pcs::addline(graph.fxline(|x| (csqrn(fcs(x))), x1, x2))
+   pcs.title = "Wave function density"
+   pcs::show()
 
-   pcs:pushlayer()
+   pcs::pushlayer()
 
    anim(pcs)
 
@@ -369,10 +369,10 @@ local function wave_demo()
    plot_coeffs()
 end
 
-return {'Wave Packet', {
+return {"Wave Packet", {
   {
-     name = 'wave',
+     name = "wave",
      f = wave_demo, 
-     description = 'Quantum Wave function for a particle in a step potential'
+     description = "Quantum Wave function for a particle in a step potential"
   },
 }}
