@@ -13,7 +13,9 @@ end
 local function new_file_reader(filename)
     local f = assert(io.open(filename, 'r'), "cannot open file " .. filename)
     local function reader()
-        return f:read(4096 - 32)
+        local chunk = f:read(4096 - 32)
+        if not chunk then f:close() end
+        return chunk
     end
     return reader
 end
