@@ -1,5 +1,4 @@
 use "math"
-use "iter"
 use "num"
 
 local function demo1()
@@ -48,7 +47,7 @@ local function demo2()
    pc.pad = true
 
    local fitleg = function(x)
-		     return isum(|k| c[k+1] * model(k, x), 0, legmodel_order)
+		     return iter.isum(|k| c[k+1] * model(k, x), 0, legmodel_order)
 		  end
 
    local p = graph.fxplot(fitleg, x0, x1)

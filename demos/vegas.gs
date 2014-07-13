@@ -14,20 +14,14 @@ local function testdim(n)
   local calls = 1e4*n
   local vegas_integ = vegas_prepare({N=n})
   local result,sigma,runs,cont=vegas_integ(integrand,a,b,calls)
-  print( string.format(
-
-
-
-
-
-
-"result = %.6f\
-sigma  = %.6f\
-exact  = %.6f\
-error  = %.6f = %.2g sigma\
-calls  = %.0f\
-==========================\
-" ,result,sigma,exact, result - exact,  math.abs(result - exact)/sigma,runs*calls))
+  print( string.format([[
+result = %.6f
+sigma  = %.6f
+exact  = %.6f
+error  = %.6f = %.2g sigma
+calls  = %.0f
+==========================
+]] ,result,sigma,exact, result - exact,  math.abs(result - exact)/sigma,runs*calls))
   return result
 end
 
