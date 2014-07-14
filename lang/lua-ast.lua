@@ -2,7 +2,7 @@ local syntax = require('syntax')
 local libexpr = require('expr-utils')
 local lua_interface = require('lua-interface')
 
-local build, ident, literal, logical, binop, field, tget = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget
+local build, ident, literal, logical, binop, field, tget, empty_table = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget, syntax.empty_table
 
 local function add_pre_stmts(stmt, pre_stmts)
     if not stmt.pre_stmts then stmt.pre_stmts = { } end
@@ -83,17 +83,56 @@ function AST.use_stmt(ast, name, line)
     end
 end
 
+local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
+    local path_keyargs = field(path, "__keyargs")
+    local options_id = ast:genid()
+    table.insert(args, 1, options_id)
+    local decl = func_decl(path_keyargs, body, args, proto.varargs, false, proto.firstline, proto.lastline)
+
+    add_pre_stmts(decl, { assign_decl })
+
+    local knames, kfetch_args = {}, { options_id }
+    for k = 1, #args.keyargs do
+        local name = args.keyargs[k].parameter
+        knames[k] = ast:var_declare(name)
+        kfetch_args[2*k] = literal(name)
+        kfetch_args[2*k + 1] = args.keyargs[k].default
+    end
+    local kfetch_call = build("CallExpression", { callee = field(ident("lang"), "__keyargs_options"), arguments = kfetch_args })
+    local kargs_decl = build("LocalDeclaration", { names = knames, expressions = { kfetch_call } })
+    table.insert(body, 1, kargs_decl)
+
+    return decl
+end
+
 function AST.expr_function(ast, args, body, proto)
    return func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
 end
 
 function AST.local_function_decl(ast, name, args, body, proto)
     local id = ast:var_declare(name)
-    return func_decl(id, body, args, proto.varargs, true, proto.firstline, proto.lastline)
+    if args.keyargs then
+        local call = build("CallExpression", { callee = ident("setmetatable"), arguments = { empty_table, field(ident("lang"), "__keyargs_class") } })
+        local ldecl = build("LocalDeclaration", { names = { id }, expressions = { call } })
+        return func_decl_keyargs(ast, id, args, body, proto, ldecl)
+    else
+        return func_decl(id, body, args, proto.varargs, true, proto.firstline, proto.lastline)
+    end
 end
 
+-- object.foo = setmetatable({}, lang.__keyargs_class)
+-- function object.foo.__keyargs(__options, x, y)
+--     local linewidth, color = lang.__keyargs_options(__options, "linewidth", 1, "color", "red")
+--     ...
+-- end
 function AST.function_decl(ast, path, args, body, proto)
-   return func_decl(path, body, args, proto.varargs, false, proto.firstline, proto.lastline)
+    if args.keyargs then
+        local call = build("CallExpression", { callee = ident("setmetatable"), arguments = { empty_table, field(ident("lang"), "__keyargs_class") } })
+        local assign = build("AssignmentExpression", { left = { path }, right = { call } })
+        return func_decl_keyargs(ast, path, args, body, proto, assign)
+    else
+        return func_decl(path, body, args, proto.varargs, false, proto.firstline, proto.lastline)
+    end
 end
 
 function AST.chunk(ast, body, chunkname, firstline, lastline)

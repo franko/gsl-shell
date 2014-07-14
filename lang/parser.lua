@@ -518,6 +518,7 @@ end
 local function parse_params_delim(ast, ls, needself, start_token, end_token)
     lex_check(ls, start_token)
     local args = { }
+    local kargs
     if needself then
         args[1] = ast:var_declare("self")
     end
@@ -525,7 +526,14 @@ local function parse_params_delim(ast, ls, needself, start_token, end_token)
         repeat
             if ls.token == 'TK_name' or (not LJ_52 and ls.token == 'TK_goto') then
                 local name = lex_str(ls)
-                args[#args+1] = ast:var_declare(name)
+                if ls.token == '=' then
+                    ls:next()
+                    local arg_expr = expr(ast, ls)
+                    if not kargs then kargs = {} end
+                    kargs[#kargs+1] = { parameter = name, default = arg_expr }
+                else
+                    args[#args+1] = ast:var_declare(name)
+                end
             elseif ls.token == 'TK_dots' then
                 ls:next()
                 ls.fs.varargs = true
@@ -537,6 +545,7 @@ local function parse_params_delim(ast, ls, needself, start_token, end_token)
         until not lex_opt(ls, ',')
     end
     lex_check(ls, end_token)
+    args.keyargs = kargs
     return args
 end
 

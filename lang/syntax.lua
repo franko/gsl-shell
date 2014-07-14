@@ -607,6 +607,8 @@ local function tget(obj, index)
     return build("MemberExpression", { object = obj, property = index, computed = true })
 end
 
+local empty_table = build("Table", { array_entries = {}, hash_keys = {}, hash_values = {}})
+
 return {
    ident   = ident,
    literal = literal,
@@ -615,4 +617,5 @@ return {
    field   = field,
    tget    = tget,
    build   = build,
+   empty_table = empty_table,
 }
