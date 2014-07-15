@@ -24,6 +24,8 @@ require('gdt-lm')
 require('gdt-interp')
 require('linfit')
 
+dofile("lang/lang-runtime.lua")
+
 num.bspline = require 'bspline'
 
 local demomod
