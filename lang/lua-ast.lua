@@ -280,8 +280,14 @@ function AST.expr_method_call(ast, v, key, args)
     return build("SendExpression", { receiver = v, method = m, arguments = args })
 end
 
-function AST.expr_function_call(ast, v, args)
-    return build("CallExpression", { callee = v, arguments = args, line = line })
+function AST.expr_function_call(ast, v, args, kw_keys, kw_vals)
+    local callee = v
+    if kw_keys then
+        local t = build("Table", { array_entries = {}, hash_keys = kw_keys, hash_values = kw_vals })
+        table.insert(args, 1, t)
+        callee = field(callee, "__keyargs")
+    end
+    return build("CallExpression", { callee = callee, arguments = args })
 end
 
 function AST.return_stmt(ast, exps, line)

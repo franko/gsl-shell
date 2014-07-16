@@ -219,11 +219,11 @@ function expr_primary(ast, ls)
         elseif ls.token == RESOLVE_TOKEN then
             ls:next()
             local key = lex_str(ls)
-            local args = parse_args(ast, ls)
+            local args = parse_args(ast, ls, false)
             vk, v = 'call', ast:expr_method_call(v, key, args)
         elseif ls.token == '(' or ls.token == 'TK_string' or ls.token == '{' then
-            local args = parse_args(ast, ls)
-            vk, v = 'call', ast:expr_function_call(v, args)
+            local args, kws, kvs = parse_args(ast, ls, true)
+            vk, v = 'call', ast:expr_function_call(v, args, kws, kvs)
         else
             break
         end
@@ -311,19 +311,37 @@ local function parse_repeat(ast, ls, line)
     return ast:repeat_stmt(cond, body, line)
 end
 
+local function expr_keyword(ast, ls, accept_keywords)
+    local kw, val
+    if ls.token == "TK_name" and accept_keywords and ls:lookahead() == '=' then
+        local name = lex_str(ls)
+        kw = ast:literal(name)
+        lex_check(ls, '=')
+    end
+    val = expr(ast, ls)
+    return val, kw
+end
+
 -- Parse function argument list.
-function parse_args(ast, ls)
+function parse_args(ast, ls, accept_keywords)
     local line = ls.linenumber
-    local args
+    local args = { }
+    local kws, kvs
     if ls.token == '(' then
         if not LJ_52 and line ~= ls.lastline then
             err_syntax(ls, "ambiguous syntax (function call x new statement)")
         end
         ls:next()
-        if ls.token ~= ')' then -- Not f().
-            args = expr_list(ast, ls)
-        else
-            args = { }
+        while ls.token ~= ')' do
+            local val, kw = expr_keyword(ast, ls, accept_keywords)
+            if kw then
+                if not kws then kws, kvs = {}, {} end
+                kws[#kws+1] = kw
+                kvs[#kvs+1] = val
+            else
+                args[#args+1] = val
+            end
+            if not lex_opt(ls, ',') then break end
         end
         lex_match(ls, ')', '(', line)
     elseif ls.token == '{' then
@@ -336,7 +354,7 @@ function parse_args(ast, ls)
     else
         err_syntax(ls, "function arguments expected")
     end
-    return args
+    return args, kws, kvs
 end
 
 local function parse_assignment(ast, ls, vlist, var, vk)
