@@ -105,7 +105,7 @@ function expr_simple(ast, ls)
         return expr_matrix(ast, ls)
     elseif tk == 'TK_function' then
         ls:next()
-        local args, body, proto = parse_body(ast, ls, ls.linenumber, false, false)
+        local args, body, proto = parse_body(ast, ls, ls.linenumber, false, true)
         return ast:expr_function(args, body, proto)
     elseif tk == '|' then
         local args, body, proto = parse_simple_body(ast, ls, ls.linenumber)
@@ -621,7 +621,7 @@ function parse_simple_body(ast, ls, line)
     ls.fs = new_proto(ls, false)
     ast:fscope_begin()
     ls.fs.firstline = line
-    local args = parse_params_delim(ast, ls, false, false, '|', '|')
+    local args = parse_params_delim(ast, ls, false, true, '|', '|')
     local exp = expr(ast, ls)
     local retstmt = ast:return_stmt({ exp }, line)
     local body = ast:block_stmt({ retstmt }, line)
