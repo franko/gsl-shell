@@ -131,7 +131,7 @@ end
 
 local function expr_is_context_free(expr, ctx, ctx_data)
     if is_ident(expr) then
-        local for_local, outer_local, var_value = ctx(var, ctx_data)
+        local for_local, outer_local, var_value = ctx(expr, ctx_data)
         if for_local and var_value then
             return expr_is_context_free(var_value, ctx, ctx_data)
         elseif outer_local then
