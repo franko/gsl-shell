@@ -348,8 +348,59 @@ local gdt_methods = {
     levels     = gdt_table_levels,
 }
 
+local function gdt_data_get(data, key)
+    local i, j = key.__row, key.__col
+    local t = data.__table
+    assert(i >= 0 and i < size1(t), 'invalid row index ')
+    assert(j >= 0 and j < size2(t), 'invalid column index')
+    local val = gdt_value()
+    local e = cgdt.gdt_table_get(t, i, j, val)
+    return extract_value(e, val)
+end
+
+local gdt_data_metatable = {
+    __index = gdt_data_get,
+}
+
+local gdt_meta_tda
+
+local function gdt_tda_add(a, b)
+    local bindex = type(b) == "string" and cgdt.gdt_table_header_index(a.__table, b) or b
+    return gdt_meta_tda(a.__table, a.__row, a.__col + bindex)
+end
+
+local function gdt_tda_mul(a, b)
+    return gdt_meta_tda(a.__table, a.__row + b, a.__col)
+end
+
+local gdt_tda_metatable = {
+    __mul = gdt_tda_mul,
+    __add = gdt_tda_add,
+}
+
+local function gdt_meta_data(t)
+    return setmetatable({ __table = t }, gdt_data_metatable)
+end
+
+function gdt_meta_tda(t, i, j)
+    return setmetatable({ __table = t, __row = i, __col = j }, gdt_tda_metatable)
+end
+
+local function gdt_table_index(t, key)
+    if key == "size1" then
+        return size1(t)
+    elseif key == "size2" then
+        return size2(t)
+    elseif key == "data" then
+        return gdt_meta_data(t)
+    elseif key == "tda" then
+        return gdt_meta_tda(t, 0, 0)
+    end
+    return gdt_methods[key]
+end
+
 local gdt_mt = {
-    __index = gdt_methods,
+    __index = gdt_table_index,
     __len   = size1,
 }
 
