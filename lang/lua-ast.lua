@@ -353,29 +353,33 @@ local function check_index(index, inf, sup, line)
     end
 end
 
+local function var_context(var, context)
+    if not context then print(debug.traceback()) end
+    local ast, for_scope = context.ast, context.for_scope
+    local name = var.name
+    local result, scope = ast:lookup(name)
+    local vinfo = result == "local" and scope.vars[name]
+    if result == "local" and vinfo.mutable == false then
+        if scope == for_scope then
+            return true, false, vinfo.value
+        else
+            return false, true
+        end
+    end
+    return false, false
+end
+
 function AST.for_post_process(ast, body, var, init, last, step)
     local for_scope = ast.current
-    local function var_context(var)
-        local name = var.name
-        local result, scope = ast:lookup(name)
-        local vinfo = result == "local" and scope.vars[name]
-        if result == "local" and vinfo.mutable == false then
-            if scope == for_scope then
-                return true, false, vinfo.value
-            else
-                return false, true
-            end
-        end
-        return false, false
-    end
     local rstmts = { }
+    local ctx_data = { ast = ast, for_scope = for_scope }
     local i = 1
     while body[i] do
         local stmt = body[i]
         if stmt.kind == "CheckIndex" then
-            local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context)
-            local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context))
-            local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context))
+            local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context, ctx_data)
+            local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context, ctx_data))
+            local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context, ctx_data))
             if inf_cf and sup_cf then
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
