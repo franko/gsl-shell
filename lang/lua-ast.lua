@@ -40,6 +40,21 @@ local function recollect_stmts(stmts)
     return ls
 end
 
+local function var_context(var, context)
+    local ast, for_scope = context.ast, context.for_scope
+    local name = var.name
+    local result, scope = ast:lookup(name)
+    local vinfo = result == "local" and scope.vars[name]
+    if result == "local" and vinfo.mutable == false then
+        if scope == for_scope then
+            return true, false, vinfo.value
+        else
+            return false, true
+        end
+    end
+    return false, false
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, firstline, lastline)
@@ -206,12 +221,15 @@ function AST:commit_generated_stmts()
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
+    local ctx_data = { ast = ast }
     local node = build("MatrixIndex", { object = v, row = row, col = col, safe = false, line = line})
     local one = literal(1)
-    local rowcheck = bound_check(node, row, one, field(v, "size1"), line)
-    local colcheck = bound_check(node, col, one, field(v, "size2"), line)
-    ast:add_generated_stmt(rowcheck)
-    ast:add_generated_stmt(colcheck)
+    if libexpr.context_free(row, var_context, ctx_data) and libexpr.context_free(col, var_context, ctx_data) then
+        local rowcheck = bound_check(node, row, one, field(v, "size1"), line)
+        local colcheck = bound_check(node, col, one, field(v, "size2"), line)
+        ast:add_generated_stmt(colcheck)
+        ast:add_generated_stmt(rowcheck)
+    end
     return node
 end
 
@@ -351,22 +369,6 @@ local function check_index(index, inf, sup, line)
     if inf or sup then
         return build("CheckIndex", { index = index, inf = inf, sup = sup, line = line })
     end
-end
-
-local function var_context(var, context)
-    if not context then print(debug.traceback()) end
-    local ast, for_scope = context.ast, context.for_scope
-    local name = var.name
-    local result, scope = ast:lookup(name)
-    local vinfo = result == "local" and scope.vars[name]
-    if result == "local" and vinfo.mutable == false then
-        if scope == for_scope then
-            return true, false, vinfo.value
-        else
-            return false, true
-        end
-    end
-    return false, false
 end
 
 function AST.for_post_process(ast, body, var, init, last, step)
