@@ -78,14 +78,14 @@ local function unop(op, arg)
     return build("UnaryExpression", { operator = op, argument = arg })
 end
 
-local function linear_ctxfree(expr, var, ctx)
+local function linear_ctxfree(expr, var, ctx, ctx_data)
     if is_ident(expr) then
         if expr.name == var.name then
             return expr, true, 1
         else
-            local for_local, outer_local, var_value = ctx(expr)
+            local for_local, outer_local, var_value = ctx(expr, ctx_data)
             if for_local and var_value then
-                return linear_ctxfree(var_value, var, ctx)
+                return linear_ctxfree(var_value, var, ctx, ctx_data)
             elseif outer_local then
                 return expr, true, 0
             end
@@ -93,65 +93,65 @@ local function linear_ctxfree(expr, var, ctx)
     elseif is_const(expr) then
         return expr, true, 0
     elseif is_binop(expr, "+") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx)
-        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
+        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
         if alin and blin then
            return binop("+", aexp, bexp), true, acoeff + bcoeff
         end
     elseif is_binop(expr, "-") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx)
-        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
+        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
         if alin and blin then
            return binop("-", aexp, bexp), true, acoeff - bcoeff
         end
     elseif is_binop(expr, "*") then
         local aconst = is_const(expr.left)
         if aconst then
-            local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx)
+            local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
             if blin then return binop("*", literal(aconst), bexp), true, aconst * bcoeff end
         else
-            local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx)
+            local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
             if alin then
                 local bconst = is_const(expr.right)
                 if bconst then return binop("*", aexp, literal(bconst)), true, acoeff * bconst end
             end
         end
     elseif is_binop(expr, "/") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
         local bconst = is_const(expr.right)
         if bconst and alin then
             return binop("/", aexp, literal(bconst)), true, acoeff / bconst
         end
     elseif is_unop(expr, "-") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.argument, var, ctx)
+        local aexp, alin, acoeff = linear_ctxfree(expr.argument, var, ctx, ctx_data)
         if alin then return unop("-", aexp), true, -acoeff end
     end
     return false
 end
 
-local function expr_is_context_free(expr, ctx)
+local function expr_is_context_free(expr, ctx, ctx_data)
     if is_ident(expr) then
-        local for_local, outer_local, var_value = ctx(var)
+        local for_local, outer_local, var_value = ctx(var, ctx_data)
         if for_local and var_value then
-            return expr_is_context_free(var_value, ctx)
+            return expr_is_context_free(var_value, ctx, ctx_data)
         elseif outer_local then
             return expr
         end
     elseif expr.kind == "Literal" then
         return expr
     elseif expr.kind == "BinaryExpression" then
-        local a = expr_is_context_free(expr.left, ctx)
-        local b = expr_is_context_free(expr.right, ctx)
+        local a = expr_is_context_free(expr.left, ctx, ctx_data)
+        local b = expr_is_context_free(expr.right, ctx, ctx_data)
         if a and b then return binop(expr.operator, a, b) end
     elseif expr.kind == "UnaryExpression" then
-        local a = expr_is_context_free(expr.argument, ctx)
+        local a = expr_is_context_free(expr.argument, ctx, ctx_data)
         if a then return unop(expr.operator, a) end
     elseif expr.kind == "MemberExpression" then
-        local _, obj_outer = ctx(expr.object)
+        local _, obj_outer = ctx(expr.object, ctx_data)
         if obj_outer then
             local prop_outer = not expr.computed
             if expr.computed then
-                _, prop_outer = ctx(expr.prop_outer)
+                _, prop_outer = ctx(expr.prop_outer, ctx_data)
             end
             return prop_outer and expr
         end
