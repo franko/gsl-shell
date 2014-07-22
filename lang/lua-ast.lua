@@ -426,9 +426,18 @@ end
 -- The functions fscope_start/end will be called appropriately before and after
 -- to ensure that variables are declared in the correct lexical scope.
 function AST.var_declare(ast, name, value)
+    local num_const = value and libexpr.context_free(value, var_context, ast.self_context)
     ast:ident_report(name)
     local id = ident(name)
-    local vinfo = { id = id, num_const = true, value = value }
+    local vinfo = { id = id, num_const = num_const, value = value }
+    ast.current.vars[name] = vinfo
+    return id
+end
+
+function AST.var_declare_num(ast, name)
+    ast:ident_report(name)
+    local id = ident(name)
+    local vinfo = { id = id, num_const = true }
     ast.current.vars[name] = vinfo
     return id
 end
