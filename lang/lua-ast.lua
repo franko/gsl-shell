@@ -221,7 +221,7 @@ function AST:commit_generated_stmts()
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
-    local ctx_data = { ast = ast }
+    local ctx_data = ast.self_context
     local node = build("MatrixIndex", { object = v, row = row, col = col, safe = false, line = line})
     local one = literal(1)
     if libexpr.context_free(row, var_context, ctx_data) and libexpr.context_free(col, var_context, ctx_data) then
@@ -372,9 +372,8 @@ local function check_index(index, inf, sup, line)
 end
 
 function AST.for_post_process(ast, body, var, init, last, step)
-    local for_scope = ast.current
+    local ctx_data = { ast = ast, for_scope = ast.current }
     local rstmts = { }
-    local ctx_data = { ast = ast, for_scope = for_scope }
     local i = 1
     while body[i] do
         local stmt = body[i]
@@ -502,6 +501,7 @@ local ASTClass = { __index = AST }
 
 local function new_ast(lex_genid)
     local ast = { gen_stmts = { }, for_stack = { } , lex_genid = lex_genid }
+    ast.self_context = { ast = ast }
     return setmetatable(ast, ASTClass)
 end
 
