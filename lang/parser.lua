@@ -261,7 +261,7 @@ local function parse_for_num(ast, ls, varname, line)
     end
     lex_check(ls, 'TK_do')
     ast:fscope_begin()
-    local var = ast:var_declare(varname)
+    local var = ast:var_declare_num(varname)
     local body = parse_chunk(ast, ls, false)
     local stmt = ast:for_stmt(var, init, last, step, body, line)
     ast:fscope_end()
