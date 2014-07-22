@@ -45,7 +45,7 @@ local function var_context(var, context)
     local name = var.name
     local result, scope = ast:lookup(name)
     local vinfo = result == "local" and scope.vars[name]
-    if result == "local" and vinfo.mutable == false then
+    if result == "local" and vinfo.num_const == true then
         if scope == for_scope then
             return true, false, vinfo.value
         else
@@ -428,7 +428,7 @@ end
 function AST.var_declare(ast, name, value)
     ast:ident_report(name)
     local id = ident(name)
-    local vinfo = { id = id, mutable = false, value = value }
+    local vinfo = { id = id, num_const = true, value = value }
     ast.current.vars[name] = vinfo
     return id
 end
@@ -485,7 +485,7 @@ function AST.mark_mutable(ast, vars)
             local usage, scope = ast:lookup(v.name)
             if usage == "local" then
                 local vinfo = scope.vars[v.name]
-                vinfo.mutable = true
+                vinfo.num_const = false
                 vinfo.value = false
             end
         end
