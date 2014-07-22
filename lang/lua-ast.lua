@@ -379,9 +379,7 @@ function AST.for_post_process(ast, body, var, init, last, step)
         local stmt = body[i]
         if stmt.kind == "CheckIndex" then
             local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context, ctx_data)
-            local inf_cf = lin and (not stmt.inf or libexpr.context_free(stmt.inf, var_context, ctx_data))
-            local sup_cf = lin and (not stmt.sup or libexpr.context_free(stmt.sup, var_context, ctx_data))
-            if inf_cf and sup_cf then
+            if lin then
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
                 if coeff < 0 then index_inf, index_sup = index_sup, index_inf end
