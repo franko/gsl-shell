@@ -110,17 +110,7 @@ local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
 end
 
 function AST.expr_function(ast, args, body, proto)
-    if args.keyargs then
-        local options_id = ast:genid()
-        table.insert(args, 1, options_id)
-        local kargs_decl = kargs_fetch_stmt(ast, args.keyargs, options_id)
-        table.insert(body, 1, kargs_decl)
-        local fn = func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
-        local t = build("Table", { array_entries = {}, hash_keys = { literal("__keyargs") }, hash_values = { fn } })
-        return build("CallExpression", { callee = ident("setmetatable"), arguments = { t, field(ident("lang"), "__keyargs_class") } })
-    else
-        return func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
-    end
+   return func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
 end
 
 function AST.local_function_decl(ast, name, args, body, proto)
