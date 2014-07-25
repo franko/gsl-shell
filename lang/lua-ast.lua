@@ -83,18 +83,6 @@ function AST.use_stmt(ast, name, line)
     end
 end
 
-local function kargs_fetch_stmt(ast, keyargs, options_id)
-    local knames, kfetch_args = {}, { options_id }
-    for k = 1, #keyargs do
-        local name = keyargs[k].parameter
-        knames[k] = ast:var_declare(name)
-        kfetch_args[2*k] = literal(name)
-        kfetch_args[2*k + 1] = keyargs[k].default
-    end
-    local kfetch_call = build("CallExpression", { callee = field(ident("lang"), "__keyargs_options"), arguments = kfetch_args })
-    return build("LocalDeclaration", { names = knames, expressions = { kfetch_call } })
-end
-
 local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
     local path_keyargs = field(path, "__keyargs")
     local options_id = ast:genid()
@@ -103,7 +91,15 @@ local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
 
     add_pre_stmts(decl, { assign_decl })
 
-    local kargs_decl = kargs_fetch_stmt(ast, args.keyargs, options_id)
+    local knames, kfetch_args = {}, { options_id }
+    for k = 1, #args.keyargs do
+        local name = args.keyargs[k].parameter
+        knames[k] = ast:var_declare(name)
+        kfetch_args[2*k] = literal(name)
+        kfetch_args[2*k + 1] = args.keyargs[k].default
+    end
+    local kfetch_call = build("CallExpression", { callee = field(ident("lang"), "__keyargs_options"), arguments = kfetch_args })
+    local kargs_decl = build("LocalDeclaration", { names = knames, expressions = { kfetch_call } })
     table.insert(body, 1, kargs_decl)
 
     return decl
