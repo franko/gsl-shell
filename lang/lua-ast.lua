@@ -89,15 +89,21 @@ local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
     table.insert(args, 1, options_id)
     local decl = func_decl(path_keyargs, body, args, proto.varargs, false, proto.firstline, proto.lastline)
 
-    add_pre_stmts(decl, { assign_decl })
-
-    local knames, kfetch_args = {}, { options_id }
+    local keyargs = args.keyargs
+    local defaults_id = ast:genid()
+    local knames, defaults_array = {}, {}
     for k = 1, #args.keyargs do
-        local name = args.keyargs[k].parameter
-        knames[k] = ast:var_declare(name)
-        kfetch_args[2*k] = literal(name)
-        kfetch_args[2*k + 1] = args.keyargs[k].default
+        local pname = keyargs[k].parameter
+        knames[k] = ast:var_declare(pname)
+        defaults_array[2*k - 1] = literal(pname)
+        defaults_array[2*k] = keyargs[k].default
     end
+    local defaults_tb = build("Table", { array_entries = defaults_array, hash_keys = { }, hash_values = { } })
+    local defaults_decl = build("LocalDeclaration", { names = { defaults_id }, expressions = { defaults_tb } })
+
+    add_pre_stmts(decl, { assign_decl, defaults_decl })
+
+    local kfetch_args = { options_id, defaults_id }
     local kfetch_call = build("CallExpression", { callee = field(ident("lang"), "__keyargs_options"), arguments = kfetch_args })
     local kargs_decl = build("LocalDeclaration", { names = knames, expressions = { kfetch_call } })
     table.insert(body, 1, kargs_decl)
@@ -105,6 +111,7 @@ local function func_decl_keyargs(ast, path, args, body, proto, assign_decl)
     return decl
 end
 
+-- setmetatable({__keyargs = function(__options, x, y) ... end, lang.__keyargs_class)
 function AST.expr_function(ast, args, body, proto)
    return func_expr(body, args, proto.varargs, proto.firstline, proto.lastline)
 end
@@ -121,8 +128,9 @@ function AST.local_function_decl(ast, name, args, body, proto)
 end
 
 -- object.foo = setmetatable({}, lang.__keyargs_class)
+-- local __1 = {"linewidth", 1, "color", "red"}
 -- function object.foo.__keyargs(__options, x, y)
---     local linewidth, color = lang.__keyargs_options(__options, "linewidth", 1, "color", "red")
+--     local linewidth, color = lang.__keyargs_options(__options, __1)
 --     ...
 -- end
 function AST.function_decl(ast, path, args, body, proto)

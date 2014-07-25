@@ -8,11 +8,11 @@ lang.__keyargs_class = {
 	__call = keyargs_call,
 }
 
-function lang.__keyargs_options(options, ...)
-	local n = select("#", ...)
+function lang.__keyargs_options(options, defaults)
+	local n = #defaults
 	local value = {}
 	for k = 1, n/2 do
-		local name, default_val = select(2*k - 1, ...)
+		local name, default_val = defaults[2*k - 1], defaults[2*k]
 		if options[name] == nil then
 			value[k] = default_val
 		else
