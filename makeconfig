@@ -20,7 +20,7 @@ DEBUG = no
 USE_READLINE = yes
 
 # can be: static, mixed or dynamic
-BUILDMODE = dynamic
+BUILDMODE = static
 
 PREFIX= /usr/local
 DESTDIR=

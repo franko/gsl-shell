@@ -67,6 +67,8 @@ PTHREAD_DEFS += -D_REENTRANT
 CPP_SUP_LIBS = -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
+  BUILDMODE = dynamic
+
   DEFS += -DWIN32
   LDFLAGS += -Wl,--export-all-symbols
 
