@@ -283,9 +283,17 @@ function AST.identifier(ast, name)
     return ident(name)
 end
 
-function AST.expr_method_call(ast, v, key, args)
+function AST.expr_method_call(ast, v, key, args, kw_keys, kw_vals)
     local m = ident(key)
-    return build("SendExpression", { receiver = v, method = m, arguments = args })
+    if kw_keys then
+        local t = build("Table", { array_entries = {}, hash_keys = kw_keys, hash_values = kw_vals })
+        table.insert(args, 1, v)
+        table.insert(args, 1, t)
+        local callee = field(field(v, key), "__keyargs")
+        return build("CallExpression", { callee = callee, arguments = args })
+    else
+        return build("SendExpression", { receiver = v, method = m, arguments = args })
+    end
 end
 
 function AST.expr_function_call(ast, v, args, kw_keys, kw_vals)

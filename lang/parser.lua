@@ -219,10 +219,10 @@ function expr_primary(ast, ls)
         elseif ls.token == RESOLVE_TOKEN then
             ls:next()
             local key = lex_str(ls)
-            local args = parse_args(ast, ls, false)
-            vk, v = 'call', ast:expr_method_call(v, key, args)
+            local args, kws, kvs = parse_args(ast, ls)
+            vk, v = 'call', ast:expr_method_call(v, key, args, kws, kvs)
         elseif ls.token == '(' or ls.token == 'TK_string' or ls.token == '{' then
-            local args, kws, kvs = parse_args(ast, ls, true)
+            local args, kws, kvs = parse_args(ast, ls)
             vk, v = 'call', ast:expr_function_call(v, args, kws, kvs)
         else
             break
@@ -311,9 +311,9 @@ local function parse_repeat(ast, ls, line)
     return ast:repeat_stmt(cond, body, line)
 end
 
-local function expr_keyword(ast, ls, accept_keywords)
+local function expr_keyword(ast, ls)
     local kw, val
-    if ls.token == "TK_name" and accept_keywords and ls:lookahead() == '=' then
+    if ls.token == "TK_name" and ls:lookahead() == '=' then
         local name = lex_str(ls)
         kw = ast:literal(name)
         lex_check(ls, '=')
@@ -323,7 +323,7 @@ local function expr_keyword(ast, ls, accept_keywords)
 end
 
 -- Parse function argument list.
-function parse_args(ast, ls, accept_keywords)
+function parse_args(ast, ls)
     local line = ls.linenumber
     local args = { }
     local kws, kvs
@@ -333,7 +333,7 @@ function parse_args(ast, ls, accept_keywords)
         end
         ls:next()
         while ls.token ~= ')' do
-            local val, kw = expr_keyword(ast, ls, accept_keywords)
+            local val, kw = expr_keyword(ast, ls)
             if kw then
                 if not kws then kws, kvs = {}, {} end
                 kws[#kws+1] = kw
@@ -414,7 +414,7 @@ local function parse_func(ast, ls, line)
         needself = true
         v = expr_field(ast, ls, v)
     end
-    local args, body, proto = parse_body(ast, ls, line, needself, not needself)
+    local args, body, proto = parse_body(ast, ls, line, needself, true)
     return ast:function_decl(v, args, body, proto)
 end
 
