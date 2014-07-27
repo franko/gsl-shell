@@ -5,6 +5,8 @@ local floor, pi = math.floor, math.pi
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
+local f_line_adaptive = require("f-eval-adaptive")
+
 local n_sampling_max = 8192
 local n_sampling_default = 256
 
@@ -49,9 +51,10 @@ function graph.ipathp(f)
    return ln
 end
 
-function graph.fxline(f, xi, xs, n)
-   n = check_sampling(n)
-   return graph.ipath(iter.sample(f, xi, xs, n))
+function graph.fxline(f, xi, xs)
+   return f_line_adaptive(f, xi, xs)
+   -- numpoints = check_sampling(numpoints)
+   -- return graph.ipath(iter.sample(f, xi, xs, numpoints))
 end
 
 function graph.filine(f, a, b)
