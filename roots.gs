@@ -1,4 +1,5 @@
 use "math"
+use "quad-poly-approx"
 
 local function is_between(x, a, b)
     if b < a then a, b = b, a end
@@ -55,25 +56,9 @@ local function segment_root_brent(f, a, b, eps, del)
     return brent(f, a, fa, b, fb, eps, del)
 end
 
-local function lagrange_quad_est(x0, f0, x1, f1, x2, f2)
-    local dx01, dx12, dx20 = x0 - x1, x1 - x2, x2 - x0
-    local a0 = - f0 / (dx01 * dx20)
-    local a1 = - f1 / (dx01 * dx12)
-    local a2 = - f2 / (dx20 * dx12)
-    return a0, a1, a2
-end
-
-local function lagrange_quad_eval(a0, a1, a2, x0, x1, x2, x)
-    return a0 * (x-x1)*(x-x2) + a1 * (x-x0)*(x-x2) + a2 * (x-x0)*(x-x1)
-end
-
 local function solver_add_root(s, x)
     local rs = s.roots
     rs[#rs+1] = x
-end
-
-local function solver_get_random(s)
-    return s.rng::get()
 end
 
 local function root_locate (s, xa, fa, xb, fb)
@@ -86,24 +71,6 @@ local function root_locate (s, xa, fa, xb, fb)
     end
 end
 
-local function f_quad_min (a0, a1, a2, x0, x1, x2)
-    local a = 2*(a0+a1+a2)
-    if a ~= 0 then
-        return (a0*(x1+x2) + a1*(x0+x2) + a2*(x0+x1)) / a
-    end
-end
-
-local function f_approx_test(s, fabsm, a0, a1, a2, x0, xm, x1)
-    for i=1, 8 do
-        local r = solver_get_random(s)
-        local x = x0 + r * (x1 - x0)
-        local fx = s.f(x)
-        local fe = lagrange_quad_eval(a0, a1, a2, x0, xm, x1, x)
-        if abs(fx - fe) > 0.01 * fabsm then return false end
-    end
-    return true
-end
-
 local function interval_roots (s, x0, f0, x1, f1)
     local f = s.f
     local xm = (x0+x1)/2
@@ -112,7 +79,7 @@ local function interval_roots (s, x0, f0, x1, f1)
 
     local fabsm = max(abs(f0), abs(f1), abs(fm))
 
-    if f_approx_test(s, fabsm, a0, a1, a2, x0, xm, x1) then
+    if f_approx_test(s.f, fabsm, a0, a1, a2, x0, xm, x1) then
         local xi, fi
         local xmin = f_quad_min (a0, a1, a2, x0, xm, x1)
         if xmin and xmin < x1 and xmin > x0 then
@@ -150,7 +117,6 @@ end
 local function solver_interval_solve(s, x0, x1, roots)
     local f = s.f
     s.roots = roots or {}
-    s.rng = s.rng or rng.new()
     interval_roots(s, x0, f(x0), x1, f(x1))
     if f(x1) == 0 then solver_add_root(s, x1) end
     return s.roots

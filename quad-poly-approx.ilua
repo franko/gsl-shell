@@ -1,0 +1,8 @@
+function lagrange_quad_est(x0, f0, x1, f1, x2, f2)
+	"Return tree coefficients for the Lagrange quadratic poly approx of (x, y) values "
+function lagrange_quad_eval(a0, a1, a2, x0, x1, x2, x)
+	"Evaluate Lagrange quadratic poly of points (x0, x1, x2) at x"
+function f_approx_test(f, fabsm, a0, a1, a2, x0, xm, x1)
+	"Test if the Lagrange quadratic poly approximates the function f using random points"
+function f_quad_min(a0, a1, a2, x0, x1, x2)
+	"Return the x that corresponds to the minimum of Lagrange quadratic poly approximation"
