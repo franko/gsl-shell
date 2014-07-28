@@ -19,8 +19,10 @@ local function f_approx_test(f, fabsm, a0, a1, a2, x0, xm, x1)
         local r = q_rng::get()
         local x = x0 + r * (x1 - x0)
         local fx = f(x)
-        local fe = lagrange_quad_eval(a0, a1, a2, x0, xm, x1, x)
-        if abs(fx - fe) > 0.01 * fabsm then return false end
+        if fx then
+            local fe = lagrange_quad_eval(a0, a1, a2, x0, xm, x1, x)
+            if abs(fx - fe) > 0.01 * fabsm then return false end
+        end
     end
     return true
 end
