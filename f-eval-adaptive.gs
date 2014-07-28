@@ -3,6 +3,8 @@ use "quad-poly-approx"
 
 local pcall, type = pcall, type
 
+local my_rng = rng.new()
+
 local function fwrap(f)
     return function(x)
         local success, y = pcall(f, x)
@@ -58,7 +60,7 @@ local function f_eval_points(s, x0, f0, x1, f1, depth)
         local A0 = a0 + a1 + a2
         local n
         if A0 ~= 0 then
-            local ytol = max(abs(f1 - f0), abs(fm - f0)) / 2000
+            local ytol = (s.fmax - s.fmin) / 2500
             local dx_qs = sqrt(4 * abs(ytol / A0))
             n = math.ceil((x1 - x0) / dx_qs)
         else
@@ -71,6 +73,18 @@ local function f_eval_points(s, x0, f0, x1, f1, depth)
     end
 end
 
+local function f_estimate_range(f, x0, f0, x1, f1)
+    local fmin, fmax = min(f0, f1), max(f0, f1)
+    for i = 1, 64 do
+        local x = x0 + my_rng::get() * (x1 - x0)
+        local y = f(x)
+        if y then
+            fmin, fmax = min(fmin, y), max(fmax, y)
+        end
+    end
+    return fmin, fmax
+end
+
 local function f_line_adaptive(f_raw, xi, xs)
     assert(xs > xi, "initial point should be on the left of ending point")
     local line = graph.path()
@@ -79,6 +93,7 @@ local function f_line_adaptive(f_raw, xi, xs)
     local fi = fn_extreme_eval(f, xi, xs)
     local fs = fn_extreme_eval(f, xs, xi)
     if fi and fs then
+        s.fmin, s.fmax = f_estimate_range(f, xi, fi, xs, fs)
         f_eval_points(s, xi, fi, xs, fs, 0)
         line::line_to(xs, fs)
         return line
