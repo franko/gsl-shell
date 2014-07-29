@@ -7,16 +7,12 @@ local n_sampling_max = 8192
 local n_sampling_default = 256
 
 local function check_sampling(n)
-   if n then
-      if n <= 1 then
-         error("sampling points should be > 1")
-      elseif n > n_sampling_max then
-         print("warning: too many sampling points requested, " ..
-              "limiting to " .. n_sampling_max)
-         n = n_sampling_max
-      end
-   else
-      n = n_sampling_default
+   if n <= 1 then
+      return n_sampling_default
+   elseif n > n_sampling_max then
+      print("warning: too many sampling points requested, " ..
+           "limiting to " .. n_sampling_max)
+      n = n_sampling_max
    end
    return n
 end
@@ -47,10 +43,17 @@ function graph.ipathp(f)
    return ln
 end
 
-function graph.fxline(f, xi, xs)
-   return f_line_adaptive(f, xi, xs)
-   -- numpoints = check_sampling(numpoints)
-   -- return graph.ipath(iter.sample(f, xi, xs, numpoints))
+local function create_line(f, xi, xs, adaptive, n)
+   if adaptive then
+      return f_line_adaptive(f, xi, xs)
+   else
+      return graph.ipath(iter.sample(f, xi, xs, n))
+   end
+end
+
+function graph.fxline(f, xi, xs, adaptive = true, numpoints = 0)
+   local n = check_sampling(numpoints)
+   return create_line(f, xi, xs, adaptive and numpoints <= 1, n)
 end
 
 function graph.filine(f, a, b)
@@ -65,17 +68,18 @@ function graph.xyline(x, y)
    return ln
 end
 
-function graph.fxplot(f, xi, xs, color, n)
-   n = check_sampling(n)
-   local p = graph.plot()
-   p::addline(graph.ipathp(iter.sample(f, xi, xs, n)), color)
+function graph.fxplot(f, xi, xs, title = false, adaptive = true, color = "red", numpoints = 0)
+   local n = check_sampling(numpoints)
+   local p = graph.plot(type(title) == "string" and title or nil)
+   local line = create_line(f, xi, xs, adaptive and numpoints <= 1, n)
+   p::addline(line, color)
    p::show()
    return p
 end
 
-function graph.fiplot(f, a, b, color)
-   if not b then a, b, color = 1, a, b end
-   local p = graph.plot()
+function graph.fiplot(f, a, b, title = false, color = "red")
+   if not b then a, b = 1, a end
+   local p = graph.plot(type(title) == "string" and title or nil)
    p::addline(graph.ipathp(iter.isample(f, a, b)), color)
    p::show()
    return p
@@ -89,15 +93,15 @@ local function add_square(p, lx, by, rx, ty)
    p::close()
 end
 
-function graph.fibars(f, a, b, color, fill)
+function graph.fibars(f, a, b, title = false, color = "black", fill = false)
    local wf = 0.5 * (fill or 1)
-   local p = graph.plot()
+   local p = graph.plot(type(title) == "string" and title or nil)
    local sh = graph.path()
    for k = a, b do
       local y = f(k)
       add_square(sh, k-wf, 0, k+wf, y)
    end
-   p::add(sh, color or "black")
+   p::add(sh, color)
    p::show()
    return p
 end
