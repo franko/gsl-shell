@@ -41,13 +41,13 @@ local function fn_extreme_eval(f, x, x1)
         y = f(x)
         i = i + 1
     end
-    return y
+    return x, y
 end
 
 local function f_eval_points(s, x0, f0, x1, f1, depth)
     local f = s.f
-    local xm = (x0+x1)/2
-    local fm = fn_extreme_eval(f, xm, x1)
+    local xm0 = (x0+x1)/2
+    local xm, fm = fn_extreme_eval(f, xm0, x1)
     if not fm then return end
 
     local a0, a1, a2 = lagrange_quad_est(x0, f0, xm, fm, x1, f1)
@@ -90,8 +90,9 @@ local function f_line_adaptive(f_raw, xi, xs)
     local line = graph.path()
     local f = fwrap(f_raw)
     local s = { f = f, line = line, restart = true }
-    local fi = fn_extreme_eval(f, xi, xs)
-    local fs = fn_extreme_eval(f, xs, xi)
+    local fi, fs
+    xi, fi = fn_extreme_eval(f, xi, xs)
+    xs, fs = fn_extreme_eval(f, xs, xi)
     if fi and fs then
         s.fmin, s.fmax = f_estimate_range(f, xi, fi, xs, fs)
         f_eval_points(s, xi, fi, xs, fs, 0)
