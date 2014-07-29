@@ -1,0 +1,24 @@
+function tobit(x)
+	"Normalizes a number to the numeric range for bit operations and returns it"
+function tohex(x [,n])
+	"Converts its first argument to a hex string"
+function bnot(a)
+	"Returns the bitwise \"not\" of its argument"
+function band(x1 [, x2, ...])
+	"Returns the bitwise \"and\" of all of its arguments"
+function bor(x1 [, x2, ...])
+	"Returns the bitwise \"or\" of all of its arguments"
+function bxor(x1 [, x2, ...])
+	"Returns the bitwise \"xor\" of all of its arguments"
+function lshift(x, n)
+	"Returns the bitwise logical left-shift by the given number of bits given by the second argument"
+function rshift(x, n)
+	"Returns the bitwise logical right-shift by the given number of bits given by the second argument"
+function arshift(x, n)
+	"Returns the bitwise arithmetic right-shift by the given number of bits given by the second argument"
+function rol(x, n)
+	"Returns the bitwise left rotation by the given number of bits given by the second argument"
+function ror(x, n)
+	"Returns the bitwise right rotation by the given number of bits given by the second argument"
+function bswap(x)
+	"Swaps the bytes of its argument and returns it"
