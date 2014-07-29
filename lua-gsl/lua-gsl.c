@@ -21,13 +21,10 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-// #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
 
 #include "lua-gsl.h"
 #include "gs-types.h"
-//#include "lua-utils.h"
-//#include "fatal.h"
 
 #include "gdt/gdt_table.h"
 
