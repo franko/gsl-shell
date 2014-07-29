@@ -1,5 +1,7 @@
 -- load initialization files for GSL Shell
 
+dofile("lang/lang-runtime.lua")
+
 require('init')
 require('iter')
 require('matrix')
@@ -23,8 +25,6 @@ require('gdt-plot')
 require('gdt-lm')
 require('gdt-interp')
 require('linfit')
-
-dofile("lang/lang-runtime.lua")
 
 num.bspline = require 'bspline'
 
