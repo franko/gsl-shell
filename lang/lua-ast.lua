@@ -4,6 +4,8 @@ local lua_interface = require('lua-interface')
 
 local build, ident, literal, logical, binop, field, tget, empty_table = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget, syntax.empty_table
 
+local context_free, linear_ctxfree = libexpr.context_free, libexpr.linear_ctxfree
+
 local function add_pre_stmts(stmt, pre_stmts)
     if not stmt.pre_stmts then stmt.pre_stmts = { } end
     local n = #stmt.pre_stmts
@@ -40,20 +42,20 @@ local function recollect_stmts(stmts)
     return ls
 end
 
-local function var_context(var, context)
-    local ast, for_scope = context.ast, context.for_scope
-    local name = var.name
-    local result, scope = ast:lookup(name)
-    local vinfo = result == "local" and scope.vars[name]
-    if result == "local" and vinfo.num_const == true then
-        if scope == for_scope then
-            return true, false, vinfo.value
-        else
-            return false, true
-        end
-    end
-    return false, false
-end
+-- local function var_context(var, context)
+--     local ast, for_scope = context.ast, context.for_scope
+--     local name = var.name
+--     local result, scope = ast:lookup(name)
+--     local vinfo = result == "local" and scope.vars[name]
+--     if result == "local" and vinfo.num_const == true then
+--         if scope == for_scope then
+--             return true, false, vinfo.value
+--         else
+--             return false, true
+--         end
+--     end
+--     return false, false
+-- end
 
 local AST = { }
 
@@ -221,10 +223,9 @@ function AST:commit_generated_stmts()
 end
 
 function AST.expr_index_dual(ast, v, row, col, line)
-    local ctx_data = ast.self_context
     local node = build("MatrixIndex", { object = v, row = row, col = col, safe = false, line = line})
     local one = literal(1)
-    if libexpr.context_free(row, var_context, ctx_data) and libexpr.context_free(col, var_context, ctx_data) then
+    if context_free(v, ast) and context_free(row, ast, true) and context_free(col, ast, true) then
         local rowcheck = bound_check(node, row, one, field(v, "size1"), line)
         local colcheck = bound_check(node, col, one, field(v, "size2"), line)
         ast:add_generated_stmt(colcheck)
@@ -378,7 +379,7 @@ function AST.for_post_process(ast, body, var, init, last, step)
     while body[i] do
         local stmt = body[i]
         if stmt.kind == "CheckIndex" then
-            local index, lin, coeff = libexpr.linear_ctxfree(stmt.index, var, var_context, ctx_data)
+            local index, lin, coeff = linear_ctxfree(stmt.index, var, ast)
             if lin then
                 local index_inf = libexpr.eval(index, var, init)
                 local index_sup = libexpr.eval(index, var, last)
@@ -424,10 +425,10 @@ end
 -- The functions fscope_start/end will be called appropriately before and after
 -- to ensure that variables are declared in the correct lexical scope.
 function AST.var_declare(ast, name, value)
-    local num_const = value and libexpr.context_free(value, var_context, ast.self_context)
+    local num_const = value and context_free(value, ast, true)
     ast:ident_report(name)
     local id = ident(name)
-    local vinfo = { id = id, num_const = num_const, value = value }
+    local vinfo = { id = id, num_const = num_const, value = value, mutable = false }
     ast.current.vars[name] = vinfo
     return id
 end
@@ -435,7 +436,7 @@ end
 function AST.var_declare_num(ast, name)
     ast:ident_report(name)
     local id = ident(name)
-    local vinfo = { id = id, num_const = true }
+    local vinfo = { id = id, num_const = true, mutable = false }
     ast.current.vars[name] = vinfo
     return id
 end
@@ -475,6 +476,17 @@ function AST.lookup(ast, name)
     return false
 end
 
+function AST.lookup_local(ast, name)
+    local current = ast.current
+    while current do
+        local vinfo = current.vars[name]
+        if vinfo then
+            return vinfo, current
+        end
+        current = current.parent
+    end
+end
+
 function AST.add_used_var(ast, mod, name)
     local vids = mod.vids
     for k = 1, #vids do
@@ -493,6 +505,7 @@ function AST.mark_mutable(ast, vars)
             if usage == "local" then
                 local vinfo = scope.vars[v.name]
                 vinfo.num_const = false
+                vinfo.mutable = true
                 vinfo.value = false
             end
         end
@@ -508,7 +521,6 @@ local ASTClass = { __index = AST }
 
 local function new_ast(lex_genid)
     local ast = { gen_stmts = { }, for_stack = { } , lex_genid = lex_genid }
-    ast.self_context = { ast = ast }
     return setmetatable(ast, ASTClass)
 end
 

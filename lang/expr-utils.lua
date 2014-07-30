@@ -78,82 +78,108 @@ local function unop(op, arg)
     return build("UnaryExpression", { operator = op, argument = arg })
 end
 
-local function linear_ctxfree(expr, var, ctx, ctx_data)
+local function linear_ctxfree(expr, var, ast)
     if is_ident(expr) then
-        if expr.name == var.name then
+        local expr_var_name = expr.name
+        if expr_var_name == var.name then
             return expr, true, 1
         else
-            local for_local, outer_local, var_value = ctx(expr, ctx_data)
-            if for_local and var_value then
-                return linear_ctxfree(var_value, var, ctx, ctx_data)
-            elseif outer_local then
+            local current_scope = ast.current
+            local vinfo, var_scope = ast:lookup_local(expr_var_name)
+            local num_const = vinfo and vinfo.num_const
+            if num_const and var_scope == current_scope then
+                -- The variable is a local, numeric, non-mutable variable in
+                -- the current scope. We take its value and verifies recursively
+                -- that it is linear.
+                return linear_ctxfree(vinfo.value, var, ast)
+            elseif num_const then
+                -- The variable is a local in an outer scope.
                 return expr, true, 0
             end
         end
     elseif is_const(expr) then
         return expr, true, 0
     elseif is_binop(expr, "+") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
-        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ast)
+        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ast)
         if alin and blin then
            return binop("+", aexp, bexp), true, acoeff + bcoeff
         end
     elseif is_binop(expr, "-") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
-        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ast)
+        local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ast)
         if alin and blin then
            return binop("-", aexp, bexp), true, acoeff - bcoeff
         end
     elseif is_binop(expr, "*") then
         local aconst = is_const(expr.left)
         if aconst then
-            local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ctx, ctx_data)
+            local bexp, blin, bcoeff = linear_ctxfree(expr.right, var, ast)
             if blin then return binop("*", literal(aconst), bexp), true, aconst * bcoeff end
         else
-            local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
+            local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ast)
             if alin then
                 local bconst = is_const(expr.right)
                 if bconst then return binop("*", aexp, literal(bconst)), true, acoeff * bconst end
             end
         end
     elseif is_binop(expr, "/") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ctx, ctx_data)
+        local aexp, alin, acoeff = linear_ctxfree(expr.left, var, ast)
         local bconst = is_const(expr.right)
         if bconst and alin then
             return binop("/", aexp, literal(bconst)), true, acoeff / bconst
         end
     elseif is_unop(expr, "-") then
-        local aexp, alin, acoeff = linear_ctxfree(expr.argument, var, ctx, ctx_data)
+        local aexp, alin, acoeff = linear_ctxfree(expr.argument, var, ast)
         if alin then return unop("-", aexp), true, -acoeff end
     end
     return false
 end
 
-local function expr_is_context_free(expr, ctx, ctx_data)
+local function var_constness(vinfo, require_numeric)
+    if require_numeric then
+        return vinfo and vinfo.num_const
+    else
+        return vinfo and (not vinfo.mutable)
+    end
+end
+
+local function expr_is_context_free(expr, ast, require_numeric)
     if is_ident(expr) then
-        local for_local, outer_local, var_value = ctx(expr, ctx_data)
-        if for_local and var_value then
-            return expr_is_context_free(var_value, ctx, ctx_data)
-        elseif outer_local then
+        local expr_var_name = expr.name
+        local current_scope = ast.current
+        local vinfo, var_scope = ast:lookup_local(expr_var_name)
+        local is_const = var_constness(vinfo, require_numeric)
+        if is_const and current_scope == var_scope then
+            local var_value = vinfo.value
+            if not var_value then
+                return expr
+            else
+                return expr_is_context_free(vinfo.value, ast, require_numeric)
+            end
+        elseif is_const then
             return expr
         end
     elseif expr.kind == "Literal" then
         return expr
     elseif expr.kind == "BinaryExpression" then
-        local a = expr_is_context_free(expr.left, ctx, ctx_data)
-        local b = expr_is_context_free(expr.right, ctx, ctx_data)
+        local a = expr_is_context_free(expr.left, ast, require_numeric)
+        local b = expr_is_context_free(expr.right, ast, require_numeric)
         if a and b then return binop(expr.operator, a, b) end
     elseif expr.kind == "UnaryExpression" then
-        local a = expr_is_context_free(expr.argument, ctx, ctx_data)
+        local a = expr_is_context_free(expr.argument, ast, require_numeric)
         if a then return unop(expr.operator, a) end
     elseif expr.kind == "MemberExpression" then
-        local _, obj_outer = ctx(expr.object, ctx_data)
-        if obj_outer then
-            local prop_outer = not expr.computed
+        local obj_resolve = expr_is_context_free(expr.object, ast, require_numeric)
+        if obj_resolve then
             if expr.computed then
-                _, prop_outer = ctx(expr.prop_outer, ctx_data)
+                local prop_resolve = expr_is_context_free(expr.property, ast, require_numeric)
+                if prop_resolve then
+                    return tget(obj_resolve, prop_resolve)
+                end
+            else
+                return tget(obj_resolve, expr.property)
             end
-            return prop_outer and expr
         end
     end
     return false
