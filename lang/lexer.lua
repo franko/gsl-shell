@@ -371,9 +371,8 @@ local function llex(ls)
             if ls.current ~= '=' then return '~' else nextchar(ls); return 'TK_ne' end
         elseif current == ':' then
             nextchar(ls)
-            -- If the lexer find ':' we return it as a char but if we find '::' we
-            -- return TK_resolve.
             if ls.current == ':' then
+                -- Recognize the '::' element.
                 nextchar(ls)
                 return 'TK_resolve'
             end
