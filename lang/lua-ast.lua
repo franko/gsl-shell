@@ -5,6 +5,7 @@ local lua_interface = require('lua-interface')
 local build, ident, literal, logical, binop, field, tget, empty_table = syntax.build, syntax.ident, syntax.literal, syntax.logical, syntax.binop, syntax.field, syntax.tget, syntax.empty_table
 
 local context_free, linear_ctxfree = libexpr.context_free, libexpr.linear_ctxfree
+local var_const, var_num_const = libexpr.const_predicate, libexpr.num_const_predicate
 
 local function add_pre_stmts(stmt, pre_stmts)
     if not stmt.pre_stmts then stmt.pre_stmts = { } end
@@ -41,21 +42,6 @@ local function recollect_stmts(stmts)
     end
     return ls
 end
-
--- local function var_context(var, context)
---     local ast, for_scope = context.ast, context.for_scope
---     local name = var.name
---     local result, scope = ast:lookup(name)
---     local vinfo = result == "local" and scope.vars[name]
---     if result == "local" and vinfo.num_const == true then
---         if scope == for_scope then
---             return true, false, vinfo.value
---         else
---             return false, true
---         end
---     end
---     return false, false
--- end
 
 local AST = { }
 
@@ -225,7 +211,7 @@ end
 function AST.expr_index_dual(ast, v, row, col, line)
     local node = build("MatrixIndex", { object = v, row = row, col = col, safe = false, line = line})
     local one = literal(1)
-    if context_free(v, ast) and context_free(row, ast, true) and context_free(col, ast, true) then
+    if context_free(v, ast, var_const) and context_free(row, ast, var_num_const) and context_free(col, ast, var_num_const) then
         local rowcheck = bound_check(node, row, one, field(v, "size1"), line)
         local colcheck = bound_check(node, col, one, field(v, "size2"), line)
         ast:add_generated_stmt(colcheck)
@@ -373,16 +359,16 @@ local function check_index(index, inf, sup, line)
 end
 
 function AST.for_post_process(ast, body, var, init, last, step)
-    local ctx_data = { ast = ast, for_scope = ast.current }
     local rstmts = { }
     local i = 1
     while body[i] do
         local stmt = body[i]
         if stmt.kind == "CheckIndex" then
-            local index, lin, coeff = linear_ctxfree(stmt.index, var, ast)
+            local index_eval = libexpr.eval(stmt.index, ast)
+            local index, lin, coeff = linear_ctxfree(index_eval, var, ast)
             if lin then
-                local index_inf = libexpr.eval(index, var, init)
-                local index_sup = libexpr.eval(index, var, last)
+                local index_inf = libexpr.eval_subst(index, var, init)
+                local index_sup = libexpr.eval_subst(index, var, last)
                 if coeff < 0 then index_inf, index_sup = index_sup, index_inf end
                 local icheck = check_index(index_inf, stmt.inf, nil, stmt.line)
                 if icheck then rstmts[#rstmts+1] = icheck end
@@ -425,7 +411,7 @@ end
 -- The functions fscope_start/end will be called appropriately before and after
 -- to ensure that variables are declared in the correct lexical scope.
 function AST.var_declare(ast, name, value)
-    local num_const = value and context_free(value, ast, true)
+    local num_const = value and context_free(value, ast, var_num_const)
     ast:ident_report(name)
     local id = ident(name)
     local vinfo = { id = id, num_const = num_const, value = value, mutable = false }

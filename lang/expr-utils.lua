@@ -1,4 +1,5 @@
-local build = require('syntax').build
+local syntax = require('syntax')
+local build, tget, field = syntax.build, syntax.tget, syntax.field
 
 local function is_ident(node)
     return node.kind == "Identifier"
@@ -84,15 +85,9 @@ local function linear_ctxfree(expr, var, ast)
         if expr_var_name == var.name then
             return expr, true, 1
         else
-            local current_scope = ast.current
             local vinfo, var_scope = ast:lookup_local(expr_var_name)
             local num_const = vinfo and vinfo.num_const
-            if num_const and var_scope == current_scope then
-                -- The variable is a local, numeric, non-mutable variable in
-                -- the current scope. We take its value and verifies recursively
-                -- that it is linear.
-                return linear_ctxfree(vinfo.value, var, ast)
-            elseif num_const then
+            if num_const and var_scope ~= ast.current then
                 -- The variable is a local in an outer scope.
                 return expr, true, 0
             end
@@ -136,44 +131,34 @@ local function linear_ctxfree(expr, var, ast)
     return false
 end
 
-local function var_constness(vinfo, require_numeric)
-    if require_numeric then
-        return vinfo and vinfo.num_const
-    else
-        return vinfo and (not vinfo.mutable)
-    end
+local function var_const(vinfo)
+    return vinfo and (not vinfo.mutable)
 end
 
-local function expr_is_context_free(expr, ast, require_numeric)
+local function var_num_const(vinfo)
+    return vinfo and vinfo.num_const
+end
+
+local function expr_is_context_free(expr, ast, var_predicate)
     if is_ident(expr) then
-        local expr_var_name = expr.name
-        local current_scope = ast.current
-        local vinfo, var_scope = ast:lookup_local(expr_var_name)
-        local is_const = var_constness(vinfo, require_numeric)
-        if is_const and current_scope == var_scope then
-            local var_value = vinfo.value
-            if not var_value then
-                return expr
-            else
-                return expr_is_context_free(vinfo.value, ast, require_numeric)
-            end
-        elseif is_const then
+        local vinfo, var_scope = ast:lookup_local(expr.name)
+        if var_predicate(vinfo) then
             return expr
         end
-    elseif expr.kind == "Literal" then
+    elseif expr.kind == "Literal" and type(expr.value) == "number" then
         return expr
     elseif expr.kind == "BinaryExpression" then
-        local a = expr_is_context_free(expr.left, ast, require_numeric)
-        local b = expr_is_context_free(expr.right, ast, require_numeric)
+        local a = expr_is_context_free(expr.left, ast, var_predicate)
+        local b = expr_is_context_free(expr.right, ast, var_predicate)
         if a and b then return binop(expr.operator, a, b) end
     elseif expr.kind == "UnaryExpression" then
-        local a = expr_is_context_free(expr.argument, ast, require_numeric)
+        local a = expr_is_context_free(expr.argument, ast, var_predicate)
         if a then return unop(expr.operator, a) end
     elseif expr.kind == "MemberExpression" then
-        local obj_resolve = expr_is_context_free(expr.object, ast, require_numeric)
+        local obj_resolve = expr_is_context_free(expr.object, ast, var_const)
         if obj_resolve then
             if expr.computed then
-                local prop_resolve = expr_is_context_free(expr.property, ast, require_numeric)
+                local prop_resolve = expr_is_context_free(expr.property, ast, var_const)
                 if prop_resolve then
                     return tget(obj_resolve, prop_resolve)
                 end
@@ -185,20 +170,56 @@ local function expr_is_context_free(expr, ast, require_numeric)
     return false
 end
 
-local function expr_eval(expr, var, value)
+local function expr_eval_subst(expr, var, value)
     if is_ident(expr) and expr.name == var.name then
         return value
     elseif expr.kind == "BinaryExpression" then
-        local left = expr_eval(expr.left, var, value)
-        local right = expr_eval(expr.right, var, value)
+        local left = expr_eval_subst(expr.left, var, value)
+        local right = expr_eval_subst(expr.right, var, value)
         return binop(expr.operator, left, right)
     elseif expr.kind == "UnaryExpression" then
-        local arg = expr_eval(expr.argument, var, value)
+        local arg = expr_eval_subst(expr.argument, var, value)
         return unop(expr.operator, arg)
+    elseif expr.kind == "MemberExpression" then
+        local obj_resolve = expr_eval_subst(expr.object, var, value)
+        if expr.computed then
+            local prop_resolve = expr_eval_subst(expr.property, var, value)
+            return tget(obj_resolve, prop_resolve)
+        else
+            return field(obj_resolve, expr.property.name)
+        end
     else
         return expr
-        -- TODO: scan MemberExpression
     end
 end
 
-return { is_const = is_const, linear_ctxfree = linear_ctxfree, context_free  = expr_is_context_free, eval = expr_eval }
+local function expr_eval(expr, ast)
+    if is_ident(expr) then
+        local expr_var_name = expr.name
+        local vinfo, var_scope = ast:lookup_local(expr_var_name)
+        local num_const = vinfo and vinfo.num_const
+        if num_const and var_scope == ast.current and vinfo.value then
+            return expr_eval(vinfo.value, ast)
+        end
+        return expr
+    elseif expr.kind == "BinaryExpression" then
+        local left = expr_eval(expr.left, ast)
+        local right = expr_eval(expr.right, ast)
+        return binop(expr.operator, left, right)
+    elseif expr.kind == "UnaryExpression" then
+        local arg = expr_eval(expr.argument, ast)
+        return unop(expr.operator, arg)
+    elseif expr.kind == "MemberExpression" then
+        local obj_resolve = expr_eval(expr.object, ast)
+        if expr.computed then
+            local prop_resolve = expr_eval(expr.property, ast)
+            return tget(obj_resolve, prop_resolve)
+        else
+            return field(obj_resolve, expr.property.name)
+        end
+    else
+        return expr
+    end
+end
+
+return { is_const = is_const, linear_ctxfree = linear_ctxfree, context_free  = expr_is_context_free, eval_subst = expr_eval_subst, eval = expr_eval, const_predicate = var_const, num_const_predicate = var_num_const }
