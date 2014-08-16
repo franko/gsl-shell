@@ -45,30 +45,25 @@ pthread_mutex_t agg_mutex[1];
 void
 graph_close_windows (lua_State *L)
 {
-    window_index_apply_all (L, app_window_hooks->close);
+    window_index_apply_all(L, app_window_hooks->close);
 }
 
 void
 graph_wait_windows (lua_State *L)
 {
-    window_index_apply_all (L, app_window_hooks->wait);
+    window_index_apply_all(L, app_window_hooks->wait);
 }
 
 void
 register_graph (lua_State *L)
 {
-    pthread_mutex_init (agg_mutex, NULL);
-
-    window_registry_prepare (L);
-
-    luaL_register (L, MLUA_GRAPHLIBNAME, methods_dummy);
-
-    draw_register (L);
-    text_register (L);
-    app_window_hooks->register_module (L);
-    plot_register (L);
-
-    initialize_fonts (L);
-
+    pthread_mutex_init(agg_mutex, NULL);
+    window_registry_prepare(L);
+    luaL_register(L, MLUA_GRAPHLIBNAME, methods_dummy);
+    draw_register(L);
+    text_register(L);
+    app_window_hooks->register_module(L);
+    plot_register(L);
+    initialize_fonts(L);
     lua_pop(L, 1);
 }
