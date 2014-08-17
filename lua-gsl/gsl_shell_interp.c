@@ -10,8 +10,6 @@
 #include "lang/language.h"
 #include "lang/lua-language-gs.h"
 
-gsl_shell_interp *global_gs;
-
 static int report_error_msg(gsl_shell_interp *gs, int status)
 {
     lua_State* L = gs->L;
@@ -140,7 +138,6 @@ gsl_shell_interp_init(gsl_shell_interp *gs)
     gs->L = NULL;
     gs->graphics = NULL;
     pthread_mutex_init(&gs->exec_mutex, NULL);
-    pthread_mutex_init(&gs->shutdown_mutex, NULL);
     str_init(gs->m_error_msg, 64);
 }
 
@@ -148,7 +145,6 @@ void
 gsl_shell_interp_free(gsl_shell_interp *gs)
 {
     pthread_mutex_destroy (&gs->exec_mutex);
-    pthread_mutex_destroy (&gs->shutdown_mutex);
     str_free(gs->m_error_msg);
 }
 
@@ -173,8 +169,6 @@ gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *graphics)
         return LUA_ERRRUN;
     }
 
-    gs->is_shutting_down = 0;
-    global_gs = gs;
     return 0;
 }
 
@@ -353,8 +347,6 @@ gsl_shell_interp_close(gsl_shell_interp *gs)
 void
 gsl_shell_interp_close_with_graph (gsl_shell_interp* gs, int send_close_req)
 {
-    pthread_mutex_lock (&gs->shutdown_mutex);
-    gs->is_shutting_down = 1;
     pthread_mutex_lock(&gs->exec_mutex);
     if (send_close_req) {
         gs->graphics->close_windows(gs->L);
@@ -363,6 +355,5 @@ gsl_shell_interp_close_with_graph (gsl_shell_interp* gs, int send_close_req)
     }
     lua_close(gs->L);
     gs->L = NULL;
-    pthread_mutex_unlock(&gs->shutdown_mutex);
     pthread_mutex_unlock(&gs->exec_mutex);
 }
