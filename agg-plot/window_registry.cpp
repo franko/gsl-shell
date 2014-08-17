@@ -96,6 +96,34 @@ window_index_count (lua_State *L)
     return count;
 }
 
+/* A C function should be given in the top of the stack. The function
+   take a window as argument and return a boolean. If it does returns
+   true the windows will be removed. */
+void
+window_index_remove_fun(lua_State *L)
+{
+    lua_getfield(L, LUA_REGISTRYINDEX, refs_tname);
+    lua_getfield(L, LUA_REGISTRYINDEX, registry_tname);
+    int n = lua_objlen(L, -1);
+    for (int i = 1; i <= n; i++) {
+        lua_rawgeti(L, -1, i); /* Retrieve the window corresponding to index i. */
+        lua_pushvalue(L, -4); /* Push the C function. */
+        lua_pushvalue(L, -2); /* Push the Window, can be nil. */
+        lua_call(L, 1, 1);
+        int remove = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        if (remove) {
+            lua_pushnil(L);
+            lua_rawset(L, -4); /* Set the reference to Window to nil. */
+            lua_pushnil(L);
+            lua_rawseti(L, -2, i); /* Eliminate the windows from the list. */
+        } else {
+            lua_pop(L, 1);
+        }
+    }
+    lua_pop(L, 3); /* Pop the reference tables, the windows list and the function. */
+}
+
 void
 window_refs_add (lua_State *L, int index, int key_index, int value_index)
 {

@@ -415,13 +415,28 @@ show_window(lua_State* L, window* win)
         luaL_error (L, "%s (reported during %s)", st.error_msg(), st.context());
 }
 
+static int
+window_is_closed(lua_State *L)
+{
+    window *win = object_cast<window>(L, 1, GS_WINDOW);
+    if (win && win->status == canvas_window::closed) {
+        lua_pushboolean(L, 1);
+    } else {
+        lua_pushboolean(L, 0);
+    }
+    return 1;
+}
+
 int
 window_new (lua_State *L)
 {
+    lua_pushcfunction(L, window_is_closed);
+    window_index_remove_fun(L);
+
     const char *spec = lua_tostring (L, 1);
     int defer_show = (lua_gettop(L) >= 2 ? lua_toboolean(L, 2) : 0);
 
-    window *win = push_new_object<window>(L, GS_WINDOW, global_gs);
+    window *win = push_new_object<window>(L, GS_WINDOW);
 
     if (spec)
     {

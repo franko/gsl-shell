@@ -20,15 +20,11 @@ enum eval_result {
 struct __gsl_shell_interp {
     lua_State *L;
     pthread_mutex_t exec_mutex;
-    pthread_mutex_t shutdown_mutex;
-    int is_shutting_down;
     str_t m_error_msg;
     const graphics_lib *graphics;
 };
 
 typedef struct __gsl_shell_interp gsl_shell_interp;
-
-extern gsl_shell_interp *global_gs;
 
 extern void gsl_shell_interp_init(gsl_shell_interp *gs);
 extern void gsl_shell_interp_free(gsl_shell_interp *gs);
