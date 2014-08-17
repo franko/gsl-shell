@@ -2,7 +2,17 @@
 #include "lua-defs.h"
 #include "window_registry.h"
 
+/* The "windows' references" is a Lua table whose keys are windows and whose values
+   are tables of plots indexed by their slot id.
+   For example:
+
+   {[<window1>] = {[1] = <plot1>}, [<window2>] = {[1] = <plot1>, [3] = <plot3>}}.
+
+   The table with plots can contain holes. */
 static char const * const refs_tname = "GSL.oirfs.wp";
+
+/* A Lua table with a list of the active windows (it can contain holes).
+   The index of each window is its "window id". */
 static char const * const registry_tname = "GSL.reg.wins";
 
 void
@@ -96,7 +106,10 @@ window_index_count (lua_State *L)
     return count;
 }
 
-/* A C function should be given in the top of the stack. The function
+/* Removes the closed windows from the windows' list and from the reference
+   table.
+
+   A C function should be given in the top of the stack. The function
    take a window as argument and return a boolean. If it does returns
    true the windows will be removed. */
 void
