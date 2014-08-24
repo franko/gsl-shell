@@ -25,7 +25,7 @@ include makedefs
 
 GSH_BASE_DIR = .
 
-INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
+INCLUDES += -I. $(GSL_INCLUDES) -Igraph -Ilua-gsl
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 CFLAGS += $(LUA_CFLAGS)
@@ -83,7 +83,7 @@ TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI)
 
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
-INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
+INCLUDES += $(PTHREADS_CFLAGS) -Igraph
 LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a $(GSH_LIBDIR)/libluagsl.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
@@ -115,7 +115,7 @@ endif
 
 LIBS += $(GSL_LIBS) -lm
 
-SUBDIRS := $(LUADIR) lang lua-gsl agg-plot gdt
+SUBDIRS := $(LUADIR) lang lua-gsl graph gdt
 FOXGUI_DIR := fox-gui
 
 FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a
@@ -134,7 +134,7 @@ $(GSH_LIBDIR)/libluajit.a: $(LUADIR)
 $(GSH_LIBDIR)/liblang.a: lang
 $(GSH_LIBDIR)/libluagsl.a: lua-gsl
 $(GSH_LIBDIR)/libgdt.a: gdt
-$(GSH_LIBDIR)/libaggplot.a: agg-plot
+$(GSH_LIBDIR)/libaggplot.a: graph
 $(FOXGUI_LIB): $(FOXGUI_DIR)
 $(LUAJIT_SO): $(LUADIR)
 
