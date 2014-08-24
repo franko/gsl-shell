@@ -14,6 +14,7 @@ local genid = require('genid').create()
 
 local matrix_trans = require('matrix-transform')
 local const_eval = require("ast-const-eval")
+local boolean_const_eval = require("ast-boolean-const-eval")
 
 local BC = bc.BC
 
@@ -57,6 +58,15 @@ local EXPR_EMIT_VSNP = { value = true, string = true, number = true, primitive =
 
 -- TGETx/TSETx instructions
 local EXPR_EMIT_VSB  = { value = true, string = true, byte = true }
+
+local function store_bit(cond)
+   return cond and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE
+end
+
+-- Logical XOR (exclusive OR)
+local function xor(a, b)
+   return (a and not b) or (not a and b)
+end
 
 local StatementRule = { }
 local ExpressionRule = { }
@@ -301,7 +311,7 @@ end
 
 function ExpressionRule:LogicalExpression(node, dest)
    local negate = (node.operator == 'or')
-   local lstore = (node.operator == 'or' and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE)
+   local lstore = store_bit(negate)
    local l = genid.new()
    self:test_emit(node.left, l, negate, lstore, dest)
    self:expr_toreg(node.right, dest)
@@ -494,7 +504,7 @@ end
 function TestRule:Literal(node, jmp, negate, store, dest)
    local free = self.ctx.freereg
    local value = node.value
-   if bit.band(store, value and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE) ~= 0 then
+   if bit.band(store, store_bit(value)) ~= 0 then
       self:expr_toreg(node, dest)
       self.ctx:nextreg()
    end
@@ -513,7 +523,7 @@ end
 -- Return true IFF the variable "store" has the EXPR_RESULT_FALSE bit
 -- set. If "negate" is true check the EXPR_RESULT_TRUE bit instead.
 local function has_branch(store, negate)
-   return bit.band(store, negate and EXPR_RESULT_TRUE or EXPR_RESULT_FALSE) ~= 0
+   return bit.band(store, store_bit(negate)) ~= 0
 end
 
 function TestRule:BinaryExpression(node, jmp, negate, store, dest)
@@ -560,21 +570,17 @@ function TestRule:BinaryExpression(node, jmp, negate, store, dest)
 end
 
 function TestRule:UnaryExpression(node, jmp, negate, store, dest)
-   if node.operator == 'not' then
-      self:test_emit(node.argument, jmp, not negate, store, dest)
-      if dest and store ~= 0 then
-         self:op_not(dest, dest)
-      end
+   if node.operator == 'not' and store == 0 then
+      self:test_emit(node.argument, jmp, not negate)
    else
       self:expr_test(node, jmp, negate, store, dest or self.ctx.freereg)
    end
 end
 
 function TestRule:LogicalExpression(node, jmp, negate, store, dest)
-   local o = node.operator
-   local lbit = o == 'and' and EXPR_RESULT_FALSE or EXPR_RESULT_TRUE
-   local lstore = bit.band(store, lbit)
-   local imbranch = (o == 'and' and negate) or (o == 'or' and not negate)
+   local or_operator = (node.operator == "or")
+   local lstore = bit.band(store, store_bit(or_operator))
+   local imbranch = xor(negate, or_operator)
    if imbranch then
       local templ = genid.new()
       self:test_emit(node.left, templ, not negate, lstore, dest)
@@ -960,13 +966,23 @@ local function generate(tree, name)
    -- Emit code to test an expression as a boolean value
    function self:expr_test(node, jmp, negate, store, dest)
       local free = self.ctx.freereg
-      if dest then
-         self:expr_toreg(node, dest)
-      else
-         dest = self:expr_toanyreg(node)
-      end
       local jreg = (store ~= 0 and dest + 1 or free)
-      self.ctx:op_test(negate, dest, jmp, jreg)
+      local const_val = boolean_const_eval(node)
+      if const_val ~= nil then
+         if bit.band(store, store_bit(const_val)) ~= 0 then
+            self.ctx:op_load(dest, const_val)
+         end
+         if xor(negate, not const_val) then
+            self.ctx:jump(jmp, jreg)
+         end
+      else
+         if dest then
+            self:expr_toreg(node, dest)
+         else
+            dest = self:expr_toanyreg(node)
+         end
+         self.ctx:op_test(negate, dest, jmp, jreg)
+      end
       self.ctx.freereg = free
    end
 
