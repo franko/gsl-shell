@@ -65,6 +65,7 @@
 #endif
 
 lua_State *globalL = NULL;
+static gsl_shell_interp *repl_gs = NULL;
 static const char *progname = LUA_PROGNAME;
 
 static void l_message(const char *pname, const char *msg)
@@ -259,7 +260,7 @@ static void laction(int i)
 {
     signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
                          terminate process (default action) */
-    gsl_shell_interp_interrupt(global_gs);
+    gsl_shell_interp_interrupt(repl_gs);
 }
 
 static void dotty(gsl_shell_interp *gs)
@@ -580,6 +581,7 @@ int main(int argc, char **argv)
     initialize_readline();
 #endif
     gsl_shell_interp_init(gs);
+    repl_gs = gs;
     status = gsl_shell_interp_open(gs, graphics);
     if (status != 0) {
         l_message(progname, "failed to initialize gsl shell");

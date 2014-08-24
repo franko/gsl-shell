@@ -433,7 +433,8 @@ end
 
 local function generate_expr(node)
     local gen = generator_new(node)
-    return gen:expr_emit(node)
+    local str = gen:expr_emit(node)
+    return str
 end
 
 return { chunk = generate, expr = generate_expr }

@@ -70,8 +70,8 @@ private:
     ref::node* m_tree;
 
 public:
-    window(gsl_shell_interp* gs, agg::rgba8 bgcol= colors::white):
-        canvas_window(gs, bgcol), m_tree(0)
+    window(agg::rgba8 bgcol= colors::white):
+        canvas_window(bgcol), m_tree(0)
     {
         this->split(".");
     }

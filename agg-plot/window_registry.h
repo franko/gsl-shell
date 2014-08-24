@@ -15,6 +15,7 @@ extern void   window_index_get       (lua_State *L, int id);
 extern void   window_index_remove    (lua_State *L, int id);
 extern void   window_index_apply_all (lua_State *L, lua_CFunction f);
 extern int    window_index_count     (lua_State *L);
+extern void   window_index_remove_fun(lua_State *L);
 
 extern void window_refs_add          (lua_State *L, int index, int key_index,
                                       int value_index);

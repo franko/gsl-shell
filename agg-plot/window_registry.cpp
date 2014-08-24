@@ -2,7 +2,17 @@
 #include "lua-defs.h"
 #include "window_registry.h"
 
+/* The "windows' references" is a Lua table whose keys are windows and whose values
+   are tables of plots indexed by their slot id.
+   For example:
+
+   {[<window1>] = {[1] = <plot1>}, [<window2>] = {[1] = <plot1>, [3] = <plot3>}}.
+
+   The table with plots can contain holes. */
 static char const * const refs_tname = "GSL.oirfs.wp";
+
+/* A Lua table with a list of the active windows (it can contain holes).
+   The index of each window is its "window id". */
 static char const * const registry_tname = "GSL.reg.wins";
 
 void
@@ -94,6 +104,37 @@ window_index_count (lua_State *L)
     lua_pop (L, 1);
 
     return count;
+}
+
+/* Removes the closed windows from the windows' list and from the reference
+   table.
+
+   A C function should be given in the top of the stack. The function
+   take a window as argument and return a boolean. If it does returns
+   true the windows will be removed. */
+void
+window_index_remove_fun(lua_State *L)
+{
+    lua_getfield(L, LUA_REGISTRYINDEX, refs_tname);
+    lua_getfield(L, LUA_REGISTRYINDEX, registry_tname);
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0) {
+        int i = lua_tointeger(L, -2);
+        lua_pushvalue(L, -5); /* Push the C function. */
+        lua_pushvalue(L, -2); /* Push the Window, can be nil. */
+        lua_call(L, 1, 1);
+        int remove = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        if (remove) {
+            lua_pushnil(L);
+            lua_rawset(L, -5); /* Set the reference to Window to nil. */
+            lua_pushnil(L);
+            lua_rawseti(L, -3, i); /* Eliminate the window from the list. */
+        } else {
+            lua_pop(L, 1);
+        }
+    }
+    lua_pop(L, 3); /* Pop the reference tables, the windows list and the function. */
 }
 
 void
