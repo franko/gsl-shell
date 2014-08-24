@@ -5,8 +5,6 @@
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
-#include "lua-gsl.h"
-#include "lua-utils.h"
 #include "lang/language.h"
 #include "lang/lua-language-gs.h"
 
@@ -76,14 +74,8 @@ static int pinit(lua_State *L)
 
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
-    /* TODO: perform other library using a use defined callback. */
-    luaopen_gsl(L);
-    if (gs->graphics) {
-        gs->graphics->init(L);
-    }
     luaopen_language(L);
     lua_gc(L, LUA_GCRESTART, -1);
-    status = dolibrary(L, "gslext");
     return status;
 }
 
@@ -136,7 +128,6 @@ void
 gsl_shell_interp_init(gsl_shell_interp *gs)
 {
     gs->L = NULL;
-    gs->graphics = NULL;
     pthread_mutex_init(&gs->exec_mutex, NULL);
     str_init(gs->m_error_msg, 64);
 }
@@ -149,7 +140,7 @@ gsl_shell_interp_free(gsl_shell_interp *gs)
 }
 
 int
-gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *graphics)
+gsl_shell_interp_open(gsl_shell_interp *gs)
 {
     gs->L = lua_open();  /* create state */
 
@@ -157,8 +148,6 @@ gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *graphics)
         str_copy_c(gs->m_error_msg, "cannot create state: not enough memory");
         return LUA_ERRRUN;
     }
-
-    gs->graphics = graphics;
 
     int status = lua_cpcall(gs->L, pinit, gs);
 
@@ -342,18 +331,4 @@ gsl_shell_interp_close(gsl_shell_interp *gs)
 {
     lua_close(gs->L);
     gs->L = NULL;
-}
-
-void
-gsl_shell_interp_close_with_graph (gsl_shell_interp* gs, int send_close_req)
-{
-    pthread_mutex_lock(&gs->exec_mutex);
-    if (send_close_req) {
-        gs->graphics->close_windows(gs->L);
-    } else {
-        gs->graphics->wait_windows(gs->L);
-    }
-    lua_close(gs->L);
-    gs->L = NULL;
-    pthread_mutex_unlock(&gs->exec_mutex);
 }

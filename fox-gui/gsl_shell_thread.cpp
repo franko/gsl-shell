@@ -4,15 +4,26 @@
 #include "gsl_shell_thread.h"
 #include "graphics-hooks.h"
 #include "lua-graph.h"
+#include "lua-gsl.h"
 
 extern "C" void * luajit_eval_thread (void *userdata);
+
+static int start_interp(gsl_shell_thread* eng)
+{
+    gsl_shell_interp* gs = eng->interp();
+    gsl_shell_interp_open(gs);
+    graphics->init(gs->L); /* Initialize graphics module. */
+    luaopen_gsl(gs->L); /* Perform some GSL Shell's specific initializations. */
+    int status = gsl_shell_interp_dolibrary(gs, "gslext");
+    return status;
+}
 
 void *
 luajit_eval_thread (void *userdata)
 {
     gsl_shell_thread* eng = (gsl_shell_thread*) userdata;
     eng->lock();
-    gsl_shell_interp_open(eng->interp(), graphics);
+    start_interp(eng);
     eng->run();
     pthread_exit(NULL);
     return NULL;
@@ -55,7 +66,7 @@ gsl_shell_thread::process_request()
     {
         graph_close_windows(m_gsl_shell->L);
         gsl_shell_interp_close(m_gsl_shell);
-        gsl_shell_interp_open(m_gsl_shell, graphics);
+        start_interp(this);
         restart_callback();
         cmd = thread_cmd_continue;
     }

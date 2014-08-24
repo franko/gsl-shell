@@ -6,7 +6,6 @@
 
 #include "defs.h"
 #include "luajit.h"
-#include "graphics-hooks.h"
 #include "str.h"
 
 __BEGIN_DECLS
@@ -21,16 +20,14 @@ struct __gsl_shell_interp {
     lua_State *L;
     pthread_mutex_t exec_mutex;
     str_t m_error_msg;
-    const graphics_lib *graphics;
 };
 
 typedef struct __gsl_shell_interp gsl_shell_interp;
 
 extern void gsl_shell_interp_init(gsl_shell_interp *gs);
 extern void gsl_shell_interp_free(gsl_shell_interp *gs);
-extern int gsl_shell_interp_open(gsl_shell_interp *gs, const graphics_lib *g);
+extern int gsl_shell_interp_open(gsl_shell_interp *gs);
 extern void gsl_shell_interp_close(gsl_shell_interp *gs);
-extern void gsl_shell_interp_close_with_graph(gsl_shell_interp* gs, int send_close_req);
 extern int gsl_shell_interp_exec(gsl_shell_interp *gs, const char* line);
 extern void gsl_shell_interp_interrupt(gsl_shell_interp *gs);
 extern const char *gsl_shell_interp_error(const gsl_shell_interp *gs);
