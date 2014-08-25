@@ -589,7 +589,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    graphics->init(gs->L); /* Initialize graphics module. */
+    register_graph(gs->L); /* Initialize graphics module. */
     luaopen_gsl(gs->L); /* Perform some GSL Shell's specific initializations. */
     status = gsl_shell_interp_dolibrary(gs, "gslext");
     if (status != 0) {
@@ -607,9 +607,9 @@ int main(int argc, char **argv)
 
     gsl_shell_interp_unlock(gs);
     if (!smain->keep_windows) {
-        graphics->close_windows(gs->L);
+        graph_close_windows(gs->L);
     } else {
-        graphics->wait_windows(gs->L);
+        graph_wait_windows(gs->L);
     }
     gsl_shell_interp_close(gs);
     gsl_shell_interp_free(gs);

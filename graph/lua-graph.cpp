@@ -36,8 +36,6 @@ extern "C" {
 #define MLUA_GRAPHLIBNAME "graph"
 #endif
 
-const graphics_lib graphics[1] = {{ register_graph, graph_close_windows, graph_wait_windows }};
-
 static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
 
 pthread_mutex_t agg_mutex[1];
