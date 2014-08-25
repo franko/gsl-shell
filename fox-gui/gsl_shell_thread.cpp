@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "gsl_shell_thread.h"
-#include "graphics-hooks.h"
 #include "lua-graph.h"
 #include "lua-gsl.h"
 
@@ -12,7 +11,7 @@ static int start_interp(gsl_shell_thread* eng)
 {
     gsl_shell_interp* gs = eng->interp();
     gsl_shell_interp_open(gs);
-    graphics->init(gs->L); /* Initialize graphics module. */
+    register_graph(gs->L); /* Initialize graphics module. */
     luaopen_gsl(gs->L); /* Perform some GSL Shell's specific initializations. */
     int status = gsl_shell_interp_dolibrary(gs, "gslext");
     return status;

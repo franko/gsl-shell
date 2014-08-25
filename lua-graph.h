@@ -4,7 +4,6 @@
 #include <pthread.h>
 
 #include "defs.h"
-#include "graphics-hooks.h"
 
 __BEGIN_DECLS
 
