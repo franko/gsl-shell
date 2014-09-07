@@ -43,6 +43,11 @@ local function recollect_stmts(stmts)
     return ls
 end
 
+local function does_multi_return(expr)
+    local k = expr.kind
+    return k == "CallExpression" or k == "SendExpression" or k == "Vararg"
+end
+
 local AST = { }
 
 local function func_decl(id, body, params, vararg, locald, firstline, lastline)
@@ -239,6 +244,20 @@ end
 
 function AST.expr_vararg(ast)
     return build("Vararg", { })
+end
+
+function AST.expr_brackets(ast, expr)
+    expr.bracketed = true
+    return expr
+end
+
+function AST.set_expr_last(ast, expr)
+    if expr.bracketed and does_multi_return(expr) then
+        expr.bracketed = nil
+        return build("ExpressionValue", { value = expr })
+    else
+        return expr
+    end
 end
 
 function AST.expr_table(ast, avals, hkeys, hvals, line)
