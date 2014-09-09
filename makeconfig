@@ -9,12 +9,6 @@
 # will be disabled.
 LUA_BUILD = no
 
-# set this to "yes" if you want to disable gamma correction
-DISABLE_GAMMA_CORR = no
-
-# set this to "yes" if you want to disable subpixel LCD antialiasing
-DISABLE_SUBPIXEL_LCD = no
-
 DEBUG = no
 
 USE_READLINE = yes

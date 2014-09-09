@@ -1137,7 +1137,7 @@ void platform_support::on_draw() {}
 void platform_support::on_post_draw(void* raw_handler) {}
 }
 
-#if defined(GSL_SHELL_DEBUG)
+#if defined(LIBGRAPH_DEBUG)
 #include <unistd.h>
 
 static int
@@ -1164,7 +1164,7 @@ platform_support_ext::prepare()
     if (! agg::platform_specific::initialized)
     {
         XInitThreads();
-#if defined(GSL_SHELL_DEBUG)
+#if defined(LIBGRAPH_DEBUG)
         XSetErrorHandler(my_x_error_handler);
 #endif
         agg::platform_specific::initialized = true;

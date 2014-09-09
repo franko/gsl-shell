@@ -24,7 +24,6 @@ extern "C" {
 }
 
 #include "lua-graph.h"
-#include "lua-gsl.h"
 #include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-text.h"

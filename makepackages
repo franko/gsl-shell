@@ -14,17 +14,11 @@ ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I$(USER_INCLUDE)
   LIBS += -L$(USER_LIBS_HOME)/lib
 
-  AGG_INCLUDES = -I$(USER_INCLUDE)/agg2
-  AGG_LIBS = -lagg -lgdi32
-
   FOX_INCLUDES = -I$(USER_INCLUDE)/fox-1.6
   FOX_LIBS = -lfox -lgdi32
 
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas
-
-  FREETYPE_INCLUDES = -I$(USER_INCLUDE)/freetype
-  FREETYPE_LIBS = -lfreetype
 
   PTHREADS_LIBS = -lpthread
 else
@@ -32,9 +26,6 @@ else
 
 # GWH: determined all of the following flags (except for pthread)
 # using the pkg-config utility, except I had to add -lX11 to AGG_LIBS.
-
-  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
-  AGG_LIBS = $(shell pkg-config libagg --libs) -lX11
 
 # GWH: pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
 # If you don't include that, the code won't run unless you first do:
@@ -46,23 +37,14 @@ else
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
 
-  FREETYPE_INCLUDES = $(shell pkg-config freetype2 --cflags)
-  FREETYPE_LIBS = $(shell pkg-config freetype2 --libs)
-
   PTHREADS_LIBS = -lpthread
 
 else
-  AGG_INCLUDES = -I/usr/include/agg2
-  AGG_LIBS = -lagg -lX11
-
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lblas
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
-
-  FREETYPE_INCLUDES = -I/usr/include/freetype2
-  FREETYPE_LIBS = -lfreetype
 
   RL_INCLUDES = -I/usr/include/readline
   RL_LIBS = -ldl -lreadline -lhistory -lncurses
