@@ -34,7 +34,7 @@ do
    end
 
    gsl_type = function(obj)
-      local s = reg.__gsl_type(obj)
+      local s = type(obj)
       if s == "cdata" then
          for _, item in ipairs(reg.__gsl_ffi_types) do
             local ctype, name = unpack(item)
