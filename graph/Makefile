@@ -62,6 +62,8 @@ ifeq ($(HOST_SYS),Windows)
 
   PTHREADS_LIBS = -lpthread
 
+  LIBGRAPH_SO = graph.dll
+
   LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib
 
@@ -111,8 +113,8 @@ else
   PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
 endif
 
-AR= ar rcu
-RANLIB= ranlib
+# AR= ar rcu
+# RANLIB= ranlib
 
 HOST_CP = cp
 HOST_RM = rm -f
@@ -128,24 +130,38 @@ DEFS += $(PTHREAD_DEFS)
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
+AGGPLOT_CSRC_FILES = gs-types.c lua-properties.c lua-utils.c str.c
 AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) printf_check.cpp fonts.cpp gamma.cpp agg_font_freetype.cpp plot.cpp plot-auto.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
-AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
+AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o) $(AGGPLOT_CSRC_FILES:%.c=%.o)
 DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-TARGETS = libaggplot.a
+TARGETS = $(LIBGRAPH_SO)
 
 all: $(TARGETS)
 
-libaggplot.a: $(AGGPLOT_OBJ_FILES)
-	@echo Archive $@
-	@$(AR) $@ $?
-	@$(RANLIB) $@
+$(LIBGRAPH_SO): $(AGGPLOT_OBJ_FILES)
+	$(CC) -shared $(AGGPLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) -L../luajit2/src -llua51 -lpthread -lsupc++
+	strip --strip-unneeded $@
+
+# libaggplot.a: $(AGGPLOT_OBJ_FILES)
+# 	@echo Archive $@
+# 	@$(AR) $@ $?
+# 	@$(RANLIB) $@
 
 %.o: %.cpp
 	@echo Compiling $<
 	@$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+            >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.o: %.c
+	@echo Compiling $<
+	@$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
 	@-cp .deps/$(*F).pp .deps/$(*F).P; \
 	tr ' ' '\012' < .deps/$(*F).pp \
           | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \

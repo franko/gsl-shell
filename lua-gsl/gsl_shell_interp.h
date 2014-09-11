@@ -6,7 +6,6 @@
 
 #include "defs.h"
 #include "luajit.h"
-#include "str.h"
 
 __BEGIN_DECLS
 
@@ -19,7 +18,8 @@ enum eval_result {
 struct __gsl_shell_interp {
     lua_State *L;
     pthread_mutex_t exec_mutex;
-    str_t m_error_msg;
+    char *m_error_msg;
+    size_t m_error_msg_size;
 };
 
 typedef struct __gsl_shell_interp gsl_shell_interp;

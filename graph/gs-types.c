@@ -125,7 +125,7 @@ gs_new_object (size_t nbytes, lua_State *L, enum gs_type_e tp)
   return p;
 }
 
-static bool
+static int
 rec_check_type (lua_State *L, enum gs_type_e tp)
 {
   const char *mt = metatable_name (tp);
@@ -137,7 +137,7 @@ rec_check_type (lua_State *L, enum gs_type_e tp)
       if (lua_rawequal(L, -1, -2))
 	{
 	  lua_pop (L, 1);
-	  return true;
+	  return 1;
 	}
       lua_pop (L, 1);
     }
@@ -149,11 +149,11 @@ rec_check_type (lua_State *L, enum gs_type_e tp)
       if (t->base_type == tp)
 	{
 	  if (rec_check_type (L, t->tp))
-	    return true;
+	    return 1;
 	}
     }
 
-  return false;
+  return 0;
 }
 
 void *
@@ -189,17 +189,6 @@ gs_check_userdata (lua_State *L, int index, int typeid)
     gs_type_error (L, index, type_qualified_name (typeid));
 
   return p;
-}
-
-int
-gs_gsl_errorcheck (lua_State *L, const char *routine, int status)
-{
-  if (status)
-    {
-      return luaL_error (L, "error during %s: %s", routine,
-			 gsl_strerror (status));
-    }
-  return 0;
 }
 
 void
