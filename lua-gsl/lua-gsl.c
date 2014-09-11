@@ -24,7 +24,6 @@
 #include <gsl/gsl_errno.h>
 
 #include "lua-gsl.h"
-#include "gs-types.h"
 
 #include "gdt/gdt_table.h"
 
@@ -37,9 +36,5 @@ int
 luaopen_gsl (lua_State *L)
 {
     gsl_set_error_handler_off ();
-
-    lua_pushcfunction (L, gs_type_string);
-    lua_setfield (L, LUA_REGISTRYINDEX, "__gsl_type");
-
     return 0;
 }

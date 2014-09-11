@@ -30,7 +30,7 @@ LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 CFLAGS += $(LUA_CFLAGS)
 
-LUAGSL_SRC_FILES = lua-properties.c gs-types.c lua-utils.c lua-gsl.c str.c fatal.c gsl_shell_interp.c
+LUAGSL_SRC_FILES = lua-gsl.c fatal.c gsl_shell_interp.c
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)
 DEP_FILES := $(LUAGSL_SRC_FILES:%.c=.deps/%.P)
 
