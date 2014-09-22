@@ -85,8 +85,6 @@ static int canvas_new      (lua_State *L);
 static int   plot_add_gener  (lua_State *L, bool as_line);
 static void  plot_update_raw (lua_State *L, sg_plot *p, int plot_index);
 
-// TODO: ensure that the value is checked and or initialized to the
-// default windows hooks.
 struct window_hooks *app_window_hooks = NULL;
 
 static const struct luaL_Reg plot_functions[] = {

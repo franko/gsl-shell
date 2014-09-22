@@ -31,36 +31,31 @@ extern "C" {
 #include "lua-plot.h"
 #include "window_hooks.h"
 
-#ifndef MLUA_GRAPHLIBNAME
-#define MLUA_GRAPHLIBNAME "graph"
-#endif
-
-static const struct luaL_Reg methods_dummy[] = {{NULL, NULL}};
+struct window_hooks nat_window_hooks[1] = {{
+        window_new, window_show, window_attach,
+        window_slot_update, window_slot_refresh,
+        window_close_wait, window_wait,
+        window_save_slot_image, window_restore_slot_image,
+        window_register,
+    }
+};
 
 pthread_mutex_t agg_mutex[1];
 
-void
-graph_close_windows (lua_State *L)
+int
+luaopen_graphcore (lua_State *L)
 {
-    window_index_apply_all(L, app_window_hooks->close);
-}
+    if (!app_window_hooks) {
+        app_window_hooks = nat_window_hooks;
+    }
 
-void
-graph_wait_windows (lua_State *L)
-{
-    window_index_apply_all(L, app_window_hooks->wait);
-}
-
-void
-register_graph (lua_State *L)
-{
     pthread_mutex_init(agg_mutex, NULL);
     window_registry_prepare(L);
-    luaL_register(L, MLUA_GRAPHLIBNAME, methods_dummy);
+    lua_newtable(L);
     draw_register(L);
     text_register(L);
     app_window_hooks->register_module(L);
     plot_register(L);
     initialize_fonts(L);
-    lua_pop(L, 1);
+    return 1;
 }

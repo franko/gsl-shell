@@ -9,9 +9,7 @@ __BEGIN_DECLS
 
 #include <lua.h>
 
-extern void graph_close_windows (lua_State *L);
-extern void graph_wait_windows (lua_State *L);
-extern void register_graph (lua_State *L);
+extern int luaopen_graphcore (lua_State *L);
 
 extern int initialize_fonts(lua_State* L);
 

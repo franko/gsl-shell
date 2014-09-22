@@ -38,9 +38,6 @@
 #include "luajit.h"
 #include "completion.h"
 #include "lua-gsl.h"
-#include "lua-graph.h"
-#include "window_hooks.h"
-#include "window.h"
 #include "gsl-shell.h"
 #include "gsl_shell_interp.h"
 #include "lang/language.h"
@@ -108,15 +105,6 @@ my_readline (const char *p)
 static void my_saveline(const char *line) { }
 
 #endif
-
-struct window_hooks app_window_hooks[1] = {{
-        window_new, window_show, window_attach,
-        window_slot_update, window_slot_refresh,
-        window_close_wait, window_wait,
-        window_save_slot_image, window_restore_slot_image,
-        window_register,
-    }
-};
 
 static void print_usage(void)
 {
@@ -589,11 +577,10 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    register_graph(gs->L); /* Initialize graphics module. */
     luaopen_gsl(gs->L); /* Perform some GSL Shell's specific initializations. */
     status = gsl_shell_interp_dolibrary(gs, "gslext");
     if (status != 0) {
-        l_message(progname, "failed to initialize gsl shell extensions");
+        report(gs, status);
         return EXIT_FAILURE;
     }
 
@@ -606,11 +593,6 @@ int main(int argc, char **argv)
     report(gs, status);
 
     gsl_shell_interp_unlock(gs);
-    if (!smain->keep_windows) {
-        graph_close_windows(gs->L);
-    } else {
-        graph_wait_windows(gs->L);
-    }
     gsl_shell_interp_close(gs);
     gsl_shell_interp_free(gs);
 

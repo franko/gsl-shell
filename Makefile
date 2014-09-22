@@ -25,7 +25,8 @@ include makedefs
 
 GSH_BASE_DIR = .
 
-INCLUDES += -I. $(GSL_INCLUDES) -Igraph -Ilua-gsl
+INCLUDES += -I. $(GSL_INCLUDES) -Ilua-gsl
+#INCLUDES += -I. $(GSL_INCLUDES) -Igraph -Ilua-gsl
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 CFLAGS += $(LUA_CFLAGS)
@@ -33,6 +34,7 @@ CFLAGS += $(LUA_CFLAGS)
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
   LIBS += -L/usr/lib -lsupc++
+    LIBGRAPH_SO = graphcore.dll
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
@@ -41,6 +43,7 @@ else
     LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
   endif
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
+  LIBGRAPH_SO = libgraphcore.so
 endif
 
 FOXGUI_LDFLAGS = -lsupc++ -lm
@@ -79,12 +82,12 @@ EXAMPLES_FILES := $(EXAMPLES_FILES_SRC:%=examples/%.csv)
 
 C_SRC_FILES += gsl-shell.c
 
-TARGETS = $(GSL_SHELL) $(GSL_SHELL_GUI)
+TARGETS = $(GSL_SHELL) # $(GSL_SHELL_GUI)
 
 # files and flags related to the pre3d modules
 LUA_BASE_FILES += pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
-INCLUDES += $(PTHREADS_CFLAGS) -Igraph
-LUAGSL_LIBS += $(GSH_LIBDIR)/libaggplot.a $(GSH_LIBDIR)/libluagsl.a
+INCLUDES += $(PTHREADS_CFLAGS) # -Igraph
+LUAGSL_LIBS += $(GSH_LIBDIR)/libluagsl.a #$(GSH_LIBDIR)/libaggplot.a $(GSH_LIBDIR)/libluagsl.a
 LIBS += $(AGG_LIBS) $(FREETYPE_LIBS) $(PTHREADS_LIBS)
 
 ifneq ($(BUILDMODE),dynamic)
@@ -120,7 +123,7 @@ FOXGUI_DIR := fox-gui
 
 FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a
 
-all: $(TARGETS) $(SUBDIRS) $(FOXGUI_DIR)
+all: $(TARGETS) $(SUBDIRS) # $(FOXGUI_DIR)
 
 subdirs: $(SUBDIRS) $(FOXGUI_DIR)
 
@@ -134,13 +137,14 @@ $(GSH_LIBDIR)/libluajit.a: $(LUADIR)
 $(GSH_LIBDIR)/liblang.a: lang
 $(GSH_LIBDIR)/libluagsl.a: lua-gsl
 $(GSH_LIBDIR)/libgdt.a: gdt
-$(GSH_LIBDIR)/libaggplot.a: graph
+# $(GSH_LIBDIR)/libaggplot.a: graph
 $(FOXGUI_LIB): $(FOXGUI_DIR)
 $(LUAJIT_SO): $(LUADIR)
 
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	cp graph/$(LIBGRAPH_SO) .
 
 $(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOXGUI_DIR)
 	@echo Linking $@

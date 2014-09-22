@@ -62,7 +62,7 @@ ifeq ($(HOST_SYS),Windows)
 
   PTHREADS_LIBS = -lpthread
 
-  LIBGRAPH_SO = graph.dll
+  LIBGRAPH_SO = graphcore.dll
 
   LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib

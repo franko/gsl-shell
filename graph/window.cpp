@@ -464,17 +464,6 @@ int
 window_free (lua_State *L)
 {
     window *win = object_check<window>(L, 1, GS_WINDOW);
-
-    /* it is important here to lock to ensure that there isn't any thread starting
-       a new graphical window right now */
-    win->lock();
-
-    /* This should never happens. Running windows are never garbage collected
-       and before closing lua_State all the graphical windows are closed and
-       their threads have naturally finished. */
-    assert(win->status != window::running);
-
-    win->unlock();
     win->~window();
     return 0;
 }

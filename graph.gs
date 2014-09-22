@@ -1,6 +1,8 @@
 use "math"
 use "bit"
 
+graph = require("graphcore")
+
 local f_line_adaptive = require("f-eval-adaptive")
 
 local n_sampling_max = 8192
@@ -364,3 +366,5 @@ local function redirect_plot()
 end
 
 redirect_plot()
+
+return graph
