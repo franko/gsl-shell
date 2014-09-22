@@ -64,6 +64,9 @@ ifeq ($(HOST_SYS),Windows)
 
   LIBGRAPH_SO = graphcore.dll
 
+  LUA_INCLUDES = -I../luajit2/src
+  LUA_LIBS = -L../luajit2/src -llua51
+
   LDFLAGS += -Wl,--enable-auto-import
   LIBS += -L/usr/lib
 
@@ -102,6 +105,11 @@ else
   PTHREADS_LIBS = -lpthread
   LDFLAGS += -Wl,-E
   endif
+
+  LIBGRAPH_SO = graphcore.so
+
+  LUA_INCLUDES = -I../luajit2/src
+  LUA_LIBS = -L../luajit2/src -lluajit
 endif
 
 ifeq ($(HOST_SYS),Windows)
@@ -123,7 +131,7 @@ CP_REL = cp --parents
 CC = gcc
 CXX = g++
 
-INCLUDES += $(FREETYPE_INCLUDES) $(AGG_INCLUDES)
+INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(AGG_INCLUDES)
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS)
 
@@ -142,7 +150,7 @@ TARGETS = $(LIBGRAPH_SO)
 all: $(TARGETS)
 
 $(LIBGRAPH_SO): $(AGGPLOT_OBJ_FILES)
-	$(CC) -shared $(AGGPLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) -L../luajit2/src -llua51 -lpthread -lsupc++
+	$(CC) -shared $(AGGPLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
 	strip --strip-unneeded $@
 
 # libaggplot.a: $(AGGPLOT_OBJ_FILES)

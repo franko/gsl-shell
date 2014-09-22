@@ -43,7 +43,7 @@ else
     LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
   endif
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
-  LIBGRAPH_SO = libgraphcore.so
+  LIBGRAPH_SO = graphcore.so
 endif
 
 FOXGUI_LDFLAGS = -lsupc++ -lm
