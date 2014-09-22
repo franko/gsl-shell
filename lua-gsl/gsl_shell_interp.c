@@ -162,6 +162,7 @@ gsl_shell_interp_init(gsl_shell_interp *gs)
 {
     gs->L = NULL;
     pthread_mutex_init(&gs->exec_mutex, NULL);
+    gs->m_error_msg = NULL;
     gs->m_error_msg_size = 0;
 }
 
