@@ -140,6 +140,7 @@ for path in string.gmatch(package.path, "[^;]+") do
    end
 end
 
+path_list[#path_list + 1] = "./?/init.lua"
 path_list[#path_list + 1] = package.path
 
 do
