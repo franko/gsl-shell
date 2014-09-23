@@ -21,7 +21,7 @@ struct window_hooks {
     void (*register_module)(lua_State* L);
 };
 
-extern struct window_hooks app_window_hooks[1];
+extern struct window_hooks *app_window_hooks;
 
 __END_DECLS
 

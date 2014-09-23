@@ -1,12 +1,42 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "gsl_shell_interp.h"
 
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
+#include "fatal.h"
 #include "lang/language.h"
 #include "lang/lua-language-gs.h"
+
+static void
+clear_error_string(gsl_shell_interp *gs)
+{
+    if (gs->m_error_msg_size > 0) {
+        gs->m_error_msg[0] = 0;
+    }
+}
+
+static void
+append_error_string(gsl_shell_interp *gs, const char *msg)
+{
+    const size_t current_len = gs->m_error_msg_size > 0 ? strlen(gs->m_error_msg) : 0;
+    const size_t xsize = current_len + strlen(msg) + 1;
+    const size_t msg_size = xsize >= 128 ? xsize : 128;
+
+    if (unlikely(msg_size > gs->m_error_msg_size)) {
+        char *new_str = malloc(msg_size);
+        if (!new_str) {
+            fatal_exception("out of memory");
+        }
+        free(gs->m_error_msg);
+        gs->m_error_msg = new_str;
+        gs->m_error_msg_size = msg_size;
+    }
+
+    memcpy(gs->m_error_msg + current_len, msg, strlen(msg) + 1);
+}
 
 static int report_error_msg(gsl_shell_interp *gs, int status)
 {
@@ -16,10 +46,11 @@ static int report_error_msg(gsl_shell_interp *gs, int status)
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
         if (status == LUA_LANGERR) {
-            str_copy_c(gs->m_error_msg, "gsl-shell internal error:");
-            str_append_c(gs->m_error_msg, msg, ' ');
+            clear_error_string(gs);
+            append_error_string(gs, "gsl-shell internal error: ");
+            append_error_string(gs, msg);
         } else {
-            str_copy_c(gs->m_error_msg, msg);
+            append_error_string(gs, msg);
         }
         lua_pop(L, 1);
     }
@@ -52,12 +83,14 @@ static int docall(lua_State *L, int narg, int clear)
     return status;
 }
 
+#if 0
 static int dolibrary(lua_State *L, const char *name)
 {
     lua_getglobal(L, "require");
     lua_pushstring(L, name);
     return docall(L, 1, 1);
 }
+#endif
 
 /* Lua C function that perform initialization. */
 static int pinit(lua_State *L)
@@ -129,14 +162,15 @@ gsl_shell_interp_init(gsl_shell_interp *gs)
 {
     gs->L = NULL;
     pthread_mutex_init(&gs->exec_mutex, NULL);
-    str_init(gs->m_error_msg, 64);
+    gs->m_error_msg = NULL;
+    gs->m_error_msg_size = 0;
 }
 
 void
 gsl_shell_interp_free(gsl_shell_interp *gs)
 {
     pthread_mutex_destroy (&gs->exec_mutex);
-    str_free(gs->m_error_msg);
+    free(gs->m_error_msg);
 }
 
 int
@@ -145,7 +179,8 @@ gsl_shell_interp_open(gsl_shell_interp *gs)
     gs->L = lua_open();  /* create state */
 
     if (unlikely(gs->L == NULL)) {
-        str_copy_c(gs->m_error_msg, "cannot create state: not enough memory");
+        clear_error_string(gs);
+        append_error_string(gs, "cannot create state: not enough memory");
         return LUA_ERRRUN;
     }
 
@@ -323,7 +358,7 @@ gsl_shell_interp_interrupt(gsl_shell_interp *gs)
 const char *
 gsl_shell_interp_error(const gsl_shell_interp *gs)
 {
-    return CSTR(gs->m_error_msg);
+    return gs->m_error_msg_size > 0 ? gs->m_error_msg : "";
 }
 
 void

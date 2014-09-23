@@ -21,7 +21,6 @@
 #include "defs.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
-#include "lua-gsl.h"
 #include "agg-parse-trans.h"
 #include "lua-cpp-utils.h"
 #include "lua-utils.h"

@@ -5,6 +5,8 @@ local floor, pi = math.floor, math.pi
 
 local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 
+graph = require("graphcore")
+
 local n_sampling_max = 8192
 local n_sampling_default = 256
 
@@ -361,3 +363,5 @@ local function redirect_plot()
 end
 
 redirect_plot()
+
+return graph
