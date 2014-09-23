@@ -142,7 +142,11 @@ end
 
 path_list[#path_list + 1] = package.path
 
-package.path = table.concat(path_list, ';')
+do
+  local dir_sep = string.match(package.path, "([/\\])%?%.lua;") or "/"
+  local new_path = table.concat(path_list, ';')
+  package.path = dir_sep == "/" and new_path or string.gsub(new_path, "/", dir_sep)
+end
 
 local function lang_loader_fn(modname)
    return lang.dofile(modname .. '.gs')
