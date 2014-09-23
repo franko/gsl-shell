@@ -51,13 +51,37 @@ function graph.ipathp(f)
    return ln
 end
 
+local function fn_sample(f, xi, xs, n)
+   local c = (xs - xi) / n
+   local k = 0
+   return function()
+             if k <= n then
+                local x = xi+k*c
+                k = k+1
+                return x, f(x)
+             end
+          end
+end
+
+local function fn_isample(f, a, b)
+   local k = a
+   return function()
+             if k <= b then
+                local x, y = k, f(k)
+                k = k + 1
+                return x, y
+             end
+          end
+end
+
 function graph.fxline(f, xi, xs, n)
    n = check_sampling(n)
-   return graph.ipath(iter.sample(f, xi, xs, n))
+   return graph.ipath(fn_sample(f, xi, xs, n))
 end
 
 function graph.filine(f, a, b)
-   return graph.ipath(iter.isample(f, a, b))
+   a, b = (b and a or 1), (b and b or a)
+   return graph.ipath(fn_isample(f, a, b))
 end
 
 function graph.xyline(x, y)
@@ -71,7 +95,7 @@ end
 function graph.fxplot(f, xi, xs, color, n)
    n = check_sampling(n)
    local p = graph.plot()
-   p:addline(graph.ipathp(iter.sample(f, xi, xs, n)), color)
+   p:addline(graph.ipathp(fn_sample(f, xi, xs, n)), color)
    p:show()
    return p
 end
@@ -79,7 +103,7 @@ end
 function graph.fiplot(f, a, b, color)
    if not b then a, b, color = 1, a, b end
    local p = graph.plot()
-   p:addline(graph.ipathp(iter.isample(f, a, b)), color)
+   p:addline(graph.ipathp(fn_isample(f, a, b)), color)
    p:show()
    return p
 end
