@@ -36,7 +36,7 @@ struct window_hooks nat_window_hooks[1] = {{
         window_slot_update, window_slot_refresh,
         window_close_wait, window_wait,
         window_save_slot_image, window_restore_slot_image,
-        window_register,
+        window_register, agg_mutex,
     }
 };
 
@@ -54,7 +54,7 @@ luaopen_graphcore (lua_State *L)
     lua_newtable(L);
     draw_register(L);
     text_register(L);
-    app_window_hooks->register_module(L);
+    app_window_hooks->register_module(L, app_window_hooks->graphics_mutex);
     plot_register(L);
     initialize_fonts(L);
     return 1;

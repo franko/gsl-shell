@@ -16,6 +16,9 @@ extern "C" {
 #include "agg_trans_affine.h"
 #include "split-parser.h"
 
+#define GRAPHICS_LOCK() pthread_mutex_lock (graphics_mutex);
+#define GRAPHICS_UNLOCK() pthread_mutex_unlock (graphics_mutex);
+
 class window : public canvas_window {
 public:
     int window_id;

@@ -7,11 +7,8 @@ extern "C" {
 #include "lua-defs.h"
 #include "window-cpp.h"
 #include "window_registry.h"
-#include "lua-draw.h"
-#include "lua-graph.h"
 #include "lua-cpp-utils.h"
 #include "gs-types.h"
-#include "colors.h"
 #include "lua-plot-cpp.h"
 #include "split-parser.h"
 #include "lua-utils.h"
@@ -22,6 +19,8 @@ __BEGIN_DECLS
 static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
 static int window_save_svg        (lua_State *L);
+
+pthread_mutex_t *graphics_mutex = NULL;
 
 static const struct luaL_Reg window_functions[] = {
     {"window",        window_new},
@@ -135,9 +134,9 @@ void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
 
     if (ref.plot)
     {
-        AGG_LOCK();
+        GRAPHICS_LOCK();
         ref.plot->draw(*m_canvas, mtx, &ref.inf);
-        AGG_UNLOCK();
+        GRAPHICS_UNLOCK();
     }
 
     if (draw_image)
@@ -214,13 +213,13 @@ window::refresh_slot_by_ref(ref& ref, bool draw_all)
     if (!ref.valid_rect || draw_all)
         rect.set(rect_of_slot_matrix<double>(mtx));
 
-    AGG_LOCK();
+    GRAPHICS_LOCK();
     opt_rect<double> draw_rect;
     ref.plot->draw_queue(*m_canvas, mtx, ref.inf, draw_rect);
     rect.add<rect_union>(draw_rect);
     rect.add<rect_union>(ref.dirty_rect);
     ref.dirty_rect = draw_rect;
-    AGG_UNLOCK();
+    GRAPHICS_UNLOCK();
 
     if (rect.is_defined())
     {
@@ -664,8 +663,10 @@ window_save_svg(lua_State *L)
 }
 
 void
-window_register (lua_State *L)
+window_register (lua_State *L, pthread_mutex_t *agg_mutex_win)
 {
+    graphics_mutex = agg_mutex_win;
+
     luaL_newmetatable (L, GS_METATABLE(GS_WINDOW));
     lua_pushvalue (L, -1);
     lua_setfield (L, -2, "__index");

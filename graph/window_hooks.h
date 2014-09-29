@@ -1,6 +1,8 @@
 #ifndef AGGPLOT_WINDOW_HOOKS_H
 #define AGGPLOT_WINDOW_HOOKS_H
 
+#include <pthread.h>
+
 #include "defs.h"
 
 __BEGIN_DECLS
@@ -18,7 +20,9 @@ struct window_hooks {
     int (*save_image)(lua_State* L);
     int (*restore_image)(lua_State* L);
 
-    void (*register_module)(lua_State* L);
+    void (*register_module)(lua_State* L, pthread_mutex_t *m);
+
+    pthread_mutex_t *graphics_mutex;
 };
 
 extern struct window_hooks *app_window_hooks;
