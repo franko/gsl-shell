@@ -26,6 +26,7 @@
 #include <string.h>
 #include <new>
 #include "pthreadpp.h"
+#include "pixel_fmt.h"
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
 #include "platform/win32/agg_win32_bmp.h"
@@ -98,7 +99,7 @@ platform_specific::platform_specific(pix_format_e format, bool flip_y) :
     m_format(gslshell::pixel_format),
     m_sys_format(gslshell::sys_pixel_format),
     m_flip_y(gslshell::flip_y),
-    m_bpp(gslshell::bpp),
+    m_bpp(LIBGRAPH_BPP),
     m_sys_bpp(gslshell::sys_bpp),
     m_hwnd(0),
     m_bmp_draw(0),
@@ -584,34 +585,7 @@ void platform_support::on_post_draw(void* raw_handler) {}
 }
 
 agg::pix_format_e gslshell::sys_pixel_format = agg::pix_format_bgr24;
-unsigned gslshell::bpp = 24;
 unsigned gslshell::sys_bpp = 24;
-
-bool
-platform_support_ext::save_image_file (agg::rendering_buffer& src, const char *fn,
-                                       agg::pix_format_e src_pixfmt_tag)
-{
-    unsigned slen = strlen (fn);
-    agg::pod_array<char> fnext(slen+5);
-    sprintf (fnext.data(), "%s.bmp", fn);
-
-    agg::pixel_map pmap;
-    pmap.create(src.width(), src.height(), agg::org_e(gslshell::sys_bpp));
-
-    agg::rendering_buffer rbuf_tmp;
-    pixel_map_attach (pmap, &rbuf_tmp, gslshell::flip_y);
-
-    if (src_pixfmt_tag == agg::pix_format_bgr24)
-    {
-        rbuf_tmp.copy_from(src);
-    }
-    else if (src_pixfmt_tag == agg::pix_format_rgb24)
-    {
-        my_color_conv(&rbuf_tmp, &src, agg::color_conv_rgb24_to_bgr24());
-    }
-
-    return pmap.save_as_bmp (fnext.data());
-}
 
 void
 platform_support_ext::prepare()

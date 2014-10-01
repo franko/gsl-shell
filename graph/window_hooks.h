@@ -19,10 +19,11 @@ struct window_hooks {
     int (*wait)(lua_State* L);
     int (*save_image)(lua_State* L);
     int (*restore_image)(lua_State* L);
+};
 
-    void (*register_module)(lua_State* L, pthread_mutex_t *m);
-
-    pthread_mutex_t *graphics_mutex;
+struct graphics_hooks {
+    void (*register_window_hooks)(window_hooks *);
+    pthread_mutex_t *mutex;
 };
 
 extern struct window_hooks *app_window_hooks;

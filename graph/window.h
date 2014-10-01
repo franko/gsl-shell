@@ -9,8 +9,6 @@ __BEGIN_DECLS
 
 #include "lua.h"
 
-extern void window_register                (lua_State *L, pthread_mutex_t *m);
-
 extern int  window_slot_update             (lua_State *L);
 extern int  window_slot_refresh            (lua_State *L);
 extern int  window_save_slot_image         (lua_State *L);
@@ -22,6 +20,8 @@ extern int  window_attach                  (lua_State *L);
 extern int  window_close                   (lua_State *L);
 extern int  window_close_wait              (lua_State *L);
 extern int  window_wait                    (lua_State *L);
+
+extern int  luaopen_natwin                 (lua_State *L);
 
 extern pthread_mutex_t *graphics_mutex;
 

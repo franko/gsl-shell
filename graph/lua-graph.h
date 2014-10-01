@@ -11,8 +11,6 @@ __BEGIN_DECLS
 
 extern int luaopen_graphcore (lua_State *L);
 
-extern int initialize_fonts(lua_State* L);
-
 extern pthread_mutex_t agg_mutex[1];
 
 #define AGG_LOCK() pthread_mutex_lock (agg_mutex);

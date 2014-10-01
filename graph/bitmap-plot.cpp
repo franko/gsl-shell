@@ -10,15 +10,17 @@ extern "C" {
 #include "gs-types.h"
 #include "canvas.h"
 #include "colors.h"
+#include "pixel_fmt.h"
 #include "agg-pixfmt-config.h"
 #include "platform_support_ext.h"
+#include "image_write.h"
 
 void
 bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
                        gslshell::ret_status& st)
 {
     agg::rendering_buffer rbuf_tmp;
-    unsigned row_size = w * (gslshell::bpp / 8);
+    unsigned row_size = w * (LIBGRAPH_BPP / 8);
     unsigned buf_size = h * row_size;
 
     unsigned char* buffer = new(std::nothrow) unsigned char[buf_size];
@@ -38,7 +40,7 @@ bitmap_save_image_cpp (sg_plot *p, const char *fn, unsigned w, unsigned h,
 
     p->draw(can, mtx, NULL);
 
-    bool success = platform_support_ext::save_image_file (rbuf_tmp, fn, gslshell::pixel_format);
+    bool success = save_image_file (rbuf_tmp, fn, gslshell::pixel_format);
 
     if (! success)
         st.error("cannot save image file", "plot save");

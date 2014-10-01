@@ -33,7 +33,8 @@ CFLAGS += $(LUA_CFLAGS)
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
   LIBS += -L/usr/lib -lsupc++
-    LIBGRAPH_SO = graphcore.dll
+  LIBGRAPH_SO = graphcore.dll
+  LIBNATWIN_SO = natwin.dll
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
@@ -43,6 +44,7 @@ else
   endif
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
   LIBGRAPH_SO = libgraphcore.so
+  LIBNATWIN_SO = libnatwin.so
 endif
 
 FOXGUI_LDFLAGS = -lsupc++ -lm
@@ -142,7 +144,7 @@ $(LUAJIT_SO): $(LUADIR)
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
-	cp graph/$(LIBGRAPH_SO) .
+	cp graph/$(LIBGRAPH_SO) graph/$(LIBNATWIN_SO) .
 
 $(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOXGUI_DIR)
 	@echo Linking $@

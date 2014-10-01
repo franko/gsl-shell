@@ -48,6 +48,8 @@ ifeq ($(strip $(DISABLE_SUBPIXEL_LCD)), yes)
 endif
 
 ifeq ($(HOST_SYS),Windows)
+  DISPLAY_SUFFIX = win32
+
   USER_LIBS_HOME = C:/fra/local
   USER_INCLUDE = $(USER_LIBS_HOME)/include
 
@@ -63,6 +65,7 @@ ifeq ($(HOST_SYS),Windows)
   PTHREADS_LIBS = -lpthread
 
   LIBGRAPH_SO = graphcore.dll
+  LIBNATWIN_SO = natwin.dll
 
   LUA_INCLUDES = -I../luajit2/src
   LUA_LIBS = -L../luajit2/src -llua51
@@ -106,19 +109,23 @@ else
   LDFLAGS += -Wl,-E
   endif
 
-  LIBGRAPH_SO = graphcore.so
+  DISPLAY_SUFFIX = x11
+
+  LIBGRAPH_SO = libgraphcore.so
+  LIBNATWIN_SO = libnatwin.so
 
   LUA_INCLUDES = -I../luajit2/src
   LUA_LIBS = -L../luajit2/src -lluajit
 endif
 
 ifeq ($(HOST_SYS),Windows)
-  PLATSUP_SRC_FILES = support_win32.cpp agg_platform_support_win32.cpp agg_win32_bmp.cpp
+  PLATFORM_NATWIN_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
+  PLATFORM_PLOT_SRC_FILES = agg_win32_bmp.cpp
 else
   ifeq ($(HOST_SYS),Darwin)
     DEFS += -DDARWIN_MACOSX
   endif
-  PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
+  PLATFORM_NATWIN_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
 HOST_CP = cp
@@ -135,21 +142,30 @@ DEFS += $(PTHREAD_DEFS)
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-AGGPLOT_CSRC_FILES = gs-types.c lua-properties.c lua-utils.c str.c
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) printf_check.cpp fonts.cpp gamma.cpp agg_font_freetype.cpp plot.cpp plot-auto.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
-AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o) $(AGGPLOT_CSRC_FILES:%.c=%.o)
-DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
+NATWIN_CSRC_FILES =
+NATWIN_CPPSRC_FILES = $(PLATFORM_NATWIN_SRC_FILES) canvas-window.cpp window.cpp
+
+PLOT_CSRC_FILES = str.c gs-types.c lua-utils.c lua-properties.c
+PLOT_CPPSRC_FILES = gamma.cpp printf_check.cpp utils.cpp window_registry.cpp fonts_search_$(DISPLAY_SUFFIX).cpp $(PLATFORM_PLOT_SRC_FILES) image_write_$(DISPLAY_SUFFIX).cpp fonts.cpp agg_font_freetype.cpp plot.cpp plot-auto.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp lua-plot.cpp bitmap-plot.cpp lua-graph.cpp
+PLOT_OBJ_FILES := $(PLOT_CSRC_FILES:%.c=%.o) $(PLOT_CPPSRC_FILES:%.cpp=%.o)
+
+NATWIN_OBJ_FILES := $(NATWIN_CSRC_FILES:%.c=%.o) $(NATWIN_CPPSRC_FILES:%.cpp=%.o)
+
+DEP_FILES := $(NATWIN_CPPSRC_FILES:%.cpp=.deps/%.P) $(NATWIN_CSRC_FILES:%.c=.deps/%.P) $(PLOT_CPPSRC_FILES:%.cpp=.deps/%.P) $(PLOT_CSRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 TARGETS = $(LIBGRAPH_SO)
 
-all: $(TARGETS)
+all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
-$(LIBGRAPH_SO): $(AGGPLOT_OBJ_FILES)
-	$(CC) -shared $(AGGPLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
+$(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
+	$(CC) -shared $(PLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
 	strip --strip-unneeded $@
 
+$(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
+	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(LUA_LIBS) -L. -lgraphcore -lpthread -lsupc++
+	strip --strip-unneeded $@
 
 %.o: %.cpp
 	@echo Compiling $<

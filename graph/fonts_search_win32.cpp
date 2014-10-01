@@ -2,13 +2,13 @@
 #include <shlobj.h>
 #include <sys/stat.h>
 
-#include "agg-pixfmt-config.h"
+#include "fonts.h"
 
 const char *ttf_names[] = {"calibri.ttf", "arial.ttf", 0};
 const char *console_font_names[] = {"consolas", "lucida console", "fixedsys", 0};
 const char *console_font_filenames[] = {"consola.ttf", "lucon.ttf", "cvgafix.fon", 0};
 
-const char *gslshell::get_font_name()
+const char *get_font_name()
 {
     static TCHAR pf[MAX_PATH + 32];
     SHGetFolderPath(0, CSIDL_FONTS, NULL, 0, pf);
@@ -27,7 +27,7 @@ const char *gslshell::get_font_name()
     return 0;
 }
 
-const char* gslshell::get_fox_console_font_name()
+const char* get_console_font_name()
 {
     static TCHAR pf[MAX_PATH + 32];
     SHGetFolderPath(0, CSIDL_FONTS, NULL, 0, pf);

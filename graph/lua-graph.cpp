@@ -24,6 +24,7 @@ extern "C" {
 }
 
 #include "lua-graph.h"
+#include "fonts.h"
 #include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-text.h"
@@ -31,31 +32,44 @@ extern "C" {
 #include "lua-plot.h"
 #include "window_hooks.h"
 
-struct window_hooks nat_window_hooks[1] = {{
-        window_new, window_show, window_attach,
-        window_slot_update, window_slot_refresh,
-        window_close_wait, window_wait,
-        window_save_slot_image, window_restore_slot_image,
-        window_register, agg_mutex,
-    }
-};
+int
+stub_window_fn(lua_State *L)
+{
+    return luaL_error(L, "no windows module loaded");
+}
+
+struct window_hooks stub_window_hooks[1] = {{
+    stub_window_fn, stub_window_fn, stub_window_fn, stub_window_fn,
+    stub_window_fn, stub_window_fn, stub_window_fn, stub_window_fn,
+    stub_window_fn,
+}};
 
 pthread_mutex_t agg_mutex[1];
 
-int
-luaopen_graphcore (lua_State *L)
-{
-    if (!app_window_hooks) {
-        app_window_hooks = nat_window_hooks;
-    }
+struct window_hooks *app_window_hooks = stub_window_hooks;
 
+static void register_window_hooks(struct window_hooks *w)
+{
+    app_window_hooks = w;
+}
+
+struct graphics_hooks graphics[1] = {
+    register_window_hooks, agg_mutex,
+};
+
+int
+luaopen_graphcore(lua_State *L)
+{
     pthread_mutex_init(agg_mutex, NULL);
     window_registry_prepare(L);
     lua_newtable(L);
     draw_register(L);
     text_register(L);
-    app_window_hooks->register_module(L, app_window_hooks->graphics_mutex);
     plot_register(L);
     initialize_fonts(L);
+
+    lua_pushlightuserdata(L, graphics);
+    lua_setfield(L, LUA_REGISTRYINDEX, "github.com/franko/libgraph");
+
     return 1;
 }

@@ -13,6 +13,7 @@ extern "C" {
 #include "split-parser.h"
 #include "lua-utils.h"
 #include "platform_support_ext.h"
+#include "window_hooks.h"
 
 __BEGIN_DECLS
 
@@ -662,10 +663,26 @@ window_save_svg(lua_State *L)
     return nret;
 }
 
-void
-window_register (lua_State *L, pthread_mutex_t *agg_mutex_win)
+struct window_hooks nat_window_hooks[1] = {{
+        window_new, window_show, window_attach,
+        window_slot_update, window_slot_refresh,
+        window_close_wait, window_wait,
+        window_save_slot_image, window_restore_slot_image
+    }
+};
+
+int
+luaopen_natwin(lua_State *L)
 {
-    graphics_mutex = agg_mutex_win;
+    lua_getfield(L, LUA_REGISTRYINDEX, "github.com/franko/libgraph");
+    struct graphics_hooks *graphics = (struct graphics_hooks *) lua_touserdata(L, -1);
+
+    if (!graphics) {
+        return luaL_error(L, "cannot find graphics module");
+    }
+
+    graphics_mutex = graphics->mutex;
+    graphics->register_window_hooks(nat_window_hooks);
 
     luaL_newmetatable (L, GS_METATABLE(GS_WINDOW));
     lua_pushvalue (L, -1);
@@ -674,5 +691,6 @@ window_register (lua_State *L, pthread_mutex_t *agg_mutex_win)
     lua_pop (L, 1);
 
     /* gsl module registration */
-    luaL_register (L, NULL, window_functions);
+    luaL_register (L, "graph", window_functions);
+    return 1;
 }

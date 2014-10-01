@@ -20,9 +20,6 @@ public:
     void do_window_update ();
 
     static void prepare();
-
-    static bool save_image_file (agg::rendering_buffer& src, const char *fn,
-                                 agg::pix_format_e src_pixfmt_tag);
 };
 
 #endif

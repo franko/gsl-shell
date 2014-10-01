@@ -1,6 +1,6 @@
 #include <sys/stat.h>
 
-#include "agg-pixfmt-config.h"
+#include "fonts.h"
 
 #ifdef DARWIN_MACOSX
 const char *ttf_names[] = {"Arial.ttf", "Trebuchet MS.ttf", "Courier New.ttf", 0};
@@ -16,7 +16,7 @@ const char *ttf_system_dir[] = {"/usr/share/fonts/truetype", "/usr/share/fonts",
 #define CONSOLE_FONT_NAME "monospace"
 #endif
 
-const char *gslshell::get_font_name()
+const char *get_font_name()
 {
     for (int i = 0; ttf_system_dir[i]; i++)
     {
@@ -43,7 +43,7 @@ const char *gslshell::get_font_name()
     return 0;
 }
 
-const char* gslshell::get_fox_console_font_name()
+const char* get_console_font_name()
 {
     return CONSOLE_FONT_NAME;
 }

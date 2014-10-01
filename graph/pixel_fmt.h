@@ -43,4 +43,6 @@ typedef pixel_gamma pixel_type;
 typedef pixel_gamma_lcd pixel_lcd_type;
 #endif
 
+#define LIBGRAPH_BPP 24
+
 #endif

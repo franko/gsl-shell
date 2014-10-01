@@ -4,16 +4,14 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include "agg-pixfmt-config.h"
-
-extern "C" int initialize_fonts(lua_State* L);
+#include "fonts.h"
 
 agg::font_engine_freetype_int32 global_font_eng;
 agg::font_cache_manager<agg::font_engine_freetype_int32> global_font_man(global_font_eng);
 
 int initialize_fonts(lua_State* L)
 {
-    const char* font_name = gslshell::get_font_name();
+    const char* font_name = get_font_name();
     if (!font_name)
         luaL_error(L, "cannot find a suitable truetype font");
     agg::glyph_rendering gren = agg::glyph_ren_outline;
@@ -23,12 +21,12 @@ int initialize_fonts(lua_State* L)
     return 0;
 }
 
-agg::font_engine_freetype_int32& gslshell::font_engine()
+agg::font_engine_freetype_int32& font_engine()
 {
     return global_font_eng;
 }
 
-agg::font_cache_manager<agg::font_engine_freetype_int32>& gslshell::font_manager()
+agg::font_cache_manager<agg::font_engine_freetype_int32>& font_manager()
 {
     return global_font_man;
 }
