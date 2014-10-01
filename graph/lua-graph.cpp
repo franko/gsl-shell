@@ -48,15 +48,6 @@ pthread_mutex_t agg_mutex[1];
 
 struct window_hooks *app_window_hooks = stub_window_hooks;
 
-static void register_window_hooks(struct window_hooks *w)
-{
-    app_window_hooks = w;
-}
-
-struct graphics_hooks graphics[1] = {
-    register_window_hooks, agg_mutex,
-};
-
 int
 luaopen_graphcore(lua_State *L)
 {
@@ -67,9 +58,5 @@ luaopen_graphcore(lua_State *L)
     text_register(L);
     plot_register(L);
     initialize_fonts(L);
-
-    lua_pushlightuserdata(L, graphics);
-    lua_setfield(L, LUA_REGISTRYINDEX, "github.com/franko/libgraph");
-
     return 1;
 }

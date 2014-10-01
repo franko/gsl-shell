@@ -21,8 +21,6 @@ static int window_free            (lua_State *L);
 static int window_split           (lua_State *L);
 static int window_save_svg        (lua_State *L);
 
-pthread_mutex_t *graphics_mutex = NULL;
-
 static const struct luaL_Reg window_functions[] = {
     {"window",        window_new},
     {NULL, NULL}
@@ -135,9 +133,9 @@ void window::draw_slot_by_ref(window::ref& ref, bool draw_image)
 
     if (ref.plot)
     {
-        GRAPHICS_LOCK();
+        AGG_LOCK();
         ref.plot->draw(*m_canvas, mtx, &ref.inf);
-        GRAPHICS_UNLOCK();
+        AGG_UNLOCK();
     }
 
     if (draw_image)
@@ -214,13 +212,13 @@ window::refresh_slot_by_ref(ref& ref, bool draw_all)
     if (!ref.valid_rect || draw_all)
         rect.set(rect_of_slot_matrix<double>(mtx));
 
-    GRAPHICS_LOCK();
+    AGG_LOCK();
     opt_rect<double> draw_rect;
     ref.plot->draw_queue(*m_canvas, mtx, ref.inf, draw_rect);
     rect.add<rect_union>(draw_rect);
     rect.add<rect_union>(ref.dirty_rect);
     ref.dirty_rect = draw_rect;
-    GRAPHICS_UNLOCK();
+    AGG_UNLOCK();
 
     if (rect.is_defined())
     {
@@ -674,15 +672,7 @@ struct window_hooks nat_window_hooks[1] = {{
 int
 luaopen_natwin(lua_State *L)
 {
-    lua_getfield(L, LUA_REGISTRYINDEX, "github.com/franko/libgraph");
-    struct graphics_hooks *graphics = (struct graphics_hooks *) lua_touserdata(L, -1);
-
-    if (!graphics) {
-        return luaL_error(L, "cannot find graphics module");
-    }
-
-    graphics_mutex = graphics->mutex;
-    graphics->register_window_hooks(nat_window_hooks);
+    app_window_hooks = nat_window_hooks;
 
     luaL_newmetatable (L, GS_METATABLE(GS_WINDOW));
     lua_pushvalue (L, -1);

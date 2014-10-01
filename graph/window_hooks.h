@@ -21,11 +21,6 @@ struct window_hooks {
     int (*restore_image)(lua_State* L);
 };
 
-struct graphics_hooks {
-    void (*register_window_hooks)(window_hooks *);
-    pthread_mutex_t *mutex;
-};
-
 extern struct window_hooks *app_window_hooks;
 
 __END_DECLS

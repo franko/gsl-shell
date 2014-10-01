@@ -4,6 +4,7 @@ extern "C" {
 }
 
 #include "window.h"
+#include "lua-graph.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
 #include "lua-plot-cpp.h"
@@ -15,9 +16,6 @@ extern "C" {
 #include "agg_color_rgba.h"
 #include "agg_trans_affine.h"
 #include "split-parser.h"
-
-#define GRAPHICS_LOCK() pthread_mutex_lock (graphics_mutex);
-#define GRAPHICS_UNLOCK() pthread_mutex_unlock (graphics_mutex);
 
 class window : public canvas_window {
 public:

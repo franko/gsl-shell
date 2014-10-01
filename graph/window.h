@@ -23,8 +23,6 @@ extern int  window_wait                    (lua_State *L);
 
 extern int  luaopen_natwin                 (lua_State *L);
 
-extern pthread_mutex_t *graphics_mutex;
-
 __END_DECLS
 
 #endif
