@@ -121,9 +121,6 @@ else
   PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
 endif
 
-# AR= ar rcu
-# RANLIB= ranlib
-
 HOST_CP = cp
 HOST_RM = rm -f
 CP_REL = cp --parents
@@ -153,10 +150,6 @@ $(LIBGRAPH_SO): $(AGGPLOT_OBJ_FILES)
 	$(CC) -shared $(AGGPLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
 	strip --strip-unneeded $@
 
-# libaggplot.a: $(AGGPLOT_OBJ_FILES)
-# 	@echo Archive $@
-# 	@$(AR) $@ $?
-# 	@$(RANLIB) $@
 
 %.o: %.cpp
 	@echo Compiling $<
