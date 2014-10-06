@@ -18,12 +18,18 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 --
 
-use 'strict'
-use 'math'
+local abs, max, min, sqrt = math.abs, math.max, math.min, math.sqrt
+local cos, sin, atan2 = math.cos, math.sin, math.atan2
+local floor = math.floor
 
 local insert = table.insert
 
 local default_color_map = graph.color_function('redyellow', 255)
+
+local function divmod(a, b)
+   local q = floor(a / b)
+   return q, a - q * b
+end
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -571,8 +577,14 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
                  function(ia, ib) return #curves[ia] < #curves[ib] end)
 
       local function make_col_iter(j)
-         return iter.sequence(function(i) return segment_index_i(i, j, i+1, j) end,
-                              0, ny-1)
+         local i = 0
+         local function col_iter()
+               if i <= ny - 1 then
+                  i = i + 1
+                  return segment_index_i(i, j, i+1, j)
+               end
+         end
+         return col_iter
       end
 
       local order_tree, treated = {}, {}
