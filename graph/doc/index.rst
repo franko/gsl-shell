@@ -16,8 +16,5 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   intro.rst
    graphics.rst
-   plot3d.rst
    contour.rst
-   examples.rst
