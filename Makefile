@@ -75,48 +75,47 @@ ifeq ($(HOST_SYS),Windows)
 
   DEFS += -DWIN32
 else
-  ifeq ($(HOST_SYS),Darwin)
+  X11_INCLUDES = $(shell pkg-config x11 --cflags)
+  X11_LIBS = $(shell pkg-config x11 --libs)
 
-# GWH: determined all of the following flags (except for pthread)
-# using the pkg-config utility, except I had to add -lX11 to AGG_LIBS.
-
-  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
-  AGG_LIBS = $(shell pkg-config libagg --libs) -lX11
-
-# GWH: pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
+# GWH (for OS X): pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
 # If you don't include that, the code won't run unless you first do:
 #   export DYLD_FALLBACK_LIBRARY_PATH=/opt/local/lib
+
+  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
+  AGG_LIBS = $(shell pkg-config libagg --libs)
 
   FREETYPE_INCLUDES = $(shell pkg-config freetype2 --cflags)
   FREETYPE_LIBS = $(shell pkg-config freetype2 --libs)
 
-  PTHREADS_LIBS = -lpthread
-
-  LINK_EXE = $(CXX) $(LDFLAGS)
-  # Use rsync because the --parents option to cp doesn't exist in
-  # Mac OS X
-  CP_REL = rsync -R
-  LDFLAGS += -L/usr/X11/lib
-  else
-  AGG_INCLUDES = -I/usr/include/agg2
-  AGG_LIBS = -lagg -lX11
-
-  FREETYPE_INCLUDES = -I/usr/include/freetype2
-  FREETYPE_LIBS = -lfreetype
+  LUA_INCLUDES = $(shell pkg-config --cflags luajit)
+  LUA_LIBS = $(shell pkg-config --libs luajit)
 
   PTHREAD_DEFS += -pthread
-  PTHREADS_LIBS = -lpthread
-  LDFLAGS += -Wl,-E
+  PTHREAD_LIBS = -lpthread
+
+  ifeq ($(HOST_SYS),Darwin)
+    LINK_EXE = $(CXX) $(LDFLAGS)
+    # Use rsync because the --parents option to cp doesn't exist in
+    # Mac OS X
+    CP_REL = rsync -R
+    LDFLAGS += -Wl,-E
   endif
 
   DISPLAY_SUFFIX = x11
 
   LIBGRAPH_SO = libgraphcore.so
   LIBNATWIN_SO = libnatwin.so
-
-  LUA_INCLUDES = -I../luajit2/src
-  LUA_LIBS = -L../luajit2/src -lluajit
 endif
+
+ifeq ($(strip $(DEST_DIR)), )
+  DEST_PREFIX = $(PREFIX)
+else
+  DEST_PREFIX = $(DEST_DIR)/$(PREFIX)
+endif
+LUA_PATH = $(DEST_PREFIX)/share/lua/5.1
+LUA_DLLPATH = $(DEST_PREFIX)/lib/lua/5.1
+SYSTEM_LIBPATH = $(DEST_PREFIX)/lib
 
 ifeq ($(HOST_SYS),Windows)
   PLATFORM_NATWIN_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
@@ -135,8 +134,8 @@ CP_REL = cp --parents
 CC = gcc
 CXX = g++
 
-INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(AGG_INCLUDES)
-LIBS += $(PTHREAD_LIBS)
+INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(X11_INCLUDES) $(AGG_INCLUDES)
+LIBS += $(FREETYPE_LIBS) $(AGG_LIBS) $(X11_LIBS) $(LUA_LIBS) $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
@@ -160,12 +159,15 @@ TARGETS = $(LIBGRAPH_SO)
 all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
 $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
-	$(CC) -shared $(PLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
+	$(CC) -shared $(PLOT_OBJ_FILES) -o $@ $(LIBS) -lsupc++
 	strip --strip-unneeded $@
 
 $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
-	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(LUA_LIBS) -L. -lgraphcore -lpthread -lsupc++
+	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
 	strip --strip-unneeded $@
+
+clean:
+	$(HOST_RM) *.o *.so *.dll $(TARGETS)
 
 %.o: %.cpp
 	@echo Compiling $<
@@ -186,8 +188,5 @@ $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
 	rm .deps/$(*F).pp
 
 .PHONY: clean all
-
-clean:
-	$(HOST_RM) *.o *.lo *.la *.so *.dll $(TARGETS)
 
 -include $(DEP_FILES)
