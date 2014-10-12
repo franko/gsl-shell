@@ -1,0 +1,28 @@
+Lua Graphics Toolkit
+====================
+
+Installation instructions
+-------------------------
+
+You can compile the Lua Graphics Toolkit on linux by installing the appropriate development packages. The libraries you will need and their package's name for
+debian based systems are:
+
+- Anti-Grain geometry library, libagg-dev package
+- Freetype library, libfreetype6-dev package
+- LuaJIT2 shared library, libluajit-5.1-dev package
+
+Once the packages above are installed you should be able to compile simply by typing:
+
+> make
+
+Then you can install the module on your system by using:
+
+> make install
+
+Windows Installation Instructions
+---------------------------------
+
+The Lua Graphics Toolkit can be installed on Windows using the mingw toolchain. To succeed you will need to compile before all the required libraries, edit the Makefile to add the
+path where the libraries are located.
+
+We strongly reccomend of using binary package on Windows.
