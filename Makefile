@@ -127,6 +127,8 @@ else
   PLATFORM_NATWIN_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
+GRAPH_LUA_SRC = graph/init.lua graph/contour.lua
+
 HOST_CP = cp
 HOST_RM = rm -f
 CP_REL = cp --parents
@@ -165,6 +167,14 @@ $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
 $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
 	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
 	strip --strip-unneeded $@
+
+install: $(TARGETS)
+	mkdir -p $(LUA_PATH)
+	mkdir -p $(LUA_DLLPATH)
+	cp $(LIBGRAPH_SO) $(LUA_DLLPATH)/graphcore.so
+	cp $(LIBNATWIN_SO) $(LUA_DLLPATH)/natwin.so
+	ln -s $(LUA_DLLPATH)/graphcore.so $(SYSTEM_LIBPATH)/libgraphcore.so
+	$(CP_REL) $(GRAPH_LUA_SRC) $(LUA_PATH)
 
 clean:
 	$(HOST_RM) *.o *.so *.dll $(TARGETS)
