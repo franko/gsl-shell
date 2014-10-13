@@ -1,0 +1,11 @@
+Package: lua-graph-toolkit
+Maintainer: Francesco Abbate <francesc.bbt@gmail.com>
+Version: LGT_VERSION
+Architecture: i386
+Installed-Size: LGT_INSTALLED_SIZE
+Depends: libc6 (>= 2.7-1), libx11-6, libluajit-5.1-2
+Section: x11
+Priority: optional
+Description: Lua Graphics Toolkit
+ The Lua Graphics Toolkit is a LuaJIT2 module to create graphical
+ windows for plots or animations.

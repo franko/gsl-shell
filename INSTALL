@@ -19,6 +19,14 @@ Then you can install the module on your system by using:
 
 > make install
 
+or, as an alternative, you can build a debian package using
+
+> make debian
+
+The Lua's package will be named "graph" and can be called from luajit using
+
+> require("graph")
+
 Windows Installation Instructions
 ---------------------------------
 

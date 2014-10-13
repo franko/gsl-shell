@@ -2,4 +2,6 @@
 *.so
 *.dll
 .deps
+debian_build
+*.deb
 

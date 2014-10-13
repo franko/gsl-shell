@@ -116,6 +116,7 @@ endif
 LUA_PATH = $(DEST_PREFIX)/share/lua/5.1
 LUA_DLLPATH = $(DEST_PREFIX)/lib/lua/5.1
 SYSTEM_LIBPATH = $(DEST_PREFIX)/lib
+DEBIAN = debian_build/$(PREFIX)
 
 ifeq ($(HOST_SYS),Windows)
   PLATFORM_NATWIN_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
@@ -176,6 +177,17 @@ install: $(TARGETS)
 	ln -s $(LUA_DLLPATH)/graphcore.so $(SYSTEM_LIBPATH)/libgraphcore.so
 	$(CP_REL) $(GRAPH_LUA_SRC) $(LUA_PATH)
 
+debian: $(TARGETS)
+	rm -fr debian_build
+	rm lua-graph-toolkit*.deb
+	mkdir -p $(DEBIAN)/share/lua/5.1
+	mkdir -p $(DEBIAN)/lib/lua/5.1
+	cp $(LIBGRAPH_SO) $(DEBIAN)/lib/lua/5.1/graphcore.so
+	cp $(LIBNATWIN_SO) $(DEBIAN)/lib/lua/5.1/natwin.so
+	ln -s lua/5.1/graphcore.so $(DEBIAN)/lib/libgraphcore.so
+	$(CP_REL) $(GRAPH_LUA_SRC) $(DEBIAN)/share/lua/5.1
+	fakeroot bash debian/build.sh $(VERSION)
+
 clean:
 	$(HOST_RM) *.o *.so *.dll $(TARGETS)
 
@@ -197,6 +209,6 @@ clean:
             >> .deps/$(*F).P; \
 	rm .deps/$(*F).pp
 
-.PHONY: clean all
+.PHONY: debian clean all
 
 -include $(DEP_FILES)
