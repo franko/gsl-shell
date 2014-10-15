@@ -157,7 +157,7 @@ DEP_FILES := $(NATWIN_CPPSRC_FILES:%.cpp=.deps/%.P) $(NATWIN_CSRC_FILES:%.c=.dep
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-TARGETS = $(LIBGRAPH_SO)
+TARGETS = $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
 all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
@@ -179,7 +179,7 @@ install: $(TARGETS)
 
 debian: $(TARGETS)
 	rm -fr debian_build
-	rm lua-graph-toolkit*.deb
+	rm -fr lua-graph-toolkit*.deb
 	mkdir -p $(DEBIAN)/share/lua/5.1
 	mkdir -p $(DEBIAN)/lib/lua/5.1
 	cp $(LIBGRAPH_SO) $(DEBIAN)/lib/lua/5.1/graphcore.so
