@@ -1,7 +1,7 @@
 Package: lua-graph-toolkit
 Maintainer: Francesco Abbate <francesc.bbt@gmail.com>
 Version: LGT_VERSION
-Architecture: i386
+Architecture: LGT_ARCH
 Installed-Size: LGT_INSTALLED_SIZE
 Depends: libc6 (>= 2.7-1), libx11-6, libluajit-5.1-2
 Section: x11
