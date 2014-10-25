@@ -408,10 +408,6 @@ plot_layout plot::compute_plot_layout(const agg::trans_affine& canvas_mtx, bool 
                 py = sy - dy - ppad * sy - dyt;
                 px = (sx - dx) / 2;
                 dyt += dy + 2 * ppad * sy;
-                break;
-            default:
-                /* */
-                ;
             }
 
             if (px >= 0 && py >= 0 && px + dx < sx && py + dy < sy)

@@ -782,8 +782,10 @@ char_to_placement_enum(lua_State* L, const char *s)
         pos = sg_plot::bottom;
     else if (letter == 't')
         pos = sg_plot::top;
-    else
+    else {
+        pos = sg_plot::right;
         luaL_error (L, "invalid legend placement specification.");
+    }
 
     return pos;
 }
