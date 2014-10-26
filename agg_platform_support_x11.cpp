@@ -801,6 +801,11 @@ void platform_support::update_window()
     XSync(xc->display, m_wait_mode);
 }
 
+static Bool is_configure_pred(Display *d, XEvent *ev, XPointer arg)
+{
+    return ev->type == ConfigureNotify ? True : False;
+}
+
 
 //------------------------------------------------------------------------
 int platform_support::run()
@@ -831,6 +836,12 @@ int platform_support::run()
         {
             ps->m_mutex.unlock();
             XNextEvent(xc->display, &x_event);
+            if (x_event.type == ConfigureNotify) {
+                XEvent xpk;
+                while (XCheckIfEvent(xc->display, &xpk, is_configure_pred, NULL) == True) {
+                    x_event = xpk;
+                }
+            }
             ps->m_mutex.lock();
         }
         else
@@ -884,6 +895,9 @@ int platform_support::run()
         break;
 
         case Expose:
+            if (x_event.xexpose.count > 0) {
+                break;
+            }
             xc->busy(true);
             ps->put_image(&m_rbuf_window);
             XFlush(xc->display);
