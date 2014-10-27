@@ -29,11 +29,19 @@ else
   endif
 endif
 
+ARCH := $(shell uname -m)
+
+ifeq ($(ARCH), i686)
+  CCOPT_ARCH = -march=i686
+endif
+
 ifeq ($(strip $(DEBUG)), yes)
+  CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall
   DEFS += -LIBGRAPH_DEBUG
 else
-  CXXFLAGS = -Os -fno-exceptions -ffast-math -fno-rtti -Wall
+  CFLAGS = $(CCOPT_ARCH) -O2 -fomit-frame-pointer -ffast-math -Wall
+  CXXFLAGS = $(CCOPT_ARCH) -O2 -fno-exceptions -ffast-math -fno-rtti -Wall
 endif
 
 PTHREAD_DEFS += -D_REENTRANT
