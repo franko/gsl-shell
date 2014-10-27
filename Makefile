@@ -66,7 +66,7 @@ ifeq ($(HOST_SYS),Windows)
   FREETYPE_INCLUDES = -I$(USER_INCLUDE)/freetype
   FREETYPE_LIBS = -lfreetype
 
-  PTHREADS_LIBS = -lpthread
+  PTHREAD_LIBS = -lpthread
 
   LIBGRAPH_SO = graphcore.dll
   LIBNATWIN_SO = natwin.dll
