@@ -48,6 +48,10 @@ ifeq ($(strip $(DISABLE_SUBPIXEL_LCD)), yes)
 endif
 
 ifeq ($(HOST_SYS),Windows)
+  CC = gcc
+  CXX = g++
+  DLLINK = gcc -static-libgcc -shared
+
   DISPLAY_SUFFIX = win32
 
   USER_LIBS_HOME = C:/fra/local
@@ -75,6 +79,10 @@ ifeq ($(HOST_SYS),Windows)
 
   DEFS += -DWIN32
 else
+  CC = gcc -fPIC
+  CXX = g++ -fPIC
+  DLLINK = gcc -shared
+
   X11_INCLUDES = $(shell pkg-config x11 --cflags)
   X11_LIBS = $(shell pkg-config x11 --libs)
 
@@ -134,9 +142,6 @@ HOST_CP = cp
 HOST_RM = rm -f
 CP_REL = cp --parents
 
-CC = gcc -fPIC
-CXX = g++ -fPIC
-
 INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(X11_INCLUDES) $(AGG_INCLUDES)
 LIBS += $(FREETYPE_LIBS) $(AGG_LIBS) $(X11_LIBS) $(LUA_LIBS) $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS)
@@ -162,11 +167,11 @@ TARGETS = $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
 $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
-	$(CC) -shared $(PLOT_OBJ_FILES) -o $@ $(LIBS) -lsupc++
+	$(DLLINK) $(PLOT_OBJ_FILES) -o $@ $(LIBS) -lsupc++
 	strip --strip-unneeded $@
 
 $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
-	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
+	$(DLLINK) $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
 	strip --strip-unneeded $@
 
 install: $(TARGETS)
