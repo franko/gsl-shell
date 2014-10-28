@@ -827,7 +827,6 @@ static XEvent x_get_event(Display *d, loop_state& current)
     while (XCheckIfEvent(d, &xev, is_configure_or_expose, NULL) == True) {
         if (xev.type == ConfigureNotify) {
             current.config = xev;
-            current.expose.type = 0;
         } else {
             current.expose = xev;
         }
