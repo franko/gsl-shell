@@ -801,6 +801,47 @@ void platform_support::update_window()
     XSync(xc->display, m_wait_mode);
 }
 
+static Bool is_configure_or_expose(Display *d, XEvent *ev, XPointer arg)
+{
+    return (ev->type == ConfigureNotify || ev->type == Expose) ? True : False;
+}
+
+struct loop_state {
+    XEvent config;
+    XEvent expose;
+
+    loop_state() {
+        config.type = 0;
+        expose.type = 0;
+    }
+};
+
+static XEvent x_get_event(Display *d, loop_state& current)
+{
+    XEvent xev;
+    if (current.expose.type == Expose) {
+        xev = current.expose;
+        current.expose.type = 0;
+        return xev;
+    }
+    while (XCheckIfEvent(d, &xev, is_configure_or_expose, NULL) == True) {
+        if (xev.type == ConfigureNotify) {
+            current.config = xev;
+        } else {
+            current.expose = xev;
+        }
+    }
+    if (current.config.type == ConfigureNotify) {
+        xev = current.config;
+        current.config.type = 0;
+    } else if (current.expose.type == Expose) {
+        xev = current.expose;
+        current.expose.type = 0;
+    } else {
+        XNextEvent(d, &xev);
+    }
+    return xev;
+}
 
 //------------------------------------------------------------------------
 int platform_support::run()
@@ -815,6 +856,7 @@ int platform_support::run()
 
     platform_specific *ps = m_specific;
 
+    loop_state event_loop;
     while(!quit)
     {
         if(ps->m_update_flag && ps->m_is_mapped)
@@ -830,7 +872,7 @@ int platform_support::run()
         if (ps->m_is_mapped)
         {
             ps->m_mutex.unlock();
-            XNextEvent(xc->display, &x_event);
+            x_event = x_get_event(xc->display, event_loop);
             ps->m_mutex.lock();
         }
         else
@@ -884,6 +926,9 @@ int platform_support::run()
         break;
 
         case Expose:
+            if (x_event.xexpose.count > 0) {
+                break;
+            }
             xc->busy(true);
             ps->put_image(&m_rbuf_window);
             XFlush(xc->display);

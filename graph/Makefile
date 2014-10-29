@@ -29,11 +29,19 @@ else
   endif
 endif
 
+ARCH := $(shell uname -m)
+
+ifeq ($(ARCH), i686)
+  CCOPT_ARCH = -march=i686
+endif
+
 ifeq ($(strip $(DEBUG)), yes)
+  CFLAGS = -g -Wall
   CXXFLAGS = -g -Wall
   DEFS += -LIBGRAPH_DEBUG
 else
-  CXXFLAGS = -Os -fno-exceptions -ffast-math -fno-rtti -Wall
+  CFLAGS = $(CCOPT_ARCH) -O2 -fomit-frame-pointer -ffast-math -Wall
+  CXXFLAGS = $(CCOPT_ARCH) -O2 -fno-exceptions -ffast-math -fno-rtti -Wall
 endif
 
 PTHREAD_DEFS += -D_REENTRANT
@@ -48,6 +56,10 @@ ifeq ($(strip $(DISABLE_SUBPIXEL_LCD)), yes)
 endif
 
 ifeq ($(HOST_SYS),Windows)
+  CC = gcc
+  CXX = g++
+  DLLINK = gcc -static-libgcc -shared
+
   DISPLAY_SUFFIX = win32
 
   USER_LIBS_HOME = C:/fra/local
@@ -62,7 +74,7 @@ ifeq ($(HOST_SYS),Windows)
   FREETYPE_INCLUDES = -I$(USER_INCLUDE)/freetype
   FREETYPE_LIBS = -lfreetype
 
-  PTHREADS_LIBS = -lpthread
+  PTHREAD_LIBS = -lpthread
 
   LIBGRAPH_SO = graphcore.dll
   LIBNATWIN_SO = natwin.dll
@@ -75,48 +87,52 @@ ifeq ($(HOST_SYS),Windows)
 
   DEFS += -DWIN32
 else
-  ifeq ($(HOST_SYS),Darwin)
+  CC = gcc -fPIC
+  CXX = g++ -fPIC
+  DLLINK = gcc -shared
 
-# GWH: determined all of the following flags (except for pthread)
-# using the pkg-config utility, except I had to add -lX11 to AGG_LIBS.
+  X11_INCLUDES = $(shell pkg-config x11 --cflags)
+  X11_LIBS = $(shell pkg-config x11 --libs)
 
-  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
-  AGG_LIBS = $(shell pkg-config libagg --libs) -lX11
-
-# GWH: pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
+# GWH (for OS X): pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
 # If you don't include that, the code won't run unless you first do:
 #   export DYLD_FALLBACK_LIBRARY_PATH=/opt/local/lib
+
+  AGG_INCLUDES = $(shell pkg-config libagg --cflags)
+  AGG_LIBS = $(shell pkg-config libagg --libs)
 
   FREETYPE_INCLUDES = $(shell pkg-config freetype2 --cflags)
   FREETYPE_LIBS = $(shell pkg-config freetype2 --libs)
 
-  PTHREADS_LIBS = -lpthread
-
-  LINK_EXE = $(CXX) $(LDFLAGS)
-  # Use rsync because the --parents option to cp doesn't exist in
-  # Mac OS X
-  CP_REL = rsync -R
-  LDFLAGS += -L/usr/X11/lib
-  else
-  AGG_INCLUDES = -I/usr/include/agg2
-  AGG_LIBS = -lagg -lX11
-
-  FREETYPE_INCLUDES = -I/usr/include/freetype2
-  FREETYPE_LIBS = -lfreetype
+  LUA_INCLUDES = $(shell pkg-config --cflags luajit)
+  LUA_LIBS = $(shell pkg-config --libs luajit)
 
   PTHREAD_DEFS += -pthread
-  PTHREADS_LIBS = -lpthread
-  LDFLAGS += -Wl,-E
+  PTHREAD_LIBS = -lpthread
+
+  ifeq ($(HOST_SYS),Darwin)
+    LINK_EXE = $(CXX) $(LDFLAGS)
+    # Use rsync because the --parents option to cp doesn't exist in
+    # Mac OS X
+    CP_REL = rsync -R
+    LDFLAGS += -Wl,-E
   endif
 
   DISPLAY_SUFFIX = x11
 
   LIBGRAPH_SO = libgraphcore.so
   LIBNATWIN_SO = libnatwin.so
-
-  LUA_INCLUDES = -I../luajit2/src
-  LUA_LIBS = -L../luajit2/src -lluajit
 endif
+
+ifeq ($(strip $(DEST_DIR)), )
+  DEST_PREFIX = $(PREFIX)
+else
+  DEST_PREFIX = $(DEST_DIR)/$(PREFIX)
+endif
+LUA_PATH = $(DEST_PREFIX)/share/lua/5.1
+LUA_DLLPATH = $(DEST_PREFIX)/lib/lua/5.1
+SYSTEM_LIBPATH = $(DEST_PREFIX)/lib
+DEBIAN = debian_build/$(PREFIX)
 
 ifeq ($(HOST_SYS),Windows)
   PLATFORM_NATWIN_SRC_FILES = agg_platform_support_win32.cpp agg_win32_bmp.cpp
@@ -128,15 +144,14 @@ else
   PLATFORM_NATWIN_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
+GRAPH_LUA_SRC = graph/init.lua graph/contour.lua
+
 HOST_CP = cp
 HOST_RM = rm -f
 CP_REL = cp --parents
 
-CC = gcc
-CXX = g++
-
-INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(AGG_INCLUDES)
-LIBS += $(PTHREAD_LIBS)
+INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(X11_INCLUDES) $(AGG_INCLUDES)
+LIBS += $(FREETYPE_LIBS) $(AGG_LIBS) $(X11_LIBS) $(LUA_LIBS) $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
@@ -155,17 +170,39 @@ DEP_FILES := $(NATWIN_CPPSRC_FILES:%.cpp=.deps/%.P) $(NATWIN_CSRC_FILES:%.c=.dep
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-TARGETS = $(LIBGRAPH_SO)
+TARGETS = $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
 all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
 
 $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
-	$(CC) -shared $(PLOT_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(FREETYPE_LIBS) $(LUA_LIBS) -lpthread -lsupc++
+	$(DLLINK) $(PLOT_OBJ_FILES) -o $@ $(LIBS) -lsupc++
 	strip --strip-unneeded $@
 
 $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
-	$(CC) -shared $(NATWIN_OBJ_FILES) -o $@ $(LIBS) $(AGG_LIBS) $(LUA_LIBS) -L. -lgraphcore -lpthread -lsupc++
+	$(DLLINK) $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
 	strip --strip-unneeded $@
+
+install: $(TARGETS)
+	mkdir -p $(LUA_PATH)
+	mkdir -p $(LUA_DLLPATH)
+	cp $(LIBGRAPH_SO) $(LUA_DLLPATH)/graphcore.so
+	cp $(LIBNATWIN_SO) $(LUA_DLLPATH)/natwin.so
+	ln -s $(LUA_DLLPATH)/graphcore.so $(SYSTEM_LIBPATH)/libgraphcore.so
+	$(CP_REL) $(GRAPH_LUA_SRC) $(LUA_PATH)
+
+debian: $(TARGETS)
+	rm -fr debian_build
+	rm -fr lua-graph-toolkit*.deb
+	mkdir -p $(DEBIAN)/share/lua/5.1
+	mkdir -p $(DEBIAN)/lib/lua/5.1
+	cp $(LIBGRAPH_SO) $(DEBIAN)/lib/lua/5.1/graphcore.so
+	cp $(LIBNATWIN_SO) $(DEBIAN)/lib/lua/5.1/natwin.so
+	ln -s lua/5.1/graphcore.so $(DEBIAN)/lib/libgraphcore.so
+	$(CP_REL) $(GRAPH_LUA_SRC) $(DEBIAN)/share/lua/5.1
+	fakeroot bash debian/build.sh $(VERSION)
+
+clean:
+	$(HOST_RM) *.o *.so *.dll $(TARGETS)
 
 %.o: %.cpp
 	@echo Compiling $<
@@ -185,9 +222,6 @@ $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
             >> .deps/$(*F).P; \
 	rm .deps/$(*F).pp
 
-.PHONY: clean all
-
-clean:
-	$(HOST_RM) *.o *.lo *.la *.so *.dll $(TARGETS)
+.PHONY: debian clean all
 
 -include $(DEP_FILES)

@@ -5,7 +5,6 @@
 #include <lauxlib.h>
 #include "lua-defs.h"
 #include "gs-types.h"
-#include <gsl/gsl_errno.h>
 #include <math.h>
 
 #define GS_WINDOW_NAME_DEF  "GSL.window"

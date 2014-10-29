@@ -1,11 +1,10 @@
-###################
-Lua Graphics Module
-###################
+Welcome to Lua Graphics Toolkit's documentation!
+================================================
 
-The Lua Graphics Module is a Lua module for creating plots and graphical
+The Lua Graphics Toolkit is a Lua module for creating plots and graphical
 animations using a simple Lua interface.
 
-The Lua Graphics Module is implement the core functions in C and C++ using
+The module does implement the core functions in C and C++ using
 the Lua's C API. A second layer of functions are implemented in Lua.
 
 Currently only LuaJIT2 is officially supported but nothing prevent to use
@@ -18,3 +17,12 @@ Contents:
 
    graphics.rst
    contour.rst
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
