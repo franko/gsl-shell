@@ -20,6 +20,9 @@
 
 include makeconfig
 
+AR = ar rcu
+RANLIB = ranlib
+
 ifneq (,$(findstring Windows,$(OS)))
   HOST_SYS= Windows
 else
@@ -57,7 +60,9 @@ endif
 
 ifeq ($(HOST_SYS),Windows)
   CC = gcc
+  DYNCC = $(CC)
   CXX = g++
+  DYNCXX = $(CXX)
   DLLINK = gcc -static-libgcc -shared
 
   DISPLAY_SUFFIX = win32
@@ -87,8 +92,10 @@ ifeq ($(HOST_SYS),Windows)
 
   DEFS += -DWIN32
 else
-  CC = gcc -fPIC
-  CXX = g++ -fPIC
+  CC = gcc
+  DYNCC = $(CC) -fPIC
+  CXX = g++
+  DYNCXX = $(CXX) -fPIC
   DLLINK = gcc -shared
 
   X11_INCLUDES = $(shell pkg-config x11 --cflags)
@@ -124,6 +131,9 @@ else
   LIBNATWIN_SO = libnatwin.so
 endif
 
+LIBGRAPH_A = libgraphcore.a
+LIBNATWIN_A = libnatwin.a
+
 ifeq ($(strip $(DEST_DIR)), )
   DEST_PREFIX = $(PREFIX)
 else
@@ -154,9 +164,6 @@ INCLUDES += $(LUA_INCLUDES) $(FREETYPE_INCLUDES) $(X11_INCLUDES) $(AGG_INCLUDES)
 LIBS += $(FREETYPE_LIBS) $(AGG_LIBS) $(X11_LIBS) $(LUA_LIBS) $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS)
 
-COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
-CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
-
 NATWIN_CSRC_FILES =
 NATWIN_CPPSRC_FILES = $(PLATFORM_NATWIN_SRC_FILES) canvas-window.cpp window.cpp
 
@@ -170,9 +177,19 @@ DEP_FILES := $(NATWIN_CPPSRC_FILES:%.cpp=.deps/%.P) $(NATWIN_CSRC_FILES:%.c=.dep
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
-TARGETS = $(LIBGRAPH_SO) $(LIBNATWIN_SO)
+ifeq ($(strip $(BUILD)), dynamic)
+  COMPILE = $(DYNCC) $(CFLAGS) $(DEFS) $(INCLUDES)
+  CXXCOMPILE = $(DYNCXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-all: $(LIBGRAPH_SO) $(LIBNATWIN_SO)
+  TARGETS = $(LIBGRAPH_SO) $(LIBNATWIN_SO)
+else
+  COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
+  CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
+
+  TARGETS = $(LIBGRAPH_A) $(LIBNATWIN_A)
+endif
+
+all: $(TARGETS)
 
 $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
 	$(DLLINK) $(PLOT_OBJ_FILES) -o $@ $(LIBS) -lsupc++
@@ -181,6 +198,16 @@ $(LIBGRAPH_SO): $(PLOT_OBJ_FILES)
 $(LIBNATWIN_SO): $(NATWIN_OBJ_FILES) $(LIBGRAPH_SO)
 	$(DLLINK) $(NATWIN_OBJ_FILES) -o $@ $(LIBS) -L. -lgraphcore -lsupc++
 	strip --strip-unneeded $@
+
+$(LIBGRAPH_A): $(PLOT_OBJ_FILES)
+	@echo Archive $@
+	@$(AR) $@ $?
+	@$(RANLIB) $@
+
+$(LIBNATWIN_A): $(NATWIN_OBJ_FILES)
+	@echo Archive $@
+	@$(AR) $@ $?
+	@$(RANLIB) $@
 
 install: $(TARGETS)
 	mkdir -p $(LUA_PATH)
@@ -202,7 +229,7 @@ debian: $(TARGETS)
 	fakeroot bash debian/build.sh $(VERSION)
 
 clean:
-	$(HOST_RM) *.o *.so *.dll $(TARGETS)
+	$(HOST_RM) *.o *.a *.so *.dll $(TARGETS)
 
 %.o: %.cpp
 	@echo Compiling $<
