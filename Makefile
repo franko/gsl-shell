@@ -119,7 +119,7 @@ endif
 
 LIBS += $(GSL_LIBS) -lm
 
-SUBDIRS := $(LUADIR) lang lua-gsl graph gdt
+SUBDIRS := $(LUADIR) lang lua-gsl graph-toolkit gdt
 FOXGUI_DIR := fox-gui
 
 FOXGUI_LIB = $(GSH_LIBDIR)/libfoxgui.a
@@ -144,7 +144,7 @@ $(LUAJIT_SO): $(LUADIR)
 $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
-	cp graph/$(LIBGRAPH_SO) graph/$(LIBNATWIN_SO) .
+	cp graph-toolkit/$(LIBGRAPH_SO) graph-toolkit/$(LIBNATWIN_SO) .
 
 $(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOXGUI_DIR)
 	@echo Linking $@
