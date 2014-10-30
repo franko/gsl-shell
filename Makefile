@@ -228,6 +228,14 @@ debian: $(TARGETS)
 	$(CP_REL) $(GRAPH_LUA_SRC) $(DEBIAN)/share/lua/5.1
 	fakeroot bash debian/build.sh $(VERSION)
 
+win_install: $(TARGETS)
+	mkdir -p windows_build
+	mkdir -p windows_build/lua
+	mkdir -p windows_build/lua/graph
+	cp $(LIBGRAPH_SO) windows_build
+	cp $(LIBNATWIN_SO) windows_build
+	$(CP_REL) $(GRAPH_LUA_SRC) windows_build/lua
+
 clean:
 	$(HOST_RM) *.o *.a *.so *.dll $(TARGETS)
 
