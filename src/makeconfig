@@ -6,6 +6,6 @@ DISABLE_SUBPIXEL_LCD = no
 
 DEBUG = no
 
-
-# can be "static" or "dynamic"
+# Define if a static or shared library should be built. Can be "static"
+# or "dynamic"
 BUILD = dynamic
