@@ -681,6 +681,6 @@ luaopen_natwin(lua_State *L)
     lua_pop (L, 1);
 
     /* gsl module registration */
-    luaL_register (L, "graph", window_functions);
+    luaL_register (L, "graphcore", window_functions);
     return 1;
 }

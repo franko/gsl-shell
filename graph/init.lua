@@ -8,6 +8,8 @@ local bor, band, lshift, rshift = bit.bor, bit.band, bit.lshift, bit.rshift
 graph = require("graphcore")
 require("natwin")
 
+graphcore = nil
+
 local n_sampling_max = 8192
 local n_sampling_default = 256
 
