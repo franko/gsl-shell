@@ -31,10 +31,6 @@ endif
 
 GRAPH_LUA_SRC = init.lua contour.lua
 
-HOST_CP = cp
-HOST_RM = rm -f
-CP_REL = cp --parents
-
 LUA_PATH = $(DEST_PREFIX)/share/lua/5.1
 LUA_DLLPATH = $(DEST_PREFIX)/lib/lua/5.1
 SYSTEM_LIBPATH = $(DEST_PREFIX)/lib
@@ -54,7 +50,7 @@ install:
 	cp src/libgraphcore.so $(LUA_DLLPATH)/graphcore.so
 	cp src/libnatwin.so $(LUA_DLLPATH)/natwin.so
 	ln -s $(LUA_DLLPATH)/graphcore.so $(SYSTEM_LIBPATH)/libgraphcore.so
-	$(CP_REL) $(GRAPH_LUA_SRC) $(LUA_PATH)
+	cp $(GRAPH_LUA_SRC) $(LUA_PATH)
 
 debian:
 	$(MAKE) -C src

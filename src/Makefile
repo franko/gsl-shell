@@ -22,7 +22,6 @@ include makeconfig
 
 AR = ar rcu
 RANLIB = ranlib
-HOST_RM = rm -f
 
 ifneq (,$(findstring Windows,$(OS)))
   HOST_SYS= Windows
@@ -192,7 +191,7 @@ $(LIBNATWIN_A): $(NATWIN_OBJ_FILES)
 	@$(RANLIB) $@
 
 clean:
-	$(HOST_RM) *.o *.a *.so *.dll $(TARGETS)
+	rm -fr *.o *.a *.so *.dll $(TARGETS)
 
 %.o: %.cpp
 	@echo Compiling $<
