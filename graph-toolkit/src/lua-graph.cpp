@@ -48,12 +48,14 @@ pthread_mutex_t agg_mutex[1];
 
 struct window_hooks *app_window_hooks = stub_window_hooks;
 
+static luaL_Reg dummy_entries[] = { {NULL, NULL} };
+
 int
 luaopen_graphcore(lua_State *L)
 {
     pthread_mutex_init(agg_mutex, NULL);
     window_registry_prepare(L);
-    lua_newtable(L);
+    luaL_register(L, "graphcore", dummy_entries);
     draw_register(L);
     text_register(L);
     plot_register(L);
