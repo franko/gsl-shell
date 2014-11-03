@@ -37,7 +37,6 @@
 #include "lualib.h"
 #include "luajit.h"
 #include "completion.h"
-#include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "gsl_shell_interp.h"
 #include "lang/language.h"
@@ -577,7 +576,6 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    luaopen_gsl(gs->L); /* Perform some GSL Shell's specific initializations. */
     status = gsl_shell_interp_dolibrary(gs, "gslext");
     if (status != 0) {
         report(gs, status);

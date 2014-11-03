@@ -21,20 +21,9 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include <gsl/gsl_errno.h>
-
-#include "lua-gsl.h"
-
 #include "gdt/gdt_table.h"
 
 /* used to force the linker to link the gdt library. Otherwise it
  * would be discarded as there are no other references to its functions. */
 extern gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc);
 gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc) = gdt_table_new;
-
-int
-luaopen_gsl (lua_State *L)
-{
-    gsl_set_error_handler_off ();
-    return 0;
-}

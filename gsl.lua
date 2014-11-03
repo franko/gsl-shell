@@ -49,6 +49,12 @@ ffi.cdef[[
 	 GSL_EOF      = 32   
    } ;
 
+      typedef void gsl_error_handler_t (const char * reason, const char * file, int line, int gsl_errno);
+
+      gsl_error_handler_t *gsl_set_error_handler (gsl_error_handler_t * new_handler);
+
+      gsl_error_handler_t *gsl_set_error_handler_off (void);
+
       const char * gsl_strerror (const int gsl_errno);
 
       typedef complex gsl_complex;
@@ -2656,7 +2662,7 @@ gsl_interp_bsearch(const double x_array[], double x,
 
 
 if jit.os == 'Linux' then
-	return ffi.C
+	return ffi.load('libgsl')
 elseif jit.os == 'OSX' then
 	return ffi.load('libgsl.0.dylib')
 else

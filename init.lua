@@ -23,7 +23,8 @@ local fmt = string.format
 local tostring = tostring
 
 do
-   local ffi = require('ffi')
+   local ffi = require("ffi")
+   local gsl = require("gsl")
    local reg = debug.getregistry()
 
    reg.__gsl_ffi_types = {}
@@ -33,7 +34,7 @@ do
       t[#t + 1] = {ctype, name}
    end
 
-   gsl_type = function(obj)
+   function gsl_type(obj)
       local s = type(obj)
       if s == "cdata" then
          for _, item in ipairs(reg.__gsl_ffi_types) do
@@ -43,6 +44,8 @@ do
       end
       return s
    end
+
+   gsl.gsl_set_error_handler_off ()
 end
 
 function math.divmod(n, p)
