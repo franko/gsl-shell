@@ -34,6 +34,9 @@ else
   GSL_INCLUDES = $(shell pkg-config gsl --cflags)
   GSL_LIBS = $(shell pkg-config gsl --libs)
 
+  LUAJIT_CFLAGS := $(shell pkg-config luajit --cflags)
+  LUAJIT_LIBS := $(shell pkg-config luajit --libs)
+
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
 
@@ -45,6 +48,9 @@ else
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
+
+  LUAJIT_CFLAGS := $(shell pkg-config luajit --cflags)
+  LUAJIT_LIBS := $(shell pkg-config luajit --libs)
 
   RL_INCLUDES = -I/usr/include/readline
   RL_LIBS = -ldl -lreadline -lhistory -lncurses

@@ -28,8 +28,6 @@ LINK_EXE = $(CC) $(LDFLAGS)
 
 GSH_LIBDIR= $(GSH_BASE_DIR)/.libs
 GSH_DLL_LIBDIR= $(GSH_BASE_DIR)
-LUADIR = $(GSH_BASE_DIR)/luajit2
-LUA_CFLAGS = -I$(LUADIR)/src
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
@@ -47,13 +45,8 @@ else
   endif
 endif
 
-ifeq ($(strip $(LUA_BUILD)), yes)
-  PACKAGE_NAME = lua
-  PACKAGE_VERSION = $(ABIVER)
-else
-  PACKAGE_NAME = gsl-shell
-  PACKAGE_VERSION = 2.3
-endif
+PACKAGE_NAME = gsl-shell
+PACKAGE_VERSION = 2.3
 
 ifeq ($(strip $(DEBUG)), yes)
   CFLAGS = -g -Wall
@@ -67,23 +60,17 @@ PTHREAD_DEFS += -D_REENTRANT
 CPP_SUP_LIBS = -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
-  BUILDMODE = dynamic
-
   DEFS += -DWIN32
   LDFLAGS += -Wl,--export-all-symbols
 
   GSL_SHELL = gsl-shell.exe
   GSL_SHELL_GUI = gsl-shell-gui.exe
-  LUAJIT_DLL = lua$(NODOTABIVER)
-  LUAJIT_SO = $(GSH_DLL_LIBDIR)/$(LUAJIT_DLL).dll
 else
   PTHREAD_DEFS += -pthread
   PTHREAD_LIBS += -pthread
 
   GSL_SHELL = gsl-shell
   GSL_SHELL_GUI = gsl-shell-gui
-  LUAJIT_DLL = luajit
-  LUAJIT_SO = $(GSH_DLL_LIBDIR)/lib$(LUAJIT_DLL).so
 endif
 
 ifeq ($(strip $(DEBUG)), yes)

@@ -30,16 +30,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define luajit_c
-
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
-#include "luajit.h"
 #include "completion.h"
 #include "gsl-shell.h"
 #include "gsl_shell_interp.h"
 #include "lang/language.h"
+
+#define LUA_PROGNAME "gsl-shell"
+#define LUA_PROMPT "> "
+#define LUA_PROMPT2 ">> "
 
 #if defined(USE_READLINE)
 #include <stdio.h>
