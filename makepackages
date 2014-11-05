@@ -20,6 +20,9 @@ ifeq ($(HOST_SYS),Windows)
   GSL_INCLUDES =
   GSL_LIBS = -lgsl -lgslcblas
 
+  LUAJIT_CFLAGS =
+  LUAJIT_LIBS = -llua51
+
   PTHREADS_LIBS = -lpthread
 else
   ifeq ($(HOST_SYS),Darwin)
