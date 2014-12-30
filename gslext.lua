@@ -1,6 +1,7 @@
 -- load initialization files for GSL Shell
 
-require('iter')
+require('base')
+iter = require('iter')
 require('matrix')
 require('eigen')
 require('num')
