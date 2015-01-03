@@ -2,7 +2,8 @@
 
 require('base')
 iter = require('iter')
-require('matrix')
+matrix = require('matrix')
+complex = require('complex')
 require('eigen')
 require('num')
 require('rng')

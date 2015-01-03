@@ -511,6 +511,11 @@ gsl_matrix_complex_alloc_from_matrix (gsl_matrix_complex * b,
                                             const size_t k1, const size_t k2,
                                             const size_t n1, const size_t n2);
 
+gsl_vector_complex *gsl_vector_complex_alloc (const size_t n);
+gsl_vector_complex *gsl_vector_complex_calloc (const size_t n);
+
+void gsl_vector_complex_free (gsl_vector_complex * v);
+
 gsl_vector_complex * 
 gsl_vector_complex_alloc_row_from_matrix (gsl_matrix_complex * m,
                                                 const size_t i);
