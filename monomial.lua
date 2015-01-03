@@ -63,7 +63,7 @@ end
 local function monomial_equal(a, b)
     if a[1] ~= b[1] or #a ~= #b then return false end
     for k, asym, apow in mon_terms(a) do
-        bsym, bpow = b[2*k], b[2*k+1]
+        local bsym, bpow = b[2*k], b[2*k+1]
         if bsym ~= asym or bpow ~= apow then return false end
     end
     return true
