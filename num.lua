@@ -3,7 +3,7 @@ local template = require 'template'
 
 local REG = debug.getregistry()
 
-num = {}
+local num = {}
 
 function num.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}

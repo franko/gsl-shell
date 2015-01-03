@@ -274,7 +274,7 @@ local function matrix_display_gen(sel)
              local eps = (sq / (n1*n2)) * 1e-9
              eps = eps > 0 and eps or 1
 
-             lsrow = {}
+             local lsrow = {}
              local lmax = 0
              for i=0, n1-1 do
                 local row = {}
@@ -570,7 +570,7 @@ local function matrix_complex_norm(m)
   return sqrt(matrix_complex_norm2(m))
 end
 
-complex = {
+local complex = {
    new   = gsl_complex,
    conj  = complex_conj,
    real  = complex_real,
@@ -617,6 +617,12 @@ ffi.metatype(gsl_complex, complex_mt)
 local function matrix_new_unit(n)
    local m = matrix_alloc(n, n)
    gsl.gsl_matrix_set_identity(m)
+   return m
+end
+
+local function matrix_new_cunit(n)
+   local m = matrix_calloc(n, n)
+   gsl.gsl_matrix_complex_set_identity(m)
    return m
 end
 
@@ -670,18 +676,14 @@ local function matrix_new_copy(m)
    return m:copy()
 end
 
-local function matrix_zero_tg()
-  m:zero()
-end
-
-matrix = {
+local matrix = {
    new    = matrix_new,
    cnew   = matrix_cnew,
    alloc  = matrix_alloc,
    calloc = matrix_calloc,
-   zero   = matrix_zero_tg,
    copy   = matrix_new_copy,
    unit   = matrix_new_unit,
+   cunit  = matrix_new_cunit,
    dim    = matrix_dim,
    vec    = matrix_vect_def,
    set    = matrix_set_equal,
@@ -967,7 +969,7 @@ local function matrix_complex_det(m)
   return det
 end
 
-function matrix_lu(m)
+local function matrix_lu(m)
   local n = tonumber(m.size1)
   local lu = matrix_copy(m)
   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
@@ -983,7 +985,7 @@ function matrix_lu(m)
   return l,u
 end
 
-function matrix_complex_lu(m)
+local function matrix_complex_lu(m)
   local n = tonumber(m.size1)
   local lu = matrix_complex_copy(m)
   local p = ffi.gc(gsl.gsl_permutation_alloc(n), gsl.gsl_permutation_free)
@@ -999,7 +1001,7 @@ function matrix_complex_lu(m)
   return l,u
 end
 
-function matrix_td_decomp(m)
+local function matrix_td_decomp(m)
   local n1 = tonumber(m.size1)
   local n2 = tonumber(m.size2)
 
@@ -1016,7 +1018,7 @@ function matrix_td_decomp(m)
   return Q,diag, sdiag
 end
 
-function matrix_complex_td_decomp(m)
+local function matrix_complex_td_decomp(m)
   local n1 = tonumber(m.size1)
   local n2 = tonumber(m.size2)
 
@@ -1029,8 +1031,8 @@ function matrix_complex_td_decomp(m)
   local sdvec = gsl.gsl_matrix_column(sdiag, 0)
   local A = matrix_complex_copy(m)
   
-  gsl_check(gsl_linalg_hermtd_decomp(A,tau))
-  gsl_check(gsl_linalg_hermtd_unpack(A, tau, Q,  dvec, sdvec))
+  gsl_check(gsl.gsl_linalg_hermtd_decomp(A,tau))
+  gsl_check(gsl.gsl_linalg_hermtd_unpack(A, tau, Q,  dvec, sdvec))
   return Q,diag, sdiag
 end
 
@@ -1060,18 +1062,6 @@ function matrix.solve(m, b)
       if br then b = mat_complex_of_real(b) end
       return matrix_complex_solve(m, b)
    end
-end
-
-local function matrix_sv_decomp(a, v, s, w)
-   local sv = gsl.gsl_matrix_column(s, 0)
-   local w
-   if w then
-      wv = gsl.gsl_matrix_column(w, 0)
-   else
-      local m, n = matrix_dim(a)
-      wv = ffi.gc(gsl.gsl_vector_alloc(n), gsl.gsl_vector_free)
-   end
-   gsl_check(gsl.gsl_linalg_SV_decomp (a, v, sv, wv))
 end
 
 function matrix.svd(a)

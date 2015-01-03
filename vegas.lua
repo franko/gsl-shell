@@ -1,5 +1,6 @@
 local template = require 'template'
 local ffi = require 'ffi'
+local num = require 'num'
 
 local abs  = math.abs
 

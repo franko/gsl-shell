@@ -1,3 +1,6 @@
+local ffi = require 'ffi'
+
+local gdt = require 'gdt'
 local expr_parse = require 'expr-parse'
 local gdt_expr = require 'gdt-expr'
 local gdt_factors = require 'gdt-factors'
@@ -38,8 +41,8 @@ function gdt.interp(t, expr_formula, interp_type)
 
     local x_a, x_b = X.data[0], X.data[n-1]
     local y_a, y_b = y.data[0], y.data[n-1]
-    local y_der_a = cgsl.gsl_interp_eval_deriv(interp, X.data, y.data, x_a, acc)
-    local y_der_b = cgsl.gsl_interp_eval_deriv(interp, X.data, y.data, x_b, acc)
+    local y_der_a = cgsl.gsl_interp_eval_deriv(interp, X.data, y.data, x_a, accel)
+    local y_der_b = cgsl.gsl_interp_eval_deriv(interp, X.data, y.data, x_b, accel)
 
     local function eval(x_req)
         if x_req <= x_a then
@@ -47,8 +50,10 @@ function gdt.interp(t, expr_formula, interp_type)
         elseif x_req >= x_b then
             return (x_req - x_b) * y_der_b + y_b
         else
-            return cgsl.gsl_interp_eval(interp, X.data, y.data, x_req, acc)
+            return cgsl.gsl_interp_eval(interp, X.data, y.data, x_req, accel)
         end
     end
     return eval
 end
+
+return gdt.interp 

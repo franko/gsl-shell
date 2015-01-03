@@ -1,4 +1,3 @@
-local ffi = require 'ffi'
 local gdt = require 'gdt'
 local csv = require 'csv'
 

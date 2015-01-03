@@ -2,15 +2,8 @@
 
 local ffi = require 'ffi'
 local gsl = require 'gsl'
-
-local sqrt, abs = math.sqrt, math.abs
-local format = string.format
-
-local check = require 'check'
-local gsl_check = require'gsl-check'
-local is_integer, is_real = check.is_integer, check.is_real
 local matrix = require 'matrix'
-
+local gsl_check = require 'gsl-check'
 ------------------------------------------------------------
 
 --Eigensystem struct und function definitions
@@ -324,9 +317,9 @@ gsl_eigen_invert_jacobi(const gsl_matrix * matrix,
 ]]
 
 -------------------------------------------------------------------------------
-eigen = {}
+local eigen = {}
 
-order_lookup = {
+local order_lookup = {
    asc      = gsl.GSL_EIGEN_SORT_VAL_ASC,
    desc     = gsl.GSL_EIGEN_SORT_VAL_DESC,
    abs_asc  = gsl.GSL_EIGEN_SORT_ABS_ASC,
@@ -404,7 +397,7 @@ function eigen.herm(m, order, eigenvalues_only)
 
 end
 
-function eigen.gensymm(a, b)
+function eigen.gensymm(a, b, order)
    local size = a.size1
    local A = matrix.copy(a)
    local B = matrix.copy(b)
@@ -424,10 +417,10 @@ function eigen.gensymm(a, b)
    return eval,evec
 end
 
-function eigen.genherm(a, b)
+function eigen.genherm(a, b, order)
    local size = a.size1
-   local A = matrix_complex.copy(a)
-   local B = matrix_complex.copy(b)
+   local A = a:copy()
+   local B = b:copy()
    local eval = matrix.alloc(size, 1)
    local xeval = gsl.gsl_matrix_column(eval, 0)
    local evec = matrix.calloc (size, size)
@@ -444,7 +437,7 @@ function eigen.genherm(a, b)
    return eval,evec
 end
 
-function eigen.gen(a, b)
+function eigen.gen(a, b, order)
    local size = a.size1
    local A = matrix.copy(a)
    local B = matrix.copy(b)
@@ -467,3 +460,5 @@ function eigen.gen(a, b)
 
    return alpha, beta, evec
 end
+
+return eigen
