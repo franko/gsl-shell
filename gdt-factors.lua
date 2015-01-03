@@ -21,7 +21,7 @@ local function expr_find_factors_rec(t, expr, factors)
     end
 end
 
-function compute_factors(t, expr_list)
+local function compute_factors(t, expr_list)
     local els = {}
     for i, e in ipairs(expr_list) do
         local et, factors = {}, {}

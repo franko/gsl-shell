@@ -57,6 +57,4 @@ function M.list()
    return t
 end
 
-rng = M
-
 return M

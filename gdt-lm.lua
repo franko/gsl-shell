@@ -1,3 +1,4 @@
+local gdt = require 'gdt'
 local expr_parse = require 'expr-parse'
 local expr_print = require 'expr-print'
 local gdt_expr = require 'gdt-expr'

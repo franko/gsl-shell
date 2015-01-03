@@ -1,5 +1,5 @@
 local cgdt = require 'cgdt'
-
+local ffi = require 'ffi'
 local format = string.format
 local concat = table.concat
 local max = math.max
@@ -11,7 +11,8 @@ local gdt_table_cursor = ffi.typeof("gdt_table_cursor")
 
 local GDT_VAL_STRING = tonumber(cgdt.GDT_VAL_STRING)
 local GDT_VAL_NUMBER = tonumber(cgdt.GDT_VAL_NUMBER)
-local GDT_VAL_UNDEF  = tonumber(cgdt.GDT_VAL_UNDEF)
+
+local gdt
 
 local function extract_value(e, val)
     if e == GDT_VAL_NUMBER then

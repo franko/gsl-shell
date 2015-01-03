@@ -2,9 +2,9 @@
 local ffi = require 'ffi'
 local gsl = require 'gsl'
 
+local gdt = require 'gdt'
 local gdt_expr = require 'gdt-expr'
 local expr_parse = require 'expr-parse'
-local gdt_expr = require 'gdt-expr'
 local gdt_factors = require 'gdt-factors'
 local AST = require 'expr-actions'
 
@@ -77,3 +77,5 @@ local function gdt_table_hist(t, expr_formula, opt)
 end
 
 gdt.hist = gdt_table_hist
+
+return gdt_table_hist

@@ -165,6 +165,4 @@ local M = {
    hypergeometric_Q = gsl.gsl_cdf_hypergeometric_Q,
 }
 
-randist = M
-
 return M
