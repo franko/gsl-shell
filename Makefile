@@ -149,42 +149,33 @@ $(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOX
 	@echo Linking $@
 	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS) $(CPP_SUP_LIBS)
 
+define install-to-dir =
+mkdir -p $1$(PREFIX)/bin
+mkdir -p $1$(PREFIX)/share/applications
+mkdir -p $1$(PREFIX)/share/icons/hicolor/128x128/apps
+mkdir -p $1$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+cp $(GSL_SHELL_GUI) $(GSL_SHELL) $1$(PREFIX)/bin
+strip $1$(PREFIX)/bin/$(GSL_SHELL) $1$(PREFIX)/bin/$(GSL_SHELL_GUI)
+test -f $(LUAJIT_SO) && \
+  mkdir -p $1$(PREFIX)/lib && \
+  cp $(LUAJIT_SO) $1$(PREFIX)/lib && \
+  cd $1$(PREFIX)/lib && \
+  ln -s libluajit.so libluajit-$(ABIVER).so && \
+  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
+cp resources/gsl-shell.desktop $1$(PREFIX)/share/applications
+cp resources/gsl-shell-128.png $1$(PREFIX)/share/icons/hicolor/128x128/apps/gsl-shell.png
+$(CP_REL) $(LUA_BASE_FILES) $1$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+$(CP_REL) $(EXAMPLES_FILES) $1$(PREFIX)/bin
+endef
+
 install: $(GSL_SHELL) $(GSL_SHELL_GUI)
-	mkdir -p $(INSTALL_BIN_DIR)
-	cp $(GSL_SHELL) $(INSTALL_BIN_DIR)
-	cp $(GSL_SHELL_GUI) $(INSTALL_BIN_DIR)
-	test -f $(LUAJIT_SO) && \
-	  mkdir -p $(INSTALL_SYS_LIB_DIR) && \
-	  cp $(LUAJIT_SO) $(INSTALL_SYS_LIB_DIR) && \
-	  cd $(INSTALL_SYS_LIB_DIR) && \
-	  ln -s libluajit.so libluajit-$(ABIVER).so && \
-	  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
-	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL)
-	strip $(INSTALL_BIN_DIR)/$(GSL_SHELL_GUI)
-	mkdir -p $(INSTALL_LIB_DIR)
-	$(CP_REL) $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
-	$(CP_REL) $(EXAMPLES_FILES) $(INSTALL_BIN_DIR)
+	$(call install-to-dir,$(DESTDIR))
 
 debian: $(DEBIAN_PACKAGE)
 
 $(DEBIAN_PACKAGE): $(GSL_SHELL) $(GSL_SHELL_GUI)
 	$(HOST_RM) -r $(DEBIAN_BUILD_DIR)
-	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
-	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/applications
-	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/icons/hicolor/128x128/apps
-	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
-	cp $(GSL_SHELL_GUI) $(GSL_SHELL) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
-	strip $(DEBIAN_BUILD_DIR)$(PREFIX)/bin/$(GSL_SHELL) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin/$(GSL_SHELL_GUI)
-	test -f $(LUAJIT_SO) && \
-	  mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
-	  cp $(LUAJIT_SO) $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
-	  cd $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
-	  ln -s libluajit.so libluajit-$(ABIVER).so && \
-	  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
-	cp resources/gsl-shell.desktop $(DEBIAN_BUILD_DIR)$(PREFIX)/share/applications
-	cp resources/gsl-shell-128.png $(DEBIAN_BUILD_DIR)$(PREFIX)/share/icons/hicolor/128x128/apps/gsl-shell.png
-	$(CP_REL) $(LUA_BASE_FILES) $(DEBIAN_BUILD_DIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
-	$(CP_REL) $(EXAMPLES_FILES) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
+	$(call install-to-dir,$(DEBIAN_BUILD_DIR))
 	fakeroot bash debian/build.sh $(PACKAGE_NAME) $(VERSION)
 
 .PHONY: clean all subdirs $(SUBDIRS) $(FOXGUI_DIR)
