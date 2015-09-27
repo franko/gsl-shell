@@ -22,5 +22,5 @@ USE_READLINE = yes
 # can be: static, mixed or dynamic
 BUILDMODE = static
 
-PREFIX= /usr/local
+PREFIX= /usr
 DESTDIR=
