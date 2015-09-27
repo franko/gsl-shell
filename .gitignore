@@ -1,12 +1,14 @@
 *.[oa]
 *.exe
+*.deb
 *.so
 *.dll
+debian_build
 luajit2/lib/vmdef.lua
 *~
 *.sublime*
 gsl-shell
-gsl-shell.exe
+gsl-shell-gui
 .deps
 .lib
 .trash

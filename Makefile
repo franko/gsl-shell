@@ -23,6 +23,10 @@ include make-system-detect
 include makepackages
 include makedefs
 
+DEBIAN_BUILD_DIR = debian_build
+DEB_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEBIAN_PACKAGE := $(PACKAGE_NAME)_$(VERSION)-1_$(DEB_ARCH).deb
+
 GSH_BASE_DIR = .
 
 INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
@@ -160,6 +164,28 @@ install: $(GSL_SHELL) $(GSL_SHELL_GUI)
 	mkdir -p $(INSTALL_LIB_DIR)
 	$(CP_REL) $(LUA_BASE_FILES) $(INSTALL_LIB_DIR)
 	$(CP_REL) $(EXAMPLES_FILES) $(INSTALL_BIN_DIR)
+
+debian: $(DEBIAN_PACKAGE)
+
+$(DEBIAN_PACKAGE): $(GSL_SHELL) $(GSL_SHELL_GUI)
+	$(HOST_RM) -r $(DEBIAN_BUILD_DIR)
+	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
+	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/applications
+	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/icons/hicolor/128x128/apps
+	mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+	cp $(GSL_SHELL_GUI) $(GSL_SHELL) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
+	strip $(DEBIAN_BUILD_DIR)$(PREFIX)/bin/$(GSL_SHELL) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin/$(GSL_SHELL_GUI)
+	test -f $(LUAJIT_SO) && \
+	  mkdir -p $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
+	  cp $(LUAJIT_SO) $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
+	  cd $(DEBIAN_BUILD_DIR)$(PREFIX)/lib && \
+	  ln -s libluajit.so libluajit-$(ABIVER).so && \
+	  ln -s libluajit-$(ABIVER).so libluajit-$(ABIVER).so.$(MAJVER) || :
+	cp resources/gsl-shell.desktop $(DEBIAN_BUILD_DIR)$(PREFIX)/share/applications
+	cp resources/gsl-shell-128.png $(DEBIAN_BUILD_DIR)$(PREFIX)/share/icons/hicolor/128x128/apps/gsl-shell.png
+	$(CP_REL) $(LUA_BASE_FILES) $(DEBIAN_BUILD_DIR)$(PREFIX)/share/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+	$(CP_REL) $(EXAMPLES_FILES) $(DEBIAN_BUILD_DIR)$(PREFIX)/bin
+	fakeroot bash debian/build.sh $(PACKAGE_NAME) $(VERSION)
 
 .PHONY: clean all subdirs $(SUBDIRS) $(FOXGUI_DIR)
 
