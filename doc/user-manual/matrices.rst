@@ -127,6 +127,14 @@ Matrix methods
 
      Return the dimensions of the matrix, in the order the numbers of rows and the number of columns.
 
+  .. method:: rows()
+
+     Return the number of rows of the matrix.
+
+  .. method:: cols()
+
+     Return the number of columns of the matrix.
+
   .. method:: get(i, j)
 
      This function returns the (i,j)-th element of a matrix. As a

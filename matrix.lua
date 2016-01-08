@@ -799,6 +799,8 @@ end
 local matrix_methods = {
    alloc = matrix_alloc,
    dim   = matrix_dim,
+   rows  = matrix_rows,
+   cols  = matrix_cols,
    zero  = matrix_zero,
    col   = matrix_col,
    row   = matrix_row,
