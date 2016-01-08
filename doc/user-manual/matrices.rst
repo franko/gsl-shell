@@ -197,6 +197,13 @@ All the functions described in this section have an equivalent function for comp
 
     Convert the table t into a column matrix. In GSL Shell column matrices are considered vectors. The table should be in the form ``{v1, v2, v3, ...}``.
 
+.. function:: stack(layout)
+
+    Returns a new matrix by stacking together, horizontally and vertically, more matrices as specified in the ``layout`` argument.
+
+    The argument ``layout`` should be in the form ``{{A1, A2, ...}, {B1, B2, ...}, ...}`` to indicate the layout of the matrices to be composed.
+    Each of the layout terms can be a matrix or a scalar.
+    If a scalar is given it will be transformed into a matrix of identical elements and whose dimensions will be adjusted to fit the other matrices in the layout.
 
 .. function:: dim(m)
 

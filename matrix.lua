@@ -45,8 +45,12 @@ local function matrix_dim(m)
    return tonumber(m.size1), tonumber(m.size2)
 end
 
-local function matrix_len(m)
+local function matrix_rows(m)
    return tonumber(m.size1)
+end
+
+local function matrix_cols(m)
+   return tonumber(m.size2)
 end
 
 local function block_alloc(n)
@@ -149,7 +153,7 @@ local function check_indices(m, i, j)
 end
 
 local function check_row_index(m, i)
-   if i < 1 or i > matrix_len(m) then
+   if i < 1 or i > matrix_rows(m) then
       error('matrix index out of bounds', 3)
    end
    return i-1
@@ -676,6 +680,89 @@ local function matrix_new_copy(m)
    return m:copy()
 end
 
+local function xget(m, i, j)
+  return type(m) == 'number' and m or m:get(i, j)
+end
+
+-- Compose a new matrix by stacking together submatrix based on the
+-- layout. This latter should be of the form:
+-- {{A1, A2, ...}, {B1, B2, ...}}.
+-- The function accepts matrix or scalars.
+local function matrix_stack(ls)
+  local p, q = #ls, #(ls[1])
+  local N, Ndim = 0, {}
+  for j = 1, q do
+    for i = 1, p do
+      local s = ls[i][j]
+      local dim = type(s) == 'number' and -1 or matrix_rows(s)
+      if not Ndim[i] and dim > 0 then
+        Ndim[i] = dim
+      end
+    end
+    N = 0
+    for i = 1, p do
+      if not Ndim[i] then
+        N = 0
+        break
+      else
+        N = N + Ndim[i]
+      end
+    end
+    if N > 0 then break end
+  end
+  if N == 0 then
+    for i = 1, p do
+      if not Ndim[i] then Ndim[i] = 1 end
+      N = N + Ndim[i]
+    end
+  end
+
+  local M, Mdim = 0, {}
+  for i = 1, p do
+    for j = 1, q do
+      local s = ls[i][j]
+      local dim = type(s) == 'number' and -1 or matrix_cols(s)
+      if not Mdim[j] and dim > 0 then
+        Mdim[j] = dim
+      end
+    end
+    M = 0
+    for j = 1, q do
+      if not Mdim[j] then
+        M = 0
+        break
+      else
+        M = M + Mdim[j]
+      end
+    end
+    if M > 0 then break end
+  end
+  if M == 0 then
+    for j = 1, q do
+      if not Mdim[j] then Mdim[j] = 1 end
+      M = M + Mdim[j]
+    end
+  end
+
+  local m = matrix.alloc(N, M)
+  local ia = 1
+  for i = 1, p do
+    local ja = 1
+    for j = 1, q do
+      local s = ls[i][j]
+      for a = 1, Ndim[i] do
+        for b = 1, Mdim[j] do
+          m:set(ia + (a-1), ja + (b-1), xget(s, a, b))
+        end
+      end
+      ja = ja + Mdim[j]
+    end
+    ia = ia + Ndim[i]
+  end
+  return m
+end
+
+
 local matrix = {
    new    = matrix_new,
    cnew   = matrix_cnew,
@@ -688,6 +775,7 @@ local matrix = {
    vec    = matrix_vect_def,
    set    = matrix_set_equal,
    fset   = matrix_fset,
+   stack  = matrix_stack,
    block  = block_alloc,
 
    transpose = matrix_new_transpose,
@@ -695,7 +783,7 @@ local matrix = {
 }
 
 local function matrix_sort(m, f)
-   local n = matrix_len(m)
+   local n = matrix_rows(m)
    algo.quicksort(m.data, 0, n - 1, f)
 end
 
@@ -762,7 +850,7 @@ local matrix_mt = {
    __unm = matrix_unm,
    __pow = matrix_power.power,
 
-   __len = matrix_len,
+   __len = matrix_rows,
 
    __index    = matrix_index,
    __newindex = matrix_newindex,
@@ -834,7 +922,7 @@ local matrix_complex_mt = {
    __pow = matrix_power.cpower,
    __unm = matrix_complex_unm,
 
-   __len = matrix_len,
+   __len = matrix_rows,
 
    __index    = matrix_complex_index,
    __newindex = matrix_complex_newindex,
