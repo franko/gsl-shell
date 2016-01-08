@@ -681,7 +681,7 @@ local function matrix_new_copy(m)
 end
 
 local function xget(m, i, j)
-  return type(m) == 'number' and m or m:get(i, j)
+  return (is_real(m) or ffi.istype(gsl_complex, m)) and m or m:get(i, j)
 end
 
 -- Compose a new matrix by stacking together submatrix based on the
@@ -690,6 +690,15 @@ end
 -- The function accepts matrix or scalars.
 local function matrix_stack(ls)
   local p, q = #ls, #(ls[1])
+
+  local is_complex = false
+  for j = 1, q do
+    for i = 1, p do
+      local is_real = get_typeid(ls[i][j])
+      is_complex = is_complex or not is_real
+    end
+  end
+
   local N, Ndim = 0, {}
   for j = 1, q do
     for i = 1, p do
@@ -744,7 +753,7 @@ local function matrix_stack(ls)
     end
   end
 
-  local m = matrix.alloc(N, M)
+  local m = is_complex and matrix_calloc(N, M) or matrix_alloc(N, M)
   local ia = 1
   for i = 1, p do
     local ja = 1
