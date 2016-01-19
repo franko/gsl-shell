@@ -25,10 +25,9 @@ include $(GSH_BASE_DIR)/make-system-detect
 include $(GSH_BASE_DIR)/makepackages
 include $(GSH_BASE_DIR)/makedefs
 
-INCLUDES += -I$(GSH_BASE_DIR) $(GSL_INCLUDES)
-LIBS += $(PTHREAD_LIBS)
+INCLUDES += -I$(GSH_BASE_DIR) $(LUAJIT_INCLUDES) $(GSL_INCLUDES)
+LIBS += $(LUAJIT_LIBS) $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
-CFLAGS += $(LUA_CFLAGS)
 
 LUAGSL_SRC_FILES = lua-properties.c gs-types.c lua-utils.c lua-gsl.c str.c fatal.c
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)

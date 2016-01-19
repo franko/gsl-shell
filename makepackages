@@ -73,8 +73,8 @@ else
   RL_INCLUDES = -I/usr/include/readline
   RL_LIBS = -ldl -lreadline -lhistory -lncurses
 
-  LUAJIT_INCLUDES =
-  LUAJIT_LIBS = -lluajit
+  LUAJIT_INCLUDES := $(shell pkg-config --cflags luajit)
+  LUAJIT_LIBS := $(shell pkg-config --libs luajit)
 
   PTHREADS_LIBS = -lpthread
   endif

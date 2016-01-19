@@ -35,10 +35,9 @@ else
   PLATSUP_SRC_FILES = support_x11.cpp agg_platform_support_x11.cpp
 endif
 
-INCLUDES += $(FREETYPE_INCLUDES) $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(LUADIR)/src -I$(GSH_BASE_DIR)/cpp-utils
-LIBS += $(PTHREAD_LIBS)
+INCLUDES += $(FREETYPE_INCLUDES) $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl $(LUAJIT_INCLUDES) -I$(GSH_BASE_DIR)/cpp-utils
+LIBS += $(PTHREAD_LIBS) $(LUAJIT_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
-CFLAGS += $(LUA_CFLAGS)
 
 AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) printf_check.cpp fonts.cpp gamma.cpp agg_font_freetype.cpp plot.cpp plot-auto.cpp utils.cpp units.cpp colors.cpp markers.cpp draw_svg.cpp canvas_svg.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window_registry.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp lua-graph.cpp
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
