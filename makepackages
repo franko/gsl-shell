@@ -26,6 +26,9 @@ ifeq ($(HOST_SYS),Windows)
   FREETYPE_INCLUDES = -I$(USER_INCLUDE)/freetype
   FREETYPE_LIBS = -lfreetype
 
+  LUAJIT_INCLUDES =
+  LUAJIT_LIBS = -lluajit
+
   PTHREADS_LIBS = -lpthread
 else
   ifeq ($(HOST_SYS),Darwin)
@@ -49,6 +52,9 @@ else
   FREETYPE_INCLUDES = $(shell pkg-config freetype2 --cflags)
   FREETYPE_LIBS = $(shell pkg-config freetype2 --libs)
 
+  LUAJIT_INCLUDES =
+  LUAJIT_LIBS = -lluajit
+
   PTHREADS_LIBS = -lpthread
 
 else
@@ -66,6 +72,9 @@ else
 
   RL_INCLUDES = -I/usr/include/readline
   RL_LIBS = -ldl -lreadline -lhistory -lncurses
+
+  LUAJIT_INCLUDES =
+  LUAJIT_LIBS = -lluajit
 
   PTHREADS_LIBS = -lpthread
   endif

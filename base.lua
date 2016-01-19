@@ -26,6 +26,8 @@ local cat = table.concat
 local fmt = string.format
 local tostring = tostring
 
+package.path = package.path .. ';templates/?.lua.in'
+
 do
    local ffi = require('ffi')
    local reg = debug.getregistry()
