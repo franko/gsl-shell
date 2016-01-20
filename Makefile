@@ -29,7 +29,7 @@ DEBIAN_PACKAGE := $(PACKAGE_NAME)_$(VERSION)-1_$(DEB_ARCH).deb
 
 GSH_BASE_DIR = .
 
-INCLUDES += -I. $(GSL_INCLUDES) $(LUAJIT_INCLUDES) -Iagg-plot -Ilua-gsl
+INCLUDES += -I. -Ilang-toolkit/src $(GSL_INCLUDES) $(LUAJIT_INCLUDES) -Iagg-plot -Ilua-gsl
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 CFLAGS += $(LUA_CFLAGS)
@@ -111,6 +111,8 @@ else
   INSTALL_SYS_LIB_DIR = $(DESTDIR)$(PREFIX)/lib
 endif
 
+LANG_TOOLKIT_LIB = lang-toolkit/src/liblang.a
+
 LIBS += $(GSL_LIBS) -lm
 
 SUBDIRS := lua-gsl agg-plot gdt
@@ -122,10 +124,9 @@ all: $(TARGETS) $(SUBDIRS) $(FOXGUI_DIR)
 
 subdirs: $(SUBDIRS) $(FOXGUI_DIR)
 
-$(SUBDIRS):
-	$(MAKE) -C $@
+$(LANG_TOOLKIT_LIB): lang-toolkit
 
-$(FOXGUI_DIR):
+$(SUBDIRS) $(FOXGUI_DIR) lang-toolkit:
 	$(MAKE) -C $@
 
 $(GSH_LIBDIR)/libluagsl.a: lua-gsl
@@ -133,13 +134,13 @@ $(GSH_LIBDIR)/libgdt.a: gdt
 $(GSH_LIBDIR)/libaggplot.a: agg-plot
 $(FOXGUI_LIB): $(FOXGUI_DIR)
 
-$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(SUBDIRS)
+$(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LANG_TOOLKIT_LIB) $(SUBDIRS)
 	@echo Linking $@
-	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	$(LINK_EXE) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LANG_TOOLKIT_LIB) $(LIBS)
 
-$(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(SUBDIRS) $(FOXGUI_DIR)
+$(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(SUBDIRS) $(LANG_TOOLKIT_LIB) $(FOXGUI_DIR)
 	@echo Linking $@
-	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS) $(CPP_SUP_LIBS)
+	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LANG_TOOLKIT_LIB) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS) $(CPP_SUP_LIBS)
 
 define install-to-dir =
 mkdir -p $1$(PREFIX)/bin
@@ -170,7 +171,7 @@ $(DEBIAN_PACKAGE): $(GSL_SHELL) $(GSL_SHELL_GUI)
 	$(call install-to-dir,$(DEBIAN_BUILD_DIR))
 	fakeroot bash debian/build.sh $(PACKAGE_NAME) $(VERSION)
 
-.PHONY: clean all subdirs $(SUBDIRS) $(FOXGUI_DIR)
+.PHONY: clean all subdirs lang-toolkit $(SUBDIRS) $(FOXGUI_DIR)
 
 include makerules
 

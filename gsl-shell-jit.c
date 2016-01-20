@@ -37,6 +37,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "language.h"
+#include "language_loaders.h"
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
@@ -254,13 +256,13 @@ static int getargs(lua_State *L, char **argv, int n)
 
 static int dofile(lua_State *L, const char *name)
 {
-    int status = luaL_loadfile(L, name) || docall(L, 0, 1);
+    int status = language_loadfile(L, name) || docall(L, 0, 1);
     return report(L, status);
 }
 
 static int dostring(lua_State *L, const char *s, const char *name)
 {
-    int status = luaL_loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
+    int status = language_loadbuffer(L, s, strlen(s), name) || docall(L, 0, 1);
     return report(L, status);
 }
 
@@ -336,7 +338,7 @@ static int yield_expr(lua_State* L, int index, const char* line, size_t len)
     }
 
     lua_pushfstring(L, "return %s", line);
-    status = luaL_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
+    status = language_loadbuffer(L, lua_tostring(L, -1), lua_strlen(L, -1), "=stdin");
     if (status == 0)
     {
         my_saveline(L, index);
@@ -368,7 +370,7 @@ static int loadline(lua_State *L)
         return 0;
 
     /* try to load it as a simple Lua chunk */
-    status = luaL_loadbuffer(L, line, len, "=stdin");
+    status = language_loadbuffer(L, line, len, "=stdin");
 
     if (incomplete(L, status))
     {
@@ -380,7 +382,7 @@ static int loadline(lua_State *L)
             lua_concat(L, 3);  /* join them */
 
             line = lua_tolstring(L, 1, &len);
-            status = luaL_loadbuffer(L, line, len, "=stdin");
+            status = language_loadbuffer(L, line, len, "=stdin");
             if (!incomplete(L, status)) break;  /* cannot try to add lines? */
         }
 
@@ -434,7 +436,7 @@ static int handle_script(lua_State *L, char **argv, int n)
     fname = argv[n];
     if (strcmp(fname, "-") == 0 && strcmp(argv[n-1], "--") != 0)
         fname = NULL;  /* stdin */
-    status = luaL_loadfile(L, fname);
+    status = language_loadfile(L, fname);
     lua_insert(L, -(narg+1));
     if (status == 0)
         status = docall(L, narg, 0);
@@ -656,6 +658,27 @@ static struct Smain {
     int keep_windows;
 } smain;
 
+static void override_loaders(lua_State *L)
+{
+  lua_getfield(L, LUA_GLOBALSINDEX, "package");
+  lua_getfield(L, -1, "loaders");
+  lua_remove(L, -2);
+
+  luaopen_langloaders(L);
+  lua_getfield(L, -1, "loadstring");
+  lua_setfield(L, LUA_GLOBALSINDEX, "loadstring");
+
+  lua_getfield(L, -1, "loadfile");
+  lua_setfield(L, LUA_GLOBALSINDEX, "loadfile");
+
+  lua_getfield(L, -1, "dofile");
+  lua_setfield(L, LUA_GLOBALSINDEX, "dofile");
+
+  lua_getfield(L, -1, "loader");
+  lua_rawseti(L, -3, 2);
+  lua_pop(L, 2);
+}
+
 static int pmain(lua_State *L)
 {
     struct Smain *s = &smain;
@@ -665,6 +688,11 @@ static int pmain(lua_State *L)
     globalL = L;
     if (argv[0] && argv[0][0]) progname = argv[0];
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
+    s->status = language_init(L);
+    if (s->status != 0) {
+        report(L, s->status);
+        return 0;
+    }
     script = collectargs(argv, &flags);
     if (script < 0) {  /* invalid args? */
         print_usage();
@@ -677,6 +705,7 @@ static int pmain(lua_State *L)
     }
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
+    override_loaders(L);
     gsl_shell_openlibs(L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
@@ -729,7 +758,9 @@ int main(int argc, char **argv)
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
 
-    gsl_shell_close_with_graph(gsl_shell, !smain.keep_windows);
+    if (smain.status == 0) {
+        gsl_shell_close_with_graph(gsl_shell, !smain.keep_windows);
+    }
     gsl_shell_free(gsl_shell);
 
     return (status || smain.status) ? EXIT_FAILURE : EXIT_SUCCESS;

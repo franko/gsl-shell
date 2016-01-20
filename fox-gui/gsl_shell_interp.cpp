@@ -9,6 +9,8 @@ extern "C" {
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "language.h"
+#include "language_loaders.h"
 }
 
 #include "gsl_shell_interp.h"
@@ -77,11 +79,37 @@ static int dolibrary(lua_State *L, const char *name)
     return stderr_report(L, docall(L, 1, 1));
 }
 
+static void override_loaders(lua_State *L)
+{
+  lua_getfield(L, LUA_GLOBALSINDEX, "package");
+  lua_getfield(L, -1, "loaders");
+  lua_remove(L, -2);
+
+  luaopen_langloaders(L);
+  lua_getfield(L, -1, "loadstring");
+  lua_setfield(L, LUA_GLOBALSINDEX, "loadstring");
+
+  lua_getfield(L, -1, "loadfile");
+  lua_setfield(L, LUA_GLOBALSINDEX, "loadfile");
+
+  lua_getfield(L, -1, "dofile");
+  lua_setfield(L, LUA_GLOBALSINDEX, "dofile");
+
+  lua_getfield(L, -1, "loader");
+  lua_rawseti(L, -3, 2);
+  lua_pop(L, 2);
+}
+
 static int pinit(lua_State *L)
 {
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
+    int status = language_init(L);
+    if (status != 0) {
+        return lua_error(L);
+    }
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
+    override_loaders(L);
     luaopen_gsl (L);
     register_graph (L);
     lua_gc(L, LUA_GCRESTART, -1);
@@ -108,7 +136,7 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
     }
 
     str mline = str::print("return %s", line);
-    status = luaL_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+    status = language_loadbuffer(L, mline.cstr(), len+7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
     return status;
 }
@@ -171,7 +199,7 @@ int gsl_shell::exec(const char *line)
 
     if (status != 0)
     {
-        status = luaL_loadbuffer(L, line, len, "=<user input>");
+        status = language_loadbuffer(L, line, len, "=<user input>");
 
         if (incomplete(L, status))
             return incomplete_input;
