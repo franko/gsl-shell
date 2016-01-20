@@ -1,0 +1,6 @@
+*~
+.out*
+.deps
+*.o
+*.a
+tests/log/*
