@@ -694,8 +694,8 @@ local function matrix_stack(ls)
   local is_complex = false
   for j = 1, q do
     for i = 1, p do
-      local is_real = get_typeid(ls[i][j])
-      is_complex = is_complex or not is_real
+      local is_real_ij = get_typeid(ls[i][j])
+      is_complex = is_complex or not is_real_ij
     end
   end
 
@@ -703,7 +703,7 @@ local function matrix_stack(ls)
   for j = 1, q do
     for i = 1, p do
       local s = ls[i][j]
-      local dim = type(s) == 'number' and -1 or matrix_rows(s)
+      local dim = (is_real(s) or ffi.istype(gsl_complex, s)) and -1 or matrix_rows(s)
       if not Ndim[i] and dim > 0 then
         Ndim[i] = dim
       end
@@ -730,7 +730,7 @@ local function matrix_stack(ls)
   for i = 1, p do
     for j = 1, q do
       local s = ls[i][j]
-      local dim = type(s) == 'number' and -1 or matrix_cols(s)
+      local dim = (is_real(s) or ffi.istype(gsl_complex, s)) and -1 or matrix_cols(s)
       if not Mdim[j] and dim > 0 then
         Mdim[j] = dim
       end
