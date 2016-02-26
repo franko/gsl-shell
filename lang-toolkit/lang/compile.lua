@@ -1,6 +1,6 @@
 local lex_setup = require('lang.lexer')
 local parse = require('lang.parser')
-local ast = require('lang.lua-ast').New()
+local lua_ast = require('lang.lua-ast')
 local reader = require('lang.reader')
 
 -- Two kind of backend can be used to generate the code from the AST:
@@ -29,11 +29,12 @@ local function compile(reader, filename, options)
         generator = require('lang.generator')
     end
     local ls = lex_setup(reader, filename)
-    local parse_success, tree = pcall(parse, ast, ls)
+    local ast_builder = lua_ast.New()
+    local parse_success, ast_tree = pcall(parse, ast_builder, ls)
     if not parse_success then
-        return lang_toolkit_error(tree)
+        return lang_toolkit_error(ast_tree)
     end
-    local success, luacode = pcall(generator, tree, filename)
+    local success, luacode = pcall(generator, ast_tree, filename)
     if not success then
         return lang_toolkit_error(luacode)
     end

@@ -18,6 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# If the following variable is set to "yes" the lang.* modules will be
+# embedded in the executable and preloaded into the Lua's state.
+BC_PRELOAD = yes
+
 ifneq (,$(findstring Windows,$(OS)))
   HOST_SYS= Windows
 else
@@ -33,21 +37,29 @@ AR= ar rcu
 RANLIB= ranlib
 
 ifeq ($(HOST_SYS),Windows)
-  LUAJIT_INCLUDES := -IC:/fra/local/include
+  LUAJIT_CFLAGS := -IC:/fra/local/include
   LUAJIT_LIBS := -LC:/fra/local/lib -lluajit
 else
-  LUAJIT_INCLUDES := $(shell pkg-config luajit --cflags)
+  LUAJIT_CFLAGS := $(shell pkg-config luajit --cflags)
   LUAJIT_LIBS := $(shell pkg-config luajit --libs)
 endif
 
+CC = gcc
 CFLAGS = -g -Wall
 
-INCLUDES += $(LUAJIT_INCLUDES)
+CFLAGS += $(LUAJIT_CFLAGS)
 LIBS += $(LUAJIT_LIBS)
+
+INCLUDES += -I..
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-LANG_SRC_FILES = language.c language_loaders.c
+ifeq ($(strip $(BC_PRELOAD)),yes)
+  LANG_SRC_FILES = language_bcloader.c
+  DEFS += -DBC_PRELOAD
+endif
+
+LANG_SRC_FILES += language.c language_loaders.c
 LANG_OBJ_FILES := $(LANG_SRC_FILES:%.c=%.o)
 DEP_FILES := $(LANG_SRC_FILES:%.c=.deps/%.P)
 
@@ -58,7 +70,7 @@ TARGETS = liblang.a
 all: $(TARGETS) luajit-x
 
 luajit-x: $(LANG_OBJ_FILES) luajit-x.o
-	$(COMPILE) -o $@ $(LANG_OBJ_FILES) luajit-x.o $(LIBS) $(LFLAGS)
+	$(CC) -o $@ $(LANG_OBJ_FILES) luajit-x.o $(LIBS)
 
 liblang.a: $(LANG_OBJ_FILES)
 	@echo Archive $@
