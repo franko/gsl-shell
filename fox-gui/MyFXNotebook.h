@@ -1,11 +1,11 @@
 #ifndef MY_FX_NOTEBOOX_H
 #define MY_FX_NOTEBOOX_H
-#include "FXScrollArea.h"
-#include "FXComposite.h"
+
+#include <fx.h>
 
 namespace FX {
 
-class MyFXNotebook : public FXScrollArea {
+class MyFXNotebook : public FXPacker {
     FXDECLARE(MyFXNotebook)
 protected:
     MyFXNotebook() {};
@@ -13,10 +13,10 @@ protected:
 public:
     MyFXNotebook(FXComposite* p, FXObject* tgt=NULL, FXSelector sel=0, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=8, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
 
-    void onPaint(FXObject*, FXSelector, void* ptr) override;
+    FXint getDefaultWidth() override;
+    FXint getDefaultHeight() override;
 
-    void FXint getDefaultWidth() override;
-    void FXint getDefaultHeight() override;
+    long onPaint(FXObject*, FXSelector, void* ptr);
 
     void layout() override;
 
