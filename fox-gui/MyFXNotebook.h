@@ -17,8 +17,14 @@ public:
     FXint getDefaultHeight() override;
 
     long onPaint(FXObject*, FXSelector, void* ptr);
+    long onChangeTextInput(FXObject*, FXSelector, void* ptr);
 
     void layout() override;
+
+    enum {
+        ID_TEXT_INPUT = FXPacker::ID_LAST,
+        ID_LAST
+    };
 
 private:
     FXint   m_padleft;          // Left margin

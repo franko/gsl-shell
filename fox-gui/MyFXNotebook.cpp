@@ -2,6 +2,7 @@
 
 FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, MyFXNotebook::onPaint),
+    FXMAPFUNC(SEL_CHANGED, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onChangeTextInput),
 };
 
 FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap))
@@ -32,6 +33,18 @@ FXint MyFXNotebook::getDefaultHeight() {
     return h;
 }
 
+void MyFXNotebook::layout() {
+    FXint hcum = m_padtop;
+    FXint x0 = m_padleft;
+    for(FXWindow* child = getFirst(); child; child = child->getNext()) {
+        FXint x = x0, y = hcum;
+        FXint w = getWidth() - m_padleft - m_padright;
+        FXint h = child->getDefaultHeight();
+        child->position(x, y, w, h);
+        hcum += h + m_vspacing;
+    }
+}
+
 long MyFXNotebook::onPaint(FXObject*, FXSelector, void *ptr) {
     FXEvent *ev= (FXEvent*)ptr;
     FXDCWindow dc(this, ev);
@@ -40,13 +53,11 @@ long MyFXNotebook::onPaint(FXObject*, FXSelector, void *ptr) {
     return 1;
 }
 
-void MyFXNotebook::layout() {
-    FXint hcum = m_padtop;
-    FXint x0 = m_padleft;
-    for(FXWindow* child = getFirst(); child; child = child->getNext()) {
-        FXint x = x0, y = hcum;
-        FXint w = getWidth(), h = child->getDefaultHeight();
-        child->position(x, y, w, h);
-        hcum += h + m_vspacing;
+long MyFXNotebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
+    FXText* text = (FXText*) obj;
+    if (text->getNumRows() != text->getVisibleRows()) {
+        text->setVisibleRows(text->getNumRows());
+        return 1;
     }
+    return 0;
 }

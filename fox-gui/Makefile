@@ -33,6 +33,10 @@ FOXGUI_SRC_FILES = io_thread.cpp window_surface.cpp fx_console.cpp redirect.cpp 
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)
 
+TEST_SRC_FILES = MyFXNotebook.cpp test-notebook.cpp
+TEST_OBJ_FILES := $(TEST_SRC_FILES:%.cpp=%.o)
+DEP_FILES += $(TEST_SRC_FILES:%.cpp=.deps/%.P)
+
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 TARGETS = libfoxgui.a
@@ -44,6 +48,9 @@ libfoxgui.a: $(FOXGUI_OBJ_FILES)
 	@echo Archive $@
 	@$(AR) $@ $?
 	@$(RANLIB) $@
+
+test-notebook.exe: $(TEST_OBJ_FILES)
+	gcc -o test-notebook.exe $(TEST_OBJ_FILES) -LC:/fra/local/lib $(FOX_LIBS) -lsupc++ -lm
 
 include $(GSH_BASE_DIR)/makerules
 
