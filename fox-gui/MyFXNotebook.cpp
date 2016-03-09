@@ -1,8 +1,12 @@
+#include "fxkeys.h"
+
 #include "MyFXNotebook.h"
+#include "MyFXTextKeylog.h"
 
 FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, MyFXNotebook::onPaint),
     FXMAPFUNC(SEL_CHANGED, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onChangeTextInput),
+    FXMAPFUNC(SEL_KEYPRESS, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onKeylogNewline),
 };
 
 FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap))
@@ -11,6 +15,13 @@ MyFXNotebook::MyFXNotebook(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs)
 {
+}
+
+FXText* MyFXNotebook::addInputText(FXObject* tgt) {
+    FXText *text = new MyFXTextKeylog(this, tgt, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF);
+    text->setVisibleColumns(60);
+    text->setVisibleRows(1);
+    return text;
 }
 
 FXint MyFXNotebook::getDefaultWidth() {
@@ -59,5 +70,11 @@ long MyFXNotebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
         text->setVisibleRows(text->getNumRows());
         return 1;
     }
+    return 0;
+}
+
+long MyFXNotebook::onKeylogNewline(FXObject*, FXSelector, void* ptr) {
+    FXEvent* event=(FXEvent*)ptr;
+    fprintf(stderr, ">> reported keypress %d vs %d\n", event->code, KEY_Return);
     return 0;
 }

@@ -33,7 +33,7 @@ FOXGUI_SRC_FILES = io_thread.cpp window_surface.cpp fx_console.cpp redirect.cpp 
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)
 
-TEST_SRC_FILES = MyFXNotebook.cpp test-notebook.cpp
+TEST_SRC_FILES = MyFXTextKeylog.cpp MyFXNotebook.cpp test-notebook.cpp
 TEST_OBJ_FILES := $(TEST_SRC_FILES:%.cpp=%.o)
 DEP_FILES += $(TEST_SRC_FILES:%.cpp=.deps/%.P)
 
