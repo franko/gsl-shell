@@ -8,7 +8,6 @@ FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]=
 {
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_window::on_close),
     FXMAPFUNC(SEL_COMMAND, FXTopWindow::ID_CLOSE, gsl_shell_window::on_close),
-    FXMAPFUNC(SEL_CHANGED, gsl_shell_window::ID_CONSOLE, gsl_shell_window::on_change_console),
     FXMAPFUNC(SEL_COMMAND, gsl_shell_window::ID_ABOUT, gsl_shell_window::on_cmd_about),
 };
 
@@ -37,8 +36,8 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FX
 
     const char* console_font = gslshell::get_fox_console_font_name();
     m_text_font = new FXFont(app, console_font, 11);
-    m_text = new fx_console(gs, lua_io, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    m_text->setFont(m_text_font);
+    m_text = new LuaFXConsole(gs, lua_io, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    // m_text->setFont(m_text_font);
 }
 
 void gsl_shell_window::create()
@@ -53,12 +52,6 @@ long gsl_shell_window::on_close(FXObject* obj, FXSelector sel, void* ptr)
     app->handle(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_CONSOLE_CLOSE), NULL);
     return 0;
 }
-
-long gsl_shell_window::on_change_console(FXObject*, FXSelector, void*)
-{
-    return m_text->update_editable();
-}
-
 
 long
 gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)

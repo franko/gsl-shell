@@ -4,7 +4,7 @@
 #include <fx.h>
 
 #include "gsl_shell_thread.h"
-#include "fx_console.h"
+#include "LuaFXConsole.h"
 
 class gsl_shell_window : public FXMainWindow
 {
@@ -18,12 +18,11 @@ public:
         delete m_text_font;
     }
 
-    fx_console* console() { return m_text; }
+    LuaFXConsole* console() { return m_text; }
 
     virtual void create();
 
     long on_close(FXObject* obj, FXSelector sel, void* ptr);
-    long on_change_console(FXObject* obj, FXSelector sel, void* ptr);
     long on_cmd_about(FXObject* obj, FXSelector sel, void* ptr);
 
     enum
@@ -36,7 +35,7 @@ protected:
     gsl_shell_window() {}
 
 private:
-    fx_console* m_text;
+    LuaFXConsole* m_text;
     FXStatusBar* m_status_bar;
     FXMenuBar* m_menu_bar;
     FXMenuPane* m_file_menu;

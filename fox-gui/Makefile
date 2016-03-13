@@ -29,13 +29,9 @@ INCLUDES += -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/lua-gsl -I$(GSH_BASE_DIR)/agg-pl
 INCLUDES += $(AGG_INCLUDES) $(FOX_INCLUDES) $(FREETYPE_INCLUDES) $(PTHREADS_CFLAGS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 
-FOXGUI_SRC_FILES = io_thread.cpp window_surface.cpp fx_console.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp fox_gsl_shell.cpp gsl_shell_window.cpp window_part.cpp fx_plot_canvas.cpp fx_plot_window.cpp lua_plot_window.cpp gsl_shell_app.cpp gsl-shell-fox.cpp
+FOXGUI_SRC_FILES = io_thread.cpp window_surface.cpp MyFXTextKeylog.cpp MyFXNotebook.cpp LuaFXConsole.cpp redirect.cpp gsl_shell_interp.cpp gsl_shell_thread.cpp fox_gsl_shell.cpp gsl_shell_window.cpp window_part.cpp fx_plot_canvas.cpp fx_plot_window.cpp lua_plot_window.cpp gsl_shell_app.cpp gsl-shell-fox.cpp
 FOXGUI_OBJ_FILES := $(FOXGUI_SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(FOXGUI_SRC_FILES:%.cpp=.deps/%.P)
-
-TEST_SRC_FILES = MyFXTextKeylog.cpp MyFXNotebook.cpp test-notebook.cpp
-TEST_OBJ_FILES := $(TEST_SRC_FILES:%.cpp=%.o)
-DEP_FILES += $(TEST_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
@@ -48,9 +44,6 @@ libfoxgui.a: $(FOXGUI_OBJ_FILES)
 	@echo Archive $@
 	@$(AR) $@ $?
 	@$(RANLIB) $@
-
-test-notebook.exe: $(TEST_OBJ_FILES)
-	gcc -o test-notebook.exe $(TEST_OBJ_FILES) -LC:/fra/local/lib $(FOX_LIBS) -lsupc++ -lm
 
 include $(GSH_BASE_DIR)/makerules
 
