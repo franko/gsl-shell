@@ -13,9 +13,11 @@ MyFXTextKeylog::MyFXTextKeylog(FXComposite* p, FXObject* tgt, FXSelector sel, FX
 }
 
 long MyFXTextKeylog::onCmdNewlineLog(FXObject* obj, FXSelector sel, void *ptr) {
-    long status = FXText::onCmdInsertNewline(obj, sel, ptr);
-    if (status && target) {
-        handle(target, FXSEL(SEL_KEYPRESS, message), ptr);
+    if (target) {
+        long status = handle(target, FXSEL(SEL_KEYPRESS, message), ptr);
+        if (status != 0) {
+            return status;
+        }
     }
-    return status;
+    return FXText::onCmdInsertNewline(obj, sel, ptr);
 }

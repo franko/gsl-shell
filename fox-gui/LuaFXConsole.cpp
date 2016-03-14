@@ -133,6 +133,7 @@ long LuaFXConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
             m_status = output_mode;
             m_engine->set_request(gsl_shell_thread::execute_request, input_line);
         }
+        return 1;
     }
     return 0;
 }
