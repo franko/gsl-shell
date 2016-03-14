@@ -70,7 +70,7 @@ void LuaFXConsole::init() {
                "%s -- %s\n\n"
                "Documentation available at http://www.nongnu.org/gsl-shell/doc/.\n"
                "To obtain help on a function or object type: help(func).\n"
-               "Type demo() to see the lists of demo.\n\n",
+               "Type demo() to see the lists of demo.",
                GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
 
     text->setText(msg);
@@ -99,7 +99,7 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
         }
     }
     FXText* text = getCurrentOutput();
-    text->appendText(m_lua_io_buffer);
+    text->appendText(m_lua_io_buffer, TRUE);
     // makePositionVisible(getCursorPos());
 
     m_lua_io_buffer.clear();
@@ -122,12 +122,16 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
 
 long LuaFXConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
     FXEvent* event=(FXEvent*)ptr;
-    if (event->code == KEY_Return) {
+    if (event->code == KEY_Return && m_status == input_mode) {
         FXString line;
         FXText* text = getCurrentInput();
         if (text != nullptr) {
             text->getText(line);
-            fprintf(stderr, "Line: %s\n", line.text());
+            const char* input_line = line.text();
+            m_history.add(input_line);
+            addOutputSection(output_section);
+            m_status = output_mode;
+            m_engine->set_request(gsl_shell_thread::execute_request, input_line);
         }
     }
     return 0;

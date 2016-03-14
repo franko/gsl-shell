@@ -4,6 +4,7 @@
 FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, MyFXNotebook::onPaint),
     FXMAPFUNC(SEL_CHANGED, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onChangeTextInput),
+    FXMAPFUNC(SEL_UPDATE, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onUpdateTextInput),
 };
 
 FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap))
@@ -75,11 +76,18 @@ long MyFXNotebook::onPaint(FXObject*, FXSelector, void *ptr) {
     return 1;
 }
 
-long MyFXNotebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
-    FXText* text = (FXText*) obj;
+static FXint CheckVisibleRows(FXText* text) {
     if (text->getNumRows() != text->getVisibleRows()) {
         text->setVisibleRows(text->getNumRows());
         return 1;
     }
     return 0;
+}
+
+long MyFXNotebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
+    return CheckVisibleRows((FXText*) obj);
+}
+
+long MyFXNotebook::onUpdateTextInput(FXObject* obj, FXSelector, void *ptr) {
+    return CheckVisibleRows((FXText*) obj);
 }

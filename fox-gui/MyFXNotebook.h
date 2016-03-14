@@ -8,7 +8,7 @@ namespace FX {
 class MyFXNotebook : public FXPacker {
     FXDECLARE(MyFXNotebook)
 public:
-    enum section_type_e { message_section, error_text_section };
+    enum section_type_e { message_section, error_text_section, output_section };
 
 protected:
     MyFXNotebook() {};
@@ -31,6 +31,7 @@ public:
 
     long onPaint(FXObject*, FXSelector, void* ptr);
     long onChangeTextInput(FXObject*, FXSelector, void*);
+    long onUpdateTextInput(FXObject*, FXSelector, void*);
     long onKeylogNewline(FXObject*, FXSelector, void*);
 
     void layout() override;
