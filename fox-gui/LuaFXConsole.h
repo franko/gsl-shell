@@ -45,6 +45,7 @@ public:
     enum
     {
         ID_LUA_OUTPUT = MyFXNotebook::ID_LAST,
+        ID_SCROLL_CONTENT,
         ID_LAST,
     };
 
@@ -60,6 +61,8 @@ private:
     status_e m_status;
     gsl_shell_thread* m_engine;
     io_redirect* m_lua_io;
+    FXObject* m_target;
+    long m_message;
 
     lua_io_thread* m_lua_io_thread;
     FXGUISignal* m_lua_io_signal;

@@ -9,7 +9,7 @@ FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
 
 FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap))
 
-MyFXNotebook::MyFXNotebook(FXComposite* p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
+MyFXNotebook::MyFXNotebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
     m_keypress_target(nullptr), m_section_output(nullptr), m_section_input(nullptr)

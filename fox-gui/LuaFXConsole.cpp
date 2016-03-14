@@ -25,8 +25,8 @@ FXIMPLEMENT(LuaFXConsole,MyFXNotebook,LuaFXConsole_map,ARRAYNUMBER(LuaFXConsole_
 // const FXchar * LuaFXConsole::prompt = "> ";
 
 LuaFXConsole::LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
-    MyFXNotebook(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb, vs),
-    m_status(not_ready), m_engine(gs), m_lua_io(lua_io)
+    MyFXNotebook(p, opts, x, y, w, h, pl, pr, pt, pb, vs),
+    m_status(not_ready), m_engine(gs), m_lua_io(lua_io), m_target(tgt), m_message(sel)
 {
     FXApp* app = getApp();
     m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
@@ -45,6 +45,9 @@ void LuaFXConsole::prepareInput() {
     text->appendText(m_input_pending);
     m_input_pending.clear();
     m_status = input_mode;
+    if (m_target) {
+        m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
+    }
 }
 
 void LuaFXConsole::showErrors() {
