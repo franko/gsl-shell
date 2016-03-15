@@ -87,6 +87,16 @@ void LuaFXConsole::updateInputLine(const char* line)
     // makePositionVisible(getCursorPos());
 }
 
+static void remove_eot_newline(FXString& s, FXint len) {
+    s.trunc(len-1); // Remove EOT char.
+    if (s[len-2] == '\n') {
+        s.trunc(len-2);
+    }
+    if (s[len-3] == '\r') {
+        s.trunc(len-3);
+    }
+}
+
 long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
 {
     bool eot = false;
@@ -95,15 +105,18 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     FXint len = m_lua_io_buffer.length();
     if (len > 0)
     {
-        if (m_lua_io_buffer[len-1] == gsl_shell_thread::eot_character)
-        {
+        if (m_lua_io_buffer[len-1] == gsl_shell_thread::eot_character) {
             eot = true;
-            m_lua_io_buffer.trunc(len-1);
+            remove_eot_newline(m_lua_io_buffer, len);
         }
     }
     FXText* text = getCurrentOutput();
     text->appendText(m_lua_io_buffer, TRUE);
     // makePositionVisible(getCursorPos());
+
+    if (m_target) {
+        m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
+    }
 
     m_lua_io_buffer.clear();
     m_lua_io_mutex.unlock();

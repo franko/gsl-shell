@@ -16,11 +16,16 @@ protected:
 public:
     MyFXNotebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=8, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
 
+    FXText* addTextSection(bool editable);
     FXText* addInputSection();
     FXText* addOutputSection(section_type_e section_type);
 
     FXText* getCurrentOutput() { return m_section_output; }
     FXText* getCurrentInput() { return m_section_input; }
+
+    void setFont(FXFont* font) {
+        m_text_font = font;
+    }
 
     void setKeypressTarget(FXObject* tgt) {
         m_keypress_target = tgt;
@@ -50,6 +55,7 @@ private:
     FXObject* m_keypress_target;
     FXText* m_section_output;
     FXText* m_section_input;
+    FXFont* m_text_font;
 };
 }
 

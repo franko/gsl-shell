@@ -39,7 +39,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FX
     m_text_font = new FXFont(app, console_font, 11);
     m_scroll_win = new FXScrollWindow(textbox, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text = new LuaFXConsole(gs, lua_io, m_scroll_win, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    // m_text->setFont(m_text_font);
+    m_text->setFont(m_text_font);
 }
 
 void gsl_shell_window::create()
@@ -84,5 +84,6 @@ long gsl_shell_window::on_cmd_scroll_content(FXObject*, FXSelector, void*) {
     FXint win_height = m_scroll_win->getHeight();
     fprintf(stderr, ">> Scroll Content: %d %d\n", content_height, win_height);
     m_scroll_win->setPosition(0, - (content_height - win_height));
+    m_scroll_win->layout();
     return 1;
 }

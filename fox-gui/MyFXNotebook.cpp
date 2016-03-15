@@ -12,26 +12,33 @@ FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap
 MyFXNotebook::MyFXNotebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
-    m_keypress_target(nullptr), m_section_output(nullptr), m_section_input(nullptr)
+    m_keypress_target(nullptr), m_section_output(nullptr), m_section_input(nullptr),
+    m_text_font(nullptr)
 {
 }
 
-FXText* MyFXNotebook::addInputSection() {
+FXText* MyFXNotebook::addTextSection(bool editable) {
     FXText *text = new MyFXTextKeylog(this, m_keypress_target, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);
     text->setVisibleRows(1);
+    text->setEditable(editable);
+    if (m_text_font) {
+        text->setFont(m_text_font);
+    }
     text->create();
+    return text;
+}
+
+FXText* MyFXNotebook::addInputSection() {
+    FXText* text = addTextSection(true);
     text->setFocus();
     m_section_input = text;
     return text;
 }
 
 FXText* MyFXNotebook::addOutputSection(MyFXNotebook::section_type_e section_type) {
-    FXText *text = new MyFXTextKeylog(this, m_keypress_target, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
-    text->setVisibleColumns(60);
-    text->setVisibleRows(1);
-    text->setEditable(false);
-    text->create();
+    FXText* text = addTextSection(false);
+    text->setFocus();
     m_section_output = text;
     return text;
 }
