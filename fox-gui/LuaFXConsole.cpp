@@ -22,11 +22,10 @@ FXDEFMAP(LuaFXConsole) LuaFXConsole_map[] =
 
 FXIMPLEMENT(LuaFXConsole,MyFXNotebook,LuaFXConsole_map,ARRAYNUMBER(LuaFXConsole_map))
 
-// const FXchar * LuaFXConsole::prompt = "> ";
-
 LuaFXConsole::LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     MyFXNotebook(p, opts, x, y, w, h, pl, pr, pt, pb, vs),
-    m_status(not_ready), m_engine(gs), m_lua_io(lua_io), m_target(tgt), m_message(sel)
+    m_status(not_ready), m_engine(gs), m_lua_io(lua_io), m_target(tgt), m_message(sel),
+    m_input_section(nullptr), m_output_section(nullptr)
 {
     FXApp* app = getApp();
     m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
@@ -41,8 +40,8 @@ LuaFXConsole::~LuaFXConsole() {
 }
 
 void LuaFXConsole::prepareInput() {
-    FXText* text = addInputSection();
-    text->appendText(m_input_pending);
+    m_input_section = addInputSection();
+    m_input_section->appendText(m_input_pending);
     m_input_pending.clear();
     m_status = input_mode;
     if (m_target) {
@@ -54,8 +53,6 @@ void LuaFXConsole::showErrors() {
     if (m_engine->eval_status() == gsl_shell::eval_error) {
         FXText* text = addOutputSection(error_text_section);
         text->appendText(m_engine->error_msg());
-        text->appendText("\n");
-        // text->makePositionVisible(text->getCursorPos());
     }
 }
 
@@ -78,13 +75,6 @@ void LuaFXConsole::init() {
 
     text->setText(msg);
     prepareInput();
-}
-
-void LuaFXConsole::updateInputLine(const char* line)
-{
-    FXText* text = getCurrentInput();
-    text->replaceText(0, text->getLength(), line, strlen(line));
-    // makePositionVisible(getCursorPos());
 }
 
 static void remove_eot_newline(FXString& s, FXint len) {
@@ -110,12 +100,15 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
             remove_eot_newline(m_lua_io_buffer, len);
         }
     }
-    FXText* text = getCurrentOutput();
-    text->appendText(m_lua_io_buffer, TRUE);
-    // makePositionVisible(getCursorPos());
+    if (!m_lua_io_buffer.empty()) {
+        if (!m_output_section) {
+            m_output_section = addOutputSection(output_section);
+        }
+        m_output_section->appendText(m_lua_io_buffer, TRUE);
 
-    if (m_target) {
-        m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
+        if (m_target) {
+            m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
+        }
     }
 
     m_lua_io_buffer.clear();
@@ -140,12 +133,11 @@ long LuaFXConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
     FXEvent* event=(FXEvent*)ptr;
     if (event->code == KEY_Return && m_status == input_mode) {
         FXString line;
-        FXText* text = getCurrentInput();
-        if (text != nullptr) {
-            text->getText(line);
+        if (m_input_section != nullptr) {
+            m_input_section->getText(line);
             const char* input_line = line.text();
             m_history.add(input_line);
-            addOutputSection(output_section);
+            m_output_section = nullptr;
             m_status = output_mode;
             m_engine->set_request(gsl_shell_thread::execute_request, input_line);
         }

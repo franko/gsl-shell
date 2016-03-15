@@ -20,9 +20,6 @@ public:
     FXText* addInputSection();
     FXText* addOutputSection(section_type_e section_type);
 
-    FXText* getCurrentOutput() { return m_section_output; }
-    FXText* getCurrentInput() { return m_section_input; }
-
     void setFont(FXFont* font) {
         m_text_font = font;
     }
@@ -53,8 +50,6 @@ private:
     FXint   m_padbottom;        // Bottom margin
     FXint   m_vspacing;         // Vertical child spacing
     FXObject* m_keypress_target;
-    FXText* m_section_output;
-    FXText* m_section_input;
     FXFont* m_text_font;
 };
 }

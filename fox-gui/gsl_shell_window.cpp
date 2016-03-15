@@ -80,10 +80,9 @@ gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
 }
 
 long gsl_shell_window::on_cmd_scroll_content(FXObject*, FXSelector, void*) {
+    m_scroll_win->layout();
     FXint content_height = m_scroll_win->getContentHeight();
     FXint win_height = m_scroll_win->getHeight();
-    fprintf(stderr, ">> Scroll Content: %d %d\n", content_height, win_height);
     m_scroll_win->setPosition(0, - (content_height - win_height));
-    m_scroll_win->layout();
     return 1;
 }

@@ -64,6 +64,9 @@ private:
     FXObject* m_target;
     long m_message;
 
+    FXText* m_input_section;
+    FXText* m_output_section;
+
     lua_io_thread* m_lua_io_thread;
     FXGUISignal* m_lua_io_signal;
     FXMutex m_lua_io_mutex;
