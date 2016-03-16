@@ -39,14 +39,18 @@ LuaFXConsole::~LuaFXConsole() {
     delete m_lua_io_signal;
 }
 
+void LuaFXConsole::signalNewContent() {
+    if (m_target) {
+        m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
+    }
+}
+
 void LuaFXConsole::prepareInput() {
     m_input_section = addInputSection();
     m_input_section->appendText(m_input_pending);
     m_input_pending.clear();
     m_status = input_mode;
-    if (m_target) {
-        m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
-    }
+    signalNewContent();
 }
 
 void LuaFXConsole::showErrors() {
@@ -105,10 +109,7 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
             m_output_section = addOutputSection(output_section);
         }
         m_output_section->appendText(m_lua_io_buffer, TRUE);
-
-        if (m_target) {
-            m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
-        }
+        signalNewContent();
     }
 
     m_lua_io_buffer.clear();
@@ -116,10 +117,14 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
 
     if (eot) {
         int status = m_engine->eval_status();
-
         if (status == gsl_shell::incomplete_input) {
             m_history.remove_last();
             m_status = input_mode;
+            m_input_section->appendText("\n");
+            m_input_section->setCursorPos(m_input_section->getLength());
+            this->handle(m_input_section, FXSEL(SEL_UPDATE, ID_TEXT_INPUT), nullptr);
+            m_input_section->setFocus();
+            signalNewContent();
         } else {
             showErrors();
             prepareInput();

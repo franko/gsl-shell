@@ -29,6 +29,7 @@ public:
     void init();
     void prepareInput();
     void showErrors();
+    void signalNewContent();
 
     // FXint get_input_length();
     // long update_editable();
