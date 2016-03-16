@@ -122,7 +122,7 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
             m_status = input_mode;
             m_input_section->appendText("\n");
             m_input_section->setCursorPos(m_input_section->getLength());
-            this->handle(m_input_section, FXSEL(SEL_UPDATE, ID_TEXT_INPUT), nullptr);
+            handle(m_input_section, FXSEL(SEL_UPDATE, ID_TEXT_INPUT), nullptr);
             m_input_section->setFocus();
             signalNewContent();
         } else {
@@ -134,19 +134,72 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
+void LuaFXConsole::updateInputLine(const char* line) {
+    FXint len = strlen(line);
+    m_input_section->setText(line, len);
+    m_input_section->setCursorPos(len);
+    handle(m_input_section, FXSEL(SEL_UPDATE, ID_TEXT_INPUT), nullptr);
+    signalNewContent();
+}
+
+long LuaFXConsole::sendInputText() {
+    if (m_input_section != nullptr) {
+        FXString line = m_input_section->getText();
+        const char* input_line = line.text();
+        m_history.add(input_line);
+        m_output_section = nullptr;
+        m_status = output_mode;
+        m_engine->set_request(gsl_shell_thread::execute_request, input_line);
+        return 1;
+    }
+    return 0;
+}
+
+long LuaFXConsole::historySelect(bool up) {
+    const char* new_line;
+    if (up) {
+        if (m_history.is_first()) {
+            m_saved_line = m_input_section->getText();
+        }
+        new_line = m_history.previous();
+    } else {
+        new_line = m_history.next();
+        if (m_history.is_first()) {
+            new_line = m_saved_line.text();
+        }
+    }
+    if (new_line) {
+        updateInputLine(new_line);
+    }
+    return 1;
+}
+
 long LuaFXConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
     FXEvent* event=(FXEvent*)ptr;
-    if (event->code == KEY_Return && m_status == input_mode) {
-        FXString line;
-        if (m_input_section != nullptr) {
-            m_input_section->getText(line);
-            const char* input_line = line.text();
-            m_history.add(input_line);
-            m_output_section = nullptr;
-            m_status = output_mode;
-            m_engine->set_request(gsl_shell_thread::execute_request, input_line);
+    if (m_status != input_mode || m_input_section == nullptr) return 0;
+    switch (event->code) {
+    case KEY_Return:
+    case KEY_KP_Enter:
+        return sendInputText();
+    case KEY_Up:
+    case KEY_KP_Up:
+        if (m_input_section->lineStart(m_input_section->getCursorPos()) == 0) {
+            return historySelect(true);
+        }
+        return 0;
+    case KEY_Down:
+    case KEY_KP_Down:
+        if (m_input_section->lineEnd(m_input_section->getCursorPos()) == m_input_section->getLength()) {
+            return historySelect(false);
+        }
+        return 0;
+    case KEY_Escape:
+        if (m_input_section->hasFocus()) {
+            updateInputLine("");
         }
         return 1;
+    default:
+        /* */;
     }
     return 0;
 }

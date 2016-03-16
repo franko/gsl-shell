@@ -18,26 +18,21 @@ private:
     enum status_e { not_ready, input_mode, output_mode };
     // enum text_style_e { plain_style = 0, prompt_style = 1, error_style = 2};
 
-    // static const FXchar* prompt;
-
 public:
     LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2,FXint vs=6);
-
     ~LuaFXConsole();
 
-    // prepare to accept input
     void init();
     void prepareInput();
     void showErrors();
     void signalNewContent();
+    long sendInputText();
 
-    // FXint get_input_length();
-    // long update_editable();
     void updateInputLine(const char* line);
+    long historySelect(bool up);
 
     virtual void create();
 
-    // long on_key_press(FXObject*,FXSelector,void*);
     // long on_cmd_delete(FXObject*,FXSelector,void*);
     // long on_cmd_insert_string(FXObject*,FXSelector,void*);
     long onIOLuaOutput(FXObject*, FXSelector, void*);
@@ -57,7 +52,6 @@ protected:
     // void init_styles();
 
 private:
-    // FXint m_input_begin;
     FXString m_input;
     status_e m_status;
     gsl_shell_thread* m_engine;
