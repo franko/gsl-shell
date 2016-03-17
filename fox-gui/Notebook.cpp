@@ -1,22 +1,22 @@
-#include "MyFXNotebook.h"
+#include "Notebook.h"
 
-FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
-    FXMAPFUNC(SEL_PAINT, 0, MyFXNotebook::onPaint),
-    FXMAPFUNC(SEL_CHANGED, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onChangeTextInput),
-    FXMAPFUNC(SEL_UPDATE, MyFXNotebook::ID_TEXT_INPUT, MyFXNotebook::onUpdateTextInput),
+FXDEFMAP(Notebook) NotebookMap[] = {
+    FXMAPFUNC(SEL_PAINT, 0, Notebook::onPaint),
+    FXMAPFUNC(SEL_CHANGED, Notebook::ID_TEXT_INPUT, Notebook::onChangeTextInput),
+    FXMAPFUNC(SEL_UPDATE, Notebook::ID_TEXT_INPUT, Notebook::onUpdateTextInput),
 };
 
-FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap))
+FXIMPLEMENT(Notebook, FXPacker, NotebookMap, ARRAYNUMBER(NotebookMap))
 
-MyFXNotebook::MyFXNotebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
+Notebook::Notebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
     m_text_font(nullptr)
 {
 }
 
-FXText* MyFXNotebook::addTextSection(bool editable) {
-    auto text = new FXText(this, this, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
+FXText* Notebook::addTextSection(bool editable) {
+    auto text = new FXText(this, this, Notebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);
     text->setVisibleRows(1);
     text->setEditable(editable);
@@ -27,19 +27,19 @@ FXText* MyFXNotebook::addTextSection(bool editable) {
     return text;
 }
 
-FXText* MyFXNotebook::addInputSection() {
+FXText* Notebook::addInputSection() {
     FXText* text = addTextSection(true);
     text->setFocus();
     return text;
 }
 
-FXText* MyFXNotebook::addOutputSection(MyFXNotebook::section_type_e section_type) {
+FXText* Notebook::addOutputSection(Notebook::section_type_e section_type) {
     FXText* text = addTextSection(false);
     text->setFocus();
     return text;
 }
 
-FXint MyFXNotebook::getDefaultWidth() {
+FXint Notebook::getDefaultWidth() {
     FXint w = 0;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         FXint cw = child->getDefaultWidth();
@@ -48,7 +48,7 @@ FXint MyFXNotebook::getDefaultWidth() {
     return (w > 0 ? w + m_padleft + m_padright : FXPacker::getDefaultWidth());
 }
 
-FXint MyFXNotebook::getDefaultHeight() {
+FXint Notebook::getDefaultHeight() {
     FXint h = m_padtop;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         FXint ch = child->getDefaultHeight();
@@ -59,7 +59,7 @@ FXint MyFXNotebook::getDefaultHeight() {
     return h;
 }
 
-void MyFXNotebook::layout() {
+void Notebook::layout() {
     FXint hcum = m_padtop;
     FXint x0 = m_padleft;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
@@ -71,7 +71,7 @@ void MyFXNotebook::layout() {
     }
 }
 
-long MyFXNotebook::onPaint(FXObject*, FXSelector, void *ptr) {
+long Notebook::onPaint(FXObject*, FXSelector, void *ptr) {
     FXEvent *ev= (FXEvent*)ptr;
     FXDCWindow dc(this, ev);
     dc.setForeground(backColor);
@@ -87,10 +87,10 @@ static FXint CheckVisibleRows(FXText* text) {
     return 0;
 }
 
-long MyFXNotebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
+long Notebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
     return CheckVisibleRows((FXText*) obj);
 }
 
-long MyFXNotebook::onUpdateTextInput(FXObject* obj, FXSelector, void *ptr) {
+long Notebook::onUpdateTextInput(FXObject* obj, FXSelector, void *ptr) {
     return CheckVisibleRows((FXText*) obj);
 }

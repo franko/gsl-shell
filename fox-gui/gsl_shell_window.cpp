@@ -9,7 +9,7 @@ FXDEFMAP(gsl_shell_window) gsl_shell_window_map[]=
     FXMAPFUNC(SEL_CLOSE, 0, gsl_shell_window::on_close),
     FXMAPFUNC(SEL_COMMAND, FXTopWindow::ID_CLOSE, gsl_shell_window::on_close),
     FXMAPFUNC(SEL_COMMAND, gsl_shell_window::ID_ABOUT, gsl_shell_window::on_cmd_about),
-    FXMAPFUNC(SEL_COMMAND, LuaFXConsole::ID_SCROLL_CONTENT, gsl_shell_window::on_cmd_scroll_content),
+    FXMAPFUNC(SEL_COMMAND, LuaConsole::ID_SCROLL_CONTENT, gsl_shell_window::on_cmd_scroll_content),
 };
 
 FXIMPLEMENT(gsl_shell_window,FXMainWindow,gsl_shell_window_map,ARRAYNUMBER(gsl_shell_window_map))
@@ -38,7 +38,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FX
     const char* console_font = gslshell::get_fox_console_font_name();
     m_text_font = new FXFont(app, console_font, 11);
     m_scroll_win = new FXScrollWindow(textbox, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    m_text = new LuaFXConsole(gs, lua_io, m_scroll_win, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_text = new LuaConsole(gs, lua_io, m_scroll_win, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
 }
 

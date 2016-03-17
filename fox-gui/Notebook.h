@@ -5,16 +5,16 @@
 
 namespace FX {
 
-class MyFXNotebook : public FXPacker {
-    FXDECLARE(MyFXNotebook)
+class Notebook : public FXPacker {
+    FXDECLARE(Notebook)
 public:
     enum section_type_e { message_section, error_text_section, output_section };
 
 protected:
-    MyFXNotebook() {};
-    MyFXNotebook(const MyFXNotebook&) {};
+    Notebook() {};
+    Notebook(const Notebook&) {};
 public:
-    MyFXNotebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=8, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
+    Notebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=8, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
 
     FXText* addTextSection(bool editable);
     FXText* addInputSection();

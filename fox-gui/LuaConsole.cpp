@@ -3,27 +3,27 @@
 
 #include "luajit.h"
 
-#include "LuaFXConsole.h"
+#include "LuaConsole.h"
 #include "gsl_shell_app.h"
 #include "gsl_shell_thread.h"
 #include "fx_plot_window.h"
 
-FXDEFMAP(LuaFXConsole) LuaFXConsole_map[] =
+FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {
-    // FXMAPFUNC(SEL_KEYPRESS, 0, LuaFXConsole::on_key_press),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, LuaFXConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, LuaFXConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, LuaFXConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, LuaFXConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, LuaFXConsole::on_cmd_insert_string),
-    FXMAPFUNC(SEL_KEYPRESS, MyFXNotebook::ID_TEXT_INPUT, LuaFXConsole::onInputKeypress),
-    FXMAPFUNC(SEL_IO_READ, LuaFXConsole::ID_LUA_OUTPUT, LuaFXConsole::onIOLuaOutput),
+    // FXMAPFUNC(SEL_KEYPRESS, 0, LuaConsole::on_key_press),
+    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, LuaConsole::on_cmd_delete),
+    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, LuaConsole::on_cmd_delete),
+    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, LuaConsole::on_cmd_delete),
+    // FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, LuaConsole::on_cmd_delete),
+    // FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, LuaConsole::on_cmd_insert_string),
+    FXMAPFUNC(SEL_KEYPRESS, Notebook::ID_TEXT_INPUT, LuaConsole::onInputKeypress),
+    FXMAPFUNC(SEL_IO_READ, LuaConsole::ID_LUA_OUTPUT, LuaConsole::onIOLuaOutput),
 };
 
-FXIMPLEMENT(LuaFXConsole,MyFXNotebook,LuaFXConsole_map,ARRAYNUMBER(LuaFXConsole_map))
+FXIMPLEMENT(LuaConsole,Notebook,LuaConsole_map,ARRAYNUMBER(LuaConsole_map))
 
-LuaFXConsole::LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
-    MyFXNotebook(p, opts, x, y, w, h, pl, pr, pt, pb, vs),
+LuaConsole::LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
+    Notebook(p, opts, x, y, w, h, pl, pr, pt, pb, vs),
     m_status(not_ready), m_engine(gs), m_lua_io(lua_io), m_target(tgt), m_message(sel),
     m_input_section(nullptr), m_output_section(nullptr)
 {
@@ -32,18 +32,18 @@ LuaFXConsole::LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposit
     m_lua_io_thread = new lua_io_thread(m_lua_io, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
 }
 
-LuaFXConsole::~LuaFXConsole() {
+LuaConsole::~LuaConsole() {
     delete m_lua_io_thread;
     delete m_lua_io_signal;
 }
 
-void LuaFXConsole::signalNewContent() {
+void LuaConsole::signalNewContent() {
     if (m_target) {
         m_target->handle(this, FXSEL(SEL_COMMAND, ID_SCROLL_CONTENT), nullptr);
     }
 }
 
-void LuaFXConsole::prepareInput() {
+void LuaConsole::prepareInput() {
     m_input_section = addInputSection();
     m_input_section->appendText(m_input_pending);
     m_input_pending.clear();
@@ -51,20 +51,20 @@ void LuaFXConsole::prepareInput() {
     signalNewContent();
 }
 
-void LuaFXConsole::showErrors() {
+void LuaConsole::showErrors() {
     if (m_engine->eval_status() == gsl_shell::eval_error) {
         FXText* text = addOutputSection(error_text_section);
         text->appendText(m_engine->error_msg());
     }
 }
 
-void LuaFXConsole::create() {
-    MyFXNotebook::create();
+void LuaConsole::create() {
+    Notebook::create();
     init();
     m_lua_io_thread->start();
 }
 
-void LuaFXConsole::init() {
+void LuaConsole::init() {
     FXText* text = addOutputSection(message_section);
     FXString msg;
     msg.format("GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
@@ -89,7 +89,7 @@ static void remove_eot_newline(FXString& s, FXint len) {
     }
 }
 
-long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
+long LuaConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
 {
     bool eot = false;
 
@@ -132,7 +132,7 @@ long LuaFXConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
-void LuaFXConsole::updateInputLine(const char* line) {
+void LuaConsole::updateInputLine(const char* line) {
     FXint len = strlen(line);
     m_input_section->setText(line, len);
     m_input_section->setCursorPos(len);
@@ -140,7 +140,7 @@ void LuaFXConsole::updateInputLine(const char* line) {
     signalNewContent();
 }
 
-long LuaFXConsole::sendInputText() {
+long LuaConsole::sendInputText() {
     if (m_input_section != nullptr) {
         FXString line = m_input_section->getText();
         const char* input_line = line.text();
@@ -153,7 +153,7 @@ long LuaFXConsole::sendInputText() {
     return 0;
 }
 
-long LuaFXConsole::historySelect(bool up) {
+long LuaConsole::historySelect(bool up) {
     const char* new_line;
     if (up) {
         if (m_history.is_first()) {
@@ -172,7 +172,7 @@ long LuaFXConsole::historySelect(bool up) {
     return 1;
 }
 
-long LuaFXConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
+long LuaConsole::onInputKeypress(FXObject* obj, FXSelector sel, void* ptr) {
     FXEvent* event=(FXEvent*)ptr;
     if (m_status != input_mode || m_input_section == nullptr) return 0;
     switch (event->code) {

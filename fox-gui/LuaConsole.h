@@ -8,19 +8,19 @@
 #include "gsl_shell_thread.h"
 #include "io_thread.h"
 #include "history.h"
-#include "MyFXNotebook.h"
+#include "Notebook.h"
 
-class LuaFXConsole : public MyFXNotebook
+class LuaConsole : public Notebook
 {
-    FXDECLARE(LuaFXConsole)
+    FXDECLARE(LuaConsole)
 
 private:
     enum status_e { not_ready, input_mode, output_mode };
     // enum text_style_e { plain_style = 0, prompt_style = 1, error_style = 2};
 
 public:
-    LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2,FXint vs=6);
-    ~LuaFXConsole();
+    LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2,FXint vs=6);
+    ~LuaConsole();
 
     void init();
     void prepareInput();
@@ -40,13 +40,13 @@ public:
 
     enum
     {
-        ID_LUA_OUTPUT = MyFXNotebook::ID_LAST,
+        ID_LUA_OUTPUT = Notebook::ID_LAST,
         ID_SCROLL_CONTENT,
         ID_LAST,
     };
 
 protected:
-    LuaFXConsole() {}
+    LuaConsole() {}
 
 // private:
     // void init_styles();

@@ -5,7 +5,7 @@
 
 #include "agg_array.h"
 #include "fox_gsl_shell.h"
-#include "LuaFXConsole.h"
+#include "LuaConsole.h"
 #include "redirect.h"
 
 class gsl_shell_app : public FXApp
@@ -78,7 +78,7 @@ private:
     fox_gsl_shell m_engine;
     FXGUISignal* m_signal_request;
     lua_request m_request;
-    LuaFXConsole* m_console;
+    LuaConsole* m_console;
     io_redirect m_redirect;
 };
 
