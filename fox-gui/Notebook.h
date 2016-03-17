@@ -14,9 +14,9 @@ protected:
     Notebook() {};
     Notebook(const Notebook&) {};
 public:
-    Notebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=8, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
+    Notebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=32, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
 
-    FXText* addTextSection(bool editable);
+    FXText* addTextSection(FXComposite* p, bool editable);
     FXText* addInputSection();
     FXText* addOutputSection(section_type_e section_type);
 
@@ -40,12 +40,15 @@ public:
     };
 
 private:
+    enum { BORDER_GRAY = 207, INPUT_GRAY = 247 };
+
     FXint   m_padleft;          // Left margin
     FXint   m_padright;         // Right margin
     FXint   m_padtop;           // Top margin
     FXint   m_padbottom;        // Bottom margin
     FXint   m_vspacing;         // Vertical child spacing
     FXFont* m_text_font;
+    FXWindow* m_active_child;
 };
 }
 

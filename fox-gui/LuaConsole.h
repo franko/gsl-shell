@@ -19,7 +19,7 @@ private:
     // enum text_style_e { plain_style = 0, prompt_style = 1, error_style = 2};
 
 public:
-    LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2,FXint vs=6);
+    LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=32,FXint pr=8,FXint pt=8,FXint pb=8,FXint vs=6);
     ~LuaConsole();
 
     void init();

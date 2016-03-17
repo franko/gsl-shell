@@ -11,30 +11,37 @@ FXIMPLEMENT(Notebook, FXPacker, NotebookMap, ARRAYNUMBER(NotebookMap))
 Notebook::Notebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
-    m_text_font(nullptr)
+    m_text_font(nullptr), m_active_child(nullptr)
 {
 }
 
-FXText* Notebook::addTextSection(bool editable) {
-    auto text = new FXText(this, this, Notebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
+FXText* Notebook::addTextSection(FXComposite* p, bool editable) {
+    auto text = new FXText(p, this, Notebook::ID_TEXT_INPUT, LAYOUT_FILL_X|LAYOUT_FILL_Y|VSCROLLING_OFF|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);
     text->setVisibleRows(1);
     text->setEditable(editable);
     if (m_text_font) {
         text->setFont(m_text_font);
     }
-    text->create();
     return text;
 }
 
 FXText* Notebook::addInputSection() {
-    FXText* text = addTextSection(true);
+    auto frame = new FXVerticalFrame(this, FRAME_LINE);
+    auto text = addTextSection(frame, true);
+    frame->setBorderColor(FXRGB(BORDER_GRAY,BORDER_GRAY,BORDER_GRAY));
+    frame->setBackColor(FXRGB(INPUT_GRAY,INPUT_GRAY,INPUT_GRAY));
+    text->setBackColor(FXRGB(INPUT_GRAY,INPUT_GRAY,INPUT_GRAY));
+    frame->create();
     text->setFocus();
+    m_active_child = frame;
+    update();
     return text;
 }
 
 FXText* Notebook::addOutputSection(Notebook::section_type_e section_type) {
-    FXText* text = addTextSection(false);
+    auto text = addTextSection(this, false);
+    text->create();
     text->setFocus();
     return text;
 }
@@ -72,10 +79,17 @@ void Notebook::layout() {
 }
 
 long Notebook::onPaint(FXObject*, FXSelector, void *ptr) {
-    FXEvent *ev= (FXEvent*)ptr;
+    FXEvent* ev= (FXEvent*)ptr;
     FXDCWindow dc(this, ev);
-    dc.setForeground(backColor);
+    dc.setForeground(FXRGB(255,255,255));
     dc.fillRectangle(ev->rect.x, ev->rect.y, ev->rect.w, ev->rect.h);
+    dc.setFont(m_text_font);
+    dc.setForeground(FXRGB(30,30,180));
+    if (m_active_child) {
+        FXint y = m_active_child->getY();
+        y += m_text_font->getFontHeight(); // m_text_font->getFontHeight() +
+        dc.drawText(m_padleft / 2, y, ">", 1);
+    }
     return 1;
 }
 
