@@ -1,5 +1,4 @@
 #include "MyFXNotebook.h"
-#include "MyFXTextKeylog.h"
 
 FXDEFMAP(MyFXNotebook) MyFXNotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, MyFXNotebook::onPaint),
@@ -12,12 +11,12 @@ FXIMPLEMENT(MyFXNotebook, FXPacker, MyFXNotebookMap, ARRAYNUMBER(MyFXNotebookMap
 MyFXNotebook::MyFXNotebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     FXPacker(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
-    m_keypress_target(nullptr), m_text_font(nullptr)
+    m_text_font(nullptr)
 {
 }
 
 FXText* MyFXNotebook::addTextSection(bool editable) {
-    FXText *text = new MyFXTextKeylog(this, m_keypress_target, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
+    auto text = new FXText(this, this, MyFXNotebook::ID_TEXT_INPUT, VSCROLLING_OFF|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);
     text->setVisibleRows(1);
     text->setEditable(editable);

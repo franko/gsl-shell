@@ -24,10 +24,6 @@ public:
         m_text_font = font;
     }
 
-    void setKeypressTarget(FXObject* tgt) {
-        m_keypress_target = tgt;
-    }
-
     FXint getDefaultWidth() override;
     FXint getDefaultHeight() override;
 
@@ -49,7 +45,6 @@ private:
     FXint   m_padtop;           // Top margin
     FXint   m_padbottom;        // Bottom margin
     FXint   m_vspacing;         // Vertical child spacing
-    FXObject* m_keypress_target;
     FXFont* m_text_font;
 };
 }

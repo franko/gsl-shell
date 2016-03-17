@@ -30,8 +30,6 @@ LuaFXConsole::LuaFXConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposit
     FXApp* app = getApp();
     m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
     m_lua_io_thread = new lua_io_thread(m_lua_io, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
-    setKeypressTarget(this);
-    // init_styles();
 }
 
 LuaFXConsole::~LuaFXConsole() {
