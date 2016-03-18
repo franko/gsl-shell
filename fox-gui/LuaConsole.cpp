@@ -55,6 +55,7 @@ void LuaConsole::showErrors() {
     if (m_engine->eval_status() == gsl_shell::eval_error) {
         FXText* text = addOutputSection(error_text_section);
         text->appendText(m_engine->error_msg());
+        updateTextVisibleRows(text);
     }
 }
 
