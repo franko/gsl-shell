@@ -77,6 +77,11 @@ FXText* Notebook::addInputSection() {
 
 FXText* Notebook::addOutputSection(Notebook::section_type_e section_type) {
     auto text = addTextSection(this, false);
+    if (section_type == output_section) {
+        text->setTextColor(FXRGB(30, 30, 180));
+    } else if (section_type == error_text_section) {
+        text->setTextColor(FXRGB(180, 30, 30));
+    }
     text->create();
     addElementUpdateLayout(text);
     text->setFocus();
