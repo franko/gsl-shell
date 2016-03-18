@@ -15,6 +15,15 @@ Notebook::Notebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint
 {
 }
 
+void Notebook::clearContent() {
+    FXWindow* p;
+    for(FXWindow* c = getLast(); c; c = p) {
+        p = c->getPrev();
+        delete c;
+    }
+    m_active_child = nullptr;
+}
+
 FXText* Notebook::addTextSection(FXComposite* p, bool editable) {
     auto text = new FXText(p, this, Notebook::ID_TEXT_INPUT, LAYOUT_FILL_X|LAYOUT_FILL_Y|VSCROLLING_OFF|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);

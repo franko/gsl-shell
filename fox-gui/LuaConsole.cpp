@@ -65,7 +65,8 @@ void LuaConsole::create() {
 }
 
 void LuaConsole::init() {
-    FXText* text = addOutputSection(message_section);
+    clearContent();
+    auto text = addOutputSection(message_section);
     FXString msg;
     msg.format("GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
                "GNU Scientific Library, Copyright (C) The GSL Team\n"

@@ -20,6 +20,8 @@ public:
     FXText* addInputSection();
     FXText* addOutputSection(section_type_e section_type);
 
+    void clearContent();
+
     void setFont(FXFont* font) {
         m_text_font = font;
     }
