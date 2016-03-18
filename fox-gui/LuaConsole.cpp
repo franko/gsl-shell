@@ -76,6 +76,7 @@ void LuaConsole::init() {
                GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
 
     text->setText(msg);
+    updateTextVisibleRows(text);
     prepareInput();
 }
 

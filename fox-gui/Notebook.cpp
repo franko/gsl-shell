@@ -26,6 +26,29 @@ FXText* Notebook::addTextSection(FXComposite* p, bool editable) {
     return text;
 }
 
+void Notebook::cursorMarkRepaint(FXWindow* w) {
+    update(0, w->getY(), m_padleft, w->getHeight());
+}
+
+void Notebook::sectionMarkRepaint(FXWindow* w) {
+    update(0, w->getY(), width, w->getHeight());
+}
+
+void Notebook::addElementUpdateLayout(FXWindow* new_child) {
+    FXint hcum = m_padtop;
+    for(FXWindow* child = getFirst(); child; child = child->getNext()) {
+        if (child != new_child) {
+            FXint h = child->getDefaultHeight();
+            hcum += h + m_vspacing;
+        }
+    }
+    FXint w = width - m_padleft - m_padright;
+    FXint h = new_child->getDefaultHeight();
+    new_child->position(m_padleft, hcum, w, h);
+
+    setHeight(height + m_vspacing + h);
+}
+
 FXText* Notebook::addInputSection() {
     auto frame = new FXVerticalFrame(this, FRAME_LINE);
     auto text = addTextSection(frame, true);
@@ -33,15 +56,20 @@ FXText* Notebook::addInputSection() {
     frame->setBackColor(FXRGB(INPUT_GRAY,INPUT_GRAY,INPUT_GRAY));
     text->setBackColor(FXRGB(INPUT_GRAY,INPUT_GRAY,INPUT_GRAY));
     frame->create();
-    text->setFocus();
+    addElementUpdateLayout(frame);
+    if (m_active_child) {
+        cursorMarkRepaint(m_active_child);
+    }
+    sectionMarkRepaint(frame);
     m_active_child = frame;
-    update();
+    text->setFocus();
     return text;
 }
 
 FXText* Notebook::addOutputSection(Notebook::section_type_e section_type) {
     auto text = addTextSection(this, false);
     text->create();
+    addElementUpdateLayout(text);
     text->setFocus();
     return text;
 }
@@ -87,13 +115,13 @@ long Notebook::onPaint(FXObject*, FXSelector, void *ptr) {
     dc.setForeground(FXRGB(30,30,180));
     if (m_active_child) {
         FXint y = m_active_child->getY();
-        y += m_text_font->getFontHeight(); // m_text_font->getFontHeight() +
+        y += m_text_font->getFontHeight();
         dc.drawText(m_padleft / 2, y, ">", 1);
     }
     return 1;
 }
 
-static FXint CheckVisibleRows(FXText* text) {
+long Notebook::updateTextVisibleRows(FXText* text) {
     if (text->getNumRows() != text->getVisibleRows()) {
         text->setVisibleRows(text->getNumRows());
         return 1;
@@ -102,9 +130,9 @@ static FXint CheckVisibleRows(FXText* text) {
 }
 
 long Notebook::onChangeTextInput(FXObject* obj, FXSelector, void *ptr) {
-    return CheckVisibleRows((FXText*) obj);
+    return updateTextVisibleRows((FXText*) obj);
 }
 
 long Notebook::onUpdateTextInput(FXObject* obj, FXSelector, void *ptr) {
-    return CheckVisibleRows((FXText*) obj);
+    return updateTextVisibleRows((FXText*) obj);
 }

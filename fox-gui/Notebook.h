@@ -39,6 +39,12 @@ public:
         ID_LAST
     };
 
+protected:
+    void cursorMarkRepaint(FXWindow* w);
+    void sectionMarkRepaint(FXWindow* w);
+    void addElementUpdateLayout(FXWindow* w);
+    long updateTextVisibleRows(FXText* text);
+
 private:
     enum { BORDER_GRAY = 207, INPUT_GRAY = 247 };
 
