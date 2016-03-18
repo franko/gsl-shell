@@ -1,6 +1,6 @@
 
 #include "fox_gsl_shell.h"
-#include "gsl_shell_app.h"
+#include "GslShellApp.h"
 #include "lua_plot_window.h"
 #include "window_registry.h"
 #include "lua-graph.h"

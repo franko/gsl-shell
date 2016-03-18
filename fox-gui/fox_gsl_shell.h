@@ -7,12 +7,12 @@
 #include "gsl_shell_thread.h"
 #include "shared_vector.h"
 
-class gsl_shell_app;
+class GslShellApp;
 
 class fox_gsl_shell : public gsl_shell_thread
 {
 public:
-    fox_gsl_shell(gsl_shell_app* app): m_app(app), m_close(0) { }
+    fox_gsl_shell(GslShellApp* app): m_app(app), m_close(0) { }
 
     ~fox_gsl_shell() { delete m_close; }
 
@@ -28,7 +28,7 @@ public:
     void window_close_notify(int window_id);
 
 private:
-    gsl_shell_app* m_app;
+    GslShellApp* m_app;
     FXGUISignal* m_close;
     shared_vector<int> m_window_close_queue;
 };

@@ -6,13 +6,13 @@
 #include "gsl_shell_thread.h"
 #include "LuaConsole.h"
 
-class gsl_shell_window : public FXMainWindow
+class GslShellWindow : public FXMainWindow
 {
-    FXDECLARE(gsl_shell_window)
+    FXDECLARE(GslShellWindow)
 public:
-    gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
+    GslShellWindow(gsl_shell_thread* gs, io_redirect* lua_io, FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
-    virtual ~gsl_shell_window()
+    virtual ~GslShellWindow()
     {
         delete m_file_menu;
         delete m_text_font;
@@ -33,7 +33,7 @@ public:
     };
 
 protected:
-    gsl_shell_window() {}
+    GslShellWindow() {}
 
 private:
     LuaConsole* m_text;

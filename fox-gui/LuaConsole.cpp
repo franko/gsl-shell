@@ -4,7 +4,7 @@
 #include "luajit.h"
 
 #include "LuaConsole.h"
-#include "gsl_shell_app.h"
+#include "GslShellApp.h"
 #include "gsl_shell_thread.h"
 #include "fx_plot_window.h"
 

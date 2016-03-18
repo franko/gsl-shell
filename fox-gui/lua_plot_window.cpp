@@ -5,7 +5,7 @@ extern "C" {
 }
 
 #include "lua_plot_window.h"
-#include "gsl_shell_app.h"
+#include "GslShellApp.h"
 #include "window_registry.h"
 #include "fx_plot_window.h"
 #include "lua-cpp-utils.h"
@@ -61,7 +61,7 @@ public:
     bool is_running() { return (m_handle->status == running); }
     int window_status() { return m_handle->status; }
 
-    gsl_shell_app*  app()    { return m_handle->app; }
+    GslShellApp*  app()    { return m_handle->app; }
     fx_plot_window* window() { return m_handle->window; }
 
 private:
@@ -69,7 +69,7 @@ private:
 };
 
 static void
-app_create_window(lua_State* L, gsl_shell_app* app, fx_plot_window* win)
+app_create_window(lua_State* L, GslShellApp* app, fx_plot_window* win)
 {
     app->window_create_request(win);
     win->lua_id = window_index_add (L, -1);
@@ -81,7 +81,7 @@ app_create_window(lua_State* L, gsl_shell_app* app, fx_plot_window* win)
 int
 fox_window_new (lua_State *L)
 {
-    gsl_shell_app* app = global_app;
+    GslShellApp* app = global_app;
 
     const char* split_str = lua_tostring(L, 1);
     int defer_show = (lua_gettop(L) >= 2 ? lua_toboolean(L, 2) : 0);
@@ -123,7 +123,7 @@ fox_window_show_try(lua_State* L)
     if (!wm.is_defined()) return type_error_return(L, 2, "window");
     if (wm.window_status() != not_ready) return error_return(L, "window is already running or closed");
     fx_plot_window* win = wm.window();
-    gsl_shell_app* app = win->get_app();
+    GslShellApp* app = win->get_app();
     app_create_window(L, app, win);
     return 0;
 }
@@ -215,7 +215,7 @@ fox_window_close_try (lua_State *L)
     if (!wm.is_running()) return 0;
 
     fx_plot_window* win = wm.window();
-    gsl_shell_app* app = wm.app();
+    GslShellApp* app = wm.app();
 
     int window_id = win->lua_id;
 

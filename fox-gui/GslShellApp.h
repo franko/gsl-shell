@@ -8,9 +8,9 @@
 #include "LuaConsole.h"
 #include "redirect.h"
 
-class gsl_shell_app : public FXApp
+class GslShellApp : public FXApp
 {
-    FXDECLARE(gsl_shell_app)
+    FXDECLARE(GslShellApp)
 
     enum lua_request_e {
         no_rq = 0,
@@ -33,8 +33,8 @@ class gsl_shell_app : public FXApp
     };
 
 public:
-    gsl_shell_app();
-    ~gsl_shell_app();
+    GslShellApp();
+    ~GslShellApp();
 
     virtual void create();
 
@@ -82,6 +82,6 @@ private:
     io_redirect m_redirect;
 };
 
-extern gsl_shell_app* global_app;
+extern GslShellApp* global_app;
 
 #endif

@@ -3,7 +3,7 @@
 
 #include <fx.h>
 
-#include "gsl_shell_app.h"
+#include "GslShellApp.h"
 #include "fx_plot_canvas.h"
 
 #include "window_surface.h"
@@ -17,7 +17,7 @@ enum window_status_e { not_ready, running, closed };
 struct lua_fox_window
 {
     fx_plot_window* window;
-    gsl_shell_app* app;
+    GslShellApp* app;
     enum window_status_e status;
 };
 
@@ -46,9 +46,9 @@ public:
     {
         return m_canvas;
     }
-    gsl_shell_app* get_app()
+    GslShellApp* get_app()
     {
-        return (gsl_shell_app*) getApp();
+        return (GslShellApp*) getApp();
     }
 
     window_surface& surface() { return m_surface; }
