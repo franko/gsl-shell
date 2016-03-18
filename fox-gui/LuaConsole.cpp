@@ -10,12 +10,6 @@
 
 FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {
-    // FXMAPFUNC(SEL_KEYPRESS, 0, LuaConsole::on_key_press),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, LuaConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, LuaConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, LuaConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, LuaConsole::on_cmd_delete),
-    // FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, LuaConsole::on_cmd_insert_string),
     FXMAPFUNC(SEL_KEYPRESS, Notebook::ID_TEXT_INPUT, LuaConsole::onInputKeypress),
     FXMAPFUNC(SEL_IO_READ, LuaConsole::ID_LUA_OUTPUT, LuaConsole::onIOLuaOutput),
 };

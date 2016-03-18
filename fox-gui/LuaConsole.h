@@ -1,5 +1,5 @@
-#ifndef FOXGUI_LUA_FX_CONSOLE_H
-#define FOXGUI_LUA_FX_CONSOLE_H
+#ifndef FOXGUI_LUA_CONSOLE_H
+#define FOXGUI_LUA_CONSOLE_H
 
 #include <new>
 #include <fx.h>
@@ -16,7 +16,6 @@ class LuaConsole : public Notebook
 
 private:
     enum status_e { not_ready, input_mode, output_mode };
-    // enum text_style_e { plain_style = 0, prompt_style = 1, error_style = 2};
 
 public:
     LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=32,FXint pr=8,FXint pt=8,FXint pb=8,FXint vs=6);
@@ -33,8 +32,6 @@ public:
 
     virtual void create();
 
-    // long on_cmd_delete(FXObject*,FXSelector,void*);
-    // long on_cmd_insert_string(FXObject*,FXSelector,void*);
     long onIOLuaOutput(FXObject*, FXSelector, void*);
     long onInputKeypress(FXObject*, FXSelector, void*);
 
@@ -47,9 +44,6 @@ public:
 
 protected:
     LuaConsole() {}
-
-// private:
-    // void init_styles();
 
 private:
     FXString m_input;
@@ -70,8 +64,6 @@ private:
 
     FXString m_saved_line;
     history m_history;
-
-    // static FXHiliteStyle m_styles[2];
 };
 
 #endif
