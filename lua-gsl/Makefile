@@ -28,7 +28,7 @@ include $(GSH_BASE_DIR)/makedefs
 INCLUDES += -I$(GSH_BASE_DIR) $(GSL_INCLUDES)
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
-CFLAGS += $(LUA_CFLAGS)
+GSH_CFLAGS += $(LUA_CFLAGS)
 
 LUAGSL_SRC_FILES = lua-properties.c gs-types.c lua-utils.c lua-gsl.c str.c fatal.c
 LUAGSL_OBJ_FILES := $(LUAGSL_SRC_FILES:%.c=%.o)

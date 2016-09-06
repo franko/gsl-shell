@@ -32,7 +32,7 @@ GSH_BASE_DIR = .
 INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
 LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
-CFLAGS += $(LUA_CFLAGS)
+GSH_CFLAGS += $(LUA_CFLAGS)
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
