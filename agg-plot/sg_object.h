@@ -168,10 +168,11 @@ class sg_object_scaling : public sg_object
 {
     sg_object* m_source;
     agg::conv_transform<sg_object> m_trans;
+    agg::trans_affine m_mtx;
 
 public:
-    sg_object_scaling(sg_object* src, agg::trans_affine& mtx=identity_matrix):
-        m_source(src), m_trans(*m_source, mtx)
+    sg_object_scaling(sg_object* src):
+        m_source(src), m_trans(*m_source, m_mtx)
     {
         ResourceManager::acquire(m_source);
     }
@@ -189,7 +190,7 @@ public:
 
     virtual void apply_transform(const agg::trans_affine& m, double as)
     {
-        m_trans.transformer(m);
+        m_mtx = m;
         m_source->apply_transform (m, as * m.scale());
     }
 
