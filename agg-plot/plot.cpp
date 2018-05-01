@@ -473,7 +473,7 @@ void plot::draw_axis(canvas_type& canvas, plot_layout& layout, const agg::rect_i
     if (clip)
         canvas.clip_box(*clip);
 
-    const agg::trans_affine& m = layout.plot_active_area;
+    agg::trans_affine& m = layout.plot_active_area;
 
     agg::path_storage box;
     sg_object_gen<agg::conv_transform<agg::path_storage> > boxtr(box, m);
