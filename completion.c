@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <readline.h>
+#include <readline/readline.h>
 #include <history.h>
 #include <lua.h>
 
