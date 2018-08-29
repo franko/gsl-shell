@@ -36,18 +36,18 @@ GSH_CFLAGS += $(LUA_CFLAGS)
 
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
-  LIBS += -L/usr/lib -lsupc++
+  LIBS += -L/usr/lib
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
     LIBS += -ldl -lreadline -lncurses
   else
-    LIBS += -ldl -lreadline -lhistory -lncurses -lsupc++
+    LIBS += -ldl -lreadline -lhistory -lncurses
   endif
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
 endif
 
-FOXGUI_LDFLAGS = -lsupc++ -lm
+FOXGUI_LDFLAGS = -lm
 ifeq ($(HOST_SYS),Windows)
   FOXGUI_LDFLAGS += -mwindows
 else
@@ -147,7 +147,7 @@ $(GSL_SHELL): $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS)
 
 $(GSL_SHELL_GUI): $(FOXGUI_LIB) $(LUAGSL_LIBS) $(GSL_SHELL_DEP) $(SUBDIRS) $(FOXGUI_DIR)
 	@echo Linking $@
-	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS) $(CPP_SUP_LIBS)
+	$(LINK_EXE) -o $@ $(FOXGUI_LIB) $(LUAGSL_LIBS) $(LIBS) $(FOX_LIBS) $(FOXGUI_LDFLAGS)
 
 define install-to-dir =
 mkdir -p $1$(PREFIX)/bin
