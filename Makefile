@@ -23,10 +23,6 @@ include make-system-detect
 include makepackages
 include makedefs
 
-DEBIAN_BUILD_DIR = debian_build
-DEB_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
-DEBIAN_PACKAGE := $(PACKAGE_NAME)_$(VERSION)-1_$(DEB_ARCH).deb
-
 GSH_BASE_DIR = .
 
 INCLUDES += -I. $(GSL_INCLUDES) -Iagg-plot -Ilua-gsl
@@ -45,6 +41,12 @@ else
     LIBS += -ldl -lreadline -lhistory -lncurses
   endif
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
+endif
+
+ifeq ($(HOST_SYS),Linux)
+  DEBIAN_BUILD_DIR = debian_build
+  DEB_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+  DEBIAN_PACKAGE := $(PACKAGE_NAME)_$(VERSION)-1_$(DEB_ARCH).deb
 endif
 
 FOXGUI_LDFLAGS = -lm
