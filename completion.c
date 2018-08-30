@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <readline/readline.h>
-#include <history.h>
+#include <readline/history.h>
 #include <lua.h>
 
 #include "completion.h"
