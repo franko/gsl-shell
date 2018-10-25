@@ -31,93 +31,28 @@ and the definition of the inverse Fourier transform is,
 
 The factor of 1/n makes this a true inverse.
 
-In general there are two possible choices for the sign of the exponential in the transform/ inverse-transform pair.
-GSL follows the same convention as fftpack, using a negative exponential for the forward transform.
+In general there are two possible choices for the sign of the exponential in the transform/ inverse-transform pair. GSL follows the same convention as FFTW, using a negative exponential for the forward transform.
 The advantage of this convention is that the inverse transform recreates the original function with simple Fourier synthesis.
 Numerical Recipes uses the opposite convention, a positive exponential in the forward transform.
 
-GSL Shell interface
--------------------
 
-GSL Shell provide a simple interface to perform Fourier transforms of real data with the functions :func:`num.fft` and :func:`num.fftinv`.
-The first function performs the Fourier transform of a column matrix and the second is the inverse Fourier transform.
-
-The function :func:`num.fft` returns a half-complex array.
-This latter is similar to a column matrix of complex numbers, but it is actually a different object because the numbers are packed together following some specific rules related to the algorithm.
-
-The idea is that you can access the elements of this vector for reading or writing simply by indexing it.
-You can also obtain the size of the vector using the operator '#'.
-The valid indices for a half-complex object range from 0 to N-1 where N is the size if the vector.
-Each element of the vector corresponds to the coefficient :math:`z_k` defined above.
-
-When performing Fourier transforms, it is important to know that the computation speed can be greatly influenced by the size of the vector. If the size is a power of two, a very efficient algorithm can be used and we can talk in this case of a Fast Fourier Transform (FFT). In addition, the algorithm has the advantage that it does not require any additional workspace. When the size of the vector is not a power of two, we can have two different cases:
-
- * the size is a product of small prime numbers
- * the size contains a big (> 7) prime number in its factorization
-
-This detail is important because if the size is a product of small prime numbers, a fast algorithm is still available but it is still somewhat slower and it does require some additional workspace.
-In the worst case when the size cannot be factorized to small prime numbers, the Fourier transform can still be computed but the calculation is slower, especially for large arrays.
-
-GSL Shell hides all the details and takes care of choosing the appropriate algorithm based on the size of the vector.
-It also transparently provides any additional workspace that may be needed for the algorithm.
-In order to avoid repeated allocation of workspace memory, the workspace allocated is kept in memory and reused *if the size of the array does not change*.
-This means that the approach of GSL Shell is quite optimal if you perform many Fourier transforms (direct or inverse) of the same size.
-
-Even though GSL Shell takes care of the details automatically, you should be aware of these performance notices because it can make a big difference in real applications.
-From a practical point of view, it is useful in most cases to always provide samples whose size is a power of two.
-
-Another property of the functions :func:`num.fft` and :func:`num.fftinv` is that they can optionally perform the transformation *in place* by modifying the original data instead of creating a copy.
-When a transformation *in place* is requested, the routine still returns a new vector (either a real matrix or a half-complex array) but this latter will point to the same underlying data of the original vector.
-The transformation *in place* can be useful in some cases to avoid unnecessary data copying and memory allocation.
-
-
-Fourier Transform of Real Data
+Methods
 ------------------------------
 
-For real data, the Fourier coefficients satisfy the relation
+The FFT implementation in gsl-shell is an interface to the `FFTW library <http://www.fftw.org/fftw3_doc/>`_ which is well tested and very fast for repetitive transformations.
 
-.. math::
-     z_k = z_{N-k}^*
+.. function:: fft(input [, output])
 
-where N is the size of the vector and k is any integer number from 0 to N-1.
-Because of this relation, the data is packed in a special type of object called a half-complex array.
+   Performs the Fourier transform of the complex-valued column matrix ``input``.
+   The transformed signal is stored in a complex-valued column matrix ``output`` which is allocated by the function each time. To speed up repetitive Fourier transformations it is recommended to give the output column matrix as a second argument to eliminate the allocation overhead. 
 
-To access an element in a half-complex array, you can index it with an integer number between 0 and N-1, inclusive. So, for example::
+.. function:: fftinv(input [, output])
 
-   -- get a random number generator
-   r = rng.new()
+   Performas the inverse Fourier transformation of the complex-valued column matrix ``input``. The output is stored in a complex-valued column matrix which is allocated by the function each time. To speed up repetitive Fourier transformations it is recommended to give the output column matrix as a second argument to eliminate the allocation overhead.
 
-   -- create a vector with random numbers
-   x = matrix.new(256, 1, || rnd.gaussian(r, 1))
+   This transformation is the inverse of the function :func:`num.fft`, so that if you perform the two transformations consecutively you will obtain a vector identical to the initial one up to a factor ``size=#input``.
 
-   -- take the Fourier transform
-   ft = num.fft(x)
-
-   -- print all the coefficients of the Fourier transform
-   for k=0, #ft-1 do print(ft[k]) end
-
-As shown in the example above, you can use the Lua operator '#' to obtain the size of a half-complex array.
-
-.. function:: fft(v[, in_place])
-
-   Perform the Fourier transform of the real-valued column matrix ``x``.
-   If ``in_place`` is ``true`` then the original data is altered and the resulting vector will point to the same underlying data of the original vector.
-
-   Please note that the value you obtain is not an ordinary matrix but a half-complex array.
-   You can access the elements of such an array by indexing the vector.
-   If you want to have an ordinary matrix you can easily build it with the following instructions::
-
-      -- we suppose that f is an half-complex array
-      m = matrix.cnew(#f, 1, |i,j| f[i-1])
-
-.. function:: fftinv(hc[, in_place])
-
-   Return a column matrix that contains the inverse Fourier transform of the half-complex vector ``hc``.
-   If ``in_place`` is ``true`` then the original data is altered and the resulting vector will point to the same underlying data of the original vector.
-
-   This transformation is the inverse of the function :func:`num.fft`, so that if you perform the two transformations consecutively you will obtain a vector identical to the initial one.
-
-   A typical usage of :func:`fft_inv` is to revert the transformation made with :func:`fft` but by doing some transformations along the way.
+   A typical usage of :func:`fftinv` is to revert the transformation made with :func:`fft` but by doing some transformations along the way.
    So a typical usage path could be::
 
       -- we assume v is a column matrix with our data
@@ -125,12 +60,67 @@ As shown in the example above, you can use the Lua operator '#' to obtain the si
 
       -- here we can manipulate the half-complex array 'ft'
       -- using the methods `get' and `set'
-      some code here
+      {some code here}
 
-      vt = num.fftinv(ft) -- we perform the inverse Fourier transform
+      vt = num.fftinv(ft)/#ft -- we perform the inverse Fourier transform
       -- now vt is a vector of the same size of v
 
-FFT example
+.. function:: rfft(input[, output])
+
+    Performs the Fourier transformation of real-valued input and complex-valued output.
+    In the output, the Fourier coefficients satisfy the relation
+
+    .. math::
+         z_k = z_{N-k}^*
+
+    where :math:`N` is the size of the vector and :math:`k` is any integer number from 0 to :math:`N-1`.
+    As a result of this symmetry, half of the output :math:`z` is redundant (being the complex conjugate of the other half), and so the transform only outputs elements :math:`0...\frac{n}{2}` of :math:`z` (:math:`\frac{n}{2}+1` complex numbers), where the division by 2 is rounded down.
+
+.. function:: rfftinv(input[, output])
+
+    Performs the inverse Fourier transformation with complex-valued input and real-valued output. Due to the implementation of the FFTW library, changes in the input matrix can occur which is why it is copied internally.
+    For the input of :math:`n`, the output has size :math:`(n-1)\times2`.
+    This is the direct inversion of :func:`num.rfft` as see in the example::
+
+        --Forward transformation
+        ft = num.rfft(matrix.vec{1,2,3,4})
+
+        --Backward transformation
+        orig = num.rfftinv(ft) / #ft
+
+.. function:: fft2(input, [output])
+.. function:: fft2inv(input, [output])
+
+    Performs a 2D forward and backward Fourier transformation of an input matrix ``input``. Giving a preallocated output matrix as a second argument speeds up repetitive transformations.
+
+.. function:: rfft2(input, [output])
+    
+    Performs a 2D forward Fourier transformation with real-valued input matrix ``input``. Returns the complex-valued output with reduced dimension. Giving a preallocated output matrix as a second argument speeds up repetitive transformations.
+
+.. function:: rfft2inv(input, [output])
+
+    Performs the 2D inverse Fourier transformation with complex-valued input matrix ``input``. Due to the implementation of the FFTW library, changes in the input matrix can occur which is why it is copied internally.
+    Returns the real-valued output with increased dimension. Giving a preallocated output matrix as a second argument speeds up repetitive transformations.
+
+.. function:: fftn(input, dimlist, [output])
+.. function:: fftninv(input, dimlist, [output])
+
+    Performs the n-dimensional forward and backward Fourier transformation of input data ``input``.
+    The input is considered to be stored in a `row-major format` meaning that if you had an array with dimensions :math:`n_1 \times n_2 \times n_3` then a point at :math:`(i_1,i_2,i_3)` is stored at index position: :math:`i_3 + n_3\cdot(i_2 + n_2\cdot i_1)`.
+    The dimensions are given as a table ``dimlist`` as :math:`{n1, n2, n3, ...}`.
+
+    As before, providing the output array as well limits the overhead of allocating the output array each call.
+
+.. function:: rfftn(input, dimlist, [output])
+.. function:: rfftninv(input, dimlist, [output])
+    
+    Performs the n-dimensional real forward and backward Fourier transformation. Here the size of the input and output arrays are similar to the 1D and 2D couterparts.
+
+    For forward transformations the real-valued input has size :math:`n_1 \times n_2 \times ... \times n_N` and the complex-valued output is of size :math:`n_1 \times n_2 \times ... \times n_N/2+1`.
+
+    For the backward transformation the complex-valued input has size :math:`n_1 \times n_2 \times ... \times n_N/2+1` and the real-valued output has size :math:`n_1 \times n_2 \times ... \times n_N` consequently. Due to the implementation of the FFTW library, changes in the input matrix can occur for backward transformations which is why the input matrix is copied internally.
+
+Examples
 -----------
 
 In this example we will treat a square pulse in the temporal domain. To illustrate a typical example of FFT usage we perform the Fourier Transform of the signal and we cut the higher order frequencies. Then we perform the inverse transform and we compare the result with the original time signal.
@@ -157,13 +147,13 @@ Now we are ready to perform:
 
 and plot the results::
 
-   ft = num.fft(y)
+   ft = num.rfft(y)
 
-   pf = graph.fibars(|k| complex.abs(ft[k]), 0, 60)
+   pf = graph.fibars(|k| complex.abs(ft[k]), 1, 60)
    pf.title = 'FFT Power Spectrum'
 
-   for k=ncut, n/2 do ft[k] = 0 end
-   ytr = num.fftinv(ft)
+   for k=ncut, #ft do ft[k] = 0 end
+   ytr = num.rfftinv(ft)/n
 
    pt:addline(graph.filine(|i| ytr[i], n), 'red')
 
