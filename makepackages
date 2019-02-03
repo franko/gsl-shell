@@ -55,8 +55,8 @@ else
   AGG_INCLUDES = -I/usr/include/agg2
   AGG_LIBS = -lagg -lX11
 
-  GSL_INCLUDES =
-  GSL_LIBS = -lgsl -lblas
+  GSL_INCLUDES = $(shell pkg-config gsl --cflags)
+  GSL_LIBS = $(shell pkg-config gsl --libs)
 
   FOX_INCLUDES := $(shell pkg-config fox --cflags)
   FOX_LIBS = $(shell pkg-config fox --libs)
