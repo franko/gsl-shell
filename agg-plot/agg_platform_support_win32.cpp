@@ -282,7 +282,7 @@ LRESULT CALLBACK window_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC paintDC;
 
-    void* user_data = reinterpret_cast<void*>(::GetWindowLong(hWnd, GWL_USERDATA));
+    void* user_data = reinterpret_cast<void*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
     platform_support* app = 0;
 
     if(user_data)
@@ -431,7 +431,7 @@ bool platform_support::init(unsigned width, unsigned height, unsigned flags)
                  height + (height - (rct.bottom - rct.top)),
                  FALSE);
 
-    ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+    ::SetWindowLongPtr(m_specific->m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
     m_specific->create_pmap(width, height, &m_rbuf_window);
     m_initial_width = width;
     m_initial_height = height;
