@@ -32,7 +32,7 @@
 #endif
 
 #define LUA_INDEX_CONVENTION
-#define GSL_SHELL_RELEASE "2.3.1"
+#define GSL_SHELL_RELEASE "2.3.2"
 
 #ifdef WIN32
 #ifndef __cplusplus

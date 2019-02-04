@@ -3,7 +3,7 @@ Maintainer: Francesco Abbate <francesco.bbt@gmail.com>
 Version: LGT_VERSION
 Architecture: LGT_ARCH
 Installed-Size: LGT_INSTALLED_SIZE
-Depends: libfox-1.6-0 (>= 1.6.0), libgsl0ldbl (>= 1.14), libfreetype6 (>= 2.2.1)
+Depends: libfox-1.6-0 (>= 1.6.0), libgsl23 (>= 2.3), libfreetype6 (>= 2.2.1)
 Section: x11
 Priority: optional
 Description: GSL Shell
