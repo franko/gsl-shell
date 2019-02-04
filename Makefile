@@ -30,16 +30,22 @@ LIBS += $(PTHREAD_LIBS)
 DEFS += $(PTHREAD_DEFS) $(GSL_SHELL_DEFS)
 GSH_CFLAGS += $(LUA_CFLAGS)
 
+C_SRC_FILES =
+
+ifeq ($(strip $(USE_READLINE)),yes)
+  INCLUDES += $(RL_INCLUDES)
+  LIBS += $(RL_LIBS)
+  C_SRC_FILES += completion.c
+endif
+
 ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include
   LIBS += -L/usr/lib
 else
   ifeq ($(HOST_SYS),Darwin)
     LDFLAGS += -L/usr/X11/lib -undefined dynamic_lookup -pagezero_size 10000 -image_base 100000000
-    LIBS += -ldl -lreadline -lncurses
-  else
-    LIBS += -ldl -lreadline -lhistory -lncurses
   endif
+  LIBS += -ldl
   TARGET_LINK_DEP = libluajit-$(ABIVER).so.$(MAJVER)
 endif
 
@@ -54,14 +60,6 @@ ifeq ($(HOST_SYS),Windows)
   FOXGUI_LDFLAGS += -mwindows
 else
   FOXGUI_LDFLAGS += -ldl
-endif
-
-C_SRC_FILES =
-
-ifeq ($(strip $(USE_READLINE)),yes)
-  INCLUDES += $(RL_INCLUDES)
-  LIBS += $(RL_LIBS)
-  C_SRC_FILES += completion.c
 endif
 
 LUA_BASE_FILES = bspline.lua fft-init.lua integ-init.lua template.lua check.lua \

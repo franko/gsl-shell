@@ -26,16 +26,15 @@ endif
 ifeq ($(HOST_SYS),Linux)
   RL_INCLUDES = $(shell pkg-config ncurses --cflags)
   RL_LIBS = $(shell pkg-config ncurses --cflags) -lreadline -lhistory
+  AGG_LIBS += -lX11
 endif
 
 ifeq ($(HOST_SYS),Darwin)
   RL_INCLUDES = $(shell pkg-config ncurses --cflags)
-  RL_LIBS = $(shell pkg-config ncurses --cflags) -lreadline -lhistory
-
+  RL_LIBS = $(shell pkg-config ncurses --cflags) -lreadline
+  AGG_LIBS += -lX11
 # GWH: determined all of the following flags (except for pthread)
 # using the pkg-config utility, except I had to add -lX11 to AGG_LIBS.
-
-  AGG_LIBS += -lX11
 
 # GWH: pkg-config will include "-Wl,-rpath,/opt/local/lib" in AGG_LIBS.
 # If you don't include that, the code won't run unless you first do:
