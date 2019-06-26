@@ -18,10 +18,9 @@ agg_dep = dependency('libagg')
 luajit_dep = dependency('luajit')
 freetype_dep = dependency('freetype2')
 
-libaggplot = static_library('libaggplot',
+libaggplot = static_library('aggplot',
     aggplot_sources + platform_sources,
-    dependencies: [agg_dep, luajit_dep, freetype_dep] + platform_window_deps,
+    dependencies: [agg_dep, luajit_dep, freetype_dep, threads_dep] + platform_window_deps,
     cpp_args : aggplot_defines,
-    include_directories: [cpp_utils_include, lua_gsl_include, gsl_shell_include],
-    install: true
+    include_directories: [cpp_utils_include, lua_gsl_include, gsl_shell_include]
 )
