@@ -9,4 +9,5 @@ threads_dep = dependency('threads')
 gsl_shell_defines = []
 
 subdir('agg-plot')
+subdir('lua-gsl')
 subdir('gdt')
