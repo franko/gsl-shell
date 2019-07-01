@@ -1,5 +1,5 @@
 [wrap-git]
 directory = luajit-lang-toolkit
 url = https://github.com/franko/luajit-lang-toolkit.git
-revision = head
+revision = keywords-functions-clean
 
