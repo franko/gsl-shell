@@ -3,8 +3,6 @@
 
 #include "GslShellApp.h"
 #include "GslShellWindow.h"
-#include "fx_plot_window.h"
-#include "lua_plot_window.h"
 #include "fatal.h"
 #include "icons.h"
 
@@ -15,7 +13,6 @@ FXDEFMAP(GslShellApp) GslShellApp_map[]=
     FXMAPFUNC(SEL_COMMAND, GslShellApp::ID_CONSOLE_CLOSE, GslShellApp::on_console_close),
     FXMAPFUNC(SEL_COMMAND, GslShellApp::ID_LUA_RESTART, GslShellApp::on_restart_lua_request),
     FXMAPFUNC(SEL_COMMAND, GslShellApp::ID_LUA_INTERRUPT, GslShellApp::on_lua_interrupt),
-    FXMAPFUNC(SEL_CLOSE, 0, GslShellApp::on_window_close),
 };
 
 FXIMPLEMENT(GslShellApp,FXApp,GslShellApp_map,ARRAYNUMBER(GslShellApp_map))
@@ -124,14 +121,6 @@ long GslShellApp::on_console_close(FXObject* sender, FXSelector, void*)
 {
     m_engine.set_request(gsl_shell_thread::exit_request);
     return 1;
-}
-
-// this is called when the user press the button to close the window.
-long GslShellApp::on_window_close(FXObject* sender, FXSelector, void*)
-{
-    fx_plot_window* win = (fx_plot_window*) sender;
-    m_engine.window_close_notify(win->lua_id);
-    return 0;
 }
 
 void GslShellApp::wait_action()

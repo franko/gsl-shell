@@ -54,7 +54,6 @@ public:
     void wait_action();
 
     long on_lua_request(FXObject*,FXSelector,void*);
-    long on_window_close(FXObject*,FXSelector,void*);
     long on_console_close(FXObject*,FXSelector,void*);
     long on_lua_quit(FXObject*,FXSelector,void*);
     long on_restart_lua_request(FXObject*,FXSelector,void*);

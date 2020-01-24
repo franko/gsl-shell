@@ -6,7 +6,6 @@
 #include "LuaConsole.h"
 #include "GslShellApp.h"
 #include "gsl_shell_thread.h"
-#include "fx_plot_window.h"
 
 FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {

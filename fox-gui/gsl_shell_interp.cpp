@@ -15,7 +15,6 @@ extern "C" {
 
 #include "gsl_shell_interp.h"
 #include "lua-gsl.h"
-#include "lua-graph.h"
 #include "fatal.h"
 
 static void stderr_message(const char *pname, const char *msg)
@@ -111,7 +110,6 @@ static int pinit(lua_State *L)
     luaL_openlibs(L);  /* open libraries */
     override_loaders(L);
     luaopen_gsl (L);
-    register_graph (L);
     lua_gc(L, LUA_GCRESTART, -1);
     dolibrary (L, "gslext");
     return 0;
