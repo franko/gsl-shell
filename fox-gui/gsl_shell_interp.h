@@ -5,10 +5,11 @@ extern "C" {
 #include <lua.h>
 }
 
+#include <string>
+
 #include "defs.h"
 #include "pthreadpp.h"
 #include "lua-gsl.h"
-#include "strpp.h"
 #include "fatal.h"
 
 class gsl_shell : public gsl_shell_state
@@ -36,13 +37,13 @@ public:
 
     const char* error_msg() const
     {
-        return m_error_msg.cstr();
+        return m_error_msg.c_str();
     }
 
 private:
     int error_report(int status);
 
-    str m_error_msg;
+    std::string m_error_msg;
 };
 
 #endif

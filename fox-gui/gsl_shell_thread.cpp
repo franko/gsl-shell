@@ -66,7 +66,7 @@ gsl_shell_thread::process_request()
 void
 gsl_shell_thread::run()
 {
-    str line;
+    std::string line;
 
     while (true)
     {
@@ -90,14 +90,15 @@ gsl_shell_thread::run()
             break;
         }
 
-        if (cmd == thread_cmd_exec)
+        if (cmd == thread_cmd_exec) {
             line = m_line_pending;
+        }
         m_status = busy;
         m_eval.unlock();
 
         if (cmd == thread_cmd_exec)
         {
-            m_eval_status = this->exec(line.cstr());
+            m_eval_status = this->exec(line.c_str());
             fputc(eot_character, stdout);
             fflush(stdout);
         }
@@ -113,7 +114,9 @@ gsl_shell_thread::set_request(gsl_shell_thread::request_e req, const char* line)
 {
     m_eval.lock();
     m_request = req;
-    if (line) m_line_pending = line;
+    if (line) {
+        m_line_pending = std::string{line};
+    }
     if (m_status == waiting)
     {
         m_eval.signal();

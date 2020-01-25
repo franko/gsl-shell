@@ -3,7 +3,6 @@
 
 #include <fx.h>
 
-#include "agg_array.h"
 #include "fox_gsl_shell.h"
 #include "LuaConsole.h"
 #include "redirect.h"

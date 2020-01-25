@@ -133,8 +133,8 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
             break;
     }
 
-    str mline = str::print("return %s", line);
-    status = language_loadbuffer(L, mline.cstr(), len+7, "=stdin");
+    std::string mline = "return " + std::string{line};
+    status = language_loadbuffer(L, mline.c_str(), len + 7, "=stdin");
     if (status != 0) lua_pop(L, 1); // remove the error message
     return status;
 }
@@ -181,7 +181,7 @@ int gsl_shell::error_report(int status)
     {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        m_error_msg = msg;
+        m_error_msg = std::string{msg};
         lua_pop(L, 1);
     }
     return status;

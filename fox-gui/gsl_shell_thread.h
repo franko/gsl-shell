@@ -5,9 +5,10 @@ extern "C" {
 #include "lua.h"
 }
 
+#include <string>
+
 #include "gsl_shell_interp.h"
 #include "pthreadpp.h"
-#include "str.h"
 
 class gsl_shell_thread : public gsl_shell
 {
@@ -57,7 +58,7 @@ private:
     pthread_t m_thread;
     engine_status_e m_status;
     pthread::cond m_eval;
-    str m_line_pending;
+    std::string m_line_pending;
     int m_eval_status;
     request_e m_request;
 };

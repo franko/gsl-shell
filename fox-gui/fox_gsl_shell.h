@@ -2,7 +2,6 @@
 #define FOX_GSL_SHELL_H
 
 #include <fx.h>
-#include "agg_array.h"
 
 #include "gsl_shell_thread.h"
 

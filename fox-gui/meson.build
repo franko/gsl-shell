@@ -2,13 +2,12 @@ foxgui_sources = ['io_thread.cpp', 'Notebook.cpp', 'LuaConsole.cpp', 'redirect.c
 
 fox_dep = dependency('fox')
 gsl_dep = dependency('gsl')
-agg_dep = dependency('libagg')
 
 executable('gsl-shell-fox',
     foxgui_sources,
     link_with: [libluagsl, libgdt],
     cpp_args: gsl_shell_defines,
     include_directories: [cpp_utils_include, lua_gsl_include, gsl_shell_include],
-    dependencies: [gsl_dep, agg_dep, liblang_dep, fox_dep, threads_dep],
+    dependencies: [gsl_dep, liblang_dep, fox_dep, threads_dep],
     install: true,
 )
