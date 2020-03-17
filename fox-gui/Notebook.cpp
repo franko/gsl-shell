@@ -1,9 +1,12 @@
+#include "elem_plot.h"
+#include "elem_plot_fox.h"
 #include "Notebook.h"
 
 FXDEFMAP(Notebook) NotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, Notebook::onPaint),
     FXMAPFUNC(SEL_CHANGED, Notebook::ID_TEXT_INPUT, Notebook::onChangeTextInput),
     FXMAPFUNC(SEL_UPDATE, Notebook::ID_TEXT_INPUT, Notebook::onUpdateTextInput),
+    FXMAPFUNC(SEL_IO_READ, Notebook::ID_ELEM_WINDOW_START, Notebook::onElemWindowStart),
 };
 
 FXIMPLEMENT(Notebook, FXPacker, NotebookMap, ARRAYNUMBER(NotebookMap))
@@ -13,6 +16,11 @@ Notebook::Notebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
     m_text_font(nullptr), m_active_child(nullptr)
 {
+    m_new_window_signal = new FXGUISignal(getApp(), this, ID_ELEM_WINDOW_START, nullptr);
+}
+
+Notebook::~Notebook() {
+    delete m_new_window_signal;
 }
 
 void Notebook::clearContent() {
@@ -87,6 +95,18 @@ FXText* Notebook::addOutputSection(Notebook::section_type_e section_type) {
     text->setFocus();
     return text;
 }
+
+long Notebook::onElemWindowStart(FXObject *, FXSelector, void *ptr) {
+    FXElemStartMessage *message = (FXElemStartMessage *) ptr;
+    if (!message) {
+        fprintf(stderr, "internal error: no message data with window's start signal\n");
+        return 1;
+    }
+    auto elem_window = FXElemBuildWindow(this, message, ELEM_CREATE_NOW);
+    addElementUpdateLayout(elem_window);
+    return 1;
+}
+
 
 FXint Notebook::getDefaultWidth() {
     FXint w = 0;

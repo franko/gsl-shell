@@ -8,6 +8,6 @@ executable('gsl-shell-fox',
     link_with: [libluagsl, libgdt],
     cpp_args: gsl_shell_defines,
     include_directories: [cpp_utils_include, lua_gsl_include, gsl_shell_include],
-    dependencies: [gsl_dep, liblang_dep, fox_dep, threads_dep],
+    dependencies: [gsl_dep, liblang_dep, fox_dep, elemplot_dep, elemplotfox_dep, elemplotlua_dep, threads_dep],
     install: true,
 )

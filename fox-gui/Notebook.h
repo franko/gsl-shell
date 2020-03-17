@@ -15,6 +15,7 @@ protected:
     Notebook(const Notebook&) {};
 public:
     Notebook(FXComposite* p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=32, FXint pr=8, FXint pt=8, FXint pb=8, FXint vs=6);
+    ~Notebook();
 
     FXText* addTextSection(FXComposite* p, bool editable);
     FXText* addInputSection();
@@ -33,11 +34,17 @@ public:
     long onChangeTextInput(FXObject*, FXSelector, void*);
     long onUpdateTextInput(FXObject*, FXSelector, void*);
     long onKeylogNewline(FXObject*, FXSelector, void*);
+    long onElemWindowStart(FXObject*, FXSelector, void*);
 
     void layout() override;
 
+    FXGUISignal *elem_start_signal() {
+        return m_new_window_signal;
+    }
+
     enum {
         ID_TEXT_INPUT = FXPacker::ID_LAST,
+        ID_ELEM_WINDOW_START,
         ID_LAST
     };
 
@@ -57,6 +64,7 @@ private:
     FXint   m_vspacing;         // Vertical child spacing
     FXFont* m_text_font;
     FXWindow* m_active_child;
+    FXGUISignal *m_new_window_signal;
 };
 }
 
