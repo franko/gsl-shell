@@ -5,7 +5,6 @@
 #include "GslShellWindow.h"
 #include "elem_plot.h"
 #include "elem_plot_fox.h"
-#include "elem_plot_lua.h"
 #include "fatal.h"
 #include "icons.h"
 
@@ -39,12 +38,11 @@ FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
     gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
     plot_icon = new FXGIFIcon(this, plot_icon_data);
 
+    elem::InitializeFonts();
+    elem::SetFoxWindowSystem(m_console->elem_start_signal());
+
     GslShellWindow *gsw = new GslShellWindow(&m_engine, &m_redirect, this, "GSL Shell", gsl_shell_icon, gsl_shell_mini, 700, 600);
     m_console = gsw->console();
-
-    elem::InitializeFonts();
-    elem::LuaOpenLibrary(m_engine.L);
-    elem::SetFoxWindowSystem(m_console->elem_start_signal());
 }
 
 GslShellApp::~GslShellApp()

@@ -15,6 +15,7 @@ extern "C" {
 
 #include "gsl_shell_interp.h"
 #include "lua-gsl.h"
+#include "elem_plot_lua.h"
 #include "fatal.h"
 
 static void stderr_message(const char *pname, const char *msg)
@@ -166,6 +167,8 @@ void gsl_shell::init()
         lua_close(this->L);
         fatal_exception("cannot initialize Lua state");
     }
+
+    elem::LuaOpenLibrary(this->L);
 }
 
 void gsl_shell::close()
