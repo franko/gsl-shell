@@ -102,11 +102,12 @@ long Notebook::onElemWindowStart(FXObject *, FXSelector, void *ptr) {
         fprintf(stderr, "internal error: no message data with window's start signal\n");
         return 1;
     }
-    auto elem_window = FXElemBuildWindow(this, message, ELEM_CREATE_NOW);
-    addElementUpdateLayout(elem_window);
+    auto packer = new FXPacker(this, 0, 0, 0, message->width, message->height);
+    FXElemBuildWindow(packer, LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT, message, ELEM_CREATE_DEFER);
+    packer->create();
+    addElementUpdateLayout(packer);
     return 1;
 }
-
 
 FXint Notebook::getDefaultWidth() {
     FXint w = 0;
