@@ -55,14 +55,29 @@ void Notebook::addElementUpdateLayout(FXWindow* new_child) {
     FXint hcum = m_padtop;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         if (child != new_child) {
-            FXint h = child->getDefaultHeight();
+            FXuint hints = child->getLayoutHints();
+            FXint h;
+            if (hints & LAYOUT_FIX_HEIGHT) {
+                h = child->getHeight();
+            } else {
+                h = child->getDefaultHeight();
+            }
             hcum += h + m_vspacing;
         }
     }
-    FXint w = width - m_padleft - m_padright;
-    FXint h = new_child->getDefaultHeight();
+    FXuint hints = new_child->getLayoutHints();
+    FXint w, h;
+    if (hints & LAYOUT_FIX_WIDTH) {
+        w = new_child->getWidth();
+    } else {
+        w = width - m_padleft - m_padright;
+    }
+    if (hints & LAYOUT_FIX_HEIGHT) {
+        h = new_child->getHeight();
+    } else {
+        h = new_child->getDefaultHeight();
+    }
     new_child->position(m_padleft, hcum, w, h);
-
     setHeight(height + m_vspacing + h);
 }
 
@@ -102,10 +117,9 @@ long Notebook::onElemWindowStart(FXObject *, FXSelector, void *ptr) {
         fprintf(stderr, "internal error: no message data with window's start signal\n");
         return 1;
     }
-    auto packer = new FXPacker(this, 0, 0, 0, message->width, message->height);
-    FXElemBuildWindow(packer, LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT, message, ELEM_CREATE_DEFER);
-    packer->create();
-    addElementUpdateLayout(packer);
+    auto elem_window = FXElemBuildWindow(this, LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT, message, ELEM_CREATE_DEFER);
+    elem_window->create();
+    addElementUpdateLayout(elem_window);
     return 1;
 }
 
@@ -121,7 +135,13 @@ FXint Notebook::getDefaultWidth() {
 FXint Notebook::getDefaultHeight() {
     FXint h = m_padtop;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
-        FXint ch = child->getDefaultHeight();
+        FXuint hints = child->getLayoutHints();
+        FXint ch;
+        if (hints & LAYOUT_FIX_HEIGHT) {
+            ch = child->getHeight();
+        } else {
+            ch = child->getDefaultHeight();
+        }
         h += ch;
         if (child != getFirst()) h += m_vspacing;
     }
@@ -134,8 +154,18 @@ void Notebook::layout() {
     FXint x0 = m_padleft;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         FXint x = x0, y = hcum;
-        FXint w = getWidth() - m_padleft - m_padright;
-        FXint h = child->getDefaultHeight();
+        FXuint hints = child->getLayoutHints();
+        FXint w, h;
+        if (hints & LAYOUT_FIX_WIDTH) {
+            w = child->getWidth();
+        } else {
+            w = getWidth() - m_padleft - m_padright;
+        }
+        if (hints & LAYOUT_FIX_HEIGHT) {
+            h = child->getHeight();
+        } else {
+            h = child->getDefaultHeight();
+        }
         child->position(x, y, w, h);
         hcum += h + m_vspacing;
     }
