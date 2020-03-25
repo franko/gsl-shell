@@ -49,6 +49,9 @@ public:
     };
 
 protected:
+    FXint getChildWidth(FXWindow *child);
+    FXint getChildExpandWidth(FXWindow *child, FXint expand_width);
+    FXint getChildHeight(FXWindow *child);
     void cursorMarkRepaint(FXWindow* w);
     void sectionMarkRepaint(FXWindow* w);
     void addElementUpdateLayout(FXWindow* w);

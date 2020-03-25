@@ -51,32 +51,40 @@ void Notebook::sectionMarkRepaint(FXWindow* w) {
     update(0, w->getY(), width, w->getHeight());
 }
 
+FXint Notebook::getChildWidth(FXWindow *child) {
+    const FXuint hints = child->getLayoutHints();
+    if (hints & LAYOUT_FIX_WIDTH) {
+        return child->getWidth();
+    }
+    return child->getDefaultWidth();
+}
+
+FXint Notebook::getChildExpandWidth(FXWindow *child, FXint expand_width) {
+    const FXuint hints = child->getLayoutHints();
+    if (hints & LAYOUT_FIX_WIDTH) {
+        return child->getWidth();
+    }
+    return expand_width - m_padleft - m_padright;
+}
+
+FXint Notebook::getChildHeight(FXWindow *child) {
+    const FXuint hints = child->getLayoutHints();
+    if (hints & LAYOUT_FIX_HEIGHT) {
+        return child->getHeight();
+    }
+    return child->getDefaultHeight();
+}
+
 void Notebook::addElementUpdateLayout(FXWindow* new_child) {
     FXint hcum = m_padtop;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         if (child != new_child) {
-            FXuint hints = child->getLayoutHints();
-            FXint h;
-            if (hints & LAYOUT_FIX_HEIGHT) {
-                h = child->getHeight();
-            } else {
-                h = child->getDefaultHeight();
-            }
+            FXint h = getChildHeight(child);
             hcum += h + m_vspacing;
         }
     }
-    FXuint hints = new_child->getLayoutHints();
-    FXint w, h;
-    if (hints & LAYOUT_FIX_WIDTH) {
-        w = new_child->getWidth();
-    } else {
-        w = width - m_padleft - m_padright;
-    }
-    if (hints & LAYOUT_FIX_HEIGHT) {
-        h = new_child->getHeight();
-    } else {
-        h = new_child->getDefaultHeight();
-    }
+    FXint w = getChildExpandWidth(new_child, width);
+    FXint h = getChildHeight(new_child);
     new_child->position(m_padleft, hcum, w, h);
     setHeight(height + m_vspacing + h);
 }
@@ -135,15 +143,10 @@ FXint Notebook::getDefaultWidth() {
 FXint Notebook::getDefaultHeight() {
     FXint h = m_padtop;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
-        FXuint hints = child->getLayoutHints();
-        FXint ch;
-        if (hints & LAYOUT_FIX_HEIGHT) {
-            ch = child->getHeight();
-        } else {
-            ch = child->getDefaultHeight();
+        h += getChildHeight(child);
+        if (child != getFirst()) {
+            h += m_vspacing;
         }
-        h += ch;
-        if (child != getFirst()) h += m_vspacing;
     }
     h += m_padbottom;
     return h;
@@ -154,18 +157,8 @@ void Notebook::layout() {
     FXint x0 = m_padleft;
     for(FXWindow* child = getFirst(); child; child = child->getNext()) {
         FXint x = x0, y = hcum;
-        FXuint hints = child->getLayoutHints();
-        FXint w, h;
-        if (hints & LAYOUT_FIX_WIDTH) {
-            w = child->getWidth();
-        } else {
-            w = getWidth() - m_padleft - m_padright;
-        }
-        if (hints & LAYOUT_FIX_HEIGHT) {
-            h = child->getHeight();
-        } else {
-            h = child->getDefaultHeight();
-        }
+        FXint w = getChildExpandWidth(child, width);
+        FXint h = getChildHeight(child);
         child->position(x, y, w, h);
         hcum += h + m_vspacing;
     }
