@@ -9,10 +9,10 @@ FXDEFMAP(Notebook) NotebookMap[] = {
     FXMAPFUNC(SEL_IO_READ, Notebook::ID_ELEM_WINDOW_START, Notebook::onElemWindowStart),
 };
 
-FXIMPLEMENT(Notebook, FXPacker, NotebookMap, ARRAYNUMBER(NotebookMap))
+FXIMPLEMENT(Notebook, FXScrollArea, NotebookMap, ARRAYNUMBER(NotebookMap))
 
 Notebook::Notebook(FXComposite* p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
-    FXPacker(p, opts, x, y, w, h),
+    FXScrollArea(p, opts, x, y, w, h),
     m_padleft(pl), m_padright(pr), m_padtop(pt), m_padbottom(pb), m_vspacing(vs),
     m_text_font(nullptr), m_active_child(nullptr)
 {
@@ -33,7 +33,7 @@ void Notebook::clearContent() {
 }
 
 FXText* Notebook::addTextSection(FXComposite* p, bool editable) {
-    auto text = new FXText(p, this, Notebook::ID_TEXT_INPUT, LAYOUT_FILL_X|LAYOUT_FILL_Y|VSCROLLING_OFF|TEXT_AUTOSCROLL);
+    auto text = new FXText(p, this, Notebook::ID_TEXT_INPUT, LAYOUT_FILL_X|LAYOUT_FILL_Y|TEXT_AUTOSCROLL);
     text->setVisibleColumns(60);
     text->setVisibleRows(1);
     text->setEditable(editable);
@@ -137,7 +137,7 @@ FXint Notebook::getDefaultWidth() {
         FXint cw = child->getDefaultWidth();
         if (cw > w) w = cw;
     }
-    return (w > 0 ? w + m_padleft + m_padright : FXPacker::getDefaultWidth());
+    return (w > 0 ? w + m_padleft + m_padright : FXScrollArea::getDefaultWidth());
 }
 
 FXint Notebook::getDefaultHeight() {
@@ -180,8 +180,16 @@ long Notebook::onPaint(FXObject*, FXSelector, void *ptr) {
 }
 
 long Notebook::updateTextVisibleRows(FXText* text) {
-    if (text->getNumRows() != text->getVisibleRows()) {
-        text->setVisibleRows(text->getNumRows());
+    FXint ndrows = text->getNumRows();
+
+    /* FOX hack: add some more empty visible lines to
+       accomodate the horizontal scrollbar in case is is
+       shown. */
+    FXint fh = text->getFont()->getFontHeight();
+    auto scrollbar = horizontalScrollBar();
+    ndrows += (scrollbar->getDefaultHeight() + fh - 1) / fh;
+    if (ndrows != text->getVisibleRows()) {
+        text->setVisibleRows(ndrows);
         return 1;
     }
     return 0;

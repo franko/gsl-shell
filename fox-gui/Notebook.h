@@ -5,7 +5,7 @@
 
 namespace FX {
 
-class Notebook : public FXPacker {
+class Notebook : public FXScrollArea {
     FXDECLARE(Notebook)
 public:
     enum section_type_e { message_section, error_text_section, output_section };
@@ -43,7 +43,7 @@ public:
     }
 
     enum {
-        ID_TEXT_INPUT = FXPacker::ID_LAST,
+        ID_TEXT_INPUT = FXScrollArea::ID_LAST,
         ID_ELEM_WINDOW_START,
         ID_LAST
     };
