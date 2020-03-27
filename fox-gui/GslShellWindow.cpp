@@ -3,6 +3,12 @@
 #include "luajit.h"
 #include "icons.h"
 
+#ifdef WIN32
+static const char* console_font = "Consolas";
+#else
+static const char* console_font = "Monospace";
+#endif
+
 FXDEFMAP(GslShellWindow) GslShellWindow_map[]=
 {
     FXMAPFUNC(SEL_CLOSE, 0, GslShellWindow::on_close),
@@ -34,7 +40,6 @@ GslShellWindow::GslShellWindow(gsl_shell_thread* gs, io_redirect* lua_io, FXApp*
     // Sunken border for text widget
     FXHorizontalFrame *textbox = new FXHorizontalFrame(frame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
-    const char* console_font = "Monospace";
     m_text_font = new FXFont(app, console_font, 11);
     m_scroll_win = new FXScrollWindow(textbox, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text = new LuaConsole(gs, lua_io, m_scroll_win, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
