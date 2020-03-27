@@ -181,13 +181,16 @@ long Notebook::onPaint(FXObject*, FXSelector, void *ptr) {
 
 long Notebook::updateTextVisibleRows(FXText* text) {
     FXint ndrows = text->getNumRows();
-
+#if 0
     /* FOX hack: add some more empty visible lines to
        accomodate the horizontal scrollbar in case is is
        shown. */
+    // It bugs on Windows, it gives very big values for
+    // scrollbar->getDefaultHeight(). Not understood.
     FXint fh = text->getFont()->getFontHeight();
     auto scrollbar = horizontalScrollBar();
     ndrows += (scrollbar->getDefaultHeight() + fh - 1) / fh;
+#endif
     if (ndrows != text->getVisibleRows()) {
         text->setVisibleRows(ndrows);
         return 1;
