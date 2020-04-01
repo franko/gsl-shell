@@ -3,8 +3,8 @@
 
 #include "GslShellApp.h"
 #include "GslShellWindow.h"
-#include "elem_plot.h"
-#include "elem_plot_fox.h"
+#include "elem/elem.h"
+#include "elem/elem_fox.h"
 #include "fatal.h"
 #include "icons.h"
 

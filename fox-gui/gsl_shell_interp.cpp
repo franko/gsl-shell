@@ -15,7 +15,7 @@ extern "C" {
 
 #include "gsl_shell_interp.h"
 #include "lua-gsl.h"
-#include "elem_plot_lua.h"
+#include "elem/elem_lua.h"
 #include "fatal.h"
 
 static void stderr_message(const char *pname, const char *msg)

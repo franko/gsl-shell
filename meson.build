@@ -9,9 +9,9 @@ gsl_shell_include = include_directories('.')
 
 threads_dep = dependency('threads')
 luajit_dep = dependency('luajit')
-elemplot_dep = dependency('libelemplot')
-elemplotfox_dep = dependency('libelemplotfox')
-elemplotlua_dep = dependency('libelemplotlua')
+libelem_dep = dependency('libelem')
+libelemfox_dep = dependency('libelemfox')
+libelemlua_dep = dependency('libelemlua')
 
 gsl_shell_defines = []
 
