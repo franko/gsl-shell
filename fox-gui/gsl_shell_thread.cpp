@@ -10,7 +10,7 @@ luajit_eval_thread (void *userdata)
 {
     gsl_shell_thread* eng = (gsl_shell_thread*) userdata;
     eng->lock();
-    eng->init();
+    eng->Initialize();
     eng->run();
     pthread_exit(NULL);
     return NULL;
@@ -45,8 +45,8 @@ gsl_shell_thread::process_request()
     }
     else if (m_request == gsl_shell_thread::restart_request)
     {
-        this->close();
-        this->init();
+        Close();
+        Initialize();
         restart_callback();
         cmd = thread_cmd_continue;
     }
@@ -98,13 +98,13 @@ gsl_shell_thread::run()
 
         if (cmd == thread_cmd_exec)
         {
-            m_eval_status = this->exec(line.c_str());
+            m_eval_status = Execute(line.c_str());
             fputc(eot_character, stdout);
             fflush(stdout);
         }
     }
 
-    this->close();
+    Close();
     this->unlock();
     quit_callback();
 }
@@ -130,6 +130,6 @@ gsl_shell_thread::interrupt_request()
 {
     m_eval.lock();
     if (m_status == busy)
-        this->interrupt();
+        Interrupt();
     m_eval.unlock();
 }

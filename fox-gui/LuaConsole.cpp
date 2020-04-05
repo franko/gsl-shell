@@ -45,9 +45,9 @@ void LuaConsole::prepareInput() {
 }
 
 void LuaConsole::showErrors() {
-    if (m_engine->eval_status() == gsl_shell::eval_error) {
+    if (m_engine->eval_status() == Interpreter::Result::kError) {
         FXText* text = addOutputSection(error_text_section);
-        text->appendText(m_engine->error_msg());
+        text->appendText(m_engine->ErrorMessageString());
         updateTextVisibleRows(text);
     }
 }
@@ -110,8 +110,8 @@ long LuaConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     m_lua_io_mutex.unlock();
 
     if (eot) {
-        int status = m_engine->eval_status();
-        if (status == gsl_shell::incomplete_input) {
+        auto status = m_engine->eval_status();
+        if (status == Interpreter::Result::kIncompleteInput) {
             m_history.remove_last();
             m_status = input_mode;
             m_input_section->appendText("\n");

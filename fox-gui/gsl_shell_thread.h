@@ -7,10 +7,10 @@ extern "C" {
 
 #include <string>
 
-#include "gsl_shell_interp.h"
+#include "LuaInterpreter.h"
 #include "pthreadpp.h"
 
-class gsl_shell_thread : public gsl_shell
+class gsl_shell_thread : public LuaInterpreter
 {
     enum thread_cmd_e { thread_cmd_exec, thread_cmd_exit, thread_cmd_continue };
 public:
@@ -39,8 +39,7 @@ public:
         pthread_mutex_unlock(&m_exec_mutex);
     }
 
-    int eval_status() const
-    {
+    Interpreter::Result eval_status() const {
         return m_eval_status;
     }
 
@@ -60,7 +59,7 @@ private:
     engine_status_e m_status;
     pthread::cond m_eval;
     std::string m_line_pending;
-    int m_eval_status;
+    Interpreter::Result m_eval_status;
     request_e m_request;
 };
 

@@ -4,12 +4,12 @@
 
 void fox_gsl_shell::init()
 {
-    gsl_shell_thread::init();
+    gsl_shell_thread::Initialize();
 }
 
 void fox_gsl_shell::close()
 {
-    gsl_shell_thread::close();
+    gsl_shell_thread::Close();
 }
 
 void

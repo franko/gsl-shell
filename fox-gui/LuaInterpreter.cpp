@@ -4,6 +4,8 @@
 
 #define luajit_c
 
+#include "LuaInterpreter.h"
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
@@ -13,8 +15,8 @@ extern "C" {
 #include "language_loaders.h"
 }
 
-#include "gsl_shell_interp.h"
 #include "elem/elem_lua.h"
+
 #include "fatal.h"
 
 static void stderr_message(const char *pname, const char *msg)
@@ -157,8 +159,7 @@ static int incomplete(lua_State *L, int status)
     return 0;  /* else... */
 }
 
-void gsl_shell::init()
-{
+void LuaInterpreter::Initialize() {
     m_lua_state = lua_open();
     int status = lua_cpcall(m_lua_state, pinit, NULL);
 
@@ -167,31 +168,28 @@ void gsl_shell::init()
         lua_close(m_lua_state);
         fatal_exception("cannot initialize Lua state");
     }
-
+    // TODO: this bit initializing the Elementary Plot
+    // library should be moved elsewhere.
     elem::LuaOpenLibrary(m_lua_state);
 }
 
-void gsl_shell::close()
-{
+void LuaInterpreter::Close() {
     lua_close(m_lua_state);
-    m_lua_state = NULL;
+    m_lua_state = nullptr;
 }
 
-int gsl_shell::error_report(int status)
-{
+void LuaInterpreter::LuaErrorStoreMessage(int status) {
     lua_State* L = m_lua_state;
     if (status && !lua_isnil(L, -1))
     {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        m_error_msg = std::string{msg};
+        m_error_message = std::string{msg};
         lua_pop(L, 1);
     }
-    return status;
 }
 
-int gsl_shell::exec(const char *line)
-{
+Interpreter::Result LuaInterpreter::Execute(const char *line) {
     lua_State* L = m_lua_state;
     size_t len = strlen(line);
 
@@ -203,13 +201,13 @@ int gsl_shell::exec(const char *line)
         status = language_loadbuffer(L, line, len, "=<user input>");
 
         if (incomplete(L, status))
-            return incomplete_input;
+            return Result::kIncompleteInput;
     }
 
     if (status == 0)
     {
         status = docall(L, 0, 0);
-        error_report(status);
+        LuaErrorStoreMessage(status);
         if (status == 0 && lua_gettop(L) > 0)   /* any result to print? */
         {
             lua_pushvalue(L, -1);
@@ -222,9 +220,8 @@ int gsl_shell::exec(const char *line)
         }
     }
 
-    error_report(status);
-
-    return (status == 0 ? eval_success : eval_error);
+    LuaErrorStoreMessage(status);
+    return (status == 0 ? Result::kSuccess : Result::kError);
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -237,8 +234,6 @@ static void lstop(lua_State *L, lua_Debug *ar)
     lua_error(L);
 }
 
-void
-gsl_shell::interrupt()
-{
+void LuaInterpreter::Interrupt() {
     lua_sethook(m_lua_state, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
