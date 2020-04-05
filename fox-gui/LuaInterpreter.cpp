@@ -105,25 +105,21 @@ static void override_loaders(lua_State *L)
   lua_pop(L, 2);
 }
 
-static int pinit(lua_State *L)
-{
-    LUAJIT_VERSION_SYM();  /* linker-enforced version check */
-    int status = language_init(L);
-    if (status != 0) {
-        return lua_error(L);
+static int loadbuffer_by_language(lua_State *L, LuaLanguage language, const char* line, size_t len, const char *source) {
+    int status;
+    if (language == LuaLanguage::kStandard) {
+        status = luaL_loadbuffer(L, line, len, source);
+    } else {
+        status = language_loadbuffer(L, line, len, source);
     }
-    lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-    luaL_openlibs(L);  /* open libraries */
-    override_loaders(L);
-    lua_gc(L, LUA_GCRESTART, -1);
-    return 0;
+    return status;
 }
 
 /* If the input is an expression we load it preceded by "return" so
    that the value is returned as a result of the evaluation.
    If the value is not an expression leave the stack as before and
    returns a non zero value. */
-static int yield_expr(lua_State* L, const char* line, size_t len)
+static int yield_expr(lua_State* L, LuaLanguage language, const char* line, size_t len)
 {
     const char *p;
     int status;
@@ -137,8 +133,8 @@ static int yield_expr(lua_State* L, const char* line, size_t len)
             break;
     }
 
-    std::string mline = "return " + std::string{line};
-    status = language_loadbuffer(L, mline.c_str(), len + 7, "=stdin");
+    std::string yield_string = "return " + std::string{line};
+    status = loadbuffer_by_language(L, language, yield_string.c_str(), len + 7, "=<user input>");
     if (status != 0) lua_pop(L, 1); // remove the error message
     return status;
 }
@@ -159,12 +155,38 @@ static int incomplete(lua_State *L, int status)
     return 0;  /* else... */
 }
 
+static int pinit_lang_extension(lua_State *L)
+{
+    LUAJIT_VERSION_SYM();  /* linker-enforced version check */
+    int status = language_init(L);
+    if (status != 0) {
+        return lua_error(L);
+    }
+    lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
+    luaL_openlibs(L);  /* open libraries */
+    override_loaders(L);
+    lua_gc(L, LUA_GCRESTART, -1);
+    return 0;
+}
+
+static int pinit_plain_lua(lua_State *L)
+{
+    LUAJIT_VERSION_SYM();  /* linker-enforced version check */
+    lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
+    luaL_openlibs(L);  /* open libraries */
+    lua_gc(L, LUA_GCRESTART, -1);
+    return 0;
+}
+
 void LuaInterpreter::Initialize() {
     m_lua_state = lua_open();
-    int status = lua_cpcall(m_lua_state, pinit, NULL);
-
-    if (unlikely(stderr_report(m_lua_state, status)))
-    {
+    int status;
+    if (m_lua_language == LuaLanguage::kLanguageExtension) {
+        status = lua_cpcall(m_lua_state, pinit_lang_extension, NULL);
+    } else {
+        status = lua_cpcall(m_lua_state, pinit_plain_lua, NULL);
+    }
+    if (unlikely(stderr_report(m_lua_state, status))) {
         lua_close(m_lua_state);
         fatal_exception("cannot initialize Lua state");
     }
@@ -194,12 +216,10 @@ Interpreter::Result LuaInterpreter::Execute(const char *line) {
     size_t len = strlen(line);
 
     /* try to load the string as an expression */
-    int status = yield_expr(L, line, len);
+    int status = yield_expr(L, m_lua_language, line, len);
 
-    if (status != 0)
-    {
-        status = language_loadbuffer(L, line, len, "=<user input>");
-
+    if (status != 0) {
+        status = loadbuffer_by_language(L, m_lua_language, line, len, "=<user input>");
         if (incomplete(L, status))
             return Result::kIncompleteInput;
     }

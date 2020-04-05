@@ -10,9 +10,19 @@ extern "C" {
 #include "defs.h"
 #include "Interpreter.h"
 
+enum class LuaLanguage {
+    kStandard,
+    kLanguageExtension,
+};
+
 class LuaInterpreter : public Interpreter {
 public:
-    LuaInterpreter() : m_lua_state(nullptr) {  }
+    LuaInterpreter():
+        m_lua_state(nullptr), m_lua_language(LuaLanguage::kLanguageExtension) {
+    }
+    LuaInterpreter(LuaLanguage language):
+        m_lua_state(nullptr), m_lua_language(language) {
+    }
 
     void Initialize() override;
     void Close() override;
@@ -26,6 +36,7 @@ private:
     void LuaErrorStoreMessage(int result);
 
     lua_State *m_lua_state;
+    const LuaLanguage m_lua_language;
     std::string m_error_message;
 };
 
