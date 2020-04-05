@@ -31,19 +31,19 @@ public:
     virtual void QuitCallback() { }
 
     void Lock() {
-        m_exec_mutex.lock();
+        exec_mutex_.lock();
     }
 
     void Unlock() {
-        m_exec_mutex.unlock();
+        exec_mutex_.unlock();
     }
 
     Interpreter *getInterpreter() {
-        return m_interpreter.get();
+        return interpreter_.get();
     }
 
     Interpreter::Result EvalStatus() const {
-        return m_eval_status;
+        return eval_status_;
     }
 
     // asyncronous request
@@ -54,15 +54,15 @@ private:
 
     Command ProcessRequest();
 
-    std::unique_ptr<Interpreter> m_interpreter;
-    std::unique_ptr<std::thread> m_thread;
-    std::mutex m_exec_mutex;
-    Status m_status;
-    std::mutex m_request_mutex;
-    std::condition_variable m_request_condition;
-    std::string m_line_pending;
-    Interpreter::Result m_eval_status;
-    Request m_request;
+    std::unique_ptr<Interpreter> interpreter_;
+    std::unique_ptr<std::thread> thread_;
+    std::mutex exec_mutex_;
+    Status status_;
+    std::mutex request_mutex_;
+    std::condition_variable request_condition_;
+    std::string line_pending_;
+    Interpreter::Result eval_status_;
+    Request request_;
 };
 
 #endif

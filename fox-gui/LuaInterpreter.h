@@ -18,10 +18,10 @@ enum class LuaLanguage {
 class LuaInterpreter : public Interpreter {
 public:
     LuaInterpreter():
-        m_lua_state(nullptr), m_lua_language(LuaLanguage::kLanguageExtension) {
+        lua_state_(nullptr), lua_language_(LuaLanguage::kLanguageExtension) {
     }
     LuaInterpreter(LuaLanguage language):
-        m_lua_state(nullptr), m_lua_language(language) {
+        lua_state_(nullptr), lua_language_(language) {
     }
 
     void Initialize() override;
@@ -30,14 +30,14 @@ public:
     void Interrupt() override;
 
     const char* ErrorMessageString() const override {
-        return m_error_message.c_str();
+        return error_message_.c_str();
     }
 private:
     void LuaErrorStoreMessage(int result);
 
-    lua_State *m_lua_state;
-    const LuaLanguage m_lua_language;
-    std::string m_error_message;
+    lua_State *lua_state_;
+    const LuaLanguage lua_language_;
+    std::string error_message_;
 };
 
 #endif

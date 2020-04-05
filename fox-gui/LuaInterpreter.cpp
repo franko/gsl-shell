@@ -179,47 +179,47 @@ static int pinit_plain_lua(lua_State *L)
 }
 
 void LuaInterpreter::Initialize() {
-    m_lua_state = lua_open();
+    lua_state_ = lua_open();
     int status;
-    if (m_lua_language == LuaLanguage::kLanguageExtension) {
-        status = lua_cpcall(m_lua_state, pinit_lang_extension, NULL);
+    if (lua_language_ == LuaLanguage::kLanguageExtension) {
+        status = lua_cpcall(lua_state_, pinit_lang_extension, NULL);
     } else {
-        status = lua_cpcall(m_lua_state, pinit_plain_lua, NULL);
+        status = lua_cpcall(lua_state_, pinit_plain_lua, NULL);
     }
-    if (unlikely(stderr_report(m_lua_state, status))) {
-        lua_close(m_lua_state);
+    if (unlikely(stderr_report(lua_state_, status))) {
+        lua_close(lua_state_);
         fatal_exception("cannot initialize Lua state");
     }
     // TODO: this bit initializing the Elementary Plot
     // library should be moved elsewhere.
-    elem::LuaOpenLibrary(m_lua_state);
+    elem::LuaOpenLibrary(lua_state_);
 }
 
 void LuaInterpreter::Close() {
-    lua_close(m_lua_state);
-    m_lua_state = nullptr;
+    lua_close(lua_state_);
+    lua_state_ = nullptr;
 }
 
 void LuaInterpreter::LuaErrorStoreMessage(int status) {
-    lua_State* L = m_lua_state;
+    lua_State* L = lua_state_;
     if (status && !lua_isnil(L, -1))
     {
         const char *msg = lua_tostring(L, -1);
         if (msg == NULL) msg = "(error object is not a string)";
-        m_error_message = std::string{msg};
+        error_message_ = std::string{msg};
         lua_pop(L, 1);
     }
 }
 
 Interpreter::Result LuaInterpreter::Execute(const char *line) {
-    lua_State* L = m_lua_state;
+    lua_State* L = lua_state_;
     size_t len = strlen(line);
 
     /* try to load the string as an expression */
-    int status = yield_expr(L, m_lua_language, line, len);
+    int status = yield_expr(L, lua_language_, line, len);
 
     if (status != 0) {
-        status = loadbuffer_by_language(L, m_lua_language, line, len, "=<user input>");
+        status = loadbuffer_by_language(L, lua_language_, line, len, "=<user input>");
         if (incomplete(L, status))
             return Result::kIncompleteInput;
     }
@@ -255,5 +255,5 @@ static void lstop(lua_State *L, lua_Debug *ar)
 }
 
 void LuaInterpreter::Interrupt() {
-    lua_sethook(m_lua_state, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
+    lua_sethook(lua_state_, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
