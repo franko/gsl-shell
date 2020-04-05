@@ -5,7 +5,8 @@
 #include <fx.h>
 #include <FXArray.h>
 
-#include "gsl_shell_thread.h"
+#include "defs.h"
+#include "InterpreterThread.h"
 #include "io_thread.h"
 #include "history.h"
 #include "Notebook.h"
@@ -18,7 +19,7 @@ private:
     enum status_e { not_ready, input_mode, output_mode };
 
 public:
-    LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=32,FXint pr=8,FXint pt=8,FXint pb=8,FXint vs=6);
+    LuaConsole(InterpreterThread* gs, io_redirect* lua_io, FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=32,FXint pr=8,FXint pt=8,FXint pb=8,FXint vs=6);
     ~LuaConsole();
 
     void init();
@@ -48,7 +49,7 @@ protected:
 private:
     FXString m_input;
     status_e m_status;
-    gsl_shell_thread* m_engine;
+    InterpreterThread* m_engine;
     io_redirect* m_lua_io;
     FXObject* m_target;
     long m_message;

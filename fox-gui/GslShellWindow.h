@@ -3,14 +3,14 @@
 
 #include <fx.h>
 
-#include "gsl_shell_thread.h"
+#include "InterpreterThread.h"
 #include "LuaConsole.h"
 
 class GslShellWindow : public FXMainWindow
 {
     FXDECLARE(GslShellWindow)
 public:
-    GslShellWindow(gsl_shell_thread* gs, io_redirect* lua_io, FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
+    GslShellWindow(InterpreterThread* gs, io_redirect* lua_io, FXApp* a, const FXString& name, FXIcon *ic=NULL, FXIcon *mi=NULL, FXint w=0, FXint h=0);
 
     virtual ~GslShellWindow()
     {

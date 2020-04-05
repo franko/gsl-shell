@@ -32,7 +32,7 @@ FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
     m_redirect.start();
 
     global_app = this;
-    m_engine.start();
+    m_engine.Start();
 
     gsl_shell_icon = new FXGIFIcon(this, gsl_shell_icon_data);
     gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
@@ -124,7 +124,7 @@ long GslShellApp::on_lua_quit(FXObject*, FXSelector, void*)
 
 long GslShellApp::on_console_close(FXObject* sender, FXSelector, void*)
 {
-    m_engine.set_request(gsl_shell_thread::exit_request);
+    m_engine.SetRequest(InterpreterThread::Request::kExit);
     return 1;
 }
 
@@ -140,12 +140,12 @@ void GslShellApp::wait_action()
 
 long GslShellApp::on_restart_lua_request(FXObject*, FXSelector, void*)
 {
-    m_engine.set_request(gsl_shell_thread::restart_request);
+    m_engine.SetRequest(InterpreterThread::Request::kRestart);
     return 0;
 }
 
 long GslShellApp::on_lua_interrupt(FXObject*, FXSelector, void*)
 {
-    m_engine.interrupt_request();
+    m_engine.InterruptRequest();
     return 0;
 }

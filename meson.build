@@ -1,4 +1,4 @@
-project('gsl-shell', ['cpp', 'c'], version : '2.3.1', default_options : ['cpp_std=c++11', 'c_std=c99'])
+project('gsl-shell', ['cpp', 'c'], version : '2.3.1', default_options : ['cpp_std=c++14', 'c_std=c99'])
 
 lang_toolkit_proj = subproject('luajit-lang-toolkit', default_options: ['preload=true'])
 liblang_dep = lang_toolkit_proj.get_variable('liblang_dep')

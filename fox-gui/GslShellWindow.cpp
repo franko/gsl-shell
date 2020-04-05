@@ -19,7 +19,7 @@ FXDEFMAP(GslShellWindow) GslShellWindow_map[]=
 
 FXIMPLEMENT(GslShellWindow,FXMainWindow,GslShellWindow_map,ARRAYNUMBER(GslShellWindow_map))
 
-GslShellWindow::GslShellWindow(gsl_shell_thread* gs, io_redirect* lua_io, FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
+GslShellWindow::GslShellWindow(InterpreterThread* gs, io_redirect* lua_io, FXApp* app, const FXString& name, FXIcon *ic, FXIcon *mi, FXint w, FXint h):
     FXMainWindow(app, name, ic, mi, DECOR_ALL, 0, 0, w, h)
 {
     m_menu_bar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);

@@ -3,22 +3,18 @@
 
 #include <fx.h>
 
-#include "gsl_shell_thread.h"
+#include "InterpreterThread.h"
 
 class GslShellApp;
 
-class fox_gsl_shell : public gsl_shell_thread
+class fox_gsl_shell : public InterpreterThread
 {
 public:
     fox_gsl_shell(GslShellApp* app): m_app(app), m_close(0) { }
-
     ~fox_gsl_shell() { delete m_close; }
 
-    virtual void init();
-    virtual void close();
-
-    virtual void restart_callback();
-    virtual void quit_callback();
+    void RestartCallback() override;
+    void QuitCallback() override;
 
     void set_closing_signal(FXGUISignal* s) { m_close = s; }
 

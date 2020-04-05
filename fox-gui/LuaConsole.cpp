@@ -5,7 +5,7 @@
 
 #include "LuaConsole.h"
 #include "GslShellApp.h"
-#include "gsl_shell_thread.h"
+#include "InterpreterThread.h"
 
 FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {
@@ -15,7 +15,7 @@ FXDEFMAP(LuaConsole) LuaConsole_map[] =
 
 FXIMPLEMENT(LuaConsole,Notebook,LuaConsole_map,ARRAYNUMBER(LuaConsole_map))
 
-LuaConsole::LuaConsole(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
+LuaConsole::LuaConsole(InterpreterThread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint vs):
     Notebook(p, opts, x, y, w, h, pl, pr, pt, pb, vs),
     m_status(not_ready), m_engine(gs), m_lua_io(lua_io), m_target(tgt), m_message(sel),
     m_input_section(nullptr), m_output_section(nullptr)
@@ -45,9 +45,9 @@ void LuaConsole::prepareInput() {
 }
 
 void LuaConsole::showErrors() {
-    if (m_engine->eval_status() == Interpreter::Result::kError) {
+    if (m_engine->EvalStatus() == Interpreter::Result::kError) {
         FXText* text = addOutputSection(error_text_section);
-        text->appendText(m_engine->ErrorMessageString());
+        text->appendText(m_engine->getInterpreter()->ErrorMessageString());
         updateTextVisibleRows(text);
     }
 }
@@ -93,7 +93,7 @@ long LuaConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     FXint len = m_lua_io_buffer.length();
     if (len > 0)
     {
-        if (m_lua_io_buffer[len-1] == gsl_shell_thread::eot_character) {
+        if (m_lua_io_buffer[len-1] == InterpreterThread::kEotCharacter) {
             eot = true;
             remove_eot_newline(m_lua_io_buffer, len);
         }
@@ -110,7 +110,7 @@ long LuaConsole::onIOLuaOutput(FXObject* obj, FXSelector sel, void* ptr)
     m_lua_io_mutex.unlock();
 
     if (eot) {
-        auto status = m_engine->eval_status();
+        auto status = m_engine->EvalStatus();
         if (status == Interpreter::Result::kIncompleteInput) {
             m_history.remove_last();
             m_status = input_mode;
@@ -143,7 +143,7 @@ long LuaConsole::sendInputText() {
         m_history.add(input_line);
         m_output_section = nullptr;
         m_status = output_mode;
-        m_engine->set_request(gsl_shell_thread::execute_request, input_line);
+        m_engine->SetRequest(InterpreterThread::Request::kExecute, input_line);
         return 1;
     }
     return 0;

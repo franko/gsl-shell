@@ -3,7 +3,7 @@
 
 #include <fx.h>
 
-#include "gsl_shell_thread.h"
+#include "InterpreterThread.h"
 #include "redirect.h"
 
 class lua_io_thread {

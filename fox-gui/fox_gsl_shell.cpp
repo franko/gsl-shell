@@ -2,24 +2,14 @@
 #include "fox_gsl_shell.h"
 #include "GslShellApp.h"
 
-void fox_gsl_shell::init()
-{
-    gsl_shell_thread::Initialize();
-}
-
-void fox_gsl_shell::close()
-{
-    gsl_shell_thread::Close();
-}
-
 void
-fox_gsl_shell::quit_callback()
+fox_gsl_shell::QuitCallback()
 {
     if (m_close)
         m_close->signal();
 }
 void
-fox_gsl_shell::restart_callback()
+fox_gsl_shell::RestartCallback()
 {
     m_app->lock();
     m_app->reset_console_request();
