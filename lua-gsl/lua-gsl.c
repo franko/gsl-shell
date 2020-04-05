@@ -34,8 +34,6 @@
 extern gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc);
 gdt_table *(*_gdt_ref)(int nb_rows, int nb_columns, int nb_rows_alloc) = gdt_table_new;
 
-struct gsl_shell_state* global_state;
-
 void
 gsl_shell_open (struct gsl_shell_state *gs)
 {
@@ -43,8 +41,6 @@ gsl_shell_open (struct gsl_shell_state *gs)
 
   if (unlikely(gs->L == NULL))
     fatal_exception("cannot create state: not enough memory");
-
-  global_state = gs;
 }
 
 void
