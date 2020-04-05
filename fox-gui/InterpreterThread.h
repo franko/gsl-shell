@@ -1,5 +1,5 @@
-#ifndef FOXGUI_LUA_ENGINE_H
-#define FOXGUI_LUA_ENGINE_H
+#ifndef FOXGUI_INTERPRETER_THREAD_H_
+#define FOXGUI_INTERPRETER_THREAD_H_
 
 #include <condition_variable>
 #include <memory>
