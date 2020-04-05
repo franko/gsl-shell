@@ -2,6 +2,7 @@
 #include "GslShellApp.h"
 #include "luajit.h"
 #include "icons.h"
+#include "version.h"
 
 #ifdef WIN32
 static const char* console_font = "Consolas";
