@@ -31,12 +31,12 @@ public:
 
     void lock()
     {
-        pthread_mutex_lock(&this->exec_mutex);
+        pthread_mutex_lock(&m_exec_mutex);
     }
 
     void unlock()
     {
-        pthread_mutex_unlock(&this->exec_mutex);
+        pthread_mutex_unlock(&m_exec_mutex);
     }
 
     int eval_status() const
@@ -56,6 +56,7 @@ private:
     thread_cmd_e process_request();
 
     pthread_t m_thread;
+    pthread_mutex_t m_exec_mutex;
     engine_status_e m_status;
     pthread::cond m_eval;
     std::string m_line_pending;

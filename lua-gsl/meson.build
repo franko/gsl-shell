@@ -1,4 +1,4 @@
-luagsl_sources = ['lua-gsl.c', 'fatal.c']
+luagsl_sources = ['fatal.c']
 
 libluagsl = static_library('luagsl',
     luagsl_sources,

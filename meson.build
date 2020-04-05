@@ -20,5 +20,4 @@ if host_machine.system() == 'windows'
 endif
 
 subdir('lua-gsl')
-subdir('gdt')
 subdir('fox-gui')

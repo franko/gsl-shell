@@ -14,7 +14,6 @@ extern "C" {
 }
 
 #include "gsl_shell_interp.h"
-#include "lua-gsl.h"
 #include "elem/elem_lua.h"
 #include "fatal.h"
 
@@ -110,9 +109,7 @@ static int pinit(lua_State *L)
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
     override_loaders(L);
-    luaopen_gsl (L);
     lua_gc(L, LUA_GCRESTART, -1);
-    dolibrary (L, "gslext");
     return 0;
 }
 
@@ -158,28 +155,27 @@ static int incomplete(lua_State *L, int status)
 
 void gsl_shell::init()
 {
-    gsl_shell_open(this);
+    m_lua_state = lua_open();
+    int status = lua_cpcall(m_lua_state, pinit, NULL);
 
-    int status = lua_cpcall(this->L, pinit, NULL);
-
-    if (unlikely(stderr_report(this->L, status)))
+    if (unlikely(stderr_report(m_lua_state, status)))
     {
-        lua_close(this->L);
+        lua_close(m_lua_state);
         fatal_exception("cannot initialize Lua state");
     }
 
-    elem::LuaOpenLibrary(this->L);
+    elem::LuaOpenLibrary(m_lua_state);
 }
 
 void gsl_shell::close()
 {
-    lua_close(this->L);
-    this->L = NULL;
+    lua_close(m_lua_state);
+    m_lua_state = NULL;
 }
 
 int gsl_shell::error_report(int status)
 {
-    lua_State* L = this->L;
+    lua_State* L = m_lua_state;
     if (status && !lua_isnil(L, -1))
     {
         const char *msg = lua_tostring(L, -1);
@@ -192,7 +188,7 @@ int gsl_shell::error_report(int status)
 
 int gsl_shell::exec(const char *line)
 {
-    lua_State* L = this->L;
+    lua_State* L = m_lua_state;
     size_t len = strlen(line);
 
     /* try to load the string as an expression */
@@ -240,5 +236,5 @@ static void lstop(lua_State *L, lua_Debug *ar)
 void
 gsl_shell::interrupt()
 {
-    lua_sethook(this->L, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
+    lua_sethook(m_lua_state, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
