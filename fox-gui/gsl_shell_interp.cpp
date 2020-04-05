@@ -71,13 +71,17 @@ static int docall(lua_State *L, int narg, int clear)
     return status;
 }
 
+// Function disabled because not currently needed.
+// It is otherwise useful and appear in the reference
+// Lua frontend.
+#if 0
 static int dolibrary(lua_State *L, const char *name)
 {
     lua_getglobal(L, "require");
     lua_pushstring(L, name);
     return stderr_report(L, docall(L, 1, 1));
 }
-
+#endif
 static void override_loaders(lua_State *L)
 {
   lua_getfield(L, LUA_GLOBALSINDEX, "package");
