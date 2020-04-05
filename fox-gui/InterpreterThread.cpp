@@ -1,19 +1,13 @@
-#include <pthread.h>
 #include <stdio.h>
 
 #include "InterpreterThread.h"
 
 #include "LuaInterpreter.h"
 
-extern "C" void * luajit_eval_thread (void *userdata);
-
-void * luajit_eval_thread (void *userdata) {
-    InterpreterThread* eng = (InterpreterThread*) userdata;
+static void StartInterpreterThread(InterpreterThread *eng) {
     eng->Lock();
     eng->getInterpreter()->Initialize();
     eng->Run();
-    pthread_exit(NULL);
-    return NULL;
 }
 
 InterpreterThread::InterpreterThread():
@@ -23,12 +17,8 @@ InterpreterThread::InterpreterThread():
 }
 
 void InterpreterThread::Start() {
-    pthread_attr_t attr[1];
-    pthread_attr_init (attr);
-    pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
-    if (pthread_create (&m_thread, attr, luajit_eval_thread, (void*)this)) {
-        fprintf(stderr, "error creating thread");
-    }
+    m_thread = std::make_unique<std::thread>(StartInterpreterThread, this);
+    m_thread->detach();
 }
 
 InterpreterThread::Command InterpreterThread::ProcessRequest() {
@@ -57,24 +47,23 @@ void InterpreterThread::Run() {
     std::string line;
     while (true) {
         Unlock();
-        m_eval.lock();
+        std::unique_lock<std::mutex> request_lock(m_request_mutex);
         m_status = Status::kWaiting;
-        while (m_request == Request::kNone) {
-            m_eval.wait();
-        }
+        m_request_condition.wait(request_lock,
+            [this] { return m_request != Request::kNone; }
+        );
         Lock();
         BeforeEval();
         Command command = ProcessRequest();
         if (command == Command::kExit) {
             m_status = Status::kTerminated;
-            m_eval.unlock();
             break;
         }
         if (command == Command::kExecute) {
             line = m_line_pending;
         }
         m_status = Status::kBusy;
-        m_eval.unlock();
+        request_lock.unlock();
         if (command == Command::kExecute) {
             m_eval_status = m_interpreter->Execute(line.c_str());
             fputc(kEotCharacter, stdout);
@@ -87,24 +76,25 @@ void InterpreterThread::Run() {
 }
 
 void InterpreterThread::SetRequest(InterpreterThread::Request request, const char* line) {
-    m_eval.lock();
+    m_request_mutex.lock();
     m_request = request;
     if (line) {
         m_line_pending = std::string{line};
     }
     if (m_status == Status::kWaiting) {
-        m_eval.signal();
+        m_request_mutex.unlock();
+        m_request_condition.notify_one();
+    } else {
+        m_request_mutex.unlock();
     }
-    m_eval.unlock();
-    sched_yield();
+    std::this_thread::yield();
 }
 
 void
-InterpreterThread::InterruptRequest()
-{
-    m_eval.lock();
+InterpreterThread::InterruptRequest() {
+    m_request_mutex.lock();
     if (m_status == Status::kBusy) {
         m_interpreter->Interrupt();
     }
-    m_eval.unlock();
+    m_request_mutex.unlock();
 }

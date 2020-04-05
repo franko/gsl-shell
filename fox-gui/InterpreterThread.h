@@ -1,14 +1,16 @@
 #ifndef FOXGUI_LUA_ENGINE_H
 #define FOXGUI_LUA_ENGINE_H
 
-#include <string>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
 
 extern "C" {
 #include "lua.h"
 }
 
-#include "pthreadpp.h"
 #include "Interpreter.h"
 
 class InterpreterThread {
@@ -29,11 +31,11 @@ public:
     virtual void QuitCallback() { }
 
     void Lock() {
-        pthread_mutex_lock(&m_exec_mutex);
+        m_exec_mutex.lock();
     }
 
     void Unlock() {
-        pthread_mutex_unlock(&m_exec_mutex);
+        m_exec_mutex.unlock();
     }
 
     Interpreter *getInterpreter() {
@@ -42,10 +44,6 @@ public:
 
     Interpreter::Result EvalStatus() const {
         return m_eval_status;
-    }
-
-    pthread::mutex& EvalMutex() {
-        return m_eval;
     }
 
     // asyncronous request
@@ -57,10 +55,11 @@ private:
     Command ProcessRequest();
 
     std::unique_ptr<Interpreter> m_interpreter;
-    pthread_t m_thread;
-    pthread_mutex_t m_exec_mutex;
+    std::unique_ptr<std::thread> m_thread;
+    std::mutex m_exec_mutex;
     Status m_status;
-    pthread::cond m_eval;
+    std::mutex m_request_mutex;
+    std::condition_variable m_request_condition;
     std::string m_line_pending;
     Interpreter::Result m_eval_status;
     Request m_request;
