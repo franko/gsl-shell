@@ -13,13 +13,18 @@ extern "C" {
 
 #include "Interpreter.h"
 
+/* This class is responsible to start and run an interpreter in a
+ * separate thread.
+ * It provides the methods to issue a request to the interpreter
+ * and to interrupt it.
+ */
 class InterpreterThread {
 public:
     enum class Status { kStarting, kWaiting, kBusy, kTerminated };
     enum class Request { kNone, kExit, kRestart, kExecute };
     enum { kEotCharacter = 0x04 };
 
-    InterpreterThread();
+    InterpreterThread(std::unique_ptr<Interpreter> interpreter);
     virtual ~InterpreterThread() { }
 
     void SetRequest(Request request, const char* line = nullptr);

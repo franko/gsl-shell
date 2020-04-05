@@ -17,9 +17,6 @@ enum class LuaLanguage {
 
 class LuaInterpreter : public Interpreter {
 public:
-    LuaInterpreter():
-        lua_state_(nullptr), lua_language_(LuaLanguage::kLanguageExtension) {
-    }
     LuaInterpreter(LuaLanguage language):
         lua_state_(nullptr), lua_language_(language) {
     }

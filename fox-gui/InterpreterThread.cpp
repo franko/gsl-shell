@@ -2,16 +2,14 @@
 
 #include "InterpreterThread.h"
 
-#include "LuaInterpreter.h"
-
 static void StartInterpreterThread(InterpreterThread *eng) {
     eng->Lock();
     eng->getInterpreter()->Initialize();
     eng->Run();
 }
 
-InterpreterThread::InterpreterThread():
-    interpreter_(std::make_unique<LuaInterpreter>()),
+InterpreterThread::InterpreterThread(std::unique_ptr<Interpreter> interpreter):
+    interpreter_(std::move(interpreter)),
     status_(Status::kStarting),
     request_(Request::kNone) {
 }
