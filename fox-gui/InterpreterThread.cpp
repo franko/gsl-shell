@@ -2,6 +2,10 @@
 
 #include "InterpreterThread.h"
 
+/* The function below could be passed to the std::thread constructor in
+ * InterpreterThread::Start() as a lambda and it would have access to
+ * InterpreterThread's private methods and variables but the code is not
+ * more readable neither more efficient. */
 static void StartInterpreterThread(InterpreterThread *eng) {
     eng->Lock();
     eng->getInterpreter()->Initialize();
