@@ -3,7 +3,7 @@
 
 #include <fx.h>
 
-#include "fox_gsl_shell.h"
+#include "FoxInterpreterThread.h"
 #include "LuaConsole.h"
 #include "redirect.h"
 
@@ -73,7 +73,7 @@ public:
     };
 
 private:
-    fox_gsl_shell m_engine;
+    FoxInterpreterThread m_engine;
     FXGUISignal* m_signal_request;
     lua_request m_request;
     LuaConsole* m_console;

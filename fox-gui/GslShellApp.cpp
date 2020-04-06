@@ -27,7 +27,7 @@ FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
     m_signal_request = new FXGUISignal(this, this, ID_LUA_REQUEST);
 
     FXGUISignal* quit = new FXGUISignal(this, this, ID_LUA_QUIT);
-    m_engine.set_closing_signal(quit);
+    m_engine.SetClosingSignal(quit);
 
     m_redirect.start();
 
