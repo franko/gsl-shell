@@ -15,10 +15,6 @@ extern "C" {
 #include "language_loaders.h"
 }
 
-#include "elem/elem_lua.h"
-
-#include "fatal.h"
-
 static void stderr_message(const char *pname, const char *msg)
 {
     if (pname) fprintf(stderr, "%s: ", pname);
@@ -178,7 +174,7 @@ static int pinit_plain_lua(lua_State *L)
     return 0;
 }
 
-void LuaInterpreter::Initialize() {
+Interpreter::Result LuaInterpreter::Initialize() {
     lua_state_ = lua_open();
     int status;
     if (lua_language_ == LuaLanguage::kLanguageExtension) {
@@ -188,11 +184,10 @@ void LuaInterpreter::Initialize() {
     }
     if (unlikely(stderr_report(lua_state_, status))) {
         lua_close(lua_state_);
-        fatal_exception("cannot initialize Lua state");
+        return Result::kError;
     }
-    // TODO: this bit initializing the Elementary Plot
-    // library should be moved elsewhere.
-    elem::LuaOpenLibrary(lua_state_);
+    Result custom_loader_result = CustomLoader(lua_state_);
+    return custom_loader_result;
 }
 
 void LuaInterpreter::Close() {

@@ -9,7 +9,7 @@ public:
         kIncompleteInput,
     };
     virtual ~Interpreter() { }
-    virtual void Initialize() = 0;
+    virtual Result Initialize() = 0;
     virtual void Close() = 0;
     virtual Result Execute(const char* line) = 0;
     virtual void Interrupt() = 0;
