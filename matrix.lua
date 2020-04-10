@@ -8,6 +8,8 @@ local sizeof_double = ffi.sizeof('double')
 
 local matrix_mt = { }
 
+-- TODO: matrix_new should return a zero-initialized
+-- matrix.
 local function matrix_new(rows, cols)
     local mat = {
         rows = rows,
@@ -18,16 +20,35 @@ local function matrix_new(rows, cols)
     return mat
 end
 
+local function matrix_copy(a)
+    local r, c = a.rows, a.cols
+    local b = matrix_new(r, c)
+    for i = 0, r * c - 1 do
+        b.data[i] = a.data[i]
+    end    
+    return b
+end
+
+local function matrix_set_to_zero(a)
+    local r, c = a.rows, a.cols
+    for i = 0, r * c - 1 do
+        a.data[i] = 0
+    end    
+end
+
 -- FIXME: when a and b are the same matrix a temporary copy
 -- should be created to avoid aliasing.
 local function matrix_mul(a, b)
+    if a == b then
+        b = matrix_copy(a)
+    end
     local m, n = a.rows, b.cols
     local k = a.cols
     if k ~= b.rows then
         error('matrix dimensions mismatch in multiplication')
     end
     local c = matrix_new(m, n)
-    ffi.fill(c.data, sizeof_double * m * n, 0)
+    matrix_set_to_zero(c)
     local alpha, beta = 1, 0
     cblas.cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha, a.data, k, b.data, n, beta, c.data, n)
     return c

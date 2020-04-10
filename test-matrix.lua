@@ -1,20 +1,13 @@
 local matrix = require("matrix")
 
-local a = matrix.new(5, 5)
+a = matrix.new(5, 5)
 for i = 1, 5 do
     for j = 1, 5 do
         a:set(i, j, 1 / (i + j - 1))
     end
 end
 
-local b = matrix.new(5, 5)
-for i = 1, 5 do
-    for j = 1, 5 do
-        b:set(i, j, 1 / (i + j - 1))
-    end
-end
-
-local c = a * b
+c = a * a
 for i = 1, 5 do
     local ls = {}
     for j = 1, 5 do
