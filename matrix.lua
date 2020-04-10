@@ -18,6 +18,8 @@ local function matrix_new(rows, cols)
     return mat
 end
 
+-- FIXME: when a and b are the same matrix a temporary copy
+-- should be created to avoid aliasing.
 local function matrix_mul(a, b)
     local m, n = a.rows, b.cols
     local k = a.cols
@@ -27,7 +29,7 @@ local function matrix_mul(a, b)
     local c = matrix_new(m, n)
     ffi.fill(c.data, sizeof_double * m * n, 0)
     local alpha, beta = 1, 0
-    cblas.cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha, a, k, b, n, beta, c, n)
+    cblas.cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha, a.data, k, b.data, n, beta, c.data, n)
     return c
 end
 
