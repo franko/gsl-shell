@@ -70,22 +70,50 @@ local function matrix_copy(a)
         b.b = mat_data_dup(k, n, a.b)
         b.c = mat_data_dup(m, n, a.c)
     end
+    setmetatable(b, matrix_mt)
     return b
 end
 
-local function mat_compute(a)
-    local m, n, k = a.m, a.n, a.k
-    if a.form == 'z' then
-        a.beta = 1
-        a.c = mat_data_new_zero(m, n)
-    elseif a.form == 'b' then
-        a.beta = 1
-        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, alpha, a.a, k, a.b, n, beta, a.c, n)
+local function matrix_inspect(a)
+    print "{"
+    for i, name in pairs({"form", "tra", "trb", "m", "n", "k", "alpha", "a", "b", "beta", "c"}) do
+        print(string.format("    %s = %s", name, tostring(a[name])))
     end
-    a.form = 'g'
+    print "}"
+end
+
+local function null_blas2(a)
+    a.k = 1
     a.alpha = 0
     a.a = 0
     a.b = 0
+end
+
+local function mat_compute_blas1(a)
+    local m, n, k = a.m, a.n, a.k
+    if a.form == 'z' then
+        a.form = 'g'
+        a.beta = 1
+        a.c = mat_data_new_zero(m, n)
+        null_blas2(a)
+    elseif a.form == 'b' then
+        a.form = 'g'
+        a.beta = 1
+        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, k, a.b, n, a.beta, a.c, n)
+        null_blas2(a)
+    end
+end
+
+local function mat_compute(a)
+    local m, n = a.m, a.n
+    if a.form == 'g' and a.beta ~= 1 then
+        for i = 0, m - 1 do
+            cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
+        end
+        a.beta = 1
+    else
+        mat_compute_blas1(a)
+    end
 end
 
 local function matrix_mul(a, b)
@@ -96,16 +124,14 @@ local function matrix_mul(a, b)
     if a.form == 'z' or b.form == 'z' then
         return matrix_new(m, n)
     end
-    if a == b then
-        b = matrix_copy(a)
-    end
-    mat_compute(b)
+    mat_compute_blas1(b)
     local d = matrix_copy(a)
-    mat_compute(d)
+    mat_compute_blas1(d)
     d.form = 'b'
+    d.tra, d.trb = CblasNoTrans, CblasNoTrans
     d.m, d.n, d.k = m, n, k
-    d.alpha = 1
-    d.a = a.c
+    d.alpha = d.beta * a.beta
+    d.a = d.c
     d.b = mat_data_dup(k, n, b.c)
     d.beta = 0
     d.c = mat_data_new_zero(m, n)
@@ -116,18 +142,20 @@ local function matrix_get(a, i, j)
     if a.form == 'z' then
         return 0
     elseif a.form == 'b' then
-        mat_compute(a)
+        mat_compute_blas1(a)
     end
     return a.beta * a.c[i * a.n + j]
 end
 
 local function matrix_set(a, i, j, value)
-    a.data[i * a.cols + j] = value
+    mat_compute(a)
+    a.c[i * a.n + j] = value
 end
 
 local matrix_index = {
     get = matrix_get,
     set = matrix_set,
+    inspect = matrix_inspect,
 }
 
 matrix_mt.__mul = matrix_mul
