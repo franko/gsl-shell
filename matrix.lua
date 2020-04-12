@@ -7,16 +7,27 @@ local CblasTrans = cblas.CblasTrans
 
 local matrix_mt = { }
 
+-- parts:
+--
+-- always defined:
+-- 'form', 'm', 'n': form type (integer), rows and columns
+--
+-- defined for blas1 and blas2 forms:
+-- 'beta' and 'c': scalar multiplier and matrix data
+--
+-- defined for blas2 only:
+-- 'k', 'alpha', 'a', 'b', 'tra', 'trb': inner product dimension, scalar multiplier,
+-- matrix data for first and second multiplier. Transpose cblas flags.
+--
 -- forms:
--- z: zero
--- g: given values
--- b: BLAS gemm form
+-- 0, blas0, zero matrix
+-- 1, blas1, matrix 'c' with multiplier 'beta'
+-- 2, blas2, gemm product with 'a', 'b' and multiplicands
+--
 
--- TODO: matrix_new should return a zero-initialized
--- matrix.
 local function matrix_new(m, n)
     local mat = {
-        form  = 'z',
+        form  = 0,
         tra   = CblasNoTrans,
         trb   = CblasNoTrans,
         m     = m,
@@ -63,9 +74,9 @@ local function matrix_copy(a)
         beta  = a.beta,
         c     = a.c,
     }
-    if a.form == 'g' then
+    if a.form == 1 then
         b.c = mat_data_dup(m, n, a.c)
-    elseif a.form == 'b' then
+    elseif a.form == 2 then
         b.a = mat_data_dup(m, k, a.a)
         b.b = mat_data_dup(k, n, a.b)
         b.c = mat_data_dup(m, n, a.c)
@@ -91,13 +102,13 @@ end
 
 local function mat_compute_blas1(a)
     local m, n, k = a.m, a.n, a.k
-    if a.form == 'z' then
-        a.form = 'g'
+    if a.form == 0 then
+        a.form = 1
         a.beta = 1
         a.c = mat_data_new_zero(m, n)
         null_blas2(a)
-    elseif a.form == 'b' then
-        a.form = 'g'
+    elseif a.form == 2 then
+        a.form = 1
         a.beta = 1
         cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, k, a.b, n, a.beta, a.c, n)
         null_blas2(a)
@@ -106,7 +117,7 @@ end
 
 local function mat_compute(a)
     local m, n = a.m, a.n
-    if a.form == 'g' and a.beta ~= 1 then
+    if a.form == 1 and a.beta ~= 1 then
         for i = 0, m - 1 do
             cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
         end
@@ -121,13 +132,13 @@ local function matrix_mul(a, b)
     if k ~= b.m then
         error('matrix dimensions mismatch in multiplication')
     end
-    if a.form == 'z' or b.form == 'z' then
+    if a.form == 0 or b.form == 0 then
         return matrix_new(m, n)
     end
     mat_compute_blas1(b)
     local d = matrix_copy(a)
     mat_compute_blas1(d)
-    d.form = 'b'
+    d.form = 2
     d.tra, d.trb = CblasNoTrans, CblasNoTrans
     d.m, d.n, d.k = m, n, k
     d.alpha = d.beta * a.beta
@@ -139,9 +150,9 @@ local function matrix_mul(a, b)
 end
 
 local function matrix_get(a, i, j)
-    if a.form == 'z' then
+    if a.form == 0 then
         return 0
-    elseif a.form == 'b' then
+    elseif a.form == 2 then
         mat_compute_blas1(a)
     end
     return a.beta * a.c[i * a.n + j]
