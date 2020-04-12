@@ -4,7 +4,7 @@
 #include "LuaConsole.h"
 #include "GslShellApp.h"
 #include "InterpreterThread.h"
-#include "welcome.h"
+#include "core/welcome.h"
 
 FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {
@@ -60,7 +60,7 @@ void LuaConsole::create() {
 void LuaConsole::init() {
     clearContent();
     auto text = addOutputSection(message_section);
-    text->setText(welcome_message);
+    text->setText(kWelcomeMessage);
     updateTextVisibleRows(text);
     prepareInput();
 }

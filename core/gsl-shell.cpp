@@ -2,8 +2,8 @@
 #include <string.h>
 #include <errno.h>
 
-#include "welcome.h"
-#include "LuaInterpreter.h"
+#include "core/welcome.h"
+#include "core/LuaInterpreter.h"
 
 const char *prompt = "> ";
 
@@ -14,7 +14,7 @@ int main() {
 		fprintf(stderr, "Error initializing Lua\n");
 		return 1;
 	}
-	fputs(welcome_message, stdout);
+	fputs(kWelcomeMessage, stdout);
 	fputs("\n\n", stdout);
 	char *line_buffer = nullptr;
 	size_t line_buffer_size = 0;

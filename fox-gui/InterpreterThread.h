@@ -11,7 +11,7 @@ extern "C" {
 #include "lua.h"
 }
 
-#include "Interpreter.h"
+#include "core/Interpreter.h"
 
 /* This class is responsible to start and run an interpreter in a
  * separate thread.

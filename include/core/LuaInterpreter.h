@@ -8,7 +8,7 @@ extern "C" {
 }
 
 #include "defs.h"
-#include "Interpreter.h"
+#include "core/Interpreter.h"
 
 enum class LuaLanguage {
     kStandard,
