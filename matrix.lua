@@ -4,58 +4,121 @@ local cblas = require("cblas")
 local CblasRowMajor = cblas.CblasRowMajor
 local CblasNoTrans = cblas.CblasNoTrans
 local CblasTrans = cblas.CblasTrans
-local sizeof_double = ffi.sizeof('double')
 
 local matrix_mt = { }
 
+-- forms:
+-- z: zero
+-- g: given values
+-- b: BLAS gemm form
+
 -- TODO: matrix_new should return a zero-initialized
 -- matrix.
-local function matrix_new(rows, cols)
+local function matrix_new(m, n)
     local mat = {
-        rows = rows,
-        cols = cols,
-        data = ffi.new("double[?]", rows * cols),
+        form  = 'z',
+        tra   = CblasNoTrans,
+        trb   = CblasNoTrans,
+        m     = m,
+        n     = n,
+        k     = 1,
+        alpha = 0,
+        a     = 0,
+        b     = 0,
+        beta  = 0,
+        c     = 0,
     }
     setmetatable(mat, matrix_mt)
     return mat
 end
 
+local function mat_data_dup(m, n, data)
+    local new_data = ffi.new('double[?]', m * n)
+    for i = 0, m * n - 1 do
+        new_data[i] = data[i]
+    end
+    return new_data
+end
+
+local function mat_data_new_zero(m, n)
+    local new_data = ffi.new('double[?]', m * n)
+    for i = 0, m * n - 1 do
+        new_data[i] = 0
+    end
+    return new_data
+end
+
 local function matrix_copy(a)
-    local r, c = a.rows, a.cols
-    local b = matrix_new(r, c)
-    for i = 0, r * c - 1 do
-        b.data[i] = a.data[i]
-    end    
+    local m, n, k = a.m, a.n, a.k
+    local b = {
+        form  = a.form,
+        tra   = a.tra,
+        trb   = a.tra,
+        m     = m,
+        n     = n,
+        k     = k,
+        alpha = a.alpha,
+        a     = a.a,
+        b     = a.b,
+        beta  = a.beta,
+        c     = a.c,
+    }
+    if a.form == 'g' then
+        b.c = mat_data_dup(m, n, a.c)
+    elseif a.form == 'b' then
+        b.a = mat_data_dup(m, k, a.a)
+        b.b = mat_data_dup(k, n, a.b)
+        b.c = mat_data_dup(m, n, a.c)
+    end
     return b
 end
 
-local function matrix_set_to_zero(a)
-    local r, c = a.rows, a.cols
-    for i = 0, r * c - 1 do
-        a.data[i] = 0
-    end    
+local function mat_compute(a)
+    local m, n, k = a.m, a.n, a.k
+    if a.form == 'z' then
+        a.beta = 1
+        a.c = mat_data_new_zero(m, n)
+    elseif a.form == 'b' then
+        a.beta = 1
+        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, alpha, a.a, k, a.b, n, beta, a.c, n)
+    end
+    a.form = 'g'
+    a.alpha = 0
+    a.a = 0
+    a.b = 0
 end
 
--- FIXME: when a and b are the same matrix a temporary copy
--- should be created to avoid aliasing.
 local function matrix_mul(a, b)
+    local m, n, k = a.m, b.n, a.n
+    if k ~= b.m then
+        error('matrix dimensions mismatch in multiplication')
+    end
+    if a.form == 'z' or b.form == 'z' then
+        return matrix_new(m, n)
+    end
     if a == b then
         b = matrix_copy(a)
     end
-    local m, n = a.rows, b.cols
-    local k = a.cols
-    if k ~= b.rows then
-        error('matrix dimensions mismatch in multiplication')
-    end
-    local c = matrix_new(m, n)
-    matrix_set_to_zero(c)
-    local alpha, beta = 1, 0
-    cblas.cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha, a.data, k, b.data, n, beta, c.data, n)
-    return c
+    mat_compute(b)
+    local d = matrix_copy(a)
+    mat_compute(d)
+    d.form = 'b'
+    d.m, d.n, d.k = m, n, k
+    d.alpha = 1
+    d.a = a.c
+    d.b = mat_data_dup(k, n, b.c)
+    d.beta = 0
+    d.c = mat_data_new_zero(m, n)
+    return d
 end
 
 local function matrix_get(a, i, j)
-    return a.data[i * a.cols + j]
+    if a.form == 'z' then
+        return 0
+    elseif a.form == 'b' then
+        mat_compute(a)
+    end
+    return a.beta * a.c[i * a.n + j]
 end
 
 local function matrix_set(a, i, j, value)
