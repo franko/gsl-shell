@@ -1,12 +1,10 @@
 
 #include <fxkeys.h>
 
-#include "luajit.h"
-
 #include "LuaConsole.h"
 #include "GslShellApp.h"
 #include "InterpreterThread.h"
-#include "version.h"
+#include "welcome.h"
 
 FXDEFMAP(LuaConsole) LuaConsole_map[] =
 {
@@ -62,16 +60,7 @@ void LuaConsole::create() {
 void LuaConsole::init() {
     clearContent();
     auto text = addOutputSection(message_section);
-    FXString msg;
-    msg.format("GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
-               "GNU Scientific Library, Copyright (C) The GSL Team\n"
-               "%s -- %s\n\n"
-               "Documentation available at http://www.nongnu.org/gsl-shell/doc/.\n"
-               "To obtain help on a function or object type: help(func).\n"
-               "Type demo() to see the lists of demo.",
-               GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
-
-    text->setText(msg);
+    text->setText(welcome_message);
     updateTextVisibleRows(text);
     prepareInput();
 }
