@@ -1,5 +1,5 @@
-#ifndef FOX_GUI_LUA_INTERPRETER_H_
-#define FOX_GUI_LUA_INTERPRETER_H_
+#ifndef CORE_LUA_INTERPRETER_H_
+#define CORE_LUA_INTERPRETER_H_
 
 #include <string>
 
