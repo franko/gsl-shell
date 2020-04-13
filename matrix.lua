@@ -127,7 +127,7 @@ local function mat_compute(a)
     end
 end
 
-local function matrix_mul(a, b)
+local function mat_mul(a, b)
     local m, n, k = a.m, b.n, a.n
     if k ~= b.m then
         error('matrix dimensions mismatch in multiplication')
@@ -147,6 +147,27 @@ local function matrix_mul(a, b)
     d.beta = 0
     d.c = mat_data_new_zero(m, n)
     return d
+end
+
+local function mat_scalar_mul(a, alpha)
+    local b = matrix_copy(a)
+    if b.form == 1 then
+        b.beta = b.beta * alpha
+    elseif b.form == 2 then
+        b.alpha = b.alpha * alpha
+        b.beta = b.beta * alpha
+    end
+    return b
+end
+
+local function matrix_mul(a, b)
+    if type(a) == 'number' then
+        return mat_scalar_mul(b, a)
+    elseif type(b) == 'number' then
+        return mat_scalar_mul(a, b)
+    else
+        return mat_mul(a, b)
+    end
 end
 
 local function matrix_get(a, i, j)
