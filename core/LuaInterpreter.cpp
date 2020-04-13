@@ -4,7 +4,7 @@
 
 #define luajit_c
 
-#include "LuaInterpreter.h"
+#include "core/LuaInterpreter.h"
 
 extern "C" {
 #include "lua.h"

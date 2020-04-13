@@ -1,5 +1,5 @@
-#ifndef FOX_GUI_LUA_INTERPRETER_H_
-#define FOX_GUI_LUA_INTERPRETER_H_
+#ifndef CORE_LUA_INTERPRETER_H_
+#define CORE_LUA_INTERPRETER_H_
 
 #include <string>
 
@@ -8,7 +8,7 @@ extern "C" {
 }
 
 #include "defs.h"
-#include "Interpreter.h"
+#include "core/Interpreter.h"
 
 enum class LuaLanguage {
     kStandard,

@@ -1,5 +1,5 @@
-#ifndef FOX_GUI_INTERPRETER_H_
-#define FOX_GUI_INTERPRETER_H_
+#ifndef CORE_INTERPRETER_H_
+#define CORE_INTERPRETER_H_
 
 class Interpreter {
 public:

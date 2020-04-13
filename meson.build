@@ -17,4 +17,5 @@ if host_machine.system() == 'windows'
     gsl_shell_defines += '-DWIN32'
 endif
 
+subdir('core')
 subdir('fox-gui')

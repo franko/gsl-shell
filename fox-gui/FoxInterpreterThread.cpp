@@ -2,7 +2,7 @@
 
 #include "elem/elem_lua.h"
 #include "GslShellApp.h"
-#include "LuaInterpreter.h"
+#include "core/LuaInterpreter.h"
 
 class ElemPlotLuaInterpreter : public LuaInterpreter {
 public:
