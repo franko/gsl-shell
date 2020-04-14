@@ -27,6 +27,8 @@ local matrix_mt = { }
 
 local function matrix_new(m, n)
     local mat = {
+        ronly = false,
+        tr    = CblasNoTrans,
         form  = 0,
         tra   = CblasNoTrans,
         trb   = CblasNoTrans,
@@ -59,9 +61,25 @@ local function mat_data_new_zero(m, n)
     return new_data
 end
 
-local function matrix_copy(a)
+-- If the matrix is read-only make it writable by copying
+-- all the data in newly allocated arrays.
+local function mat_dup(a)
+    if not a.ronly then return end
+    local m, n, k = a.m, a.n, a.k
+    if a.form == 1 then
+        a.c = mat_data_dup(m, n, a.c)
+    elseif a.form == 2 then
+        a.a = mat_data_dup(m, k, a.a)
+        a.b = mat_data_dup(k, n, a.b)
+        a.c = mat_data_dup(m, n, a.c)
+    end
+end
+
+local function matrix_copy(a, duplicate)
     local m, n, k = a.m, a.n, a.k
     local b = {
+        ronly = not duplicate,
+        tr    = a.tr,
         form  = a.form,
         tra   = a.tra,
         trb   = a.tra,
@@ -74,12 +92,14 @@ local function matrix_copy(a)
         beta  = a.beta,
         c     = a.c,
     }
-    if a.form == 1 then
-        b.c = mat_data_dup(m, n, a.c)
-    elseif a.form == 2 then
-        b.a = mat_data_dup(m, k, a.a)
-        b.b = mat_data_dup(k, n, a.b)
-        b.c = mat_data_dup(m, n, a.c)
+    if duplicate then
+        if a.form == 1 then
+            b.c = mat_data_dup(m, n, a.c)
+        elseif a.form == 2 then
+            b.a = mat_data_dup(m, k, a.a)
+            b.b = mat_data_dup(k, n, a.b)
+            b.c = mat_data_dup(m, n, a.c)
+        end
     end
     setmetatable(b, matrix_mt)
     return b
@@ -87,7 +107,7 @@ end
 
 local function matrix_inspect(a)
     print "{"
-    for i, name in pairs({"form", "tra", "trb", "m", "n", "k", "alpha", "a", "b", "beta", "c"}) do
+    for i, name in pairs({"ronly", "tr", "form", "tra", "trb", "m", "n", "k", "alpha", "a", "b", "beta", "c"}) do
         print(string.format("    %s = %s", name, tostring(a[name])))
     end
     print "}"
@@ -108,6 +128,10 @@ local function mat_compute_blas1(a)
         a.c = mat_data_new_zero(m, n)
         null_blas2(a)
     elseif a.form == 2 then
+        if a.ronly then
+            a.c = mat_data_dup(m, n, a.c)
+        end
+        a.ronly = false
         a.form = 1
         a.beta = 1
         cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, k, a.b, n, a.beta, a.c, n)
@@ -118,6 +142,10 @@ end
 local function mat_compute(a)
     local m, n = a.m, a.n
     if a.form == 1 and a.beta ~= 1 then
+        if a.ronly then
+            a.c = mat_data_dup(m, n, a.c)
+        end
+        a.ronly = false       
         for i = 0, m - 1 do
             cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
         end
@@ -136,8 +164,9 @@ local function mat_mul(a, b)
         return matrix_new(m, n)
     end
     mat_compute_blas1(b)
-    local d = matrix_copy(a)
+    local d = matrix_copy(a, false)
     mat_compute_blas1(d)
+    mat_dup(d)
     d.form = 2
     d.tra, d.trb = CblasNoTrans, CblasNoTrans
     d.m, d.n, d.k = m, n, k
