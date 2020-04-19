@@ -145,7 +145,7 @@ local function mat_compute(a)
         if a.ronly then
             a.c = mat_data_dup(m, n, a.c)
         end
-        a.ronly = false       
+        a.ronly = false
         for i = 0, m - 1 do
             cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
         end
