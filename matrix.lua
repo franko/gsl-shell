@@ -45,12 +45,53 @@ local function matrix_new(m, n)
     return mat
 end
 
+local function mat_size(a)
+    if a.tr == CblasNoTrans then
+        return a.m, a.n
+    else
+        return a.n, a.m
+    end
+end
+
 local function mat_data_dup(m, n, data)
     local new_data = ffi.new('double[?]', m * n)
     for i = 0, m * n - 1 do
         new_data[i] = data[i]
     end
     return new_data
+end
+
+local function mat_data_dup_tr(tr, m, n, data)
+    local new_data = ffi.new('double[?]', m * n)
+    if tr == CblasTrans then
+        local new_m, new_n = n, m
+        for i = 0, m - 1 do
+            for j = 0, n - 1 do
+                new_data[j * new_n + i] = data[i * n + j]
+            end
+        end
+        return CblasNoTrans, new_m, new_n, new_data
+    else
+        -- TODO: transform double loop into a simple one
+        for i = 0, m - 1 do
+            for j = 0, n - 1 do
+                new_data[i * n + j] = data[i * n + j]
+            end
+        end
+        return CblasNoTrans, m, n, new_data
+    end
+end
+
+local function mat_data_tr(m, n, data)
+    -- TODO: figure out how to do in-place transform
+    local new_data = ffi.new('double[?]', m * n)
+    local new_m, new_n = n, m
+    for i = 0, m - 1 do
+        for j = 0, n - 1 do
+            new_data[j * new_n + i] = data[i * n + j]
+        end
+    end
+    return new_m, new_n, new_data
 end
 
 local function mat_data_new_zero(m, n)
@@ -73,6 +114,7 @@ local function mat_dup(a)
         a.b = mat_data_dup(k, n, a.b)
         a.c = mat_data_dup(m, n, a.c)
     end
+    a.ronly = false
 end
 
 local function matrix_copy(a, duplicate)
@@ -93,13 +135,7 @@ local function matrix_copy(a, duplicate)
         c     = a.c,
     }
     if duplicate then
-        if a.form == 1 then
-            b.c = mat_data_dup(m, n, a.c)
-        elseif a.form == 2 then
-            b.a = mat_data_dup(m, k, a.a)
-            b.b = mat_data_dup(k, n, a.b)
-            b.c = mat_data_dup(m, n, a.c)
-        end
+        mat_dup(a)
     end
     setmetatable(b, matrix_mt)
     return b
@@ -120,32 +156,41 @@ local function null_blas2(a)
     a.b = 0
 end
 
+local function mat_dup_tr(a)
+    if a.ronly then
+        a.tr, a.m, a.n, a.c = mat_data_dup_tr(a.tr, a.m, a.n, a.c)
+    elseif a.tr == CblasTrans then
+        a.m, a.n, a.c = mat_data_tr(a.m, a.n, a.c)
+        a.tr = CblasNoTrans
+    end
+end
+
 local function mat_compute_blas1(a)
-    local m, n, k = a.m, a.n, a.k
     if a.form == 0 then
+        if a.tr == CblasTrans then
+            a.tr = CblasNoTrans
+            a.m, a.n = a.n, a.m
+        end
         a.form = 1
         a.beta = 1
-        a.c = mat_data_new_zero(m, n)
+        a.c = mat_data_new_zero(a.m, a.n)
         null_blas2(a)
     elseif a.form == 2 then
-        if a.ronly then
-            a.c = mat_data_dup(m, n, a.c)
-        end
+        mat_dup_tr(a)
         a.ronly = false
         a.form = 1
         a.beta = 1
+        local m, n, k = a.m, a.n, a.k
         cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, k, a.b, n, a.beta, a.c, n)
         null_blas2(a)
     end
 end
 
 local function mat_compute(a)
-    local m, n = a.m, a.n
     if a.form == 1 and a.beta ~= 1 then
-        if a.ronly then
-            a.c = mat_data_dup(m, n, a.c)
-        end
+        mat_dup_tr(a)
         a.ronly = false
+        local n = a.n
         for i = 0, m - 1 do
             cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
         end
@@ -156,8 +201,9 @@ local function mat_compute(a)
 end
 
 local function mat_mul(a, b)
-    local m, n, k = a.m, b.n, a.n
-    if k ~= b.m then
+    local m, ka = mat_size(a)
+    local kb, n = mat_size(b)
+    if ka ~= kb then
         error('matrix dimensions mismatch in multiplication')
     end
     if a.form == 0 or b.form == 0 then
@@ -166,13 +212,15 @@ local function mat_mul(a, b)
     mat_compute_blas1(b)
     local d = matrix_copy(a, false)
     mat_compute_blas1(d)
-    mat_dup(d)
+    -- FIXME: we do not need to duplicate here if d has
+    -- non transposed c data
+    mat_dup_tr(d)
     d.form = 2
     d.tra, d.trb = CblasNoTrans, CblasNoTrans
-    d.m, d.n, d.k = m, n, k
+    d.m, d.n, d.k = m, n, ka
     d.alpha = d.beta * a.beta
     d.a = d.c
-    d.b = mat_data_dup(k, n, b.c)
+    d.b = b.c
     d.beta = 0
     d.c = mat_data_new_zero(m, n)
     return d
@@ -199,24 +247,49 @@ local function matrix_mul(a, b)
     end
 end
 
+local function mat_element_index(a, i, j)
+    if a.tr == CblasNoTrans then
+        return i * a.n + j
+    else
+        return j * a.m + n
+    end
+end
+
 local function matrix_get(a, i, j)
     if a.form == 0 then
         return 0
     elseif a.form == 2 then
         mat_compute_blas1(a)
     end
-    return a.beta * a.c[i * a.n + j]
+    local index = mat_element_index(a, i, j)
+    return a.beta * a.c[index]
 end
 
 local function matrix_set(a, i, j, value)
     mat_compute(a)
-    a.c[i * a.n + j] = value
+    local index = mat_element_index(a, i, j)
+    a.c[index] = value
+end
+
+local function flip_tr(tr)
+    return tr == CblasTrans and CblasNoTrans or CblasTrans
+end
+
+local function matrix_transpose(a)
+    if a.form == 0 or a.form == 1 then
+        a.tr = flip_tr(a.tr)
+    else
+        a.tr = flip_tr(a.tr)
+        a.tra, a.trb = flip_tr(a.trb), flip_tr(a.tra)
+        a.a, a.b = a.b, a.a
+    end
 end
 
 local matrix_index = {
     get = matrix_get,
     set = matrix_set,
     inspect = matrix_inspect,
+    transpose = matrix_transpose,
 }
 
 matrix_mt.__mul = matrix_mul
