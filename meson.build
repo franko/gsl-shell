@@ -19,3 +19,4 @@ endif
 
 subdir('core')
 subdir('fox-gui')
+subdir('tests')

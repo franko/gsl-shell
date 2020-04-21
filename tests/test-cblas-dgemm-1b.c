@@ -18,18 +18,18 @@ int main() {
     int m, n, k, i;
     double alpha, beta;
 
-    printf ("\n This example computes real matrix C=alpha*A*B+beta*C using \n"
+    printf ("\n This example computes real matrix C=alpha*A*t(B)+beta*C using \n"
         " BLAS function dgemm, where A, B, and  C are matrices and \n"
         " alpha and beta are double precision scalars\n\n");
 
     m = 2000, k = 200, n = 1000;
-    printf (" Initializing data for matrix multiplication C=A*B for matrix \n"
-        " A(%ix%i) and matrix B(%ix%i)\n\n", m, k, k, n);
+    printf (" Initializing data for matrix multiplication C=A*t(B) for matrix \n"
+        " A(%ix%i) and matrix B(%ix%i)\n\n", m, k, n, k);
     alpha = 1.0; beta = 0.0;
 
-    printf (" Allocating memory for matrices  \n\n");
+    printf (" Allocating memory for matrices \n\n");
     A = (double *) malloc( m*k*sizeof( double ) );
-    B = (double *) malloc( k*n*sizeof( double ) );
+    B = (double *) malloc( n*k*sizeof( double ) );
     C = (double *) malloc( m*n*sizeof( double ) );
     if (A == NULL || B == NULL || C == NULL) {
         printf( "\n ERROR: Can't allocate memory for matrices. Aborting... \n\n");
@@ -45,7 +45,9 @@ int main() {
     }
 
     for (i = 0; i < (k*n); i++) {
-        B[i] = (double)(-i-1);
+        int col = i / n, row = i % n;
+        int element_index = row * k + col;
+        B[element_index] = (double)(-i-1);
     }
 
     for (i = 0; i < (m*n); i++) {
@@ -53,15 +55,15 @@ int main() {
     }
 
     printf (" Computing matrix product using BLAS dgemm function via CBLAS interface \n\n");
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
-                m, n, k, alpha, A, k, B, n, beta, C, n);
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, 
+                m, n, k, alpha, A, k, B, k, beta, C, n);
     printf ("\n Computations completed.\n\n");
 
     printf (" Top left corner of matrix A: \n");
     print_matrix_top_left(A, m, k, 6, 6);
 
     printf ("\n Top left corner of matrix B: \n");
-    print_matrix_top_left(B, k, n, 6, 6);
+    print_matrix_top_left(B, n, k, 6, 6);
     
     printf ("\n Top left corner of matrix C: \n");
     print_matrix_top_left(C, m, n, 6, 6);
