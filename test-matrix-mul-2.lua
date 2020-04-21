@@ -1,7 +1,7 @@
 local matrix = require("matrix")
 
 local function set_by_values(a, values)
-	local m, n = a.m, a.n
+	local m, n = a:size()
 	local index = 1
 	for i = 1, m do
 		for j = 1, n do
@@ -12,7 +12,7 @@ local function set_by_values(a, values)
 end
 
 local function mat_print(a)
-	local m, n = a.m, a.n
+	local m, n = a:size()
 	for i = 1, m do
 	    local ls = {}
 	    for j = 1, n do

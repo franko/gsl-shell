@@ -312,7 +312,7 @@ local function mat_element_index(a, i, j)
     if a.tr == CblasNoTrans then
         return i * a.n + j
     else
-        return j * a.m + i
+        return j * a.n + i
     end
 end
 
@@ -340,7 +340,14 @@ local function matrix_transpose(a)
     a.tr = flip_tr(a.tr)
 end
 
+local function matrix_new_transpose(a)
+    local b = matrix_copy(a, false)
+    b.tr = flip_tr(b.tr)
+    return b
+end
+
 local matrix_index = {
+    size = mat_size,
     get = matrix_get,
     set = matrix_set,
     inspect = matrix_inspect,
@@ -352,4 +359,5 @@ matrix_mt.__index = matrix_index
 
 return {
     new = matrix_new,
+    transpose = matrix_new_transpose,
 }

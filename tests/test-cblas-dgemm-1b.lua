@@ -29,14 +29,16 @@ end
 
 local m, k, n = 2000, 200, 1000
 print(" Initializing data for matrix multiplication C=A*B for matrix ")
-print(string.format(" A(%ix%i) and matrix B(%ix%i)\n", m, k, k, n))
+print(string.format(" A(%ix%i) and matrix B(%ix%i)\n", k, m, k, n))
 
 print(" Allocating and initializing matrices  \n")
-local A = matrix.new(m, k, function(i, j) return i * k + j + 1 end)
+local A = matrix.new(k, m, function(i, j) return i + j * k + 1 end)
 local B = matrix.new(k, n, function(i, j) return -(i * n + j + 1) end)
 
+local At = matrix.transpose(A)
+
 print(" Computing matrix product \n")
-local C = A * B
+local C = At * B
 
 print(" Top left corner of matrix A: ")
 print_matrix_top_left(A, m, k, 6, 6)
