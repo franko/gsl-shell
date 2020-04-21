@@ -16,9 +16,9 @@ local function mat_print(a)
 	for i = 1, m do
 	    local ls = {}
 	    for j = 1, n do
-	        ls[j] = string.format("%.6g", a:get(i - 1, j - 1))
+	        ls[j] = string.format("%10.6g", a:get(i - 1, j - 1))
 	    end
-	    print(table.concat(ls, ","))
+	    print(table.concat(ls, " "))
 	end
 end
 
@@ -34,6 +34,7 @@ set_by_values(b1, {10, -2, 1, 6, 11, 5, 3, -4, 2})
 
 c1 = a1 * b1
 mat_print(c1)
+print()
 
 a2 = matrix.new(4, 2)
 set_by_values(a2, {-1, 2, -2, 0, 1, -3, 3, 4})

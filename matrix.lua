@@ -72,7 +72,7 @@ local function mat_data_dup_tr(tr, m, n, data)
         end
         return CblasNoTrans, new_m, new_n, new_data
     else
-        -- TODO: transform double loop into a simple one
+        -- MAYBE: transform double loop into a simple one
         for i = 0, m - 1 do
             for j = 0, n - 1 do
                 new_data[i * n + j] = data[i * n + j]
@@ -83,7 +83,11 @@ local function mat_data_dup_tr(tr, m, n, data)
 end
 
 local function mat_data_tr(m, n, data)
-    -- TODO: figure out how to do in-place transform
+    -- In theory transpose could be done in place but the
+    -- algorithm is complex and mostly inefficient. See:
+    --
+    -- https://en.wikipedia.org/wiki/In-place_matrix_transposition
+    --
     local new_data = ffi.new('double[?]', m * n)
     local new_m, new_n = n, m
     for i = 0, m - 1 do
@@ -103,20 +107,20 @@ local function mat_data_new_zero(m, n)
 end
 
 -- If the matrix is read-only make it writable by copying
--- all the data in newly allocated arrays.
+-- the c data in newly allocated arrays.
+-- TODO: rename to a better name (fox example ?)
+-- FORMAL: keep matrix state valid
 local function mat_dup(a)
     if not a.ronly then return end
     local m, n, k = a.m, a.n, a.k
+    -- form2 always owns c data and do not own a and b datas.
     if a.form == 1 then
-        a.c = mat_data_dup(m, n, a.c)
-    elseif a.form == 2 then
-        a.a = mat_data_dup(m, k, a.a)
-        a.b = mat_data_dup(k, n, a.b)
         a.c = mat_data_dup(m, n, a.c)
     end
     a.ronly = false
 end
 
+-- FORMAL: return a matrix in a valid state
 local function matrix_copy(a, duplicate)
     local m, n, k = a.m, a.n, a.k
     local b = {
@@ -149,23 +153,22 @@ local function matrix_inspect(a)
     print "}"
 end
 
-local function null_blas2(a)
+local function null_form2_terms(a)
     a.k = 1
     a.alpha = 0
     a.a = 0
     a.b = 0
 end
 
-local function mat_dup_tr(a)
-    if a.ronly then
-        a.tr, a.m, a.n, a.c = mat_data_dup_tr(a.tr, a.m, a.n, a.c)
-    elseif a.tr == CblasTrans then
-        a.m, a.n, a.c = mat_data_tr(a.m, a.n, a.c)
-        a.tr = CblasNoTrans
-    end
-end
-
-local function mat_compute_blas1(a)
+-- Transform matrix into form1.
+-- CHECK: Do we really need to transform form0 to form1 ? verify
+-- function usage. ANSWER: from mat_mul we really need to have
+-- writeable actual c data. No, not really because if matrix is zero
+-- mat_mul will return zero without calling GEMM.
+-- ANSWER: ok from matrix_get, not called when form0.
+-- FORMAL: keep matrix state valid
+-- FORMAL: at the end ensure will be in form1
+local function mat_compute_form1(a)
     if a.form == 0 then
         if a.tr == CblasTrans then
             a.tr = CblasNoTrans
@@ -174,32 +177,39 @@ local function mat_compute_blas1(a)
         a.form = 1
         a.beta = 1
         a.c = mat_data_new_zero(a.m, a.n)
-        null_blas2(a)
+        null_form2_terms(a)
     elseif a.form == 2 then
-        mat_dup_tr(a)
-        a.ronly = false
+        -- form 2 always has writeable c data.
         a.form = 1
         a.beta = 1
         local m, n, k = a.m, a.n, a.k
-        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, k, a.b, n, a.beta, a.c, n)
-        null_blas2(a)
+        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, a.tra == CblasNoTrans and k or m, a.b, a.trb == CblasNoTrans and n or k, a.beta, a.c, n)
+        null_form2_terms(a)
     end
 end
 
+-- Reduce to fully computed form1 (beta = 1).
+-- The transpose flag will not change.
+-- FORMAL: keep matrix state valid
+-- FORMAL: at the end matriw will be form1 with beta == 1
 local function mat_compute(a)
-    if a.form == 1 and a.beta ~= 1 then
-        mat_dup_tr(a)
-        a.ronly = false
-        local n = a.n
-        for i = 0, m - 1 do
-            cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
+    if a.form == 1 then
+        if a.beta ~= 1 then
+            mat_dup(a)
+            local n = a.n
+            for i = 0, m - 1 do
+                cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
+            end
+            a.beta = 1
         end
-        a.beta = 1
     else
-        mat_compute_blas1(a)
+        -- CHECK: do we really need to transform form0 ?
+        -- ANSWER: yes when used from matrix_set
+        mat_compute_form1(a)
     end
 end
 
+-- FORMAL: returns a matrix in a valid state
 local function mat_mul(a, b)
     local m, ka = mat_size(a)
     local kb, n = mat_size(b)
@@ -209,25 +219,30 @@ local function mat_mul(a, b)
     if a.form == 0 or b.form == 0 then
         return matrix_new(m, n)
     end
-    mat_compute_blas1(b)
-    local d = matrix_copy(a, false)
-    mat_compute_blas1(d)
-    -- FIXME: we do not need to duplicate here if d has
-    -- non transposed c data
-    mat_dup_tr(d)
-    d.form = 2
-    d.tra, d.trb = CblasNoTrans, CblasNoTrans
-    d.m, d.n, d.k = m, n, ka
-    d.alpha = d.beta * a.beta
-    d.a = d.c
-    d.b = b.c
-    d.beta = 0
-    d.c = mat_data_new_zero(m, n)
-    return d
+    mat_compute_form1(a)
+    mat_compute_form1(b)
+
+    local r = {
+        ronly = false,
+        tr    = CblasNoTrans,
+        form  = 2,
+        tra   = a.tr,
+        trb   = b.tr,
+        m     = m,
+        n     = n,
+        k     = ka,
+        alpha = a.beta * b.beta,
+        a     = a.c,
+        b     = b.c,
+        beta  = 0,
+        c     = mat_data_new_zero(m, n),
+    }
+    setmetatable(r, matrix_mt)
+    return r
 end
 
 local function mat_scalar_mul(a, alpha)
-    local b = matrix_copy(a)
+    local b = matrix_copy(a, false)
     if b.form == 1 then
         b.beta = b.beta * alpha
     elseif b.form == 2 then
@@ -251,7 +266,7 @@ local function mat_element_index(a, i, j)
     if a.tr == CblasNoTrans then
         return i * a.n + j
     else
-        return j * a.m + n
+        return j * a.m + i
     end
 end
 
@@ -259,7 +274,7 @@ local function matrix_get(a, i, j)
     if a.form == 0 then
         return 0
     elseif a.form == 2 then
-        mat_compute_blas1(a)
+        mat_compute_form1(a)
     end
     local index = mat_element_index(a, i, j)
     return a.beta * a.c[index]
@@ -276,13 +291,7 @@ local function flip_tr(tr)
 end
 
 local function matrix_transpose(a)
-    if a.form == 0 or a.form == 1 then
-        a.tr = flip_tr(a.tr)
-    else
-        a.tr = flip_tr(a.tr)
-        a.tra, a.trb = flip_tr(a.trb), flip_tr(a.tra)
-        a.a, a.b = a.b, a.a
-    end
+    a.tr = flip_tr(a.tr)
 end
 
 local matrix_index = {
