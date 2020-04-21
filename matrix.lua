@@ -25,7 +25,7 @@ local matrix_mt = { }
 -- 2, blas2, gemm product with 'a', 'b' and multiplicands
 --
 
-local function matrix_new(m, n)
+local function matrix_new_zero(m, n)
     local mat = {
         ronly = false,
         tr    = CblasNoTrans,
@@ -43,6 +43,52 @@ local function matrix_new(m, n)
     }
     setmetatable(mat, matrix_mt)
     return mat
+end
+
+local function matrix_alloc_form1(m, n)
+    local mat = {
+        ronly = false,
+        tr    = CblasNoTrans,
+        form  = 1,
+        tra   = CblasNoTrans,
+        trb   = CblasNoTrans,
+        m     = m,
+        n     = n,
+        k     = 1,
+        alpha = 0,
+        a     = 0,
+        b     = 0,
+        beta  = 1,
+        c     = ffi.new('double[?]', m * n),
+    }
+    setmetatable(mat, matrix_mt)
+    return mat
+end
+
+local function matrix_new(m, n, init)
+    if not init then
+        return matrix_new_zero(m, n)
+    elseif type(init) == "function" then
+        local a = matrix_alloc_form1(m, n)
+        for i = 0, m - 1 do
+            local index_row = i * n
+            for j = 0, n - 1 do
+                a.c[index_row + j] = init(i, j)
+            end
+        end
+        return a
+    elseif type(init) == 'table' then
+        local a = matrix_alloc_form1(m, n)
+        for i = 0, m - 1 do
+            local index_row = i * n
+            for j = 0, n - 1 do
+                a.c[index_row + j] = init[index_row + j + 1]
+            end
+        end
+        return a
+    else
+        error("init argument should be a function or a table")
+    end
 end
 
 local function mat_size(a)
