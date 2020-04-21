@@ -1,0 +1,72 @@
+#define min(x,y) (((x) < (y)) ? (x) : (y))
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "cblas.h"
+
+static void print_matrix_top_left(double *A, int m, int n, int m_limit, int n_limit) {
+    for (int i=0; i<min(m,m_limit); i++) {
+        for (int j=0; j<min(n,n_limit); j++) {
+            printf ("%12.0f", A[j+i*n]);
+        }
+        printf ("\n");
+    }
+}
+
+static int check_matrix_values_top_left(double *A, int m, int n, int m_limit, int n_limit, const double *A_ref, const double eps_abs, const double eps_rel) {
+    int difference_seen = 0;
+    for (int i=0; i<min(m,m_limit); i++) {
+        for (int j=0; j<min(n,n_limit); j++) {
+            const double element_ref = A_ref[j+i*n_limit];
+            const double elements_diff = A[j+i*n] - element_ref;
+            if (fabs(elements_diff) > eps_abs || 
+                fabs(elements_diff / element_ref) > eps_rel) {
+                difference_seen += 1;
+                printf ("Difference for element: (%d; %d) value: %12.0f expected: %12.0f\n", i, j, A[j+i*n], element_ref);
+            }
+        }
+    }
+    return difference_seen;
+}
+
+int main() {
+    printf ("\n This example computes real matrix C=alpha*A*B+beta*C using \n"
+        " BLAS function dgemm, where A, B, and  C are matrices and \n"
+        " alpha and beta are double precision scalars\n\n");
+
+    const int m = 4, k = 3, n = 3;
+    printf (" Initializing data for matrix multiplication C=A*B for matrix \n"
+        " A(%ix%i) and matrix B(%ix%i)\n\n", m, k, k, n);
+    const double alpha = 1.0, beta = 0.0;
+
+    double A[] = {3, -2, 2, 6, -3, 5, -1, 7, 0, 4, 8, 9};
+    double B[] = {10, -2, 1, 6, 11, 5, 3, -4, 2};
+    double C[m * n];
+
+    printf (" Intializing matrix data \n\n");
+    for (int i = 0; i < (m*n); i++) {
+        C[i] = 0.0;
+    }
+
+    printf (" Computing matrix product using BLAS dgemm function via CBLAS interface \n\n");
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
+                m, n, k, alpha, A, k, B, n, beta, C, n);
+    printf ("\n Computations completed.\n\n");
+
+    printf (" Top left corner of matrix A: \n");
+    print_matrix_top_left(A, m, k, 6, 6);
+
+    printf ("\n Top left corner of matrix B: \n");
+    print_matrix_top_left(B, k, n, 6, 6);
+    
+    printf ("\n Top left corner of matrix C: \n");
+    print_matrix_top_left(C, m, n, 6, 6);
+
+    const double eps_abs = 100, eps_rel = 1e-8;
+    const double C_expect[] = {24, -36, -3, 57, -65, 1, 32, 79, 34, 115, 44, 62};
+    int check = check_matrix_values_top_left(C, m, n, 4, 3, C_expect, eps_abs, eps_rel);
+
+    printf (" Example completed. \n\n");
+    return (check == 0 ? 0 : 1);
+}

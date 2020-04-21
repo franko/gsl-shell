@@ -9,6 +9,7 @@ m_dep = cc.find_library('m', required : false)
 cblas_tests = [
     {'name': 'test-cblas-dgemm-1', 'sources': 'test-cblas-dgemm-1.c'},
     {'name': 'test-cblas-dgemm-1b', 'sources': 'test-cblas-dgemm-1b.c'},
+    {'name': 'test-cblas-dgemm-2', 'sources': 'test-cblas-dgemm-2.c'},
 ]
 
 foreach test : cblas_tests
