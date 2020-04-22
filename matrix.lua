@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local cblas = require("cblas")
+local matrix_display = require("matrix-display")
 
 local CblasRowMajor = cblas.CblasRowMajor
 local CblasNoTrans = cblas.CblasNoTrans
@@ -7,22 +8,30 @@ local CblasTrans = cblas.CblasTrans
 
 local matrix_mt = { }
 
+-- TODO: rename method size to dim to be coherent with GSL Shell 2.
+-- TODO: find a nameing convention to discriminate:
+-- - local only private function
+-- - public matrix method function
+-- - public matrix module function
+-- - public function or method performing object modification or returning
+-- - a new object.
+--
 -- parts:
 --
 -- always defined:
 -- 'form', 'm', 'n': form type (integer), rows and columns
 --
--- defined for blas1 and blas2 forms:
+-- defined for form1 and form2 forms:
 -- 'beta' and 'c': scalar multiplier and matrix data
 --
--- defined for blas2 only:
+-- defined for form2 only:
 -- 'k', 'alpha', 'a', 'b', 'tra', 'trb': inner product dimension, scalar multiplier,
 -- matrix data for first and second multiplier. Transpose cblas flags.
 --
 -- forms:
--- 0, blas0, zero matrix
--- 1, blas1, matrix 'c' with multiplier 'beta'
--- 2, blas2, gemm product with 'a', 'b' and multiplicands
+-- 0, form0, zero matrix
+-- 1, form1, matrix 'c' with multiplier 'beta'
+-- 2, form2, gemm product with 'a', 'b' and multiplicands
 --
 
 local function matrix_new_zero(m, n)
@@ -346,12 +355,20 @@ local function matrix_new_transpose(a)
     return b
 end
 
+local mat_real_selector = function(ap, i, j)
+    return ap:get(i, j), 0
+end
+
+-- Limits the number or rows and columns to display to 8.
+local matrix_show = matrix_display.generator(mat_size, mat_real_selector, 8, 8)
+
 local matrix_index = {
     size = mat_size,
     get = matrix_get,
     set = matrix_set,
     inspect = matrix_inspect,
     transpose = matrix_transpose,
+    show = matrix_show,
 }
 
 matrix_mt.__mul = matrix_mul
