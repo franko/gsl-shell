@@ -40,15 +40,20 @@ window:Start(520, 380, elem.WindowResize)
 
 local X = matrix.new(n_samples, 3, function(i, j)
     local x = data[i + 1][1]
-    if i == 0 then
+    if j == 0 then
         return 1
-    elseif i == 1 then
+    elseif j == 1 then
         return x
     else
         return x * x
     end
 end)
 
-local XtX = matrix.transpose(X) * X
-print(XtX:show())
+local Y = matrix.new(n_samples, 1, function(i, j) return data[i+1][2] end)
 
+local Xt = matrix.transpose(X)
+local XtX = Xt * X
+local XtY = Xt * Y
+print(XtX:show())
+print()
+print(XtY:show())

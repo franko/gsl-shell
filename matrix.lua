@@ -15,6 +15,7 @@ local matrix_mt = { }
 -- - public matrix module function
 -- - public function or method performing object modification or returning
 -- - a new object.
+-- TODO: change indexing convention for matrix to 1-based
 --
 -- parts:
 --
