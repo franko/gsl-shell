@@ -53,8 +53,15 @@ end
 local function matrix_display_gen(dim, sel, rows_limit, cols_limit)
     return function(m)
         local n1, n2 = dim(m)
-        if n1 > rows_limit then n1 = rows_limit end
-        if n2 > cols_limit then n2 = cols_limit end
+        local rows_cut, cols_cut = false, false
+        if n1 > rows_limit then
+            rows_cut = true
+            n1 = rows_limit
+        end
+        if n2 > cols_limit then
+            cols_cut = true
+            n2 = cols_limit
+        end
         local sq = 0
         for i=0, n1-1 do
             for j=0, n2-1 do
@@ -79,8 +86,14 @@ local function matrix_display_gen(dim, sel, rows_limit, cols_limit)
         end
 
         local ss = {}
+        local hclose = cols_cut and ' ... ]' or ' ]'
         for i=0, n1-1 do
-            ss[i+1] = '[ ' .. concat_pad(lsrow[i+1], lmax) .. ' ]'
+            ss[i+1] = '[ ' .. concat_pad(lsrow[i+1], lmax) .. hclose
+        end
+        if rows_cut then
+            local hrow = {}
+            for i = 1, n2 do hrow[i] = '...' end
+            ss[#ss + 1] = '[ ' .. concat_pad(hrow, lmax) .. hclose
         end
 
         return table.concat(ss, '\n')
