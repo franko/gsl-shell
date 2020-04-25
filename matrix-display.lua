@@ -63,8 +63,8 @@ local function matrix_display_gen(dim, sel, rows_limit, cols_limit)
             n2 = cols_limit
         end
         local sq = 0
-        for i=0, n1-1 do
-            for j=0, n2-1 do
+        for i = 1, n1 do
+            for j = 1, n2 do
                 local x, y = sel(m, i, j)
                 sq = sq + abs(x) + abs(y)
             end
@@ -74,21 +74,21 @@ local function matrix_display_gen(dim, sel, rows_limit, cols_limit)
 
         local lsrow = {}
         local lmax = 0
-        for i=0, n1-1 do
+        for i = 1, n1 do
             local row = {}
-            for j=0, n2-1 do
+            for j = 1, n2 do
                 local x, y = sel(m, i, j)
                 local s = recttostr(x, y, eps)
                 if #s > lmax then lmax = #s end
-                row[j+1] = s
+                row[j] = s
             end
-            lsrow[i+1] = row
+            lsrow[i] = row
         end
 
         local ss = {}
         local hclose = cols_cut and ' ... ]' or ' ]'
-        for i=0, n1-1 do
-            ss[i+1] = '[ ' .. concat_pad(lsrow[i+1], lmax) .. hclose
+        for i = 1, n1 do
+            ss[i] = '[ ' .. concat_pad(lsrow[i], lmax) .. hclose
         end
         if rows_cut then
             local hrow = {}

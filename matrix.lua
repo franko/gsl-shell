@@ -9,8 +9,6 @@ local CblasTrans = cblas.CblasTrans
 local matrix_mt = { }
 
 -- TODO: rename method size to dim to be coherent with GSL Shell 2.
--- TODO: change indexing convention for matrix to 1-based
--- TODO: add bounds checks for matrix elements indexing
 --
 -- function naming convention:
 -- mat_*, local functions, not exposed to public
@@ -81,20 +79,22 @@ local function matrix_new(m, n, init)
         return mat_new_zero(m, n)
     elseif type(init) == "function" then
         local a = mat_alloc_form1(m, n)
+        local index = 0
         for i = 0, m - 1 do
-            local index_row = i * n
             for j = 0, n - 1 do
-                a.c[index_row + j] = init(i, j)
+                a.c[index + j] = init(i + 1, j + 1)
             end
+            index = index + n
         end
         return a
     elseif type(init) == 'table' then
         local a = mat_alloc_form1(m, n)
+        local index = 0
         for i = 0, m - 1 do
-            local index_row = i * n
             for j = 0, n - 1 do
-                a.c[index_row + j] = init[index_row + j + 1]
+                a.c[index + j] = init[index + j + 1]
             end
+            index = index + n
         end
         return a
     else
@@ -361,9 +361,15 @@ end
 
 local function mat_element_index(a, i, j)
     if a.tr == CblasNoTrans then
-        return i * a.n + j
+        if i < 1 or i > a.m or j < 1 or j > a.n then
+            error('index out of bounds')
+        end
+        return (i - 1) * a.n + (j - 1)
     else
-        return j * a.n + i
+        if i < 1 or i > a.n or j < 1 or j > a.m then
+            error('index out of bounds')
+        end
+        return (j - 1) * a.n + (i - 1)
     end
 end
 
@@ -398,19 +404,19 @@ local function matrix_new_transpose(a)
 end
 
 local mat_real_selector = function(ap, i, j)
-    return ap:get(i, j), 0
+    return matrix_get(ap, i, j), 0
 end
 
 -- Limits the number or rows and columns to display to 8.
 local matrix_show = matrix_display.generator(matrix_size, mat_real_selector, 8, 8)
 
 local matrix_index = {
-    size = matrix_size,
-    get = matrix_get,
-    set = matrix_set,
-    inspect = matrix_inspect,
+    size      = matrix_size,
+    get       = matrix_get,
+    set       = matrix_set,
+    inspect   = matrix_inspect,
     transpose = matrix_transpose,
-    show = matrix_show,
+    show      = matrix_show,
 }
 
 matrix_mt.__mul = matrix_new_mul

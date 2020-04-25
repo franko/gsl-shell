@@ -3,10 +3,10 @@ local matrix = require("matrix")
 local min, abs = math.min, math.abs
 
 local function print_matrix_top_left(A, m, n, m_limit, n_limit)
-    for i = 0, min(m, m_limit) - 1 do
+    for i = 1, min(m, m_limit) do
         local line = {}
-        for j = 0, min(n, n_limit) - 1 do
-            line[j + 1] = string.format("%12.6g", A:get(i, j))
+        for j = 1, min(n, n_limit) do
+            line[j] = string.format("%12.6g", A:get(i, j))
         end
         print(table.concat(line, " "))
     end
@@ -14,8 +14,8 @@ end
 
 local function check_matrix_values_top_left(A, m, n, m_limit, n_limit, A_ref, eps_abs, eps_rel)
     local difference_seen = 0
-    for i = 0, min(m, m_limit) - 1 do
-        for j = 0, min(n, n_limit) - 1 do
+    for i = 1, min(m, m_limit) do
+        for j = 1, min(n, n_limit) do
             local element_ref = A_ref:get(i, j)
             local elements_diff = A:get(i, j) - element_ref
             if abs(elements_diff) > eps_abs or abs(elements_diff / element_ref) > eps_rel then
@@ -32,8 +32,8 @@ print(" Initializing data for matrix multiplication C=A*B for matrix ")
 print(string.format(" A(%ix%i) and matrix B(%ix%i)\n", m, k, k, n))
 
 print(" Allocating and initializing matrices  \n")
-local A = matrix.new(m, k, function(i, j) return i * k + j + 1 end)
-local B = matrix.new(k, n, function(i, j) return -(i * n + j + 1) end)
+local A = matrix.new(m, k, function(i, j) return (i - 1) * k + j end)
+local B = matrix.new(k, n, function(i, j) return -((i - 1) * n + j) end)
 
 print(" Computing matrix product \n")
 local C = A * B
