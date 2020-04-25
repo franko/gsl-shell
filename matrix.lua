@@ -9,13 +9,13 @@ local CblasTrans = cblas.CblasTrans
 local matrix_mt = { }
 
 -- TODO: rename method size to dim to be coherent with GSL Shell 2.
--- TODO: find a nameing convention to discriminate:
--- - local only private function
--- - public matrix method function
--- - public matrix module function
--- - public function or method performing object modification or returning
--- - a new object.
 -- TODO: change indexing convention for matrix to 1-based
+--
+-- function naming convention:
+-- mat_*, local functions, not exposed to public
+-- matrix_*, public functions
+-- matrix_new_*, returns a new matrix. Otherwise, without "new" the method change the
+-- object itself.
 --
 -- parts:
 --
@@ -35,7 +35,7 @@ local matrix_mt = { }
 -- 2, form2, gemm product with 'a', 'b' and multiplicands
 --
 
-local function matrix_new_zero(m, n)
+local function mat_new_zero(m, n)
     local mat = {
         ronly = false,
         tr    = CblasNoTrans,
@@ -55,7 +55,7 @@ local function matrix_new_zero(m, n)
     return mat
 end
 
-local function matrix_alloc_form1(m, n)
+local function mat_alloc_form1(m, n)
     local mat = {
         ronly = false,
         tr    = CblasNoTrans,
@@ -77,9 +77,9 @@ end
 
 local function matrix_new(m, n, init)
     if not init then
-        return matrix_new_zero(m, n)
+        return mat_new_zero(m, n)
     elseif type(init) == "function" then
-        local a = matrix_alloc_form1(m, n)
+        local a = mat_alloc_form1(m, n)
         for i = 0, m - 1 do
             local index_row = i * n
             for j = 0, n - 1 do
@@ -88,7 +88,7 @@ local function matrix_new(m, n, init)
         end
         return a
     elseif type(init) == 'table' then
-        local a = matrix_alloc_form1(m, n)
+        local a = mat_alloc_form1(m, n)
         for i = 0, m - 1 do
             local index_row = i * n
             for j = 0, n - 1 do
@@ -101,7 +101,7 @@ local function matrix_new(m, n, init)
     end
 end
 
-local function mat_size(a)
+local function matrix_size(a)
     if a.tr == CblasNoTrans then
         return a.m, a.n
     else
@@ -115,43 +115,6 @@ local function mat_data_dup(m, n, data)
         new_data[i] = data[i]
     end
     return new_data
-end
-
-local function mat_data_dup_tr(tr, m, n, data)
-    local new_data = ffi.new('double[?]', m * n)
-    if tr == CblasTrans then
-        local new_m, new_n = n, m
-        for i = 0, m - 1 do
-            for j = 0, n - 1 do
-                new_data[j * new_n + i] = data[i * n + j]
-            end
-        end
-        return CblasNoTrans, new_m, new_n, new_data
-    else
-        -- MAYBE: transform double loop into a simple one
-        for i = 0, m - 1 do
-            for j = 0, n - 1 do
-                new_data[i * n + j] = data[i * n + j]
-            end
-        end
-        return CblasNoTrans, m, n, new_data
-    end
-end
-
-local function mat_data_tr(m, n, data)
-    -- In theory transpose could be done in place but the
-    -- algorithm is complex and mostly inefficient. See:
-    --
-    -- https://en.wikipedia.org/wiki/In-place_matrix_transposition
-    --
-    local new_data = ffi.new('double[?]', m * n)
-    local new_m, new_n = n, m
-    for i = 0, m - 1 do
-        for j = 0, n - 1 do
-            new_data[j * new_n + i] = data[i * n + j]
-        end
-    end
-    return new_m, new_n, new_data
 end
 
 local function mat_data_new_zero(m, n)
@@ -267,8 +230,8 @@ end
 
 -- FORMAL: returns a matrix in a valid state
 local function mat_mul(a, b)
-    local m, ka = mat_size(a)
-    local kb, n = mat_size(b)
+    local m, ka = matrix_size(a)
+    local kb, n = matrix_size(b)
     if ka ~= kb then
         error('matrix dimensions mismatch in multiplication')
     end
@@ -361,10 +324,10 @@ local mat_real_selector = function(ap, i, j)
 end
 
 -- Limits the number or rows and columns to display to 8.
-local matrix_show = matrix_display.generator(mat_size, mat_real_selector, 8, 8)
+local matrix_show = matrix_display.generator(matrix_size, mat_real_selector, 8, 8)
 
 local matrix_index = {
-    size = mat_size,
+    size = matrix_size,
     get = matrix_get,
     set = matrix_set,
     inspect = matrix_inspect,
