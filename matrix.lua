@@ -10,6 +10,7 @@ local matrix_mt = { }
 
 -- TODO: rename method size to dim to be coherent with GSL Shell 2.
 -- TODO: change indexing convention for matrix to 1-based
+-- TODO: add bounds checks for matrix elements indexing
 --
 -- function naming convention:
 -- mat_*, local functions, not exposed to public
@@ -140,7 +141,7 @@ local function mat_dup(a)
 end
 
 -- FORMAL: return a matrix in a valid state
-local function matrix_copy(a, duplicate)
+local function mat_copy(a, duplicate)
     local m, n, k = a.m, a.n, a.k
     local b = {
         ronly = not duplicate,
@@ -261,7 +262,7 @@ local function mat_mul(a, b)
 end
 
 local function mat_scalar_mul(a, alpha)
-    local b = matrix_copy(a, false)
+    local b = mat_copy(a, false)
     if b.form == 1 then
         b.beta = b.beta * alpha
     elseif b.form == 2 then
@@ -271,7 +272,7 @@ local function mat_scalar_mul(a, alpha)
     return b
 end
 
-local function matrix_mul(a, b)
+local function matrix_new_mul(a, b)
     if type(a) == 'number' then
         return mat_scalar_mul(b, a)
     elseif type(b) == 'number' then
@@ -279,6 +280,21 @@ local function matrix_mul(a, b)
     else
         return mat_mul(a, b)
     end
+end
+
+local function matrix_new_add(a, b)
+    local m, n = matrix_size(a)
+    local mb, nb = matrix_size(b)
+    if m ~= mb or n ~= nb then
+        error('matrix dimensions mismatch in addition')
+    end
+    if a.form == 0 then
+        return mat_copy(b, false)
+    elseif b.form == 0 then
+        return mat_copy(a, false)
+    end
+
+    error('NYI')
 end
 
 local function mat_element_index(a, i, j)
@@ -314,7 +330,7 @@ local function matrix_transpose(a)
 end
 
 local function matrix_new_transpose(a)
-    local b = matrix_copy(a, false)
+    local b = mat_copy(a, false)
     b.tr = flip_tr(b.tr)
     return b
 end
@@ -335,7 +351,7 @@ local matrix_index = {
     show = matrix_show,
 }
 
-matrix_mt.__mul = matrix_mul
+matrix_mt.__mul = matrix_new_mul
 matrix_mt.__index = matrix_index
 
 return {
