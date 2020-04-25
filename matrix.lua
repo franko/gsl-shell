@@ -130,7 +130,7 @@ end
 -- the c data in newly allocated arrays.
 -- TODO: rename to a better name (fox example ?)
 -- FORMAL: keep matrix state valid
-local function mat_dup(a)
+local function mat_dup_if_ronly(a)
     if not a.ronly then return end
     local m, n, k = a.m, a.n, a.k
     -- form2 always owns c data and do not own a and b datas.
@@ -159,7 +159,7 @@ local function mat_copy(a, duplicate)
         c     = a.c,
     }
     if duplicate then
-        mat_dup(a)
+        mat_dup_if_ronly(a)
     end
     setmetatable(b, matrix_mt)
     return b
@@ -183,7 +183,7 @@ end
 -- Transform matrix into form1.
 -- CHECK: Do we really need to transform form0 to form1 ? verify
 -- function usage. ANSWER: from mat_mul we really need to have
--- writeable actual c data. No, not really because if matrix is zero
+-- writable actual c data. No, not really because if matrix is zero
 -- mat_mul will return zero without calling GEMM.
 -- ANSWER: ok from matrix_get, not called when form0.
 -- FORMAL: keep matrix state valid
@@ -199,7 +199,7 @@ local function mat_compute_form1(a)
         a.c = mat_data_new_zero(a.m, a.n)
         null_form2_terms(a)
     elseif a.form == 2 then
-        -- form 2 always has writeable c data.
+        -- form 2 always has writable c data.
         a.form = 1
         a.beta = 1
         local m, n, k = a.m, a.n, a.k
@@ -208,24 +208,39 @@ local function mat_compute_form1(a)
     end
 end
 
+-- Assume matrix is in form1 or 2 and beta != 1.
+-- Make c data writable and performs beta multiplication to bring
+-- beta = 1
+local function mat_compute_c(a)
+    mat_dup_if_ronly(a)
+    local m, n = a.m, a.n
+    for i = 0, m - 1 do
+        cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
+    end
+    a.beta = 1
+end
+
 -- Reduce to fully computed form1 (beta = 1).
 -- The transpose flag will not change.
 -- FORMAL: keep matrix state valid
--- FORMAL: at the end matriw will be form1 with beta == 1
+-- FORMAL: at the end matrix will be form1 with beta == 1
 local function mat_compute(a)
     if a.form == 1 then
         if a.beta ~= 1 then
-            mat_dup(a)
-            local n = a.n
-            for i = 0, m - 1 do
-                cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
-            end
-            a.beta = 1
+            mat_compute_c(a)
         end
     else
         -- CHECK: do we really need to transform form0 ?
         -- ANSWER: yes when used from matrix_set
         mat_compute_form1(a)
+    end
+end
+
+-- FORMAL: keep matrix state valid
+-- FORMAL: at the end matrix will be writable with beta == 1
+local function mat_reduce_beta(a)
+    if a.form > 0 and a.beta ~= 1 then
+        mat_compute_c(a)
     end
 end
 
@@ -293,8 +308,55 @@ local function matrix_new_add(a, b)
     elseif b.form == 0 then
         return mat_copy(a, false)
     end
+    -- assume here both a and b are each either if form1 or 2
+    mat_reduce_beta(a)
+    mat_reduce_beta(b)
 
-    error('NYI')
+    local r = mat_alloc_form1(m, n)
+    if a.tr == CblasNoTrans then
+        if b.tr == CblasNoTrans then
+            local index = 0
+            for i = 0, m - 1 do
+                for j = 0, n - 1 do
+                    r.c[index] = a.c[index] + b.c[index]
+                    index = index + 1
+                end
+            end
+        else
+            local index = 0
+            for i = 0, m - 1 do
+                local index_tr = i
+                for j = 0, n - 1 do
+                    r.c[index] = a.c[index] + b.c[index_tr]
+                    index = index + 1
+                    index_tr = index_tr + n
+                end
+            end
+        end
+    else
+        if b.tr == CblasNoTrans then
+            local index = 0
+            for i = 0, m - 1 do
+                local index_tr = i
+                for j = 0, n - 1 do
+                    r.c[index] = a.c[index_tr] + b.c[index]
+                    index = index + 1
+                    index_tr = index_tr + n
+                end
+            end
+        else
+            local index = 0
+            for i = 0, m - 1 do
+                local index_tr = i
+                for j = 0, n - 1 do
+                    r.c[index] = a.c[index_tr] + b.c[index_tr]
+                    index = index + 1
+                    index_tr = index_tr + n
+                end
+            end
+        end
+    end
+    return r
 end
 
 local function mat_element_index(a, i, j)
@@ -352,6 +414,7 @@ local matrix_index = {
 }
 
 matrix_mt.__mul = matrix_new_mul
+matrix_mt.__add = matrix_new_add
 matrix_mt.__index = matrix_index
 
 return {
