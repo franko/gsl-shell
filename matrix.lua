@@ -423,7 +423,15 @@ matrix_mt.__mul = matrix_new_mul
 matrix_mt.__add = matrix_new_add
 matrix_mt.__index = matrix_index
 
+local function int_array_alloc(n)
+    return ffi.new("int[?]", n)
+end
+
 return {
     new = matrix_new,
     transpose = matrix_new_transpose,
+    impl = {
+        compute = mat_compute,
+        int_array_alloc = int_array_alloc,
+    },
 }

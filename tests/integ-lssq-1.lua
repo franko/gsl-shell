@@ -1,4 +1,5 @@
 local matrix = require("matrix")
+local linalg = require("matrix-lapack")
 
 local random, cos, sqrt, log, pi = math.random, math.cos, math.sqrt, math.log, math.pi
 
@@ -28,6 +29,16 @@ local function data_line(data)
     return line
 end
 
+local function fx_dashed_line(f, x1, x2, n)
+    local line = elem.DashPath.new()
+    line:AddDash(7, 3)
+    for i = 0, n - 1 do
+        local x = x1 + (x2 - x1) * i / (n - 1)
+        line:LineTo(x, f(x))
+    end
+    return line
+end
+
 local plot = elem.Plot.new()
 plot:AddStroke(data_line(data), 0x0000B4FF, 1.5, elem.property.Stroke)
 plot:SetTitle("Function plot example")
@@ -39,21 +50,23 @@ window:Attach(plot, "")
 window:Start(520, 380, elem.WindowResize)
 
 local X = matrix.new(n_samples, 3, function(i, j)
-    local x = data[i + 1][1]
-    if j == 0 then
+    local x = data[i][1]
+    if j == 1 then
         return 1
-    elseif j == 1 then
+    elseif j == 2 then
         return x
     else
         return x * x
     end
 end)
 
-local Y = matrix.new(n_samples, 1, function(i, j) return data[i+1][2] end)
+local Y = matrix.new(n_samples, 1, function(i, j) return data[i][2] end)
 
 local Xt = matrix.transpose(X)
 local XtX = Xt * X
 local XtY = Xt * Y
-print(XtX:show())
-print()
+
+linalg.solve(XtX, XtY)
 print(XtY:show())
+
+plot:AddStroke(fx_dashed_line(function(x) return XtY:get(1, 1) + XtY:get(2, 1) * x + XtY:get(3, 1) * x * x end, 0, 20, 256), 0xB40000FF, 1.5, elem.property.Stroke)
