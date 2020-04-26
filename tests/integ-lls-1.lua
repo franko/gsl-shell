@@ -1,5 +1,5 @@
 local matrix = require("matrix")
-local linalg = require("matrix-lapack")
+local lapack = require("lapack")
 
 local random, cos, sqrt, log, pi = math.random, math.cos, math.sqrt, math.log, math.pi
 
@@ -66,7 +66,7 @@ local Xt = matrix.transpose(X)
 local XtX = Xt * X
 local XtY = Xt * Y
 
-linalg.solve(XtX, XtY)
+lapack.gesv(XtX, XtY)
 print(XtY:show())
 
 plot:AddStroke(fx_dashed_line(function(x) return XtY:get(1, 1) + XtY:get(2, 1) * x + XtY:get(3, 1) * x * x end, 0, 20, 256), 0xB40000FF, 1.5, elem.property.Stroke)
