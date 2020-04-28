@@ -44,10 +44,7 @@ plot:AddStroke(data_line(data), 0x0000B4FF, 1.5, elem.property.Stroke)
 plot:SetTitle("Function plot example")
 plot:SetXAxisTitle("x variable")
 plot:SetYAxisTitle("y variable")
-
-local window = elem.Window.new()
-window:Attach(plot, "")
-window:Start(520, 380, elem.WindowResize)
+plot:Show(520, 380, elem.WindowResize)
 
 local X = matrix.new(n_samples, 3, function(i, j)
     local x = data[i][1]
