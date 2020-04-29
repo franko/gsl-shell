@@ -17,6 +17,11 @@ if host_machine.system() == 'windows'
     gsl_shell_defines += '-DWIN32'
 endif
 
+bc_headers_dir = include_directories('.')
+
+# matrix need to be done before core because the bytecode generated
+# files are needed in core for the interpreter.
+subdir('matrix')
 subdir('core')
 subdir('fox-gui')
 subdir('tests')

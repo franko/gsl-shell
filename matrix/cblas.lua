@@ -1,14 +1,14 @@
-/* From openblas.h with the following changes:
+local ffi = require("ffi")
+-- From openblas.h with the following changes:
 
-- OPENBLAS_CONST -> const
-- blasint -> int
-- CBLAS_INDEX -> size_t
+-- - OPENBLAS_CONST -> const
+-- - blasint -> int
+-- - CBLAS_INDEX -> size_t
 
-And added definition:
+-- And added definition:
 
-openblas_complex_* -> typedef to * _Complex
-*/
-
+-- openblas_complex_* -> typedef to * _Complex
+ffi.cdef[[
 typedef float _Complex openblas_complex_float;
 typedef double _Complex openblas_complex_double;
 typedef double _Complex openblas_complex_xdouble;
@@ -343,3 +343,5 @@ void cblas_cgeadd(const enum CBLAS_ORDER CORDER,const int crows, const int ccols
           float *c, const int cldc); 
 void cblas_zgeadd(const enum CBLAS_ORDER CORDER,const int crows, const int ccols, const double *calpha, double *a, const int clda, const double *cbeta, 
           double *c, const int cldc); 
+]]
+return ffi.load((jit.os == "Windows" and "libopenblas" or "openblas"))

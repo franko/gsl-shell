@@ -13,6 +13,7 @@ extern "C" {
 #include "luajit.h"
 #include "language.h"
 #include "language_loaders.h"
+#include "core/matrix_bc_loader.h"
 }
 
 static void stderr_message(const char *pname, const char *msg)
@@ -162,6 +163,10 @@ static int pinit_lang_extension(lua_State *L)
     luaL_openlibs(L);  /* open libraries */
     override_loaders(L);
     lua_gc(L, LUA_GCRESTART, -1);
+    /* This is a quick hack to test the preload of bytecode.
+    I should figure out a mechanism so that what we are loading
+    is explicit when calling the LuaInterpreter. */
+    matrix_bc_preload(L);
     return 0;
 }
 
