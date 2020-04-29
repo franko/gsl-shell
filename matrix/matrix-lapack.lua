@@ -1,6 +1,6 @@
 local ffi = require("ffi")
 local matrix = require("matrix")
-local lapack = require("lapacke-ffi")
+local lapack = require("lapacke")
 
 local function int_array_alloc(n)
     return ffi.new("int[?]", n)

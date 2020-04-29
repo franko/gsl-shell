@@ -1,5 +1,5 @@
 local matrix = require("matrix")
-local lapack = require("lapack")
+local lapack = require("matrix.lapack")
 
 local random, cos, sqrt, log, pi = math.random, math.cos, math.sqrt, math.log, math.pi
 
