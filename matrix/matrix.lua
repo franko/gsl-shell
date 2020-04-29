@@ -1,6 +1,6 @@
 local ffi = require("ffi")
-local cblas = require("matrix.cblas")
-local matrix_display = require("matrix.matrix-display")
+local cblas = require("cblas")
+local matrix_display = require("matrix.display")
 
 local CblasRowMajor = cblas.CblasRowMajor
 local CblasNoTrans = cblas.CblasNoTrans
