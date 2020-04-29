@@ -1,14 +1,27 @@
 #include <iostream>
 #include <string>
 
+#include "elem/elem_lua.h"
+
 #include "core/welcome.h"
 #include "core/LuaInterpreter.h"
 
 const char *prompt = "> ";
 const char *prompt_continuation = ". ";
 
+class CustomLuaInterpreter : public LuaInterpreter {
+public:
+    using LuaInterpreter::LuaInterpreter;
+
+    virtual Result CustomLoader(lua_State *L) override {
+        elem::LuaOpenLibrary(L);
+        return Result::kSuccess;
+    }
+
+};
+
 int main() {
-    LuaInterpreter intepreter{LuaLanguage::kLanguageExtension};
+    CustomLuaInterpreter intepreter{LuaLanguage::kLanguageExtension};
     auto init_status = intepreter.Initialize();
     if (init_status != Interpreter::Result::kSuccess) {
         std::cerr << "Error initializing Lua" << std::endl;

@@ -19,6 +19,6 @@ executable('gsl-shell',
     link_with: libcore_interp,
     link_whole: matrix_bc_lib,
     export_dynamic: true,
-    dependencies: [liblang_dep, luajit_dep, threads_dep],
+    dependencies: [liblang_dep, luajit_dep, libelem_dep, libelemlua_dep, threads_dep],
     install: true,
 )
