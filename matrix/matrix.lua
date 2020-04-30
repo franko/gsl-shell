@@ -213,11 +213,6 @@ local function null_form2_terms(a)
 end
 
 -- Transform matrix into form1.
--- CHECK: Do we really need to transform form0 to form1 ? verify
--- function usage. ANSWER: from mat_mul we really need to have
--- writable actual c data. No, not really because if matrix is zero
--- mat_mul will return zero without calling GEMM.
--- ANSWER: ok from matrix_get, not called when form0.
 -- FORMAL: keep matrix state valid
 -- FORMAL: at the end ensure will be in form1
 local function mat_compute_form1(a)
@@ -262,8 +257,6 @@ local function mat_compute(a)
             mat_compute_c(a)
         end
     else
-        -- CHECK: do we really need to transform form0 ?
-        -- ANSWER: yes when used from matrix_set
         mat_compute_form1(a)
     end
 end
