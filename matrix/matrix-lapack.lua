@@ -1,10 +1,8 @@
 local ffi = require("ffi")
-local matrix = require("matrix")
-local lapack = require("lapacke")
 
-local function int_array_alloc(n)
-    return ffi.new("int[?]", n)
-end
+local lapack = require("lapacke")
+local matrix = require("matrix")
+local permutation = require("matrix.permutation")
 
 local function gesv(A, B)
     local n, na = A:size()
@@ -12,21 +10,16 @@ local function gesv(A, B)
     if n ~= na or na ~= nb then
         error("matrix size does not match in matrix solve function")
     end
-    if A.tr == CblasTrans or B.tr == CblasTrans then
-        error("NYI")
-    end
-    matrix.impl.compute(A)
-    matrix.impl.compute(B)
-    if B.c == A.c then
-        error("the matrix arguments in solve cannot be the same matrix")
-    end
-    local ipiv = int_array_alloc(n)
-    local info = lapack.LAPACKE_dgesv(lapack.LAPACK_ROW_MAJOR, n, nrhs, A.c, n, ipiv, B.c, nrhs)
+    local Ar = matrix.impl.new_raw_copy(A)
+    local Br = matrix.impl.new_raw_copy(B)
+    local P = permutation.new(n)
+    local info = lapack.LAPACKE_dgesv(lapack.LAPACK_ROW_MAJOR, n, nrhs, Ar.data, n, P.data, Br.data, nrhs)
     if info < 0 then
         error("internal error in solve function: invalid argument " .. tostring(-info))
     elseif info > 0 then
         error(string.format("singular matrix, U(%i,%i) = 0", info))
     end
+    return matrix.impl.new_from_cdata(n, nrhs, Br.data)
 end
 
 return {

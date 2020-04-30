@@ -74,6 +74,27 @@ local function mat_alloc_form1(m, n)
     return mat
 end
 
+-- FIXME: avoid repeating all the struct with the same data.
+local function mat_new_from_cdata(m, n, c_data)
+    local mat = {
+        ronly = false,
+        tr    = CblasNoTrans,
+        form  = 1,
+        tra   = CblasNoTrans,
+        trb   = CblasNoTrans,
+        m     = m,
+        n     = n,
+        k     = 1,
+        alpha = 0,
+        a     = 0,
+        b     = 0,
+        beta  = 1,
+        c     = c_data,
+    }
+    setmetatable(mat, matrix_mt)
+    return mat
+end
+
 local function matrix_new(m, n, init)
     if not init then
         return mat_new_zero(m, n)
@@ -114,6 +135,17 @@ local function mat_data_dup(m, n, data)
     local new_data = ffi.new('double[?]', m * n)
     for i = 0, m * n - 1 do
         new_data[i] = data[i]
+    end
+    return new_data
+end
+
+-- m, n are the size of the resulting matrix
+local function mat_data_dup_transpose(m, n, data)
+    local new_data = ffi.new('double[?]', m * n)
+    for i = 0, m - 1 do
+        for j = 0, n - 1 do
+            new_data[i * n + j] = data[j * m + n]
+        end
     end
     return new_data
 end
@@ -407,6 +439,24 @@ local mat_real_selector = function(ap, i, j)
     return matrix_get(ap, i, j), 0
 end
 
+-- Return a simple object representing a matrix and its data
+-- without metatable.
+local function mat_new_raw_copy(a)
+    local m, n = a:size()
+    local new_data
+    if a.form == 0 then
+        new_data = mat_data_new_zero(m, n)
+    else
+        mat_compute(a)
+        if a.tr == CblasNoTrans then
+            new_data = mat_data_dup(m, n, a.c)
+        else
+            new_data = mat_data_dup_transpose(m, n, a.c)
+        end
+    end
+    return {m = m, n = n, data = new_data}
+end
+
 -- Limits the number or rows and columns to display to 8.
 local matrix_show = matrix_display.generator(matrix_size, mat_real_selector, 8, 8)
 
@@ -428,5 +478,7 @@ return {
     transpose = matrix_new_transpose,
     impl = {
         compute = mat_compute,
+        new_raw_copy = mat_new_raw_copy,
+        new_from_cdata = mat_new_from_cdata,
     },
 }

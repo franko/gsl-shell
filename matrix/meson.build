@@ -1,4 +1,4 @@
-matrix_sources = ['cblas.lua', 'matrix.lua', 'matrix-display.lua', 'lapacke.lua', 'matrix-lapack.lua']
+matrix_sources = ['cblas.lua', 'matrix.lua', 'matrix-display.lua', 'lapacke.lua', 'matrix-lapack.lua', 'matrix-permutation.lua']
 
 luajit = find_program('luajit')
 

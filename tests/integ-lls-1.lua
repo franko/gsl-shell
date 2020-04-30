@@ -63,7 +63,7 @@ local Xt = matrix.transpose(X)
 local XtX = Xt * X
 local XtY = Xt * Y
 
-lapack.gesv(XtX, XtY)
-print(XtY:show())
+local A = lapack.gesv(XtX, XtY)
+print(A:show())
 
-plot:AddStroke(fx_dashed_line(function(x) return XtY:get(1, 1) + XtY:get(2, 1) * x + XtY:get(3, 1) * x * x end, 0, 20, 256), 0xB40000FF, 1.5, elem.property.Stroke)
+plot:AddStroke(fx_dashed_line(function(x) return A:get(1, 1) + A:get(2, 1) * x + A:get(3, 1) * x * x end, 0, 20, 256), 0xB40000FF, 1.5, elem.property.Stroke)
