@@ -54,27 +54,6 @@ local function mat_new_zero(m, n)
     return mat
 end
 
-local function mat_alloc_form1(m, n)
-    local mat = {
-        ronly = false,
-        tr    = CblasNoTrans,
-        form  = 1,
-        tra   = CblasNoTrans,
-        trb   = CblasNoTrans,
-        m     = m,
-        n     = n,
-        k     = 1,
-        alpha = 0,
-        a     = 0,
-        b     = 0,
-        beta  = 1,
-        c     = ffi.new('double[?]', m * n),
-    }
-    setmetatable(mat, matrix_mt)
-    return mat
-end
-
--- FIXME: avoid repeating all the struct with the same data.
 local function mat_new_from_cdata(m, n, c_data)
     local mat = {
         ronly = false,
@@ -93,6 +72,11 @@ local function mat_new_from_cdata(m, n, c_data)
     }
     setmetatable(mat, matrix_mt)
     return mat
+end
+
+local function mat_alloc_form1(m, n)
+    local new_data = ffi.new('double[?]', m * n)
+    return mat_new_from_cdata(m, n, new_data)
 end
 
 local function matrix_new(m, n, init)
