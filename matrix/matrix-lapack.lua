@@ -13,7 +13,7 @@ local function gesv(A, B)
     local Ar = matrix.impl.new_raw_copy(A)
     local Br = matrix.impl.new_raw_copy(B)
     local P = permutation.new(n)
-    local info = lapack.LAPACKE_dgesv(lapack.LAPACK_ROW_MAJOR, n, nrhs, Ar.data, n, P.data, Br.data, nrhs)
+    local info = lapack.LAPACKE_dgesv(lapack.LAPACK_COL_MAJOR, n, nrhs, Ar.data, n, P.data, Br.data, n)
     if info < 0 then
         error("internal error in solve function: invalid argument " .. tostring(-info))
     elseif info > 0 then

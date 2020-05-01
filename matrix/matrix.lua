@@ -2,7 +2,7 @@ local ffi = require("ffi")
 local cblas = require("cblas")
 local matrix_display = require("matrix.display")
 
-local CblasRowMajor = cblas.CblasRowMajor
+local CblasColMajor = cblas.CblasColMajor
 local CblasNoTrans = cblas.CblasNoTrans
 local CblasTrans = cblas.CblasTrans
 
@@ -85,21 +85,23 @@ local function matrix_new(m, n, init)
     elseif type(init) == "function" then
         local a = mat_alloc_form1(m, n)
         local index = 0
-        for i = 0, m - 1 do
-            for j = 0, n - 1 do
-                a.c[index + j] = init(i + 1, j + 1)
+        for j = 0, n - 1 do
+            for i = 0, m - 1 do
+                a.c[index + i] = init(i + 1, j + 1)
             end
-            index = index + n
+            index = index + m
         end
         return a
     elseif type(init) == 'table' then
         local a = mat_alloc_form1(m, n)
-        local index = 0
+        local index_tab = 0
         for i = 0, m - 1 do
+            local index = i
             for j = 0, n - 1 do
-                a.c[index + j] = init[index + j + 1]
+                a.c[index] = init[index_tab + j + 1]
+                index = index + m
             end
-            index = index + n
+            index_tab = index_tab + n
         end
         return a
     else
@@ -126,9 +128,9 @@ end
 -- m, n are the size of the resulting matrix
 local function mat_data_dup_transpose(m, n, data)
     local new_data = ffi.new('double[?]', m * n)
-    for i = 0, m - 1 do
-        for j = 0, n - 1 do
-            new_data[i * n + j] = data[j * m + n]
+    for j = 0, n - 1 do
+        for i = 0, m - 1 do
+            new_data[j * m + i] = data[i * n + j]
         end
     end
     return new_data
@@ -214,7 +216,7 @@ local function mat_compute_form1(a)
         a.form = 1
         a.beta = 1
         local m, n, k = a.m, a.n, a.k
-        cblas.cblas_dgemm(CblasRowMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, a.tra == CblasNoTrans and k or m, a.b, a.trb == CblasNoTrans and n or k, a.beta, a.c, n)
+        cblas.cblas_dgemm(CblasColMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, a.tra == CblasNoTrans and m or k, a.b, a.trb == CblasNoTrans and k or n, a.beta, a.c, m)
         null_form2_terms(a)
     end
 end
@@ -225,8 +227,8 @@ end
 local function mat_compute_c(a)
     mat_dup_if_ronly(a)
     local m, n = a.m, a.n
-    for i = 0, m - 1 do
-        cblas.cblas_dscal(n, a.beta, a.c + i * n, 1)
+    for j = 0, n - 1 do
+        cblas.cblas_dscal(m, a.beta, a.c + j * m, 1)
     end
     a.beta = 1
 end
@@ -306,6 +308,7 @@ local function matrix_new_mul(a, b)
     end
 end
 
+-- TODO: consider using the blas function daxpy
 local function matrix_new_add(a, b)
     local m, n = matrix_size(a)
     local mb, nb = matrix_size(b)
@@ -324,43 +327,39 @@ local function matrix_new_add(a, b)
     local r = mat_alloc_form1(m, n)
     if a.tr == CblasNoTrans then
         if b.tr == CblasNoTrans then
-            local index = 0
-            for i = 0, m - 1 do
-                for j = 0, n - 1 do
-                    r.c[index] = a.c[index] + b.c[index]
-                    index = index + 1
-                end
+            for index = 0, m * n - 1 do
+                r.c[index] = a.c[index] + b.c[index]
             end
         else
             local index = 0
-            for i = 0, m - 1 do
-                local index_tr = i
-                for j = 0, n - 1 do
+            for j = 0, n - 1 do
+                local index_tr = j
+                for i = 0, m - 1 do
                     r.c[index] = a.c[index] + b.c[index_tr]
                     index = index + 1
-                    index_tr = index_tr + n
+                    index_tr = index_tr + m
                 end
             end
         end
     else
         if b.tr == CblasNoTrans then
             local index = 0
-            for i = 0, m - 1 do
-                local index_tr = i
-                for j = 0, n - 1 do
+            for j = 0, n - 1 do
+                local index_tr = j
+                for i = 0, m - 1 do
                     r.c[index] = a.c[index_tr] + b.c[index]
                     index = index + 1
-                    index_tr = index_tr + n
+                    index_tr = index_tr + m
                 end
             end
         else
             local index = 0
-            for i = 0, m - 1 do
-                local index_tr = i
-                for j = 0, n - 1 do
+            for j = 0, n - 1 do
+                local index_tr = j
+                for i = 0, m - 1 do
                     r.c[index] = a.c[index_tr] + b.c[index_tr]
                     index = index + 1
-                    index_tr = index_tr + n
+                    index_tr = index_tr + m
                 end
             end
         end
@@ -373,12 +372,12 @@ local function mat_element_index(a, i, j)
         if i < 1 or i > a.m or j < 1 or j > a.n then
             error('index out of bounds')
         end
-        return (i - 1) * a.n + (j - 1)
+        return (i - 1) + (j - 1) * a.m
     else
         if i < 1 or i > a.n or j < 1 or j > a.m then
             error('index out of bounds')
         end
-        return (j - 1) * a.n + (i - 1)
+        return (j - 1) + (i - 1) * a.m
     end
 end
 
