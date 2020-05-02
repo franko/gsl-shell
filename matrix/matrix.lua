@@ -449,6 +449,8 @@ matrix_mt.__mul = matrix_new_mul
 matrix_mt.__add = matrix_new_add
 matrix_mt.__index = matrix_index
 
+-- TODO: put functions for matrices in raw form in a specific
+-- namespace (table)
 return {
     new = matrix_new,
     transpose = matrix_new_transpose,
