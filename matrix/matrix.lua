@@ -229,10 +229,7 @@ end
 -- beta = 1
 local function mat_compute_c(a)
     mat_dup_if_ronly(a)
-    local m, n = a.m, a.n
-    for j = 0, n - 1 do
-        cblas.cblas_dscal(m, a.beta, a.c + j * m, 1)
-    end
+    cblas.cblas_dscal(m * n, a.beta, a.c, 1)
     a.beta = 1
 end
 
