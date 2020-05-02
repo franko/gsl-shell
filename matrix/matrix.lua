@@ -1,10 +1,13 @@
 local ffi = require("ffi")
-local cblas = require("cblas")
-local matrix_display = require("matrix.display")
 
-local CblasColMajor = cblas.CblasColMajor
-local CblasNoTrans = cblas.CblasNoTrans
-local CblasTrans = cblas.CblasTrans
+local cblas = require("cblas")
+local lapack = require("lapack")
+local matrix_display = require("matrix.display")
+local permutation = require("matrix.permutation")
+
+local ColMajor = cblas.CblasColMajor
+local NoTrans = cblas.CblasNoTrans
+local Trans = cblas.CblasTrans
 
 local matrix_mt = { }
 
@@ -37,10 +40,10 @@ local matrix_mt = { }
 local function mat_new_zero(m, n)
     local mat = {
         ronly = false,
-        tr    = CblasNoTrans,
+        tr    = NoTrans,
         form  = 0,
-        tra   = CblasNoTrans,
-        trb   = CblasNoTrans,
+        tra   = NoTrans,
+        trb   = NoTrans,
         m     = m,
         n     = n,
         k     = 1,
@@ -57,10 +60,10 @@ end
 local function mat_new_from_cdata(m, n, c_data)
     local mat = {
         ronly = false,
-        tr    = CblasNoTrans,
+        tr    = NoTrans,
         form  = 1,
-        tra   = CblasNoTrans,
-        trb   = CblasNoTrans,
+        tra   = NoTrans,
+        trb   = NoTrans,
         m     = m,
         n     = n,
         k     = 1,
@@ -110,7 +113,7 @@ local function matrix_new(m, n, init)
 end
 
 local function matrix_size(a)
-    if a.tr == CblasNoTrans then
+    if a.tr == NoTrans then
         return a.m, a.n
     else
         return a.n, a.m
@@ -203,8 +206,8 @@ end
 -- FORMAL: at the end ensure will be in form1
 local function mat_compute_form1(a)
     if a.form == 0 then
-        if a.tr == CblasTrans then
-            a.tr = CblasNoTrans
+        if a.tr == Trans then
+            a.tr = NoTrans
             a.m, a.n = a.n, a.m
         end
         a.form = 1
@@ -216,7 +219,7 @@ local function mat_compute_form1(a)
         a.form = 1
         a.beta = 1
         local m, n, k = a.m, a.n, a.k
-        cblas.cblas_dgemm(CblasColMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, a.tra == CblasNoTrans and m or k, a.b, a.trb == CblasNoTrans and k or n, a.beta, a.c, m)
+        cblas.cblas_dgemm(ColMajor, a.tra, a.trb, m, n, k, a.alpha, a.a, a.tra == NoTrans and m or k, a.b, a.trb == NoTrans and k or n, a.beta, a.c, m)
         null_form2_terms(a)
     end
 end
@@ -270,7 +273,7 @@ local function mat_mul(a, b)
 
     local r = {
         ronly = false,
-        tr    = CblasNoTrans,
+        tr    = NoTrans,
         form  = 2,
         tra   = a.tr,
         trb   = b.tr,
@@ -325,8 +328,8 @@ local function matrix_new_add(a, b)
     mat_reduce_beta(b)
 
     local r = mat_alloc_form1(m, n)
-    if a.tr == CblasNoTrans then
-        if b.tr == CblasNoTrans then
+    if a.tr == NoTrans then
+        if b.tr == NoTrans then
             for index = 0, m * n - 1 do
                 r.c[index] = a.c[index] + b.c[index]
             end
@@ -342,7 +345,7 @@ local function matrix_new_add(a, b)
             end
         end
     else
-        if b.tr == CblasNoTrans then
+        if b.tr == NoTrans then
             local index = 0
             for j = 0, n - 1 do
                 local index_tr = j
@@ -368,7 +371,7 @@ local function matrix_new_add(a, b)
 end
 
 local function mat_element_index(a, i, j)
-    if a.tr == CblasNoTrans then
+    if a.tr == NoTrans then
         if i < 1 or i > a.m or j < 1 or j > a.n then
             error('index out of bounds')
         end
@@ -398,7 +401,7 @@ local function matrix_set(a, i, j, value)
 end
 
 local function flip_tr(tr)
-    return tr == CblasTrans and CblasNoTrans or CblasTrans
+    return tr == Trans and NoTrans or Trans
 end
 
 local function matrix_transpose(a)
@@ -424,7 +427,7 @@ local function mat_new_raw_copy(a)
         new_data = mat_data_new_zero(m, n)
     else
         mat_compute(a)
-        if a.tr == CblasNoTrans then
+        if a.tr == NoTrans then
             new_data = mat_data_dup(m, n, a.c)
         else
             new_data = mat_data_dup_transpose(m, n, a.c)
@@ -435,6 +438,34 @@ end
 
 -- Limits the number or rows and columns to display to 8.
 local matrix_show = matrix_display.generator(matrix_size, mat_real_selector, 8, 8)
+
+local function matrix_new_solve(A, B)
+    local n, na = A:size()
+    local nb, nrhs = B:size()
+    if n ~= na or na ~= nb then
+        error("matrix size does not match in matrix solve function")
+    end
+    local Ar = mat_new_raw_copy(A)
+    local Br = mat_new_raw_copy(B)
+    local P = permutation.new(n)
+    local info = lapack.gesv(Ar, P, Br)
+    lapack.check_info_singular(info)
+    return mat_new_from_cdata(n, nrhs, Br.data)
+end
+
+local function matrix_new_inverse(A)
+    local n, na = A:size()
+    if n ~= na then
+        error("cannot invert rectangular matrix")
+    end
+    local Ar = mat_new_raw_copy(A)
+    local P = permutation.new(n)
+    local info_getrf = lapack.getrf(Ar, P)
+    lapack.check_info_singular(info_getrf)
+    local info_getri = lapack.getri(Ar, P)
+    lapack.check_info_singular(info_getri)
+    return mat_new_from_cdata(n, n, Ar.data)
+end
 
 local matrix_index = {
     size      = matrix_size,
@@ -449,14 +480,9 @@ matrix_mt.__mul = matrix_new_mul
 matrix_mt.__add = matrix_new_add
 matrix_mt.__index = matrix_index
 
--- TODO: put functions for matrices in raw form in a specific
--- namespace (table)
 return {
-    new = matrix_new,
+    new       = matrix_new,
     transpose = matrix_new_transpose,
-    impl = {
-        compute = mat_compute,
-        new_raw_copy = mat_new_raw_copy,
-        new_from_cdata = mat_new_from_cdata,
-    },
+    inverse   = matrix_new_inverse,
+    solve     = matrix_new_solve,
 }

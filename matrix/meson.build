@@ -1,4 +1,4 @@
-matrix_sources = ['cblas.lua', 'matrix.lua', 'matrix-display.lua', 'lapacke.lua', 'matrix-lapack.lua', 'matrix-permutation.lua']
+matrix_sources = ['cblas.lua', 'matrix.lua', 'matrix-display.lua', 'lapacke.lua', 'lapack.lua', 'matrix-permutation.lua']
 
 luajit = find_program('luajit')
 
@@ -7,7 +7,7 @@ foreach lua_source : matrix_sources
     matrix_bc_sources += custom_target(lua_source + '.c',
         input: lua_source,
         output: '@BASENAME@.c',
-        command: [luajit, '-b', '@INPUT@', '@OUTPUT@']
+        command: [luajit, '-bg', '@INPUT@', '@OUTPUT@']
     )
 endforeach
 
