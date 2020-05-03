@@ -450,6 +450,31 @@ local function matrix_new_solve(A, B)
     return mat_new_from_cdata(n, nrhs, Br.data)
 end
 
+local function matrix_new_lssolve(A, B)
+    local m, n = A:size()
+    local mp, nrhs = B:size()
+    if m ~= mp then
+        error("matrix size does not match in matrix solve function")
+    end
+    local Ar = mat_new_raw_copy(A)
+    local Br = mat_new_raw_copy(B)
+    local info = lapack.gels("N", Ar, Br)
+    lapack.check_info_singular(info)
+
+    local S = mat_new_from_cdata(n, nrhs, Br.data)
+
+    local resid_sumsq = mat_alloc_form1(nrhs, 1)
+    for j = 0, nrhs - 1 do
+        local resid_j = 0
+        for i = n, m - 1 do
+            resid_j = resid_j + Br.data[i + j * m]
+        end
+        resid_sumsq:set(j + 1, 1, resid_j)
+    end
+
+    return S, resid_sumsq
+end
+
 local function matrix_new_inverse(A)
     local n, na = A:size()
     if n ~= na then
@@ -482,4 +507,5 @@ return {
     transpose = matrix_new_transpose,
     inverse   = matrix_new_inverse,
     solve     = matrix_new_solve,
+    lssolve   = matrix_new_lssolve,
 }

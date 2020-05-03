@@ -38,10 +38,23 @@ local function getri(Ar, P, W)
     return lapacke.LAPACKE_dgetri_work(COL_MAJOR, n, Ar.data, n, P.data, W.data, W.size)
 end
 
+local function gels(trans, Ar, Br, W)
+    local m, n = Ar.m, Ar.n
+    local nrhs = Br.n
+    local trans_char = string.byte(trans)
+    if not W then
+        local work_query = ffi.new('double[1]')
+        lapacke.LAPACKE_dgels_work(COL_MAJOR, trans_char, m, n, nrhs, Ar.data, m, Br.data, m, work_query, -1)
+        W = workspace_new(work_query[0])
+    end
+    return lapacke.LAPACKE_dgels_work(COL_MAJOR, trans_char, m, n, nrhs, Ar.data, m, Br.data, m, W.data, W.size)
+end
+
 return {
     gesv  = gesv,
     getrf = getrf,
     getri = getri,
+    gels  = gels,
 
     check_info_singular = check_info_singular,
 }
