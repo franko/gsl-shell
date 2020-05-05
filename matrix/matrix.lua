@@ -467,7 +467,7 @@ local function matrix_new_lssolve(A, B)
     for j = 0, nrhs - 1 do
         local resid_j = 0
         for i = n, m - 1 do
-            resid_j = resid_j + Br.data[i + j * m]
+            resid_j = resid_j + Br.data[i + j * m]^2
         end
         resid_sumsq:set(j + 1, 1, resid_j)
     end
