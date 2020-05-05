@@ -17,9 +17,13 @@ if host_machine.system() == 'windows'
     gsl_shell_defines += '-DWIN32'
 endif
 
+luajit = find_program('luajit')
+bytecode_libs = []
+
 # matrix need to be done before core because the bytecode generated
 # files are needed in core for the interpreter.
 subdir('matrix')
+subdir('graph')
 subdir('core')
 subdir('fox-gui')
 subdir('tests')
