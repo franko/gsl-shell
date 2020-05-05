@@ -2,6 +2,7 @@ local matrix = require("matrix")
 
 local random, cos, sqrt, log, pi = math.random, math.cos, math.sqrt, math.log, math.pi
 
+-- Generate a random number with gaussian distribution.
 local function gaussian_random(mean, sigma)
     -- https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
     local u1, u2 = math.random(), math.random()
@@ -16,7 +17,7 @@ local n_samples = 100
 local data = {}
 for i = 1, n_samples do
     local x = x0 + (x1 - x0) * (i - 1) / (n_samples - 1)
-    local y = a + b * x + c * x * x
+    local y = a + b * x + c * x^2
     data[i] = {x, gaussian_random(y, sigma)}
 end
 
@@ -56,10 +57,37 @@ local X = matrix.new(n_samples, 3, function(i, j)
     end
 end)
 
-local Y = matrix.new(n_samples, 1, function(i, j) return data[i][2] end)
-local A, residual = matrix.lssolve(X, Y)
-print(A:show())
--- FIXME: expected value below seems to be wrong.
-print("Residual sum of squares: ", residual:get(1,1), " expected (theory): ", sigma * sigma * n_samples * math.sqrt((n_samples - 3) / n_samples))
+-- Extract the predict value for Y based on the x value and on the column matrix
+-- A of the coefficients.
+local function predict(A, x)
+    return (A:get(3, 1) * x + A:get(2, 1)) * x + A:get(1, 1)
+end
 
-plot:AddStroke(fx_dashed_line(function(x) return A:get(1, 1) + A:get(2, 1) * x + A:get(3, 1) * x * x end, 0, 20, 256), 0xB40000FF, 1.5, elem.property.Stroke)
+local Y = matrix.new(n_samples, 1, function(i, j) return data[i][2] end)
+
+-- Call to lssolve will find the least squares solution A to the over-determined
+-- linear system:
+--
+-- X * A = Y
+--
+-- where X is the "model" matrix for the linear model constructed above and Y
+-- are the expected values.
+--
+local A, residual = matrix.lssolve(X, Y)
+
+plot:AddStroke(
+    fx_dashed_line(function(x) return predict(A, x) end, 0, 20, 256),
+    0xB40000FF, 1.5, elem.property.Stroke
+)
+
+print(A:show())
+print("residual sum of squares: ",
+    residual:get(1,1),
+    " expected (theory): ",
+    sigma^2 * n_samples * math.sqrt((n_samples - 3) / n_samples)
+)
+print("residual stderr: ",
+    sqrt(residual:get(1,1) / n_samples),
+    "expected: ",
+    sigma * sqrt((n_samples - 3) / n_samples)
+)
