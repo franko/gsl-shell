@@ -1,6 +1,7 @@
 #include "elem/elem.h"
 #include "elem/elem_fox.h"
 #include "Notebook.h"
+#include "NotebookElemWindow.h"
 
 FXDEFMAP(Notebook) NotebookMap[] = {
     FXMAPFUNC(SEL_PAINT, 0, Notebook::onPaint),
@@ -125,7 +126,7 @@ long Notebook::onElemWindowStart(FXObject *, FXSelector, void *ptr) {
         fprintf(stderr, "internal error: no message data with window's start signal\n");
         return 1;
     }
-    auto elem_window = FXElemBuildWindow(this, LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT, message, ELEM_CREATE_DEFER);
+    auto elem_window = NotebookElemWindow::NewFromStartMessage(this, LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT, message, ELEM_CREATE_DEFER);
     elem_window->create();
     addElementUpdateLayout(elem_window);
     return 1;

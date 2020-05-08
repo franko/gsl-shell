@@ -1,4 +1,4 @@
-foxgui_sources = ['fatal.cpp', 'io_thread.cpp', 'Notebook.cpp', 'LuaConsole.cpp', 'redirect.cpp', 'InterpreterThread.cpp', 'FoxInterpreterThread.cpp', 'GslShellWindow.cpp', 'GslShellApp.cpp', 'gsl-shell-fox.cpp']
+foxgui_sources = ['fatal.cpp', 'io_thread.cpp', 'Notebook.cpp', 'LuaConsole.cpp', 'redirect.cpp', 'InterpreterThread.cpp', 'FoxInterpreterThread.cpp', 'GslShellWindow.cpp', 'GslShellApp.cpp', 'NotebookElemWindow.cpp', 'gsl-shell-fox.cpp']
 
 fox_dep = dependency('fox')
 
