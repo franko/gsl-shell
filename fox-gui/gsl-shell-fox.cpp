@@ -1,3 +1,7 @@
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+
 #include <fx.h>
 #include "gsl_shell_window.h"
 #include "gsl_shell_app.h"
@@ -16,6 +20,11 @@ struct window_hooks app_window_hooks[1] = {{
 int
 main (int argc, char *argv[])
 {
+#if defined(_WIN32)
+    HINSTANCE lib = LoadLibrary("user32.dll");
+    int (*SetProcessDPIAware)() = (int (*)()) GetProcAddress(lib, "SetProcessDPIAware");
+    SetProcessDPIAware();
+#endif
     gsl_shell_app app;
     app.init(argc, argv);
     app.create();

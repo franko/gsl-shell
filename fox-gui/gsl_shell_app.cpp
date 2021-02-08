@@ -1,3 +1,6 @@
+#ifdef _WIN32
+  #include <windows.h>
+#endif
 
 #include <unistd.h>
 
@@ -39,7 +42,8 @@ FXApp("GSL Shell", "GSL Shell"), m_engine(this), m_redirect(2048, 2048)
     gsl_shell_mini = new FXGIFIcon(this, gsl_shell_mini_data);
     plot_icon = new FXGIFIcon(this, plot_icon_data);
 
-    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell", gsl_shell_icon, gsl_shell_mini, 700, 600);
+    const float scale = get_dpi_scale();
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell", gsl_shell_icon, gsl_shell_mini, 700 * scale, 600 * scale);
     m_console = gsw->console();
 }
 
@@ -155,3 +159,13 @@ long gsl_shell_app::on_lua_interrupt(FXObject*, FXSelector, void*)
     m_engine.interrupt_request();
     return 0;
 }
+
+float gsl_shell_app::get_dpi_scale()
+{
+#ifdef _WIN32
+    return GetSystemMetrics(SM_CXCURSOR) / 32.0;
+#else
+    return 1.0;
+#endif
+}
+

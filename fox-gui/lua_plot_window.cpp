@@ -88,8 +88,9 @@ fox_window_new (lua_State *L)
 
     app->lock();
 
+    const float scale = gsl_shell_app::get_dpi_scale();
     lua_fox_window* bwin = new(L, GS_WINDOW) lua_fox_window();
-    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480, 480);
+    fx_plot_window* win = new fx_plot_window(app, "GSL Shell FX plot", app->plot_icon, NULL, 480 * scale, 480 * scale);
 
     if (split_str)
     {

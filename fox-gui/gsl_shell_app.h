@@ -74,6 +74,8 @@ public:
         ID_LAST
     };
 
+    static float get_dpi_scale();
+
 private:
     fox_gsl_shell m_engine;
     FXGUISignal* m_signal_request;
