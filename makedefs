@@ -21,8 +21,9 @@ AR= ar rcu
 RANLIB= ranlib
 CP_REL = cp --parents
 
-CC = gcc
-CXX = g++
+CC ?= gcc
+CXX ?= g++
+LDFLAGS ?= -static-libgcc -static-libstdc++
 
 GSH_CFLAGS = $(CFLAGS)
 
