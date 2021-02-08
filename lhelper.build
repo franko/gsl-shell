@@ -1,0 +1,6 @@
+lhelper install libagg
+lhelper install freetype2
+lhelper install fox
+lhelper install openblas
+lhelper install gsl -shared -blas=openblas 2.1-ms
+
