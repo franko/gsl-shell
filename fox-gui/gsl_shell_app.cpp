@@ -88,7 +88,7 @@ long gsl_shell_app::on_lua_request(FXObject*, FXSelector, void* data)
     case close_window_rq:
     {
         FXMainWindow* win = request->win;
-        win->close(FALSE);
+        win->close(false);
         break;
     }
     case clear_console_rq:
