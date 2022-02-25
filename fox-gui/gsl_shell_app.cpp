@@ -27,11 +27,11 @@ gsl_shell_app* global_app;
 
 gsl_shell_app::gsl_shell_app():
     FXApp("GSL Shell", "GSL Shell"),
-    m_engine(this), m_close_channel(this), m_request_channel(this),
+    m_engine(this), m_engine_channel(this), m_request_channel(this),
     m_request_done(true),
     m_redirect(2048, 2048)
 {
-    m_engine.set_closing_signal(this, FXSEL(SEL_COMMAND, gsl_shell_app::ID_LUA_QUIT), &m_close_channel);
+    m_engine.bind_app_channel(FXSEL(SEL_COMMAND, gsl_shell_app::ID_LUA_QUIT), &m_engine_channel);
 
     m_redirect.start();
 

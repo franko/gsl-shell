@@ -32,10 +32,11 @@ fox_gsl_shell::before_eval()
 void
 fox_gsl_shell::quit_callback()
 {
-    if (m_close_channel) {
-        m_close_channel->message(m_close_target, m_close_selector, (void *) this, sizeof(int));
+    if (m_app_channel) {
+        m_app_channel->message(m_app, m_close_selector, (void *) this, sizeof(int));
     }
 }
+
 void
 fox_gsl_shell::restart_callback()
 {

@@ -67,7 +67,7 @@ private:
     void wait_action();
 
     fox_gsl_shell m_engine;
-    FXMessageChannel m_close_channel;
+    FXMessageChannel m_engine_channel;
     FXMessageChannel m_request_channel;
     FXCondition m_request_treated;
     bool m_request_done;
