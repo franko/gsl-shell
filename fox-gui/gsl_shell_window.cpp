@@ -37,7 +37,7 @@ gsl_shell_window::gsl_shell_window(gsl_shell_thread* gs, io_redirect* lua_io, FX
 
     const char* console_font = gslshell::get_fox_console_font_name();
     m_text_font = new FXFont(app, console_font, 11);
-    m_text = new fx_console(gs, lua_io, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_text = new fx_console(app, gs, lua_io, textbox, this, ID_CONSOLE, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_text->setFont(m_text_font);
 }
 
@@ -69,7 +69,7 @@ gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"G S L   S h e l l",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side, FXStringFormat(
+  new FXLabel(side, FXString::value(
     "GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
     "GNU Scientific Library, Copyright (C) The GSL Team\n"
     "%s -- %s\n"

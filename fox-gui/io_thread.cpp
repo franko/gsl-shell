@@ -31,7 +31,7 @@ void lua_io_thread::run()
         m_io_buffer->append((const FXchar*)buffer);
         m_io_protect->unlock();
 
-        m_io_ready->signal();
+        m_io_channel->message(m_io_target, m_io_selector, (void *) this, sizeof(int));
     }
 }
 

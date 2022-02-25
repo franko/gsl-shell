@@ -71,10 +71,8 @@ private:
 static void
 app_create_window(lua_State* L, gsl_shell_app* app, fx_plot_window* win)
 {
-    app->window_create_request(win);
+    app->send_request({gsl_shell_app::create_window_rq, win});
     win->lua_id = window_index_add (L, -1);
-    app->wait_action();
-
     win->set_lua_status(running);
 }
 
@@ -217,13 +215,9 @@ fox_window_close_try (lua_State *L)
 
     fx_plot_window* win = wm.window();
     gsl_shell_app* app = wm.app();
+    app->send_request({gsl_shell_app::close_window_rq, win});
 
-    int window_id = win->lua_id;
-
-    app->window_close_request(win);
-    app->wait_action();
-
-    window_index_remove (L, window_id);
+    window_index_remove (L, win->lua_id);
     return 0;
 }
 

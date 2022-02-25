@@ -11,7 +11,7 @@
 class gsl_shell_app : public FXApp
 {
     FXDECLARE(gsl_shell_app)
-
+public:
     enum lua_request_e {
         no_rq = 0,
         create_window_rq,
@@ -22,17 +22,8 @@ class gsl_shell_app : public FXApp
     struct lua_request {
         lua_request_e cmd;
         FXMainWindow* win;
-
-        lua_request(): cmd(no_rq) { }
-
-        void signal_done() { m_term_cond.signal(); }
-        void wait(FXMutex& m) { m_term_cond.wait(m); }
-
-    private:
-        FXCondition m_term_cond;
     };
 
-public:
     gsl_shell_app();
     ~gsl_shell_app();
 
@@ -47,11 +38,7 @@ public:
         mutex().unlock();
     }
 
-    void window_create_request(FXMainWindow* win);
-    void window_close_request(FXMainWindow* win);
-    void reset_console_request();
-
-    void wait_action();
+    void send_request(lua_request request);
 
     long on_lua_request(FXObject*,FXSelector,void*);
     long on_window_close(FXObject*,FXSelector,void*);
@@ -77,9 +64,13 @@ public:
     static float get_dpi_scale();
 
 private:
+    void wait_action();
+
     fox_gsl_shell m_engine;
-    FXGUISignal* m_signal_request;
-    lua_request m_request;
+    FXMessageChannel m_close_channel;
+    FXMessageChannel m_request_channel;
+    FXCondition m_request_treated;
+    bool m_request_done;
     fx_console* m_console;
     io_redirect m_redirect;
 };

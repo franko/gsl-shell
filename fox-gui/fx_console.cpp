@@ -13,33 +13,34 @@ FXHiliteStyle fx_console::m_styles[2];
 FXDEFMAP(fx_console) fx_console_map[]=
 {
     FXMAPFUNC(SEL_KEYPRESS, 0, fx_console::on_key_press),
-    FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE, fx_console::on_cmd_delete),
+    FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_CHAR, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_BOL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, fx_console::on_cmd_insert_string),
-    FXMAPFUNC(SEL_IO_READ, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
+    FXMAPFUNC(SEL_COMMAND, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
 
 FXIMPLEMENT(fx_console,FXText,fx_console_map,ARRAYNUMBER(fx_console_map))
 
 const FXchar * fx_console::prompt = "> ";
 
-fx_console::fx_console(gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
+fx_console::fx_console(FXApp *app, gsl_shell_thread* gs, io_redirect* lua_io, FXComposite *p, FXObject* tgt, FXSelector sel, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb):
     FXText(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb),
     m_status(not_ready), m_engine(gs), m_lua_io(lua_io)
 {
-    FXApp* app = getApp();
-    m_lua_io_signal = new FXGUISignal(app, this, ID_LUA_OUTPUT);
-    m_lua_io_thread = new lua_io_thread(m_lua_io, m_lua_io_signal, &m_lua_io_mutex, &m_lua_io_buffer);
+    m_io_channel = new FXMessageChannel(app);
+    m_lua_io_thread = new lua_io_thread(m_lua_io,
+        this, FXSEL(SEL_COMMAND, fx_console::ID_LUA_OUTPUT), m_io_channel,
+        &m_lua_io_mutex, &m_lua_io_buffer);
 
     init_styles();
 }
 
 fx_console::~fx_console()
 {
+    delete m_io_channel;
     delete m_lua_io_thread;
-    delete m_lua_io_signal;
 }
 
 void fx_console::init_styles()
@@ -317,7 +318,7 @@ long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
 
         switch (FXSELID(sel))
         {
-        case ID_BACKSPACE:
+        case ID_BACKSPACE_CHAR:
             del_pos = pos - 1;
             break;
         case ID_BACKSPACE_BOL:

@@ -32,15 +32,15 @@ fox_gsl_shell::before_eval()
 void
 fox_gsl_shell::quit_callback()
 {
-    if (m_close)
-        m_close->signal();
+    if (m_close_channel) {
+        m_close_channel->message(m_close_target, m_close_selector, (void *) this, sizeof(int));
+    }
 }
 void
 fox_gsl_shell::restart_callback()
 {
     m_app->lock();
-    m_app->reset_console_request();
-    m_app->wait_action();
+    m_app->send_request({gsl_shell_app::clear_console_rq});
     m_app->unlock();
 }
 
