@@ -35,7 +35,7 @@ void fx_plot_canvas::update_region(const agg::rect_i& r)
     rendering_buffer_ro src;
     rendering_buffer_get_const_view(src, src_img, r, window_surface::image_pixel_width);
 
-    my_color_conv(&dest, &src, color_conv_rgb24_to_rgba32());
+    my_color_conv(&dest, &src, color_conv_rgb24_to_bgra32());
 
     img.create();
 
