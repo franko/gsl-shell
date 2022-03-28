@@ -296,6 +296,34 @@ function barplot.legend(plt, labels, enums, legend_title)
     add_category_legend(plt, "square", labels, enums, legend_title)
 end
 
+local boxplot = setmetatable({}, { __index = barplot })
+
+function boxplot.create(labels, enums, stats)
+    local plt = graph.plot()
+    local pad = 0.1
+    local dx = (1 - 2*pad) / #enums
+    for p, lab in ipairs(labels) do
+        for q, _ in ipairs(enums) do
+            -- qs below are the quartiles
+            local qs = stats[p][q]
+            if qs then
+                local x = (p - 1) + pad + dx * (q - 1)
+                local r = rect(x, qs[2], x + dx, qs[4])
+                plt:add(r, webcolor(q))
+                local median_segment = graph.segment(x, qs[3], x + dx, qs[3])
+                plt:addline(median_segment, "black")
+                local x_mid = x + dx / 2
+                local ext_path = graph.path(x_mid, qs[1])
+                ext_path:line_to(x_mid, qs[2])
+                ext_path:move_to(x_mid, qs[4])
+                ext_path:line_to(x_mid, qs[5])
+                plt:addline(ext_path, "black")
+            end
+        end
+    end
+    return plt
+end
+
 local lineplot = {xlabels = gen_xlabels}
 
 function lineplot.create(labels, enums, val, title)
@@ -355,6 +383,48 @@ local function stat_expr_get_functions(exprs)
     return jys
 end
 
+local function quartile_f_accu(accu, x)
+    local n = #accu
+    for i = 1, n do
+        if accu[i] > x then
+            table.insert(accu, i, x)
+            return accu
+        end
+    end
+    table.insert(accu, n + 1, x)
+    return accu
+end
+
+local function quartile_fini(accu)
+    -- return quartiles Q0, Q1, Q2, Q3, Q4
+    -- https://en.wikipedia.org/wiki/Box_plot
+    -- FIXME: the implementation above is very crude as doesn't
+    -- take into account outliers and does not coumpute intermediate
+    -- quartiles accurately.
+    if not accu then return end
+    local n = #accu
+    local q0, q4 = accu[1], accu[n]
+    local i1, i3 = math.floor(n / 4 + 0.5), math.floor(3 * n / 4 + 0.5)
+    local q1, q3 = accu[i1], accu[i3]
+    local i2 = math.floor(n / 2 + 0.5)
+    local q2 = accu[i2]
+    return {q0, q1, q2, q3, q4}
+end
+
+local function exprs_get_quartile_functions(exprs)
+    local jys = {}
+    for i, yexpr in ipairs(exprs) do
+        jys[i] = {
+            f     = quartile_f_accu,
+            f0    = function() return {} end,
+            fini  = quartile_fini,
+            name  = expr_print.expr(yexpr),
+            expr  = yexpr,
+        }
+    end
+    return jys
+end
+
 local function expr_get_functions(exprs)
     local jys = {}
     for i, expr in ipairs(exprs) do
@@ -405,6 +475,30 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local legend_title = get_legend_title(t, jys, jes)
 
     local plt = plotter.create(labels, enums, val, param_title)
+    plotter.xlabels(plt, labels)
+    plotter.legend(plt, labels, enums, legend_title)
+
+    if show_plot then plt:show() end
+    return plt
+end
+
+-- NOTE: the function below is a copy & paste of gdt_table_category_plot
+-- except for jys we call exprs_get_quartile_functions instead of
+-- stat_expr_get_functions.
+-- We may consider merge them in some way.
+local function gdt_table_category_boxplot(plotter, t, plot_descr, opt)
+    local show_plot = get_option(opt, xyplot_default, "show")
+
+    local schema = expr_parse.schema_multivar(plot_descr, AST)
+    local jxs = idents_get_column_indexes(t, schema.x)
+    local jys = exprs_get_quartile_functions(schema.y)
+    local jes = idents_get_column_indexes(t, schema.enums)
+
+    local labels, enums, stats = rect_funcbin(t, jxs, jys, jes, schema.conds)
+    local param_title = extract_parameter_title(enums)
+    local legend_title = get_legend_title(t, jys, jes)
+
+    local plt = plotter.create(labels, enums, stats, param_title)
     plotter.xlabels(plt, labels)
     plotter.legend(plt, labels, enums, legend_title)
 
@@ -560,6 +654,10 @@ function gdt.plot(t, plot_descr, opts)
     else
         return gdt_table_category_plot(lineplot, t, plot_descr, opts)
     end
+end
+
+function gdt.boxplot(t, plot_descr, opts)
+    return gdt_table_category_boxplot(boxplot, t, plot_descr, opts)
 end
 
 function gdt.lineplot(t, plot_descr, opts)
