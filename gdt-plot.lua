@@ -298,26 +298,43 @@ end
 
 local boxplot = setmetatable({}, { __index = barplot })
 
+local function get_quartiles(ls)
+    -- return quartiles Q0, Q1, Q2, Q3, Q4
+    -- https://en.wikipedia.org/wiki/Box_plot
+    -- FIXME: the implementation above is very crude as doesn't
+    -- take into account outliers and does not coumpute intermediate
+    -- quartiles accurately.
+    local n = #ls
+    local q0, q4 = ls[1], ls[n]
+    local i1, i3 = math.floor(n / 4 + 0.5), math.floor(3 * n / 4 + 0.5)
+    local q1, q3 = ls[i1], ls[i3]
+    local i2 = math.floor(n / 2 + 0.5)
+    local q2 = ls[i2]
+    return q0, q1, q2, q3, q4
+end
+
 function boxplot.create(labels, enums, stats)
     local plt = graph.plot()
     local pad = 0.1
     local dx = (1 - 2*pad) / #enums
+    local outline_color, median_color = graph.rgb(0x40, 0x40, 0x40), graph.color.black
     for p, lab in ipairs(labels) do
         for q, _ in ipairs(enums) do
-            -- qs below are the quartiles
-            local qs = stats[p][q]
-            if qs then
+            local values = stats[p][q]
+            if values then
+                local Q0, Q1, Q2, Q3, Q4 = get_quartiles(values)
                 local x = (p - 1) + pad + dx * (q - 1)
-                local r = rect(x, qs[2], x + dx, qs[4])
+                local r = rect(x, Q1, x + dx, Q3)
                 plt:add(r, webcolor(q))
-                local median_segment = graph.segment(x, qs[3], x + dx, qs[3])
-                plt:addline(median_segment, "black")
+                plt:addline(r, outline_color)
+                local median_segment = graph.segment(x, Q2, x + dx, Q2)
+                plt:add(median_segment, median_color, {{'stroke', width = 2}})
                 local x_mid = x + dx / 2
-                local ext_path = graph.path(x_mid, qs[1])
-                ext_path:line_to(x_mid, qs[2])
-                ext_path:move_to(x_mid, qs[4])
-                ext_path:line_to(x_mid, qs[5])
-                plt:addline(ext_path, "black")
+                local ext_path = graph.path(x_mid, Q0)
+                ext_path:line_to(x_mid, Q1)
+                ext_path:move_to(x_mid, Q3)
+                ext_path:line_to(x_mid, Q4)
+                plt:addline(ext_path, outline_color)
             end
         end
     end
@@ -383,41 +400,23 @@ local function stat_expr_get_functions(exprs)
     return jys
 end
 
-local function quartile_f_accu(accu, x)
-    local n = #accu
-    for i = 1, n do
+local function f_sorted_accu(accu, x, n)
+    for i = 1, n - 1 do
         if accu[i] > x then
             table.insert(accu, i, x)
             return accu
         end
     end
-    table.insert(accu, n + 1, x)
+    table.insert(accu, n, x)
     return accu
 end
 
-local function quartile_fini(accu)
-    -- return quartiles Q0, Q1, Q2, Q3, Q4
-    -- https://en.wikipedia.org/wiki/Box_plot
-    -- FIXME: the implementation above is very crude as doesn't
-    -- take into account outliers and does not coumpute intermediate
-    -- quartiles accurately.
-    if not accu then return end
-    local n = #accu
-    local q0, q4 = accu[1], accu[n]
-    local i1, i3 = math.floor(n / 4 + 0.5), math.floor(3 * n / 4 + 0.5)
-    local q1, q3 = accu[i1], accu[i3]
-    local i2 = math.floor(n / 2 + 0.5)
-    local q2 = accu[i2]
-    return {q0, q1, q2, q3, q4}
-end
-
-local function exprs_get_quartile_functions(exprs)
+local function exprs_get_values_functions(exprs)
     local jys = {}
     for i, yexpr in ipairs(exprs) do
         jys[i] = {
-            f     = quartile_f_accu,
+            f     = f_sorted_accu,
             f0    = function() return {} end,
-            fini  = quartile_fini,
             name  = expr_print.expr(yexpr),
             expr  = yexpr,
         }
@@ -483,7 +482,7 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
 end
 
 -- NOTE: the function below is a copy & paste of gdt_table_category_plot
--- except for jys we call exprs_get_quartile_functions instead of
+-- except for jys we call exprs_get_values_functions instead of
 -- stat_expr_get_functions.
 -- We may consider merge them in some way.
 local function gdt_table_category_boxplot(plotter, t, plot_descr, opt)
@@ -491,7 +490,7 @@ local function gdt_table_category_boxplot(plotter, t, plot_descr, opt)
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = idents_get_column_indexes(t, schema.x)
-    local jys = exprs_get_quartile_functions(schema.y)
+    local jys = exprs_get_values_functions(schema.y)
     local jes = idents_get_column_indexes(t, schema.enums)
 
     local labels, enums, stats = rect_funcbin(t, jxs, jys, jes, schema.conds)
