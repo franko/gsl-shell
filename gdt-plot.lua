@@ -329,30 +329,38 @@ local function list_get_limits(ls, lower_limit, upper_limit)
     return v_min, v_max
 end
 
-local function compute_fill_number(labels, enums, stats)
-    local fill_number = 0.0
-    local n_max = #enums
-    for p, lab in ipairs(labels) do
-        local n = 0
-        for q, _ in ipairs(enums) do
-            local values = stats[p][q]
-            if values then n = n + 1 end
+local function compute_fill_number(labels, enums, values_table)
+    local fill_number = 0
+    local n, m = #labels, #enums
+    for p = 1, n do
+        local k = 0
+        for q = 1, m do
+            if values_table[p][q] then k = k + 1 end
         end
-        fill_number = math.max(n, fill_number)
+        fill_number = math.max(k, fill_number)
     end
     return fill_number
 end
 
--- FIXME: the name "stats" for the agument below is misleading.
-function boxplot.create(labels, enums, stats)
+-- The argument values_table will be doubly indexed, first by the label's index
+-- and then by the enum's index. Once indexed it will provide a list of values
+-- corresponding to a "distribution". The boxplot will use the distribution to
+-- compute the quartiles and outliers.
+function boxplot.create(labels, enums, values_table)
     local plt = graph.plot()
     local pad = 0.1
     local outline_color, median_color = graph.rgb(0x40, 0x40, 0x40), graph.color.black
-    local fill_number = compute_fill_number(labels, enums, stats)
+    -- In principle for each element in labels we should have as many values to plot
+    -- as "enums". In practice it can happen that the "occupatio number" for each label
+    -- is less than #enums. We compute the "occupation/fill number" below to adjust
+    -- the box' width accordingly.
+    local fill_number = compute_fill_number(labels, enums, values_table)
+    -- dx below is the box' width assuming maximum occupation.
     local dx = (1 - 2*pad) / #enums
     for p, lab in ipairs(labels) do
+        local slot_index = 0
         for q, _ in ipairs(enums) do
-            local values = stats[p][q]
+            local values = values_table[p][q]
             if values then
                 -- https://en.wikipedia.org/wiki/Box_plot
                 local Q1 = interpolate_quartile(values, 0.25)
@@ -360,14 +368,8 @@ function boxplot.create(labels, enums, stats)
                 local Q3 = interpolate_quartile(values, 0.75)
                 local iqm = Q3 - Q1
                 local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
-                local x, width
-                if fill_number == 1 then
-                    x = (p - 1) + pad
-                    width = dx * #enums
-                else
-                    x = (p - 1) + pad + dx * (q - 1)
-                    width = dx
-                end
+                local width = dx * #enums / fill_number
+                local x = (p - 1) + pad + width * slot_index
                 local r = rect(x, Q1, x + width, Q3)
                 plt:add(r, webcolor(q))
                 plt:addline(r, outline_color)
@@ -393,6 +395,7 @@ function boxplot.create(labels, enums, stats)
                     end
                     plt:add(o_path, outline_color, {{'marker', size=4, mark='diamond', outline=true}})
                 end
+                slot_index = slot_index + 1
             end
         end
     end
