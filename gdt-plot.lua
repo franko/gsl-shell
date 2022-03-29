@@ -298,19 +298,51 @@ end
 
 local boxplot = setmetatable({}, { __index = barplot })
 
+local function interpolate_quartile(ls, fraction)
+    -- works for fraction in range [0, 1)
+    -- perform interpolation like in:
+    -- https://dsearls.org/other/CalculatingQuartiles/CalculatingQuartiles.htm
+    local i_frac = (#ls - 1) * fraction
+    local i = math.floor(i_frac)
+    local v1, v2 = ls[i + 1], ls[i + 2]
+    return v1 + (i_frac - i) * (v2 - v1)
+end
+
 local function get_quartiles(ls)
     -- return quartiles Q0, Q1, Q2, Q3, Q4
     -- https://en.wikipedia.org/wiki/Box_plot
     -- FIXME: the implementation above is very crude as doesn't
     -- take into account outliers and does not coumpute intermediate
     -- quartiles accurately.
-    local n = #ls
-    local q0, q4 = ls[1], ls[n]
-    local i1, i3 = math.floor(n / 4 + 0.5), math.floor(3 * n / 4 + 0.5)
-    local q1, q3 = ls[i1], ls[i3]
-    local i2 = math.floor(n / 2 + 0.5)
-    local q2 = ls[i2]
+    local q0, q4 = ls[1], ls[#ls]
+    local q1, q3 = interpolate_quartile(ls, 0.25), interpolate_quartile(ls, 0.75)
+    local q2 = interpolate_quartile(ls, 0.5)
     return q0, q1, q2, q3, q4
+end
+
+local function list_get_limits(ls, lower_limit, upper_limit)
+    local outliers = {}
+    local n = #ls
+    local v_min
+    for i = 1, n do
+        local v = ls[i]
+        if v >= lower_limit then
+            v_min = v
+            break
+        end
+        outliers[i] = v
+    end
+    local v_max
+    local no = #outliers
+    for i = n, 1, -1 do
+        local v = ls[i]
+        if v <= upper_limit then
+            v_max = v
+            break
+        end
+        outliers[no + (n - i) + 1] = v
+    end
+    return v_min, v_max, outliers
 end
 
 function boxplot.create(labels, enums, stats)
@@ -323,6 +355,8 @@ function boxplot.create(labels, enums, stats)
             local values = stats[p][q]
             if values then
                 local Q0, Q1, Q2, Q3, Q4 = get_quartiles(values)
+                local iqm = Q3 - Q1
+                local whisker_min, whisker_max, outliers = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
                 local x = (p - 1) + pad + dx * (q - 1)
                 local r = rect(x, Q1, x + dx, Q3)
                 plt:add(r, webcolor(q))
@@ -330,11 +364,18 @@ function boxplot.create(labels, enums, stats)
                 local median_segment = graph.segment(x, Q2, x + dx, Q2)
                 plt:add(median_segment, median_color, {{'stroke', width = 2}})
                 local x_mid = x + dx / 2
-                local ext_path = graph.path(x_mid, Q0)
+                local ext_path = graph.path(x_mid, whisker_min)
                 ext_path:line_to(x_mid, Q1)
                 ext_path:move_to(x_mid, Q3)
-                ext_path:line_to(x_mid, Q4)
+                ext_path:line_to(x_mid, whisker_max)
                 plt:addline(ext_path, outline_color)
+                if #outliers > 0 then
+                    local o_path = graph.path()
+                    for _, v in ipairs(outliers) do
+                        o_path:line_to(x_mid, v)
+                    end
+                    plt:add(o_path, "red", {{'marker', size=5, mark='diamond', outline=true}})
+                end
             end
         end
     end
