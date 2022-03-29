@@ -308,20 +308,7 @@ local function interpolate_quartile(ls, fraction)
     return v1 + (i_frac - i) * (v2 - v1)
 end
 
-local function get_quartiles(ls)
-    -- return quartiles Q0, Q1, Q2, Q3, Q4
-    -- https://en.wikipedia.org/wiki/Box_plot
-    -- FIXME: the implementation above is very crude as doesn't
-    -- take into account outliers and does not coumpute intermediate
-    -- quartiles accurately.
-    local q0, q4 = ls[1], ls[#ls]
-    local q1, q3 = interpolate_quartile(ls, 0.25), interpolate_quartile(ls, 0.75)
-    local q2 = interpolate_quartile(ls, 0.5)
-    return q0, q1, q2, q3, q4
-end
-
 local function list_get_limits(ls, lower_limit, upper_limit)
-    local outliers = {}
     local n = #ls
     local v_min
     for i = 1, n do
@@ -330,19 +317,16 @@ local function list_get_limits(ls, lower_limit, upper_limit)
             v_min = v
             break
         end
-        outliers[i] = v
     end
     local v_max
-    local no = #outliers
     for i = n, 1, -1 do
         local v = ls[i]
         if v <= upper_limit then
             v_max = v
             break
         end
-        outliers[no + (n - i) + 1] = v
     end
-    return v_min, v_max, outliers
+    return v_min, v_max
 end
 
 function boxplot.create(labels, enums, stats)
@@ -354,9 +338,12 @@ function boxplot.create(labels, enums, stats)
         for q, _ in ipairs(enums) do
             local values = stats[p][q]
             if values then
-                local Q0, Q1, Q2, Q3, Q4 = get_quartiles(values)
+                -- https://en.wikipedia.org/wiki/Box_plot
+                local Q1 = interpolate_quartile(values, 0.25)
+                local Q2 = interpolate_quartile(values, 0.5)
+                local Q3 = interpolate_quartile(values, 0.75)
                 local iqm = Q3 - Q1
-                local whisker_min, whisker_max, outliers = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
+                local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
                 local x = (p - 1) + pad + dx * (q - 1)
                 local r = rect(x, Q1, x + dx, Q3)
                 plt:add(r, webcolor(q))
@@ -364,17 +351,24 @@ function boxplot.create(labels, enums, stats)
                 local median_segment = graph.segment(x, Q2, x + dx, Q2)
                 plt:add(median_segment, median_color, {{'stroke', width = 2}})
                 local x_mid = x + dx / 2
-                local ext_path = graph.path(x_mid, whisker_min)
-                ext_path:line_to(x_mid, Q1)
-                ext_path:move_to(x_mid, Q3)
-                ext_path:line_to(x_mid, whisker_max)
-                plt:addline(ext_path, outline_color)
-                if #outliers > 0 then
+                local whisker_path = graph.path()
+                whisker_path:move_to(x_mid - dx / 4, whisker_min)
+                whisker_path:line_to(x_mid + dx / 4, whisker_min)
+                whisker_path:move_to(x_mid, whisker_min)
+                whisker_path:line_to(x_mid, Q1)
+                whisker_path:move_to(x_mid, Q3)
+                whisker_path:line_to(x_mid, whisker_max)
+                whisker_path:move_to(x_mid - dx / 4, whisker_max)
+                whisker_path:line_to(x_mid + dx / 4, whisker_max)
+                plt:addline(whisker_path, outline_color)
+                if values[1] < whisker_min or values[#values] > whisker_max then
                     local o_path = graph.path()
-                    for _, v in ipairs(outliers) do
-                        o_path:line_to(x_mid, v)
+                    for _, v in ipairs(values) do
+                        if v < whisker_min or v > whisker_max then
+                            o_path:line_to(x_mid, v)
+                        end
                     end
-                    plt:add(o_path, "red", {{'marker', size=5, mark='diamond', outline=true}})
+                    plt:add(o_path, outline_color, {{'marker', size=4, mark='diamond', outline=true}})
                 end
             end
         end
