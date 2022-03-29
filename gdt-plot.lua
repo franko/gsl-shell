@@ -559,6 +559,8 @@ local function gdt_table_category_boxplot(plotter, t, plot_descr, opt)
     plotter.xlabels(plt, labels)
     plotter.legend(plt, labels, enums, legend_title)
 
+    plt.pad = true
+
     if show_plot then plt:show() end
     return plt
 end
