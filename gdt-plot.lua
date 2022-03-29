@@ -329,11 +329,27 @@ local function list_get_limits(ls, lower_limit, upper_limit)
     return v_min, v_max
 end
 
+local function compute_fill_number(labels, enums, stats)
+    local fill_number = 0.0
+    local n_max = #enums
+    for p, lab in ipairs(labels) do
+        local n = 0
+        for q, _ in ipairs(enums) do
+            local values = stats[p][q]
+            if values then n = n + 1 end
+        end
+        fill_number = math.max(n, fill_number)
+    end
+    return fill_number
+end
+
+-- FIXME: the name "stats" for the agument below is misleading.
 function boxplot.create(labels, enums, stats)
     local plt = graph.plot()
     local pad = 0.1
-    local dx = (1 - 2*pad) / #enums
     local outline_color, median_color = graph.rgb(0x40, 0x40, 0x40), graph.color.black
+    local fill_number = compute_fill_number(labels, enums, stats)
+    local dx = (1 - 2*pad) / #enums
     for p, lab in ipairs(labels) do
         for q, _ in ipairs(enums) do
             local values = stats[p][q]
@@ -344,22 +360,29 @@ function boxplot.create(labels, enums, stats)
                 local Q3 = interpolate_quartile(values, 0.75)
                 local iqm = Q3 - Q1
                 local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
-                local x = (p - 1) + pad + dx * (q - 1)
-                local r = rect(x, Q1, x + dx, Q3)
+                local x, width
+                if fill_number == 1 then
+                    x = (p - 1) + pad
+                    width = dx * #enums
+                else
+                    x = (p - 1) + pad + dx * (q - 1)
+                    width = dx
+                end
+                local r = rect(x, Q1, x + width, Q3)
                 plt:add(r, webcolor(q))
                 plt:addline(r, outline_color)
-                local median_segment = graph.segment(x, Q2, x + dx, Q2)
+                local median_segment = graph.segment(x, Q2, x + width, Q2)
                 plt:add(median_segment, median_color, {{'stroke', width = 2}})
-                local x_mid = x + dx / 2
+                local x_mid = x + width / 2
                 local whisker_path = graph.path()
-                whisker_path:move_to(x_mid - dx / 4, whisker_min)
-                whisker_path:line_to(x_mid + dx / 4, whisker_min)
+                whisker_path:move_to(x_mid - width / 4, whisker_min)
+                whisker_path:line_to(x_mid + width / 4, whisker_min)
                 whisker_path:move_to(x_mid, whisker_min)
                 whisker_path:line_to(x_mid, Q1)
                 whisker_path:move_to(x_mid, Q3)
                 whisker_path:line_to(x_mid, whisker_max)
-                whisker_path:move_to(x_mid - dx / 4, whisker_max)
-                whisker_path:line_to(x_mid + dx / 4, whisker_max)
+                whisker_path:move_to(x_mid - width / 4, whisker_max)
+                whisker_path:line_to(x_mid + width / 4, whisker_max)
                 plt:addline(whisker_path, outline_color)
                 if values[1] < whisker_min or values[#values] > whisker_max then
                     local o_path = graph.path()
