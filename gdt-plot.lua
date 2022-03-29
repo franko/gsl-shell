@@ -342,58 +342,73 @@ local function compute_fill_number(labels, enums, values_table)
     return fill_number
 end
 
+local function draw_boxplot_element(plt, x, width, values, colors)
+    -- https://en.wikipedia.org/wiki/Box_plot
+    local Q1 = interpolate_quartile(values, 0.25)
+    local Q2 = interpolate_quartile(values, 0.5)
+    local Q3 = interpolate_quartile(values, 0.75)
+    local iqm = Q3 - Q1
+    local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
+    local r = rect(x, Q1, x + width, Q3)
+    plt:add(r, colors.fill)
+    plt:addline(r, colors.outline)
+    local median_segment = graph.segment(x, Q2, x + width, Q2)
+    plt:add(median_segment, colors.median, {{'stroke', width = 2}})
+    local x_mid = x + width / 2
+    local whisker_path = graph.path()
+    whisker_path:move_to(x_mid - width / 4, whisker_min)
+    whisker_path:line_to(x_mid + width / 4, whisker_min)
+    whisker_path:move_to(x_mid, whisker_min)
+    whisker_path:line_to(x_mid, Q1)
+    whisker_path:move_to(x_mid, Q3)
+    whisker_path:line_to(x_mid, whisker_max)
+    whisker_path:move_to(x_mid - width / 4, whisker_max)
+    whisker_path:line_to(x_mid + width / 4, whisker_max)
+    plt:addline(whisker_path, colors.outline)
+
+    if values[1] < whisker_min or values[#values] > whisker_max then
+        local o_path = graph.path()
+        for _, v in ipairs(values) do
+            if v < whisker_min or v > whisker_max then
+                o_path:line_to(x_mid, v)
+            end
+        end
+        plt:add(o_path, colors.outline, {{'marker', size=4, mark='diamond', outline=true}})
+    end
+end
+
 -- The argument values_table will be doubly indexed, first by the label's index
 -- and then by the enum's index. Once indexed it will provide a list of values
 -- corresponding to a "distribution". The boxplot will use the distribution to
 -- compute the quartiles and outliers.
 function boxplot.create(labels, enums, values_table)
     local plt = graph.plot()
-    local pad = 0.1
-    local outline_color, median_color = graph.rgb(0x40, 0x40, 0x40), graph.color.black
+    local pad, space = 0.1, 0.05
+    local colors = {
+        outline = graph.rgb(0x40, 0x40, 0x40),
+        median  = graph.rgb(0, 0, 0),
+    }
     -- In principle for each element in labels we should have as many values to plot
     -- as "enums". In practice it can happen that the "occupatio number" for each label
     -- is less than #enums. We compute the "occupation/fill number" below to adjust
     -- the box' width accordingly.
     local fill_number = compute_fill_number(labels, enums, values_table)
-    -- dx below is the box' width assuming maximum occupation.
-    local dx = (1 - 2*pad) / #enums
     for p, lab in ipairs(labels) do
         local slot_index = 0
         for q, _ in ipairs(enums) do
+            colors.fill = webcolor(q)
             local values = values_table[p][q]
             if values then
-                -- https://en.wikipedia.org/wiki/Box_plot
-                local Q1 = interpolate_quartile(values, 0.25)
-                local Q2 = interpolate_quartile(values, 0.5)
-                local Q3 = interpolate_quartile(values, 0.75)
-                local iqm = Q3 - Q1
-                local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
-                local width = dx * #enums / fill_number
-                local x = (p - 1) + pad + width * slot_index
-                local r = rect(x, Q1, x + width, Q3)
-                plt:add(r, webcolor(q))
-                plt:addline(r, outline_color)
-                local median_segment = graph.segment(x, Q2, x + width, Q2)
-                plt:add(median_segment, median_color, {{'stroke', width = 2}})
-                local x_mid = x + width / 2
-                local whisker_path = graph.path()
-                whisker_path:move_to(x_mid - width / 4, whisker_min)
-                whisker_path:line_to(x_mid + width / 4, whisker_min)
-                whisker_path:move_to(x_mid, whisker_min)
-                whisker_path:line_to(x_mid, Q1)
-                whisker_path:move_to(x_mid, Q3)
-                whisker_path:line_to(x_mid, whisker_max)
-                whisker_path:move_to(x_mid - width / 4, whisker_max)
-                whisker_path:line_to(x_mid + width / 4, whisker_max)
-                plt:addline(whisker_path, outline_color)
-                if values[1] < whisker_min or values[#values] > whisker_max then
+                local width = (1 - 2 * pad - (fill_number - 1) * space) / fill_number
+                local x = (p - 1) + pad + (width + space) * slot_index
+                if #values <= 3 then
                     local o_path = graph.path()
                     for _, v in ipairs(values) do
-                        if v < whisker_min or v > whisker_max then
-                            o_path:line_to(x_mid, v)
-                        end
+                        o_path:line_to(x + width / 2, v)
                     end
-                    plt:add(o_path, outline_color, {{'marker', size=4, mark='diamond', outline=true}})
+                    plt:add(o_path, colors.outline, {{'marker', size=4, mark='diamond', outline=true}})
+                else
+                    draw_boxplot_element(plt, x, width, values, colors)
                 end
                 slot_index = slot_index + 1
             end
