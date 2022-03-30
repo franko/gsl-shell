@@ -275,17 +275,33 @@ end
 
 local barplot = {xlabels = gen_xlabels}
 
+local function compute_fill_number(labels, enums, values_table)
+    local fill_number = 0
+    local n, m = #labels, #enums
+    for p = 1, n do
+        local k = 0
+        for q = 1, m do
+            if values_table[p][q] then k = k + 1 end
+        end
+        fill_number = math.max(k, fill_number)
+    end
+    return fill_number
+end
+
 function barplot.create(labels, enums, val)
     local plt = graph.plot()
-    local pad = 0.1
-    local dx = (1 - 2*pad) / #enums
+    local pad, space = 0.1, 0.05
+    local fill_number = compute_fill_number(labels, enums, val)
+    local dx = (1 - 2 * pad - (fill_number - 1) * space) / fill_number
     for p, lab in ipairs(labels) do
+        local slot_index = 0
         for q, _ in ipairs(enums) do
             local v = val[p][q]
             if v then
-                local x = (p - 1) + pad + dx * (q - 1)
+                local x = (p - 1) + pad + (dx + space) * slot_index
                 local r = rect(x, 0, x + dx, val[p][q])
                 plt:add(r, webcolor(q))
+                slot_index = slot_index + 1
             end
         end
     end
@@ -298,14 +314,21 @@ end
 
 local boxplot = setmetatable({}, { __index = barplot })
 
-local function interpolate_quartile(ls, fraction)
-    -- works for fraction in range [0, 1)
-    -- perform interpolation like in:
-    -- https://dsearls.org/other/CalculatingQuartiles/CalculatingQuartiles.htm
-    local i_frac = (#ls - 1) * fraction
-    local i = math.floor(i_frac)
-    local v1, v2 = ls[i + 1], ls[i + 2]
-    return v1 + (i_frac - i) * (v2 - v1)
+-- Hyndman, Rob & Fan, Yanan. (1996). Sample Quantiles in Statistical Packages. The American Statistician. 50. 361-365
+-- https://www.researchgate.net/publication/222105754_Sample_Quantiles_in_Statistical_Packages
+-- https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/quantile
+-- It seems that for boxplot GNU R use type 8.
+local quantile_type = 8
+local function get_quantile(ls, fraction)
+    local j_frac
+    if quantile_type == 7 then
+        j_frac = fraction * (#ls - 1) + 1
+    else
+        j_frac = fraction * (#ls + 1/3) + 1/3
+    end
+    local j = math.floor(j_frac)
+    local g = j_frac - j
+    return (1 - g) * ls[j] + g * ls[j + 1]
 end
 
 local function list_get_limits(ls, lower_limit, upper_limit)
@@ -329,24 +352,11 @@ local function list_get_limits(ls, lower_limit, upper_limit)
     return v_min, v_max
 end
 
-local function compute_fill_number(labels, enums, values_table)
-    local fill_number = 0
-    local n, m = #labels, #enums
-    for p = 1, n do
-        local k = 0
-        for q = 1, m do
-            if values_table[p][q] then k = k + 1 end
-        end
-        fill_number = math.max(k, fill_number)
-    end
-    return fill_number
-end
-
 local function draw_boxplot_element(plt, x, width, values, colors)
     -- https://en.wikipedia.org/wiki/Box_plot
-    local Q1 = interpolate_quartile(values, 0.25)
-    local Q2 = interpolate_quartile(values, 0.5)
-    local Q3 = interpolate_quartile(values, 0.75)
+    local Q1 = get_quantile(values, 0.25)
+    local Q2 = get_quantile(values, 0.5)
+    local Q3 = get_quantile(values, 0.75)
     local iqm = Q3 - Q1
     local whisker_min, whisker_max = list_get_limits(values, Q1 - 1.5 * iqm, Q3 + 1.5 * iqm)
     local r = rect(x, Q1, x + width, Q3)
@@ -355,16 +365,22 @@ local function draw_boxplot_element(plt, x, width, values, colors)
     local median_segment = graph.segment(x, Q2, x + width, Q2)
     plt:add(median_segment, colors.median, {{'stroke', width = 2}})
     local x_mid = x + width / 2
-    local whisker_path = graph.path()
-    whisker_path:move_to(x_mid - width / 4, whisker_min)
-    whisker_path:line_to(x_mid + width / 4, whisker_min)
-    whisker_path:move_to(x_mid, whisker_min)
-    whisker_path:line_to(x_mid, Q1)
-    whisker_path:move_to(x_mid, Q3)
-    whisker_path:line_to(x_mid, whisker_max)
-    whisker_path:move_to(x_mid - width / 4, whisker_max)
-    whisker_path:line_to(x_mid + width / 4, whisker_max)
-    plt:addline(whisker_path, colors.outline)
+    if whisker_min < Q1 then
+        local whisker_path = graph.path()
+        whisker_path:move_to(x_mid - width / 4, whisker_min)
+        whisker_path:line_to(x_mid + width / 4, whisker_min)
+        whisker_path:move_to(x_mid, whisker_min)
+        whisker_path:line_to(x_mid, Q1)
+        plt:addline(whisker_path, colors.outline)
+    end
+    if whisker_max > Q3 then
+        local whisker_path = graph.path()
+        whisker_path:move_to(x_mid, Q3)
+        whisker_path:line_to(x_mid, whisker_max)
+        whisker_path:move_to(x_mid - width / 4, whisker_max)
+        whisker_path:line_to(x_mid + width / 4, whisker_max)
+        plt:addline(whisker_path, colors.outline)
+    end
 
     if values[1] < whisker_min or values[#values] > whisker_max then
         local o_path = graph.path()
@@ -393,13 +409,13 @@ function boxplot.create(labels, enums, values_table)
     -- is less than #enums. We compute the "occupation/fill number" below to adjust
     -- the box' width accordingly.
     local fill_number = compute_fill_number(labels, enums, values_table)
+    local width = (1 - 2 * pad - (fill_number - 1) * space) / fill_number
     for p, lab in ipairs(labels) do
         local slot_index = 0
         for q, _ in ipairs(enums) do
             colors.fill = webcolor(q)
             local values = values_table[p][q]
             if values then
-                local width = (1 - 2 * pad - (fill_number - 1) * space) / fill_number
                 local x = (p - 1) + pad + (width + space) * slot_index
                 if #values <= 3 then
                     local o_path = graph.path()
@@ -537,12 +553,17 @@ local function get_legend_title(t, jys, jes)
     return table.concat(names, " / ")
 end
 
-local function gdt_table_category_plot(plotter, t, plot_descr, opt)
+local function gdt_table_category_plot(plotter, t, plot_descr, opt, use_raw_values)
     local show_plot = get_option(opt, xyplot_default, "show")
 
     local schema = expr_parse.schema_multivar(plot_descr, AST)
     local jxs = idents_get_column_indexes(t, schema.x)
-    local jys = stat_expr_get_functions(schema.y)
+    local jys
+    if use_raw_values then
+        jys = exprs_get_values_functions(schema.y)
+    else
+        jys = stat_expr_get_functions(schema.y)
+    end
     local jes = idents_get_column_indexes(t, schema.enums)
 
     local labels, enums, val = rect_funcbin(t, jxs, jys, jes, schema.conds)
@@ -552,31 +573,6 @@ local function gdt_table_category_plot(plotter, t, plot_descr, opt)
     local plt = plotter.create(labels, enums, val, param_title)
     plotter.xlabels(plt, labels)
     plotter.legend(plt, labels, enums, legend_title)
-
-    if show_plot then plt:show() end
-    return plt
-end
-
--- NOTE: the function below is a copy & paste of gdt_table_category_plot
--- except for jys we call exprs_get_values_functions instead of
--- stat_expr_get_functions.
--- We may consider merge them in some way.
-local function gdt_table_category_boxplot(plotter, t, plot_descr, opt)
-    local show_plot = get_option(opt, xyplot_default, "show")
-
-    local schema = expr_parse.schema_multivar(plot_descr, AST)
-    local jxs = idents_get_column_indexes(t, schema.x)
-    local jys = exprs_get_values_functions(schema.y)
-    local jes = idents_get_column_indexes(t, schema.enums)
-
-    local labels, enums, stats = rect_funcbin(t, jxs, jys, jes, schema.conds)
-    local param_title = extract_parameter_title(enums)
-    local legend_title = get_legend_title(t, jys, jes)
-
-    local plt = plotter.create(labels, enums, stats, param_title)
-    plotter.xlabels(plt, labels)
-    plotter.legend(plt, labels, enums, legend_title)
-
     plt.pad = true
 
     if show_plot then plt:show() end
@@ -734,7 +730,7 @@ function gdt.plot(t, plot_descr, opts)
 end
 
 function gdt.boxplot(t, plot_descr, opts)
-    return gdt_table_category_boxplot(boxplot, t, plot_descr, opts)
+    return gdt_table_category_plot(boxplot, t, plot_descr, opts, true)
 end
 
 function gdt.lineplot(t, plot_descr, opts)
