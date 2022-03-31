@@ -2665,5 +2665,5 @@ if jit.os == 'Linux' then
 elseif jit.os == 'OSX' then
 	return ffi.load('libgsl.0.dylib')
 else
-	return ffi.load('libgsl-19')
+	return ffi.load('libgsl')
 end
