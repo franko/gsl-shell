@@ -167,6 +167,23 @@ GDT Functions
     Make a bar plot of the data in the table ``t`` based on the plot description ``plot_desc``.
     The meaning of the plot description strings and the options are the same of the function :func:`gdt.plot`.
 
+.. function:: boxplot(t, plot_spec[, options])
+
+    Make a boxplot of the data in the table ``t`` based on the plot description ``plot_desc``.
+    The meaning of the plot description strings and the options are the same of the function
+    :func:`gdt.plot` but without using statistical functions like described in :ref:`GDT Plots <gdt-plot-stat-functions>`.
+
+    Below an example of boxplot:
+
+       >>> exam = gdt.read_csv 'examples/exam.csv'
+       >>> gdt.boxplot(exam, "final ~ teacher | sex")
+
+    giving the plot:
+
+    .. figure:: gdt-boxplot-example-exam.png
+
+    The quartiles are computed according to Hyndman, Rob & Fan, Yanan (1996), computation type 8.
+
 .. function:: read_csv(filename)
 
     Read a file in CSV format (Comma Separated Values) and return a GDT table.
@@ -386,6 +403,8 @@ The meaning is that we want to plot the "final" variable versus the "teacher", "
 
 It is interesting to note that if the "student" variable was omitted the plot function would have plotted the average score for each teacher and sex combination.
 These means that, when more entries correspond to a single plotting value the average of the values is used.
+
+.. _gdt-plot-stat-functions:
 
 This behavior can be made explicit by using the "mean" function which is otherwise implicit::
 
