@@ -23,7 +23,10 @@ CP_REL = cp --parents
 
 CC ?= gcc
 CXX ?= g++
-LDFLAGS ?= -static-libgcc -static-libstdc++
+
+ifeq ($(strip $(DEBUG)),no)
+  LDFLAGS += -static-libgcc -static-libstdc++
+endif
 
 GSH_CFLAGS = $(CFLAGS)
 
