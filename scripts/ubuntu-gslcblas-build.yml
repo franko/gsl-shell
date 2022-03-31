@@ -1,0 +1,26 @@
+image: ubuntu/18.04
+packages:
+  [python3-pip, make, ninja-build, pkg-config, libx11-dev, libxext-dev, libxrandr-dev, libxrender-dev, libxcursor-dev, libxfixes-dev, libxi-dev, libxft-dev, gcc, g++, gfortran]
+sources:
+  - https://github.com/franko/gsl-shell
+shell: true
+tasks:
+  - enable-local: |
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.buildenv"
+  - prepare-setup: |
+      pip3 install --user meson
+  - lhelper-install: |
+      git clone https://github.com/franko/lhelper
+      cd lhelper
+      bash install "$HOME/.local"
+  - lhelper-create-env: |
+      lhelper create gsl-shell -n
+      source "$(lhelper env-source gsl-shell)"
+      lhelper install libagg
+      lhelper install fox -xft
+      lhelper install gsl -shared
+  - build: |
+      cd gsl-shell
+      sed -i 's/^USE_READLINE\s*=.*/USE_READLINE = no/g' makeconfig
+      source "$(lhelper env-source gsl-shell)"
+      make -j1
