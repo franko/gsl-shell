@@ -1,0 +1,2 @@
+option('blas', type : 'string', value : 'internal', description: 'cblas library to use for GSL')
+
