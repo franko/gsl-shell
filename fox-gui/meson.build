@@ -17,6 +17,7 @@ executable('gsl-shell-gui',
     include_directories: [gsl_shell_include, cpp_utils_include],
     cpp_args: gsl_shell_defines + fox_gui_defines,
     link_with: [libluagsl, libaggplot, libgdt],
+    link_args: gsl_shell_link_args,
     export_dynamic: true,
     win_subsystem: 'windows'
 )

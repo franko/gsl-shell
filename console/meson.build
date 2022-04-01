@@ -5,6 +5,7 @@ executable('gsl-shell', 'gsl-shell-jit.c',
     include_directories: gsl_shell_include,
     cpp_args: gsl_shell_defines,
     link_with: [libluagsl, libaggplot, libgdt],
+    link_args: gsl_shell_link_args,
     export_dynamic: true,
     win_subsystem: 'console'
 )
