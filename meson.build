@@ -16,7 +16,7 @@ if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
     gsl_shell_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
-gsl_shell_include = include_directories('.', 'agg-plot', 'lua-gsl')
+gsl_shell_include = include_directories('include', 'gdt', 'agg-plot', 'lua-gsl')
 cpp_utils_include = include_directories('cpp-utils')
 
 threads_dep  = dependency('threads')
@@ -33,14 +33,6 @@ libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
 subdir('lua-gsl')
 subdir('agg-plot')
 subdir('gdt')
+subdir('console')
 subdir('fox-gui')
-
-executable('gsl-shell', 'gsl-shell-jit.c',
-    dependencies: [libgsl_dep, libagg_dep, threads_dep, freetype_dep, luajit_dep],
-    include_directories: gsl_shell_include,
-    cpp_args: gsl_shell_defines,
-    link_with: [libluagsl, libaggplot, libgdt],
-    export_dynamic: true,
-    win_subsystem: 'console'
-)
 

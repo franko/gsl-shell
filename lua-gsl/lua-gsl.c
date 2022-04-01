@@ -29,7 +29,7 @@
 #include "lua-utils.h"
 #include "fatal.h"
 
-#include "gdt/gdt_table.h"
+#include "gdt_table.h"
 
 /* used to force the linker to link the gdt library. Otherwise it
  * would be discarded as there are no other references to its functions. */
