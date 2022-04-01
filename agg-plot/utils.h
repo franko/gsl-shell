@@ -4,6 +4,10 @@
 #include "agg_trans_affine.h"
 #include "agg_array.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #ifdef min
 #undef min
 #endif

@@ -6,6 +6,10 @@ gsl_shell_defines = [
     # '-DUSE_READLINE',
 ]
 
+if host_machine.system() == 'darwin'
+    gsl_shell_defines += '-DDARWIN_MACOSX'
+endif
+
 gsl_shell_link_args = []
 cc = meson.get_compiler('c')
 if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
@@ -13,6 +17,7 @@ if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
 endif
 
 gsl_shell_include = include_directories('.', 'agg-plot', 'lua-gsl')
+cpp_utils_include = include_directories('cpp-utils')
 
 threads_dep  = dependency('threads')
 gsl_dep      = dependency('gsl')
@@ -25,6 +30,7 @@ luajit_dep = dependency('luajit', fallback: ['luajit', 'lua_dep'],
 libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
 
 subdir('lua-gsl')
-# subdir('agg-plot')
-# subdir('gdt')
+subdir('agg-plot')
+subdir('gdt')
+subdir('fox-gui')
 
