@@ -1,6 +1,6 @@
 
-local Pre3d = require 'pre3d/pre3d'
-local ShapeUtils = require 'pre3d/pre3d_shape_utils'
+local Pre3d = require 'pre3d.pre3d'
+local ShapeUtils = require 'pre3d.pre3d_shape_utils'
 
 local pi = math.pi
 local rgb = graph.rgb

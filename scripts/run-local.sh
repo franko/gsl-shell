@@ -37,10 +37,12 @@ rundir=".run"
 bindir="$rundir"
 datadir="$rundir/lua"
 
+ninja -C "$builddir"
+
 rm -fr "$rundir"
 mkdir -p "$bindir" "$datadir"
+cp "$builddir/console/gsl-shell$ext" "$bindir"
 cp "$builddir/fox-gui/gsl-shell-gui$ext" "$bindir"
-cp "$builddir/gsl-shell$ext" "$bindir"
 
 lua_files=(bspline.lua fft-init.lua integ-init.lua template.lua check.lua
 graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua
@@ -64,6 +66,9 @@ mkdir -p "$datadir/demos"
 for name in bspline fft plot wave-particle fractals ode nlinfit integ anim linfit contour svg graphics sf vegas gdt-lm; do
     cp "data/demos/${name}.lua" "$datadir/demos"
 done
+
+mkdir -p "$datadir/pre3d"
+cp pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua "$datadir/pre3d"
 
 pushd "$rundir"
 ./$exe_name
