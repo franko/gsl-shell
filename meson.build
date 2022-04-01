@@ -20,7 +20,6 @@ gsl_shell_include = include_directories('.', 'agg-plot', 'lua-gsl')
 cpp_utils_include = include_directories('cpp-utils')
 
 threads_dep  = dependency('threads')
-gsl_dep      = dependency('gsl')
 freetype_dep = dependency('freetype2')
 fox_dep      = dependency('fox')
 
@@ -28,6 +27,9 @@ luajit_dep = dependency('luajit', fallback: ['luajit', 'lua_dep'],
     default_options: ['default_library=static', 'app=false', 'shortfnsyn=true']
 )
 libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+
+libgsl_proj = subproject('gsl', default_options: ['default_library=static'])
+libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
 
 subdir('lua-gsl')
 subdir('agg-plot')

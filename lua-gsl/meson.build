@@ -9,7 +9,7 @@ luagsl_sources = [
 
 libluagsl = static_library('luagsl',
     luagsl_sources,
-    dependencies: [gsl_dep, luajit_dep],
+    dependencies: [libgsl_dep, luajit_dep],
     include_directories: gsl_shell_include,
     c_args: gsl_shell_defines,
 )

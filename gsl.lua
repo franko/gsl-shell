@@ -2659,11 +2659,4 @@ gsl_interp_bsearch(const double x_array[], double x,
 
 ]]
 
-
-if jit.os == 'Linux' then
-	return ffi.C
-elseif jit.os == 'OSX' then
-	return ffi.load('libgsl.0.dylib')
-else
-	return ffi.load('libgsl')
-end
+return ffi.C

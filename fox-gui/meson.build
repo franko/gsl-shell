@@ -13,9 +13,11 @@ foxgui_sources = [
 
 executable('gsl-shell-gui',
     foxgui_sources,
-    dependencies: [libagg_dep, threads_dep, freetype_dep, luajit_dep, fox_dep],
+    dependencies: [libgsl_dep, libagg_dep, threads_dep, freetype_dep, luajit_dep, fox_dep],
     include_directories: [gsl_shell_include, cpp_utils_include],
     cpp_args: gsl_shell_defines + fox_gui_defines,
     link_with: [libluagsl, libaggplot, libgdt],
+    export_dynamic: true,
+    win_subsystem: 'windows'
 )
 
