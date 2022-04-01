@@ -22,11 +22,10 @@ cpp_utils_include = include_directories('cpp-utils')
 threads_dep  = dependency('threads')
 freetype_dep = dependency('freetype2')
 fox_dep      = dependency('fox')
-
-luajit_dep = dependency('luajit', fallback: ['luajit', 'lua_dep'],
-    default_options: ['default_library=static', 'app=false', 'shortfnsyn=true']
-)
 libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+
+luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
+luajit_dep = luajit_proj.get_variable('lua_dep')
 
 libgsl_proj = subproject('gsl', default_options: ['default_library=static'])
 libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
