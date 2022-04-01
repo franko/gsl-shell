@@ -1,5 +1,5 @@
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -17,7 +17,7 @@
 static void open_pipe(int fd[], int buffer_size)
 {
     int status;
-#ifdef WIN32
+#ifdef _WIN32
     status = _pipe(fd, buffer_size, O_TEXT);
 #else
     status = pipe(fd);
@@ -34,7 +34,7 @@ static void dup_stdout(int fd)
         fatal_exception("cannot overwrite the STDOUT file descriptor");
     close(fd);
 
-#ifdef WIN32
+#ifdef _WIN32
     FILE* f = _fdopen(STDOUT_FILENO, "w");
     *stdout = *f;
 #endif
@@ -49,7 +49,7 @@ static void dup_stdin(int fd)
         fatal_exception("cannot overwrite the STDIN file descriptor");
     close(fd);
 
-#ifdef WIN32
+#ifdef _WIN32
     FILE* f = _fdopen(STDIN_FILENO, "r");
     *stdin = *f;
 #endif
