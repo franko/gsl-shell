@@ -31,6 +31,10 @@
 #include <string.h>
 #include <pthread.h>
 
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+
 #define luajit_c
 
 #include "lua.h"
@@ -714,6 +718,12 @@ static int pmain(lua_State *L)
 int main(int argc, char **argv)
 {
     int status;
+#ifdef _WIN32
+  HINSTANCE lib = LoadLibrary("user32.dll");
+  int (*SetProcessDPIAware)() = (void*) GetProcAddress(lib, "SetProcessDPIAware");
+  SetProcessDPIAware();
+#endif
+
 #ifdef USE_READLINE
     initialize_readline();
 #endif
