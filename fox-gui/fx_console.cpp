@@ -108,7 +108,7 @@ void fx_console::create()
 void fx_console::init()
 {
     FXString msg;
-    msg.format("GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
+    msg.format("GSL Shell %s, Copyright (C) 2009-2022 Francesco Abbate\n"
                "GNU Scientific Library, Copyright (C) The GSL Team\n"
                "%s -- %s\n\n"
                "Documentation available at http://www.nongnu.org/gsl-shell/doc/.\n"

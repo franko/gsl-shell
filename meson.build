@@ -1,10 +1,14 @@
-project('gsl-shell', ['cpp', 'c'], version : '2.3.1', default_options : ['cpp_std=c++11', 'c_std=gnu11'])
+project('gsl-shell', ['cpp', 'c'], version : '2.3.3', default_options : ['cpp_std=c++11', 'c_std=gnu11'])
 
 gsl_shell_defines = [
     # '-DDISABLE_GAMMA_CORR',
     # '-DDISABLE_SUBPIXEL_AA',
     # '-DUSE_READLINE',
 ]
+
+conf_data = configuration_data()
+conf_data.set('version', meson.project_version())
+configure_file(input : 'include/defs.h.in', output : 'defs.h', configuration : conf_data)
 
 if host_machine.system() == 'darwin'
     gsl_shell_defines += '-DDARWIN_MACOSX'
@@ -16,7 +20,7 @@ if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
     gsl_shell_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
-gsl_shell_include = include_directories('include', 'gdt', 'agg-plot', 'lua-gsl')
+gsl_shell_include = include_directories('.', 'include', 'gdt', 'agg-plot', 'lua-gsl')
 cpp_utils_include = include_directories('cpp-utils')
 
 threads_dep  = dependency('threads')

@@ -2,10 +2,13 @@
 
 set -o errexit
 
-# No options yet.
+blas_option=
 pargs=()
 while [[ "$#" -gt 0 ]]; do
   case $1 in
+    -openblas)
+    blas_option="-Dblas=openblas"
+    ;;
     -*)
     echo "error: unknown option \"$1\""
     exit 1
@@ -24,7 +27,7 @@ fi
 
 builddir=".build-release"
 
-meson setup --buildtype=release -Dblas=openblas "$builddir"
+meson setup --buildtype=release $blas_option "$builddir"
 ninja -C "$builddir"
 
 rundir="packages/gsl-shell"
