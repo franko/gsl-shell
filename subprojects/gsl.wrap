@@ -1,5 +1,5 @@
 [wrap-git]
 directory = gsl
 url = https://github.com/franko/gsl
-revision = v2.1-lhelper1
+revision = v2.1-modules
 
