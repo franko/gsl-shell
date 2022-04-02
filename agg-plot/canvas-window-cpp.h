@@ -63,7 +63,7 @@ public:
         return m_gsl_shell;
     }
 
-    bool start_new_thread (std::auto_ptr<thread_info>& inf);
+    bool start_new_thread (std::unique_ptr<thread_info>& inf);
 
     void scale (agg::trans_affine& m) {
         trans_affine_compose (m, m_matrix);

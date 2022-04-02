@@ -56,7 +56,7 @@ canvas_window::on_init()
     this->on_resize(width(), height());
 }
 
-bool canvas_window::start_new_thread (std::auto_ptr<canvas_window::thread_info>& inf)
+bool canvas_window::start_new_thread (std::unique_ptr<canvas_window::thread_info>& inf)
 {
     if (status != not_ready && status != closed)
         return false;
@@ -87,7 +87,7 @@ canvas_thread_function (void *_inf)
 {
     typedef canvas_window::thread_info thread_info;
 
-    std::auto_ptr<thread_info> inf((thread_info *) _inf);
+    std::unique_ptr<thread_info> inf((thread_info *) _inf);
     platform_support_ext::prepare();
     canvas_window *win = inf->win;
 

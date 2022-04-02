@@ -1,3 +1,4 @@
+#include <memory>
 
 extern "C" {
 #include "lua.h"
@@ -386,7 +387,7 @@ void window::start (lua_State *L, gslshell::ret_status& st)
     if (status != canvas_window::running)
     {
         typedef canvas_window::thread_info thread_info;
-        std::auto_ptr<thread_info> inf(new thread_info(L, this));
+        std::unique_ptr<thread_info> inf(new thread_info(L, this));
 
         this->window_id = window_index_add (L, -1);
         inf->window_id = this->window_id;
