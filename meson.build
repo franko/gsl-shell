@@ -31,7 +31,11 @@ libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
 luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
 luajit_dep = luajit_proj.get_variable('lua_dep')
 
-libgsl_proj = subproject('gsl', default_options: ['default_library=static', 'blas=' + get_option('blas')])
+libgsl_proj = subproject('gsl', default_options: [
+    'default_library=static', 'blas=' + get_option('blas'),
+    'siman=false', 'wavelet=false', 'sparse=false', 'ode=false', 'monte=false',
+    'integ=false', 'min=false'
+])
 libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
 
 subdir('lua-gsl')
