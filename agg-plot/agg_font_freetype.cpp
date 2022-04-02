@@ -434,7 +434,6 @@ void decompose_ft_bitmap_mono(const FT_Bitmap& bitmap,
                               Scanline& sl,
                               ScanlineStorage& storage)
 {
-    int i;
     const int8u* buf = (const int8u*)bitmap.buffer;
     int pitch = bitmap.pitch;
     sl.reset(x, x + bitmap.width);
@@ -445,12 +444,11 @@ void decompose_ft_bitmap_mono(const FT_Bitmap& bitmap,
         y += bitmap.rows;
         pitch = -pitch;
     }
-    for(i = 0; i < bitmap.rows; i++)
+    for(unsigned int i = 0; i < bitmap.rows; i++)
     {
         sl.reset_spans();
         bitset_iterator bits(buf, 0);
-        int j;
-        for(j = 0; j < bitmap.width; j++)
+        for(unsigned int j = 0; j < bitmap.width; j++)
         {
             if(bits.bit()) sl.add_cell(x + j, cover_full);
             ++bits;
@@ -475,7 +473,6 @@ void decompose_ft_bitmap_gray8(const FT_Bitmap& bitmap,
                                Scanline& sl,
                                ScanlineStorage& storage)
 {
-    int i, j;
     const int8u* buf = (const int8u*)bitmap.buffer;
     int pitch = bitmap.pitch;
     sl.reset(x, x + bitmap.width);
@@ -486,11 +483,11 @@ void decompose_ft_bitmap_gray8(const FT_Bitmap& bitmap,
         y += bitmap.rows;
         pitch = -pitch;
     }
-    for(i = 0; i < bitmap.rows; i++)
+    for(unsigned int i = 0; i < bitmap.rows; i++)
     {
         sl.reset_spans();
         const int8u* p = buf;
-        for(j = 0; j < bitmap.width; j++)
+        for(unsigned int j = 0; j < bitmap.width; j++)
         {
             if(*p) sl.add_cell(x + j, ras.apply_gamma(*p));
             ++p;
