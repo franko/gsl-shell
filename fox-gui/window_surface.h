@@ -17,6 +17,7 @@
 
 struct display_window {
     virtual void update_region(const agg::rect_i& r) = 0;
+    virtual ~display_window() {}
 };
 
 struct plot_ref {
