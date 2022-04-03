@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>GSL FFI interface &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="GSL Shell Examples" href="examples.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="GSL Shell Examples"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL FFI interface</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="gsl-ffi-interface">
+<span id="id1"></span><h1>GSL FFI interface<a class="headerlink" href="#gsl-ffi-interface" title="Permalink to this headline">¶</a></h1>
+<p>In this chapter we are going to explain the direct GSL interface to use the C functions provided by the GSL library directly.</p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The access to the C GSL functions is possible thanks to the FFI module provided by LuaJIT2 on which GSL Shell is based.
+The FFI module allows one to call any C function available from the dynamic libraries currently loaded, directly from Lua code.</p>
+<p>Some of the modules available in GSL Shell are reimplemented in Lua using the FFI interface and the basic GSL functions about BLAS and linear algebra.</p>
+<p>For example, the module for non-linear fitting has been completely reimplemented in Lua using the FFI interface.
+Thanks to the capability of LuaJIT2 to generate highly optimized code on the fly, the Lua implementation runs at a speed comparable to compiled optimized C code.
+For the ODE systems LuaJIT2 is actually, in some cases, faster than optimized C code and is in general comparable to C in terms of speed.
+Another module re-implemented in Lua is the module for numerical integration, where the QAG adaptive routine has been ported with excellent results.</p>
+<p>The non-linear fit module reimplemented in Lua has been checked for correctness using a subset of the <a class="reference external" href="http://www.itl.nist.gov/div898/strd/nls/nls_main.shtml">NIST datasets</a>.
+You can run the tests yourself by giving the following command:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;benchmarks/lmfit/nist_test.lua&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then you can compare the results and the plots to the official results published in the NIST website.</p>
+<p>Here is an example of the plot produced for the ENSO dataset:</p>
+<figure class="align-default">
+<img alt="_images/lmfit-enso-dataset-plot.png" src="_images/lmfit-enso-dataset-plot.png" />
+</figure>
+</section>
+<section id="id2">
+<h2>GSL FFI interface<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-gsl"></span><p>The usage of the GSL FFI interface is done using the <a class="reference internal" href="#module-gsl" title="gsl"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gsl</span></code></a> module.
+This latter contains all the GSL functions available and you can call them directly from Lua code.</p>
+<p>Let us see a simple example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- we load the gsl module</span>
+<span class="n">gsl</span> <span class="o">=</span> <span class="nb">require</span> <span class="s1">&#39;gsl&#39;</span>
+
+<span class="c1">-- we define a new matrix</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="kr">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span> <span class="kr">do</span>
+  <span class="kr">for</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span> <span class="kr">do</span>
+    <span class="n">gsl</span><span class="p">.</span><span class="n">gsl_matrix_set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>As you can see we are just using the GSL function <code class="docutils literal notranslate"><span class="pre">gsl_matrix_set</span></code> to set the value each of element of the matrix.</p>
+<p>There are a few things that are important to note.
+The C function that we have used has the following signature <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">gsl_matrix_set(gsl_matrix</span> <span class="pre">*m,</span> <span class="pre">int</span> <span class="pre">i,</span> <span class="pre">int</span> <span class="pre">j,</span> <span class="pre">double</span> <span class="pre">x)</span></code>.
+When you call it from Lua, the arguments are converted to the appropriate C types using a set of rules specific to the <a class="reference external" href="http://luajit.org/ext_ffi_semantics.html">FFI semantics</a>.
+The implementation of GSL Shell ensures that a matrix object can actually be converted to a <code class="docutils literal notranslate"><span class="pre">gsl_matrix</span></code> pointer.
+As for the other arguments, note that the Lua numbers are converted to integer or double as appropriate to match the C function signature.
+If the arguments cannot be converted to the appropriate type, an error is raised, so it is always safe to call a C function.</p>
+<p>Another thing that you may note is that we have ignored the value returned by the GSL function.
+In general, the return value can signal an error condition and it could be necessary to check the returned value.
+For this purpose, GSL Shell offers a simple helper function that can be used like in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gsl_check</span> <span class="o">=</span> <span class="nb">require</span> <span class="s1">&#39;gsl-check&#39;</span>
+
+<span class="n">gsl_check</span><span class="p">(</span><span class="n">gsl</span><span class="p">.</span><span class="n">gsl_matrix_set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>The function <code class="docutils literal notranslate"><span class="pre">gsl_check</span></code> above just checks the returned value and raises an error with an appropriate message if needed.</p>
+<p>Finally note that the indexing convention when calling <code class="docutils literal notranslate"><span class="pre">gsl_matrix_set</span></code> is the C convention where the first index is 0.
+This fact is a direct implication of the fact that we are directly calling the C function defined in the GSL library.</p>
+</section>
+<section id="gsl-ffi-examples">
+<h2>GSL FFI examples<a class="headerlink" href="#gsl-ffi-examples" title="Permalink to this headline">¶</a></h2>
+<p>If you want to learn more about the usage of the GSL FFI interface, you may take a look at the implementation file of the <code class="docutils literal notranslate"><span class="pre">bspline</span></code> module.</p>
+<p>The file is quite small and easy to understand, and it illustrates all the important aspects of the GSL FFI interface.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GSL FFI interface</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#id2">GSL FFI interface</a></li>
+<li><a class="reference internal" href="#gsl-ffi-examples">GSL FFI examples</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="examples.html"
+                          title="previous chapter">GSL Shell Examples</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gsl-ffi.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="GSL Shell Examples"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL FFI interface</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

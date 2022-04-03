@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>3D Plotting &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contour Plots" href="contour.html" />
+    <link rel="prev" title="Graphics" href="graphics.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="contour.html" title="Contour Plots"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="graphics.html" title="Graphics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">3D Plotting</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="d-plotting">
+<h1>3D Plotting<a class="headerlink" href="#d-plotting" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>GSL shell offer, since the release 1.0, the possibility of making three dimensional plots and animations. The module for this kind of plots is based on the <a class="reference external" href="http://deanm.github.com/pre3d/">Pre3d</a> JavaScript library of Dean Mc Namee.</p>
+<p>The 3D plotting functions works by creating a <a class="reference internal" href="graphics.html#graph.Plot" title="graph.Plot"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plot</span></code></a> object and is therefore fully compatible with all the standard operations used for 2D graphics.</p>
+<p>The functions for 3D plotting are defined in the module <code class="docutils literal notranslate"><span class="pre">plot3d</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>While this module is fully functional it does have some major
+limitations you should be aware of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the module is not suitable for complex 3D graphics with a lot of polygons</p></li>
+<li><p>the memory usage is quite important and if you perform plots with many meshes you may note an important usage of memory</p></li>
+<li><p>the rendering speed is quite slow for scene with many polygons</p></li>
+</ul>
+</div></blockquote>
+<p>In future we may change the implementation of the 3D plotting module
+in order to have a more efficient implementation.</p>
+</div>
+</section>
+<section id="d-function-plot">
+<h2>3D Function Plot<a class="headerlink" href="#d-function-plot" title="Permalink to this headline">¶</a></h2>
+<p>The 3D Function Plot give you the possibility of making a 3D plot of a function of the form <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">f(x,</span> <span class="pre">y)</span></code> over a rectangular domain. Here the description of the function:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.plot3d">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">plot3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymax</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.plot3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a 3D plot of the function <code class="docutils literal notranslate"><span class="pre">f(x,</span> <span class="pre">y)</span></code> over the rectangular domain defined by <code class="docutils literal notranslate"><span class="pre">xmin</span></code>, <code class="docutils literal notranslate"><span class="pre">ymin</span></code>, <code class="docutils literal notranslate"><span class="pre">xmax</span></code> and <code class="docutils literal notranslate"><span class="pre">ymax</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">options</span></code> argument is an optional table that can contain the following field:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gridx</span></code>, number of subdivision along x</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gridy</span></code>, number of subdivision along y</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code>, the title of the plot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stroke</span></code>, a boolean value that indicate if the wireframe
+should be drawn or not.</p></li>
+</ul>
+</dd></dl>
+
+<p>Here a simples example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">import</span> <span class="s1">&#39;math&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;plot3d&#39;</span>
+<span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">{</span><span class="n">title</span><span class="o">=</span> <span class="s1">&#39;3d plot&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>and here the plot that you will obtain:</p>
+<figure class="align-default">
+<img alt="_images/plot3d-example-1.png" src="_images/plot3d-example-1.png" />
+</figure>
+</section>
+<section id="parametric-surface-plot">
+<h2>Parametric Surface Plot<a class="headerlink" href="#parametric-surface-plot" title="Permalink to this headline">¶</a></h2>
+<p>The Parametric Surface Plot function allow the plotting of a 3D surface defined in the parametric form:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  x = &amp; z(u, v) \\
+  y = &amp; y(u, v) \\
+  z = &amp; z(u, v)
+\end{array}\end{split}\]</div>
+<p>where u and v are two parameters that span a rectangular domain.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.surfplot">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">surfplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">{x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">umin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">umax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.surfplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a 3D plot of the parametric surface defined by the functions <code class="docutils literal notranslate"><span class="pre">x(u,</span> <span class="pre">v)</span></code>, <code class="docutils literal notranslate"><span class="pre">y(u,</span> <span class="pre">v)</span></code> and <code class="docutils literal notranslate"><span class="pre">z(u,</span> <span class="pre">v)</span></code> when the parameters <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v)</span></code> span a rectangular domain defined by <code class="docutils literal notranslate"><span class="pre">umin</span></code>, <code class="docutils literal notranslate"><span class="pre">vmin</span></code>, <code class="docutils literal notranslate"><span class="pre">umax</span></code> and <code class="docutils literal notranslate"><span class="pre">vmax</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">options</span></code> argument is an optional table that can contain the following field:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gridu</span></code>, number of subdivision along x</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gridv</span></code>, number of subdivision along y</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code>, the title of the plot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stroke</span></code>, a boolean value that indicate if the wireframe should
+be drawn or not.</p></li>
+</ul>
+</dd></dl>
+
+<p>Here a simples example that plot the Moebius surface starting from a parametric: form:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  x = &amp; \left(1 + 1/2 \, v \cos(u/2)\right) \cos(u) \\
+  y = &amp; \left(1 + 1/2 \, v \cos(u/2)\right) \sin(u) \\
+  z = &amp; 1/2 \, v \sin(u/2)
+\end{array}\end{split}\]</div>
+<p>here the code to produce the plot:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">import</span> <span class="s1">&#39;math&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;plot3d&#39;</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="o">|</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="o">|</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="o">|</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="o">|</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="o">|</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="o">|</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">graph</span><span class="p">.</span><span class="n">surfplot</span><span class="p">({</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">},</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="n">gridu</span><span class="o">=</span> <span class="mi">60</span><span class="p">,</span> <span class="n">gridv</span><span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">stroke</span><span class="o">=</span> <span class="kc">true</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>and here an image of the resulting plot:</p>
+<figure class="align-default">
+<img alt="_images/surfplot-example-1.png" src="_images/surfplot-example-1.png" />
+</figure>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">3D Plotting</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#d-function-plot">3D Function Plot</a></li>
+<li><a class="reference internal" href="#parametric-surface-plot">Parametric Surface Plot</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="graphics.html"
+                          title="previous chapter">Graphics</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="contour.html"
+                          title="next chapter">Contour Plots</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/plot3d.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="contour.html" title="Contour Plots"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="graphics.html" title="Graphics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">3D Plotting</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Random Numbers &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Random Number Distributions" href="randist.html" />
+    <link rel="prev" title="Eigensystems" href="eigen.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="randist.html" title="Random Number Distributions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="eigen.html" title="Eigensystems"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random Numbers</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="random-numbers">
+<h1>Random Numbers<a class="headerlink" href="#random-numbers" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes routines for generating random numbers. GSL
+provides a large collection of random number generators that can be
+accessed through a uniform interface. You can choose very easily the
+generator you want to use and even switch between generators without
+needing to change your commands.</p>
+<p>Each instance of a generator keeps track of its own state so that you
+can have several different generators and they will not interfere with
+each other. Additional functions are available for transforming
+uniform random numbers into samples from continuous or discrete
+probability distributions such as the Gaussian, log-normal or Poisson
+distributions.</p>
+<section id="general-comments-on-random-numbers">
+<h2>General comments on random numbers<a class="headerlink" href="#general-comments-on-random-numbers" title="Permalink to this headline">¶</a></h2>
+<p>In 1988, Park and Miller wrote a paper entitled “Random number
+generators: good ones are hard to find.” <a class="reference internal" href="#park-miller" id="id1"><span>[park-miller]</span></a>.
+Fortunately, some excellent random number generators are available,
+though poor ones are still in common use.  You may be happy with the
+system-supplied random number generator on your computer, but you should
+be aware that as computers get faster, requirements on random number
+generators increase.  Nowadays, a simulation that calls a random number
+generator millions of times can often finish before you can make it down
+the hall to the coffee machine and back.</p>
+<p>A very nice review of random number generators was written by Pierre
+L’Ecuyer, as Chapter 4 of the book: Handbook on Simulation, Jerry
+Banks, ed. (Wiley, 1997).  The chapter is available in postscript from
+L’Ecuyer’s ftp site (see references).  Knuth’s volume on Seminumerical
+Algorithms (originally published in 1968) devotes 170 pages to random
+number generators, and has recently been updated in its 3rd edition
+(1997).  It is brilliant, a classic.  If you don’t own it, you should
+stop reading right now, run to the nearest bookstore, and buy it.</p>
+<p>A good random number generator will satisfy both theoretical and
+statistical properties.  Theoretical properties are often hard to
+obtain (<em>they require real math!</em>), but one prefers a random number
+generator with a long period, low serial correlation, and a tendency
+<em>not</em> to “fall mainly on the planes.”  Statistical tests are performed
+with numerical simulations.  Generally, a random number generator is
+used to estimate some quantity for which the theory of probability
+provides an exact answer.  Comparison to this exact answer provides a
+measure of “randomness”.</p>
+</section>
+<section id="the-random-number-generator-interface">
+<h2>The Random Number Generator Interface<a class="headerlink" href="#the-random-number-generator-interface" title="Permalink to this headline">¶</a></h2>
+<p>In order to generate random numbers you need a “Random Number
+Generator” or <code class="docutils literal notranslate"><span class="pre">rng</span></code> for short. A random number generator is an
+object that can be used to generate number whenever is needed. Of
+course that is just what you want for a random number generator, but
+to achieve this effect, the generator must keep track of some kind of
+“state” variable.  Sometimes this state is just an integer (sometimes
+just the value of the previously generated random number), but often
+it is more complicated than that and may involve a whole array of
+numbers, possibly with some indices thrown in.  To use the random
+number generators, you do not need to know the details of what
+comprises the state, and besides that varies from algorithm to
+algorithm.</p>
+<span class="target" id="module-rng"></span><p>So, if you want to generate random numbers the first step is to use the <a class="reference internal" href="#rng.new" title="rng.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">rng.new()</span></code></a> function,</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="rng.new">
+<span class="sig-prename descclassname"><span class="pre">rng.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#rng.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a “random number generator” object of the
+specified type <code class="docutils literal notranslate"><span class="pre">name</span></code>. If you do not specify a particular
+generator the default <code class="docutils literal notranslate"><span class="pre">taus2</span></code> generator will be used. See the
+paragraph on <a class="reference internal" href="#rng-algorithms"><span class="std std-ref">algorithms</span></a> for a description
+of the different algorithms available.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="rng.Rng">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rng.</span></span><span class="sig-name descname"><span class="pre">Rng</span></span><a class="headerlink" href="#rng.Rng" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="rng.Rng.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rng.Rng.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a real number uniformly distributed in the
+range [0,1).  The range includes 0.0 but excludes 1.0. Some
+generators compute this ratio internally so that they can provide
+floating point numbers with more than 32 bits of randomness.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rng.Rng.getint">
+<span class="sig-name descname"><span class="pre">getint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rng.Rng.getint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random integer from 0 to n-1 inclusive by
+scaling down and/or discarding samples from the generator R.  All
+integers in the range [0,n-1] are produced with equal probability.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rng.Rng.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rng.Rng.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method set the seed of the generator to the given integer value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="rng.list">
+<span class="sig-prename descclassname"><span class="pre">rng.</span></span><span class="sig-name descname"><span class="pre">list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rng.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array with all the list of all the supported generator type.</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>So here a simple example that prints 20 integer numbers between 0 and 999:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span> <span class="c1">-- we create a random number generator</span>
+<span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="mi">20</span> <span class="kr">do</span>
+   <span class="kd">local</span> <span class="n">n</span> <span class="o">=</span> <span class="n">r</span><span class="p">:</span><span class="n">getint</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="c1">-- we obtain a random integer &lt; 1000</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>and here another example that creates a 5x5 matrix and initialize it with random numbers like before:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span> <span class="c1">-- we create a random number generator</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="o">|</span> <span class="n">r</span><span class="p">:</span><span class="n">getint</span><span class="p">(</span><span class="mi">1000</span><span class="p">))</span> <span class="c1">-- create the matrix</span>
+</pre></div>
+</div>
+</section>
+<section id="random-number-generator-algorithms">
+<span id="rng-algorithms"></span><h2>Random Number Generator Algorithms<a class="headerlink" href="#random-number-generator-algorithms" title="Permalink to this headline">¶</a></h2>
+<p>The following generators are recommended for use in simulation.  They
+have extremely long periods, low correlation and pass most statistical
+tests.  For the most reliable source of uncorrelated numbers, the
+second-generation RANLUX generators have the strongest proof of
+randomness.</p>
+<dl>
+<dt><strong>mt19937</strong></dt><dd><p>The MT19937 generator of Makoto Matsumoto and Takuji Nishimura is a
+variant of the twisted generalized feedback shift-register
+algorithm, and is known as the “Mersenne Twister” generator.  It
+has a Mersenne prime period of 2<sup>19937</sup>  - 1 (about 10<sup>6000</sup> ) and is
+equi-distributed in 623 dimensions.  It has passed the DIEHARD
+statistical tests.  It uses 624 words of state per generator and is
+comparable in speed to the other generators.  The original
+generator used a default seed of 4357 and choosing S equal to zero
+in ‘set’ reproduces this.  Later versions switched to 5489
+as the default seed, you can choose this explicitly via
+‘set’ instead if you require it.</p>
+<p>For more information see,</p>
+<ul class="simple">
+<li><p>Makoto Matsumoto and Takuji Nishimura, “Mersenne Twister: A
+623-dimensionally equidistributed uniform pseudorandom number
+generator”. ‘ACM Transactions on Modeling and Computer
+Simulation’, Vol. 8, No. 1 (Jan. 1998), Pages 3-30</p></li>
+</ul>
+<p>The generator ‘mt19937’ uses the second revision of the
+seeding procedure published by the two authors above in 2002.  The
+original seeding procedures could cause spurious artifacts for
+some seed values. They are still available through the alternative
+generators ‘mt19937_1999’ and ‘mt19937_1998’.</p>
+</dd>
+<dt><strong>ranlxs0, ranlxs1, ranlxs2</strong></dt><dd><p>The generator ‘ranlxs0’ is a second-generation version of the
+RANLUX algorithm of Lüscher, which produces “luxury random
+numbers”.  This generator provides single precision output (24
+bits) at three luxury levels ‘ranlxs0’, ‘ranlxs1’ and ‘ranlxs2’,
+in increasing order of strength.  It uses double-precision
+floating point arithmetic internally and can be significantly
+faster than the integer version of ‘ranlux’, particularly on
+64-bit architectures.  The period of the generator is about
+10<sup>171</sup> .  The algorithm has mathematically proven properties and
+can provide truly decorrelated numbers at a known level of
+randomness.  The higher luxury levels provide increased
+decorrelation between samples as an additional safety margin.</p>
+</dd>
+<dt><strong>ranlxd1, ranlxd2</strong></dt><dd><p>These generators produce double precision output (48 bits) from the
+RANLXS generator.  The library provides two luxury levels
+‘ranlxd1’ and ‘ranlxd2’, in increasing order of strength.</p>
+</dd>
+<dt><strong>ranlux, ranlux389</strong></dt><dd><p>The ‘ranlux’ generator is an implementation of the original
+algorithm developed by Lüscher.  It uses a
+lagged-fibonacci-with-skipping algorithm to produce “luxury random
+numbers”.  It is a 24-bit generator, originally designed for
+single-precision IEEE floating point numbers.  This implementation
+is based on integer arithmetic, while the second-generation
+versions RANLXS and RANLXD described above provide floating-point
+implementations which will be faster on many platforms.  The
+period of the generator is about 10<sup>171</sup> .  The algorithm has
+mathematically proven properties and it can provide truly
+decorrelated numbers at a known level of randomness.  The default
+level of decorrelation recommended by Lüscher is provided by
+‘ranlux’, while ‘ranlux389’ gives the highest
+level of randomness, with all 24 bits decorrelated.  Both types of
+generator use 24 words of state per generator.</p>
+<p>For more information see,</p>
+<ul class="simple">
+<li><p>M. Lüscher, “A portable high-quality random number generator
+for lattice field theory calculations”, ‘Computer Physics
+Communications’, 79 (1994) 100-110.</p></li>
+<li><p>F. James, “RANLUX: A Fortran implementation of the
+high-quality pseudo-random number generator of Lüscher”,
+‘Computer Physics Communications’, 79 (1994) 111-114</p></li>
+</ul>
+</dd>
+<dt><strong>cmrg</strong></dt><dd><p>This is a combined multiple recursive generator by L’Ecuyer.  Its
+sequence is,</p>
+<p>z<sub>n</sub>  = (x<sub>n</sub>  - y<sub>n</sub> ) mod m<sub>1</sub></p>
+<p>where the two underlying generators x<sub>n</sub>  and y<sub>n</sub>  are,</p>
+<p>x<sub>n</sub> = (a<sub>1</sub> x<sub>n-1</sub>  + a<sub>2</sub> x<sub>n-2</sub>  + a<sub>3</sub> x<sub>n-3</sub> ) mod m<sub>1</sub></p>
+<p>y<sub>n</sub> = (b<sub>1</sub> y<sub>n-1</sub>  + b<sub>2</sub> y<sub>n-2</sub>  + b<sub>3</sub> y<sub>n-3</sub> ) mod m<sub>2</sub></p>
+<p>with coefficients a<sub>1</sub>  = 0, a<sub>2</sub>  = 63308, a<sub>3</sub>  = -183326, b<sub>1</sub>  = 86098,
+b<sub>2</sub>  = 0, b<sub>3</sub>  = -539608, and moduli m<sub>1</sub>  = 2<sup>31</sup>  - 1 = 2147483647 and
+m<sub>2</sub>  = 2145483479.</p>
+<p>The period of this generator is lcm(m<sub>1</sub><sup>3</sup> -1, m<sub>2</sub><sup>3</sup> -1), which is
+approximately 2<sup>185</sup>  (about 10<sup>56</sup> ).  It uses 6 words of state per
+generator.  For more information see,</p>
+<ul class="simple">
+<li><p>P. L’Ecuyer, “Combined Multiple Recursive Random Number
+Generators”, ‘Operations Research’, 44, 5 (1996), 816-822.</p></li>
+</ul>
+</dd>
+<dt><strong>mrg</strong></dt><dd><p>This is a fifth-order multiple recursive generator by L’Ecuyer,
+Blouin and Coutre.  Its sequence is,</p>
+<p>x<sub>n</sub>  = (a<sub>1</sub>  x<sub>n-1</sub>  + a<sub>5</sub>  x<sub>n-5</sub> )
+mod m</p>
+<p>with a<sub>1</sub>  = 107374182, a<sub>2</sub>  = a<sub>3</sub>  = a<sub>4</sub>  = 0, a<sub>5</sub>  = 104480 and m =
+2<sup>31</sup>  - 1.</p>
+<p>The period of this generator is about 10<sup>46</sup> .  It uses 5 words of
+state per generator.  More information can be found in the
+following paper,</p>
+<ul class="simple">
+<li><p>P. L’Ecuyer, F. Blouin, and R. Coutre, “A search for good
+multiple recursive random number generators”, ‘ACM
+Transactions on Modeling and Computer Simulation’ 3, 87-98
+(1993).</p></li>
+</ul>
+</dd>
+<dt><strong>taus, taus2</strong></dt><dd><p>This is a maximally equidistributed combined Tausworthe generator
+by L’Ecuyer.  The sequence is,</p>
+<p>x<sub>n</sub> = (s1<sub>n</sub> ^^ s2<sub>n</sub> ^^ s3<sub>n</sub>)</p>
+<p>where,</p>
+<p>s1<sub>n+1</sub> = (((s1<sub>n</sub> &amp; 4294967294)&lt;&lt;12)^^(((s1<sub>n</sub> &lt;&lt;13)^^s1<sub>n</sub>)&gt;&gt;19))</p>
+<p>s2<sub>n+1</sub> = (((s2<sub>n</sub> &amp; 4294967288)&lt;&lt; 4)^^(((s2<sub>n</sub> &lt;&lt; 2)^^s2<sub>n</sub>)&gt;&gt;25))</p>
+<p>s3<sub>n+1</sub> = (((s3<sub>n</sub> &amp; 4294967280)&lt;&lt;17)^^(((s3<sub>n</sub> &lt;&lt; 3)^^s3<sub>n</sub>)&gt;&gt;11))</p>
+<p>computed modulo 2<sup>32</sup> .  In the formulas above ^^ denotes
+“exclusive-or”.  Note that the algorithm relies on the properties
+of 32-bit unsigned integers and has been implemented using a
+bitmask of ‘0xFFFFFFFF’ to make it work on 64 bit machines.</p>
+<p>The period of this generator is 2<sup>88</sup>  (about 10<sup>26</sup> ).  It uses 3
+words of state per generator.  For more information see,</p>
+<ul class="simple">
+<li><p>P. L’Ecuyer, “Maximally Equidistributed Combined Tausworthe
+Generators”, ‘Mathematics of Computation’, 65, 213 (1996),
+203-213.</p></li>
+</ul>
+<p>The generator ‘taus2’ uses the same algorithm as
+‘taus’ but with an improved seeding procedure described in
+the paper,</p>
+<ul class="simple">
+<li><p>P. L’Ecuyer, “Tables of Maximally Equidistributed Combined
+LFSR Generators”, ‘Mathematics of Computation’, 68, 225
+(1999), 261-269</p></li>
+</ul>
+<p>The generator ‘taus2’ should now be used in preference to
+‘taus’.</p>
+</dd>
+<dt><strong>gfsr4</strong></dt><dd><p>The ‘gfsr4’ generator is like a lagged-fibonacci generator, and
+produces each number as an ‘xor’’d sum of four previous values.</p>
+<p>r<sub>n</sub>  = r<sub>n-A</sub>  ^^ r<sub>n-B</sub>  ^^ r<sub>n-C</sub>  ^^ r<sub>n-D</sub></p>
+<p>Ziff (ref below) notes that “it is now widely known” that two-tap
+registers (such as R250, which is described below) have serious
+flaws, the most obvious one being the three-point correlation that
+comes from the definition of the generator.  Nice mathematical
+properties can be derived for GFSR’s, and numerics bears out the
+claim that 4-tap GFSR’s with appropriately chosen offsets are as
+random as can be measured, using the author’s test.</p>
+<p>This implementation uses the values suggested the example on p392
+of Ziff’s article: A=471, B=1586, C=6988, D=9689.</p>
+<p>If the offsets are appropriately chosen (such as the one ones in
+this implementation), then the sequence is said to be maximal;
+that means that the period is 2<sup>D</sup> - 1, where D is the longest lag.
+(It is one less than 2<sup>D</sup> because it is not permitted to have all
+zeros in the ‘ra[]’ array.)  For this implementation with D=9689
+that works out to about 10<sup>2917</sup> .</p>
+<p>Note that the implementation of this generator using a 32-bit
+integer amounts to 32 parallel implementations of one-bit
+generators.  One consequence of this is that the period of this
+32-bit generator is the same as for the one-bit generator.
+Moreover, this independence means that all 32-bit patterns are
+equally likely, and in particular that 0 is an allowed random
+value.  (We are grateful to Heiko Bauke for clarifying for us these
+properties of GFSR random number generators.)</p>
+<p>For more information see,</p>
+<ul class="simple">
+<li><p>Robert M. Ziff, “Four-tap shift-register-sequence
+random-number generators”, ‘Computers in Physics’, 12(4),
+Jul/Aug 1998, pp 385-392.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="citation">
+<dt class="label" id="park-miller"><span class="brackets"><a class="fn-backref" href="#id1">park-miller</a></span></dt>
+<dd><p>Commun. ACM, 31, 1192-1201</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Random Numbers</a><ul>
+<li><a class="reference internal" href="#general-comments-on-random-numbers">General comments on random numbers</a></li>
+<li><a class="reference internal" href="#the-random-number-generator-interface">The Random Number Generator Interface</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#random-number-generator-algorithms">Random Number Generator Algorithms</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="eigen.html"
+                          title="previous chapter">Eigensystems</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="randist.html"
+                          title="next chapter">Random Number Distributions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/random.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="randist.html" title="Random Number Distributions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="eigen.html" title="Eigensystems"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random Numbers</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

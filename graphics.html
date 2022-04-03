@@ -1,0 +1,1065 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Graphics &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3D Plotting" href="plot3d.html" />
+    <link rel="prev" title="Monte Carlo Integration" href="vegas.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plot3d.html" title="3D Plotting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vegas.html" title="Monte Carlo Integration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Graphics</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="graphics">
+<span id="graphics-chapter"></span><h1>Graphics<a class="headerlink" href="#graphics" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>When you are working with a lot of numbers and complicated functions, it is often useful to visualize the data.
+GSL Shell offers a graphics module that allows you to produce beautiful graphics with a very rich interface and almost unlimited possibilities.</p>
+<p>The graphics module in GSL Shell is implemented using the excellent <a class="reference external" href="http://www.antigrain.com/">Anti-Grain Geometry</a> library, version 2.5, of Maxim Shemanarev.</p>
+<p>GSL Shell offers a graphics interface with few but powerful functions that, if used appropriately, allow the user to produce a wide range of plot types.</p>
+</section>
+<section id="module-graph">
+<span id="a-first-example"></span><h2>A First Example<a class="headerlink" href="#module-graph" title="Permalink to this headline">¶</a></h2>
+<p>Let’s start with a simple example. Suppose that we want to plot the function:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \exp(-\alpha \, t) \, \sin(\omega \, t)\]</div>
+<p>where α and ω are constants and t varies from 0 to t1.</p>
+<p>Before starting we need to note a couple of things.</p>
+<p>The mathematical functions like exp, sin, cos are contained in the ‘math’ module.
+You can use <code class="docutils literal notranslate"><span class="pre">use</span> <span class="pre">'math'</span></code> to make them directly available.
+The graphical functions are in the module ‘graph’.
+In order to access them you can use the <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a> function or just prefix all the functions with the module name like, for example, <code class="docutils literal notranslate"><span class="pre">graph.plot</span></code>.
+Choose whatever option you prefer, it is just a matter of taste.</p>
+<p>So now we can come back to our mathematical function.
+We can plot this function with GSL Shell using the following instructions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="kr">function</span> <span class="nf">myplot</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">t1</span><span class="p">)</span>
+   <span class="c1">-- create a new plot, it is not shown for the moment</span>
+   <span class="kd">local</span> <span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;f(x) = exp(-a t) sin(w t)&#39;</span><span class="p">)</span>
+
+   <span class="c1">-- we create a line that corresponds to our function</span>
+   <span class="kd">local</span> <span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">t</span><span class="o">|</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span><span class="o">*</span><span class="n">t</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t1</span><span class="p">)</span>
+
+   <span class="c1">-- we add the line to the plot and show it</span>
+   <span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">ln</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+   <span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+
+   <span class="kr">return</span> <span class="n">p</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>Now you just have to call the ‘myplot’ function. For example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">myplot</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<figure class="align-default">
+<img alt="_images/graphics-example-1.png" src="_images/graphics-example-1.png" />
+</figure>
+<p>The function <a class="reference internal" href="#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a> takes three arguments, the function to plot and the initial and final values of the variable. By default, the function will be sampled with 256 points, but if you want, you can provide the number of sample points as a fourth argument.</p>
+<p>In this example, we have used the <a class="reference internal" href="#graph.plot" title="graph.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.plot()</span></code></a> function to create a plot, the <a class="reference internal" href="#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a> function to create the line to draw and the method <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-func docutils literal notranslate"><span class="pre">addline()</span></code></a> to add the line to the plot (in red). These three operations can be done with a single function, <a class="reference internal" href="#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a>. It can be called as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxplot</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the first argument is the function to plot and the following
+arguments are the limits of the range of the independent variable x.</p>
+<p>You may wish to add a title to the plot using the <a class="reference internal" href="#graph.Plot.title" title="graph.Plot.title"><code class="xref py py-attr docutils literal notranslate"><span class="pre">title</span></code></a> attribute and save it in a file as an image using the <a class="reference internal" href="#graph.Plot.save" title="graph.Plot.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> method. Here’s how you do it in two lines of code:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;y = sin(x)&quot;</span>
+<span class="n">p</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;sin-function&#39;</span><span class="p">,</span> <span class="mi">640</span><span class="p">,</span> <span class="mi">480</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="graphics-functions">
+<h2>Graphics Functions<a class="headerlink" href="#graphics-functions" title="Permalink to this headline">¶</a></h2>
+<p>For many types of plots, you don’t need to use the graphics primitives, as GSL Shell provides higher level plotting functions.
+In this section, we give an overview and a description of all the higher level plotting functions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.fxplot">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">fxplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xs</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.fxplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a plot of the function <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> for x going from <code class="docutils literal notranslate"><span class="pre">xi</span></code> to <code class="docutils literal notranslate"><span class="pre">xs</span></code>.
+The last optional parameter <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of sampling points to use and, if not specified, the default value of 256 will be used.
+The function returns the plot itself.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.fiplot">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">fiplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.fiplot" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">fiplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Produces a plot of the function <code class="docutils literal notranslate"><span class="pre">f(i)</span></code> where ‘i’ is an integer variable going from <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code>.
+In the second abbreviated form, <code class="docutils literal notranslate"><span class="pre">a</span></code> takes the default value of one.
+The function returns the plot itself.</p>
+<p><em>Example</em>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- plot the &#39;choose&#39; function for some integer values</span>
+<span class="n">graph</span><span class="p">.</span><span class="n">fiplot</span><span class="p">(</span><span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">sf</span><span class="p">.</span><span class="n">choose</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="mi">12</span><span class="p">)</span>
+
+<span class="c1">-- plot of a geometric series</span>
+<span class="n">graph</span><span class="p">.</span><span class="n">fiplot</span><span class="p">(</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="mf">0.9</span><span class="o">^</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">36</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.fibars">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">fibars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_ratio</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.fibars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a bar plot of the function <code class="docutils literal notranslate"><span class="pre">f(i)</span></code> where <code class="docutils literal notranslate"><span class="pre">i</span></code> is an integer ranging from <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code>.
+The parameter <code class="docutils literal notranslate"><span class="pre">fill_ratio</span></code> determines the width of the bars and is by default equal to 1.
+When a smaller value is provided for <code class="docutils literal notranslate"><span class="pre">fill_ratio</span></code>, the bars will be drawn with a smaller width along the x axis.</p>
+<p><em>Example</em>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">binom</span> <span class="o">=</span> <span class="kr">function</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="kr">return</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">sf</span><span class="p">.</span><span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">^</span><span class="n">n</span> <span class="kr">end</span>
+<span class="n">graph</span><span class="p">.</span><span class="n">fibars</span><span class="p">(</span><span class="n">binom</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;darkgreen&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.fxline">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">fxline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xs</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.fxline" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a graphical object of type <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> given by the points (x, f(x)) for x going from <code class="docutils literal notranslate"><span class="pre">xi</span></code> to <code class="docutils literal notranslate"><span class="pre">xs</span></code> with <code class="docutils literal notranslate"><span class="pre">n</span></code> sampling points.</p>
+<p><em>Example</em>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="c1">-- we create a &#39;path&#39; for the function f(x) = sin(x)*exp(-0.1*x)</span>
+<span class="c1">-- and plot it</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Example&#39;</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl>
+<dt><em>Example</em>:</dt><dd><p>You can very easily produce a nice illustration of the “area below a curve” with the following commands:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Example&#39;</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s1">&#39;lightyellow&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>which will produce the following output:</p>
+<figure class="align-default">
+<img alt="_images/graphics-example-yellow-area.png" src="_images/graphics-example-yellow-area.png" />
+</figure>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.filine">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">filine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.filine" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">filine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>This function returns a graphical object of type <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> given by the points (i, f(i)) where ‘i’ is an integer variable going from <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code>. If <code class="docutils literal notranslate"><span class="pre">a</span></code> is omitted, values will be in the interval 1 .. b.</p>
+<p>For usage, see the similar function <a class="reference internal" href="#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.xyline">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">xyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.xyline" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes two column matrices of dimension N as arguments and returns a graphical object of type <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> given by the points (x[i], y[i]) where i goes from 1 to N.</p>
+<p><em>Example</em>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">N</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">sio2n</span> <span class="o">=</span> <span class="o">|</span><span class="n">w</span><span class="o">|</span> <span class="n">sqrt</span><span class="p">(</span><span class="mf">1.4923</span> <span class="o">+</span> <span class="mf">0.61497</span><span class="o">*</span><span class="n">w</span><span class="o">^</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">w</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.115</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span><span class="o">-</span><span class="mf">0.01059</span><span class="o">*</span><span class="n">w</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1">-- define a matrix with wavelength and refractive index in each column</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="kr">function</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                        <span class="kd">local</span> <span class="n">w</span> <span class="o">=</span> <span class="mf">0.4</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="mf">0.4</span>
+                        <span class="kr">return</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">w</span> <span class="ow">or</span> <span class="n">sio2n</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                     <span class="kr">end</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;SiO2 dispersion curve in visible range&#39;</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">xyline</span><span class="p">(</span><span class="n">d</span><span class="p">:</span><span class="n">col</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">d</span><span class="p">:</span><span class="n">col</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.ipath">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">ipath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.ipath" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.ipathp">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">ipathp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.ipathp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an iterator function <code class="docutils literal notranslate"><span class="pre">f</span></code> and returns a <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> given by the points (x, y) returned by the iterator <code class="docutils literal notranslate"><span class="pre">f</span></code>.
+The variant <a class="reference internal" href="#graph.ipathp" title="graph.ipathp"><code class="xref py py-func docutils literal notranslate"><span class="pre">ipathp()</span></code></a> is able to treat the case when the function <code class="docutils literal notranslate"><span class="pre">f</span></code> fails and continues by calling the iterator again.</p>
+<dl>
+<dt><em>Example</em></dt><dd><p>In the following example, we show how to create a circle using an iterator to generate the points.
+We first define an iterator that uses a counter to generate the points and then we pass the iterator to the function <a class="reference internal" href="#graph.ipath" title="graph.ipath"><code class="xref py py-func docutils literal notranslate"><span class="pre">ipath()</span></code></a>.
+This way, we obtain an object of type <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> and we can add into a plot.:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="c1">-- create a simple iterator that returns n points uniformly spaced</span>
+<span class="c1">-- on a circle centered in (x0, y0) with radius R</span>
+<span class="n">circle</span> <span class="o">=</span> <span class="kr">function</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="kd">local</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="kr">return</span> <span class="kr">function</span><span class="p">()</span>
+               <span class="kr">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="kr">then</span>
+                  <span class="kd">local</span> <span class="n">th</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span>
+                  <span class="kd">local</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">R</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">R</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+                  <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+                  <span class="kr">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+               <span class="kr">end</span>
+            <span class="kr">end</span>
+         <span class="kr">end</span>
+<span class="c1">-- then we use ipath to create a path from the iterator</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">ipath</span><span class="p">(</span><span class="n">circle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;circle at (1,1) with R= 2.5&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">graph</span><span class="p">.</span><span class="n">rgba</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">150</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The example above shows how to create a more generic iterator using basic Lua constructs.
+A generic iterator is very flexible because it can generate any sequence of values without restrictions of any kind.
+You will probably find that in many cases, you want to build iterators that generate values over a range of integer numbers, as we did for the circle in the example.
+In such cases it can be simpler to use the function <a class="reference internal" href="lua-base.html#iter.sequence" title="iter.sequence"><code class="xref py py-func docutils literal notranslate"><span class="pre">iter.sequence()</span></code></a> that creates an iterator over a range of integers.
+Here is the same example as above but using the function <a class="reference internal" href="lua-base.html#iter.sequence" title="iter.sequence"><code class="xref py py-func docutils literal notranslate"><span class="pre">iter.sequence()</span></code></a>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="c1">-- create a simple iterator that return n points uniformly spaced</span>
+<span class="c1">-- in a circle centered in (x0, y0) with radius R</span>
+<span class="n">circle</span> <span class="o">=</span> <span class="kr">function</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="kr">return</span> <span class="kr">function</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                      <span class="kd">local</span> <span class="n">th</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span>
+                      <span class="kr">return</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">R</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">R</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+                   <span class="kr">end</span>
+         <span class="kr">end</span>
+<span class="c1">-- then we use ipath to create a path from the iterator</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">circle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">ipath</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;circle at (1,1) with R= 2.5&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">graph</span><span class="p">.</span><span class="n">rgba</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">150</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.ibars">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">ibars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.ibars" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an iterator function <code class="docutils literal notranslate"><span class="pre">f</span></code> and returns a <a class="reference internal" href="#graph.Path" title="graph.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> object that draws many adjacent rectangular boxes corresponding to the points (x, y) returned by the iterator <code class="docutils literal notranslate"><span class="pre">f</span></code>.
+This function simplifies the creation of histograms.</p>
+<p><em>Example</em>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="c1">-- draws the histogram of a simulated Gaussian distribution</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">800</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Simulated Gaussian Distribution&#39;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">ibars</span><span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">rnd</span><span class="p">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span> <span class="mf">0.5</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/graphics-example-ibars.png" src="_images/graphics-example-ibars.png" />
+</figure>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.rgb">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.rgb" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.rgba">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">rgba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.rgba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a color specified by the given <code class="docutils literal notranslate"><span class="pre">r</span></code>, <code class="docutils literal notranslate"><span class="pre">g</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code> values.
+These values should be integer numbers in the interval 0, 255.
+The second variant of the function lets you specify an alpha value.
+This value can range from 0 (completely transparent) to 255 (completely opaque).</p>
+<p>In GSL Shell, a color is encoded as an integer number with 8 bit per channel and 4 channels, R, G, B, A in the given order.
+For example, to express a pure green color, you can write:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="mh">0x00ff00ff</span>
+</pre></div>
+</div>
+<p>where the last two digits express the alpha value equal to 255 for opaque color.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.rainbow">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">rainbow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.rainbow" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.webcolor">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">webcolor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.webcolor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a color from a predefined palette.
+The argument <code class="docutils literal notranslate"><span class="pre">n</span></code> can be any integer number to select the color.
+A limited number of colors is available and they are repeated cyclically.</p>
+</dd></dl>
+
+</section>
+<section id="multiple-plot-window">
+<h2>Multiple plot window<a class="headerlink" href="#multiple-plot-window" title="Permalink to this headline">¶</a></h2>
+<p>With GSL Shell, it is possible to tile several plots in a given window, and also to display a given plot on several windows. To better understand what follows, we will first clarify the relations between plots and windows.</p>
+<p>In GSL Shell, a plot can exist independently of any window and vice versa, a window can exists without being associated to any plot. When you create a plot using the “plot” function, the plot is not shown and it is not associated to any window. When you call the method <a class="reference internal" href="#graph.Plot.show" title="graph.Plot.show"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show()</span></code></a> what happens is that:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a window is created and shown on the screen</p></li>
+<li><p>the plot is <em>attached</em> to the window</p></li>
+</ul>
+</div></blockquote>
+<p>You can perform the operations above explicitly if you want. For example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Test plot&#39;</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">window</span><span class="p">()</span>
+<span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="c1">-- attach the plot &quot;p&quot; to the default slot of &quot;w&quot;</span>
+</pre></div>
+</div>
+<p>In this code snippet you can see the method <a class="reference internal" href="#graph.Window.attach" title="graph.Window.attach"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach()</span></code></a> at work. It is a method of the <a class="reference internal" href="#graph.Window" title="graph.Window"><code class="xref py py-class docutils literal notranslate"><span class="pre">Window</span></code></a>, used to tie a particular plot to a window. At this point, you may wonder what the second argument is for. It is something which is not very useful for simple windows but it becomes important when the window is “subdivided” into subwindows.</p>
+<p>Let us see this at work with a second example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="c1">-- create a window divided in two subwindows (vertical tiling)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">window</span><span class="p">(</span><span class="s1">&#39;v..&#39;</span><span class="p">)</span>
+
+<span class="c1">-- create a first plot...</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Logarithm function&#39;</span><span class="p">)</span>
+<span class="n">p1</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+
+<span class="c1">-- create a second plot</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;f(x) = sin(x)/x&#39;</span><span class="p">)</span>
+<span class="n">p2</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">pi</span><span class="p">),</span> <span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+
+<span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span> <span class="c1">-- attach plot &quot;p1&quot; to the first available slot</span>
+<span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">)</span> <span class="c1">-- attach plot &quot;p2&quot; to the second slot</span>
+</pre></div>
+</div>
+<p>And this is what the result will look like:</p>
+<figure class="align-default">
+<img alt="_images/example-vtiled-plots.png" src="_images/example-vtiled-plots.png" />
+</figure>
+</section>
+<section id="window-class">
+<h2>Window class<a class="headerlink" href="#window-class" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="graph.Window">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">Window</span></span><a class="headerlink" href="#graph.Window" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py function">
+<dt class="sig sig-object py" id="graph.Window.window">
+<span class="sig-name descname"><span class="pre">window</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defer_show</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Window.window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new empty window with the layout given by the optional <a class="reference internal" href="#layout-string"><span class="std std-ref">layout string</span></a>.
+If the argument is omitted the window will have a single drawing area that will cover the whole window.
+If the second argument evaluates to “true” the window will not be shown on the screen.
+The window can be shown afterward using the method <code class="xref py py-meth docutils literal notranslate"><span class="pre">show()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Window.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Window.layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all the plots that may be attached to the existing window
+and subdivide the window according to the given
+<a class="reference internal" href="#layout-string"><span class="std std-ref">layout string</span></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Window.attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slot</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Window.attach" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach the given <code class="docutils literal notranslate"><span class="pre">plot</span></code> to the window’s slot specified by the string <code class="docutils literal notranslate"><span class="pre">slot</span></code>. The string should be a list of comma separated integer number in the form ‘n1,n2,…,nk’. For each of the mentioned integer the corresponding window partition will be chosen recursively.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">w</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">window</span><span class="p">()</span>
+
+<span class="c1">-- create two vertical subdivision and divide the first area</span>
+<span class="c1">-- into two horizontal drawing regions</span>
+<span class="n">w</span><span class="p">:</span><span class="n">layout</span><span class="p">(</span><span class="s1">&#39;v(h..).&#39;</span><span class="p">)</span>
+
+<span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;1,1&#39;</span><span class="p">)</span> <span class="c1">-- attach plot &quot;p1&quot; to a the lower left subwindow</span>
+<span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">)</span>   <span class="c1">-- attach plot &quot;p2&quot; to a the upper subwindow</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Window.save_svg">
+<span class="sig-name descname"><span class="pre">save_svg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Window.save_svg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the content of the window in the given filename in SVG format.
+Two optional parameters can be given to specify the width and height of the drawing area.
+If the “svg” extension is not given it will be automatically added.</p>
+</dd></dl>
+
+</dd></dl>
+
+<section id="layout-string">
+<span id="id1"></span><h3>Layout string<a class="headerlink" href="#layout-string" title="Permalink to this headline">¶</a></h3>
+<p>The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the <a class="reference internal" href="#graph.Window.layout" title="graph.Window.layout"><code class="xref py py-meth docutils literal notranslate"><span class="pre">layout()</span></code></a> method or, during the creation of the window, by the function <code class="xref py py-func docutils literal notranslate"><span class="pre">window()</span></code> itself.</p>
+<p>A valid string layout is defined recursively and it is either:</p>
+<ul class="simple">
+<li><p>a ‘.’ to indicate a region without further subdivisions</p></li>
+<li><p>the character ‘h’ followed by a sequence of layout strings</p></li>
+<li><p>the character ‘v’ followed by a sequence of layout strings</p></li>
+<li><p>the same as above but enclosed between brackets: ‘(’ ‘)’.</p></li>
+</ul>
+<p>With the sequence ‘h’ and ‘v’ you designate a subdivision along the horizontal or vertical direction respectively. Each subdivision is done according to the sequence of cell layout that follows the ‘h’ or ‘v’.</p>
+<p>The pattern described above is recursive and you can use brackets to group items where needed to avoid ambiguity.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">w</span> <span class="o">=</span> <span class="n">window</span><span class="p">()</span> <span class="c1">-- create a window</span>
+<span class="n">w</span><span class="p">:</span><span class="n">layout</span><span class="p">(</span><span class="s1">&#39;v(h..).&#39;</span><span class="p">)</span> <span class="c1">-- split the windows into three drawing regions</span>
+</pre></div>
+</div>
+<p>and here’s how the resulting window can look:</p>
+<figure class="align-default">
+<img alt="_images/split-window-example.png" src="_images/split-window-example.png" />
+</figure>
+<p>We have added some empty plots so that you can see something inside the window.</p>
+<p>Now let us see how to specify a particular drawing area once the <a class="reference internal" href="#graph.Window.layout" title="graph.Window.layout"><code class="xref py py-meth docutils literal notranslate"><span class="pre">layout()</span></code></a> is done. Drawing area specification is done with the method <a class="reference internal" href="#graph.Window.attach" title="graph.Window.attach"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach()</span></code></a> with a string that identifies the drawing area. The string should be a list of comma-separated integer numbers in the form ‘n1,n2,…,nk’. With each number you identify the element of the current subdivision and the following numbers will select recursively the nested subdivisions. As the subdivision can be nested at arbitrary depth, you should specify as many numbers as required for the depth level of the drawing area you want to address.</p>
+<p>For example, to identify the drawing area in the sample above, the following string should be used: ‘1,1’, ‘1,2’, ‘2’. You can attach a plot to a particular drawing area by using the method <a class="reference internal" href="#graph.Window.attach" title="graph.Window.attach"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach()</span></code></a> as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">w</span><span class="p">:</span><span class="n">attach</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;1,2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="graphics-primitives">
+<h2>Graphics primitives<a class="headerlink" href="#graphics-primitives" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>In order to better understand the way GSL Shell graphics work, it is better to take a step back. Let use suppose that we want to plot an equilateral triangle. We can proceed as follows:</dt><dd><ul class="simple">
+<li><p>define a ‘path’ that describe the contour that we want to plot</p></li>
+<li><p>add the ‘path’ that we have defined to a ‘plot’ object to show it</p></li>
+</ul>
+</dd>
+</dl>
+<p>In order to create a ‘path’, we can use the function <a class="reference internal" href="#graph.path" title="graph.path"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.path()</span></code></a> which just creates an empty path. Then we add the points using the methods <a class="reference internal" href="#graph.Path.move_to" title="graph.Path.move_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">move_to()</span></code></a> and <a class="reference internal" href="#graph.Path.line_to" title="graph.Path.line_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">line_to()</span></code></a> methods. When you use <a class="reference internal" href="#graph.Path.move_to" title="graph.Path.move_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">move_to()</span></code></a>, a new curve is started at the given point. With <a class="reference internal" href="#graph.Path.line_to" title="graph.Path.line_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">line_to()</span></code></a> you can draw your curve.</p>
+<p>So to plot a triangle you can give the following instructions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">path</span><span class="p">()</span>         <span class="c1">-- a new path is created</span>
+<span class="n">t</span><span class="p">:</span><span class="n">move_to</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>    <span class="c1">-- starting point</span>
+<span class="n">t</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>   <span class="c1">-- second vertex</span>
+<span class="n">t</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.66</span><span class="p">)</span> <span class="c1">-- third vertex</span>
+<span class="n">t</span><span class="p">:</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-default">
+<img alt="_images/simpler-example-1.png" src="_images/simpler-example-1.png" />
+</figure>
+<p>Please not that we have used the <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> method instead of <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a> to add the path.</p>
+<p>Now let us suppose that we want to plot only the contour of the triangle with a line width of 10 pixels and with round edges. Then what you have to do is to supply the <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> method with a third argument where you specify a <code class="docutils literal notranslate"><span class="pre">stroke</span></code> transformation:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cap</span><span class="o">=</span><span class="s1">&#39;round&#39;</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-default">
+<img alt="_images/simpler-example-2.png" src="_images/simpler-example-2.png" />
+</figure>
+<p>As you can see we have used the ‘stroke’ transformation and we have provided two parameters: ‘width’ and ‘cap’ to specify the stroke properties.</p>
+<p>Now, to continue our example, let us suppose that we want to plot a dashed line just one pixel thick. In this case we have to cascade two transformations, the ‘dash’ transformation and the ‘stroke’ transformation. It can be done as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;dash&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span> <span class="mi">5</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-default">
+<img alt="_images/simpler-example-3.png" src="_images/simpler-example-3.png" />
+</figure>
+<p>the ‘a’ and ‘b’ parameters specify the lengths of the dash and of the blank space between the dashes. This length is calculated in pixels as it depends on the size of the windows. Let us suppose now that you want to give the length of the dashes in the user coordinate system. In this case you have to provide it as a fourth argument to <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a>. So you should do something like this:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">}},</span> <span class="p">{{</span><span class="s1">&#39;dash&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span> <span class="mf">0.25</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can note that we have changed the size of the dashes because in the user coordinate system the value 10 is as big as the edge of the triangle.</p>
+<p>So, in general, the <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> methods takes two optional arguments, the list of the post-transforms and the list of the pre-transforms. The post-transforms are made when we are already in the window coordinate system while the pre-transforms are made in the user coordinate system.</p>
+<p>Some transformations are naturally expressed as post-transforms because they operate naturally in terms of pixels, while others are usually expressed as pre-transforms because they operates in the user coordinates space.</p>
+</section>
+<section id="plot">
+<h2>Plot<a class="headerlink" href="#plot" title="Permalink to this headline">¶</a></h2>
+<p>We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> and <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a>. The method <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a> is just a shortcut to add elements with a ‘stroke’ post transform of unitary width.</p>
+<p>You can add elements to a plot at any time, even when it is already shown. GSL Shell will automatically calculate the bounding box so that every element is shown on the window.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.plot">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new empty plot with an optional title. The plot is not
+attached to any window and is therefore not visible. To show the
+plot on the screen, use either the <code class="xref py py-func docutils literal notranslate"><span class="pre">show()</span></code> plot’s method or
+use the <a class="reference internal" href="#graph.Window.attach" title="graph.Window.attach"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach()</span></code></a> window’s method to attach the plot to a
+specific window.</p>
+<p>This kind of plot automatically updates its limits when
+graphical objects are added. The <code class="docutils literal notranslate"><span class="pre">sync</span></code> property is also
+initialized to <code class="docutils literal notranslate"><span class="pre">true</span></code> so that every operation triggers
+an update of all the windows that show the plot. If you want to
+perform animations, you may want to set the <code class="docutils literal notranslate"><span class="pre">sync</span></code> property to
+<code class="docutils literal notranslate"><span class="pre">false</span></code> and use the <a class="reference internal" href="#graph.Plot.flush" title="graph.Plot.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a> method to update the windows
+when all the drawing operations have been done.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.canvas">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">canvas</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.canvas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like the function above, it creates a new empty plot with
+fixed logical limits. This latter kind of plot differs in that
+it will not update its limits automatically to fit the graphical
+objects. The method <code class="xref py py-func docutils literal notranslate"><span class="pre">limits()</span></code> should be used instead to set
+the logical limits of the plotting area. The other difference with
+the <a class="reference internal" href="#graph.plot" title="graph.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.plot()</span></code></a> function is that the property <code class="docutils literal notranslate"><span class="pre">sync</span></code> will be
+initialized to <code class="docutils literal notranslate"><span class="pre">false</span></code>. This kind of plot is generally better
+suited for animations.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="graph.Plot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><a class="headerlink" href="#graph.Plot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">post_trans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_trans</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the <a class="reference internal" href="#graphics-objects"><span class="std std-ref">graphical object</span></a> <code class="docutils literal notranslate"><span class="pre">obj</span></code> to
+the plot with the given <code class="docutils literal notranslate"><span class="pre">color</span></code>.  The optional arguments
+<code class="docutils literal notranslate"><span class="pre">post_trans</span></code> and <code class="docutils literal notranslate"><span class="pre">pre_trans</span></code> should be a table of
+<a class="reference internal" href="#graphics-transforms"><span class="std std-ref">graphical transformations</span></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.addline">
+<span class="sig-name descname"><span class="pre">addline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">post_trans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_trans</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.addline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the <a class="reference internal" href="#graphics-objects"><span class="std std-ref">graphical object</span></a> <code class="docutils literal notranslate"><span class="pre">obj</span></code> to
+the plot by automatically performing a stroke of it. It is
+useful because you often need to draw lines and not filled
+polygons. It is equivalent to adding a ‘stroke’ operation of
+unitary size in the viewport coordinate system.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.limits">
+<span class="sig-name descname"><span class="pre">limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the logical limits of the area displayed by the plot to the
+rectangle with lower-left corner (x1, y1) and upper-right corner
+(x2, y2). This method is used for plots with fixed limits
+obtained with the function <a class="reference internal" href="#graph.canvas" title="graph.canvas"><code class="xref py py-func docutils literal notranslate"><span class="pre">canvas()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new window to show the plot on the screen.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all the graphical elements in the current
+<a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layer</span></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.flush">
+<span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the pending operations on a plot are processed and all the
+windows attached to the plot are updated. This method is only
+useful when the attribute <code class="docutils literal notranslate"><span class="pre">sync</span></code> is set to false.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.pushlayer">
+<span class="sig-name descname"><span class="pre">pushlayer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.pushlayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new <a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layer</span></a> to the
+plot so that it becomes the current one and all the elements
+added with methods <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> or <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a>
+are associated with this new layer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.poplayer">
+<span class="sig-name descname"><span class="pre">poplayer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.poplayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the current <a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layer</span></a> and
+all its graphical elements and make the previous level the
+current one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the plot in a file in a bitmap image format. The first
+argument is the file name without extension while the other
+optional arguments are the width and the height in pixels of the
+image. The format used is BMP on windows and PPM on Linux.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.save_svg">
+<span class="sig-name descname"><span class="pre">save_svg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.save_svg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the plot in the given filename in SVG format.
+Two optional parameters can be given to specify the width and height of the drawing area.
+If the “svg” extension is not given it will be automatically added.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.set_legend">
+<span class="sig-name descname"><span class="pre">set_legend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">placement</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.set_legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the plot <code class="docutils literal notranslate"><span class="pre">p</span></code> as a legend in the side area of the main plot.
+The argument <code class="docutils literal notranslate"><span class="pre">placement</span></code> is used to give the placement of the mini plot and should be one of the letters ‘l’, ‘r’, ‘b’, ‘t’, which stand for “left”, “right”, “bottom” and “top” respectively.
+By default, the placement of the legend is on the right side.</p>
+<p>The plot legend is drawn on the screen using an area that is equal, in pixels, to the logical size of the plot legend itself.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.get_legend">
+<span class="sig-name descname"><span class="pre">get_legend</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">placement</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.get_legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the plot legend stored in the given <code class="docutils literal notranslate"><span class="pre">placement</span></code>.
+The placement parameter is interpreted as in the <a class="reference internal" href="#graph.Plot.set_legend" title="graph.Plot.set_legend"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_legend()</span></code></a> method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.legend">
+<span class="sig-name descname"><span class="pre">legend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">trans</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add to the plot a new legend item with the given <code class="docutils literal notranslate"><span class="pre">text</span></code>.
+The symbol used is determined by the string <code class="docutils literal notranslate"><span class="pre">symbol</span></code>.
+Possible values are ‘line’, ‘square’ or anything accepted by <a class="reference internal" href="#graph.marker" title="graph.marker"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.marker()</span></code></a>.
+The optional <code class="docutils literal notranslate"><span class="pre">trans</span></code> parameter should be a <a class="reference internal" href="#graphics-transforms"><span class="std std-ref">graphical transform</span></a>.
+If omitted, the appropriate default is chosen based on the symbol type.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;plot example&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">),</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">legend</span><span class="p">(</span><span class="s1">&#39;sinus&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;line&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="n">cos</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">),</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;dash&#39;</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">legend</span><span class="p">(</span><span class="s1">&#39;cosinus&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">},{</span><span class="s1">&#39;dash&#39;</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Plot.set_categories">
+<span class="sig-name descname"><span class="pre">set_categories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Plot.set_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the given <code class="docutils literal notranslate"><span class="pre">axis</span></code> (a letter, ‘x’ or ‘y’) to use a custom set of labels specified by <code class="docutils literal notranslate"><span class="pre">categories</span></code>.
+This latter should be a list containing the values where the label should be placed and the label text itself.
+The coordinate refers to the plot system of coordinates.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxplot</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">set_categories</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="s1">&#39;pi&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="s1">&#39;2 pi&#39;</span><span class="p">})</span>
+<span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Sin function&#39;</span>
+</pre></div>
+</div>
+<p>will produce the following plot:</p>
+<figure class="align-default">
+<img alt="_images/graphics-categories-example.png" src="_images/graphics-categories-example.png" />
+</figure>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.title">
+<span class="sig-name descname"><span class="pre">title</span></span><a class="headerlink" href="#graph.Plot.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>The title of the plot. You can change or set the title using
+this attribute.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.xtitle">
+<span class="sig-name descname"><span class="pre">xtitle</span></span><a class="headerlink" href="#graph.Plot.xtitle" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.Plot.ytitle">
+<span class="sig-name descname"><span class="pre">ytitle</span></span><a class="headerlink" href="#graph.Plot.ytitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>The title to be used for the x and y axis of the plot.
+By default the labels are empty.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.xlab_angle">
+<span class="sig-name descname"><span class="pre">xlab_angle</span></span><a class="headerlink" href="#graph.Plot.xlab_angle" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.Plot.ylab_angle">
+<span class="sig-name descname"><span class="pre">ylab_angle</span></span><a class="headerlink" href="#graph.Plot.ylab_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>A rotation angle to be used for the text of the labels in the x or y axis.
+The default angle is zero so that text is shown without rotations.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.xlab_format">
+<span class="sig-name descname"><span class="pre">xlab_format</span></span><a class="headerlink" href="#graph.Plot.xlab_format" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graph.Plot.ylab_format">
+<span class="sig-name descname"><span class="pre">ylab_format</span></span><a class="headerlink" href="#graph.Plot.ylab_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choose a format for the numeric labels in the x or y axis.
+It does accept the same strings used by the C function printf.
+For example, if you give ‘%.3f’ the numbers will be formatted using the
+floating point notation with three digits after the point.
+If you give something like ‘%03d’ the number will be formatted like an integer using three spaces and padding with zeroes from the left..</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.units">
+<span class="sig-name descname"><span class="pre">units</span></span><a class="headerlink" href="#graph.Plot.units" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean value that defines whether the axis and grids should be
+drawn or not. By default it is true.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.sync">
+<span class="sig-name descname"><span class="pre">sync</span></span><a class="headerlink" href="#graph.Plot.sync" title="Permalink to this definition">¶</a></dt>
+<dd><p>This attribute can be either true or false. If true, any changes
+made to the plot will automatically update all the windows where the
+plot is shown. It is useful to set <code class="docutils literal notranslate"><span class="pre">sync</span></code> to false for
+animations so that many operations can be performed and the
+window is updated only when the <a class="reference internal" href="#graph.Plot.flush" title="graph.Plot.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a> method is called.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.pad">
+<span class="sig-name descname"><span class="pre">pad</span></span><a class="headerlink" href="#graph.Plot.pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>This attribute determines if the padding is active or not for the plot.
+The padding determines if the viewport area should be larger than the actual plotting area to align with axis marks.
+The default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Plot.clip">
+<span class="sig-name descname"><span class="pre">clip</span></span><a class="headerlink" href="#graph.Plot.clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activate or not the clipping of the graphical elements inside the plotting viewport.
+The default value is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<section id="graphical-layers">
+<span id="graphical-layer"></span><h3>Graphical Layers<a class="headerlink" href="#graphical-layers" title="Permalink to this headline">¶</a></h3>
+<p>When you want to perform animations with plots you can take advantage of the <a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layers</span></a>. These enable you to clear and redraw only some graphical elements while keeping other elements always present in the background. The idea is that if you want to make an animation, you will probably repeatedly clear and redraw some graphical elements, but you may want to keep some of them fixed in the background. In order to obtain that you can</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>add all the fixed graphical elements as usual</p></li>
+<li><p>add a new <a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layer</span></a> with the method <a class="reference internal" href="#graph.Plot.pushlayer" title="graph.Plot.pushlayer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pushlayer()</span></code></a></p></li>
+<li><p>clear and redraw all the elements using the new topmost layer</p></li>
+</ul>
+</div></blockquote>
+<p>Here an simple example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">canvas</span><span class="p">(</span><span class="s1">&#39;Animation Test&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">limits</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">circle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span> <span class="mi">5</span><span class="p">}})</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<span class="n">vx</span><span class="p">,</span> <span class="n">vy</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span>
+<span class="n">R</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="n">p</span><span class="p">:</span><span class="n">pushlayer</span><span class="p">()</span>
+<span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span> <span class="kr">do</span>
+  <span class="kr">if</span> <span class="n">x</span> <span class="o">+</span> <span class="n">vx</span> <span class="o">+</span> <span class="n">R</span> <span class="o">&gt;</span> <span class="mi">100</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">+</span> <span class="n">vx</span> <span class="o">-</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">100</span> <span class="kr">then</span> <span class="n">vx</span> <span class="o">=</span> <span class="o">-</span><span class="n">vx</span> <span class="kr">end</span>
+  <span class="kr">if</span> <span class="n">y</span> <span class="o">+</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">R</span> <span class="o">&gt;</span> <span class="mi">100</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">+</span> <span class="n">vy</span> <span class="o">-</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">100</span> <span class="kr">then</span> <span class="n">vy</span> <span class="o">=</span> <span class="o">-</span><span class="n">vy</span> <span class="kr">end</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">vx</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">vy</span>
+
+  <span class="n">p</span><span class="p">:</span><span class="n">clear</span><span class="p">()</span>
+  <span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">circle</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R</span><span class="p">),</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+  <span class="n">p</span><span class="p">:</span><span class="n">flush</span><span class="p">()</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="graphical-objects">
+<span id="graphics-objects"></span><h2>Graphical Objects<a class="headerlink" href="#graphical-objects" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.path">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an empty path. If the two coordinates (x, y) are provided, set the initial point of the path to (x, y).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="graph.Path">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">Path</span></span><a class="headerlink" href="#graph.Path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.move_to">
+<span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.move_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move the current point to the coordinates (x, y) and start a new path here.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.line_to">
+<span class="sig-name descname"><span class="pre">line_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.line_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a line into the path from the previous point to the specified (x, y) coordinates.
+As a special case, if the path is empty, this method is equivalent to <a class="reference internal" href="#graph.Path.move_to" title="graph.Path.move_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">move_to()</span></code></a>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If you want to define a polygonal line, you don’t need to use the <a class="reference internal" href="#graph.Path.move_to" title="graph.Path.move_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">move_to()</span></code></a> method for the first point.
+Instead you can use the method <a class="reference internal" href="#graph.Path.line_to" title="graph.Path.line_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">line_to()</span></code></a> to add each point.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the polygon.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.arc_to">
+<span class="sig-name descname"><span class="pre">arc_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">large_arc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sweep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.arc_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an arc or ellipse with radius rx and ry up to the point (x, y).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.curve3">
+<span class="sig-name descname"><span class="pre">curve3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.curve3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a conic bezier curve up to (x, y) with a single control point. The curve will be displayed as such only if a ‘curve’ <a class="reference internal" href="#graphics-transforms"><span class="std std-ref">graphical transformation</span></a> is used in the transformations pipeline.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Path.curve4">
+<span class="sig-name descname"><span class="pre">curve4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2_ctrl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Path.curve4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a conic bezier curve up to (x, y) with two control points. The same remarks for the method <a class="reference internal" href="#graph.Path.curve3" title="graph.Path.curve3"><code class="xref py py-func docutils literal notranslate"><span class="pre">curve3()</span></code></a> apply to <a class="reference internal" href="#graph.Path.curve4" title="graph.Path.curve4"><code class="xref py py-func docutils literal notranslate"><span class="pre">curve4()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.text">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a text object with the given text at the position (x,y).
+The first optional argument <code class="docutils literal notranslate"><span class="pre">height</span></code> indicates the text height.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="graph.Text">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">Text</span></span><a class="headerlink" href="#graph.Text" title="Permalink to this definition">¶</a></dt>
+<dd><p>A text object is used to display a text.
+This class of graphical object is special because it is not a shape that is resized rigidly with the window. Instead, the text is always displayed with the same size in pixels.
+Because of this difference, a text object should be subject only to post-transforms.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graph.Text.angle">
+<span class="sig-name descname"><span class="pre">angle</span></span><a class="headerlink" href="#graph.Text.angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate the text by the given angle (in radians).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Text.justif">
+<span class="sig-name descname"><span class="pre">justif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Text.justif" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the justification of the text.
+The argument <code class="docutils literal notranslate"><span class="pre">hv</span></code> should be a string of the form ‘xy’ where x is a letter among ‘l’, ‘c’ or ‘r’ that determine the horizontal justification and y is a letter among ‘t’, ‘c’ or ‘b’ for the vertical justification.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graph.Text.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.Text.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the position where the test is displayed. It corresponds to
+the bottom left corner of the text.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.textshape">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">textshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.textshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a text shape graphical object of given <code class="docutils literal notranslate"><span class="pre">text</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> at the position <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="graph.TextShape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">TextShape</span></span><a class="headerlink" href="#graph.TextShape" title="Permalink to this definition">¶</a></dt>
+<dd><p>A text shape object is used to display a text.
+The difference with a simple text object is that a text shape has a well-defined shape and extension in the plot system of coordinates.
+One of the implications is that the text shape will occupy a well-defined area and the plot can adapt its area to include the text itself.
+On the other hand, text shapes could be deformed if a different scale is used for x and y axis.
+If the aspect ratio of the coordinate system is not unitary, a simple “text” object should be used instead.</p>
+<p>The text shape currently has no methods and its properties are determined during the creation of the object.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Text shape objects are useful to create plot legends.
+In this case the size and position of the text shape can be expressed in screen coordinates (pixels).
+The reason is that when a mini plot is added to a plot, the area of the screen used to display the mini plot is equal to the bounding box of the mini plot itself.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph.marker">
+<span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graph.marker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a marker object with the given <code class="docutils literal notranslate"><span class="pre">symbol</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> at the position <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>.
+A marker object is a graphical symbol drawn at the given coordinates and can be useful to mark a geometic point.
+The accepted symbol strings are the same of those accepted by the ‘marker’ graphical transformation.</p>
+</dd></dl>
+
+</section>
+<section id="graphical-transformations">
+<span id="graphics-transforms"></span><h2>Graphical transformations<a class="headerlink" href="#graphical-transformations" title="Permalink to this headline">¶</a></h2>
+<p>A generic graphical transformation is expressed in the form of a table with the following layout:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">,</span>
+ <span class="n">property1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">,</span>
+ <span class="n">property2</span> <span class="o">=</span> <span class="n">value2</span><span class="p">,</span>
+ <span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For example, to express a ‘stroke’ transform you can write:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span> <span class="mi">5</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>to mean a stroke transformation with a stroke width of 5.</p>
+<p>Here is a complete list of all the available transforms:</p>
+<blockquote>
+<div><dl>
+<dt><strong>stroke</strong></dt><dd><p>A strokes create an outline of the given path. The properties are:</p>
+<ul class="simple">
+<li><p><strong>width</strong>, the width of the stroke, default value is width=1</p></li>
+<li><p><strong>cap</strong>, can be ‘round’, ‘butt’ or ‘square’. The default value is ‘butt’.</p></li>
+<li><p><strong>join</strong>, can be ‘miter’, ‘miter.rev’, ‘miter.round’, ‘round’ and ‘bevel’</p></li>
+</ul>
+</dd>
+<dt><strong>dash</strong></dt><dd><p>Transform the path to a sequence of dashes. The following elements in the table are the lengths of the dashes and gaps.</p>
+<p>For example, to express a dash-dot  line you can write <code class="docutils literal notranslate"><span class="pre">{'dash',</span> <span class="pre">7,3,3,3}</span></code>.</p>
+</dd>
+<dt><strong>curve</strong></dt><dd><p>This transformation makes the ‘curve3’ and ‘curve4’ path elements become real curves.</p>
+</dd>
+<dt><strong>marker</strong></dt><dd><p>Replace each vertex of the path with a circular mark</p>
+<ul class="simple">
+<li><p><strong>size</strong>, the size of the marker</p></li>
+<li><p><strong>mark</strong>, a string, an integer number or a graphical object indicating the symbol to be used for the markers.
+Available symbols are ‘circle’, ‘triangle’, ‘square’, ‘diamond’, ‘plus’, ‘cross’.
+If a number is given, the symbol will be chosen from the list given above.
+If a graphical object is supplied, its extension should be such that is contained in a box of size 1 and centered in (0, 0).
+The object will be automatically scaled according to the parameter <code class="docutils literal notranslate"><span class="pre">size</span></code>.</p></li>
+<li><p><strong>outline</strong>, if it is true, draw the marker in outline</p></li>
+</ul>
+</dd>
+<dt><strong>translate</strong></dt><dd><p>A translation along the x and y axis. This transformation can be used only in the user coordinate system.</p>
+<ul class="simple">
+<li><p><strong>x</strong>, translation along the x axis</p></li>
+<li><p><strong>y</strong>, translation along the y axis</p></li>
+</ul>
+</dd>
+<dt><strong>scale</strong></dt><dd><p>A scaling of the image around the point (0, 0). Only one numeric
+parameter should be supplied to indicate the scaling factor. For
+example <code class="docutils literal notranslate"><span class="pre">{'scale',</span> <span class="pre">2}</span></code> will scale the image by a factor two.</p>
+</dd>
+<dt><strong>extend</strong></dt><dd><p>Shrink or expand a shape by a given amount.</p>
+<ul class="simple">
+<li><p><strong>width</strong>, the size of the shrink/expansion.
+An expansion if positive, otherwise a shrink.</p></li>
+</ul>
+</dd>
+<dt><strong>rotate</strong></dt><dd><p>A rotation by a given angle about the origin. This transformation can be used only in the user coordinate system.</p>
+<ul class="simple">
+<li><p><strong>angle</strong>, the angle of the rotation, in radians.</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Graphics</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#module-graph">A First Example</a></li>
+<li><a class="reference internal" href="#graphics-functions">Graphics Functions</a></li>
+<li><a class="reference internal" href="#multiple-plot-window">Multiple plot window</a></li>
+<li><a class="reference internal" href="#window-class">Window class</a><ul>
+<li><a class="reference internal" href="#layout-string">Layout string</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graphics-primitives">Graphics primitives</a></li>
+<li><a class="reference internal" href="#plot">Plot</a><ul>
+<li><a class="reference internal" href="#graphical-layers">Graphical Layers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graphical-objects">Graphical Objects</a></li>
+<li><a class="reference internal" href="#graphical-transformations">Graphical transformations</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="vegas.html"
+                          title="previous chapter">Monte Carlo Integration</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="plot3d.html"
+                          title="next chapter">3D Plotting</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/graphics.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plot3d.html" title="3D Plotting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vegas.html" title="Monte Carlo Integration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Graphics</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

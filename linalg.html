@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Linear Algebra &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Eigensystems" href="eigen.html" />
+    <link rel="prev" title="Iterators" href="lua-base.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="eigen.html" title="Eigensystems"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="lua-base.html" title="Iterators"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Linear Algebra</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="linear-algebra">
+<h1>Linear Algebra<a class="headerlink" href="#linear-algebra" title="Permalink to this headline">¶</a></h1>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>GSL Shell gives access to some functions of linear algebra based on GSL itself or on the BLAS routines.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.inv">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of the matrix m.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.det">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">det</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.det" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the determinant of a matrix m from its LU decomposition, LU.
+The determinant is computed as the product of the diagonal elements of U and the sign of the row permutation signum.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.solve">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the square system A x = b where A is a square matrix, b
+is a column matrix. It returns the solution x of the system.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.svd">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">svd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.svd" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general rectangular M-by-N matrix A has a singular value
+decomposition (SVD) into the product of an M-by-N orthogonal matrix U,
+an N-by-N diagonal matrix of singular values S and the transpose of an
+N-by-N orthogonal square matrix V,</p>
+<div class="math notranslate nohighlight">
+\[A = U \Sigma V^T\]</div>
+<p>The singular values σ<sub>i</sub> = Σ<sub>ii</sub>
+are all non-negative and are
+generally chosen to form a non-increasing sequence
+σ<sub>1</sub> &gt;= σ<sub>2</sub> &gt;= … &gt;= σ<sub>N</sub> &gt;= 0.</p>
+<p>The singular value decomposition of a matrix has many practical uses.
+The condition number of the matrix is given by the ratio of the largest
+singular value to the smallest singular value. The presence of a zero
+singular value indicates that the matrix is singular. The number of
+non-zero singular values indicates the rank of the matrix.  In practice
+singular value decomposition of a rank-deficient matrix will not produce
+exact zeroes for singular values, due to finite numerical precision.
+Small singular values should be edited by choosing a suitable tolerance.</p>
+<p>For a rank-deficient matrix, the null space of A is given by the
+columns of V corresponding to the zero singular values.  Similarly, the
+range of A is given by columns of U corresponding to the non-zero
+singular values.</p>
+<p>Note that the routines here compute the “thin” version of the SVD
+with U as M-by-N orthogonal matrix. This allows in-place computation
+and is the most commonly-used form in practice.  Mathematically, the
+“full” SVD is defined with U as an M-by-M orthogonal matrix and S as an
+M-by-N diagonal matrix (with additional rows of zeros).</p>
+<p>This function returns three values, in the order, U, Σ, V. So you can
+write something like this:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">svd</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.lu">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">lu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.lu" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions factorize the square matrix A into the LU decomposition PA = LU.</p>
+<p>Optionally you can use <cite>extract</cite> to get L and U seperately:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">,</span><span class="n">U</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">lu</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.qr">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">qr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.qr" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function factorizes the M-by-N matrix A into the QR decomposition A = Q R:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">Q</span><span class="p">,</span><span class="n">R</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">qr</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.cholesky">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">cholesky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.cholesky" title="Permalink to this definition">¶</a></dt>
+<dd><p>A symmetric, positive definite square matrix A has a Cholesky decomposition into a product of a
+lower triangular matrix L and its transpose L^T,</p>
+<p>real: <span class="math notranslate nohighlight">\(A = L L^T\)</span>
+complex: <span class="math notranslate nohighlight">\(A = L L^\star\)</span></p>
+<p>This is sometimes referred to as taking the square-root of a matrix.
+The Cholesky decomposition can only be carried out when all the eigenvalues of the matrix are positive.
+This decomposition can be used to convert the linear system A x = b into a pair of triangular systems (L y = b, L^T x = y),
+which can be solved by forward and back-substitution.</p>
+<p>These functions factorize the symmetric, positive-definite square matrix A into the Cholesky decomposition.
+On input, the values from the diagonal and lower-triangular part of the matrix A are used (the upper triangular part is ignored).
+If the matrix is not positive-definite then the decomposition will fail.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.td_decomp">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">td_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.td_decomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A matrix A can be factorized by similarity transformations into the form,</p>
+<p>real: <span class="math notranslate nohighlight">\(A = Q T Q^T\)</span>
+complex: <span class="math notranslate nohighlight">\(A = U T U^T\)</span></p>
+<p>where</p>
+<p>real: Q is an orthogonal matrix and T is a symmetric tridiagonal matrix.
+complex: U is a unitary matrix and T is a real symmetric tridiagonal matrix.</p>
+<p>This function calculates this decomposition and returns Q/U, the diagonal vector and the sub-diagonal vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.hessenberg_decomp">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">hessenberg_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.hessenberg_decomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general real matrix A can be decomposed by orthogonal similarity transformations into the form</p>
+<p><span class="math notranslate nohighlight">\(A = U H U^T\)</span></p>
+<p>where U is orthogonal and H is an upper Hessenberg matrix, meaning that it has zeros below the first subdiagonal.
+The Hessenberg reduction is the first step in the Schur decomposition for the nonsymmetric eigenvalue problem,
+but has applications in other areas as well.
+The function returns <code class="docutils literal notranslate"><span class="pre">H</span></code> and <code class="docutils literal notranslate"><span class="pre">U</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.hesstri_decomp">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">hesstri_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.hesstri_decomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general real matrix pair (A, B) can be decomposed by orthogonal similarity transformations into the form</p>
+<blockquote>
+<div><p>A = U H V^T
+B = U R V^T</p>
+</div></blockquote>
+<p>where U and V are orthogonal, H is an upper Hessenberg matrix, and R is upper triangular.
+The Hessenberg-Triangular reduction is the first step in the generalized Schur decomposition for the generalized eigenvalue problem.
+The function returns H, R, U and V.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Linear Algebra</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="lua-base.html"
+                          title="previous chapter">Iterators</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="eigen.html"
+                          title="next chapter">Eigensystems</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/linalg.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="eigen.html" title="Eigensystems"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="lua-base.html" title="Iterators"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Linear Algebra</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

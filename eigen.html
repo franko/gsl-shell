@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Eigensystems &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Random Numbers" href="random.html" />
+    <link rel="prev" title="Linear Algebra" href="linalg.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="random.html" title="Random Numbers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="linalg.html" title="Linear Algebra"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Eigensystems</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-eigen"><span id="eigensystems"></span></span><section id="id1">
+<h1>Eigensystems<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes functions for computing eigenvalues and eigenvectors of matrices.
+There are routines for real symmetric, real nonsymmetric, complex hermitian, real generalized symmetric-definite, complex generalized hermitian-definite, and real generalized nonsymmetric eigensystems.
+Eigenvalues can be computed with or without eigenvectors.
+The hermitian and real symmetric matrix algorithms are symmetric bidiagonalization followed by QR reduction.
+The nonsymmetric algorithm is the Francis QR double-shift. The generalized nonsymmetric algorithm is the QZ method due to Moler and Stewart.</p>
+<section id="real-symmetric-matrices">
+<h2>Real Symmetric Matrices<a class="headerlink" href="#real-symmetric-matrices" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="eigen.symm">
+<span class="sig-prename descclassname"><span class="pre">eigen.</span></span><span class="sig-name descname"><span class="pre">symm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#eigen.symm" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the eigenvalues and eigenvectors of the real symmetric matrix A. The default ordering of the eigenvalues and eigenvectors is descending order in numerical value.
+You can however choose from the following sorting shemes for the eigenvalues:</p>
+<dl class="simple">
+<dt>‘desc’</dt><dd><p>descending order in numerical value</p>
+</dd>
+<dt>‘asc’</dt><dd><p>ascending order in numerical value</p>
+</dd>
+<dt>‘abs_asc’</dt><dd><p>ascending order in magnitude</p>
+</dd>
+<dt>‘abs_desc’</dt><dd><p>descending order in magnitude</p>
+</dd>
+<dt>‘none’</dt><dd><p>eigenvalue sorting</p>
+</dd>
+</dl>
+<p>The function returns:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">eval</span><span class="p">,</span> <span class="n">evec</span> <span class="o">=</span> <span class="n">symm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="s1">&#39;abs_asc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>while the first eigenvalue correpsonds to the first eigenvector stored in the first column of the eigenvectors matrix.
+For real symmetric matrices, the library uses the symmetric bidiagonalization and QR reduction method.
+This is described in Golub &amp; van Loan, section 8.3. The computed eigenvalues are accurate to an absolute accuracy of <span class="math notranslate nohighlight">\(\epsilon ||m||_2\)</span>, where <span class="math notranslate nohighlight">\(\epsilon\)</span> is the machine precision.</p>
+</dd></dl>
+
+</section>
+<section id="real-nonsymmetric-matrices">
+<h2>Real Nonsymmetric Matrices<a class="headerlink" href="#real-nonsymmetric-matrices" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="eigen.non_symm">
+<span class="sig-prename descclassname"><span class="pre">eigen.</span></span><span class="sig-name descname"><span class="pre">non_symm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">A</span> <span class="pre">[,</span> <span class="pre">order</span> <span class="pre">]</span> <span class="pre">]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigen.non_symm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The solution of the real nonsymmetric eigensystem problem for a matrix A involves computing the Schur decomposition</p>
+<p><span class="math notranslate nohighlight">\(A = Z T Z^T\)</span></p>
+<p>where Z is an orthogonal matrix of Schur vectors and T, the Schur form, is quasi upper triangular with diagonal 1-by-1 blocks which are real eigenvalues of A,
+and diagonal 2-by-2 blocks whose eigenvalues are complex conjugate eigenvalues of A. The algorithm used is the double-shift Francis method.</p>
+<p>This function computes eigenvalues and right eigenvectors of the n-by-n real nonsymmetric matrix A.
+The computed eigenvectors are normalized to have unit magnitude. On output, the upper portion of A contains the Schur form T:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">eval</span><span class="p">,</span> <span class="n">evec</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="n">non_symm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="s1">&#39;abs_asc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="complex-hermitian-matrices">
+<h2>Complex Hermitian Matrices<a class="headerlink" href="#complex-hermitian-matrices" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="real-generalized-symmetric-definite-eigensystems">
+<h2>Real Generalized Symmetric-Definite Eigensystems<a class="headerlink" href="#real-generalized-symmetric-definite-eigensystems" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="eigen.gensymm">
+<span class="sig-prename descclassname"><span class="pre">eigen.</span></span><span class="sig-name descname"><span class="pre">gensymm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigen.gensymm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The real generalized symmetric-definite eigenvalue problem is to find eigenvalues lambda and eigenvectors x such that</p>
+<div class="math notranslate nohighlight">
+\[A x = \lambda B x\]</div>
+<p>where A and B are symmetric matrices, and B is positive-definite.
+This problem reduces to the standard symmetric eigenvalue problem by applying the Cholesky decomposition to B:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}A x = \lambda B x\\                     A x = \lambda L L^t x\\( L^{-1} A L^{-t} ) L^t x = \lambda L^t x\end{aligned}\end{align} \]</div>
+<p>Therefore, the problem becomes <span class="math notranslate nohighlight">\(C y = \lambda y\)</span> where <span class="math notranslate nohighlight">\(C = L^{-1} A L^{-t}\)</span> is symmetric, and <span class="math notranslate nohighlight">\(y = L^t x\)</span>.
+The standard symmetric eigensolver can be applied to the matrix C.
+The resulting eigenvectors are backtransformed to find the vectors of the original problem.
+The eigenvalues and eigenvectors of the generalized symmetric-definite eigenproblem are always real.</p>
+</dd></dl>
+
+</section>
+<section id="complex-generalized-hermitian-definite-eigensystems">
+<h2>Complex Generalized Hermitian-Definite Eigensystems<a class="headerlink" href="#complex-generalized-hermitian-definite-eigensystems" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="eigen.genherm">
+<span class="sig-prename descclassname"><span class="pre">eigen.</span></span><span class="sig-name descname"><span class="pre">genherm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigen.genherm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The complex generalized hermitian-definite eigenvalue problem is to find eigenvalues lambda and eigenvectors x such that</p>
+<div class="math notranslate nohighlight">
+\[A x = \lambda B x\]</div>
+<p>where A and B are hermitian matrices, and B is positive-definite.
+Similarly to the real case, this can be reduced to <span class="math notranslate nohighlight">\(C y = \lambda y\)</span> where <span class="math notranslate nohighlight">\(C = L^{-1} A L^{-H}\)</span> is hermitian,
+and <span class="math notranslate nohighlight">\(y = L^H x\)</span>. The standard hermitian eigensolver can be applied to the matrix C.
+The resulting eigenvectors are backtransformed to find the vectors of the original problem.
+The eigenvalues of the generalized hermitian-definite eigenproblem are always real.</p>
+</dd></dl>
+
+</section>
+<section id="real-generalized-nonsymmetric-eigensystems">
+<h2>Real Generalized Nonsymmetric Eigensystems<a class="headerlink" href="#real-generalized-nonsymmetric-eigensystems" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="eigen.gen">
+<span class="sig-prename descclassname"><span class="pre">eigen.</span></span><span class="sig-name descname"><span class="pre">gen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigen.gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two square matrices (A, B), the generalized nonsymmetric eigenvalue problem is to find eigenvalues lambda and eigenvectors x such that</p>
+<div class="math notranslate nohighlight">
+\[A x = \lambda B x\]</div>
+<p>We may also define the problem as finding eigenvalues mu and eigenvectors y such that</p>
+<div class="math notranslate nohighlight">
+\[\mu A y = B y\]</div>
+<p>Note that these two problems are equivalent (with lambda = 1/mu) if neither lambda nor mu is zero. If say, lambda is zero, then it is still a well defined eigenproblem, but its alternate problem involving mu is not. Therefore, to allow for zero (and infinite) eigenvalues, the problem which is actually solved is</p>
+<div class="math notranslate nohighlight">
+\[\beta A x = \alpha B x\]</div>
+<p>The eigensolver routines below will return two values <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> and leave it to the user
+to perform the divisions <span class="math notranslate nohighlight">\(\lambda = \alpha / \beta\)</span> and <span class="math notranslate nohighlight">\(\mu = \beta / \alpha\)</span>.</p>
+<p>If the determinant of the matrix pencil <span class="math notranslate nohighlight">\(A - \lambda B\)</span> is zero for all <span class="math notranslate nohighlight">\(\lambda\)</span>,
+the problem is said to be singular; otherwise it is called regular.
+Singularity normally leads to some <span class="math notranslate nohighlight">\(\alpha = \beta = 0\)</span> which means the eigenproblem is ill-conditioned
+and generally does not have well defined eigenvalue solutions.
+The routines below are intended for regular matrix pencils and could yield unpredictable results when applied to singular pencils.</p>
+<p>The solution of the real generalized nonsymmetric eigensystem problem for a matrix pair (A, B)
+involves computing the generalized Schur decomposition</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}A = Q S Z^T\\B = Q T Z^T\end{aligned}\end{align} \]</div>
+<p>where Q and Z are orthogonal matrices of left and right Schur vectors respectively,
+and (S, T) is the generalized Schur form whose diagonal elements give the <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> values.
+The algorithm used is the QZ method due to Moler and Stewart (see references).</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Eigensystems</a><ul>
+<li><a class="reference internal" href="#real-symmetric-matrices">Real Symmetric Matrices</a></li>
+<li><a class="reference internal" href="#real-nonsymmetric-matrices">Real Nonsymmetric Matrices</a></li>
+<li><a class="reference internal" href="#complex-hermitian-matrices">Complex Hermitian Matrices</a></li>
+<li><a class="reference internal" href="#real-generalized-symmetric-definite-eigensystems">Real Generalized Symmetric-Definite Eigensystems</a></li>
+<li><a class="reference internal" href="#complex-generalized-hermitian-definite-eigensystems">Complex Generalized Hermitian-Definite Eigensystems</a></li>
+<li><a class="reference internal" href="#real-generalized-nonsymmetric-eigensystems">Real Generalized Nonsymmetric Eigensystems</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="linalg.html"
+                          title="previous chapter">Linear Algebra</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="random.html"
+                          title="next chapter">Random Numbers</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/eigen.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="random.html" title="Random Numbers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="linalg.html" title="Linear Algebra"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Eigensystems</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

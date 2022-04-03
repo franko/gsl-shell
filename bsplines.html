@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Basis Splines &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Fast Fourier Transform" href="fft.html" />
+    <link rel="prev" title="Nonlinear Least Squares fit" href="nlinfit.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fft.html" title="Fast Fourier Transform"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nlinfit.html" title="Nonlinear Least Squares fit"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basis Splines</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="basis-splines">
+<h1>Basis Splines<a class="headerlink" href="#basis-splines" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>B-splines are commonly used as basis functions to fit smoothing curves
+to large data sets. To do this, the abscissa axis is broken up into
+some number of intervals, where the endpoints of each interval are
+called “breakpoints”. These breakpoints are then converted to “knots”
+by imposing various continuity and smoothness conditions at each
+interface. Given a nondecreasing knot vector t = {t<sub>0</sub>, t<sub>1</sub>, …,
+t<sub>n+k-1</sub>}, the n basis splines of order k are defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  B_{i,1}(x) = &amp;  \left\{ \begin{array}{rl}
+                           1 &amp; \qquad t_i \le x &lt; t_{i+1} \\
+                           0 &amp; \qquad \textrm{else}
+                         \end{array} \right. \\
+  B_{i,k}(x) = &amp; \dfrac{x - t_i}{t_{i+k-1} - t_i} B_{i,k-1}(x)
+              + \dfrac{t_{i+k} - x}{t_{i+k} - t_{i+1}} B_{i+1,k-1}(x)
+\end{array}\end{split}\]</div>
+<p>for i = 0, …, n-1. The common case of cubic B-splines is given by k =
+4. The above recurrence relation can be evaluated in a numerically
+stable way by the de Boor algorithm.</p>
+<p>If we define appropriate knots on an interval [a,b] then the B-spline basis functions form a complete set on that interval. Therefore we can expand a smoothing function as</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \sum_i c_i B_{i,k}(x)\]</div>
+<p>given enough <span class="math notranslate nohighlight">\((x_j, f(x_j))\)</span> data pairs. The coefficients c<sub>i</sub> can be readily obtained from a least-squares fit.</p>
+</section>
+<section id="b-splines-functions">
+<h2>B-Splines functions<a class="headerlink" href="#b-splines-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="bspline">
+<span class="sig-name descname"><span class="pre">bspline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#bspline" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">bspline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">knots</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Create an object of type <a class="reference internal" href="#BSpline" title="BSpline"><code class="xref py py-class docutils literal notranslate"><span class="pre">BSpline</span></code></a>. In the first form it will create a basis splines in the interval from <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">N</span></code> uniformly spaced breaks. The <code class="docutils literal notranslate"><span class="pre">order</span></code> is 4 if unspecified, it corresponds to cubic splines. In the second form you should provide a non-decreasing list <code class="docutils literal notranslate"><span class="pre">knots</span></code> with all the points.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BSpline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BSpline</span></span><a class="headerlink" href="#BSpline" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the class use to calculate the Basis Splines.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="BSpline.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BSpline.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a column matrix with <code class="docutils literal notranslate"><span class="pre">nbreak</span> <span class="pre">+</span> <span class="pre">order</span> <span class="pre">-</span> <span class="pre">2</span></code> elements that stores the value of all the B-spline basis functions at the position <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BSpline.model">
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BSpline.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a column matrix of dimension N and returns a matrix of M columns and N rows where M = nbreak + order - 1. The matrix will contain, for each column, the value of the corresponding basis function evaluated in all the N position given by <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="b-splines-example">
+<h2>B-splines Example<a class="headerlink" href="#b-splines-example" title="Permalink to this headline">¶</a></h2>
+<p>The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve <span class="math notranslate nohighlight">\(y(x) = \cos(x) \exp(-x/10)\)</span> on the interval [0,15] with Gaussian noise added:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="n">use</span> <span class="s1">&#39;graph&#39;</span>
+
+<span class="c1">-- number of points and breakpoints</span>
+<span class="n">n</span><span class="p">,</span> <span class="n">br</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">10</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+<span class="n">xsmp</span> <span class="o">=</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="mi">15</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">-- we calculate the simulated data</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">xsmp</span><span class="p">),</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">f</span><span class="p">(</span><span class="n">xsmp</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+
+<span class="c1">-- we add a Gaussian noise and calculate weights</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="kr">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span> <span class="kr">do</span>
+    <span class="kd">local</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+   <span class="n">y</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">rnd</span><span class="p">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span>
+   <span class="n">w</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">sigma</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span>
+<span class="kr">end</span>
+
+<span class="c1">-- we create a bspline object and we calculate the model matrix X</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">bspline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="n">br</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">b</span><span class="p">:</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1">-- linear least-squares fit</span>
+<span class="n">c</span><span class="p">,</span> <span class="n">cov</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">linfit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+<span class="c1">-- plot</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">plot</span><span class="p">(</span><span class="s1">&#39;B-splines curve approximation&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">xyline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">X</span> <span class="o">*</span> <span class="n">c</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">xyline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;marker&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And the resulting plot is:</p>
+<figure class="align-default">
+<img alt="_images/example-bsplines-plot.png" src="_images/example-bsplines-plot.png" />
+</figure>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Basis Splines</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#b-splines-functions">B-Splines functions</a></li>
+<li><a class="reference internal" href="#b-splines-example">B-splines Example</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="nlinfit.html"
+                          title="previous chapter">Nonlinear Least Squares fit</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="fft.html"
+                          title="next chapter">Fast Fourier Transform</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bsplines.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fft.html" title="Fast Fourier Transform"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nlinfit.html" title="Nonlinear Least Squares fit"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basis Splines</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

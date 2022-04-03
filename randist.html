@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Random Number Distributions &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Probability Distribution Functions" href="pdf.html" />
+    <link rel="prev" title="Random Numbers" href="random.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pdf.html" title="Probability Distribution Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="random.html" title="Random Numbers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random Number Distributions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-rnd">
+<span id="random-number-distributions"></span><h1>Random Number Distributions<a class="headerlink" href="#module-rnd" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes functions for generating random variates and
+computing their probability distributions.  Samples from the
+distributions described in this chapter can be obtained using any of
+the random number generators in the library as an underlying source of
+randomness.</p>
+<p>In the simplest cases a non-uniform distribution can be obtained
+analytically from the uniform distribution of a random number
+generator by applying an appropriate transformation.  This method uses
+one call to the random number generator.  More complicated
+distributions are created by the “acceptance-rejection” method, which
+compares the desired distribution against a distribution which is
+similar and known analytically.  This usually requires several samples
+from the generator.</p>
+<p>The library also provides cumulative distribution functions and
+inverse cumulative distribution functions, sometimes referred to as
+quantile functions.  The cumulative distribution functions and their
+inverses are computed separately for the upper and lower tails of the
+distribution, allowing full accuracy to be retained for small results.</p>
+<span class="target" id="rnd-gaussian"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.gaussian">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a Gaussian random variate, with mean zero and
+standard deviation ‘sigma’.  The probability distribution for
+Gaussian random variates is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over \sqrt{2 \pi \sigma^2}} \exp (-x^2 / 2\sigma^2) dx\]</div>
+<p>for x in the range -∞ to +∞ .  Use the transformation z =
+μ + x on the numbers returned by ‘gsl_ran_gaussian’ to obtain a
+Gaussian distribution with mean μ.  This function uses the
+Box-Mueller algorithm which requires two calls to the random
+number generator R.</p>
+</dd></dl>
+
+<span class="target" id="rnd-exponential"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.exponential">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.exponential" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the exponential
+distribution with mean ‘mu’. The distribution is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over \mu} \exp(-x/\mu) dx\]</div>
+<p>for x &gt;= 0.</p>
+</dd></dl>
+
+<span class="target" id="rnd-chisq"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.chisq">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.chisq" title="Permalink to this definition">¶</a></dt>
+<dd><p>The chi-squared distribution arises in statistics.  If Y<sub>i</sub> are n
+independent gaussian random variates with unit variance then the
+sum-of-squares,</p>
+<div class="math notranslate nohighlight">
+\[X_i = \sum_i Y_i^2\]</div>
+<p>has a chi-squared distribution with n degrees of freedom.</p>
+<p>This function returns a random variate from the chi-squared
+distribution with ν degrees of freedom. The distribution function
+is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over 2 \Gamma(\nu/2) } (x/2)^{\nu/2 - 1} \exp(-x/2) dx\]</div>
+<p>for x &gt;= 0.</p>
+</dd></dl>
+
+<span class="target" id="rnd-laplace"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.laplace">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.laplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the Laplace
+distribution with width <code class="docutils literal notranslate"><span class="pre">a</span></code>.  The distribution is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over 2 a}  \exp(-|x/a|) dx\]</div>
+<p>for -∞ &lt; x &lt; +∞.</p>
+</dd></dl>
+
+<span class="target" id="rnd-tdist"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.tdist">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">tdist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.tdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>The t-distribution arises in statistics.  If Y<sub>1</sub> has a
+normal distribution and Y<sub>2</sub> has a chi-squared distribution
+with nu degrees of freedom then the ratio,</p>
+<div class="math notranslate nohighlight">
+\[X = { Y_1 \over \sqrt{Y_2 / \nu} }\]</div>
+<p>has a t-distribution t(x; ν) with ν degrees of freedom.</p>
+<p>This function returns a random variate from the t-distribution.
+The distribution function is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {\Gamma((\nu + 1)/2) \over \sqrt{\pi \nu} \Gamma(\nu/2)}
+   (1 + x^2/\nu)^{-(\nu + 1)/2} dx\]</div>
+<p>for -∞ &lt; x &lt; +∞.</p>
+</dd></dl>
+
+<span class="target" id="rnd-cauchy"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.cauchy">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">cauchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.cauchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the Cauchy
+distribution with scale parameter A.  The probability distribution
+for Cauchy random variates is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over a\pi (1 + (x/a)^2) } dx\]</div>
+<p>for x in the range - ∞ to + ∞ .  The Cauchy distribution is
+also known as the Lorentz distribution.</p>
+</dd></dl>
+
+<span class="target" id="rnd-rayleigh"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.rayleigh">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">rayleigh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.rayleigh" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the Rayleigh
+distribution with scale parameter σ.  The distribution is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {x \over \sigma^2} \exp(- x^2/(2 \sigma^2)) dx\]</div>
+<p>for x &gt; 0.</p>
+</dd></dl>
+
+<span class="target" id="rnd-fdist"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.fdist">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">fdist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.fdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>The F-distribution arises in statistics.  If Y<sub>1</sub> and Y<sub>2</sub> are chi-squared deviates with ν <sub>1</sub> and
+ν<sub>2</sub> degrees of freedom then the ratio,</p>
+<div class="math notranslate nohighlight">
+\[X = { (Y_1 / \nu_1) \over (Y_2 / \nu_2) }\]</div>
+<p>has an F-distribution F(x; ν<sub>1</sub>, ν<sub>2</sub>).</p>
+<p>This function returns a random variate from the F-distribution with
+degrees of freedom ν<sub>1</sub> and ν<sub>2</sub>. The
+distribution function is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx =
+   { \Gamma((\nu_1 + \nu_2)/2)
+        \over \Gamma(\nu_1/2) \Gamma(\nu_2/2) }
+   \nu_1^{\nu_1/2} \nu_2^{\nu_2/2}
+   x^{\nu_1/2 - 1} (\nu_2 + \nu_1 x)^{-\nu_1/2 -\nu_2/2}\]</div>
+<p>for x &gt;= 0.</p>
+</dd></dl>
+
+<span class="target" id="rnd-gamma"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.gamma">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the gamma
+distribution. The distribution function is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over \Gamma(a) b^a} x^{a-1} e^{-x/b} dx\]</div>
+<p>for x &gt; 0.</p>
+<p>The gamma distribution with an integer parameter a is known as the
+Erlang distribution. The variates are computed using the
+Marsaglia-Tsang fast gamma method.</p>
+</dd></dl>
+
+<span class="target" id="rnd-beta"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.beta">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the beta
+distribution. The distribution function is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {\Gamma(a+b) \over \Gamma(a) \Gamma(b)} x^{a-1} (1-x)^{b-1} dx\]</div>
+<p>for 0 &lt;= x &lt;= 1.</p>
+</dd></dl>
+
+<span class="target" id="rnd-gaussian-tail"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.gaussian_tail">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.gaussian_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function provides random variates from the upper tail of a
+Gaussian distribution with standard deviation sigma. The values
+returned are larger than the lower limit a, which must be
+positive. The method is based on Marsaglia’s famous
+rectangle-wedge-tail algorithm (Ann. Math. Stat. 32, 894–899
+(1961)), with this aspect explained in Knuth, v2, 3rd ed, p139,586
+(exercise 11).</p>
+<p>The probability distribution for Gaussian tail random variates is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over N(a;\sigma) \sqrt{2 \pi \sigma^2}}
+\exp \left(- \frac{x^2}{2 \sigma^2}\right) dx\]</div>
+<p>for x &gt; a where N(a; σ) is the normalization constant,</p>
+<div class="math notranslate nohighlight">
+\[N(a; \sigma) = (1/2) \textrm{erfc}(a / \sqrt{2 \sigma^2}).\]</div>
+</dd></dl>
+
+<span class="target" id="rnd-exppow"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.exppow">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">exppow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.exppow" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the exponential power
+distribution with scale parameter a and exponent b. The
+distribution is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over 2 a \Gamma(1+1/b)} \exp(-|x/a|^b) dx\]</div>
+<p>for x &gt;= 0. For b = 1 this reduces to the Laplace distribution. For
+b = 2 it has the same form as a gaussian distribution, but with
+<span class="math notranslate nohighlight">\(a = \sqrt{2} \sigma\)</span>.</p>
+</dd></dl>
+
+<span class="target" id="rnd-lognormal"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.lognormal">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">lognormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.lognormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random variate from the lognormal
+distribution. The distribution function is,</p>
+<div class="math notranslate nohighlight">
+\[p(x) dx = {1 \over x \sqrt{2 \pi \sigma^2} }
+\exp(-(\ln(x) - \zeta)^2/2 \sigma^2) dx\]</div>
+<p>for x &gt; 0.</p>
+</dd></dl>
+
+<span class="target" id="rnd-binomial"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.binomial">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.binomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random integer from the binomial
+distribution, the number of successes in n independent trials with
+probability p. The probability distribution for binomial variates
+is,</p>
+<div class="math notranslate nohighlight">
+\[p(k) = {n! \over k! (n-k)! } p^k (1-p)^{n-k}\]</div>
+<p>for 0 &lt;= k &lt;= n.</p>
+</dd></dl>
+
+<span class="target" id="rnd-poisson"></span><dl class="py function">
+<dt class="sig sig-object py" id="rnd.poisson">
+<span class="sig-prename descclassname"><span class="pre">rnd.</span></span><span class="sig-name descname"><span class="pre">poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnd.poisson" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a random integer from the Poisson
+distribution with mean mu. The probability distribution for Poisson
+variates is,</p>
+<div class="math notranslate nohighlight">
+\[p(k) = {\mu^k \over k!} \exp(-\mu)\]</div>
+<p>for k &gt;= 0.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="random.html"
+                          title="previous chapter">Random Numbers</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="pdf.html"
+                          title="next chapter">Probability Distribution Functions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/randist.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pdf.html" title="Probability Distribution Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="random.html" title="Random Numbers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random Number Distributions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

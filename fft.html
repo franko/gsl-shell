@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Fast Fourier Transform &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Ordinary Differential Equations" href="ode.html" />
+    <link rel="prev" title="Basis Splines" href="bsplines.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="Ordinary Differential Equations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bsplines.html" title="Basis Splines"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fast Fourier Transform</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fast-fourier-transform">
+<h1>Fast Fourier Transform<a class="headerlink" href="#fast-fourier-transform" title="Permalink to this headline">¶</a></h1>
+<section id="mathematical-definitions">
+<h2>Mathematical Definitions<a class="headerlink" href="#mathematical-definitions" title="Permalink to this headline">¶</a></h2>
+<p>Fast Fourier Transforms are efficient algorithms for calculating the discrete Fourier transform (DFT)</p>
+<div class="math notranslate nohighlight">
+\[x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)\]</div>
+<p>The DFT usually arises as an approximation to the continuous Fourier
+transform when functions are sampled at discrete intervals in space or
+time. The naive evaluation of the discrete Fourier transform is a matrix-vector multiplication <span class="math notranslate nohighlight">\(W\vec{z}\)</span>. A general matrix-vector multiplication takes O(n<sup>2</sup>) operations for n data-points. Fast Fourier transform algorithms use a divide-and-conquer strategy to factorize the matrix W into smaller sub-matrices, corresponding to the integer factors of the length n. If n can be factorized into a product of integers f<sub>1</sub> f<sub>2</sub> … f<sub>m</sub> then the DFT can be computed in O(n Σ f<sub>i</sub>) operations. For a radix-2 FFT this gives an operation count of O(n log<sub>2</sub> n).</p>
+<p>All the FFT functions offer two types of transform: forwards and inverse, based on the same mathematical definitions. The definition of the forward Fourier transform, <code class="docutils literal notranslate"><span class="pre">fft(z)</span></code>, is,</p>
+<div class="math notranslate nohighlight">
+\[x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)\]</div>
+<p>and the definition of the inverse Fourier transform is,</p>
+<div class="math notranslate nohighlight">
+\[z_j = {1 \over n} \sum_{k=0}^{n-1} x_k \exp(2\pi i j k / n).\]</div>
+<p>The factor of 1/n makes this a true inverse.</p>
+<p>In general there are two possible choices for the sign of the exponential in the transform/ inverse-transform pair.
+GSL follows the same convention as fftpack, using a negative exponential for the forward transform.
+The advantage of this convention is that the inverse transform recreates the original function with simple Fourier synthesis.
+Numerical Recipes uses the opposite convention, a positive exponential in the forward transform.</p>
+</section>
+<section id="gsl-shell-interface">
+<h2>GSL Shell interface<a class="headerlink" href="#gsl-shell-interface" title="Permalink to this headline">¶</a></h2>
+<p>GSL Shell provide a simple interface to perform Fourier transforms of real data with the functions <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a> and <a class="reference internal" href="#num.fftinv" title="num.fftinv"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fftinv()</span></code></a>.
+The first function performs the Fourier transform of a column matrix and the second is the inverse Fourier transform.</p>
+<p>The function <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a> returns a half-complex array.
+This latter is similar to a column matrix of complex numbers, but it is actually a different object because the numbers are packed together following some specific rules related to the algorithm.</p>
+<p>The idea is that you can access the elements of this vector for reading or writing simply by indexing it.
+You can also obtain the size of the vector using the operator ‘#’.
+The valid indices for a half-complex object range from 0 to N-1 where N is the size if the vector.
+Each element of the vector corresponds to the coefficient <span class="math notranslate nohighlight">\(z_k\)</span> defined above.</p>
+<p>When performing Fourier transforms, it is important to know that the computation speed can be greatly influenced by the size of the vector. If the size is a power of two, a very efficient algorithm can be used and we can talk in this case of a Fast Fourier Transform (FFT). In addition, the algorithm has the advantage that it does not require any additional workspace. When the size of the vector is not a power of two, we can have two different cases:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the size is a product of small prime numbers</p></li>
+<li><p>the size contains a big (&gt; 7) prime number in its factorization</p></li>
+</ul>
+</div></blockquote>
+<p>This detail is important because if the size is a product of small prime numbers, a fast algorithm is still available but it is still somewhat slower and it does require some additional workspace.
+In the worst case when the size cannot be factorized to small prime numbers, the Fourier transform can still be computed but the calculation is slower, especially for large arrays.</p>
+<p>GSL Shell hides all the details and takes care of choosing the appropriate algorithm based on the size of the vector.
+It also transparently provides any additional workspace that may be needed for the algorithm.
+In order to avoid repeated allocation of workspace memory, the workspace allocated is kept in memory and reused <em>if the size of the array does not change</em>.
+This means that the approach of GSL Shell is quite optimal if you perform many Fourier transforms (direct or inverse) of the same size.</p>
+<p>Even though GSL Shell takes care of the details automatically, you should be aware of these performance notices because it can make a big difference in real applications.
+From a practical point of view, it is useful in most cases to always provide samples whose size is a power of two.</p>
+<p>Another property of the functions <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a> and <a class="reference internal" href="#num.fftinv" title="num.fftinv"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fftinv()</span></code></a> is that they can optionally perform the transformation <em>in place</em> by modifying the original data instead of creating a copy.
+When a transformation <em>in place</em> is requested, the routine still returns a new vector (either a real matrix or a half-complex array) but this latter will point to the same underlying data of the original vector.
+The transformation <em>in place</em> can be useful in some cases to avoid unnecessary data copying and memory allocation.</p>
+</section>
+<section id="fourier-transform-of-real-data">
+<h2>Fourier Transform of Real Data<a class="headerlink" href="#fourier-transform-of-real-data" title="Permalink to this headline">¶</a></h2>
+<p>For real data, the Fourier coefficients satisfy the relation</p>
+<div class="math notranslate nohighlight">
+\[z_k = z_{N-k}^*\]</div>
+<p>where N is the size of the vector and k is any integer number from 0 to N-1.
+Because of this relation, the data is packed in a special type of object called a half-complex array.</p>
+<p>To access an element in a half-complex array, you can index it with an integer number between 0 and N-1, inclusive. So, for example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- get a random number generator</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span>
+
+<span class="c1">-- create a vector with random numbers</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">||</span> <span class="n">rnd</span><span class="p">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="c1">-- take the Fourier transform</span>
+<span class="n">ft</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1">-- print all the coefficients of the Fourier transform</span>
+<span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">#</span><span class="n">ft</span><span class="o">-</span><span class="mi">1</span> <span class="kr">do</span> <span class="nb">print</span><span class="p">(</span><span class="n">ft</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="kr">end</span>
+</pre></div>
+</div>
+<p>As shown in the example above, you can use the Lua operator ‘#’ to obtain the size of a half-complex array.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="num.fft">
+<span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">fft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">in_place</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#num.fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the Fourier transform of the real-valued column matrix <code class="docutils literal notranslate"><span class="pre">x</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">in_place</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> then the original data is altered and the resulting vector will point to the same underlying data of the original vector.</p>
+<p>Please note that the value you obtain is not an ordinary matrix but a half-complex array.
+You can access the elements of such an array by indexing the vector.
+If you want to have an ordinary matrix you can easily build it with the following instructions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- we suppose that f is an half-complex array</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">cnew</span><span class="p">(</span><span class="o">#</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="o">|</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="num.fftinv">
+<span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">fftinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hc</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">in_place</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#num.fftinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a column matrix that contains the inverse Fourier transform of the half-complex vector <code class="docutils literal notranslate"><span class="pre">hc</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">in_place</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> then the original data is altered and the resulting vector will point to the same underlying data of the original vector.</p>
+<p>This transformation is the inverse of the function <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a>, so that if you perform the two transformations consecutively you will obtain a vector identical to the initial one.</p>
+<p>A typical usage of <code class="xref py py-func docutils literal notranslate"><span class="pre">fft_inv()</span></code> is to revert the transformation made with <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">fft()</span></code></a> but by doing some transformations along the way.
+So a typical usage path could be:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- we assume v is a column matrix with our data</span>
+<span class="n">ft</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1">-- Fourier transform</span>
+
+<span class="c1">-- here we can manipulate the half-complex array &#39;ft&#39;</span>
+<span class="c1">-- using the methods `get&#39; and `set&#39;</span>
+<span class="n">some</span> <span class="n">code</span> <span class="n">here</span>
+
+<span class="n">vt</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">fftinv</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span> <span class="c1">-- we perform the inverse Fourier transform</span>
+<span class="c1">-- now vt is a vector of the same size of v</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="fft-example">
+<h2>FFT example<a class="headerlink" href="#fft-example" title="Permalink to this headline">¶</a></h2>
+<p>In this example we will treat a square pulse in the temporal domain. To illustrate a typical example of FFT usage we perform the Fourier Transform of the signal and we cut the higher order frequencies. Then we perform the inverse transform and we compare the result with the original time signal.</p>
+<p>So, first we define our square pulse in the time domain. Actually it will be a matrix with just one column:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">n</span><span class="p">,</span> <span class="n">ncut</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">16</span>
+
+<span class="c1">-- we create a pulse signal in the time domain</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="o">/</span><span class="mi">3</span> <span class="ow">and</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="mi">3</span> <span class="ow">and</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Then we create two new plots, one for the Fourier transform and one for the signal itself:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">pt</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Original signal / reconstructed&#39;</span><span class="p">)</span>
+
+<span class="n">pt</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">filine</span><span class="p">(</span><span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we are ready to perform:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the Fourier transform</p></li>
+<li><p>cut the higher frequencies</p></li>
+<li><p>transform back the signal in the time domain</p></li>
+</ul>
+</div></blockquote>
+<p>and plot the results:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">ft</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="n">pf</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fibars</span><span class="p">(</span><span class="o">|</span><span class="n">k</span><span class="o">|</span> <span class="n">complex</span><span class="p">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ft</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="n">pf</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;FFT Power Spectrum&#39;</span>
+
+<span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="n">ncut</span><span class="p">,</span> <span class="n">n</span><span class="o">/</span><span class="mi">2</span> <span class="kr">do</span> <span class="n">ft</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="kr">end</span>
+<span class="n">ytr</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">fftinv</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
+
+<span class="n">pt</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">filine</span><span class="p">(</span><span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">ytr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n</span><span class="p">),</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+<span class="n">pt</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-default" id="id1">
+<img alt="_images/fft-example-power-spectrum.png" src="_images/fft-example-power-spectrum.png" />
+<figcaption>
+<p><span class="caption-text">Fourier transform spectrum</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id2">
+<img alt="_images/fft-example-time-signal.png" src="_images/fft-example-time-signal.png" />
+<figcaption>
+<p><span class="caption-text">Time signal before (black) and after (red) the transformation</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>You can observe in the reconstructed signal (the red curve) that we obtain approximately the square pulse, but with a lot of oscillations. Of course this is an artifact of our transformations. The reason is that in order to perfectly reproduce a sharp signal, we also need all the high frequencies of the Fourier transform.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Fast Fourier Transform</a><ul>
+<li><a class="reference internal" href="#mathematical-definitions">Mathematical Definitions</a></li>
+<li><a class="reference internal" href="#gsl-shell-interface">GSL Shell interface</a></li>
+<li><a class="reference internal" href="#fourier-transform-of-real-data">Fourier Transform of Real Data</a></li>
+<li><a class="reference internal" href="#fft-example">FFT example</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="bsplines.html"
+                          title="previous chapter">Basis Splines</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="ode.html"
+                          title="next chapter">Ordinary Differential Equations</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/fft.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="Ordinary Differential Equations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bsplines.html" title="Basis Splines"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fast Fourier Transform</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>GSL Shell Examples &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GSL FFI interface" href="gsl-ffi.html" />
+    <link rel="prev" title="Comma Separated Values Parsing Utilities" href="csv.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gsl-ffi.html" title="GSL FFI interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL Shell Examples</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="gsl-shell-examples">
+<span id="id1"></span><h1>GSL Shell Examples<a class="headerlink" href="#gsl-shell-examples" title="Permalink to this headline">¶</a></h1>
+<p>In this chapter we give some usage examples of GSL Shell.</p>
+<section id="home-made-bessel-functions">
+<h2>Home-made Bessel Functions<a class="headerlink" href="#home-made-bessel-functions" title="Permalink to this headline">¶</a></h2>
+<p>The Bessel function J<sub>n</sub> for integer values of n can be defined with the following integral:</p>
+<div class="math notranslate nohighlight">
+\[J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau\]</div>
+<p>We can use this definition to define our home-made Bessel function.
+To perform the integral we need to use the <a class="reference internal" href="integ.html#num.integ" title="num.integ"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.integ()</span></code></a> function and provide the function to integrate.
+This is easy like eating a piece of cake:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="kr">function</span> <span class="nf">bessJ</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">epsabs</span><span class="p">,</span> <span class="n">epsrel</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mf">1e-4</span>
+   <span class="kd">local</span> <span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span> <span class="n">cos</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">t</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="c1">-- we define the function to integrate</span>
+   <span class="kr">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">pi</span> <span class="o">*</span> <span class="n">num</span><span class="p">.</span><span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">epsabs</span><span class="p">,</span> <span class="n">epsrel</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>The definition of <code class="docutils literal notranslate"><span class="pre">bessJ</span></code> takes x and n as arguments and calculates the definite integral between 0 and π. Then we can plot the results for various values of n:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Bessel Functions Jn, n=0 ... 5&#39;</span><span class="p">)</span>
+<span class="kr">for</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span> <span class="kr">do</span>
+   <span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">bessJ</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">graph</span><span class="p">.</span><span class="n">rainbow</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+<span class="kr">end</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>to obtain the following result:</p>
+<figure class="align-default">
+<img alt="_images/example-bessJ-plot.png" src="_images/example-bessJ-plot.png" />
+</figure>
+<p>Then we can also calculate a matrix with the tabulated values. For example, we can use the columns of the matrix to span different values of n. We write:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="o">|</span><span class="n">k</span><span class="p">,</span><span class="n">n</span><span class="o">|</span> <span class="n">bessJ</span><span class="p">((</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>And we obtain the following matrix:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>           <span class="mi">1</span>           <span class="mi">0</span>           <span class="mi">0</span>           <span class="mi">0</span>           <span class="mi">0</span>           <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.997502</span>   <span class="mf">0.0499375</span>  <span class="mf">0.00124896</span> <span class="mf">2.08203e-05</span> <span class="mf">2.60286e-07</span>           <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.990025</span>   <span class="mf">0.0995008</span>  <span class="mf">0.00498335</span>  <span class="mf">0.00016625</span> <span class="mf">4.15834e-06</span> <span class="mf">8.31945e-08</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.977626</span>    <span class="mf">0.148319</span>   <span class="mf">0.0111659</span> <span class="mf">0.000559343</span>  <span class="mf">2.0999e-05</span> <span class="mf">6.30443e-07</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.960398</span>    <span class="mf">0.196027</span>   <span class="mf">0.0197347</span>  <span class="mf">0.00132005</span> <span class="mf">6.61351e-05</span> <span class="mf">2.64894e-06</span> <span class="p">]</span>
+<span class="p">[</span>     <span class="mf">0.93847</span>    <span class="mf">0.242268</span>    <span class="mf">0.030604</span>  <span class="mf">0.00256373</span> <span class="mf">0.000160736</span> <span class="mf">8.05363e-06</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.912005</span>    <span class="mf">0.286701</span>   <span class="mf">0.0436651</span>  <span class="mf">0.00439966</span>  <span class="mf">0.00033147</span> <span class="mf">1.99482e-05</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.881201</span>    <span class="mf">0.328996</span>   <span class="mf">0.0587869</span>  <span class="mf">0.00692965</span> <span class="mf">0.000610097</span> <span class="mf">4.28824e-05</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.846287</span>    <span class="mf">0.368842</span>   <span class="mf">0.0758178</span>   <span class="mf">0.0102468</span>  <span class="mf">0.00103298</span> <span class="mf">8.30836e-05</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.807524</span>     <span class="mf">0.40595</span>   <span class="mf">0.0945863</span>    <span class="mf">0.014434</span>  <span class="mf">0.00164055</span> <span class="mf">0.000148658</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mf">0.765198</span>    <span class="mf">0.440051</span>    <span class="mf">0.114903</span>   <span class="mf">0.0195634</span>  <span class="mf">0.00247664</span> <span class="mf">0.000249758</span> <span class="p">]</span>
+<span class="p">[</span> <span class="p">...</span> <span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="the-von-koch-curve">
+<h2>The Von-Koch curve<a class="headerlink" href="#the-von-koch-curve" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://en.wikipedia.org/wiki/Koch_snowflake">Von-Koch curve</a> is a simple and beautiful fractal curve described in 1904 by the Swedish mathematician Helge von Koch.</p>
+<p>Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="kr">function</span> <span class="nf">vonkoch</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">sx</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">}</span>
+   <span class="kd">local</span> <span class="n">sy</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+   <span class="kd">local</span> <span class="n">sh</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">}</span>
+   <span class="kd">local</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+   <span class="kd">local</span> <span class="n">w</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">ilist</span><span class="p">(</span><span class="o">||</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+   <span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span><span class="o">^</span><span class="n">n</span><span class="p">)</span>
+   <span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span> <span class="kr">do</span>
+      <span class="n">sx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+      <span class="n">sy</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sy</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+   <span class="kr">end</span>
+
+   <span class="kd">local</span> <span class="n">first</span> <span class="o">=</span> <span class="kc">true</span>
+
+   <span class="kr">return</span> <span class="kr">function</span><span class="p">()</span>
+          <span class="kr">if</span> <span class="n">first</span> <span class="kr">then</span> <span class="n">first</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span> <span class="kr">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="kr">end</span>
+          <span class="kr">if</span> <span class="n">w</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="kr">then</span>
+             <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">sx</span><span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sy</span><span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+             <span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="kr">do</span>
+                <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span>
+                <span class="kr">if</span> <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">~=</span> <span class="mi">0</span> <span class="kr">then</span>
+                   <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">sh</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span> <span class="o">%</span> <span class="mi">6</span>
+                   <span class="kr">break</span>
+                <span class="kr">end</span>
+             <span class="kr">end</span>
+             <span class="kr">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+          <span class="kr">end</span>
+       <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>Then we need to produce the plot. Since we want to make something cool, we produce a closed Von Koch triangle by always using the same curve and adding it to the plot with some rotations and translations. We also produce a nice semi-transparent background to have something more beautiful. Here is the code:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">path</span><span class="p">()</span>
+<span class="n">t</span><span class="p">:</span><span class="n">move_to</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">t</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">t</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">t</span><span class="p">:</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">v</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">ipath</span><span class="p">(</span><span class="n">vonkoch</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">180</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{{</span><span class="s1">&#39;translate&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="n">angle</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">{},</span> <span class="p">{{</span><span class="s1">&#39;translate&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="n">angle</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">rgb</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">180</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">}},</span> <span class="p">{{</span><span class="s1">&#39;translate&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="n">angle</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;stroke&#39;</span><span class="p">}},</span> <span class="p">{{</span><span class="s1">&#39;translate&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="n">angle</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">}})</span>
+
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And this the result:</p>
+<figure class="align-default">
+<img alt="_images/examples-von-koch-complete.png" src="_images/examples-von-koch-complete.png" />
+</figure>
+<p>With a similar procedure, for which the code is in <code class="docutils literal notranslate"><span class="pre">demos/fractals.lua</span></code>, we can produce the beautiful Levy C curve:</p>
+<figure class="align-default">
+<img alt="_images/examples-levy-c-curve-1.png" src="_images/examples-levy-c-curve-1.png" />
+</figure>
+</section>
+<section id="reading-and-plotting-data-from-files">
+<h2>Reading and plotting data from files<a class="headerlink" href="#reading-and-plotting-data-from-files" title="Permalink to this headline">¶</a></h2>
+<p>In this example we show how to load some data stored in a file in CSV format and use it to make a plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just plain text with several lines where each line consists of a comma-separated list of numbers or strings.</p>
+<p>In order to load the data, you need to load the module <a class="reference internal" href="csv.html#module-csv" title="csv"><code class="xref py py-mod docutils literal notranslate"><span class="pre">csv</span></code></a> and use the function <a class="reference internal" href="csv.html#csv.read" title="csv.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code></a>. In this example, we will use the data stored in the file <code class="docutils literal notranslate"><span class="pre">examples/data/sige-sims-prof.csv</span></code>. This set of data contains just two columns, of which the first one is the x and the second column represents the y. Here is the simple code to load the data:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">csv</span> <span class="o">=</span> <span class="nb">require</span> <span class="s1">&#39;csv&#39;</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">csv</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;examples/data/sige-sims-prof.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can then print the number of lines in the table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#t</span>
+<span class="go">316</span>
+</pre></div>
+</div>
+<p>If you want to plot the data in the table, there is actually no function that will do that right away, but you can do it by using a few functions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">dget</span> <span class="o">=</span> <span class="kr">function</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="kr">return</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="kr">end</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">ipath</span><span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">dget</span><span class="p">,</span> <span class="o">#</span><span class="n">t</span><span class="p">)))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The idea is that, in order to plot the curve, we need to <em>build</em> the curve beforehand.
+What we want is actually a line that connects the points <code class="docutils literal notranslate"><span class="pre">(x[i],</span> <span class="pre">y[i])</span></code> where <code class="docutils literal notranslate"><span class="pre">x[i]</span></code> and <code class="docutils literal notranslate"><span class="pre">y[i]</span></code> are taken from the rows of the table <code class="docutils literal notranslate"><span class="pre">t</span></code>.
+The last resort to obtain that would be to create a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> object and to give all the points in a procedural way like this:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- we create a path and gives it the starting point</span>
+<span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">path</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="kr">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">#</span><span class="n">t</span> <span class="kr">do</span>
+  <span class="n">ln</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>but it can be more handy to use the <code class="xref py py-func docutils literal notranslate"><span class="pre">ipath()</span></code> function to build the curve. This latter function builds a curve using an iterator that returns values in the form <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code>. To obtain the iterator, we use the <code class="xref py py-func docutils literal notranslate"><span class="pre">sequence()</span></code> function that lets us easily build an iterator over a sequence of integer numbers.</p>
+<p>So to clarify the code given above, we can separate the curve and the iterator instantiations as in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">()</span>
+
+<span class="c1">-- we define our iterator</span>
+<span class="n">it</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">sequence</span><span class="p">(</span><span class="kr">function</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="kr">return</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="kr">end</span><span class="p">,</span> <span class="o">#</span><span class="n">t</span><span class="p">)</span>
+
+<span class="c1">-- we create the curve using the iterator just defined</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">ipath</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+
+<span class="c1">-- then we add it to the plot, we give a title and show the result</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;SiGe SIMS profile&quot;</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and here the resulting image:</p>
+<figure class="align-default">
+<img alt="_images/sige-plot-example.png" src="_images/sige-plot-example.png" />
+</figure>
+</section>
+<section id="zernike-polynomials">
+<h2>Zernike Polynomials<a class="headerlink" href="#zernike-polynomials" title="Permalink to this headline">¶</a></h2>
+<p><em>Taken from Wikipedia</em></p>
+<p>In mathematics, the Zernike polynomials are a sequence of polynomials that are orthogonal on the unit disk. Named after Frits Zernike, they play an important role in beam optics.</p>
+<section id="definitions">
+<h3>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h3>
+<p>There are even and odd Zernike polynomials. The even ones are defined as</p>
+<div class="math notranslate nohighlight">
+\[Z_n^m(\rho, \phi) = R_n^m(\rho) \cos(m \phi)\]</div>
+<p>and the odd ones as</p>
+<div class="math notranslate nohighlight">
+\[Z_n^{-m}(\rho, \phi) = R_n^m(\rho) \sin(m \phi)\]</div>
+<p>where m and n are nonnegative integers with n≥m, φ is the azimuthal angle, and ρ is the radial distance . The radial polynomials R<sub>n</sub><sup>m</sup> are defined as</p>
+<div class="math notranslate nohighlight">
+\[R_n^m(\rho) = \sum_{k=0}^{(n-m)/2} \frac{(-1)^k (n-k)!}{k! ((n+m)/2-k)! ((n-m)/2 - k)!} \rho^{n - 2 k}\]</div>
+<p>for n − m even, and are identically 0 for n − m odd.
+For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup>(ρ).</p>
+</section>
+<section id="implementation">
+<h3>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h3>
+<p>The above formula can be implemented quite straightforwardly in GSL Shell with only a subtle point about the factorials in the denominator. The problem is that in some cases you can have the factorial of a negative number and if you feed a negative number to the <code class="xref py py-func docutils literal notranslate"><span class="pre">fact()</span></code> function, you will get an error.</p>
+<p>Actually the meaning of the formula is that the factorial of a negative number if <span class="math notranslate nohighlight">\(\infty\)</span> and so, since it appears in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that returns the inverse of the factorial and zero when the argument is negative.</p>
+<p>So here is the code for the radial part:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">fact</span> <span class="o">=</span> <span class="n">sf</span><span class="p">.</span><span class="n">fact</span>
+
+<span class="c1">-- inverse factorial function definition</span>
+<span class="n">invf</span> <span class="o">=</span> <span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="mi">1</span><span class="o">/</span><span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+
+<span class="c1">-- radial part of Zernike&#39;s polynomial</span>
+<span class="kr">function</span> <span class="nf">zerR</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">ip</span><span class="p">,</span> <span class="n">im</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+   <span class="kd">local</span> <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+   <span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">im</span> <span class="kr">do</span>
+      <span class="kd">local</span> <span class="n">f</span> <span class="o">=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">invf</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">invf</span><span class="p">(</span><span class="n">ip</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">invf</span><span class="p">(</span><span class="n">im</span><span class="o">-</span><span class="n">k</span><span class="p">))</span>
+      <span class="kr">if</span> <span class="n">f</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="kr">then</span> <span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">^</span><span class="n">k</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">p</span><span class="o">^</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="kr">end</span>
+   <span class="kr">end</span>
+   <span class="kr">return</span> <span class="n">z</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>Next, we define Zernike’s function completed with the angular part:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span> <span class="nf">zernicke</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">even</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">pf</span> <span class="o">=</span> <span class="n">even</span> <span class="ow">and</span> <span class="n">cos</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">phi</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sin</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="o">*</span><span class="n">phi</span><span class="p">)</span>
+   <span class="kr">return</span> <span class="n">zerR</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">pf</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>Now we are ready to draw our function. The only missing piece is the relation between ρ, φ and the Cartesian coordinates but this is trivial:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  \rho = &amp; \sqrt{x^2 + y^2} \\
+  \phi = &amp; \tan^{-1}(y, x)
+\end{array}\end{split}\]</div>
+<p>Let us therefore define our sample function in term of x and y and use it to call the function <code class="xref py py-func docutils literal notranslate"><span class="pre">polar_contour()</span></code>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="nb">require</span> <span class="s1">&#39;contour&#39;</span>
+<span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span>
+<span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="o">|</span> <span class="n">zernicke</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">^</span><span class="mi">2</span><span class="p">),</span> <span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">))</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">polar_contour</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="p">{</span><span class="n">gridx</span><span class="o">=</span> <span class="mi">81</span><span class="p">,</span> <span class="n">gridy</span><span class="o">=</span> <span class="mi">81</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span> <span class="mi">10</span><span class="p">})</span>
+<span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">string.format</span><span class="p">(</span><span class="s1">&#39;Zernike polynomial (N=%i, M=%i)&#39;</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We show a few screenshots of the contour plot for various N and M.</p>
+<figure class="align-default">
+<img alt="_images/zernicke-contour-3-1.png" src="_images/zernicke-contour-3-1.png" />
+</figure>
+<figure class="align-default">
+<img alt="_images/zernicke-contour-5-1.png" src="_images/zernicke-contour-5-1.png" />
+</figure>
+<figure class="align-default">
+<img alt="_images/zernicke-contour-5-5.png" src="_images/zernicke-contour-5-5.png" />
+</figure>
+<figure class="align-default">
+<img alt="_images/zernicke-contour-8-2.png" src="_images/zernicke-contour-8-2.png" />
+</figure>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GSL Shell Examples</a><ul>
+<li><a class="reference internal" href="#home-made-bessel-functions">Home-made Bessel Functions</a></li>
+<li><a class="reference internal" href="#the-von-koch-curve">The Von-Koch curve</a></li>
+<li><a class="reference internal" href="#reading-and-plotting-data-from-files">Reading and plotting data from files</a></li>
+<li><a class="reference internal" href="#zernike-polynomials">Zernike Polynomials</a><ul>
+<li><a class="reference internal" href="#definitions">Definitions</a></li>
+<li><a class="reference internal" href="#implementation">Implementation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="csv.html"
+                          title="previous chapter">Comma Separated Values Parsing Utilities</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="gsl-ffi.html"
+                          title="next chapter">GSL FFI interface</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gsl-ffi.html" title="GSL FFI interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL Shell Examples</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

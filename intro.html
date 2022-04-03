@@ -1,0 +1,639 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>GSL Shell introduction &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="General Purpose Functions" href="general.html" />
+    <link rel="prev" title="Welcome to GSL shell documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="General Purpose Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to GSL shell documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL Shell introduction</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="gsl-shell-introduction">
+<span id="introduction"></span><h1>GSL Shell introduction<a class="headerlink" href="#gsl-shell-introduction" title="Permalink to this headline">¶</a></h1>
+<p>GSL Shell is an interactive interface that gives access to the GSL numerical routines using Lua, an easy to learn and powerful programming language.
+With GSL Shell, you can access the functions provided by the GSL library with great ease, without the need to write and compile a stand-alone C application.
+In addition, the power and expressiveness of the Lua language enables you to develop and test complex procedures to process your data and effectively use the GSL routines.
+You will be also able to create plots in real-time using the powerful built-in graphical module.</p>
+<p>The underlying programming language, Lua, itself is a very cleverly designed programming language. It is therefore an excellent platform for programming.
+In addition the LuaJIT2 implementation provides excellent execution speed that can be very competitive with compiled C or C++ code.</p>
+<p>Since GSL Shell is oriented toward mathematics it does use an optional simplified syntax to express simple mathematical functions (see <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function syntax</span></a>).
+Otherwise the syntax and the semantic of the Lua programming language is completely ensured.</p>
+<section id="first-steps">
+<h2>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h2>
+<p>The most basic usage of GSL Shell is just like a calculator: you can type any expression and GSL Shell will print the results.
+GSL Shell is designed to work mainly with floating point numbers stored internally in double precision.
+Sometimes we will refer to this kind of number as a <em>real</em> number, as opposed to a <em>complex</em> number.</p>
+<p>For integer numbers, GSL Shell differs from many other programming environments because it does not have a distinct type to represent them.
+In other words, integer numbers are treated just like <em>real</em> numbers with all the implications that follow.</p>
+<p>To give the flavor of GSL Shell let us suppose that we want to plot a simple quadratic function like <span class="math notranslate nohighlight">\(y = x^2 - 1\)</span>.
+You can define the function very easily:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<p>So the first line means: let f be a function that given a value x returns <span class="math notranslate nohighlight">\(f(x) = x^2 - 1\)</span>.</p>
+<p>This kind of notation for simple functions is an extension to the Lua syntax and is explained in a specific section about the <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function notation</span></a>.</p>
+<p>Now you may want to plot the function f.
+This is done very easily:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">fxplot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/intro-first-step-plot-1.png" src="_images/intro-first-step-plot-1.png" />
+</figure>
+<p>Since the plot looks a little bit empty we can try to add at least a title:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Function plot example&#39;</span>
+</pre></div>
+</div>
+<p>You have probably noted that we have kept a reference to the plot in a variable named “p”.
+It is actually important to keep a reference to the plot to be able to make further modifications.</p>
+<p>In case you forgot the assignement to a variable you can still retrieve the last returned expression using the special variable name “_”.
+So for example if you type:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span><span class="o">.</span><span class="n">fxplot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;plot: 0xb770eed8&gt;</span>
+</pre></div>
+</div>
+<p>The plot is still available using the special variable “_”:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span>
+<span class="go">&lt;plot: 0xb770eed8&gt;</span>
+</pre></div>
+</div>
+<p>Now let us suppose that we want to add to the same plot another curve to represent the function <span class="math notranslate nohighlight">\(y = 1/x\)</span>.
+In this case we don’t want to create another plot, but we need to create a “curve”.
+We can do that by using the function <a class="reference internal" href="graphics.html#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a> that works eaxctly like <a class="reference internal" href="graphics.html#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a> but it does return a graphical object instead of a plot.
+Once the curve is created we add it to the plot using the method <code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you bother to add also the other side of the hyperbole you will obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/intro-first-step-plot-2.png" src="_images/intro-first-step-plot-2.png" />
+</figure>
+<p>At this point you can also add a legend.
+This can be done with a couple of more commands:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">:</span><span class="n">legend</span><span class="p">(</span><span class="s1">&#39;parabola&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;line&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">:</span><span class="n">legend</span><span class="p">(</span><span class="s1">&#39;hyperbole&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;line&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/intro-first-step-plot-3.png" src="_images/intro-first-step-plot-3.png" />
+</figure>
+<p>As you can see the graphical system is very flexible and it does offer a lot of possibilities.
+If you want to learn more about the graphical system you can read the chapter about <a class="reference internal" href="graphics.html#graphics-chapter"><span class="std std-ref">graphics</span></a>.</p>
+<section id="getting-help">
+<h3>Getting Help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h3>
+<p>When you are using GSL Shell interactively you get easily help about any function by using the function:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">some_function</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain a short text that explain what the function does and the arguments that it gets.
+If the arguments are enclosed in square bracket it means that these arguments are optional.</p>
+</section>
+<section id="complex-numbers">
+<span id="id1"></span><h3>Complex numbers<a class="headerlink" href="#complex-numbers" title="Permalink to this headline">¶</a></h3>
+<p>When you need to define a complex number you can use a native syntax like in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="n">i</span>
+</pre></div>
+</div>
+<p>The rule is that when you write a number followed by an ‘i’ it will be considered as a pure imaginary number.
+The imaginary number will be accepted only if the ‘i’ follows immediately the number without any interleaving spaces.
+Note also that if you write ‘i’ alone this will be not interpreted as the imaginary unit but as the variable ‘i’.
+The imaginary unit can be declared by writing ‘1i’, because the ‘1’ at the beginning forces the interpreter to consider it as a number.</p>
+<p>All the functions in <code class="xref py py-mod docutils literal notranslate"><span class="pre">math</span></code> such as exp, sin, cos etc. work on <em>real</em> numbers.
+If you want to operate on complex numbers, you should use the functions defined in the <a class="reference internal" href="complex.html#module-complex" title="complex"><code class="xref py py-mod docutils literal notranslate"><span class="pre">complex</span></code></a> module.</p>
+<p>The other important mathematical types in GSL Shell are matrices, either of complex or real numbers.
+In addition, Lua offers a native type called “table”.
+This latter is very useful for general purpose programming because it can store any kind of data or structures. However, you should be careful to not confuse Lua tables with matrices.
+You can work with both types as far as you understand the difference and use the appropriate functions to operate on them.</p>
+<p>Most of the GSL functions operate on real or complex matrices because of the nature of the GSL library itself.</p>
+</section>
+<section id="a-couple-of-useful-tricks">
+<h3>A couple of useful tricks<a class="headerlink" href="#a-couple-of-useful-tricks" title="Permalink to this headline">¶</a></h3>
+<p>When you are working in an interactive session, GSL Shell will always remember the last result evaluated.
+You can access its value using the global variable “_”.
+When you evaluate a statement or an expression that returns no values, the variable “_” is not modified.</p>
+<p>Another useful thing to know is that you can suppress the returned value by adding a ‘;’ character at the end of line.
+This can be useful to avoid to show a large table or matrix if you don’t want to see them on the screen.</p>
+</section>
+<section id="working-with-matrices">
+<span id="matrices"></span><h3>Working with matrices<a class="headerlink" href="#working-with-matrices" title="Permalink to this headline">¶</a></h3>
+<p>In order to define a matrix you have basically two options: you can enumerate all the values or you can provide a function that generates the terms of the matrix.
+In the first case you, should use the <a class="reference internal" href="matrices.html#matrix.def" title="matrix.def"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.def()</span></code></a> like in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">th</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">8</span> <span class="c1">-- define the angle &quot;th&quot;</span>
+
+<span class="c1">-- define 2x2 rotation matrix for the given angle &quot;th&quot;</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">def</span> <span class="p">{{</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)},</span> <span class="p">{</span><span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">)}}</span>
+</pre></div>
+</div>
+<p>You can remark that we have used the <a class="reference internal" href="matrices.html#matrix.def" title="matrix.def"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.def()</span></code></a> function without parentheses to enclose its arguments.
+The reason is that, when a function is called with a single argument which is a literal table or string, you can omit the enclosing parentheses.</p>
+<p>In this case we have therefore omitted the parentheses because <a class="reference internal" href="matrices.html#matrix.def" title="matrix.def"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.def()</span></code></a> has a single argument that is a literal table.</p>
+<p>Note that in our snippet of code we have used the function <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a> to make the functions in the module <code class="xref py py-mod docutils literal notranslate"><span class="pre">math</span></code> available.
+If you don’t use <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a>, the function <code class="xref py py-func docutils literal notranslate"><span class="pre">math.sin()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">math.cos()</span></code> should be accessed by explicitly specifying the <code class="docutils literal notranslate"><span class="pre">math</span></code> namespace.</p>
+<p>You can also define a column matrix using the function <a class="reference internal" href="matrices.html#matrix.vec" title="matrix.vec"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.vec()</span></code></a> as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">vec</span> <span class="p">{</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>The other way to define a matrix is through the <a class="reference internal" href="matrices.html#matrix.new" title="matrix.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.new()</span></code></a> function (or <a class="reference internal" href="matrices.html#matrix.cnew" title="matrix.cnew"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.cnew()</span></code></a> to create a complex matrix).
+This latter function takes the number of rows and columns as the first two arguments and a function as an optional third argument.
+Let us see an example to illustrate how it works:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- define a matrix whose (i, j) element is 1/(i + j)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="o">|</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In this example, the third argument is a function expressed with the <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function notation</span></a>.
+This function takes two arguments, respectively the row and column number, and returns the value that should be assigned to the corresponding matrix element.
+Of course, you are not forced to define the function in the same line; you can define it before and use it later with the <a class="reference internal" href="matrices.html#matrix.new" title="matrix.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.new()</span></code></a> function as in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- define the binomial function</span>
+<span class="kr">function</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+  <span class="kr">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="kr">then</span>
+      <span class="kr">return</span> <span class="n">sf</span><span class="p">.</span><span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+  <span class="kr">else</span>
+      <span class="kr">return</span> <span class="mi">0</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="c1">-- define a matrix based on the function just defined</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">binomial</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is the result:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">3</span>  <span class="mi">3</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">4</span>  <span class="mi">6</span>  <span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">5</span> <span class="mi">10</span> <span class="mi">10</span>  <span class="mi">5</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">6</span> <span class="mi">15</span> <span class="mi">20</span> <span class="mi">15</span>  <span class="mi">6</span>  <span class="mi">1</span>  <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mi">1</span>  <span class="mi">7</span> <span class="mi">21</span> <span class="mi">35</span> <span class="mi">35</span> <span class="mi">21</span>  <span class="mi">7</span>  <span class="mi">1</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>An alternative compact writing could have been:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="o">|</span><span class="n">n</span><span class="p">,</span><span class="n">k</span><span class="o">|</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">sf</span><span class="p">.</span><span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where we have used again the short function notation and the Lua logical operators <code class="docutils literal notranslate"><span class="pre">and</span></code> and <code class="docutils literal notranslate"><span class="pre">or</span></code>.</p>
+</section>
+<section id="matrix-operations">
+<h3>Matrix operations<a class="headerlink" href="#matrix-operations" title="Permalink to this headline">¶</a></h3>
+<p>If we want to obtain the inverse of the matrix defined above we can use the function <a class="reference internal" href="linalg.html#matrix.inv" title="matrix.inv"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.inv()</span></code></a>.
+Let us see how it works by using the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> defined above and taking its inverse:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="c1">-- we define the matrix</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="o">|</span><span class="n">n</span><span class="p">,</span><span class="n">k</span><span class="o">|</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">sf</span><span class="p">.</span><span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1">-- we obtain the inverse</span>
+<span class="n">minv</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">inv</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then the matrix <code class="docutils literal notranslate"><span class="pre">minv</span></code> will be equal to:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">minv</span>
+<span class="p">[</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="o">-</span><span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>   <span class="mi">1</span>  <span class="o">-</span><span class="mi">2</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="o">-</span><span class="mi">1</span>   <span class="mi">3</span>  <span class="o">-</span><span class="mi">3</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>   <span class="mi">1</span>  <span class="o">-</span><span class="mi">4</span>   <span class="mi">6</span>  <span class="o">-</span><span class="mi">4</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="o">-</span><span class="mi">1</span>   <span class="mi">5</span> <span class="o">-</span><span class="mi">10</span>  <span class="mi">10</span>  <span class="o">-</span><span class="mi">5</span>   <span class="mi">1</span>   <span class="mi">0</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>   <span class="mi">1</span>  <span class="o">-</span><span class="mi">6</span>  <span class="mi">15</span> <span class="o">-</span><span class="mi">20</span>  <span class="mi">15</span>  <span class="o">-</span><span class="mi">6</span>   <span class="mi">1</span>   <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="o">-</span><span class="mi">1</span>   <span class="mi">7</span> <span class="o">-</span><span class="mi">21</span>  <span class="mi">35</span> <span class="o">-</span><span class="mi">35</span>  <span class="mi">21</span>  <span class="o">-</span><span class="mi">7</span>   <span class="mi">1</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>If we want to check that <code class="docutils literal notranslate"><span class="pre">minv</span></code> is actually the inverse of <code class="docutils literal notranslate"><span class="pre">m</span></code>, we can perform the matrix multiplication to check:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">minv</span> <span class="o">*</span> <span class="n">m</span>
+<span class="p">[</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>and as we should expect, we have actually obtained the unit matrix.</p>
+<p>The matrix inverse can be used to solve a linear system, so let us try that.
+First we define a column vector, for example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">b</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">b</span>
+<span class="p">[</span>           <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.70710678</span> <span class="p">]</span>
+<span class="p">[</span>           <span class="mi">1</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.70710678</span> <span class="p">]</span>
+<span class="p">[</span>           <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.70710678</span> <span class="p">]</span>
+<span class="p">[</span>          <span class="o">-</span><span class="mi">1</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.70710678</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>The we can solve the linear system <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code> using the inverse matrix <code class="docutils literal notranslate"><span class="pre">minv</span></code> as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">minv</span> <span class="o">*</span> <span class="n">b</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span>
+<span class="p">[</span>           <span class="mi">0</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.70710678</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.41421356</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.17157288</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.34314575</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.10050506</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.14213562</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.14213562</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>so that the resulting column matrix x will satisfy the equation <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code>.</p>
+<p>The reader familiar with linear algebra computations may argue that using matrix inversion to solve a linear system is inefficient.
+This is actually true and GSL Shell offers the function <a class="reference internal" href="linalg.html#matrix.solve" title="matrix.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.solve()</span></code></a> to solve a linear system efficiently.
+So in the example above we could have used the function <a class="reference internal" href="linalg.html#matrix.solve" title="matrix.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.solve()</span></code></a> as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">solve</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain the same result of above.</p>
+</section>
+<section id="working-with-complex-matrices">
+<h3>Working with complex matrices<a class="headerlink" href="#working-with-complex-matrices" title="Permalink to this headline">¶</a></h3>
+<p>In the example above we have shown how to solve a linear system in the form <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code>.
+We may wonder how to manage the case when <code class="docutils literal notranslate"><span class="pre">m</span></code> or <code class="docutils literal notranslate"><span class="pre">b</span></code> are complex.
+The answer is easy, since GSL Shell always checks the type of the matrix, and the appropriate algorithm is selected.</p>
+<p>So, to continue the example above, we can define b as a complex vector as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">b</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">cnew</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">complex</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="n">i</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">b</span>
+<span class="p">[</span>                       <span class="mi">1</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.70710678</span><span class="o">+</span><span class="mf">0.70710678</span><span class="n">i</span> <span class="p">]</span>
+<span class="p">[</span>                       <span class="n">i</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.70710678</span><span class="o">+</span><span class="mf">0.70710678</span><span class="n">i</span> <span class="p">]</span>
+<span class="p">[</span>                      <span class="o">-</span><span class="mi">1</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.70710678</span><span class="o">-</span><span class="mf">0.70710678</span><span class="n">i</span> <span class="p">]</span>
+<span class="p">[</span>                      <span class="o">-</span><span class="n">i</span> <span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.70710678</span><span class="o">-</span><span class="mf">0.70710678</span><span class="n">i</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>and then we can use the function <a class="reference internal" href="linalg.html#matrix.solve" title="matrix.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.solve()</span></code></a> as above and we will obtain a complex matrix that solves the linear system.</p>
+<p>Please note that above we have used the function <a class="reference internal" href="matrices.html#matrix.cnew" title="matrix.cnew"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.cnew()</span></code></a> to create a new complex matrix.
+The reason is that we need to inform GSL Shell in advance if we want a complex matrix.</p>
+<p>In general, GSL Shell tries to ensure that all the common matrix operations transparently handle real or complex matrices.</p>
+</section>
+<section id="matrix-indexing">
+<h3>Matrix indexing<a class="headerlink" href="#matrix-indexing" title="Permalink to this headline">¶</a></h3>
+<p>When indexing the matrix, only one index is permitted, so the syntax <code class="docutils literal notranslate"><span class="pre">m[2]</span></code> is OK but <code class="docutils literal notranslate"><span class="pre">m[2,3]</span></code> will not be accepted.
+This is a limitation of GSL Shell that is related to the Lua programming language on which it is based.</p>
+<p>So when you write <code class="docutils literal notranslate"><span class="pre">m[2]</span></code> you will obtain the second row of the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> but in <em>column</em> form.
+So, if we use the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> defined above we could have:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">[ 1 ]</span>
+<span class="go">[ 4 ]</span>
+<span class="go">[ 6 ]</span>
+<span class="go">[ 4 ]</span>
+<span class="go">[ 1 ]</span>
+<span class="go">[ 0 ]</span>
+<span class="go">[ 0 ]</span>
+<span class="go">[ 0 ]</span>
+</pre></div>
+</div>
+<p>It may seems odd that the row is returned in column form but it is actually convenient because many function accept a column matrix as input.
+The idea is that in GSL Shell, column matrices play the role of vectors.</p>
+<p>Following the same logic as above, if you index a column matrix you will just obtain its n-th element (as returning a 1x1 matrix will be not very useful).
+So you can have for example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">[</span><span class="mi">5</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p>At this point it should be clear that, in general, you can access the elements of a matrix with the double indexing syntax <code class="docutils literal notranslate"><span class="pre">m[i][j]</span></code>.</p>
+<p>Something that is important to know about the matrix indexing to obtain a row is that the column matrix refers to the same underlying data as the original matrix.
+As a consequence, any change to the elements of the derived matrix will also be effective for the original matrix.</p>
+<p>The indexing method that we have explained above can be used not only for retrieving the matrix elements or an entire row, but it can be equally used for assignment.
+This means that you can use double indexing to change an element of a matrix.
+If you use simple indexing, you can assign the content of a whole row all at once.</p>
+<p>Just a small note about efficiency.
+The double indexing method can be slow and should be probably avoided in the tight loop where the performance is important.
+In this case you should use the methods <a class="reference internal" href="matrices.html#Matrix.get" title="Matrix.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> and <a class="reference internal" href="matrices.html#Matrix.set" title="Matrix.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a>.
+Another opportunity is to directly address matrix data by using its <code class="docutils literal notranslate"><span class="pre">data</span></code> field, but this requires particular attention since these kinds of operations are not safe and could easily crash the application.</p>
+<p>You can find more details in the chapter about <a class="reference internal" href="gsl-ffi.html#gsl-ffi-interface"><span class="std std-ref">GSL FFI interface</span></a>.</p>
+</section>
+<section id="plotting-functions">
+<span id="plotting"></span><h3>Plotting functions<a class="headerlink" href="#plotting-functions" title="Permalink to this headline">¶</a></h3>
+<p>The plotting functions live in the <code class="docutils literal notranslate"><span class="pre">graph</span></code> module. The more common and useful functions are probably <a class="reference internal" href="graphics.html#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a> and <a class="reference internal" href="graphics.html#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a>.
+The first one can used to create a plot while the second one just creates a graphical object of type line.
+A graphical object is visible only when it is added into a plot.
+The idea is that you can create the objects as needed and add them to the plot as it is more appropriate.</p>
+<p>Here a simple example to plot some simple functions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="c1">-- we create a plot of a simple function</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxplot</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="c1">-- we create a graphical object that describes the second function</span>
+<span class="c1">-- and we add it to the previous plot</span>
+<span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">ln</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Damped sine and cosine&#39;</span>
+</pre></div>
+</div>
+<p>Let us explain the example step by step.
+To use the function <a class="reference internal" href="graphics.html#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a> we pass three arguments: the function that we want to plot and the minimum and maximum value of the abscissa.
+The function will therefore produce a plot of the function y=f(x) for x that span the given interval.
+There is actually some magic that we have used to define the function on the fly.
+We have used the <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function syntax</span></a> that lets us define a function using the syntax <code class="docutils literal notranslate"><span class="pre">|x|</span> <span class="pre">f(x)</span></code> or in the case of multiple variables <code class="docutils literal notranslate"><span class="pre">|x,y|</span> <span class="pre">f(x,y)</span></code>.
+The short function syntax is very convenient to express simple functions with a compact syntax.</p>
+<p>The second function <a class="reference internal" href="graphics.html#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a> operates in a similar way, but it creates a graphical object instead of a plot.
+In the following instruction, we add the second line to the plot using the <code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code> method.</p>
+<p>We can also set the title of the plot using the <code class="xref py py-attr docutils literal notranslate"><span class="pre">title</span></code> property of the plot.</p>
+<p>Here is the plot that we obtain with the snippet given above:</p>
+<figure class="align-default">
+<img alt="_images/plot-intro-example.png" src="_images/plot-intro-example.png" />
+</figure>
+<p>You can refer to the <a class="reference internal" href="graphics.html#graphics-chapter"><span class="std std-ref">Graphics chapter</span></a> for more details about the plotting functions.</p>
+</section>
+<section id="short-function-notation">
+<span id="short-func-notation"></span><h3>Short Function Notation<a class="headerlink" href="#short-function-notation" title="Permalink to this headline">¶</a></h3>
+<p>In numerical environments, one often needs simple functions that just return a value. In this case GSL Shell introduces a special notation:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">...</span><span class="o">|</span> <span class="n">expr</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">expr</span></code> is any expression is equivalent to:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">...)</span> <span class="kr">return</span> <span class="n">expr</span> <span class="kr">end</span>
+</pre></div>
+</div>
+<p>So, for example, to write the function that returns a square of a number plus one, you could write:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>this is exactly equivalent to the following syntax:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+   <span class="kr">return</span> <span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>or, alternatively:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="kr">return</span> <span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span> <span class="kr">end</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="an-example">
+<h2>An Example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h2>
+<p>To illustrate most of the key features of GSL Shell, let us write a short script to calculate the volume of an <cite>n</cite>-dimensional unit sphere and compare it with the analytical solution of <span class="math notranslate nohighlight">\(V_n=\pi^{n/2}/ \Gamma(1+n/2)\)</span>.</p>
+<p>For the integration in high dimensions, we will use the <a class="reference internal" href="vegas.html#monte-vegas"><span class="std std-ref">Monte Carlo VEGAS</span></a> implementation, that is included in GSL Shell.</p>
+<p>At the beginning of each script, you should think about which sections of GSL Shell you want to use.
+If you utilize functions from certain modules more often, you might want to call those functions directly with the help of the <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a> directive:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;iter&#39;</span>
+<span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+</pre></div>
+</div>
+<p>If you don’t use the <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a> directive you can still access the functions from a module, but you need to specify the full name.
+So, for example, you can refer to the VEGAS algorithm using its full name <code class="docutils literal notranslate"><span class="pre">num.vegas_prepare</span></code>.
+This latter approach is useful because it avoids conflicts in the global namespace.</p>
+<p>Now we need to define the integrand function.
+Since we want to calculate the volume of an <cite>n</cite>-dimensional sphere, the function should accept an <cite>n</cite>-tuple of coordinates and return 1 if the sampling point is inside the unit sphere or 0 otherwise.
+To work correctly, the VEGAS algorithm assumes that the integrand function takes a single argument that is a table with the <cite>n</cite> coordinates.
+Since the computation depends on the dimension <cite>n</cite> of the space, we need to take this into account.
+The solution is to define a function that we can call <cite>getunitsphere</cite>, that returns the integrand function for the <cite>n</cite>-dimension space.</p>
+<p>The <cite>n</cite>-dimensional integrand function itself calculates the summed square of the table values for a given size which equals <span class="math notranslate nohighlight">\(R^2=\sum_{i=1}^nx_i^2\)</span>.
+So <cite>getunitsphere</cite> can be defined as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="kr">function</span> <span class="nf">getunitsphere</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+   <span class="kr">return</span> <span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+      <span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="kr">for</span> <span class="n">k</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="kr">do</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">^</span><span class="mi">2</span> <span class="kr">end</span>
+      <span class="kr">return</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span>
+   <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>This is the function we will use to integrate later.</p>
+<p>Now we can prepare a graph path that will hold all calculated values (<a class="reference internal" href="graphics.html#graph.path" title="graph.path"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.path()</span></code></a>).
+Also</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">path</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1">-- 1-sphere = [-1, 1] (length 2)</span>
+</pre></div>
+</div>
+<p>Now, we can start to calculate the volume of the unit sphere of the first 14 dimensions:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">for</span> <span class="n">d</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="mi">14</span> <span class="kr">do</span>
+
+   <span class="kd">local</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">ilist</span><span class="p">(</span><span class="o">||</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">ilist</span><span class="p">(</span><span class="o">||</span> <span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">calls</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">d</span><span class="o">*</span><span class="mf">1e4</span><span class="p">,</span><span class="mi">1</span>
+   <span class="kd">local</span> <span class="n">vegas_integ</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">vegas_prepare</span><span class="p">({</span><span class="n">N</span><span class="o">=</span><span class="n">d</span><span class="p">})</span>
+
+   <span class="c1">--Obtaining monte carlo vegas callback</span>
+   <span class="kd">local</span> <span class="n">res</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">cont</span> <span class="o">=</span> <span class="n">vegas_integ</span><span class="p">(</span><span class="n">getunitsphere</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">calls</span><span class="p">)</span>
+
+   <span class="c1">--Increasing the number of calls to reach a satisfying result</span>
+   <span class="kr">while</span><span class="p">(</span><span class="n">sig</span><span class="o">/</span><span class="n">res</span> <span class="o">&gt;</span> <span class="mf">0.005</span><span class="p">)</span> <span class="kr">do</span>
+      <span class="n">res</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">num</span> <span class="o">=</span> <span class="n">cont</span><span class="p">(</span><span class="n">calls</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">^</span><span class="n">n</span><span class="p">))</span>
+      <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span>
+   <span class="kr">end</span>
+
+   <span class="n">ln</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">res</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>The loop consists of three major parts.
+In the first part, we initialize the important variables with the help of the <cite>short function syntax</cite> and the <a class="reference internal" href="lua-base.html#iter.ilist" title="iter.ilist"><code class="xref py py-func docutils literal notranslate"><span class="pre">iter.ilist()</span></code></a> function, which conveniently creates vectors of any size with a value provided by the function.
+In this case <cite>a</cite> and <cite>b</cite> are the lower and the upper boundary for the integration.</p>
+<p>The Monte Carlo VEGAS integrator <cite>vegas_integ</cite> with the correct number of dimensions is obtained with <a class="reference internal" href="vegas.html#num.vegas_prepare" title="num.vegas_prepare"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.vegas_prepare()</span></code></a>. By calling <cite>vegas_integ</cite> with the desired unitsphere function, the Monte Carlo VEGAS algorithm is being invoked for the first time.
+It returns multiple arguments, namely the result itself, the precision, the number of iterations it took and a continuation function that can be called to recalculate the result with higher precision.</p>
+<p>Depending on the relative precision <cite>sig/res</cite>, we continue to recalculate the integral with increasing numbers of iterations.
+When it is done, we add the dimension and the result to our given path by <code class="xref py py-func docutils literal notranslate"><span class="pre">line_to()</span></code>.</p>
+<p>We can now proceed to compare the data with analytical solutions and plot these results.
+First we need to initialize a <a class="reference internal" href="graphics.html#graph.plot" title="graph.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.plot()</span></code></a> object.
+Then we can add the data to the plot with <code class="xref py py-func docutils literal notranslate"><span class="pre">add()</span></code> and the result of the analytical solution with <code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code>.
+Notice that you can change the appearance of the data points at this moment.
+We are going for markers with size 8.
+At that point, we are using <cite>short functions</cite> again which greatly facilitates the syntax in this case:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Volume of a unit n-sphere&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">clip</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">pad</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span> <span class="kc">true</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">pi</span><span class="o">^</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sf</span><span class="p">.</span><span class="n">gamma</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_dim</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">ln</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;marker&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">.</span><span class="n">xtitle</span><span class="o">=</span><span class="s2">&quot;n&quot;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">ytitle</span><span class="o">=</span><span class="s2">&quot;V&quot;</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Also note that we use <a class="reference internal" href="sf.html#sf.gamma" title="sf.gamma"><code class="xref py py-func docutils literal notranslate"><span class="pre">sf.gamma()</span></code></a> from the special functions section, which offers all such functions that you can find in the GSL library.
+After setting the axis-names with <code class="xref py py-func docutils literal notranslate"><span class="pre">xtitle()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">ytitle()</span></code>, we are ready to show the plot with <code class="xref py py-func docutils literal notranslate"><span class="pre">show()</span></code>:</p>
+<figure class="align-default">
+<img alt="_images/vegas.png" src="_images/vegas.png" />
+</figure>
+<p>Here is the code as a whole:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="n">use</span> <span class="s1">&#39;iter&#39;</span>
+
+<span class="kd">local</span> <span class="kr">function</span> <span class="nf">getunitsphere</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+   <span class="kr">return</span> <span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+      <span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="kr">for</span> <span class="n">k</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="kr">do</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">^</span><span class="mi">2</span> <span class="kr">end</span>
+      <span class="kr">return</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span>
+   <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="kd">local</span> <span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">path</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1">-- 1-sphere = [-1, 1] (length 2)</span>
+<span class="kd">local</span> <span class="n">max_dim</span> <span class="o">=</span> <span class="mi">14</span>
+
+<span class="c1">--Calculating the volume of d-dimensional sphere</span>
+<span class="kr">for</span> <span class="n">d</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_dim</span> <span class="kr">do</span>
+   <span class="c1">--Intializing work varaibles</span>
+   <span class="kd">local</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">ilist</span><span class="p">(</span><span class="o">||</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">ilist</span><span class="p">(</span><span class="o">||</span> <span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">calls</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">d</span><span class="o">*</span><span class="mf">1e4</span><span class="p">,</span><span class="mi">1</span>
+   <span class="kd">local</span> <span class="n">vegas_integ</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">vegas_prepare</span><span class="p">({</span><span class="n">N</span><span class="o">=</span><span class="n">d</span><span class="p">})</span>
+
+   <span class="c1">--Obtaining monte carlo vegas callback</span>
+   <span class="kd">local</span> <span class="n">res</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">cont</span> <span class="o">=</span> <span class="n">vegas_integ</span><span class="p">(</span><span class="n">getunitsphere</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">calls</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;Volume = %.3f +/- %.3f &quot;</span>
+   <span class="nb">print</span><span class="p">(</span><span class="nb">string.format</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span><span class="n">res</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">,</span><span class="n">sig</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">))</span>
+
+   <span class="c1">--Increasing the number of calls to reach a satisfying result</span>
+   <span class="kr">while</span><span class="p">(</span><span class="n">sig</span><span class="o">/</span><span class="n">res</span> <span class="o">&gt;</span> <span class="mf">0.005</span><span class="p">)</span> <span class="kr">do</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Increasing accuracy, doubling number of calls...&quot;</span><span class="p">)</span>
+      <span class="n">res</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">num</span> <span class="o">=</span> <span class="n">cont</span><span class="p">(</span><span class="n">calls</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">^</span><span class="n">n</span><span class="p">))</span>
+      <span class="nb">print</span><span class="p">(</span><span class="nb">string.format</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span><span class="n">res</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">,</span><span class="n">sig</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">))</span>
+      <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span>
+   <span class="kr">end</span>
+   <span class="n">ln</span><span class="p">:</span><span class="n">line_to</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">res</span><span class="o">*</span><span class="mi">2</span><span class="o">^</span><span class="n">d</span><span class="p">)</span>
+<span class="kr">end</span>
+
+<span class="c1">--plotting a comparison of the numerical result with the analytical solution</span>
+<span class="kd">local</span> <span class="n">p</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Volume of a unit n-sphere&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">clip</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">pad</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span> <span class="kc">true</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="nb">math.pi</span><span class="o">^</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sf</span><span class="p">.</span><span class="n">gamma</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_dim</span><span class="p">))</span>
+<span class="n">p</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">ln</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;marker&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">.</span><span class="n">xtitle</span><span class="o">=</span><span class="s2">&quot;n&quot;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">ytitle</span><span class="o">=</span><span class="s2">&quot;V&quot;</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This rather simple example showed quite a lot of important features of GSL Shell.
+Creating data structures with <cite>iterators</cite> and <cite>short functions</cite> are both very common.</p>
+<p>With the function <cite>getunitsphere</cite>, we have shown that some problems can be solved in an elegant way by returning a function.
+These kinds of functions are called closures because they refer to local variables declared outside of the function body itself.
+In this particular case, the function returned by <cite>getunitsphere</cite> is a closure because it refers to the variable <cite>n</cite> defined outside its body.
+The function <cite>cont</cite> returned my <cite>vegas_integ</cite> is also another example of closure since it refers to the current state of the VEGAS integration.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GSL Shell introduction</a><ul>
+<li><a class="reference internal" href="#first-steps">First steps</a><ul>
+<li><a class="reference internal" href="#getting-help">Getting Help</a></li>
+<li><a class="reference internal" href="#complex-numbers">Complex numbers</a></li>
+<li><a class="reference internal" href="#a-couple-of-useful-tricks">A couple of useful tricks</a></li>
+<li><a class="reference internal" href="#working-with-matrices">Working with matrices</a></li>
+<li><a class="reference internal" href="#matrix-operations">Matrix operations</a></li>
+<li><a class="reference internal" href="#working-with-complex-matrices">Working with complex matrices</a></li>
+<li><a class="reference internal" href="#matrix-indexing">Matrix indexing</a></li>
+<li><a class="reference internal" href="#plotting-functions">Plotting functions</a></li>
+<li><a class="reference internal" href="#short-function-notation">Short Function Notation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#an-example">An Example</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to GSL shell documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="general.html"
+                          title="next chapter">General Purpose Functions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="General Purpose Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to GSL shell documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GSL Shell introduction</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

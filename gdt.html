@@ -1,0 +1,895 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>General Data Tables &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Iterators" href="lua-base.html" />
+    <link rel="prev" title="Matrices" href="matrices.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lua-base.html" title="Iterators"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="general-data-tables">
+<h1>General Data Tables<a class="headerlink" href="#general-data-tables" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format.
+They are somewhat similar to matrices but have some notable differences.</p>
+<p>While in matrices columns are always unnamed in GDT tables they have names so that you can refer to a specific column by name.
+The other important difference is that the value in each cell does not need to be numeric but can be also a string or undefined.</p>
+<p>Since a GDT table can contain strings they are often useful to store data coming from observations or from reports.
+The possibility to mark a cell as undefined is also useful to take into account missing or not available data.</p>
+<p>Here an example of GDT table taken from the excellent <a class="reference external" href="http://oldwww.acm.org/perlman/stat/handbook/handbook.html">|STAT user manual</a> of Gary Pearlman:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ms</span><span class="o">=</span><span class="n">gdt</span><span class="o">.</span><span class="n">read_csv</span> <span class="s1">&#39;examples/exam.csv&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ms</span>
+<span class="go">   student teacher    sex m1 m2 final</span>
+<span class="go">1      S-1    john   male 56 42    58</span>
+<span class="go">2      S-2    john   male 96 90    91</span>
+<span class="go">3      S-3    john   male 70 59    65</span>
+<span class="go">4      S-4    john   male 82 75    78</span>
+<span class="go">5      S-5    john   male 85 90    92</span>
+<span class="go">6      S-6    john   male 69 60    65</span>
+<span class="go">7      S-7    john female 82 78    60</span>
+<span class="go">8      S-8    john female 84 81    82</span>
+<span class="go">9      S-9    john female 89 80    68</span>
+<span class="go">10    S-10    john female 90 93    91</span>
+<span class="go">11    S-11    jane   male 42 46    65</span>
+<span class="go">12    S-12    jane   male 28 15    34</span>
+<span class="go">13    S-13    jane   male 49 68    75</span>
+<span class="go">14    S-14    jane   male 36 30    48</span>
+<span class="go">15    S-15    jane   male 58 58    62</span>
+<span class="go">16    S-16    jane   male 72 70    84</span>
+<span class="go">17    S-17    jane female 65 61    70</span>
+<span class="go">18    S-18    jane female 68 75    71</span>
+<span class="go">19    S-19    jane female 62 50    55</span>
+<span class="go">20    S-20    jane female 71 72    87</span>
+</pre></div>
+</div>
+<p>As you can see in this case the data is loaded from a CSV file. In the first line the name of each column is shown and the data follow in a tabular form.</p>
+<p>In the example above the columns are either numeric of textual but in reality there is nothing to enforce the type of a column.
+Each column can mix freely numbers or strings or even undefined values without restrictions.</p>
+<p>As a general rule the functions that need to know if a column is purely numeric or if it does contain text always looks at the content of the column to decide its type.</p>
+<p>As you can imagine there are many functions available to operate of a GDT table.
+They can be grouped into families:</p>
+<ul class="simple">
+<li><p>functions to manipulate tables</p></li>
+<li><p>functions to create plots based on the table’s data</p></li>
+<li><p>functions to perform statistical computations</p></li>
+</ul>
+<p>The the chapter <a class="reference internal" href="#gdt-plot"><span class="std std-ref">GDT plots</span></a> you will find an introductions to plotting functions.
+In the chapter about <a class="reference internal" href="#gdt-lm"><span class="std std-ref">Linear Models</span></a> the function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> in described in details.
+The function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> is very function to analyze data in term of a linear model.
+You can think it as a generalization of the familiar linear regression of the form <span class="math notranslate nohighlight">\(y = a \, x + b\)</span>.</p>
+<p>The function <a class="reference internal" href="#gdt.filter" title="gdt.filter"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.filter()</span></code></a> and <a class="reference internal" href="#gdt.reduce" title="gdt.reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.reduce()</span></code></a> are also very useful to manipulate tables in a similar way to what you can do with spreadsheet applications.</p>
+</section>
+<section id="module-gdt">
+<span id="gdt-functions"></span><h2>GDT Functions<a class="headerlink" href="#module-gdt" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.new">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.new" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a new data table with <code class="docutils literal notranslate"><span class="pre">n</span></code> rows and <code class="docutils literal notranslate"><span class="pre">m</span></code> columns.
+In the second form a table is provided with the column’s names.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.alloc">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">alloc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.alloc" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">alloc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Like the function <a class="reference internal" href="#gdt.new" title="gdt.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.new()</span></code></a> but the table data is not initialized.
+It is left to the user to set the values for each rows and columns.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.create">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.create" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a new GDT table based using the function <code class="docutils literal notranslate"><span class="pre">f_init(i)</span></code> for <code class="docutils literal notranslate"><span class="pre">i</span></code> going from <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code>.
+In the second form <code class="docutils literal notranslate"><span class="pre">a</span></code> defaults to 1.
+The function <code class="docutils literal notranslate"><span class="pre">f_init</span></code> should return, for each value of “i”, a table in the form <code class="docutils literal notranslate"><span class="pre">{field1=</span> <span class="pre">&lt;expr&gt;,</span> <span class="pre">field2=</span> <span class="pre">&lt;expr&gt;,</span> <span class="pre">...}</span></code>.
+The GDT table will be created filling each rows with the provided expressions.
+For each named field a column will be created in the table.</p>
+<p>For example let us create a table that computes the value of <span class="math notranslate nohighlight">\(\sin(x)\)</span> and <span class="math notranslate nohighlight">\(\cos(x)\)</span> for x going from 0 to <span class="math notranslate nohighlight">\(2 \pi\)</span>.
+This can done with <a class="reference internal" href="#gdt.create" title="gdt.create"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.create()</span></code></a> like in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">16</span> <span class="c1">-- # of sampling points</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span> <span class="c1">-- sampling function</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="p">{</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">sin</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span> <span class="n">cos</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">))},</span> <span class="n">n</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>
+           <span class="n">sin</span>        <span class="n">x</span>          <span class="n">cos</span>
+<span class="mi">1</span>            <span class="mi">0</span>        <span class="mi">0</span>            <span class="mi">1</span>
+<span class="mi">2</span>     <span class="mf">0.382683</span> <span class="mf">0.392699</span>      <span class="mf">0.92388</span>
+<span class="mi">3</span>     <span class="mf">0.707107</span> <span class="mf">0.785398</span>     <span class="mf">0.707107</span>
+<span class="mi">4</span>      <span class="mf">0.92388</span>   <span class="mf">1.1781</span>     <span class="mf">0.382683</span>
+<span class="mi">5</span>            <span class="mi">1</span>   <span class="mf">1.5708</span>  <span class="mf">6.12303e-17</span>
+<span class="mi">6</span>      <span class="mf">0.92388</span>   <span class="mf">1.9635</span>    <span class="o">-</span><span class="mf">0.382683</span>
+<span class="mi">7</span>     <span class="mf">0.707107</span>  <span class="mf">2.35619</span>    <span class="o">-</span><span class="mf">0.707107</span>
+<span class="mi">8</span>     <span class="mf">0.382683</span>  <span class="mf">2.74889</span>     <span class="o">-</span><span class="mf">0.92388</span>
+<span class="mi">9</span>  <span class="mf">1.22461e-16</span>  <span class="mf">3.14159</span>           <span class="o">-</span><span class="mi">1</span>
+<span class="mi">10</span>   <span class="o">-</span><span class="mf">0.382683</span>  <span class="mf">3.53429</span>     <span class="o">-</span><span class="mf">0.92388</span>
+<span class="mi">11</span>   <span class="o">-</span><span class="mf">0.707107</span>  <span class="mf">3.92699</span>    <span class="o">-</span><span class="mf">0.707107</span>
+<span class="mi">12</span>    <span class="o">-</span><span class="mf">0.92388</span>  <span class="mf">4.31969</span>    <span class="o">-</span><span class="mf">0.382683</span>
+<span class="mi">13</span>          <span class="o">-</span><span class="mi">1</span>  <span class="mf">4.71239</span> <span class="o">-</span><span class="mf">1.83691e-16</span>
+<span class="mi">14</span>    <span class="o">-</span><span class="mf">0.92388</span>  <span class="mf">5.10509</span>     <span class="mf">0.382683</span>
+<span class="mi">15</span>   <span class="o">-</span><span class="mf">0.707107</span>  <span class="mf">5.49779</span>     <span class="mf">0.707107</span>
+<span class="mi">16</span>   <span class="o">-</span><span class="mf">0.382683</span>  <span class="mf">5.89049</span>      <span class="mf">0.92388</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.filter">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new table obtained from <code class="docutils literal notranslate"><span class="pre">t</span></code> by filtering the rows selon the predicate function <code class="docutils literal notranslate"><span class="pre">f</span></code>.
+The predicate function will be called for each row with two arguments: <code class="docutils literal notranslate"><span class="pre">f(r,</span> <span class="pre">i)</span></code> where the first is a cursor pointing to the current row and the second is the index.
+The row will be retained if and only if the predicate function returns true.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.reduce">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.reduce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new table with aggregate partial results for table <code class="docutils literal notranslate"><span class="pre">t</span></code> based on <code class="docutils literal notranslate"><span class="pre">description</span></code>.
+This latter should be a string and has the same meaning of the plot description string described in the <a class="reference internal" href="#gdt-plot"><span class="std std-ref">GDT Plot</span></a> chapter.</p>
+<p>The general form of the description string is <code class="docutils literal notranslate"><span class="pre">&quot;&lt;func1&gt;(&lt;expr1&gt;),</span> <span class="pre">&lt;func2&gt;(&lt;expr2&gt;),</span> <span class="pre">...</span> <span class="pre">~</span> <span class="pre">x1,</span> <span class="pre">x2,</span> <span class="pre">...,</span> <span class="pre">xn</span> <span class="pre">|</span> <span class="pre">e1,</span> <span class="pre">e2,</span> <span class="pre">...,</span> <span class="pre">en&quot;</span></code>.
+The functions will be used to compute the aggregate value for a given instance of x1, x2, …, xn and e1, e2, …, en.
+The available aggregate functions are “mean”, “stddev”, “stddevp”, “var”, “count”, “sum”.</p>
+<p>Example to compute some averages and std deviations:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">t</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">read_csv</span> <span class="s1">&#39;examples/exam.csv&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gdt</span><span class="p">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;mean(final), stddev(final), mean((m1+m2)/2) ~ teacher, sex&quot;</span><span class="p">)</span>
+  <span class="n">teacher</span>    <span class="n">sex</span> <span class="n">mean</span><span class="p">(</span><span class="n">final</span><span class="p">)</span> <span class="n">stddev</span><span class="p">(</span><span class="n">final</span><span class="p">)</span> <span class="n">mean</span><span class="p">((</span><span class="n">m1</span><span class="o">+</span><span class="n">m2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="mi">1</span>    <span class="n">jane</span> <span class="n">female</span>       <span class="mf">70.75</span>       <span class="mf">13.0735</span>            <span class="mf">65.5</span>
+<span class="mi">2</span>    <span class="n">jane</span>   <span class="n">male</span>     <span class="mf">61.3333</span>       <span class="mf">18.1071</span>         <span class="mf">47.6667</span>
+<span class="mi">3</span>    <span class="n">john</span> <span class="n">female</span>       <span class="mf">75.25</span>       <span class="mf">13.8894</span>          <span class="mf">84.625</span>
+<span class="mi">4</span>    <span class="n">john</span>   <span class="n">male</span>     <span class="mf">74.8333</span>       <span class="mf">14.4418</span>         <span class="mf">72.8333</span>
+</pre></div>
+</div>
+<p>The meaning of the description string is: for each teacher and sex compute the mean and the standard deviation of the “final” score and the average of m1 and m2 (midterm’s scores).</p>
+<p>If you call the function <a class="reference internal" href="#gdt.barplot" title="gdt.barplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.barplot()</span></code></a> with the same arguments you will obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/gdt-reduce-exam-example-plot.png" src="_images/gdt-reduce-exam-example-plot.png" />
+</figure>
+<p>The plot above correspond actually to the table obtained with <a class="reference internal" href="#gdt.reduce" title="gdt.reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.reduce()</span></code></a>. Both functions perform the same operations, the only difference is that <a class="reference internal" href="#gdt.reduce" title="gdt.reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.reduce()</span></code></a> will create a table while the function <a class="reference internal" href="#gdt.barplot" title="gdt.barplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.barplot()</span></code></a> will create a plot.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.lm">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">lm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_descr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.lm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a linear fit of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> based on the model described with <code class="docutils literal notranslate"><span class="pre">model_descr</span></code>.
+This latter should be a string of the form <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">~</span> <span class="pre">x1,</span> <span class="pre">x2^2&quot;</span></code> where the variables referenced are column’s names of the table.
+For more details about the model description look in the section on <a class="reference internal" href="#gdt-lm"><span class="std std-ref">GDT linear model</span></a>.
+The options are documented in the paragraph about <a class="reference internal" href="#gdt-lm-opts"><span class="std std-ref">linear model options</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.plot">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> based on the plot description <code class="docutils literal notranslate"><span class="pre">plot_desc</span></code>.
+For more details about the plot description look in the section on <a class="reference internal" href="#gdt-plot"><span class="std std-ref">GDT plots</span></a>.
+The options are documented in the paragraph about <a class="reference internal" href="#gdt-plot-opts"><span class="std std-ref">plotting options</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.barplot">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">barplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.barplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a bar plot of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> based on the plot description <code class="docutils literal notranslate"><span class="pre">plot_desc</span></code>.
+The meaning of the plot description strings and the options are the same of the function <a class="reference internal" href="#gdt.plot" title="gdt.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.plot()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.boxplot">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">boxplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.boxplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a boxplot of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> based on the plot description <code class="docutils literal notranslate"><span class="pre">plot_desc</span></code>.
+The meaning of the plot description strings and the options are the same of the function
+<a class="reference internal" href="#gdt.plot" title="gdt.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.plot()</span></code></a> but without using statistical functions like described in <a class="reference internal" href="#gdt-plot-stat-functions"><span class="std std-ref">GDT Plots</span></a>.</p>
+<p>Below an example of boxplot:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exam</span> <span class="o">=</span> <span class="n">gdt</span><span class="o">.</span><span class="n">read_csv</span> <span class="s1">&#39;examples/exam.csv&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gdt</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">exam</span><span class="p">,</span> <span class="s2">&quot;final ~ teacher | sex&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>giving the plot:</p>
+<figure class="align-default">
+<img alt="_images/gdt-boxplot-example-exam.png" src="_images/gdt-boxplot-example-exam.png" />
+</figure>
+<p>The quartiles are computed according to Hyndman, Rob &amp; Fan, Yanan (1996), computation type 8.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.read_csv">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">read_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.read_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a file in CSV format (Comma Separated Values) and return a GDT table.
+If the file have headers they will be used to define the columns’ names.
+The function will determine automatically is the first line should be considered as a line of headers or data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.write_csv">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">write_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.write_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a CSV file with the given <code class="docutils literal notranslate"><span class="pre">filename</span></code> with the content of the table <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.interp">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a function that perform an interpolation based of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> and the <code class="docutils literal notranslate"><span class="pre">description</span></code> string.
+The description should be of the form <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">~</span> <span class="pre">x&quot;</span></code> where “y” and “x” are variables defined in the table.</p>
+<p>Given the set of data points <span class="math notranslate nohighlight">\((x_1, y_1) \dots (x_n, y_n)\)</span> the routines described in this section compute a continuous interpolating function <span class="math notranslate nohighlight">\(y(x)\)</span> such that <span class="math notranslate nohighlight">\(y(x_i) = y_i\)</span>. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.</p>
+<p>The interpolation method is specified by the optional argument <code class="docutils literal notranslate"><span class="pre">interp_method</span></code>.
+The accepted methods are “linear”, “polynomial”, “cspline”, “cspline_periodic”, “akima”, “akima_periodic”.
+The default method is “cspline” if none is specified.</p>
+</dd></dl>
+
+</section>
+<section id="gdt-methods">
+<h2>GDT Methods<a class="headerlink" href="#gdt-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gdt.Gdt">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">Gdt</span></span><a class="headerlink" href="#gdt.Gdt" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.dim">
+<span class="sig-name descname"><span class="pre">dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.dim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the numbers of rows and of columns of the table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.get" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>This function returns the (i,j)-th element of a table.
+As for the matrices the indexes starts from 1.
+In the second form the column’s name can be used.
+The returned value can be either a number, a string or “nil” in case of undefined value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.set" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>This function sets the value of the (i,j)-th element of the table to v.
+The name of the column can be given instead of the column’s index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.header">
+<span class="sig-name descname"><span class="pre">header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the column’s name of the j-th column of the table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.set_header">
+<span class="sig-name descname"><span class="pre">set_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.set_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the column’s name of the j-th column of the table to the given name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.column">
+<span class="sig-name descname"><span class="pre">column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.column" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Return an iterator that gives, at each iterations, the couple (i, v) representing the index and the value of each cell in the column j.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.col_index">
+<span class="sig-name descname"><span class="pre">col_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.col_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the column index corresponding to the given name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.col_insert">
+<span class="sig-name descname"><span class="pre">col_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">f_init</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.col_insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new column named <code class="docutils literal notranslate"><span class="pre">name</span></code> at the given index.
+The function <code class="docutils literal notranslate"><span class="pre">f_init</span></code> is called for each row of the table to intialize the column’s value.
+The function is called in the form <code class="docutils literal notranslate"><span class="pre">f_init(r,</span> <span class="pre">i)</span></code> where the argument <code class="docutils literal notranslate"><span class="pre">r</span></code> passed to <code class="docutils literal notranslate"><span class="pre">f_init</span></code> contains the values in the current row indexed by the column’s name.
+If the initialized function is not provided the values will be initialized to <code class="docutils literal notranslate"><span class="pre">NA</span></code>.</p>
+<p>For example if we have a table with two columns named <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> we can define a new column with their average with the following code:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="p">:</span><span class="n">col_insert</span><span class="p">(</span><span class="s2">&quot;average&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">|</span><span class="n">r</span><span class="o">|</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">r</span><span class="p">.</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.col_append">
+<span class="sig-name descname"><span class="pre">col_append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">f_init</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.col_append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a new column named <code class="docutils literal notranslate"><span class="pre">name</span></code>.
+The function <code class="docutils literal notranslate"><span class="pre">f_init</span></code> is called for each row of the table to intialize the column’s value.
+The function is called in the form <code class="docutils literal notranslate"><span class="pre">f_init(r,</span> <span class="pre">i)</span></code> where the argument <code class="docutils literal notranslate"><span class="pre">r</span></code> passed to <code class="docutils literal notranslate"><span class="pre">f_init</span></code> contains the values in the current row indexed by the column’s name.
+If the initialized function is not provided the values will be initialized to <code class="docutils literal notranslate"><span class="pre">NA</span></code>.</p>
+<p>For example if we have a table with two columns named <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> we can define a new column with their average with the following code:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="p">:</span><span class="n">col_append</span><span class="p">(</span><span class="s2">&quot;average&quot;</span><span class="p">,</span> <span class="o">|</span><span class="n">r</span><span class="o">|</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">r</span><span class="p">.</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.col_define">
+<span class="sig-name descname"><span class="pre">col_define</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">f_init</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.col_define" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like the method <a class="reference internal" href="#gdt.Gdt.col_append" title="gdt.Gdt.col_append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">col_append()</span></code></a> with the exception that, if a column with the given name already exists, it will be overwritten with the new values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.insert">
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new row at the given index <code class="docutils literal notranslate"><span class="pre">i</span></code>.
+The second argument, if given, will be used to initialize the new row for each column by taking <code class="docutils literal notranslate"><span class="pre">values[key]</span></code> where <code class="docutils literal notranslate"><span class="pre">key</span></code> is the column’s name.
+If the second argument is not provided the values will be initialized to <code class="docutils literal notranslate"><span class="pre">NA</span></code>.</p>
+<p>For example if we have a table with two columns named <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> we can insert a new row at index 1 as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="p">:</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="n">x</span> <span class="o">=</span> <span class="mf">3.2</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a new row at the end of the table.
+The initialization of the values is done using the optional argument like for the <a class="reference internal" href="#gdt.Gdt.insert" title="gdt.Gdt.insert"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert()</span></code></a> method.</p>
+<p>If the second argument is not provided the values will be initialized to <code class="docutils literal notranslate"><span class="pre">NA</span></code>.</p>
+<p>For example if we have a table with two columns named <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> we can insert a new row at the end of the table as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="p">:</span><span class="n">append</span> <span class="p">{</span><span class="n">x</span> <span class="o">=</span> <span class="mf">3.2</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.cursor">
+<span class="sig-name descname"><span class="pre">cursor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an object of type cursor.
+It does intially point to the first row of the table.
+A cursor object can be indexed with the name of the columns to obtain the correponding value for the current row.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.rows">
+<span class="sig-name descname"><span class="pre">rows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an iterator to span all the rows of the table.
+At each iteration the row index is provided and a cursor pointing to the current row.</p>
+<p>For example to print the element <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> for each row of a table:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cursor</span> <span class="kr">in</span> <span class="n">t</span><span class="p">:</span><span class="n">rows</span><span class="p">()</span> <span class="kr">do</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">cursor</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">cursor</span><span class="p">.</span><span class="n">y</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.headers">
+<span class="sig-name descname"><span class="pre">headers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a table with the name of the columns (headers).
+The values are given in the column’s order so that the index of each element corresponds to the index of the given column in the table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.Gdt.levels">
+<span class="sig-name descname"><span class="pre">levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.Gdt.levels" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column_name</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a list of the unique levels for the given column identified by its index <code class="docutils literal notranslate"><span class="pre">j</span></code> or its name.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="gdt-plots">
+<span id="gdt-plot"></span><h2>GDT Plots<a class="headerlink" href="#gdt-plots" title="Permalink to this headline">¶</a></h2>
+<p>With GSL Shell it is relatively easy to plot data from a GDT table based on the name of the columns.
+A mini language is used to express the type of plot that should be realized.
+In this chapter we will illustrate its usage with some examples.</p>
+<p>Let us use the following data for our example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ms</span> <span class="o">=</span> <span class="n">gdt</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;examples/am-women-weight.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ms</span>
+<span class="go">   height weight</span>
+<span class="go">1    1.47  52.21</span>
+<span class="go">2     1.5  53.12</span>
+<span class="go">3    1.52  54.48</span>
+<span class="go">4    1.55  55.84</span>
+<span class="go">5    1.57   57.2</span>
+<span class="go">6     1.6  58.57</span>
+<span class="go">7    1.63  59.93</span>
+<span class="go">8    1.65  61.29</span>
+<span class="go">9    1.68  63.11</span>
+<span class="go">10    1.7  64.47</span>
+<span class="go">11   1.73  66.28</span>
+<span class="go">12   1.75   68.1</span>
+<span class="go">13   1.78  69.92</span>
+<span class="go">14    1.8  72.19</span>
+<span class="go">15   1.83  74.46</span>
+</pre></div>
+</div>
+<p>As you can see the table above have two columns named “height” and “weight”.
+We may want to make a scatterplot of the data to see how the weight varies with the height.
+In order to make such plot we can just use the function <a class="reference internal" href="#gdt.plot" title="gdt.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.plot()</span></code></a></p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gdt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;weight ~ height&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The formula provided as a second argument tells to the function that the variable “weight” should be plotted versus the variable “height”.</p>
+<p>The function <a class="reference internal" href="#gdt.plot" title="gdt.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.plot()</span></code></a> can create even more complex plots when dealing with tables with enumeration variables.
+Let us cover a more complex example with another set of data:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">ms</span><span class="o">=</span><span class="n">gdt</span><span class="p">.</span><span class="n">read_csv</span> <span class="s1">&#39;examples/exam.csv&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ms</span>
+   <span class="n">student</span> <span class="n">teacher</span>    <span class="n">sex</span> <span class="n">m1</span> <span class="n">m2</span> <span class="n">final</span>
+<span class="mi">1</span>      <span class="n">S</span><span class="o">-</span><span class="mi">1</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">56</span> <span class="mi">42</span>    <span class="mi">58</span>
+<span class="mi">2</span>      <span class="n">S</span><span class="o">-</span><span class="mi">2</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">96</span> <span class="mi">90</span>    <span class="mi">91</span>
+<span class="mi">3</span>      <span class="n">S</span><span class="o">-</span><span class="mi">3</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">70</span> <span class="mi">59</span>    <span class="mi">65</span>
+<span class="mi">4</span>      <span class="n">S</span><span class="o">-</span><span class="mi">4</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">82</span> <span class="mi">75</span>    <span class="mi">78</span>
+<span class="mi">5</span>      <span class="n">S</span><span class="o">-</span><span class="mi">5</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">85</span> <span class="mi">90</span>    <span class="mi">92</span>
+<span class="mi">6</span>      <span class="n">S</span><span class="o">-</span><span class="mi">6</span>    <span class="n">john</span>   <span class="n">male</span> <span class="mi">69</span> <span class="mi">60</span>    <span class="mi">65</span>
+<span class="mi">7</span>      <span class="n">S</span><span class="o">-</span><span class="mi">7</span>    <span class="n">john</span> <span class="n">female</span> <span class="mi">82</span> <span class="mi">78</span>    <span class="mi">60</span>
+<span class="mi">8</span>      <span class="n">S</span><span class="o">-</span><span class="mi">8</span>    <span class="n">john</span> <span class="n">female</span> <span class="mi">84</span> <span class="mi">81</span>    <span class="mi">82</span>
+<span class="mi">9</span>      <span class="n">S</span><span class="o">-</span><span class="mi">9</span>    <span class="n">john</span> <span class="n">female</span> <span class="mi">89</span> <span class="mi">80</span>    <span class="mi">68</span>
+<span class="mi">10</span>    <span class="n">S</span><span class="o">-</span><span class="mi">10</span>    <span class="n">john</span> <span class="n">female</span> <span class="mi">90</span> <span class="mi">93</span>    <span class="mi">91</span>
+<span class="mi">11</span>    <span class="n">S</span><span class="o">-</span><span class="mi">11</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">42</span> <span class="mi">46</span>    <span class="mi">65</span>
+<span class="mi">12</span>    <span class="n">S</span><span class="o">-</span><span class="mi">12</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">28</span> <span class="mi">15</span>    <span class="mi">34</span>
+<span class="mi">13</span>    <span class="n">S</span><span class="o">-</span><span class="mi">13</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">49</span> <span class="mi">68</span>    <span class="mi">75</span>
+<span class="mi">14</span>    <span class="n">S</span><span class="o">-</span><span class="mi">14</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">36</span> <span class="mi">30</span>    <span class="mi">48</span>
+<span class="mi">15</span>    <span class="n">S</span><span class="o">-</span><span class="mi">15</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">58</span> <span class="mi">58</span>    <span class="mi">62</span>
+<span class="mi">16</span>    <span class="n">S</span><span class="o">-</span><span class="mi">16</span>    <span class="n">jane</span>   <span class="n">male</span> <span class="mi">72</span> <span class="mi">70</span>    <span class="mi">84</span>
+<span class="mi">17</span>    <span class="n">S</span><span class="o">-</span><span class="mi">17</span>    <span class="n">jane</span> <span class="n">female</span> <span class="mi">65</span> <span class="mi">61</span>    <span class="mi">70</span>
+<span class="mi">18</span>    <span class="n">S</span><span class="o">-</span><span class="mi">18</span>    <span class="n">jane</span> <span class="n">female</span> <span class="mi">68</span> <span class="mi">75</span>    <span class="mi">71</span>
+<span class="mi">19</span>    <span class="n">S</span><span class="o">-</span><span class="mi">19</span>    <span class="n">jane</span> <span class="n">female</span> <span class="mi">62</span> <span class="mi">50</span>    <span class="mi">55</span>
+<span class="mi">20</span>    <span class="n">S</span><span class="o">-</span><span class="mi">20</span>    <span class="n">jane</span> <span class="n">female</span> <span class="mi">71</span> <span class="mi">72</span>    <span class="mi">87</span>
+</pre></div>
+</div>
+<p>In the table above we have some numerical columns, “m1”, “m2” and “final” while the other three columns are not numerical.
+In this case we can still use the plot function that will automatically display the variable as an enumeration.
+So, fox example, we can do a plot using the function:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gdt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;final ~ teacher, sex, student&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/gdt-plot-exam.png" src="_images/gdt-plot-exam.png" />
+</figure>
+<p>We have just adjusted the orientation of the x axis’ labels with the command:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">_</span><span class="p">.</span><span class="n">xlab_angle</span><span class="o">=</span><span class="nb">math.pi</span><span class="o">/</span><span class="mi">2</span>
+</pre></div>
+</div>
+<p>In this latter example we have given a formula with <em>three</em> variables on the right of the “~” symbol.
+The meaning is that we want to plot the “final” variable versus the “teacher”, “sex” and the “student” variables.</p>
+<p>It is interesting to note that if the “student” variable was omitted the plot function would have plotted the average score for each teacher and sex combination.
+These means that, when more entries correspond to a single plotting value the average of the values is used.</p>
+<p id="gdt-plot-stat-functions">This behavior can be made explicit by using the “mean” function which is otherwise implicit:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gdt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;mean(final) ~ teacher, sex, student&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other functions like “stddev” and “count” are available to deal with multiple values.
+The function “stddev” can be especially useful to easily plot the standard deviation of grouped data.</p>
+<p>At this point we may want to switch to a barplot to plot the results.
+This can be done using the function <a class="reference internal" href="#gdt.barplot" title="gdt.barplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.barplot()</span></code></a>.
+This latter function can be used in exactly the same way that the function <a class="reference internal" href="#gdt.plot" title="gdt.plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.plot()</span></code></a> so you can switch between them without changing the formula.</p>
+<p>In this case we may want to plot both the final score and the “m2” score (mid term score).
+This can be done easily with the following formula:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gdt</span><span class="p">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;final, m2 ~ teacher, sex, student&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain the plot below:</p>
+<figure class="align-default">
+<img alt="_images/gdt-plot-exam-m2-final.png" src="_images/gdt-plot-exam-m2-final.png" />
+</figure>
+<p>Now let use suppose that we want to drop the “student” variable to obtain the average score for each teacher and sex possible combinations.
+The plot can be done using the following expression:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">gdt</span><span class="p">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;final ~ teacher | sex&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain the plot below:</p>
+<figure class="align-default">
+<img alt="_images/gdt-plot-exam-by-sex.png" src="_images/gdt-plot-exam-by-sex.png" />
+</figure>
+<p>In this case we have used the “|” symbol.
+The idea is that all the variables on the right of the “|” will be enumerated with different colors and different symbols depending on the plot.
+A legend will be also added to link each color with each enumerated value.
+We will refer to the variables or the right of the “|” as an “enumeration variables”.</p>
+<p>The enumeration variables are useful for all kind of plots.
+In the case of line plots enumerated plots are handy to obtain different lines with different colors plotted over the same variables.</p>
+<p>We want to illustrate now how to <em>filter</em> the data to be plotted on the fly.
+The filter is given in the form of a logical relation specifid after a colon ‘:’ character.
+Only the rows satisfying the given relation will be included in the plot.</p>
+<p>To illustrate plot’s filters we will use the data from the Julia language benchmark.
+In the benchmark data there is a column “language” that identifies the programming language and a column “test” that identifies the specific benchmark test.
+Now let us suppose that you want to plot only the results for the “mandel” test.
+You can do it by using the plot filters like in the example below:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">ms</span><span class="o">=</span><span class="n">gdt</span><span class="p">.</span><span class="n">read_csv</span> <span class="s1">&#39;examples/perf-julia.csv&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gdt</span><span class="p">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">ms</span><span class="p">,</span> <span class="s2">&quot;log(time.c) ~ language : test = &#39;mandel&#39;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/gdt-plot-perf-filter-mandel.png" src="_images/gdt-plot-perf-filter-mandel.png" />
+</figure>
+<p>In this case you can note that the string <code class="docutils literal notranslate"><span class="pre">'mandel'</span></code> is enclosed using the single quotes characters.
+This is required because otherwise the expression is interpreted as a column’s name.</p>
+<p>In addition we have also used the <code class="docutils literal notranslate"><span class="pre">log</span></code> function.
+When you describe a plot you can actually use any function contained in the standard “math” module.</p>
+<p>The relation operators available are: <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code>.
+More conditions can be given, separated by a comma, to filter the data.
+In addition the logical operators ‘and’ and ‘or’ can be used to combine the logical relations.</p>
+</section>
+<section id="histogram-plots">
+<h2>Histogram plots<a class="headerlink" href="#histogram-plots" title="Permalink to this headline">¶</a></h2>
+<p>Histogram plots can be created using the function <code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.hist()</span></code>.
+Its usage is simple, you just need to give the tables and an expression whose values will be plotted in the form of an histogram.</p>
+<p>Here an example of the kind of plot that you can obtain:</p>
+<figure class="align-default">
+<img alt="_images/gdt-hist-example.png" src="_images/gdt-hist-example.png" />
+</figure>
+<p>Currently the histogram function does not support any option but this may change in future.
+The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.</p>
+</section>
+<section id="plotting-options">
+<span id="gdt-plot-opts"></span><h2>Plotting options<a class="headerlink" href="#plotting-options" title="Permalink to this headline">¶</a></h2>
+<p>Plotting options are passed in the form of a table as the last arguments.
+The table should be of the form <code class="docutils literal notranslate"><span class="pre">{option_1=</span> <span class="pre">value_1,</span> <span class="pre">option_2=</span> <span class="pre">value_2,</span> <span class="pre">...}</span></code>.</p>
+<p>The options accepted by plots are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">show</span></code>, if false the plot will not be shown, default to true</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lines</span></code>, if true lines will be used for the plot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">points</span></code>, if true points markers will be used for the plot</p></li>
+</ul>
+</section>
+<section id="gdt-linear-model">
+<span id="gdt-lm"></span><h2>GDT Linear Model<a class="headerlink" href="#gdt-linear-model" title="Permalink to this headline">¶</a></h2>
+<p>The linear model function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> is a generic function to perform a linear least square fit based on a linear model description.</p>
+<p>It does return a special type of object that store the result of the fit.
+The fit object can be used to print a summary or performing other operations like evaluating the predicted values. The details about the fit objects are given in the <a class="reference internal" href="#gdt-fit-obj"><span class="std std-ref">fit objects</span></a> specific section.</p>
+<p>The linear fit is performed accordingly to the model string.
+This latter should be of the form:</p>
+<blockquote>
+<div><p>y ~ factor1, factor2, …</p>
+</div></blockquote>
+<p>where <code class="docutils literal notranslate"><span class="pre">y</span></code> is the indipendent variables.</p>
+<p>In general you can refer to the data present in the table by using the column’s name.</p>
+<p>The factors that appears on the right hand side can be just variable names or a derived expression.
+All the arithmetic operations can be used plus the functions present the the “math” module.</p>
+<p>The linear model procedure classify the factors in two classes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>enumeration factors</em>, by default any column that contains string</p></li>
+<li><p><em>scalar factors</em>, purely numerical columns</p></li>
+</ul>
+</div></blockquote>
+<p>A column can be forced to be considerd as an <em>enumeration factor</em> by using the <code class="docutils literal notranslate"><span class="pre">%</span></code> prefix operator.</p>
+<p>The <em>enumeration factors</em> are treated differently by the linear model procedure.
+For each enumeration factor the possible levels are enumerated based on the table.
+The first level is chosen as a reference and a coefficient is added in the fit for each other level.
+The enumeration can have a scalar part that multiply the coefficient in the model.
+For purely enumeration factors the scalar part is equal to 1.</p>
+<p>In mathematical terms the more general linear fit form is given by the formula:</p>
+<div class="math notranslate nohighlight">
+\[f_i = \sum_{k} a_k \, A_{k i} + \sum_{k} \sum_{p = 1}^{P_k} b_{k p} F_{k p i} B_{k i}\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_{k i}\)</span> is the matrix of the scalar factors, <span class="math notranslate nohighlight">\(B_{k i}\)</span> is the matrix of the scalar part of the enumeration factors and <span class="math notranslate nohighlight">\(F_{k p i}\)</span> is the “level matrix”.
+The index <span class="math notranslate nohighlight">\(p\)</span> will assume the values <span class="math notranslate nohighlight">\(1, ..., P_k\)</span> where <span class="math notranslate nohighlight">\(P_k\)</span> are the number of levels for the k-th enumerated factor.
+The value <span class="math notranslate nohighlight">\(F_{k p i}\)</span> will be always equal to 1 for <span class="math notranslate nohighlight">\(p = 1\)</span> since the first level is taken as a reference.
+For the other levels <span class="math notranslate nohighlight">\(F_{k p i}\)</span> will be 1 if the level in the i-th row match the p-level and 0 otherwise.
+The coefficient determined by the fit are <span class="math notranslate nohighlight">\(a_k\)</span> and <span class="math notranslate nohighlight">\(b_{k p}\)</span> for the scalar and enumerated factors respectively.
+The index <code class="docutils literal notranslate"><span class="pre">i</span></code> span each row in the tables by excluding only rows where one of the factors or the observation is undefined.</p>
+<p>For example, in the case of a linear fit of the form:</p>
+<div class="math notranslate nohighlight">
+\[y = a + b x\]</div>
+<p>let us suppose that in our table we have two columns named “x” and “y”.
+In this case we can make the fit by using the model:</p>
+<blockquote>
+<div><p>“y ~ 1, x”</p>
+</div></blockquote>
+<p>and the general mathematical form given above simplifies to:</p>
+<div class="math notranslate nohighlight">
+\[y_i = a_1 \cdot 1 + a_2 \, x_i\]</div>
+<p>since only two scalar factors are used.
+In this case the model matrix has two columns, the first identically equal to 1 and the second equal to the <code class="docutils literal notranslate"><span class="pre">x</span></code> column.</p>
+<p>For this fit we could have omitted the scalar factor <code class="docutils literal notranslate"><span class="pre">1</span></code> as it is automatically added from the <code class="docutils literal notranslate"><span class="pre">x</span></code> factor.
+In general for each expression factor all the multiplicative factor of inferior degree are added.
+So, for example, if you add a factor <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">*</span> <span class="pre">z^2&quot;</span></code> the factors <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">z^2</span></code> will be automatically added.</p>
+<section id="gdt-linear-fit-example">
+<h3>GDT linear fit example<a class="headerlink" href="#gdt-linear-fit-example" title="Permalink to this headline">¶</a></h3>
+<p>In this example we illustrate the more general case of linear model with scalar and enumerated factors.</p>
+<p>Let us suppose that we have a measured quantity <code class="docutils literal notranslate"><span class="pre">y</span></code> taken at different moment of time <code class="docutils literal notranslate"><span class="pre">t</span></code>.
+We suspect that the speciman evolve with time and <code class="docutils literal notranslate"><span class="pre">y</span></code> varies linearly with <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+<p>In addition let us suppose that we have three different tools, “tool A”, “tool B” and “tool C” and we suspect they are not matched.</p>
+<p>Here a extract of how the data table will look like:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">ms</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;examples/metro-lm-example.csv&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ms</span>
+     <span class="n">tool</span>   <span class="n">t</span>        <span class="n">y</span>
+<span class="mi">1</span>  <span class="n">tool</span> <span class="n">A</span>   <span class="mi">0</span>  <span class="mf">2.74018</span>
+<span class="mi">2</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.1</span>  <span class="mf">2.79357</span>
+<span class="mi">3</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.2</span>  <span class="mf">3.44232</span>
+<span class="mi">4</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.3</span>  <span class="mf">3.28009</span>
+<span class="mi">5</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.4</span>  <span class="mf">3.47926</span>
+<span class="mi">6</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.5</span>  <span class="mf">2.91675</span>
+<span class="mi">7</span>  <span class="n">tool</span> <span class="n">A</span> <span class="mf">0.6</span>  <span class="mf">2.70099</span>
+<span class="p">...</span>
+<span class="mi">31</span> <span class="n">tool</span> <span class="n">B</span>   <span class="mi">0</span>  <span class="mf">2.93806</span>
+<span class="mi">32</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.1</span>  <span class="mf">3.04179</span>
+<span class="mi">33</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.2</span>  <span class="mf">3.19853</span>
+<span class="mi">34</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.3</span>  <span class="mf">2.59698</span>
+<span class="mi">35</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.4</span>  <span class="mf">3.65323</span>
+<span class="mi">36</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.5</span>  <span class="mf">3.58917</span>
+<span class="mi">37</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.6</span>  <span class="mf">3.65215</span>
+<span class="mi">38</span> <span class="n">tool</span> <span class="n">B</span> <span class="mf">0.7</span>   <span class="mf">4.0545</span>
+<span class="p">...</span>
+<span class="mi">61</span> <span class="n">tool</span> <span class="n">C</span>   <span class="mi">0</span> <span class="mf">0.928787</span>
+<span class="mi">62</span> <span class="n">tool</span> <span class="n">C</span> <span class="mf">0.1</span>  <span class="mf">1.22095</span>
+<span class="mi">63</span> <span class="n">tool</span> <span class="n">C</span> <span class="mf">0.2</span>  <span class="mf">1.21612</span>
+<span class="mi">64</span> <span class="n">tool</span> <span class="n">C</span> <span class="mf">0.3</span>  <span class="mf">1.19774</span>
+<span class="mi">65</span> <span class="n">tool</span> <span class="n">C</span> <span class="mf">0.4</span>  <span class="mf">1.06587</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p>Based on out knowledge we suspect that the data can be explained with a linear model of the form:</p>
+<div class="math notranslate nohighlight">
+\[y_i = a + b \, t_i + \delta_p F_{p i}\]</div>
+<p>where <span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(b_i\)</span> are the linear coefficient and <span class="math notranslate nohighlight">\(\delta_p\)</span> are the coefficients for the levels of the enumerated factor, the tool.
+These latter describe de tool effect by taking “tool A” as a reference so that
+<code class="docutils literal notranslate"><span class="pre">p</span></code> can take two values: 1, 2 for tools B et C respectively.</p>
+<p>The expression <span class="math notranslate nohighlight">\(F_{p i}\)</span> is equal to 1 when the tool in the i-th column correspond to the tool “p” and 0 otherwise.
+Therefore the coefficients <span class="math notranslate nohighlight">\(\delta_1\)</span> and <span class="math notranslate nohighlight">\(\delta_2\)</span> represents the average delta of tools “B” and “C” versus the tool “A”.</p>
+<p>Here a way to perform the linear fit and make a plot of the data:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- make a plot of the data</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ t | tool&quot;</span><span class="p">,</span> <span class="p">{</span><span class="n">show</span><span class="o">=</span> <span class="kc">false</span><span class="p">})</span>
+
+<span class="c1">-- set plot&#39;s titles</span>
+<span class="n">p</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Linear Fit example&quot;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">xtitle</span> <span class="o">=</span> <span class="s2">&quot;time, s&quot;</span>
+<span class="n">p</span><span class="p">.</span><span class="n">ytitle</span> <span class="o">=</span> <span class="s2">&quot;thickness, mm&quot;</span>
+
+<span class="c1">-- perform a linear model fit</span>
+<span class="n">fit</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">lm</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ t, tool&quot;</span><span class="p">)</span>
+<span class="n">fit</span><span class="p">:</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="c1">-- add into the plot the lines representing the predicted values</span>
+<span class="c1">-- by tool</span>
+<span class="kr">for</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">P</span> <span class="kr">do</span>
+  <span class="kd">local</span> <span class="n">ln</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="n">fxline</span><span class="p">(</span><span class="o">|</span><span class="n">t</span><span class="o">|</span> <span class="n">fit</span><span class="p">:</span><span class="n">eval</span> <span class="p">{</span><span class="n">tool</span><span class="o">=</span> <span class="n">tools</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">t</span><span class="o">=</span> <span class="n">t</span><span class="p">},</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span>
+  <span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">ln</span><span class="p">,</span> <span class="n">graph</span><span class="p">.</span><span class="n">webcolor</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="p">{{</span><span class="s1">&#39;dash&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">}})</span>
+<span class="kr">end</span>
+
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can note that the function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> return a “fit” object.
+This latter is important because it does store the result of the fit.
+More specifically its <code class="xref py py-meth docutils literal notranslate"><span class="pre">summary()</span></code> will print a summary of the results:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">fit</span><span class="p">:</span><span class="n">summary</span><span class="p">()</span>
+        <span class="n">term</span> <span class="n">estimate</span> <span class="n">std</span> <span class="nb">error</span>  <span class="n">t</span> <span class="n">value</span>     <span class="n">Pr</span><span class="p">(</span><span class="o">&gt;|</span><span class="n">t</span><span class="o">|</span><span class="p">)</span>
+<span class="mi">1</span>          <span class="mi">1</span>  <span class="mf">2.68767</span> <span class="mf">0.0816757</span>  <span class="mf">32.9067</span>      <span class="o">&lt;</span> <span class="mf">2e-16</span>
+<span class="mi">2</span>          <span class="n">x</span>  <span class="mf">1.17714</span> <span class="mf">0.0391605</span>  <span class="mf">30.0594</span>      <span class="o">&lt;</span> <span class="mf">2e-16</span>
+<span class="mi">3</span> <span class="n">tooltool</span> <span class="n">B</span> <span class="mf">0.417387</span> <span class="mf">0.0830258</span>  <span class="mf">5.02719</span> <span class="mf">2.68273e-006</span>
+<span class="mi">4</span> <span class="n">tooltool</span> <span class="n">C</span> <span class="o">-</span><span class="mf">1.61441</span> <span class="mf">0.0830258</span> <span class="o">-</span><span class="mf">19.4447</span>      <span class="o">&lt;</span> <span class="mf">2e-16</span>
+
+<span class="n">Standard</span> <span class="n">Error</span><span class="p">:</span> <span class="mf">0.321557</span><span class="p">,</span> <span class="n">R2</span><span class="p">:</span> <span class="mf">0.948122</span><span class="p">,</span> <span class="n">Adjusted</span> <span class="n">R2</span><span class="p">:</span> <span class="mf">0.94568</span>
+</pre></div>
+</div>
+<p>In the table above a summary of the fit result is presented including the estimated coefficients with their standard errors and the “t values”.
+At the bottom the residual R square of the fit and the residual standard error are given.</p>
+<p>Later we use the <code class="xref py py-meth docutils literal notranslate"><span class="pre">eval()</span></code> method to trace the predicted line to obtain the following plot:</p>
+<figure class="align-default">
+<img alt="_images/gdt-lm-plot-example.png" src="_images/gdt-lm-plot-example.png" />
+</figure>
+<p>It is interesting to note that the tool effect can be taken into account with a different model where the “time” and “tool” effect are crossed:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">lm</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ t * tool&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case the regression function will take into account three effects:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the “time” linear effect</p></li>
+<li><p>the tool effect</p></li>
+<li><p>a tool effect on the time coefficient</p></li>
+</ul>
+</div></blockquote>
+<p>So the difference from the example made before would be that, for each tool, a different coefficient is evaluated.</p>
+<p>The corresponding model would be:</p>
+<div class="math notranslate nohighlight">
+\[y_i = a + b \, t_i + (\delta_p + c \, t_i) F_{p i}\]</div>
+<p>so that a different linear coefficient is attributed to each tool.</p>
+</section>
+<section id="gdt-fit-object">
+<span id="gdt-fit-obj"></span><h3>GDT Fit Object<a class="headerlink" href="#gdt-fit-object" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="gdt.LMFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">LMFit</span></span><a class="headerlink" href="#gdt.LMFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>A fit object is returned by the function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> and store the result of a linear fit.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.LMFit.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.LMFit.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a summary of the fit results with some statistical informations.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">fit</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">lm</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ x, tool&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">fit</span><span class="p">:</span><span class="n">summary</span><span class="p">()</span>
+        <span class="n">term</span> <span class="n">estimate</span> <span class="n">std</span> <span class="nb">error</span>  <span class="n">t</span> <span class="n">value</span>    <span class="n">Pr</span><span class="p">(</span><span class="o">&gt;|</span><span class="n">t</span><span class="o">|</span><span class="p">)</span>
+<span class="mi">1</span>          <span class="mi">1</span>  <span class="mf">2.68767</span> <span class="mf">0.0816757</span>  <span class="mf">32.9067</span>     <span class="o">&lt;</span> <span class="mf">2e-16</span>
+<span class="mi">2</span>          <span class="n">x</span>  <span class="mf">1.17714</span> <span class="mf">0.0391605</span>  <span class="mf">30.0594</span>     <span class="o">&lt;</span> <span class="mf">2e-16</span>
+<span class="mi">3</span> <span class="n">tooltool</span> <span class="n">B</span> <span class="mf">0.417387</span> <span class="mf">0.0830258</span>  <span class="mf">5.02719</span> <span class="mf">2.68273e-06</span>
+<span class="mi">4</span> <span class="n">tooltool</span> <span class="n">C</span> <span class="o">-</span><span class="mf">1.61441</span> <span class="mf">0.0830258</span> <span class="o">-</span><span class="mf">19.4447</span>     <span class="o">&lt;</span> <span class="mf">2e-16</span>
+
+<span class="n">Standard</span> <span class="n">Error</span><span class="p">:</span> <span class="mf">0.321557</span><span class="p">,</span> <span class="n">R2</span><span class="p">:</span> <span class="mf">0.948122</span><span class="p">,</span> <span class="n">Adjusted</span> <span class="n">R2</span><span class="p">:</span> <span class="mf">0.94568</span>
+</pre></div>
+</div>
+<p>In the table the coefficient estimated are shown with the associated standard error, t value and t value probability.
+This latter is a test that can help to determine if the effect is significative.</p>
+<p>In the last row the residual standard error is reported with the fit’s R square.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.LMFit.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.LMFit.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the predicted value based on the provided <code class="docutils literal notranslate"><span class="pre">data</span></code>.
+This latter should be a table whose field match the variables’ names used in the model.</p>
+<p>Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">lm</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ time, site | tool&quot;</span><span class="p">)</span>
+<span class="n">fit</span><span class="p">.</span><span class="n">eval</span><span class="p">({</span><span class="n">time</span><span class="o">=</span> <span class="mf">20.5</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tool</span><span class="o">=</span> <span class="s2">&quot;Tool A&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.LMFit.model">
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.LMFit.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the model matrix associated with the given fit method and a given data table.
+This latter can be different from the table used for the fit.
+The obtained matrix can be used, for example, with the function <code class="xref py py-func docutils literal notranslate"><span class="pre">num.linfit()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gdt.LMFit.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.LMFit.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a column matrix with the predicted values for the given data table.
+This latter can be different from the table used for the fit.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gdt.LMFit.SE">
+<span class="sig-name descname"><span class="pre">SE</span></span><a class="headerlink" href="#gdt.LMFit.SE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The residual standard error of the fit.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gdt.LMFit.R2">
+<span class="sig-name descname"><span class="pre">R2</span></span><a class="headerlink" href="#gdt.LMFit.R2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The R square of the fit.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gdt.LMFit.R2_adj">
+<span class="sig-name descname"><span class="pre">R2_adj</span></span><a class="headerlink" href="#gdt.LMFit.R2_adj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The adjusted R square of the fit.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="gdt-linear-model-options">
+<span id="gdt-lm-opts"></span><h3>GDT Linear Model Options<a class="headerlink" href="#gdt-linear-model-options" title="Permalink to this headline">¶</a></h3>
+<p>The options accepted by the <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> functions are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>predict</strong>, a boolean value, if true a column will be added to the table with the predicted value.</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">General Data Tables</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#module-gdt">GDT Functions</a></li>
+<li><a class="reference internal" href="#gdt-methods">GDT Methods</a></li>
+<li><a class="reference internal" href="#gdt-plots">GDT Plots</a></li>
+<li><a class="reference internal" href="#histogram-plots">Histogram plots</a></li>
+<li><a class="reference internal" href="#plotting-options">Plotting options</a></li>
+<li><a class="reference internal" href="#gdt-linear-model">GDT Linear Model</a><ul>
+<li><a class="reference internal" href="#gdt-linear-fit-example">GDT linear fit example</a></li>
+<li><a class="reference internal" href="#gdt-fit-object">GDT Fit Object</a></li>
+<li><a class="reference internal" href="#gdt-linear-model-options">GDT Linear Model Options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="matrices.html"
+                          title="previous chapter">Matrices</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="lua-base.html"
+                          title="next chapter">Iterators</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gdt.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lua-base.html" title="Iterators"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

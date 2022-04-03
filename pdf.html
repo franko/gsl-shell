@@ -1,0 +1,371 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Probability Distribution Functions &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Linear Least Squares fit" href="linfit.html" />
+    <link rel="prev" title="Random Number Distributions" href="randist.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linfit.html" title="Linear Least Squares fit"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="randist.html" title="Random Number Distributions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Probability Distribution Functions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-randist">
+<span id="probability-distribution-functions"></span><h1>Probability Distribution Functions<a class="headerlink" href="#module-randist" title="Permalink to this headline">¶</a></h1>
+<p>The module <a class="reference internal" href="#module-randist" title="randist"><code class="xref py py-mod docutils literal notranslate"><span class="pre">randist</span></code></a> offer a set of functions that mirrors those available from the module <a class="reference internal" href="randist.html#module-rnd" title="rnd"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rnd</span></code></a>.
+Generally, for each kind of distribution a few functions are available to calculate the probability density, the cumulative probability and its inverse.</p>
+<p>Continuous random number distributions are defined by a probability density function, p(x), such that the probability of x occurring in the infinitesimal range x to x+dx is p dx.</p>
+<p>The cumulative distribution function for the lower tail P(x) is defined by the integral,</p>
+<div class="math notranslate nohighlight">
+\[P(x) = \int_{-\infty}^{x} dx' p(x')\]</div>
+<p>and gives the probability of a variate taking a value less than x.</p>
+<p>The cumulative distribution function for the upper tail Q(x) is defined by the integral,</p>
+<div class="math notranslate nohighlight">
+\[Q(x) = \int_{x}^{+\infty} dx' p(x')\]</div>
+<p>and gives the probability of a variate taking a value greater than x.</p>
+<p>The upper and lower cumulative distribution functions are related by <span class="math notranslate nohighlight">\(P(x) + Q(x) = 1\)</span> and satisfy <span class="math notranslate nohighlight">\(0 \le P(x) \le 1\)</span>, <span class="math notranslate nohighlight">\(0 \le Q(x) \le 1\)</span>.</p>
+<p>The inverse cumulative distributions, <span class="math notranslate nohighlight">\(x = P^{-1}(p)\)</span> and <span class="math notranslate nohighlight">\(x = Q^{-1}(q)\)</span> give the values of x which correspond to a specific value of p or q.
+They can be used to find confidence limits from probability values.</p>
+<p>For discrete distributions the probability of sampling the integer value k is given by <span class="math notranslate nohighlight">\(p(k)\)</span>, where <span class="math notranslate nohighlight">\(\sum_k p(k) = 1\)</span>.  The cumulative distribution for the lower tail P(k) of a discrete distribution is defined as,</p>
+<div class="math notranslate nohighlight">
+\[P(k) = \sum_{i \le k} p(i)\]</div>
+<p>where the sum is over the allowed range of the distribution less than or equal to k.</p>
+<p>The cumulative distribution for the upper tail of a discrete distribution Q(k) is defined as</p>
+<div class="math notranslate nohighlight">
+\[Q(k) = \sum_{i &gt; k} p(i)\]</div>
+<p>giving the sum of probabilities for all values greater than k.
+These two definitions satisfy the identity <span class="math notranslate nohighlight">\(P(k) + Q(k) = 1\)</span>.</p>
+<p>If the range of the distribution is 1 to n inclusive then <span class="math notranslate nohighlight">\(P(n)=1\)</span>,
+<span class="math notranslate nohighlight">\(Q(n)=0\)</span> while <span class="math notranslate nohighlight">\(P(1) = p(1)\)</span>, <span class="math notranslate nohighlight">\(Q(1)=1-p(1)\)</span>.</p>
+<section id="naming-conventions">
+<h2>Naming Conventions<a class="headerlink" href="#naming-conventions" title="Permalink to this headline">¶</a></h2>
+<p>The probability functions are named following an uniform naming convention.
+The probability density function end with the suffix <code class="docutils literal notranslate"><span class="pre">_pdf</span></code>.
+The cumulative functions <span class="math notranslate nohighlight">\(P(x)\)</span> and <span class="math notranslate nohighlight">\(Q(x)\)</span> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_P</span></code> and <code class="docutils literal notranslate"><span class="pre">_Q</span></code> respectively.
+The inverse cumulative functions <span class="math notranslate nohighlight">\(P^{-1}(x)\)</span> and <span class="math notranslate nohighlight">\(Q^{-1}(x)\)</span> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_Pinv</span></code> and <code class="docutils literal notranslate"><span class="pre">_Qinv</span></code> respectively.</p>
+</section>
+<section id="functions-index">
+<h2>Functions Index<a class="headerlink" href="#functions-index" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>We present here the list of the available probability functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Actually GSL Shell implements all the functions provided by the GSL library but some of them are not listed here.
+Please consult the GSL reference manual if you need a complete list of all the distributions available.</p>
+</div>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.gaussian_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-gaussian"><span class="std std-ref">Gaussian distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.exponential_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exponential_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exponential_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exponential_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exponential_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exponential_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exponential_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exponential_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exponential_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exponential_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exponential_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exponential_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exponential_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exponential_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exponential_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-exponential"><span class="std std-ref">Exponential  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.chisq_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">chisq_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.chisq_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.chisq_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">chisq_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.chisq_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.chisq_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">chisq_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.chisq_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.chisq_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">chisq_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.chisq_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.chisq_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">chisq_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.chisq_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-chisq"><span class="std std-ref">Chi square  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.laplace_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">laplace_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.laplace_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.laplace_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">laplace_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.laplace_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.laplace_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">laplace_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.laplace_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.laplace_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">laplace_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.laplace_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.laplace_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">laplace_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.laplace_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-fdist"><span class="std std-ref">Laplace  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.tdist_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">tdist_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.tdist_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.tdist_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">tdist_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.tdist_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.tdist_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">tdist_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.tdist_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.tdist_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">tdist_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.tdist_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.tdist_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">tdist_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.tdist_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-tdist"><span class="std std-ref">t- Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.cauchy_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">cauchy_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.cauchy_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.cauchy_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">cauchy_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.cauchy_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.cauchy_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">cauchy_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.cauchy_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.cauchy_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">cauchy_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.cauchy_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.cauchy_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">cauchy_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.cauchy_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-cauchy"><span class="std std-ref">Cauchy  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.rayleigh_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">rayleigh_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.rayleigh_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.rayleigh_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">rayleigh_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.rayleigh_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.rayleigh_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">rayleigh_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.rayleigh_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.rayleigh_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">rayleigh_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.rayleigh_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.rayleigh_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">rayleigh_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.rayleigh_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-rayleigh"><span class="std std-ref">Rayleigh  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.fdist_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">fdist_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.fdist_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.fdist_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">fdist_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.fdist_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.fdist_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">fdist_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.fdist_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.fdist_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">fdist_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.fdist_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.fdist_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">fdist_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.fdist_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-fdist"><span class="std std-ref">F- Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.gamma_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gamma_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gamma_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gamma_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gamma_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gamma_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gamma_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gamma_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gamma_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gamma_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gamma_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gamma_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gamma_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gamma_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gamma_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-gamma"><span class="std std-ref">Gamma  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.beta_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">beta_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.beta_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.beta_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">beta_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.beta_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.beta_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">beta_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.beta_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.beta_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">beta_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.beta_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.beta_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">beta_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.beta_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-beta"><span class="std std-ref">Beta  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.gaussian_tail_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_tail_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_tail_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_tail_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_tail_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_tail_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_tail_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_tail_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.gaussian_tail_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">gaussian_tail_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.gaussian_tail_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-gaussian-tail"><span class="std std-ref">Gaussian tail  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.exppow_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exppow_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exppow_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exppow_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exppow_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exppow_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exppow_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exppow_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exppow_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exppow_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exppow_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exppow_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.exppow_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">exppow_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.exppow_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-exppow"><span class="std std-ref">Exponential Power  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.lognormal_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">lognormal_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.lognormal_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.lognormal_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">lognormal_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.lognormal_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.lognormal_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">lognormal_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.lognormal_Q" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.lognormal_Pinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">lognormal_Pinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.lognormal_Pinv" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.lognormal_Qinv">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">lognormal_Qinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.lognormal_Qinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-lognormal"><span class="std std-ref">Lognormal  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.binomial_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">binomial_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.binomial_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.binomial_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">binomial_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.binomial_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.binomial_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">binomial_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.binomial_Q" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-binomial"><span class="std std-ref">Binomial  Distribution</span></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="randist.poisson_pdf">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">poisson_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.poisson_pdf" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.poisson_P">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">poisson_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.poisson_P" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="randist.poisson_Q">
+<span class="sig-prename descclassname"><span class="pre">randist.</span></span><span class="sig-name descname"><span class="pre">poisson_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randist.poisson_Q" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="randist.html#rnd-poisson"><span class="std std-ref">Poisson  Distribution</span></a>.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Probability Distribution Functions</a><ul>
+<li><a class="reference internal" href="#naming-conventions">Naming Conventions</a></li>
+<li><a class="reference internal" href="#functions-index">Functions Index</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="randist.html"
+                          title="previous chapter">Random Number Distributions</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="linfit.html"
+                          title="next chapter">Linear Least Squares fit</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pdf.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linfit.html" title="Linear Least Squares fit"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="randist.html" title="Random Number Distributions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Probability Distribution Functions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

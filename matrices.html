@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Matrices &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="General Data Tables" href="gdt.html" />
+    <link rel="prev" title="Complex Numbers" href="complex.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gdt.html" title="General Data Tables"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="complex.html" title="Complex Numbers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Matrices</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="matrices">
+<h1>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>GSL Shell main data types are <em>real</em> and <em>complex</em> matrices and many of the GSL routines works on this kind of data.
+GSL Shell does not have a separate type to represent a vector but column matrices are used for this purpose.</p>
+<p>With matrix you can do basic arithmetic operations with the usual mathematical meaning provided that the dimensions of the matrices are compatible.
+You can also mix freely scalar with matrices, GSL Shell will perform the appropriate operation in each case.
+In general you can also mix real and complex valued number or matrix in arithmetic operations and the result will be complex if at least one of the operand is complex.
+The only arithmetic operation that is not allowed is the division where the right operand is a matrix.
+The reason is that this latter operation does not have a well defined mathematical meaning.
+In general the inversion of the matrix can be performed using the function <a class="reference internal" href="linalg.html#matrix.inv" title="matrix.inv"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.inv()</span></code></a> or the function <a class="reference internal" href="linalg.html#matrix.solve" title="matrix.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.solve()</span></code></a> to solve a linear system efficiently.</p>
+<p>In general most of the matrix related functions can operate on both real or complex matrices and return the appropriate result.</p>
+<p>In order to create a new matrix you should use the <a class="reference internal" href="#matrix.new" title="matrix.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.new()</span></code></a> function to define a <em>real</em> matrix and <a class="reference internal" href="#matrix.cnew" title="matrix.cnew"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.cnew()</span></code></a> for a <em>complex</em> matrix. If you want a matrix by giving explicitly all its elements you can use instead the function <a class="reference internal" href="#matrix.def" title="matrix.def"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.def()</span></code></a>.</p>
+<p>The <code class="xref py py-func docutils literal notranslate"><span class="pre">new()</span></code> function takes two mandatory arguments, the number of rows and of columns and an optional third argument. If the third argument is not given all the elements of the matrix are initialized to zero. Otherwise, if you provide a function of two variables, lets say i and j, it will be used to initialize the element of the matrix. The provided function will be called for each element of the matrix with the index of row and column as an argument. This provides a very useful way to initialize matrices. As an example, let us suppose that we want to define a matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> of dimension <span class="math notranslate nohighlight">\(n \times n\)</span> whose elements are given by <span class="math notranslate nohighlight">\(m_{jk} = \textrm{exp} (2 \pi i j k / n)\)</span>.</p>
+<p>In GSL Shell we can define the matrix with the following command:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1">-- we define a complex matrix that operate a Fourier transform</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">cnew</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">|</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="o">|</span> <span class="n">complex</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="n">i</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where you have previously defined <code class="docutils literal notranslate"><span class="pre">n</span></code> to be a small integer number.</p>
+</section>
+<section id="accessing-matrix-elements">
+<h2>Accessing Matrix Elements<a class="headerlink" href="#accessing-matrix-elements" title="Permalink to this headline">¶</a></h2>
+<p>To access an element of a matrix placed at the i-th row and the j-th column you can use the syntax <code class="docutils literal notranslate"><span class="pre">m:get(i,</span> <span class="pre">j)</span></code> where <code class="docutils literal notranslate"><span class="pre">m</span></code> is the matrix.
+You can also change the value with the following syntax <code class="docutils literal notranslate"><span class="pre">m:set(i,</span> <span class="pre">j,</span> <span class="pre">x)</span></code> to set the element to the value <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>In the GSL Shell’s indexing convention the first row or column of a matrix in identified by the number one.
+This is the same indexing convention used in FORTRAN and also in standard mathematical notation and is also coherent with the Lua indexing of a table.</p>
+<p>In GSL shell the matrix with only one column are considered like vectors and you can reference their elements just by indexing the vector like in <code class="docutils literal notranslate"><span class="pre">v[i]</span></code>.
+You can therefore read or set a specific element of a vector using
+simple indexing like we illustrate in the following example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="c1">-- we define a vector, it is just a matrix with one column</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">vec</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">7.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span>
+<span class="p">[</span> <span class="mi">0</span>   <span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.2</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.4</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mf">7.6</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.8</span> <span class="p">]</span>
+<span class="p">[</span> <span class="mi">1</span>   <span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+<span class="mf">7.6</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+<span class="mi">0</span>
+</pre></div>
+</div>
+<p>In the case you index a matrix with more then one column you will obtain a row of the matrix but in column form.
+The resulting column matrix will refer to the same underlying data of the original matrix.
+Since the two matrices refer to the same data any change to the content of one matrix will affect both of them.</p>
+<p>Here some simple examples of matrix manipulations:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">def</span> <span class="p">{{</span><span class="mf">0.2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">},</span> <span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">}}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span>
+<span class="p">[</span>  <span class="mf">0.2</span>    <span class="mi">4</span> <span class="o">-</span><span class="mf">0.5</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mi">2</span>    <span class="mi">0</span>  <span class="mf">1.1</span> <span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">[</span>  <span class="mf">0.2</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mi">4</span> <span class="p">]</span>
+<span class="p">[</span> <span class="o">-</span><span class="mf">0.5</span> <span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1">-- we change one of the matrix element</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.7</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span>
+<span class="p">[</span>  <span class="mf">0.2</span> <span class="o">-</span><span class="mf">0.7</span> <span class="o">-</span><span class="mf">0.5</span> <span class="p">]</span>
+<span class="p">[</span>    <span class="mi">2</span>    <span class="mi">0</span>  <span class="mf">1.1</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>In general the aliasing between matrices can be useful in many circumstances to refer to an original matrix by using a submatrix.
+In case you really need a submatrix which is an independent copy of its parent matrix you can just use the <a class="reference internal" href="#matrix.copy" title="matrix.copy"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.copy()</span></code></a> function to obtain a copy.</p>
+<p>You should have noticed that when you index a matrix with many column you obtain the row identified by the index but in column form.
+If you want to obtain a row in the form of a row matrix you can use the <a class="reference internal" href="#Matrix.row" title="Matrix.row"><code class="xref py py-meth docutils literal notranslate"><span class="pre">row()</span></code></a> method.
+In alternative you can also use the <a class="reference internal" href="#Matrix.slice" title="Matrix.slice"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice()</span></code></a> method that let you extract any submatrix of contiguous rows and columns.</p>
+<section id="matrix-dimensions">
+<h3>Matrix Dimensions<a class="headerlink" href="#matrix-dimensions" title="Permalink to this headline">¶</a></h3>
+<p>To obtain the dimension of a matrix you should use the <a class="reference internal" href="#matrix.dim" title="matrix.dim"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.dim()</span></code></a> function that takes the matrix as argument and returns its number of rows and columns. Here an example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- we define a matrix</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">def</span> <span class="p">{{</span><span class="mf">0.2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">},</span> <span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">}}</span>
+
+<span class="c1">-- we obtain the number of rows and columns, r and c respectively</span>
+<span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">dim</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also use the length operator <code class="docutils literal notranslate"><span class="pre">#</span></code> with a matrix to obtain just the number of rows.</p>
+</div>
+</section>
+</section>
+<section id="matrix-methods">
+<h2>Matrix methods<a class="headerlink" href="#matrix-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Matrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Matrix</span></span><a class="headerlink" href="#Matrix" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Matrix.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a copy of the matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.dim">
+<span class="sig-name descname"><span class="pre">dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.dim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the dimensions of the matrix, in the order the numbers of rows and the number of columns.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.rows">
+<span class="sig-name descname"><span class="pre">rows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of rows of the matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.cols">
+<span class="sig-name descname"><span class="pre">cols</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of columns of the matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns the (i,j)-th element of a matrix. As a
+general convention in GSL Shell the index of the first element is 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function sets the value of the (i,j)-th element of the matrix to v.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.slice">
+<span class="sig-name descname"><span class="pre">slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a sub-matrix obtained from the original matrix by starting
+at the element (k0, k1) and taking n0 rows and n1 columns. The
+matrix that is returned is a “view” of the existing matrix in the
+sense that it make reference to the same underlying matrix. So if
+you modify the submatrix you will implicitly modify the original
+matrix and vice versa.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.norm">
+<span class="sig-name descname"><span class="pre">norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Frobenius norm of the matrix. It is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\|a\| = \sqrt{\sum_i \sum_j | a_{ij} |^2}\]</div>
+<p>where a<sub>ij</sub> are the elements of the matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.row">
+<span class="sig-name descname"><span class="pre">row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the submatrix given by the i-th row of the matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Matrix.col">
+<span class="sig-name descname"><span class="pre">col</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Matrix.col" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the submatrix given by the j-th column of the matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-matrix">
+<span id="matrix-functions"></span><h2>Matrix Functions<a class="headerlink" href="#module-matrix" title="Permalink to this headline">¶</a></h2>
+<p>All the functions described in this section have an equivalent function for complex valued matrix. The functions for complex matrix are obtained by adding the ‘c’ prefix to the name. So for example the function <code class="xref py py-func docutils literal notranslate"><span class="pre">mul()</span></code> has an equivalent for complex matrix whose name is <code class="xref py py-func docutils literal notranslate"><span class="pre">cmul()</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.new">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">finit</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#matrix.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new matrix of <code class="docutils literal notranslate"><span class="pre">r</span></code> rows and <code class="docutils literal notranslate"><span class="pre">c</span></code> columns. If <code class="docutils literal notranslate"><span class="pre">finit</span></code>
+is not given the matrix is initialized to 0. If <code class="docutils literal notranslate"><span class="pre">finit</span></code> is
+provided the function <code class="docutils literal notranslate"><span class="pre">finit(i,</span> <span class="pre">j)</span></code> is called for all the
+elements with the i arguments equal to the row index and j equal to
+the column index. Then the value returned by the function is assigned
+to the matrix elements.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.cnew">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">cnew</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">finit</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#matrix.cnew" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new complex matrix. The meaning of its arguments is the
+same of the function <a class="reference internal" href="#matrix.new" title="matrix.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">new()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.def">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">def</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.def" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the table t into a matrix. The table should be in the form <code class="docutils literal notranslate"><span class="pre">{{row1_v1,</span> <span class="pre">row1_v2,</span> <span class="pre">...},</span> <span class="pre">{row2_v1,</span> <span class="pre">row2_v2,</span> <span class="pre">...},</span> <span class="pre">...}</span></code> where each term is a number. You should also ensure that all the lines contains the same number of elements. Example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">th</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">6</span>
+<span class="c1">-- create a 2x2 rotation matrix using the angle th</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">def</span> <span class="p">{{</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)},</span> <span class="p">{</span><span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">)}}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.vec">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">vec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the table t into a column matrix. In GSL Shell column matrices are considered vectors. The table should be in the form <code class="docutils literal notranslate"><span class="pre">{v1,</span> <span class="pre">v2,</span> <span class="pre">v3,</span> <span class="pre">...}</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.stack">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">stack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new matrix by stacking together, horizontally and vertically, more matrices as specified in the <code class="docutils literal notranslate"><span class="pre">layout</span></code> argument.</p>
+<p>The argument <code class="docutils literal notranslate"><span class="pre">layout</span></code> should be in the form <code class="docutils literal notranslate"><span class="pre">{{A1,</span> <span class="pre">A2,</span> <span class="pre">...},</span> <span class="pre">{B1,</span> <span class="pre">B2,</span> <span class="pre">...},</span> <span class="pre">...}</span></code> to indicate the layout of the matrices to be composed.
+Each of the layout terms can be a matrix or a scalar.
+If a scalar is given it will be transformed into a matrix of identical elements and whose dimensions will be adjusted to fit the other matrices in the layout.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.dim">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">dim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.dim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns two values, in the order, the number of rows and of columns of
+the matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.copy">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a copy of the matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.transpose">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the transpose of the matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.hc">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">hc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.hc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hermitian conjugate of the matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.diag">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.diag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a table <code class="docutils literal notranslate"><span class="pre">t</span></code> of length <code class="docutils literal notranslate"><span class="pre">n</span></code> returns a diagonal matrix whose diagonal elements are equal to the elements of <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.unit">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the unit matrix of dimension nxn.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.set">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the matrix <code class="docutils literal notranslate"><span class="pre">a</span></code> to be equal to the matrix <code class="docutils literal notranslate"><span class="pre">b</span></code>. It raise an
+error if the dimensions of the matrices are different. Please note
+that it is different than the statement:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>because this latter simple make the variable <code class="docutils literal notranslate"><span class="pre">a</span></code> refer to the
+same matrix of <code class="docutils literal notranslate"><span class="pre">b</span></code>. With the <a class="reference internal" href="#matrix.set" title="matrix.set"><code class="xref py py-func docutils literal notranslate"><span class="pre">set()</span></code></a> function you set each
+element of an existing matrix <code class="docutils literal notranslate"><span class="pre">a</span></code> to the same value of the
+corresponding element of <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="matrix.fset">
+<span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">fset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.fset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the elements of the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> to the value given by
+<code class="docutils literal notranslate"><span class="pre">f(i,</span> <span class="pre">j)</span></code> where <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code> are, respectively, the row and column
+indexes of the matrix. Note that this function have the same
+semantic of the <a class="reference internal" href="#matrix.new" title="matrix.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">new()</span></code></a> function with the difference that <a class="reference internal" href="#matrix.fset" title="matrix.fset"><code class="xref py py-func docutils literal notranslate"><span class="pre">fset()</span></code></a>
+operate on a matrix that already exists instead of creating a new one.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Matrices</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#accessing-matrix-elements">Accessing Matrix Elements</a><ul>
+<li><a class="reference internal" href="#matrix-dimensions">Matrix Dimensions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#matrix-methods">Matrix methods</a></li>
+<li><a class="reference internal" href="#module-matrix">Matrix Functions</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="complex.html"
+                          title="previous chapter">Complex Numbers</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="gdt.html"
+                          title="next chapter">General Data Tables</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/matrices.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gdt.html" title="General Data Tables"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="complex.html" title="Complex Numbers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Matrices</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Nonlinear Least Squares fit &#8212; GSL Shell 2.3.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basis Splines" href="bsplines.html" />
+    <link rel="prev" title="Linear Least Squares fit" href="linfit.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bsplines.html" title="Basis Splines"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="linfit.html" title="Linear Least Squares fit"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Nonlinear Least Squares fit</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="nonlinear-least-squares-fit">
+<h1>Nonlinear Least Squares fit<a class="headerlink" href="#nonlinear-least-squares-fit" title="Permalink to this headline">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>GSL Shell provides support for nonlinear least squares fitting for user-defined data and functions.</p>
+<p>The problem of multidimensional nonlinear least-squares fitting requires
+the minimization of the squared residuals of n functions, f<sub>i</sub>, in p
+parameters, x<sub>i</sub>,</p>
+<div class="math notranslate nohighlight">
+\[\Phi(x) = \frac{1}{2} || F(x) ||^2
+        = \frac{1}{2} \sum_{i=1}^{n} f_i(x_1, ..., x_p)^2\]</div>
+<p>All algorithms proceed from an initial guess using the linearization,</p>
+<div class="math notranslate nohighlight">
+\[\psi(p) = || F(x+p) || \simeq || F(x) + J p ||\]</div>
+<p>where x is the initial point, p is the proposed step and J is the
+Jacobian matrix J<sub>ij</sub> = df<sub>i</sub> / dx<sub>j</sub>.
+Additional strategies are used
+to enlarge the region of convergence.  These include requiring a
+decrease in the norm ||F|| on each step or using a trust region to
+avoid steps which fall outside the linear regime.</p>
+<p>To perform a weighted least-squares fit of a nonlinear model Y(x,t)
+to data (t<sub>i</sub>, y<sub>i</sub>) with independent Gaussian errors
+σ<sub>i</sub>, use
+function components of the following form</p>
+<div class="math notranslate nohighlight">
+\[f_i = (Y(x, t_i) - y_i) / \sigma_i\]</div>
+<p>Note that the model parameters are denoted by x in this chapter since
+the non-linear least-squares algorithms are described geometrically
+(i.e. finding the minimum of a surface).  The independent variable of
+any data to be fitted is denoted by t.</p>
+<p>With the definition above the Jacobian is
+<span class="math notranslate nohighlight">\(J_{ij} =(1 / \sigma_i)  d Y_i / d x_j\)</span>, where <span class="math notranslate nohighlight">\(Y_i = Y(x,t_i)\)</span>.</p>
+</section>
+<section id="performing-a-non-linear-fit">
+<h2>Performing a non-linear fit<a class="headerlink" href="#performing-a-non-linear-fit" title="Permalink to this headline">¶</a></h2>
+<p>To perform a non-linear fit with GSL Shell you should define before a function that computes the values <span class="math notranslate nohighlight">\(f_i\)</span> and <span class="math notranslate nohighlight">\(J_{ij}\)</span> for some given values of the parameters. The details about the function are given in the following section.</p>
+<section id="user-defined-function">
+<span id="fdf-non-linear-descr"></span><h3>User defined function<a class="headerlink" href="#user-defined-function" title="Permalink to this headline">¶</a></h3>
+<p>The user supplied function for the non-linear fit should calculates the values <span class="math notranslate nohighlight">\(f_i\)</span> and the elements of the Jacobian <span class="math notranslate nohighlight">\(J_{ij}\)</span> for a given set values of the parameters.
+The function is called with the following calling convention:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span> <span class="nf">fdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+   <span class="c1">-- user defined function</span>
+   <span class="p">...</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>where the function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> is the function that you provide, <code class="docutils literal notranslate"><span class="pre">x</span></code> is column matrix that contains the P parameters, <code class="docutils literal notranslate"><span class="pre">f</span></code> is a column matrix of size N used to store the values <span class="math notranslate nohighlight">\(f_i\)</span>  and J is a matrix of size N x P whose generic element <span class="math notranslate nohighlight">\(J_{ij}\)</span> is the derivative of <span class="math notranslate nohighlight">\(f_i\)</span> with respect of the j-th fit parameter.</p>
+<p>In some cases the function can be called with <code class="docutils literal notranslate"><span class="pre">f</span></code> or <code class="docutils literal notranslate"><span class="pre">J</span></code> equal to <code class="docutils literal notranslate"><span class="pre">nil</span></code> because their values does not need to be computed. This imply that the user defined function should always check the argument <code class="docutils literal notranslate"><span class="pre">f</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> and set their values only if the variable is not <code class="docutils literal notranslate"><span class="pre">nil</span></code>.</p>
+<p>For example let us suppose that we want to fit the function</p>
+<div class="math notranslate nohighlight">
+\[f(t) = A \, e^{ - \lambda t} + b\]</div>
+<p>where A, λ and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t<sub>1</sub>, …, t<sub>i</sub>, …, t<sub>N</sub>. If this case the vector <code class="docutils literal notranslate"><span class="pre">x</span></code> will have size P, <code class="docutils literal notranslate"><span class="pre">f</span></code> size N and <code class="docutils literal notranslate"><span class="pre">J</span></code> size N x P. The function for the non-linear fit can be therefore defined as follows:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+
+<span class="kr">function</span> <span class="nf">fdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+   <span class="kr">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="kr">do</span>
+      <span class="kd">local</span> <span class="n">A</span><span class="p">,</span> <span class="n">lambda</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+      <span class="kd">local</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">yrf</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sigrf</span>
+      <span class="kd">local</span> <span class="n">e</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">lambda</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+      <span class="kr">if</span> <span class="n">f</span> <span class="kr">then</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">e</span><span class="o">+</span><span class="n">b</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="n">sig</span> <span class="kr">end</span>
+      <span class="kr">if</span> <span class="n">J</span> <span class="kr">then</span>
+         <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">e</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+         <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="n">e</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+         <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+       <span class="kr">end</span>
+    <span class="kr">end</span>
+ <span class="kr">end</span>
+</pre></div>
+</div>
+<p>You can note in the definition above the we have chosen to store the three parameters A, λ and b in this exact order. In general you should choose an order to pack the parameters into the vector <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>Note also that the assignment to the elements of the vector <code class="docutils literal notranslate"><span class="pre">f</span></code> and the matrix <code class="docutils literal notranslate"><span class="pre">J</span></code> are done only if their respective variables <code class="docutils literal notranslate"><span class="pre">f</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> are not <code class="docutils literal notranslate"><span class="pre">nil</span></code>.</p>
+<p>Once that the function is defined the most delicate work is done and you should create a non-linear fit solver of the appropriate size N and P with the function <a class="reference internal" href="#num.nlinfit" title="num.nlinfit"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.nlinfit()</span></code></a>. Once the non-linear fit solver is defined you indicate the function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> and the values using the method <a class="reference internal" href="#num.NLinFit.set" title="num.NLinFit.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a>. Then you should iterate the search procedure with the method <a class="reference internal" href="#num.NLinFit.iterate" title="num.NLinFit.iterate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate()</span></code></a> and test the convergence with the method <a class="reference internal" href="#num.NLinFit.test" title="num.NLinFit.test"><code class="xref py py-meth docutils literal notranslate"><span class="pre">test()</span></code></a>.</p>
+<p>Here a complete example:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
+<span class="n">use</span> <span class="s1">&#39;graph&#39;</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">40</span>
+
+<span class="n">sigrf</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="kr">function</span> <span class="nf">fdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+   <span class="kr">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="kr">do</span>
+      <span class="n">A</span><span class="p">,</span> <span class="n">lambda</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+      <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">yrf</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sigrf</span>
+      <span class="n">e</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">lambda</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+      <span class="kr">if</span> <span class="n">f</span> <span class="kr">then</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">e</span><span class="o">+</span><span class="n">b</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="n">sig</span> <span class="kr">end</span>
+      <span class="kr">if</span> <span class="n">J</span> <span class="kr">then</span>
+      <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">e</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+      <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="n">e</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+      <span class="n">J</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sig</span><span class="p">)</span>
+      <span class="kr">end</span>
+   <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="kr">function</span> <span class="nf">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+   <span class="n">A</span><span class="p">,</span> <span class="n">lambda</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+   <span class="kr">return</span> <span class="n">A</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">lambda</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+<span class="kr">end</span>
+
+<span class="n">xref</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">vec</span> <span class="p">{</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span>
+
+<span class="n">yrf</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">model</span><span class="p">(</span><span class="n">xref</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">rnd</span><span class="p">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">nlinfit</span> <span class="p">{</span><span class="n">n</span><span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span> <span class="mi">3</span><span class="p">}</span>
+
+<span class="n">s</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="n">fdf</span><span class="p">,</span> <span class="n">matrix</span><span class="p">.</span><span class="n">vec</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">chisq</span><span class="p">)</span>
+
+<span class="kr">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span> <span class="kr">do</span>
+   <span class="n">s</span><span class="p">:</span><span class="n">iterate</span><span class="p">()</span>
+   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ITER=&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">chisq</span><span class="p">)</span>
+   <span class="kr">if</span> <span class="n">s</span><span class="p">:</span><span class="n">test</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">)</span> <span class="kr">then</span> <span class="kr">break</span> <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Non-linear fit example&#39;</span><span class="p">)</span>
+<span class="n">pts</span> <span class="o">=</span> <span class="n">ipath</span><span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">sequence</span><span class="p">(</span><span class="kr">function</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="kr">return</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">yrf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="kr">end</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="n">fitln</span> <span class="o">=</span> <span class="n">fxline</span><span class="p">(</span><span class="kr">function</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="kr">return</span> <span class="n">model</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="kr">end</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="p">{{</span><span class="s1">&#39;marker&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">}})</span>
+<span class="n">p</span><span class="p">:</span><span class="n">addline</span><span class="p">(</span><span class="n">fitln</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">clip</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="n">p</span><span class="p">.</span><span class="n">pad</span>  <span class="o">=</span> <span class="kc">true</span>
+<span class="n">p</span><span class="p">:</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and here the resulting plot where we have superposed the simulated points with the best fit function.</p>
+<figure class="align-default" id="id1">
+<img alt="_images/nlinfit-example-plot.png" src="_images/nlinfit-example-plot.png" />
+<figcaption>
+<p><span class="caption-text">Non-linear fit of function A exp(a t) + b with Gaussian noise</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="solver-class-definition">
+<h2>Solver class definition<a class="headerlink" href="#solver-class-definition" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="num.nlinfit">
+<span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">nlinfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.nlinfit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a non-linear fit solver object.
+The argument <code class="docutils literal notranslate"><span class="pre">spec</span></code> should be a table in the form <code class="docutils literal notranslate"><span class="pre">{n</span> <span class="pre">=</span> <span class="pre">...,</span> <span class="pre">p</span> <span class="pre">=</span> <span class="pre">...}</span></code> where the fields n and p indicate, respectively the number of observations and the number of fit parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="num.NLinFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">NLinFit</span></span><a class="headerlink" href="#num.NLinFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Non-linear fit solver class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="num.NLinFit.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.NLinFit.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associate the non-linear fit solver with the user-defined function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> and set the initial condition for the fit parameters to <code class="docutils literal notranslate"><span class="pre">x0</span></code>.
+The definition of the function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> is given in the section <a class="reference internal" href="#fdf-non-linear-descr"><span class="std std-ref">above</span></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="num.NLinFit.iterate">
+<span class="sig-name descname"><span class="pre">iterate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#num.NLinFit.iterate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Advance the solver of a single step. It does return <code class="docutils literal notranslate"><span class="pre">continue</span></code> if it
+did not reach the optimal point and <code class="docutils literal notranslate"><span class="pre">success</span></code> otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="num.NLinFit.test">
+<span class="sig-name descname"><span class="pre">test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps_abs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_err</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.NLinFit.test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the the search converged for the given absolute error <code class="docutils literal notranslate"><span class="pre">eps_abs</span></code> and relative error <code class="docutils literal notranslate"><span class="pre">eps_rel</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="num.NLinFit.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#num.NLinFit.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current vector with the fit parameters.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="num.NLinFit.f">
+<span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#num.NLinFit.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a vector with the fit residuals.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Nonlinear Least Squares fit</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#performing-a-non-linear-fit">Performing a non-linear fit</a><ul>
+<li><a class="reference internal" href="#user-defined-function">User defined function</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solver-class-definition">Solver class definition</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="linfit.html"
+                          title="previous chapter">Linear Least Squares fit</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="bsplines.html"
+                          title="next chapter">Basis Splines</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/nlinfit.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bsplines.html" title="Basis Splines"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="linfit.html" title="Linear Least Squares fit"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Nonlinear Least Squares fit</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>
