@@ -70,6 +70,11 @@ done
 mkdir -p "$datadir/pre3d"
 cp pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua "$datadir/pre3d"
 
+mkdir -p "$datadir/help"
+for name in fft graphics integ iter matrix nlfit ode rng vegas; do
+    cp "data/help/${name}.lua" "$datadir/help"
+done
+
 pushd "$rundir"
 ./$exe_name
 popd
