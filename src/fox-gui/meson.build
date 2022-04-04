@@ -19,6 +19,8 @@ executable('gsl-shell-gui',
     link_with: [libluagsl, libaggplot, libgdt],
     link_args: gsl_shell_link_args,
     export_dynamic: true,
-    win_subsystem: 'windows'
+    win_subsystem: 'windows',
+    install: true,
+    install_dir: gsl_shell_bindir,
 )
 

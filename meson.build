@@ -38,6 +38,10 @@ endforeach
 libgsl_proj = subproject('gsl', default_options: libgsl_options)
 libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
 
+gsl_shell_bindir = ''
+gsl_shell_datadir = 'lua'
+install_subdir('data', strip_directory : true, install_dir : gsl_shell_datadir)
+
 subdir('include')
 subdir('src')
 

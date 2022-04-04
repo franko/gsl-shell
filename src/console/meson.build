@@ -7,6 +7,8 @@ executable('gsl-shell', 'gsl-shell-jit.c',
     link_with: [libluagsl, libaggplot, libgdt],
     link_args: gsl_shell_link_args,
     export_dynamic: true,
-    win_subsystem: 'console'
+    win_subsystem: 'console',
+    install: true,
+    install_dir: gsl_shell_bindir,
 )
 
