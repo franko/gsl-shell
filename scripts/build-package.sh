@@ -37,8 +37,8 @@ datadir="$rundir/lua"
 
 rm -fr "$rundir"
 mkdir -p "$bindir" "$datadir"
-cp "$builddir/console/gsl-shell$ext" "$bindir"
-cp "$builddir/fox-gui/gsl-shell-gui$ext" "$bindir"
+cp "$builddir/src/console/gsl-shell$ext" "$bindir"
+cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
 
 lua_files=(bspline.lua fft-init.lua integ-init.lua template.lua check.lua
 graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua

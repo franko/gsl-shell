@@ -8,7 +8,6 @@ gsl_shell_defines = [
 
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
-configure_file(input : 'include/defs.h.in', output : 'defs.h', configuration : conf_data)
 
 if host_machine.system() == 'darwin'
     gsl_shell_defines += '-DDARWIN_MACOSX'
@@ -20,8 +19,8 @@ if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
     gsl_shell_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
-gsl_shell_include = include_directories('.', 'include', 'gdt', 'agg-plot', 'lua-gsl')
-cpp_utils_include = include_directories('cpp-utils')
+gsl_shell_include = include_directories('include', 'src/gdt', 'src/agg-plot', 'src/lua-gsl')
+cpp_utils_include = include_directories('src/cpp-utils')
 
 threads_dep  = dependency('threads')
 freetype_dep = dependency('freetype2')
@@ -34,9 +33,6 @@ luajit_dep = luajit_proj.get_variable('lua_dep')
 libgsl_proj = subproject('gsl', default_options: ['default_library=static', 'blas=' + get_option('blas')])
 libgsl_dep = libgsl_proj.get_variable('libgsl_dep').as_link_whole()
 
-subdir('lua-gsl')
-subdir('agg-plot')
-subdir('gdt')
-subdir('console')
-subdir('fox-gui')
+subdir('include')
+subdir('src')
 
