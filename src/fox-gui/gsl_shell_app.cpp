@@ -43,7 +43,7 @@ gsl_shell_app::gsl_shell_app():
     plot_icon = new FXGIFIcon(this, plot_icon_data);
 
     const float scale = get_dpi_scale();
-    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell", gsl_shell_icon, gsl_shell_mini, 700 * scale, 600 * scale);
+    gsl_shell_window *gsw = new gsl_shell_window(&m_engine, &m_redirect, this, "GSL Shell", gsl_shell_icon, gsl_shell_mini, 1000 * scale, 800 * scale);
     m_console = gsw->console();
 }
 
