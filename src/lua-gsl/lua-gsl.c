@@ -65,6 +65,34 @@ gsl_shell_free (struct gsl_shell_state *gs)
   pthread_mutex_destroy (&gs->shutdown_mutex);
 }
 
+void run_start_script(lua_State *L) {
+#ifdef _WIN32
+#define PATHSEP_PATTERN "\\\\"
+#define NONPATHSEP_PATTERN "[^\\\\]+"
+#else
+#define PATHSEP_PATTERN "/"
+#define NONPATHSEP_PATTERN "[^/]+"
+#endif
+
+  const char *init_code = \
+    "xpcall(function()\n"
+    "  local exedir = EXEFILE:match('^(.*)" PATHSEP_PATTERN NONPATHSEP_PATTERN"$')\n"
+    "  local prefix = exedir:match('^(.*)" PATHSEP_PATTERN "bin$')\n"
+    "  dofile((prefix and prefix .. '/share/gsl-shell' or exedir .. '/lua') .. '/start.lua')\n"
+    "end, function(err)\n"
+    "  local error_dir\n"
+    "  io.stdout:write('Error: '..tostring(err)..'\\n')\n"
+    "  io.stdout:write(debug.traceback(nil, 4)..'\\n')\n"
+    "  os.exit(1)\n"
+    "end)\n";
+
+  if (luaL_loadstring(L, init_code)) {
+    fprintf(stderr, "internal error when starting the application\n");
+    exit(1);
+  }
+  lua_pcall(L, 0, 0, 0);
+}
+
 int
 luaopen_gsl (lua_State *L)
 {

@@ -20,6 +20,8 @@ extern void gsl_shell_open (struct gsl_shell_state *gs);
 extern void gsl_shell_free (struct gsl_shell_state *gs);
 extern void gsl_shell_init (struct gsl_shell_state *gs);
 
+extern void run_start_script(lua_State *L);
+
 extern int luaopen_gsl (lua_State *L);
 
 extern struct gsl_shell_state* global_state;

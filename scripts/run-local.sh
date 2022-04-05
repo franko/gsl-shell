@@ -10,6 +10,9 @@ while [[ "$#" -gt 0 ]]; do
     -console)
     exe_name=gsl-shell
     ;;
+    -unix)
+    use_unix=yes
+    ;;
     -*)
     echo "error: unknown option \"$1\""
     exit 1
@@ -34,8 +37,13 @@ fi
 builddir="${pargs[0]}"
 
 rundir=".run"
-bindir="$rundir"
-datadir="$rundir/lua"
+if [ -z ${use_unix+x} ]; then
+  bindir="$rundir"
+  datadir="$rundir/lua"
+else
+  bindir="$rundir/bin"
+  datadir="$rundir/share/gsl-shell"
+fi
 
 ninja -C "$builddir"
 
@@ -46,7 +54,7 @@ cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
 
 lua_files=(bspline.lua fft-init.lua integ-init.lua template.lua check.lua
 graph-init.lua rng.lua rnd.lua randist.lua iter.lua time.lua gsl-check.lua linfit.lua
-roots.lua contour.lua gsl.lua matrix.lua csv.lua gslext.lua num.lua demo-init.lua
+roots.lua contour.lua gsl.lua matrix.lua csv.lua start.lua num.lua demo-init.lua
 import.lua plot3d.lua sf.lua vegas.lua eigen.lua help.lua cgdt.lua expr-actions.lua
 expr-lexer.lua expr-parse.lua expr-print.lua gdt-factors.lua gdt-interp.lua gdt-expr.lua
 gdt-hist.lua gdt-lm.lua gdt.lua gdt-parse-csv.lua gdt-plot.lua lm-expr.lua
@@ -75,7 +83,5 @@ for name in fft graphics integ iter matrix nlfit ode rng vegas; do
     cp "data/help/${name}.lua" "$datadir/help"
 done
 
-pushd "$rundir"
-./$exe_name
-popd
+"$bindir/$exe_name"
 

@@ -11,10 +11,11 @@ extern "C" {
 #include "luajit.h"
 }
 
-#include "gsl_shell_interp.h"
-#include "lua-gsl.h"
-#include "lua-graph.h"
 #include "fatal.h"
+#include "gsl_shell_interp.h"
+#include "lua-graph.h"
+#include "lua-gsl.h"
+#include "platform.h"
 
 static void stderr_message(const char *pname, const char *msg)
 {
@@ -70,22 +71,21 @@ static int docall(lua_State *L, int narg, int clear)
     return status;
 }
 
-static int dolibrary(lua_State *L, const char *name)
-{
-    lua_getglobal(L, "require");
-    lua_pushstring(L, name);
-    return stderr_report(L, docall(L, 1, 1));
-}
-
 static int pinit(lua_State *L)
 {
     LUAJIT_VERSION_SYM();  /* linker-enforced version check */
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
+
+    char exename[2048];
+    get_exe_filename(exename, sizeof(exename));
+    lua_pushstring(L, exename);
+    lua_setglobal(L, "EXEFILE");
+
     luaopen_gsl (L);
     register_graph (L);
     lua_gc(L, LUA_GCRESTART, -1);
-    dolibrary (L, "gslext");
+    run_start_script(L);
     return 0;
 }
 

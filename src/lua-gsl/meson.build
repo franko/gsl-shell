@@ -4,7 +4,8 @@ luagsl_sources = [
     'lua-utils.c',
     'lua-gsl.c',
     'str.c',
-    'fatal.c'
+    'fatal.c',
+    'platform.c',
 ]
 
 libluagsl = static_library('luagsl',

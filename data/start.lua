@@ -1,14 +1,17 @@
 -- load initialization files for GSL Shell
 
--- We add in the package.path the pattern to load templates file.
-local base_path = package.searchpath("base", package.path)
-if base_path then
-   local libpath = base_path:match("([^;]*[/\\])base%.lua$")
-   if libpath then
-      local pathsep = package.config:sub(1, 1)
-      package.path = package.path .. libpath .. "templates" .. pathsep .. "?.lua.in;"
-   end
+do
+  EXEDIR = EXEFILE:match("^(.+)[/\\][^/\\]+$")
+  local prefix = EXEDIR:match("^(.+)[/\\]bin$")
+  if prefix then
+    DATADIR = prefix .. '/share/gsl-shell'
+    package.path = DATADIR .. '/?.lua;' .. package.path
+    package.path = DATADIR .. '/?/init.lua;' .. package.path
+  else
+    DATADIR = EXEDIR .. '/lua'
+  end
 end
+package.path = DATADIR .. '/templates/?.lua.in;' .. package.path
 
 require('base')
 iter = require('iter')

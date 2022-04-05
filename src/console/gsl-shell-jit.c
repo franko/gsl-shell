@@ -45,6 +45,7 @@
 #include "gsl-shell.h"
 #include "completion.h"
 #include "lua-graph.h"
+#include "platform.h"
 #include "window_hooks.h"
 #include "window.h"
 
@@ -681,9 +682,16 @@ static int pmain(lua_State *L)
     }
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
+
+    char exename[2048];
+    get_exe_filename(exename, sizeof(exename));
+    lua_pushstring(L, exename);
+    lua_setglobal(L, "EXEFILE");
+
     gsl_shell_openlibs(L);
     lua_gc(L, LUA_GCRESTART, -1);
-    dolibrary (L, "gslext");
+    run_start_script(L);
+
     s->keep_windows = 1;
     if (!(flags & FLAGS_NOENV)) {
         s->status = handle_luainit(L);
