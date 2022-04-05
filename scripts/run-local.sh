@@ -68,7 +68,7 @@ for name in bspline fft plot wave-particle fractals ode nlinfit integ anim linfi
 done
 
 mkdir -p "$datadir/pre3d"
-cp pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua "$datadir/pre3d"
+cp data/pre3d/pre3d.lua data/pre3d/pre3d_shape_utils.lua "$datadir/pre3d"
 
 mkdir -p "$datadir/help"
 for name in fft graphics integ iter matrix nlfit ode rng vegas; do
