@@ -552,6 +552,7 @@ static int dobytecode(lua_State *L, char **argv)
 #define FLAGS_EXEC		4
 #define FLAGS_OPTION		8
 #define FLAGS_NOENV		16
+#define FLAGS_NOPROMPT 32
 
 static int collectargs(char **argv, int *flags)
 {
@@ -591,6 +592,9 @@ static int collectargs(char **argv, int *flags)
             return 0;
         case 'E':
             *flags |= FLAGS_NOENV;
+            break;
+        case 'S':
+            *flags |= FLAGS_NOPROMPT;
             break;
         default:
             return -1;  /* invalid option */
@@ -679,6 +683,12 @@ static int pmain(lua_State *L)
     if ((flags & FLAGS_NOENV)) {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
+    }
+    if ((flags & FLAGS_NOPROMPT)) {
+        lua_pushstring(L, "");
+        lua_setfield(L, LUA_GLOBALSINDEX, "_PROMPT");
+        lua_pushstring(L, "");
+        lua_setfield(L, LUA_GLOBALSINDEX, "_PROMPT2");
     }
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
