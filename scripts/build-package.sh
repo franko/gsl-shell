@@ -4,10 +4,12 @@ set -o errexit
 
 blas_option=
 pargs=()
+cblastag="-gslcblas"
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     -openblas)
     blas_option="-Dblas=openblas"
+    cblastag=""
     ;;
     -unix)
     use_unix=yes
@@ -75,5 +77,5 @@ cp resources/gsl-shell.desktop resources/gsl-shell.svg "$rundir"
 
 $strip "$bindir/gsl-shell$ext" "$bindir/gsl-shell-gui$ext"
 
-tar czf gsl-shell-$platform-$arch.tar.gz -C "$rundir/.." gsl-shell
+tar czf gsl-shell$cblastag-$platform-$arch.tar.gz -C "$rundir/.." gsl-shell
 

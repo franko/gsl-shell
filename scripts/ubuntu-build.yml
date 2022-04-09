@@ -22,9 +22,13 @@ tasks:
   - build: |
       cd gsl-shell
       source "$(lhelper env-source gsl-shell)"
-      bash scripts/build-package.sh -openblas
-      cd packages
-      tar czvf gsl-shell.tar.gz gsl-shell
+
+      bash scripts/build-package.sh -openblas -unix
+      bash scripts/repackage-appimage.sh gsl-shell-linux-x86_64.tar.gz
+
+      bash scripts/build-package.sh -unix
+      bash scripts/repackage-appimage.sh gsl-shell-gslcblas-linux-x86_64.tar.gz
 artifacts:
-  - gsl-shell/packages/gsl-shell.tar.gz
+  - gsl-shell/gsl-shell-linux-x86_64.tar.gz
+  - gsl-shell/gsl-shell-gslcblas-linux-x86_64.tar.gz
 

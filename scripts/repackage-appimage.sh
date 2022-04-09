@@ -23,7 +23,8 @@ create_appimage() {
   popd
 
   echo "Generating AppImage..."
-  local appimage_name="${1/gsl-shell-linux-${ARCH}/GSLShell-${ARCH}}"
+  local appimage_name="${1/gsl-shell-/GSLShell-}"
+  appimage_name="${appimage_name/-linux/}"
   appimage_name="${appimage_name/%.tar.gz/.AppImage}"
 
   ./appimagetool GSLShell.AppDir "$appimage_name"
