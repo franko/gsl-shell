@@ -70,7 +70,7 @@ gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
   new FXLabel(side,"G S L   S h e l l",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
   new FXLabel(side, FXString::value(
-    "GSL Shell %s, Copyright (C) 2009-2013 Francesco Abbate\n"
+    "GSL Shell %s, Copyright (C) 2009-2022 Francesco Abbate\n"
     "GNU Scientific Library, Copyright (C) The GSL Team\n"
     "%s -- %s\n"
     "\n"
