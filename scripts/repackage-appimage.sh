@@ -1,6 +1,8 @@
 #!/bin/env bash
 set -e
 
+archive_file="$(realpath "$1")"
+
 workdir=".repackage"
 rm -fr "$workdir" && mkdir "$workdir" && pushd "$workdir"
 
@@ -11,16 +13,17 @@ create_appimage() {
 
   echo "Creating GSLShell.AppDir..."
 
-  mkdir -p GSLShell.AppDir
-  tar xf "$1" -C GSLShell.AppDir --strip-components=1
+  mkdir -p GSLShell.AppDir/usr
+  tar xf "$1" -C GSLShell.AppDir/usr --strip-components=1
+  mv GSLShell.AppDir/usr/gsl-shell.desktop GSLShell.AppDir
+  mv GSLShell.AppDir/usr/gsl-shell.svg GSLShell.AppDir
   cp AppRun GSLShell.AppDir/
   pushd GSLShell.AppDir
   strip AppRun
   popd
 
   echo "Generating AppImage..."
-  local appimage_name="${1/gsl-shell/GSLShell}"
-  appimage_name="${appimage_name/-linux/}"
+  local appimage_name="${1/gsl-shell-linux-${ARCH}/GSLShell-${ARCH}}"
   appimage_name="${appimage_name/%.tar.gz/.AppImage}"
 
   ./appimagetool GSLShell.AppDir "$appimage_name"
@@ -52,5 +55,5 @@ download_appimage_apprun() {
 
 setup_appimagetool
 download_appimage_apprun
-create_appimage "$1"
+create_appimage "$archive_file"
 
