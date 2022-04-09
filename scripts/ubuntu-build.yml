@@ -1,7 +1,8 @@
 image: ubuntu/18.04
 packages:
   # xorg-dev can be used instead of the detailed list of x11 libraries
-  [python3-pip, make, ninja-build, pkg-config, libx11-dev, libxext-dev, libxrandr-dev, libxrender-dev, libxcursor-dev, libxfixes-dev, libxi-dev, libxft-dev, gcc, g++, gfortran]
+  # fuse needed to create appimage
+  [python3-pip, fuse, make, ninja-build, pkg-config, libx11-dev, libxext-dev, libxrandr-dev, libxrender-dev, libxcursor-dev, libxfixes-dev, libxi-dev, libxft-dev, gcc, g++, gfortran]
 sources:
   - https://github.com/franko/gsl-shell
   - https://github.com/franko/lhelper
