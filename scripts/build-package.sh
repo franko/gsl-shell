@@ -77,5 +77,11 @@ cp resources/gsl-shell.desktop resources/gsl-shell.svg "$rundir"
 
 $strip "$bindir/gsl-shell$ext" "$bindir/gsl-shell-gui$ext"
 
-tar czf gsl-shell$cblastag-$platform-$arch.tar.gz -C "$rundir/.." gsl-shell
+if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
+  sleep 2
+  cd "$rundir/.."
+  zip -9rv gsl-shell$cblastag-$platform-$arch.zip gsl-shell
+else
+  tar czf gsl-shell$cblastag-$platform-$arch.tar.gz -C "$rundir/.." gsl-shell
+fi
 
