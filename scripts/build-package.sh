@@ -41,7 +41,10 @@ get_platform_name() {
 }
 
 ext=""
-arch="$(uname -m)"
+arch="$CPU_TYPE"
+if [ -z ${arch+x} ]; then
+  arch="$(uname -m)"
+fi
 platform="$(get_platform_name)"
 if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
   ext=".exe"
