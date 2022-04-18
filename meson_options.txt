@@ -1,2 +1,2 @@
 option('blas', type : 'string', value : 'internal', description: 'cblas library to use for GSL')
-
+option('lite-renderer', type : 'boolean', value : false, description: 'Use SDL renderer for Lite UI')
