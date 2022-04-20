@@ -9,6 +9,12 @@ gsl_shell_defines = [
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 
+configure_file(
+    input : 'data/lite-ui/core/start.lua',
+    output : 'start.lua',
+    configuration : conf_data,
+)
+
 if host_machine.system() == 'darwin'
     gsl_shell_defines += '-DDARWIN_MACOSX'
 endif
@@ -20,12 +26,24 @@ if cc.get_id() == 'gcc' and get_option('buildtype') == 'release'
 endif
 
 gsl_shell_include = include_directories('include', 'src/gdt', 'src/agg-plot', 'src/lua-gsl')
+resources_include = include_directories('resources')
 cpp_utils_include = include_directories('src/cpp-utils')
+
+libm = cc.find_library('m', required : false)
+libdl = cc.find_library('dl', required : false)
 
 threads_dep  = dependency('threads')
 freetype_dep = dependency('freetype2')
 fox_dep      = dependency('fox')
-libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+libagg_dep   = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+pcre2_dep    = dependency('libpcre2-8')
+sdl_dep      = dependency('sdl2', method: 'config-tool')
+reproc_dep   = dependency('reproc', fallback: ['reproc', 'reproc_dep'],
+    default_options: [
+        'default_library=static', 'multithreaded=false',
+        'reproc-cpp=false', 'examples=false'
+    ]
+)
 
 luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
 luajit_dep = luajit_proj.get_variable('lua_dep')
