@@ -1,0 +1,22 @@
+CC=gcc
+CXX=g++
+
+# CFLAGS=
+# CXXFLAGS=
+# LDFLAGS=
+
+CPU_TYPE=x86-64
+CPU_TARGET=nehalem
+
+BUILD_TYPE=Release
+
+if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
+  packages=("freetype2" "fox")
+else
+  packages=("fox -xft")
+fi
+
+packages+=(
+  "openblas -arch=static"
+  "gsl -blas=openblas"
+)
