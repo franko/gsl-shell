@@ -215,6 +215,3 @@ man_pages = [
      [u'Francesco Abbate'], 1)
 ]
 
-
-# Example configuration for intersphinx: refer to the Python standard library.
-#intersphinx_mapping = {'gslshell': ('http://www.nongnu.org/gsl-shell/doc-current/', 'manual.inv')}

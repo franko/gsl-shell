@@ -70,9 +70,9 @@ The folder can be moved in any location of your choice, no installation required
 
 [screenshot]:                 https://user-images.githubusercontent.com/433545/161387390-9dea885b-9413-415a-b982-4aadaededd3a.png
 [Get GSL Shell]:              https://github.com/franko/gsl-shell/releases/latest
-[LuaJIT2]:                    http://luajit.org/
-[GSL Shell project page]:     https://www.nongnu.org/gsl-shell/
-[GSL Shell user manual]:      http://www.nongnu.org/gsl-shell/doc/
+[LuaJIT2]:                    https://luajit.org/
+[GSL Shell project page]:     https://github.com/franko/gsl-shell/
+[GSL Shell user manual]:      https://franko.github.io/gsl-shell/
 [download page]:              https://github.com/franko/gsl-shell/releases/latest
 [Meson build system]:         https://mesonbuild.com/
 [FOX toolkit]:                http://fox-toolkit.org/

@@ -233,7 +233,7 @@ static void print_jit_status(lua_State *L)
 static void print_help_message()
 {
     l_message(NULL, "");
-    l_message(NULL, "Documentation available at http://www.nongnu.org/gsl-shell/doc/.");
+    l_message(NULL, "Documentation available at https://franko.github.io/gsl-shell");
     l_message(NULL, "To obtain help on a function or object type: help(func).");
     l_message(NULL, "Type demo() to see the lists of demo.");
     l_message(NULL, "");

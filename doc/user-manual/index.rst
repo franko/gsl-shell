@@ -15,7 +15,7 @@ advanced functionalities like closures and metamethods. Lua is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL library more effectively.
 
-`GSL Shell main page <http://www.nongnu.org/gsl-shell/>`_.
+`GSL Shell github project <https://github.com/franko/gsl-shell/>`_.
 
 Contents:
 
