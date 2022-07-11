@@ -37,6 +37,7 @@ require('gdt-plot')
 require('gdt-lm')
 require('gdt-interp')
 require('linfit')
+project = require('project')
 
 num.bspline = require 'bspline'
 
