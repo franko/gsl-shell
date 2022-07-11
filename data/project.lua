@@ -12,7 +12,12 @@ local function chdir(s)
 end
 
 function activate()
-    local str = debug.getinfo(2, "S").source:sub(2)
+    local info = debug.getinfo(2, "S")
+    if not info or not info.source then
+        print("not a script: no project directory to activate")
+        return
+    end
+    local str = info.source:sub(2)
     local path = str:match("(.*/)")
     if path then
         chdir(path)
