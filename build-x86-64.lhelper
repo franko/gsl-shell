@@ -14,7 +14,8 @@ else
   packages=("fox -xft")
 fi
 
+# Do not install the gsl package "gsl -blas=openblas" because it is built as a
+# subproject.
 packages+=(
   "openblas -arch=static"
-  "gsl -blas=openblas"
 )
