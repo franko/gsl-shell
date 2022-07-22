@@ -22,6 +22,11 @@ function interp2d.new(x, y, z, options)
   return interp
 end
 
+function interp2d.new_from_csv(filename, options)
+  local x, y, z = interp2d.read_csv(filename)
+  return interp2d.new(x, y, z, options)
+end
+
 function interp2d.read_csv(filename)
   local f = assert(io.open(filename, "r"), "cannot open file " .. filename)
   local xsize, ysize = -1, -1
