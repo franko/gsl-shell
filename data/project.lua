@@ -1,11 +1,22 @@
 local ffi = require 'ffi'
 
-ffi.cdef [[
-    int chdir(const char *path);
-]]
+if ffi.os == "Windows" then
+    ffi.cdef [[
+        int _chdir(const char *path);
+    ]]
+else
+    ffi.cdef [[
+        int chdir(const char *path);
+    ]]
+end
 
 local function chdir(s)
-    local err = ffi.C.chdir(s)
+    local err
+    if ffi.os == "Windows" then
+        err = ffi.C._chdir(s)
+    else
+        err = ffi.C.chdir(s)
+    end
     if err ~= 0 then
         error("chdir() into directory %q failed.")
     end
@@ -18,7 +29,7 @@ function activate()
         return
     end
     local str = info.source:sub(2)
-    local path = str:match("(.*/)")
+    local path = str:match("(.*[/\\])")
     if path then
         chdir(path)
         package.path = path .. "?.lua;" .. package.path
