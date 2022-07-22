@@ -2686,16 +2686,6 @@ extern const gsl_interp2d_type * gsl_interp2d_bicubic;
 
 gsl_interp2d * gsl_interp2d_alloc(const gsl_interp2d_type * T, const size_t xsize,
                                   const size_t ysize);
-
-const char * gsl_interp2d_name(const gsl_interp2d * interp);
-size_t gsl_interp2d_min_size(const gsl_interp2d * interp);
-size_t gsl_interp2d_type_min_size(const gsl_interp2d_type * T);
-int gsl_interp2d_set(const gsl_interp2d * interp, double zarr[],
-                     const size_t i, const size_t j, const double z);
-double gsl_interp2d_get(const gsl_interp2d * interp, const double zarr[],
-                        const size_t i, const size_t j);
-size_t gsl_interp2d_idx(const gsl_interp2d * interp,
-                        const size_t i, const size_t j);
 int gsl_interp2d_init(gsl_interp2d * interp, const double xa[], const double ya[],
                       const double za[], const size_t xsize, const size_t ysize);
 void gsl_interp2d_free(gsl_interp2d * interp);
@@ -2710,71 +2700,15 @@ double gsl_interp2d_eval_extrap(const gsl_interp2d * interp,
                                 const double y, gsl_interp_accel * xa,
                                 gsl_interp_accel * ya);
 
-int gsl_interp2d_eval_e(const gsl_interp2d * interp, const double xarr[],
-                        const double yarr[], const double zarr[],
-                        const double x, const double y, gsl_interp_accel* xa,
-                        gsl_interp_accel* ya, double * z);
-
-int gsl_interp2d_eval_e_extrap(const gsl_interp2d * interp,
-                               const double xarr[],
-                               const double yarr[],
-                               const double zarr[],
-                               const double x,
-                               const double y,
-                               gsl_interp_accel * xa,
-                               gsl_interp_accel * ya,
-                               double * z);
-
 double gsl_interp2d_eval_deriv_x(const gsl_interp2d * interp, const double xarr[],
                                  const double yarr[], const double zarr[],
                                  const double x, const double y, gsl_interp_accel * xa,
                                  gsl_interp_accel * ya);
 
-int gsl_interp2d_eval_deriv_x_e(const gsl_interp2d * interp, const double xarr[],
-                                const double yarr[], const double zarr[],
-                                const double x, const double y,
-                                gsl_interp_accel * xa, gsl_interp_accel * ya, double * z);
-
 double gsl_interp2d_eval_deriv_y(const gsl_interp2d * interp, const double xarr[],
                                  const double yarr[], const double zarr[],
                                  const double x, const double y,
                                  gsl_interp_accel* xa, gsl_interp_accel* ya);
-
-int gsl_interp2d_eval_deriv_y_e(const gsl_interp2d * interp, const double xarr[],
-                                const double yarr[], const double zarr[],
-                                const double x, const double y,
-                                gsl_interp_accel * xa, gsl_interp_accel * ya, double * z);
-
-double gsl_interp2d_eval_deriv_xx(const gsl_interp2d * interp, const double xarr[],
-                                  const double yarr[], const double zarr[],
-                                  const double x, const double y,
-                                  gsl_interp_accel * xa, gsl_interp_accel * ya);
-
-int gsl_interp2d_eval_deriv_xx_e(const gsl_interp2d * interp, const double xarr[],
-                                 const double yarr[], const double zarr[],
-                                 const double x, const double y,
-                                 gsl_interp_accel * xa, gsl_interp_accel * ya, double * z);
-
-double gsl_interp2d_eval_deriv_yy(const gsl_interp2d * interp, const double xarr[],
-                                  const double yarr[], const double zarr[],
-                                  const double x, const double y,
-                                  gsl_interp_accel * xa, gsl_interp_accel * ya);
-
-int gsl_interp2d_eval_deriv_yy_e(const gsl_interp2d * interp, const double xarr[],
-                                 const double yarr[], const double zarr[],
-                                 const double x, const double y,
-                                 gsl_interp_accel * xa, gsl_interp_accel * ya, double * z);
-
-double gsl_interp2d_eval_deriv_xy(const gsl_interp2d * interp, const double xarr[],
-                                  const double yarr[], const double zarr[],
-                                  const double x, const double y,
-                                  gsl_interp_accel * xa, gsl_interp_accel * ya);
-
-int gsl_interp2d_eval_deriv_xy_e(const gsl_interp2d * interp, const double xarr[],
-                                 const double yarr[], const double zarr[],
-                                 const double x, const double y,
-                                 gsl_interp_accel * xa, gsl_interp_accel * ya, double * z);
-
 ]]
 
 return ffi.C
