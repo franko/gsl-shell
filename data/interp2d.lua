@@ -1,5 +1,6 @@
-local ffi = require 'ffi'
 local cgsl = require 'gsl'
+local csv = require 'csv'
+local ffi = require 'ffi'
 
 local interp2d = {}
 
@@ -17,8 +18,44 @@ function interp2d.new(x, y, z, options)
   cgsl.gsl_interp2d_init(interp.interp2d, x.data, y.data, z.data, xsize, ysize)
   interp.xaccel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
   interp.yaccel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
-  interp.extrapolate = options.extrapolate or false
+  interp.extrapolate = options.extrapolate == nil or options.extrapolate
   return interp
+end
+
+function interp2d.read_csv(filename)
+  local f = assert(io.open(filename, "r"), "cannot open file " .. filename)
+  local xsize, ysize = -1, -1
+  local x
+  for line in f:lines() do
+    local values = csv.line(line)
+    if ysize == -1 then
+      -- for some reason values will contain a lot of nil values at the end
+      for i = 1, #line - 1 do
+        if not values[i + 1] then
+          xsize = i - 1
+          break
+        end
+      end
+      x = matrix.new(xsize, 1, |i| values[i + 1])
+    end
+    ysize = ysize + 1
+  end
+  f:seek("set", 0)
+  local y = matrix.alloc(ysize, 1)
+  local z = matrix.alloc(ysize, xsize)
+  local i = 0
+  for line in f:lines() do
+    local values = csv.line(line)
+    if i > 0 then
+      y:set(i, 1, values[1])
+      for j = 1, xsize do
+        z:set(i, j, values[j + 1])
+      end
+    end
+    i = i + 1
+  end
+  f:close()
+  return x, y, z
 end
 
 function Interp2d:eval(x, y)
