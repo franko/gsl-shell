@@ -25,22 +25,10 @@ local function chdir(s)
 end
 
 local function getcwd()
-    local buf_size = 256
-    while buf_size <= 8192 do
-        local buf = ffi.new("char[?]", buf_size)
-        local r
-        if ffi.os == "Windows" then
-            r = ffi.C._getcwd(buf, buf_size)
-        else
-            r = ffi.C.getcwd(buf, buf_size)
-        end
-        if r then
-            return ffi.string(buf)
-        else
-            buf_size = buf_size * 4
-        end
-    end
-    error("error calling getcwd()")
+    local getcwd_fn = ffi.C[ffi.os == "Windows" and "_getcwd" or "getcwd"]
+    local buf = ffi.gc(getcwd_fn(nil, 0), ffi.C.free)
+    assert(buf, "error calling getcwd()")
+    return ffi.string(buf)
 end
 
 local function run(filename)
