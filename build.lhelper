@@ -1,11 +1,8 @@
-CC=gcc
-CXX=g++
+CC="${CC:-gcc}"
+CXX="${CXX:-g++}"
 CFLAGS=
 CXXFLAGS=
 LDFLAGS=
-CPU_TYPE=x86-64
-CPU_TARGET=x86-64
-
 BUILD_TYPE=Release
 
 if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
