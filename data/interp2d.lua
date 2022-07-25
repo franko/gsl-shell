@@ -9,7 +9,7 @@ Interp2d.__index = Interp2d
 
 function interp2d.new(x, y, z, options)
   options = options or {}
-  local interp = setmetatable({xa = x.data, ya = y.data, za = z.data}, Interp2d)
+  local interp = setmetatable({x = x, y = y, z = z}, Interp2d)
   local xsize, ysize = #x, #y
   local zrows, zcols = z:dim()
   assert(zcols == xsize and zrows == ysize, "mismatch in lookup table size")
@@ -65,15 +65,15 @@ end
 
 function Interp2d:eval(x, y)
   if self.extrapolate then
-    return cgsl.gsl_interp2d_eval_extrap(self.interp2d, self.xa, self.ya, self.za, x, y, self.xaccel, self.yaccel)
+    return cgsl.gsl_interp2d_eval_extrap(self.interp2d, self.x.data, self.y.data, self.z.data, x, y, self.xaccel, self.yaccel)
   else
-    return cgsl.gsl_interp2d_eval(self.interp2d, self.xa, self.ya, self.za, x, y, self.xaccel, self.yaccel)
+    return cgsl.gsl_interp2d_eval(self.interp2d, self.x.data, self.y.data, self.z.data, x, y, self.xaccel, self.yaccel)
   end
 end
 
 function Interp2d:eval_deriv(x, y)
-  local dzdx = cgsl.gsl_interp2d_eval_deriv_x(self.interp2d, self.xa, self.ya, self.za, x, y, self.xaccel, self.yaccel)
-  local dzdy = cgsl.gsl_interp2d_eval_deriv_y(self.interp2d, self.xa, self.ya, self.za, x, y, self.xaccel, self.yaccel)
+  local dzdx = cgsl.gsl_interp2d_eval_deriv_x(self.interp2d, self.x.data, self.y.data, self.z.data, x, y, self.xaccel, self.yaccel)
+  local dzdy = cgsl.gsl_interp2d_eval_deriv_y(self.interp2d, self.x.data, self.y.data, self.z.data, x, y, self.xaccel, self.yaccel)
   return dzdx, dzdy
 end
 
