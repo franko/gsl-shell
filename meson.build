@@ -31,7 +31,7 @@ luajit_proj = subproject('luajit', default_options: ['default_library=static', '
 luajit_dep = luajit_proj.get_variable('lua_dep')
 
 libgsl_options = ['default_library=static', 'blas=' + get_option('blas')]
-foreach module_name : ['siman', 'wavelet', 'sparse', 'ode', 'monte', 'integ', 'min', 'fit', 'multifit']
+foreach module_name : ['siman', 'wavelet', 'sparse', 'ode', 'monte', 'integ', 'min', 'fit']
     libgsl_options += module_name + '=false'
 endforeach
 

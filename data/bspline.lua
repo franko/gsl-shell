@@ -1,4 +1,3 @@
-
 local ffi = require 'ffi'
 local gsl = require 'gsl'
 
@@ -9,6 +8,13 @@ local function eval(bs, x)
    local c = matrix.alloc(dof, 1)
    local v = gsl.gsl_matrix_column (c, 0)
    gsl_check(gsl.gsl_bspline_eval(x, v, ws))
+   return c
+end
+
+local function deriv_eval(bs, x, nderiv)
+   local dof, ws = bs.dof, bs.ws
+   local c = matrix.alloc(dof, nderiv + 1)
+   gsl_check(gsl.gsl_bspline_deriv_eval(x, nderiv, c, ws))
    return c
 end
 
@@ -25,7 +31,7 @@ local function model(bs, x)
 end
 
 local mt = {
-   __index = {eval= eval, model= model}
+   __index = {eval= eval, deriv_eval= deriv_eval, model= model}
 }
 
 local function bspline(a, b, nbreak)
