@@ -34,16 +34,17 @@ local mt = {
    __index = {eval= eval, deriv_eval= deriv_eval, model= model}
 }
 
-local function bspline(a, b, nbreak)
+local function bspline(a, b, nbreak, order)
    local breaks
    local brk
    if type(a) ~= 'number' then
       breaks = type(a) == 'table' and matrix.vec(a) or a
       brk = gsl.gsl_matrix_column (breaks, 0)
       nbreak = #breaks
+      order = b
    end
 
-   local k = 4
+   local k = order or 4
    local dof = nbreak + k - 2
    local ws = ffi.gc(gsl.gsl_bspline_alloc (k, nbreak), gsl.gsl_bspline_free)
 
