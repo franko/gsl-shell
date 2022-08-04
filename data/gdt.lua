@@ -1,4 +1,5 @@
 local cgdt = require 'cgdt'
+local csv = require 'csv'
 local ffi = require 'ffi'
 local format = string.format
 local concat = table.concat
@@ -329,6 +330,46 @@ local function gdt_table_create(f_init, a, b)
     return tb
 end
 
+local function all_string(ls)
+    for i = 1, #ls do
+        if type(ls[i]) ~= "string" then
+            return false
+        end
+    end
+    return true
+end
+
+local function gdt_table_read_string(text)
+    local t = {}
+    local headers
+    local m = 0
+    for str in text:gmatch("([^\r\n]+)") do
+        local line = csv.line_space_sep(str, " ", "%s+")
+        if #line > 0 then
+            if not headers and #t == 0 and all_string(line) then
+                headers = line
+            else
+                t[#t + 1] = line
+                m = #line > m and #line or m
+            end
+        end
+    end
+    if headers then
+        m = #headers
+    end
+    if m == 0 then
+        error("empty table described by string")
+    end
+    local tab = gdt.alloc(#t, headers or m)
+    for i = 1, #t do
+        local line = t[i]
+        for j = 1, m do
+            gdt_table_set_unsafe(tab, i, j, line[j])
+        end
+    end
+    return tab
+end
+
 local gdt_methods = {
     dim        = gdt_table_dim,
     get        = gdt_table_get,
@@ -388,12 +429,13 @@ local register_ffi_type = debug.getregistry().__gsl_reg_ffi_type
 register_ffi_type(gdt_table, "data table")
 
 gdt = {
-    new    = gdt_table_new,
-    alloc  = gdt_table_alloc,
-    get    = gdt_table_get,
-    set    = gdt_table_set,
-    filter = gdt_table_filter,
-    create = gdt_table_create,
+    new         = gdt_table_new,
+    alloc       = gdt_table_alloc,
+    read_string = gdt_table_read_string,
+    get         = gdt_table_get,
+    set         = gdt_table_set,
+    filter      = gdt_table_filter,
+    create      = gdt_table_create,
 
     get_number_unsafe = gdt_table_get_number_unsafe,
 }
