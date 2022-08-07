@@ -43,10 +43,10 @@ local function ode_new()
 end
 
 local function ode_init(s, t0, h0, f, $(VL'y'))
-   $(AL's.y.data') = $(VL'y')
-   $(AL's.dydt.data') = f(t0, $(VL'y'))
-   s.t, s.h, s.f = t0, h0, f
    s.results = record.new()
+   $(AL's.y.data') = $(VL'y')
+   $(AL's.dydt.data') = f(t0, $(VL'y'), s.results)
+   s.t, s.h, s.f = t0, h0, f
 end
 
 local function ode_evolve(s, t1, tsmp)
