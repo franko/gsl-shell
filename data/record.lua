@@ -8,6 +8,7 @@ function Record:store(t, values)
         for k in pairs(values) do
             hs[#hs + 1] = k
         end
+        self.headers = hs
         self.tab = gdt.new(0, hs)
     end
     values.t = t
@@ -28,6 +29,7 @@ local function record_plot(self, pll, as_canvas)
             p:addline(line, graph.webcolor(j))
             p:legend(var_name, graph.webcolor(j), "line")
         end
+        p.pad = true
         w:attach(p, np - i + 1)
         plots[i] = p
     end
@@ -42,6 +44,18 @@ function Record:plot(...)
     else
         return record_plot(self, ...)
     end 
+end
+
+function Record:values()
+    if self.tab then
+        local n = #self.tab
+        local vls = {}
+        for j = 1, #self.headers do
+            local h = self.headers[j]
+            vls[h] = self.tab:get(n, j)
+        end
+        return vls
+    end
 end
 
 function Record.new()
