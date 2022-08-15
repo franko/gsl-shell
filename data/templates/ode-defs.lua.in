@@ -43,10 +43,23 @@ local function ode_new()
 end
 
 local function ode_init(s, t0, h0, f, $(VL'y'))
+   h0 = math.max(h0, $(step_min))
    s.results = record.new()
+   s.warnings = {}
    $(AL's.y.data') = $(VL'y')
    $(AL's.dydt.data') = f(t0, $(VL'y'), s.results)
    s.t, s.h, s.f = t0, h0, f
+end
+
+local function add_warning(s, msg)
+   s.warnings[msg] = true
+end
+
+local function print_warnings_and_clear(s)
+   for msg in pairs(s.warnings) do
+      print(string.format("warning (t = %g): %s", s.t, msg))
+      s.warnings[msg] = nil
+   end
 end
 
 local function ode_evolve(s, t1, tsmp)
@@ -58,6 +71,7 @@ local function ode_evolve(s, t1, tsmp)
 	 while s.t < t do
 	    step(s, t)
 	 end
+	 print_warnings_and_clear(s)
 	 return t, $(AL'y.data')
       end
    end

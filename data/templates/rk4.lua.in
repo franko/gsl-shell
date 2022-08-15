@@ -106,6 +106,13 @@ function rk4_evolve(s, f, t1)
 
       local inc
       h_new, inc = hadjust(rmax, h)
+      if inc ~= 0 and hadj < $(step_min) then
+         add_warning(s,
+            "ODE step size limited to its minimum allowed value: " ..
+            "error may be larger than required tolerance")
+         hadj = $(step_min)
+         if h <= $(step_min) then break end
+      end
       if inc >= 0 then break end
      
       h = h_new
