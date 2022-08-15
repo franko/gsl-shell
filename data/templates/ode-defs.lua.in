@@ -52,12 +52,28 @@ local function ode_init(s, t0, h0, f, $(VL'y'))
 end
 
 local function add_warning(s, msg)
-   s.warnings[msg] = true
+   local ts = s.warnings[msg] or {}
+   if #ts == 0 or s.t > ts[#ts] then
+      table.insert(ts, s.t)
+   end
+   s.warnings[msg] = ts
+end
+
+local function report_step_min_hit(s)
+   add_warning(s, "ODE step size hit step_min limit, errors may be larger")
+end
+
+local function format_times_group(ts)
+   if #ts <= 5 then
+      return "time t = " .. table.concat(ts, ", ")
+   else
+      return "time t = " .. table.concat(ts, ", ", 1, 4) .. ", ..., " .. ts[#ts] .. " (" .. #ts .. " times)"
+   end
 end
 
 local function print_warnings_and_clear(s)
-   for msg in pairs(s.warnings) do
-      print(string.format("warning (t = %g): %s", s.t, msg))
+   for msg, ts in pairs(s.warnings) do
+      print(string.format("warning: %s. Reported at %s", msg, format_times_group(ts)))
       s.warnings[msg] = nil
    end
 end
@@ -68,12 +84,12 @@ local function ode_evolve(s, t1, tsmp)
    local function it(s, t)
       t = t and t + tsmp or t0
       if t <= t1 then
-	 while s.t < t do
-	    step(s, t)
-	 end
-	 print_warnings_and_clear(s)
-	 return t, $(AL'y.data')
+         while s.t < t do
+            step(s, t)
+         end
+         return t, $(AL'y.data')
       end
+      print_warnings_and_clear(s)
    end
 
    return it, s
