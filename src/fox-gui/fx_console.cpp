@@ -18,6 +18,7 @@ FXDEFMAP(fx_console) fx_console_map[]=
     FXMAPFUNC(SEL_COMMAND, FXText::ID_BACKSPACE_WORD, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_DELETE_SEL, fx_console::on_cmd_delete),
     FXMAPFUNC(SEL_COMMAND, FXText::ID_INSERT_STRING, fx_console::on_cmd_insert_string),
+    FXMAPFUNC(SEL_LEFTBUTTONPRESS, 0, fx_console::on_left_btn_press),
     FXMAPFUNC(SEL_COMMAND, fx_console::ID_LUA_OUTPUT, fx_console::on_lua_output),
 };
 
@@ -260,6 +261,19 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         }
         update_editable();
     }
+    default:
+    {
+        bool has_no_ctrl_keys = (event->state & (CONTROLMASK | ALTMASK | METAMASK)) == 0;
+        bool is_paste_cmd = (event->state & CONTROLMASK) && event->code == KEY_v;
+        if ((has_no_ctrl_keys || is_paste_cmd) && getCursorPos() < m_input_begin) {
+            setCursorPos(getLength());
+            setEditable(true);
+            if (is_paste_cmd) {
+                pasteSelection(false);
+                return 1;
+            }
+        }
+    }
     }
 
     return FXText::onKeyPress(obj, sel, ptr);
@@ -334,6 +348,18 @@ long fx_console::on_cmd_delete(FXObject* obj, FXSelector sel, void* ptr)
     }
 
     return this->FXText::handle(obj, sel, ptr);
+}
+
+long fx_console::on_left_btn_press(FXObject *obj, FXSelector sel, void* ptr)
+{
+    long r = FXText::onLeftBtnPress(obj, sel, ptr);
+    if (r) {
+        if (rowFromPos(getCursorPos()) == rowFromPos(getLength())) {
+            setCursorPos(getLength());
+            setEditable(true);
+        }
+    }
+    return r;
 }
 
 long fx_console::on_cmd_insert_string(FXObject* obj, FXSelector sel, void* ptr)
