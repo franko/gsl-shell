@@ -258,6 +258,7 @@ long fx_console::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
             removeText(m_input_begin, line_len);
             setCursorPos(m_input_begin);
         }
+        update_editable();
     }
     }
 
