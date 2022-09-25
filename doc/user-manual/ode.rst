@@ -42,7 +42,7 @@ For the moment all the methods implemented in GSL Shell does not use the Jacobia
 .. note::
    The current implementation is limited to systems with a few number of variables.
    Probably you should avoid to use it if you have more than 20 variables.
-   An implementation for ODE systems in array form should be available in the near future.
+   An implementation for ODE systems in array form may be available in the future.
 
 ODE solver usage example
 ------------------------
@@ -120,6 +120,29 @@ You can see that the :meth:`~ODE.evolve` method works actually as a Lua iterator
 
 You may also note that the :meth:`~ODE.evolve` iterator provides at each iteration the value t and each of the system variables in the standard order.
 
+ODE value logger
+----------------
+
+During the solution of the differential equation it may be useful to store the values of some
+user-defined derived quantities. To this purpose the ODE function will be called, at some steps
+with an additional argument of Record type. The record argument can be used by calling its `store`
+method in the form::
+
+  odef(t, y_1, ..., y_N, log)
+     -- compute whatever is needed here
+     if log then
+        -- store some values if the log argument is provided
+        log:store(t, {der_value1 = some_value, der_value2 = ...}
+     end
+     -- return the derivatives
+     return dy_1, ..., dy_N
+  end
+
+Please note that the additional argument will be provided only at some specific steps when the final
+time of the integration step actually meets the required final time provided to the step function.
+You are therefore required into the ODE function to check if the additional argument to record
+the value is not nil.
+
 
 ODE Solver Class Definition
 ---------------------------
@@ -145,6 +168,12 @@ ODE Solver Class Definition
           - rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.
 
           - rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.
+     step_min, *optional*
+          The smaller step the solver is allowed to use.
+          Please note that if set the accuracy may be degraded bacause the solver may need to set a
+          smaller step to meet the required precision.
+          This option is useful to avoid excessively increase the computation time by making a
+          compromise with the accuracy.
 
    .. method:: init(t0, h0, f, y0_1, y0_2, ..., y0_N)
 
@@ -153,6 +182,10 @@ ODE Solver Class Definition
       The function ``f`` is the function that defines the ODE system.
       It will be called like ``f(t, y_1, y_2, ..., y_N)`` where ``t`` is the time and ``y_1, y_2, ...`` are the values of the N independent values conventionally denoted here by 'y'.
       The function ``f`` should return N values that correspond to values ``f_i(t, y_1, ..., y_N)`` for each component ``f_i`` of the ODE system function.
+
+      The function ``f`` can be called with an additional argument of Record type at the end to log the
+      ODE values. In this case it will be called with arguments: ``f(t, y_1, y_2, ..., y_N, log)``. The
+      additional argument will be provided only for some specific calls.
 
    .. method:: step(t1)
 
