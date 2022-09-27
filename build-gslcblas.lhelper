@@ -13,9 +13,3 @@ else
   packages=("freetype2" "expat" "fontconfig" "xft" "fox -xft")
 fi
 
-# Do not install the gsl package "gsl -blas=openblas" because it is built as a
-# subproject.
-packages+=(
-  "openblas -arch=dynamic"
-)
-
