@@ -15,16 +15,10 @@ tasks:
   - lhelper-install: |
       cd lhelper
       bash install "$HOME/.local"
-  - lhelper-create-env: |
-      lhelper create gsl-shell -n
-      source "$(lhelper env-source gsl-shell)"
-      lhelper install fox -xft
-      # By using target nehalem we are quite conservative but we don't support
-      # very old CPU microarchitectures.
-      lhelper install openblas -target=nehalem
   - build: |
       cd gsl-shell
-      source "$(lhelper env-source gsl-shell)"
+      lhelper create build
+      source "$(lhelper env-source build)"
 
       bash scripts/build-package.sh -openblas -unix
       bash scripts/repackage-appimage.sh gsl-shell-linux-x86_64.tar.gz

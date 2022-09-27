@@ -15,13 +15,10 @@ tasks:
   - lhelper-install: |
       cd lhelper
       bash install "$HOME/.local"
-  - lhelper-create-env: |
-      lhelper create gsl-shell -n
-      source "$(lhelper env-source gsl-shell)"
-      lhelper install fox -xft
   - build: |
       cd gsl-shell
-      source "$(lhelper env-source gsl-shell)"
+      lhelper create build-gslcblas
+      source "$(lhelper env-source build-gslcblas)"
 
       bash scripts/build-package.sh -unix
       bash scripts/repackage-appimage.sh gsl-shell-gslcblas-linux-x86_64.tar.gz
