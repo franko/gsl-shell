@@ -354,8 +354,14 @@ long fx_console::on_left_btn_press(FXObject *obj, FXSelector sel, void* ptr)
 {
     long r = FXText::onLeftBtnPress(obj, sel, ptr);
     if (r) {
-        if (rowFromPos(getCursorPos()) == rowFromPos(getLength())) {
-            setCursorPos(getLength());
+        // We don't want that the cursor end ups in the input line in the middle of the
+        // prompt. It actually happens with FOX 1.7 if clicking the in input line and there
+        // isn't yet any text, FOX will position the cursor after the ">" of the prompt but
+        // before the space character that is part of the prompt. This will prevent the user
+        // from entering some input text.
+        if (m_status == input_mode && rowFromPos(getCursorPos()) == rowFromPos(getLength()) &&
+            getCursorPos() < m_input_begin) {
+            setCursorPos(m_input_begin);
             setEditable(true);
         }
     }
