@@ -109,13 +109,14 @@ void fx_console::create()
 void fx_console::init()
 {
     FXString msg;
-    msg.format("GSL Shell %s, Copyright (C) 2009-2022 Francesco Abbate\n"
-               "GNU Scientific Library, Copyright (C) The GSL Team\n"
+    msg.format("GSL Shell %s -- %s\n"
+               "GNU Scientific Library -- Copyright (C) The GSL Team\n"
                "%s -- %s\n\n"
                "Documentation available at https://franko.github.io/gsl-shell/\n"
                "To obtain help on a function or object type: help(func).\n"
                "Type demo() to see the lists of demo.\n\n",
-               GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT);
+               GSL_SHELL_RELEASE, GSL_SHELL_COPYRIGHT,
+               LUAJIT_VERSION, LUAJIT_COPYRIGHT);
 
     setText(msg);
     FXint pos = getLength();

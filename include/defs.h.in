@@ -33,6 +33,7 @@
 
 #define LUA_INDEX_CONVENTION
 #define GSL_SHELL_RELEASE "@version@"
+#define GSL_SHELL_COPYRIGHT "@copyright@"
 
 #ifdef _WIN32
 #ifndef __cplusplus

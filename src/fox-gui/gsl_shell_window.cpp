@@ -70,13 +70,13 @@ gsl_shell_window::on_cmd_about(FXObject*, FXSelector, void*)
   new FXLabel(side,"G S L   S h e l l",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
   new FXLabel(side, FXString::value(
-    "GSL Shell %s, Copyright (C) 2009-2022 Francesco Abbate\n"
-    "GNU Scientific Library, Copyright (C) The GSL Team\n"
+    "GSL Shell %s -- %s\n"
+    "GNU Scientific Library -- Copyright (C) The GSL Team\n"
     "%s -- %s\n"
     "\n"
     "With contribution of Lesley De Cruz, Benjamin Von Ardenne\n"
     "and Jesus Romero Hebrero.",
-    GSL_SHELL_RELEASE, LUAJIT_VERSION, LUAJIT_COPYRIGHT),
+    GSL_SHELL_RELEASE, GSL_SHELL_COPYRIGHT, LUAJIT_VERSION, LUAJIT_COPYRIGHT),
     NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
   button->setFocus();

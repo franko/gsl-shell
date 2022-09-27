@@ -208,8 +208,8 @@ static int docall(lua_State *L, int narg, int clear)
 
 static void print_version(void)
 {
-    l_message(NULL, "GSL Shell " GSL_SHELL_RELEASE ", Copyright (C) 2009-2013 Francesco Abbate");
-    l_message(NULL, "GNU Scientific Library, Copyright (C) The GSL Team");
+    l_message(NULL, "GSL Shell " GSL_SHELL_RELEASE " -- " GSL_SHELL_COPYRIGHT);
+    l_message(NULL, "GNU Scientific Library -- Copyright (C) The GSL Team");
     l_message(NULL, LUAJIT_VERSION " -- " LUAJIT_COPYRIGHT ". " LUAJIT_URL);
 }
 

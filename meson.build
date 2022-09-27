@@ -8,6 +8,7 @@ gsl_shell_defines = [
 
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
+conf_data.set('copyright', 'Copyright (C) 2009-2022 Francesco Abbate')
 
 if host_machine.system() == 'darwin'
     gsl_shell_defines += '-DDARWIN_MACOSX'
