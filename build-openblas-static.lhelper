@@ -1,0 +1,21 @@
+#!/bin/bash
+CC="${CC:-gcc}"
+CXX="${CXX:-g++}"
+# CFLAGS=
+# CXXFLAGS=
+# LDFLAGS=
+
+BUILD_TYPE=Release
+
+if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
+  packages=("freetype2" "fox")
+else
+  packages=("freetype2" "expat" "fontconfig" "xft" "fox -xft")
+fi
+
+# Do not install the gsl package "gsl -blas=openblas" because it is built as a
+# subproject.
+packages+=(
+  "openblas -arch=static"
+)
+

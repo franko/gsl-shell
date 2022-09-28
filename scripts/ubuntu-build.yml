@@ -19,15 +19,39 @@ tasks:
       cd gsl-shell
       lhelper create build
       source "$(lhelper env-source build)"
-
-      bash scripts/build-package.sh -openblas -unix
-      bash scripts/repackage-appimage.sh gsl-shell-linux-$CPU_TYPE.tar.gz
-
-      bash scripts/build-package.sh -unix
-      bash scripts/repackage-appimage.sh gsl-shell-gslcblas-linux-$CPU_TYPE.tar.gz
+      bash scripts/build-package.sh -appimage -name=dynamic -openblas -unix
+  - build-gslcblas: |
+      cd gsl-shell
+      lhelper create build-gslcblas
+      source "$(lhelper env-source build-gslcblas)"
+      bash scripts/build-package.sh -appimage -unix
+  - build-openblas-static: |
+      cd gsl-shell
+      lhelper create build-openblas-static
+      source "$(lhelper env-source build-openblas-static)"
+      bash scripts/build-package.sh -appimage -openblas -unix
+  - build-specific-cpus: |
+      cd gsl-shell
+      for cpu_target in nehalem haswell skylake; do
+        (
+          export CPU_TYPE=x86-64
+          export CPU_TARGET="$cpu_target"
+          lhelper create build-openblas-static
+          source "$(lhelper env-source build-openblas-static)"
+          bash scripts/build-package.sh -appimage -name=$cpu_target -openblas -unix
+        )
+      done
 artifacts:
-  - gsl-shell/gsl-shell-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-x86-64.AppImage
+  - gsl-shell/gsl-shell-dynamic-linux-x86-64.tar.gz
+  - gsl-shell/GSLShell-dynamic-x86-64.AppImage
   - gsl-shell/gsl-shell-gslcblas-linux-x86-64.tar.gz
   - gsl-shell/GSLShell-gslcblas-x86-64.AppImage
+  - gsl-shell/gsl-shell-linux-x86-64.tar.gz
+  - gsl-shell/GSLShell-x86-64.AppImage
+  - gsl-shell/gsl-shell-nehalem-linux-x86-64.tar.gz
+  - gsl-shell/GSLShell-nehalem-x86-64.AppImage
+  - gsl-shell/gsl-shell-haswell-linux-x86-64.tar.gz
+  - gsl-shell/GSLShell-haswell-x86-64.AppImage
+  - gsl-shell/gsl-shell-skylake-linux-x86-64.tar.gz
+  - gsl-shell/GSLShell-skylake-x86-64.AppImage
 

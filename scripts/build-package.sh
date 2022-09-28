@@ -5,6 +5,8 @@ set -o errexit
 blas_option=
 pargs=()
 cblastag="-gslcblas"
+add_name=""
+create_appimage=no
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     -openblas)
@@ -16,6 +18,12 @@ while [[ "$#" -gt 0 ]]; do
     ;;
     -reuse)
     reuse_build=yes
+    ;;
+    -name=*)
+    add_name="-${1#-name=}"
+    ;;
+    -appimage)
+    create_appimage=yes
     ;;
     -*)
     echo "error: unknown option \"$1\""
@@ -80,11 +88,15 @@ cp resources/gsl-shell.desktop resources/gsl-shell.svg "$rundir"
 
 $strip "$bindir/gsl-shell$ext" "$bindir/gsl-shell-gui$ext"
 
+package_suffix="$add_name$cblastag-$platform-$arch"
 if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
   sleep 2
   cd "$rundir/.."
-  zip -9rv gsl-shell$cblastag-$platform-$arch.zip gsl-shell
+  zip -9rv "gsl-shell$package_suffix.zip" gsl-shell
 else
-  tar czf gsl-shell$cblastag-$platform-$arch.tar.gz -C "$rundir/.." gsl-shell
+  tar czf "gsl-shell$package_suffix.tar.gz" -C "$rundir/.." gsl-shell
+  if [[ $create_appimage == yes ]]; then
+    bash scripts/repackage-appimage.sh "gsl-shell$package_suffix.tar.gz"
+  fi
 fi
 
