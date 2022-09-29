@@ -106,6 +106,11 @@ function rk4_evolve(s, f, t1)
 
       local inc
       h_new, inc = hadjust(rmax, h)
+      if inc < 0 and hadj < $(step_min) then
+         report_step_min_hit(s)
+         hadj = $(step_min)
+         if h <= $(step_min) then break end
+      end
       if inc >= 0 then break end
      
       h = h_new

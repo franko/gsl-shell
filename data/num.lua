@@ -7,7 +7,11 @@ local num = {}
 
 function num.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}
-   local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
+   -- step_min beloy corresponds to an optional minimum step size. Its purpose is
+   -- to avoid the solver choosing a step which is too small. If the step gets
+   -- limited by "step_min" we accept that the error may be larger than the required
+   -- tolerance.
+   local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0, step_min = -1}
    local is_known = {rkf45= true, rk8pd= true}
 
    for k, tp in pairs(required) do

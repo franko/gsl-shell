@@ -2653,7 +2653,59 @@ gsl_interp_free(gsl_interp * interp);
 size_t
 gsl_interp_bsearch(const double x_array[], double x,
                    size_t index_lo, size_t index_hi);
+typedef struct {
+    const char* name;
+    unsigned int min_size;
+    void * (*alloc)(size_t xsize, size_t ysize);
+    int    (*init)(void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize);
+    int    (*eval)(const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z);
+    int    (*eval_deriv_x) (const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z_p);
+    int    (*eval_deriv_y) (const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z_p);
+    int    (*eval_deriv_xx) (const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z_pp);
+    int    (*eval_deriv_xy) (const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z_pp);
+    int    (*eval_deriv_yy) (const void *, const double xa[], const double ya[], const double za[], size_t xsize, size_t ysize, double x, double y, gsl_interp_accel*, gsl_interp_accel*, double* z_pp);
+    void   (*free)(void *);
+} gsl_interp2d_type;
 
+typedef struct {
+    const gsl_interp2d_type * type; /* interpolation type */
+    double xmin;                    /* minimum value of x for which data have been provided */
+    double xmax;                    /* maximum value of x for which data have been provided */
+    double ymin;                    /* minimum value of y for which data have been provided */
+    double ymax;                    /* maximum value of y for which data have been provided */
+    size_t xsize;                   /* number of x values provided */
+    size_t ysize;                   /* number of y values provided */
+    void * state;                   /* internal state object specific to the interpolation type */
+} gsl_interp2d;
+
+extern const gsl_interp2d_type * gsl_interp2d_bilinear;
+extern const gsl_interp2d_type * gsl_interp2d_bicubic;
+
+gsl_interp2d * gsl_interp2d_alloc(const gsl_interp2d_type * T, const size_t xsize,
+                                  const size_t ysize);
+int gsl_interp2d_init(gsl_interp2d * interp, const double xa[], const double ya[],
+                      const double za[], const size_t xsize, const size_t ysize);
+void gsl_interp2d_free(gsl_interp2d * interp);
+
+double gsl_interp2d_eval(const gsl_interp2d * interp, const double xarr[],
+                         const double yarr[], const double zarr[], const double x,
+                         const double y, gsl_interp_accel * xa, gsl_interp_accel * ya);
+
+double gsl_interp2d_eval_extrap(const gsl_interp2d * interp,
+                                const double xarr[], const double yarr[],
+                                const double zarr[], const double x,
+                                const double y, gsl_interp_accel * xa,
+                                gsl_interp_accel * ya);
+
+double gsl_interp2d_eval_deriv_x(const gsl_interp2d * interp, const double xarr[],
+                                 const double yarr[], const double zarr[],
+                                 const double x, const double y, gsl_interp_accel * xa,
+                                 gsl_interp_accel * ya);
+
+double gsl_interp2d_eval_deriv_y(const gsl_interp2d * interp, const double xarr[],
+                                 const double yarr[], const double zarr[],
+                                 const double x, const double y,
+                                 gsl_interp_accel* xa, gsl_interp_accel* ya);
 ]]
 
 return ffi.C

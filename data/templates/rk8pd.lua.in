@@ -170,7 +170,8 @@ local function rk8pd_step(s, t1)
    local $(VL'y')
    local $(VL'k1') = $(AL's_dydt.data')
 
-   if t < t1 and t + h > t1 then h = t1 - t end
+   local may_hit_t1 = (t < t1 and t + h > t1)
+   if may_hit_t1 then h = t1 - t end
 
    while h > 0 do
       $(VL'y') = $(AL's_y.data')
@@ -217,16 +218,32 @@ local function rk8pd_step(s, t1)
       end
 
       hadj, inc = hadjust(rmax, h)
+      if inc < 0 and hadj < $(step_min) then
+         report_step_min_hit(s)
+         hadj = $(step_min)
+         if h <= $(step_min) then break end
+      end
       if inc >= 0 then break end
 
+      may_hit_t1 = false
       h = hadj
    end
 
 #  if y_err_only then
-      local $(VL'dydt') = f(t + h, $(VL'y'))
+      local $(VL'dydt')
+      if may_hit_t1 then
+         $(VL'dydt') = f(t + h, $(VL'y'), s.results)
+      else
+         $(VL'dydt') = f(t + h, $(VL'y'))
+      end
 #     for i = 0, N-1 do
          s_dydt.data[$(i)] = dydt_$(i)
 #     end
+#  else
+      if may_hit_t1 then
+         -- call to just store the results
+         f(t + h, $(VL'y'), s.results)
+      end
 #  end
 
 #  for i = 0, N-1 do

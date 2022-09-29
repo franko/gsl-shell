@@ -190,6 +190,35 @@ GDT Functions
     If the file have headers they will be used to define the columns' names.
     The function will determine automatically is the first line should be considered as a line of headers or data.
 
+.. function:: read_string(text)
+
+    Returns a table by parsing the text as a multi-lines list of values separated by spaces
+    or tabs. Values can be either string or numeric values. In case
+    of strings they can be either unquoted or quoted using the ``"`` symbol.
+    If the first non empty line consists entirely of string it is interpreted as headers.
+
+    Below an example:
+
+      >>> t = gdt.read_string [[
+                 sin        x          cos
+                 0        0            1
+          0.382683 0.392699      0.92388
+          0.707107 0.785398     0.707107
+           0.92388   1.1781     0.382683
+                 1   1.5708  6.12303e-17
+           0.92388   1.9635    -0.382683
+          0.707107  2.35619    -0.707107
+          0.382683  2.74889     -0.92388
+       1.22461e-16  3.14159           -1
+         -0.382683  3.53429     -0.92388
+         -0.707107  3.92699    -0.707107
+          -0.92388  4.31969    -0.382683
+                -1  4.71239 -1.83691e-16
+          -0.92388  5.10509     0.382683
+         -0.707107  5.49779     0.707107
+         -0.382683  5.89049      0.92388
+      ]]
+
 .. function:: write_csv(t, filename)
 
     Write a CSV file with the given ``filename`` with the content of the table ``t``.

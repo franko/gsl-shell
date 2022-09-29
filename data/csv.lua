@@ -32,6 +32,35 @@ function csv.line (s)
     return t
 end
 
+function csv.line_space_sep (s, sep, sep_pattern)
+    s = s .. sep        -- ending comma
+    local t = {}        -- table to collect fields
+    local fieldstart = 1
+    repeat
+        -- next field is quoted? (start with `"'?)
+        if string.find(s, '^"', fieldstart) then
+            local a, c
+            local i  = fieldstart
+            repeat
+                -- find closing quote
+                a, i, c = string.find(s, '"("?)', i+1)
+            until c ~= '"'    -- quote not followed by quote?
+            if not i then error('unmatched "') end
+            local f = string.sub(s, fieldstart+1, i-1)
+            add_number(t, (string.gsub(f, '""', '"')))
+            local _, nexti = string.find(s, sep_pattern, i)
+            fieldstart = nexti + 1
+        else                -- unquoted; find next comma
+            local nexti, nextiend = string.find(s, sep_pattern, fieldstart)
+            if nexti > fieldstart then
+                add_number(t, string.sub(s, fieldstart, nexti - 1))
+            end
+            fieldstart = nextiend + 1
+        end
+    until fieldstart > string.len(s)
+    return t
+end
+
 function csv.read(filename)
     local t = {}
     for line in io.lines(filename) do
