@@ -6,7 +6,6 @@ packages:
 sources:
   - https://github.com/franko/gsl-shell
   - https://github.com/franko/lhelper
-shell: true
 tasks:
   - enable-local: |
       echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.buildenv"
@@ -30,7 +29,7 @@ tasks:
       lhelper create build-openblas-static
       source "$(lhelper env-source build-openblas-static)"
       bash scripts/build-package.sh -appimage -openblas -unix
-  - build-specific-cpus: |
+  - build-cpu-specific: |
       cd gsl-shell
       for cpu_target in nehalem haswell skylake; do
         (
@@ -41,17 +40,9 @@ tasks:
           bash scripts/build-package.sh -appimage -name=$cpu_target -openblas -unix
         )
       done
+  - package-all: |
+      cd gsl-shell
+      tar cf gsl-shell-linux-2.3.4.tar gsl-shell-*.tar.gz *.AppImage
 artifacts:
-  - gsl-shell/gsl-shell-dynamic-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-dynamic-x86-64.AppImage
-  - gsl-shell/gsl-shell-gslcblas-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-gslcblas-x86-64.AppImage
-  - gsl-shell/gsl-shell-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-x86-64.AppImage
-  - gsl-shell/gsl-shell-nehalem-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-nehalem-x86-64.AppImage
-  - gsl-shell/gsl-shell-haswell-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-haswell-x86-64.AppImage
-  - gsl-shell/gsl-shell-skylake-linux-x86-64.tar.gz
-  - gsl-shell/GSLShell-skylake-x86-64.AppImage
+  - gsl-shell/gsl-shell-linux-2.3.4.tar
 
