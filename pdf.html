@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Probability Distribution Functions &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Probability Distribution Functions &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="randist.html" title="Random Number Distributions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Probability Distribution Functions</a></li> 
       </ul>
     </div>  
@@ -47,41 +48,41 @@
           <div class="body" role="main">
             
   <section id="module-randist">
-<span id="probability-distribution-functions"></span><h1>Probability Distribution Functions<a class="headerlink" href="#module-randist" title="Permalink to this headline">¶</a></h1>
+<span id="probability-distribution-functions"></span><h1>Probability Distribution Functions<a class="headerlink" href="#module-randist" title="Permalink to this heading">¶</a></h1>
 <p>The module <a class="reference internal" href="#module-randist" title="randist"><code class="xref py py-mod docutils literal notranslate"><span class="pre">randist</span></code></a> offer a set of functions that mirrors those available from the module <a class="reference internal" href="randist.html#module-rnd" title="rnd"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rnd</span></code></a>.
 Generally, for each kind of distribution a few functions are available to calculate the probability density, the cumulative probability and its inverse.</p>
 <p>Continuous random number distributions are defined by a probability density function, p(x), such that the probability of x occurring in the infinitesimal range x to x+dx is p dx.</p>
 <p>The cumulative distribution function for the lower tail P(x) is defined by the integral,</p>
-<div class="math notranslate nohighlight">
-\[P(x) = \int_{-\infty}^{x} dx' p(x')\]</div>
-<p>and gives the probability of a variate taking a value less than x.</p>
+<div class="math">
+<p><img src="_images/math/c872ecc287ce5d296259e834c630b9651705e0ed.png" alt="P(x) = \int_{-\infty}^{x} dx' p(x')"/></p>
+</div><p>and gives the probability of a variate taking a value less than x.</p>
 <p>The cumulative distribution function for the upper tail Q(x) is defined by the integral,</p>
-<div class="math notranslate nohighlight">
-\[Q(x) = \int_{x}^{+\infty} dx' p(x')\]</div>
-<p>and gives the probability of a variate taking a value greater than x.</p>
-<p>The upper and lower cumulative distribution functions are related by <span class="math notranslate nohighlight">\(P(x) + Q(x) = 1\)</span> and satisfy <span class="math notranslate nohighlight">\(0 \le P(x) \le 1\)</span>, <span class="math notranslate nohighlight">\(0 \le Q(x) \le 1\)</span>.</p>
-<p>The inverse cumulative distributions, <span class="math notranslate nohighlight">\(x = P^{-1}(p)\)</span> and <span class="math notranslate nohighlight">\(x = Q^{-1}(q)\)</span> give the values of x which correspond to a specific value of p or q.
+<div class="math">
+<p><img src="_images/math/543b579ddf7ce3a625626dcd97a3684a7e593f4e.png" alt="Q(x) = \int_{x}^{+\infty} dx' p(x')"/></p>
+</div><p>and gives the probability of a variate taking a value greater than x.</p>
+<p>The upper and lower cumulative distribution functions are related by <img class="math" src="_images/math/344ba10acdedccb433a7a7af8f85656ddae795ff.png" alt="P(x) + Q(x) = 1"/> and satisfy <img class="math" src="_images/math/beb0fa9089556540a3f5beb0479771206ac43783.png" alt="0 \le P(x) \le 1"/>, <img class="math" src="_images/math/1040a0f4b1821322712185de065b5ed0fe844e0c.png" alt="0 \le Q(x) \le 1"/>.</p>
+<p>The inverse cumulative distributions, <img class="math" src="_images/math/c283a2571b8e288ea1d67b9095e62799155e28a7.png" alt="x = P^{-1}(p)"/> and <img class="math" src="_images/math/2058da94d215b19b2d1fa19359311e80e5b12595.png" alt="x = Q^{-1}(q)"/> give the values of x which correspond to a specific value of p or q.
 They can be used to find confidence limits from probability values.</p>
-<p>For discrete distributions the probability of sampling the integer value k is given by <span class="math notranslate nohighlight">\(p(k)\)</span>, where <span class="math notranslate nohighlight">\(\sum_k p(k) = 1\)</span>.  The cumulative distribution for the lower tail P(k) of a discrete distribution is defined as,</p>
-<div class="math notranslate nohighlight">
-\[P(k) = \sum_{i \le k} p(i)\]</div>
-<p>where the sum is over the allowed range of the distribution less than or equal to k.</p>
+<p>For discrete distributions the probability of sampling the integer value k is given by <img class="math" src="_images/math/913f624a8f1f68057db9eb37f1f58917edfa6eca.png" alt="p(k)"/>, where <img class="math" src="_images/math/bd0e23789c8e31f39b5c47214c9bfd66c5e17b26.png" alt="\sum_k p(k) = 1"/>.  The cumulative distribution for the lower tail P(k) of a discrete distribution is defined as,</p>
+<div class="math">
+<p><img src="_images/math/d1b1998a7c26a8af0dd5b704afa2a4a9f7daa112.png" alt="P(k) = \sum_{i \le k} p(i)"/></p>
+</div><p>where the sum is over the allowed range of the distribution less than or equal to k.</p>
 <p>The cumulative distribution for the upper tail of a discrete distribution Q(k) is defined as</p>
-<div class="math notranslate nohighlight">
-\[Q(k) = \sum_{i &gt; k} p(i)\]</div>
-<p>giving the sum of probabilities for all values greater than k.
-These two definitions satisfy the identity <span class="math notranslate nohighlight">\(P(k) + Q(k) = 1\)</span>.</p>
-<p>If the range of the distribution is 1 to n inclusive then <span class="math notranslate nohighlight">\(P(n)=1\)</span>,
-<span class="math notranslate nohighlight">\(Q(n)=0\)</span> while <span class="math notranslate nohighlight">\(P(1) = p(1)\)</span>, <span class="math notranslate nohighlight">\(Q(1)=1-p(1)\)</span>.</p>
+<div class="math">
+<p><img src="_images/math/556aa043c9de6076b8b046c8eef54de0ccb471e9.png" alt="Q(k) = \sum_{i &gt; k} p(i)"/></p>
+</div><p>giving the sum of probabilities for all values greater than k.
+These two definitions satisfy the identity <img class="math" src="_images/math/ca4c57ad1268bdaf2958f978f9215ff8fa63682c.png" alt="P(k) + Q(k) = 1"/>.</p>
+<p>If the range of the distribution is 1 to n inclusive then <img class="math" src="_images/math/b40b7f01bf2e278b34f08005753ac813eb6759d6.png" alt="P(n)=1"/>,
+<img class="math" src="_images/math/fefb30e31937187bba341664ce9f04716fe14fa8.png" alt="Q(n)=0"/> while <img class="math" src="_images/math/7cffa7354e00de40cd87d7c526baaf6f79fab6c1.png" alt="P(1) = p(1)"/>, <img class="math" src="_images/math/cb3d18bc05683ff46da7b76f3477feda2e555190.png" alt="Q(1)=1-p(1)"/>.</p>
 <section id="naming-conventions">
-<h2>Naming Conventions<a class="headerlink" href="#naming-conventions" title="Permalink to this headline">¶</a></h2>
+<h2>Naming Conventions<a class="headerlink" href="#naming-conventions" title="Permalink to this heading">¶</a></h2>
 <p>The probability functions are named following an uniform naming convention.
 The probability density function end with the suffix <code class="docutils literal notranslate"><span class="pre">_pdf</span></code>.
-The cumulative functions <span class="math notranslate nohighlight">\(P(x)\)</span> and <span class="math notranslate nohighlight">\(Q(x)\)</span> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_P</span></code> and <code class="docutils literal notranslate"><span class="pre">_Q</span></code> respectively.
-The inverse cumulative functions <span class="math notranslate nohighlight">\(P^{-1}(x)\)</span> and <span class="math notranslate nohighlight">\(Q^{-1}(x)\)</span> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_Pinv</span></code> and <code class="docutils literal notranslate"><span class="pre">_Qinv</span></code> respectively.</p>
+The cumulative functions <img class="math" src="_images/math/f01cb75ce76498bd7c3e6f4505d157bc0315ce1d.png" alt="P(x)"/> and <img class="math" src="_images/math/d574589beb01807c12a0f604b37aac349b6bc4e3.png" alt="Q(x)"/> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_P</span></code> and <code class="docutils literal notranslate"><span class="pre">_Q</span></code> respectively.
+The inverse cumulative functions <img class="math" src="_images/math/c0959ff49bb8bce0e94c1513cb9b2940b730b29a.png" alt="P^{-1}(x)"/> and <img class="math" src="_images/math/45ff19860f37241bbad09e0e6ada52e1b36f05b0.png" alt="Q^{-1}(x)"/> ends with the suffix <code class="docutils literal notranslate"><span class="pre">_Pinv</span></code> and <code class="docutils literal notranslate"><span class="pre">_Qinv</span></code> respectively.</p>
 </section>
 <section id="functions-index">
-<h2>Functions Index<a class="headerlink" href="#functions-index" title="Permalink to this headline">¶</a></h2>
+<h2>Functions Index<a class="headerlink" href="#functions-index" title="Permalink to this heading">¶</a></h2>
 <blockquote>
 <div><p>We present here the list of the available probability functions.</p>
 <div class="admonition note">
@@ -307,7 +308,80 @@ Please consult the GSL reference manual if you need a complete list of all the d
     <ul>
 <li><a class="reference internal" href="#">Probability Distribution Functions</a><ul>
 <li><a class="reference internal" href="#naming-conventions">Naming Conventions</a></li>
-<li><a class="reference internal" href="#functions-index">Functions Index</a></li>
+<li><a class="reference internal" href="#functions-index">Functions Index</a><ul>
+<li><a class="reference internal" href="#randist.gaussian_pdf"><code class="docutils literal notranslate"><span class="pre">gaussian_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_P"><code class="docutils literal notranslate"><span class="pre">gaussian_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_Q"><code class="docutils literal notranslate"><span class="pre">gaussian_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_Pinv"><code class="docutils literal notranslate"><span class="pre">gaussian_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_Qinv"><code class="docutils literal notranslate"><span class="pre">gaussian_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exponential_pdf"><code class="docutils literal notranslate"><span class="pre">exponential_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exponential_P"><code class="docutils literal notranslate"><span class="pre">exponential_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exponential_Q"><code class="docutils literal notranslate"><span class="pre">exponential_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exponential_Pinv"><code class="docutils literal notranslate"><span class="pre">exponential_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exponential_Qinv"><code class="docutils literal notranslate"><span class="pre">exponential_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.chisq_pdf"><code class="docutils literal notranslate"><span class="pre">chisq_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.chisq_P"><code class="docutils literal notranslate"><span class="pre">chisq_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.chisq_Q"><code class="docutils literal notranslate"><span class="pre">chisq_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.chisq_Pinv"><code class="docutils literal notranslate"><span class="pre">chisq_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.chisq_Qinv"><code class="docutils literal notranslate"><span class="pre">chisq_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.laplace_pdf"><code class="docutils literal notranslate"><span class="pre">laplace_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.laplace_P"><code class="docutils literal notranslate"><span class="pre">laplace_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.laplace_Q"><code class="docutils literal notranslate"><span class="pre">laplace_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.laplace_Pinv"><code class="docutils literal notranslate"><span class="pre">laplace_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.laplace_Qinv"><code class="docutils literal notranslate"><span class="pre">laplace_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.tdist_pdf"><code class="docutils literal notranslate"><span class="pre">tdist_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.tdist_P"><code class="docutils literal notranslate"><span class="pre">tdist_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.tdist_Q"><code class="docutils literal notranslate"><span class="pre">tdist_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.tdist_Pinv"><code class="docutils literal notranslate"><span class="pre">tdist_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.tdist_Qinv"><code class="docutils literal notranslate"><span class="pre">tdist_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.cauchy_pdf"><code class="docutils literal notranslate"><span class="pre">cauchy_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.cauchy_P"><code class="docutils literal notranslate"><span class="pre">cauchy_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.cauchy_Q"><code class="docutils literal notranslate"><span class="pre">cauchy_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.cauchy_Pinv"><code class="docutils literal notranslate"><span class="pre">cauchy_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.cauchy_Qinv"><code class="docutils literal notranslate"><span class="pre">cauchy_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.rayleigh_pdf"><code class="docutils literal notranslate"><span class="pre">rayleigh_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.rayleigh_P"><code class="docutils literal notranslate"><span class="pre">rayleigh_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.rayleigh_Q"><code class="docutils literal notranslate"><span class="pre">rayleigh_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.rayleigh_Pinv"><code class="docutils literal notranslate"><span class="pre">rayleigh_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.rayleigh_Qinv"><code class="docutils literal notranslate"><span class="pre">rayleigh_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.fdist_pdf"><code class="docutils literal notranslate"><span class="pre">fdist_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.fdist_P"><code class="docutils literal notranslate"><span class="pre">fdist_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.fdist_Q"><code class="docutils literal notranslate"><span class="pre">fdist_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.fdist_Pinv"><code class="docutils literal notranslate"><span class="pre">fdist_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.fdist_Qinv"><code class="docutils literal notranslate"><span class="pre">fdist_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gamma_pdf"><code class="docutils literal notranslate"><span class="pre">gamma_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gamma_P"><code class="docutils literal notranslate"><span class="pre">gamma_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gamma_Q"><code class="docutils literal notranslate"><span class="pre">gamma_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gamma_Pinv"><code class="docutils literal notranslate"><span class="pre">gamma_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gamma_Qinv"><code class="docutils literal notranslate"><span class="pre">gamma_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.beta_pdf"><code class="docutils literal notranslate"><span class="pre">beta_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.beta_P"><code class="docutils literal notranslate"><span class="pre">beta_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.beta_Q"><code class="docutils literal notranslate"><span class="pre">beta_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.beta_Pinv"><code class="docutils literal notranslate"><span class="pre">beta_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.beta_Qinv"><code class="docutils literal notranslate"><span class="pre">beta_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_tail_pdf"><code class="docutils literal notranslate"><span class="pre">gaussian_tail_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_tail_P"><code class="docutils literal notranslate"><span class="pre">gaussian_tail_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_tail_Q"><code class="docutils literal notranslate"><span class="pre">gaussian_tail_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_tail_Pinv"><code class="docutils literal notranslate"><span class="pre">gaussian_tail_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.gaussian_tail_Qinv"><code class="docutils literal notranslate"><span class="pre">gaussian_tail_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exppow_pdf"><code class="docutils literal notranslate"><span class="pre">exppow_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exppow_P"><code class="docutils literal notranslate"><span class="pre">exppow_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exppow_Q"><code class="docutils literal notranslate"><span class="pre">exppow_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exppow_Pinv"><code class="docutils literal notranslate"><span class="pre">exppow_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.exppow_Qinv"><code class="docutils literal notranslate"><span class="pre">exppow_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.lognormal_pdf"><code class="docutils literal notranslate"><span class="pre">lognormal_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.lognormal_P"><code class="docutils literal notranslate"><span class="pre">lognormal_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.lognormal_Q"><code class="docutils literal notranslate"><span class="pre">lognormal_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.lognormal_Pinv"><code class="docutils literal notranslate"><span class="pre">lognormal_Pinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.lognormal_Qinv"><code class="docutils literal notranslate"><span class="pre">lognormal_Qinv()</span></code></a></li>
+<li><a class="reference internal" href="#randist.binomial_pdf"><code class="docutils literal notranslate"><span class="pre">binomial_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.binomial_P"><code class="docutils literal notranslate"><span class="pre">binomial_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.binomial_Q"><code class="docutils literal notranslate"><span class="pre">binomial_Q()</span></code></a></li>
+<li><a class="reference internal" href="#randist.poisson_pdf"><code class="docutils literal notranslate"><span class="pre">poisson_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#randist.poisson_P"><code class="docutils literal notranslate"><span class="pre">poisson_P()</span></code></a></li>
+<li><a class="reference internal" href="#randist.poisson_Q"><code class="docutils literal notranslate"><span class="pre">poisson_Q()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -339,7 +413,7 @@ Please consult the GSL reference manual if you need a complete list of all the d
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -359,13 +433,13 @@ Please consult the GSL reference manual if you need a complete list of all the d
         <li class="right" >
           <a href="randist.html" title="Random Number Distributions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Probability Distribution Functions</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

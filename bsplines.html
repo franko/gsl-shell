@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Basis Splines &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Basis Splines &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="nlinfit.html" title="Nonlinear Least Squares fit"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Basis Splines</a></li> 
       </ul>
     </div>  
@@ -47,9 +48,9 @@
           <div class="body" role="main">
             
   <section id="basis-splines">
-<h1>Basis Splines<a class="headerlink" href="#basis-splines" title="Permalink to this headline">¶</a></h1>
+<h1>Basis Splines<a class="headerlink" href="#basis-splines" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>B-splines are commonly used as basis functions to fit smoothing curves
 to large data sets. To do this, the abscissa axis is broken up into
 some number of intervals, where the endpoints of each interval are
@@ -57,25 +58,25 @@ called “breakpoints”. These breakpoints are then converted to “knots”
 by imposing various continuity and smoothness conditions at each
 interface. Given a nondecreasing knot vector t = {t<sub>0</sub>, t<sub>1</sub>, …,
 t<sub>n+k-1</sub>}, the n basis splines of order k are defined by</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{ll}
+<div class="math">
+<p><img src="_images/math/3f5466bd9decfef384f27428ee1fc1a6a34a2965.png" alt="\begin{array}{ll}
   B_{i,1}(x) = &amp;  \left\{ \begin{array}{rl}
                            1 &amp; \qquad t_i \le x &lt; t_{i+1} \\
                            0 &amp; \qquad \textrm{else}
                          \end{array} \right. \\
   B_{i,k}(x) = &amp; \dfrac{x - t_i}{t_{i+k-1} - t_i} B_{i,k-1}(x)
               + \dfrac{t_{i+k} - x}{t_{i+k} - t_{i+1}} B_{i+1,k-1}(x)
-\end{array}\end{split}\]</div>
-<p>for i = 0, …, n-1. The common case of cubic B-splines is given by k =
+\end{array}"/></p>
+</div><p>for i = 0, …, n-1. The common case of cubic B-splines is given by k =
 4. The above recurrence relation can be evaluated in a numerically
 stable way by the de Boor algorithm.</p>
 <p>If we define appropriate knots on an interval [a,b] then the B-spline basis functions form a complete set on that interval. Therefore we can expand a smoothing function as</p>
-<div class="math notranslate nohighlight">
-\[f(x) = \sum_i c_i B_{i,k}(x)\]</div>
-<p>given enough <span class="math notranslate nohighlight">\((x_j, f(x_j))\)</span> data pairs. The coefficients c<sub>i</sub> can be readily obtained from a least-squares fit.</p>
+<div class="math">
+<p><img src="_images/math/c4887ae3a9434f7df942f7f03ddbd0b151039b2d.png" alt="f(x) = \sum_i c_i B_{i,k}(x)"/></p>
+</div><p>given enough <img class="math" src="_images/math/cea55eb951bd8cb2a8de86e0782828f2f6f8100f.png" alt="(x_j, f(x_j))"/> data pairs. The coefficients c<sub>i</sub> can be readily obtained from a least-squares fit.</p>
 </section>
 <section id="b-splines-functions">
-<h2>B-Splines functions<a class="headerlink" href="#b-splines-functions" title="Permalink to this headline">¶</a></h2>
+<h2>B-Splines functions<a class="headerlink" href="#b-splines-functions" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="bspline">
 <span class="sig-name descname"><span class="pre">bspline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#bspline" title="Permalink to this definition">¶</a></dt>
@@ -104,8 +105,8 @@ stable way by the de Boor algorithm.</p>
 
 </section>
 <section id="b-splines-example">
-<h2>B-splines Example<a class="headerlink" href="#b-splines-example" title="Permalink to this headline">¶</a></h2>
-<p>The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve <span class="math notranslate nohighlight">\(y(x) = \cos(x) \exp(-x/10)\)</span> on the interval [0,15] with Gaussian noise added:</p>
+<h2>B-splines Example<a class="headerlink" href="#b-splines-example" title="Permalink to this heading">¶</a></h2>
+<p>The following example computes a linear least squares fit to data using cubic B-spline basis functions with uniform breakpoints. The data is generated from the curve <img class="math" src="_images/math/70d13d0c906536fa1e16d9c0f0f781acb2e02b1e.png" alt="y(x) = \cos(x) \exp(-x/10)"/> on the interval [0,15] with Gaussian noise added:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
 <span class="n">use</span> <span class="s1">&#39;graph&#39;</span>
 
@@ -160,7 +161,15 @@ stable way by the de Boor algorithm.</p>
     <ul>
 <li><a class="reference internal" href="#">Basis Splines</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#b-splines-functions">B-Splines functions</a></li>
+<li><a class="reference internal" href="#b-splines-functions">B-Splines functions</a><ul>
+<li><a class="reference internal" href="#bspline"><code class="docutils literal notranslate"><span class="pre">bspline()</span></code></a></li>
+<li><a class="reference internal" href="#BSpline"><code class="docutils literal notranslate"><span class="pre">BSpline</span></code></a><ul>
+<li><a class="reference internal" href="#BSpline.eval"><code class="docutils literal notranslate"><span class="pre">BSpline.eval()</span></code></a></li>
+<li><a class="reference internal" href="#BSpline.model"><code class="docutils literal notranslate"><span class="pre">BSpline.model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#b-splines-example">B-splines Example</a></li>
 </ul>
 </li>
@@ -193,7 +202,7 @@ stable way by the de Boor algorithm.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -213,13 +222,13 @@ stable way by the de Boor algorithm.</p>
         <li class="right" >
           <a href="nlinfit.html" title="Nonlinear Least Squares fit"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Basis Splines</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

@@ -1,19 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Iterators &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Iterators &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +37,7 @@
         <li class="right" >
           <a href="gdt.html" title="General Data Tables"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Iterators</a></li> 
       </ul>
     </div>  
@@ -46,7 +48,7 @@
           <div class="body" role="main">
             
   <section id="iterators">
-<span id="lua-base"></span><h1>Iterators<a class="headerlink" href="#iterators" title="Permalink to this headline">¶</a></h1>
+<span id="lua-base"></span><h1>Iterators<a class="headerlink" href="#iterators" title="Permalink to this heading">¶</a></h1>
 <p>GSL Shell provides a number of simple functions to perform some common tasks related to iterators.
 These functions allow you to write more simple and compact code and to improve the readability.
 The functions described below are available in the module <a class="reference internal" href="#module-iter" title="iter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">iter</span></code></a>.</p>
@@ -105,7 +107,7 @@ In the second form, the sequence will start from one.</p>
 </dd></dl>
 
 <section id="more-complex-iterators">
-<h2>More complex iterators<a class="headerlink" href="#more-complex-iterators" title="Permalink to this headline">¶</a></h2>
+<h2>More complex iterators<a class="headerlink" href="#more-complex-iterators" title="Permalink to this heading">¶</a></h2>
 <p>Actually the more general form of an iterator is the following:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">...</span> <span class="kr">in</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">i0</span> <span class="kr">do</span>
    <span class="c1">-- [ some code here]</span>
@@ -154,6 +156,11 @@ In the second form, the sequence will start from one.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Iterators</a><ul>
+<li><a class="reference internal" href="#iter.sequence"><code class="docutils literal notranslate"><span class="pre">sequence()</span></code></a></li>
+<li><a class="reference internal" href="#iter.sample"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></a></li>
+<li><a class="reference internal" href="#iter.isample"><code class="docutils literal notranslate"><span class="pre">isample()</span></code></a></li>
+<li><a class="reference internal" href="#iter.ilist"><code class="docutils literal notranslate"><span class="pre">ilist()</span></code></a></li>
+<li><a class="reference internal" href="#iter.isum"><code class="docutils literal notranslate"><span class="pre">isum()</span></code></a></li>
 <li><a class="reference internal" href="#more-complex-iterators">More complex iterators</a></li>
 </ul>
 </li>
@@ -186,7 +193,7 @@ In the second form, the sequence will start from one.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -206,13 +213,13 @@ In the second form, the sequence will start from one.</p>
         <li class="right" >
           <a href="gdt.html" title="General Data Tables"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Iterators</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

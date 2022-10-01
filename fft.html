@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Fast Fourier Transform &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Fast Fourier Transform &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="bsplines.html" title="Basis Splines"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Fast Fourier Transform</a></li> 
       </ul>
     </div>  
@@ -47,29 +48,29 @@
           <div class="body" role="main">
             
   <section id="fast-fourier-transform">
-<h1>Fast Fourier Transform<a class="headerlink" href="#fast-fourier-transform" title="Permalink to this headline">¶</a></h1>
+<h1>Fast Fourier Transform<a class="headerlink" href="#fast-fourier-transform" title="Permalink to this heading">¶</a></h1>
 <section id="mathematical-definitions">
-<h2>Mathematical Definitions<a class="headerlink" href="#mathematical-definitions" title="Permalink to this headline">¶</a></h2>
+<h2>Mathematical Definitions<a class="headerlink" href="#mathematical-definitions" title="Permalink to this heading">¶</a></h2>
 <p>Fast Fourier Transforms are efficient algorithms for calculating the discrete Fourier transform (DFT)</p>
-<div class="math notranslate nohighlight">
-\[x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)\]</div>
-<p>The DFT usually arises as an approximation to the continuous Fourier
+<div class="math">
+<p><img src="_images/math/9f59a88564ab5fb94b4a0f5b7edfeb68cbe60574.png" alt="x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)"/></p>
+</div><p>The DFT usually arises as an approximation to the continuous Fourier
 transform when functions are sampled at discrete intervals in space or
-time. The naive evaluation of the discrete Fourier transform is a matrix-vector multiplication <span class="math notranslate nohighlight">\(W\vec{z}\)</span>. A general matrix-vector multiplication takes O(n<sup>2</sup>) operations for n data-points. Fast Fourier transform algorithms use a divide-and-conquer strategy to factorize the matrix W into smaller sub-matrices, corresponding to the integer factors of the length n. If n can be factorized into a product of integers f<sub>1</sub> f<sub>2</sub> … f<sub>m</sub> then the DFT can be computed in O(n Σ f<sub>i</sub>) operations. For a radix-2 FFT this gives an operation count of O(n log<sub>2</sub> n).</p>
+time. The naive evaluation of the discrete Fourier transform is a matrix-vector multiplication <img class="math" src="_images/math/fed8434b5bc99d38af649d94ee0c237743b6c4d1.png" alt="W\vec{z}"/>. A general matrix-vector multiplication takes O(n<sup>2</sup>) operations for n data-points. Fast Fourier transform algorithms use a divide-and-conquer strategy to factorize the matrix W into smaller sub-matrices, corresponding to the integer factors of the length n. If n can be factorized into a product of integers f<sub>1</sub> f<sub>2</sub> … f<sub>m</sub> then the DFT can be computed in O(n Σ f<sub>i</sub>) operations. For a radix-2 FFT this gives an operation count of O(n log<sub>2</sub> n).</p>
 <p>All the FFT functions offer two types of transform: forwards and inverse, based on the same mathematical definitions. The definition of the forward Fourier transform, <code class="docutils literal notranslate"><span class="pre">fft(z)</span></code>, is,</p>
-<div class="math notranslate nohighlight">
-\[x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)\]</div>
-<p>and the definition of the inverse Fourier transform is,</p>
-<div class="math notranslate nohighlight">
-\[z_j = {1 \over n} \sum_{k=0}^{n-1} x_k \exp(2\pi i j k / n).\]</div>
-<p>The factor of 1/n makes this a true inverse.</p>
+<div class="math">
+<p><img src="_images/math/9f59a88564ab5fb94b4a0f5b7edfeb68cbe60574.png" alt="x_j = \sum_{k=0}^{n-1} z_k \exp(-2\pi i j k / n)"/></p>
+</div><p>and the definition of the inverse Fourier transform is,</p>
+<div class="math">
+<p><img src="_images/math/e0f2596f908a2811146c6548c6e338cba055283c.png" alt="z_j = {1 \over n} \sum_{k=0}^{n-1} x_k \exp(2\pi i j k / n)."/></p>
+</div><p>The factor of 1/n makes this a true inverse.</p>
 <p>In general there are two possible choices for the sign of the exponential in the transform/ inverse-transform pair.
 GSL follows the same convention as fftpack, using a negative exponential for the forward transform.
 The advantage of this convention is that the inverse transform recreates the original function with simple Fourier synthesis.
 Numerical Recipes uses the opposite convention, a positive exponential in the forward transform.</p>
 </section>
 <section id="gsl-shell-interface">
-<h2>GSL Shell interface<a class="headerlink" href="#gsl-shell-interface" title="Permalink to this headline">¶</a></h2>
+<h2>GSL Shell interface<a class="headerlink" href="#gsl-shell-interface" title="Permalink to this heading">¶</a></h2>
 <p>GSL Shell provide a simple interface to perform Fourier transforms of real data with the functions <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a> and <a class="reference internal" href="#num.fftinv" title="num.fftinv"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fftinv()</span></code></a>.
 The first function performs the Fourier transform of a column matrix and the second is the inverse Fourier transform.</p>
 <p>The function <a class="reference internal" href="#num.fft" title="num.fft"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.fft()</span></code></a> returns a half-complex array.
@@ -77,7 +78,7 @@ This latter is similar to a column matrix of complex numbers, but it is actually
 <p>The idea is that you can access the elements of this vector for reading or writing simply by indexing it.
 You can also obtain the size of the vector using the operator ‘#’.
 The valid indices for a half-complex object range from 0 to N-1 where N is the size if the vector.
-Each element of the vector corresponds to the coefficient <span class="math notranslate nohighlight">\(z_k\)</span> defined above.</p>
+Each element of the vector corresponds to the coefficient <img class="math" src="_images/math/6b7671526711c1dfe9ef193284994bca08d77a6e.png" alt="z_k"/> defined above.</p>
 <p>When performing Fourier transforms, it is important to know that the computation speed can be greatly influenced by the size of the vector. If the size is a power of two, a very efficient algorithm can be used and we can talk in this case of a Fast Fourier Transform (FFT). In addition, the algorithm has the advantage that it does not require any additional workspace. When the size of the vector is not a power of two, we can have two different cases:</p>
 <blockquote>
 <div><ul class="simple">
@@ -98,11 +99,11 @@ When a transformation <em>in place</em> is requested, the routine still returns 
 The transformation <em>in place</em> can be useful in some cases to avoid unnecessary data copying and memory allocation.</p>
 </section>
 <section id="fourier-transform-of-real-data">
-<h2>Fourier Transform of Real Data<a class="headerlink" href="#fourier-transform-of-real-data" title="Permalink to this headline">¶</a></h2>
+<h2>Fourier Transform of Real Data<a class="headerlink" href="#fourier-transform-of-real-data" title="Permalink to this heading">¶</a></h2>
 <p>For real data, the Fourier coefficients satisfy the relation</p>
-<div class="math notranslate nohighlight">
-\[z_k = z_{N-k}^*\]</div>
-<p>where N is the size of the vector and k is any integer number from 0 to N-1.
+<div class="math">
+<p><img src="_images/math/4703694c5b235c94816e7165aeb9a8d3fc290606.png" alt="z_k = z_{N-k}^*"/></p>
+</div><p>where N is the size of the vector and k is any integer number from 0 to N-1.
 Because of this relation, the data is packed in a special type of object called a half-complex array.</p>
 <p>To access an element in a half-complex array, you can index it with an integer number between 0 and N-1, inclusive. So, for example:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- get a random number generator</span>
@@ -156,7 +157,7 @@ So a typical usage path could be:</p>
 
 </section>
 <section id="fft-example">
-<h2>FFT example<a class="headerlink" href="#fft-example" title="Permalink to this headline">¶</a></h2>
+<h2>FFT example<a class="headerlink" href="#fft-example" title="Permalink to this heading">¶</a></h2>
 <p>In this example we will treat a square pulse in the temporal domain. To illustrate a typical example of FFT usage we perform the Fourier Transform of the signal and we cut the higher order frequencies. Then we perform the inverse transform and we compare the result with the original time signal.</p>
 <p>So, first we define our square pulse in the time domain. Actually it will be a matrix with just one column:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">n</span><span class="p">,</span> <span class="n">ncut</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">16</span>
@@ -222,7 +223,11 @@ So a typical usage path could be:</p>
 <li><a class="reference internal" href="#">Fast Fourier Transform</a><ul>
 <li><a class="reference internal" href="#mathematical-definitions">Mathematical Definitions</a></li>
 <li><a class="reference internal" href="#gsl-shell-interface">GSL Shell interface</a></li>
-<li><a class="reference internal" href="#fourier-transform-of-real-data">Fourier Transform of Real Data</a></li>
+<li><a class="reference internal" href="#fourier-transform-of-real-data">Fourier Transform of Real Data</a><ul>
+<li><a class="reference internal" href="#num.fft"><code class="docutils literal notranslate"><span class="pre">fft()</span></code></a></li>
+<li><a class="reference internal" href="#num.fftinv"><code class="docutils literal notranslate"><span class="pre">fftinv()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#fft-example">FFT example</a></li>
 </ul>
 </li>
@@ -255,7 +260,7 @@ So a typical usage path could be:</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -275,13 +280,13 @@ So a typical usage path could be:</p>
         <li class="right" >
           <a href="bsplines.html" title="Basis Splines"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Fast Fourier Transform</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

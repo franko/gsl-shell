@@ -1,19 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>GSL FFI interface &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>GSL FFI interface &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -31,7 +33,7 @@
         <li class="right" >
           <a href="examples.html" title="GSL Shell Examples"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL FFI interface</a></li> 
       </ul>
     </div>  
@@ -42,10 +44,10 @@
           <div class="body" role="main">
             
   <section id="gsl-ffi-interface">
-<span id="id1"></span><h1>GSL FFI interface<a class="headerlink" href="#gsl-ffi-interface" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>GSL FFI interface<a class="headerlink" href="#gsl-ffi-interface" title="Permalink to this heading">¶</a></h1>
 <p>In this chapter we are going to explain the direct GSL interface to use the C functions provided by the GSL library directly.</p>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
 <p>The access to the C GSL functions is possible thanks to the FFI module provided by LuaJIT2 on which GSL Shell is based.
 The FFI module allows one to call any C function available from the dynamic libraries currently loaded, directly from Lua code.</p>
 <p>Some of the modules available in GSL Shell are reimplemented in Lua using the FFI interface and the basic GSL functions about BLAS and linear algebra.</p>
@@ -65,7 +67,7 @@ You can run the tests yourself by giving the following command:</p>
 </figure>
 </section>
 <section id="id2">
-<h2>GSL FFI interface<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>GSL FFI interface<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
 <span class="target" id="module-gsl"></span><p>The usage of the GSL FFI interface is done using the <a class="reference internal" href="#module-gsl" title="gsl"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gsl</span></code></a> module.
 This latter contains all the GSL functions available and you can call them directly from Lua code.</p>
 <p>Let us see a simple example:</p>
@@ -102,7 +104,7 @@ For this purpose, GSL Shell offers a simple helper function that can be used lik
 This fact is a direct implication of the fact that we are directly calling the C function defined in the GSL library.</p>
 </section>
 <section id="gsl-ffi-examples">
-<h2>GSL FFI examples<a class="headerlink" href="#gsl-ffi-examples" title="Permalink to this headline">¶</a></h2>
+<h2>GSL FFI examples<a class="headerlink" href="#gsl-ffi-examples" title="Permalink to this heading">¶</a></h2>
 <p>If you want to learn more about the usage of the GSL FFI interface, you may take a look at the implementation file of the <code class="docutils literal notranslate"><span class="pre">bspline</span></code> module.</p>
 <p>The file is quite small and easy to understand, and it illustrates all the important aspects of the GSL FFI interface.</p>
 </section>
@@ -148,7 +150,7 @@ This fact is a direct implication of the fact that we are directly calling the C
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -165,13 +167,13 @@ This fact is a direct implication of the fact that we are directly calling the C
         <li class="right" >
           <a href="examples.html" title="GSL Shell Examples"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL FFI interface</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

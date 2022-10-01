@@ -1,0 +1,30 @@
+.. highlight:: lua
+
+.. _project-section:
+
+Projects Utility Functions
+==========================
+
+.. module:: project
+
+The module ``project`` offers a few useful functions to execute the entry point of a project organized like a
+set of Lua scripts in a folder.
+
+.. function:: run(filename)
+
+   Move into the directory of `filename`, add the path into the `package.path` and execute the given file using
+   the Lua function `dofile`. When the script has completed the execution restore the original `package.path`
+   and goes back to the previous working directory.
+
+   The advantage over a simple `dofile` is that the Lua scripts presents in the project's directory will be
+   available to be loaded using the `require` function. In this way there is no need to give explicit path of
+   the modules' filename.
+
+.. function:: chdir(dirname)
+
+   Goes into the given directory.
+
+.. function:: getcwd()
+
+   Get the current working directory.
+

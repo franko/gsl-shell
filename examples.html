@@ -1,25 +1,26 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>GSL Shell Examples &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>GSL Shell Examples &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GSL FFI interface" href="gsl-ffi.html" />
-    <link rel="prev" title="Comma Separated Values Parsing Utilities" href="csv.html" /> 
+    <link rel="prev" title="2D Interpolation" href="interp2d.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -34,9 +35,9 @@
           <a href="gsl-ffi.html" title="GSL FFI interface"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+          <a href="interp2d.html" title="2D Interpolation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL Shell Examples</a></li> 
       </ul>
     </div>  
@@ -47,14 +48,14 @@
           <div class="body" role="main">
             
   <section id="gsl-shell-examples">
-<span id="id1"></span><h1>GSL Shell Examples<a class="headerlink" href="#gsl-shell-examples" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>GSL Shell Examples<a class="headerlink" href="#gsl-shell-examples" title="Permalink to this heading">¶</a></h1>
 <p>In this chapter we give some usage examples of GSL Shell.</p>
 <section id="home-made-bessel-functions">
-<h2>Home-made Bessel Functions<a class="headerlink" href="#home-made-bessel-functions" title="Permalink to this headline">¶</a></h2>
+<h2>Home-made Bessel Functions<a class="headerlink" href="#home-made-bessel-functions" title="Permalink to this heading">¶</a></h2>
 <p>The Bessel function J<sub>n</sub> for integer values of n can be defined with the following integral:</p>
-<div class="math notranslate nohighlight">
-\[J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau\]</div>
-<p>We can use this definition to define our home-made Bessel function.
+<div class="math">
+<p><img src="_images/math/0374ff1d9f5d2e8b17e6204f0fcd776c524ed058.png" alt="J_n(x) = {1 \over \pi} \int_0^\pi \cos(n \tau - x \sin \tau) \textrm{d}\tau"/></p>
+</div><p>We can use this definition to define our home-made Bessel function.
 To perform the integral we need to use the <a class="reference internal" href="integ.html#num.integ" title="num.integ"><code class="xref py py-func docutils literal notranslate"><span class="pre">num.integ()</span></code></a> function and provide the function to integrate.
 This is easy like eating a piece of cake:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
@@ -99,7 +100,7 @@ This is easy like eating a piece of cake:</p>
 </div>
 </section>
 <section id="the-von-koch-curve">
-<h2>The Von-Koch curve<a class="headerlink" href="#the-von-koch-curve" title="Permalink to this headline">¶</a></h2>
+<h2>The Von-Koch curve<a class="headerlink" href="#the-von-koch-curve" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference external" href="http://en.wikipedia.org/wiki/Koch_snowflake">Von-Koch curve</a> is a simple and beautiful fractal curve described in 1904 by the Swedish mathematician Helge von Koch.</p>
 <p>Here an example to plot it with GSL Shell. First we need a function to produce the curve, we are not going to explain the details but the following code can do the job:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
@@ -171,7 +172,7 @@ This is easy like eating a piece of cake:</p>
 </figure>
 </section>
 <section id="reading-and-plotting-data-from-files">
-<h2>Reading and plotting data from files<a class="headerlink" href="#reading-and-plotting-data-from-files" title="Permalink to this headline">¶</a></h2>
+<h2>Reading and plotting data from files<a class="headerlink" href="#reading-and-plotting-data-from-files" title="Permalink to this heading">¶</a></h2>
 <p>In this example we show how to load some data stored in a file in CSV format and use it to make a plot. The CSV is a very simple format that can be used to exchange data with spreadsheets applications. It is just plain text with several lines where each line consists of a comma-separated list of numbers or strings.</p>
 <p>In order to load the data, you need to load the module <a class="reference internal" href="csv.html#module-csv" title="csv"><code class="xref py py-mod docutils literal notranslate"><span class="pre">csv</span></code></a> and use the function <a class="reference internal" href="csv.html#csv.read" title="csv.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code></a>. In this example, we will use the data stored in the file <code class="docutils literal notranslate"><span class="pre">examples/data/sige-sims-prof.csv</span></code>. This set of data contains just two columns, of which the first one is the x and the second column represents the y. Here is the simple code to load the data:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">csv</span> <span class="o">=</span> <span class="nb">require</span> <span class="s1">&#39;csv&#39;</span>
@@ -223,27 +224,27 @@ The last resort to obtain that would be to create a <code class="xref py py-clas
 </figure>
 </section>
 <section id="zernike-polynomials">
-<h2>Zernike Polynomials<a class="headerlink" href="#zernike-polynomials" title="Permalink to this headline">¶</a></h2>
+<h2>Zernike Polynomials<a class="headerlink" href="#zernike-polynomials" title="Permalink to this heading">¶</a></h2>
 <p><em>Taken from Wikipedia</em></p>
 <p>In mathematics, the Zernike polynomials are a sequence of polynomials that are orthogonal on the unit disk. Named after Frits Zernike, they play an important role in beam optics.</p>
 <section id="definitions">
-<h3>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h3>
+<h3>Definitions<a class="headerlink" href="#definitions" title="Permalink to this heading">¶</a></h3>
 <p>There are even and odd Zernike polynomials. The even ones are defined as</p>
-<div class="math notranslate nohighlight">
-\[Z_n^m(\rho, \phi) = R_n^m(\rho) \cos(m \phi)\]</div>
-<p>and the odd ones as</p>
-<div class="math notranslate nohighlight">
-\[Z_n^{-m}(\rho, \phi) = R_n^m(\rho) \sin(m \phi)\]</div>
-<p>where m and n are nonnegative integers with n≥m, φ is the azimuthal angle, and ρ is the radial distance . The radial polynomials R<sub>n</sub><sup>m</sup> are defined as</p>
-<div class="math notranslate nohighlight">
-\[R_n^m(\rho) = \sum_{k=0}^{(n-m)/2} \frac{(-1)^k (n-k)!}{k! ((n+m)/2-k)! ((n-m)/2 - k)!} \rho^{n - 2 k}\]</div>
-<p>for n − m even, and are identically 0 for n − m odd.
+<div class="math">
+<p><img src="_images/math/3ebbf428ba79bda8abd71354c5ef4eff641be010.png" alt="Z_n^m(\rho, \phi) = R_n^m(\rho) \cos(m \phi)"/></p>
+</div><p>and the odd ones as</p>
+<div class="math">
+<p><img src="_images/math/602cc44575417d8d0502c03a50cdf529a5834c1c.png" alt="Z_n^{-m}(\rho, \phi) = R_n^m(\rho) \sin(m \phi)"/></p>
+</div><p>where m and n are nonnegative integers with n≥m, φ is the azimuthal angle, and ρ is the radial distance . The radial polynomials R<sub>n</sub><sup>m</sup> are defined as</p>
+<div class="math">
+<p><img src="_images/math/ad758471dca4f27ff07b4c5d29d0f7a213e2ec83.png" alt="R_n^m(\rho) = \sum_{k=0}^{(n-m)/2} \frac{(-1)^k (n-k)!}{k! ((n+m)/2-k)! ((n-m)/2 - k)!} \rho^{n - 2 k}"/></p>
+</div><p>for n − m even, and are identically 0 for n − m odd.
 For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup>(ρ).</p>
 </section>
 <section id="implementation">
-<h3>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h3>
+<h3>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading">¶</a></h3>
 <p>The above formula can be implemented quite straightforwardly in GSL Shell with only a subtle point about the factorials in the denominator. The problem is that in some cases you can have the factorial of a negative number and if you feed a negative number to the <code class="xref py py-func docutils literal notranslate"><span class="pre">fact()</span></code> function, you will get an error.</p>
-<p>Actually the meaning of the formula is that the factorial of a negative number if <span class="math notranslate nohighlight">\(\infty\)</span> and so, since it appears in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that returns the inverse of the factorial and zero when the argument is negative.</p>
+<p>Actually the meaning of the formula is that the factorial of a negative number if <img class="math" src="_images/math/bc77ef1d57e976aaf1df2652d6a847961be9fdfc.png" alt="\infty"/> and so, since it appears in the denominator, its contribution to the sum is null. So, in order to implement this behavior we just define an auxiliary function that returns the inverse of the factorial and zero when the argument is negative.</p>
 <p>So here is the code for the radial part:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
 
@@ -272,12 +273,12 @@ For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup
 </pre></div>
 </div>
 <p>Now we are ready to draw our function. The only missing piece is the relation between ρ, φ and the Cartesian coordinates but this is trivial:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{ll}
+<div class="math">
+<p><img src="_images/math/ee02b5c42f5b5af32502ea8b324eb9952e1eb354.png" alt="\begin{array}{ll}
   \rho = &amp; \sqrt{x^2 + y^2} \\
   \phi = &amp; \tan^{-1}(y, x)
-\end{array}\end{split}\]</div>
-<p>Let us therefore define our sample function in term of x and y and use it to call the function <code class="xref py py-func docutils literal notranslate"><span class="pre">polar_contour()</span></code>:</p>
+\end{array}"/></p>
+</div><p>Let us therefore define our sample function in term of x and y and use it to call the function <code class="xref py py-func docutils literal notranslate"><span class="pre">polar_contour()</span></code>:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="nb">require</span> <span class="s1">&#39;contour&#39;</span>
 <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span>
 <span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="o">|</span> <span class="n">zernicke</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">^</span><span class="mi">2</span><span class="p">),</span> <span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">))</span>
@@ -328,8 +329,8 @@ For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="csv.html"
-                          title="previous chapter">Comma Separated Values Parsing Utilities</a></p>
+    <p class="topless"><a href="interp2d.html"
+                          title="previous chapter">2D Interpolation</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
@@ -352,7 +353,7 @@ For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -370,15 +371,15 @@ For m = 0, the even definition is used which reduces to R<sub>n</sub><sup>0</sup
           <a href="gsl-ffi.html" title="GSL FFI interface"
              >next</a> |</li>
         <li class="right" >
-          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+          <a href="interp2d.html" title="2D Interpolation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL Shell Examples</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

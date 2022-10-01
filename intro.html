@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>GSL Shell introduction &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>GSL Shell introduction &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to GSL shell documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL Shell introduction</a></li> 
       </ul>
     </div>  
@@ -47,7 +48,7 @@
           <div class="body" role="main">
             
   <section id="gsl-shell-introduction">
-<span id="introduction"></span><h1>GSL Shell introduction<a class="headerlink" href="#gsl-shell-introduction" title="Permalink to this headline">¶</a></h1>
+<span id="introduction"></span><h1>GSL Shell introduction<a class="headerlink" href="#gsl-shell-introduction" title="Permalink to this heading">¶</a></h1>
 <p>GSL Shell is an interactive interface that gives access to the GSL numerical routines using Lua, an easy to learn and powerful programming language.
 With GSL Shell, you can access the functions provided by the GSL library with great ease, without the need to write and compile a stand-alone C application.
 In addition, the power and expressiveness of the Lua language enables you to develop and test complex procedures to process your data and effectively use the GSL routines.
@@ -57,20 +58,20 @@ In addition the LuaJIT2 implementation provides excellent execution speed that c
 <p>Since GSL Shell is oriented toward mathematics it does use an optional simplified syntax to express simple mathematical functions (see <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function syntax</span></a>).
 Otherwise the syntax and the semantic of the Lua programming language is completely ensured.</p>
 <section id="first-steps">
-<h2>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h2>
+<h2>First steps<a class="headerlink" href="#first-steps" title="Permalink to this heading">¶</a></h2>
 <p>The most basic usage of GSL Shell is just like a calculator: you can type any expression and GSL Shell will print the results.
 GSL Shell is designed to work mainly with floating point numbers stored internally in double precision.
 Sometimes we will refer to this kind of number as a <em>real</em> number, as opposed to a <em>complex</em> number.</p>
 <p>For integer numbers, GSL Shell differs from many other programming environments because it does not have a distinct type to represent them.
 In other words, integer numbers are treated just like <em>real</em> numbers with all the implications that follow.</p>
-<p>To give the flavor of GSL Shell let us suppose that we want to plot a simple quadratic function like <span class="math notranslate nohighlight">\(y = x^2 - 1\)</span>.
+<p>To give the flavor of GSL Shell let us suppose that we want to plot a simple quadratic function like <img class="math" src="_images/math/0b0c254c42af5af5b995babda93502a635d95e32.png" alt="y = x^2 - 1"/>.
 You can define the function very easily:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">3</span>
 </pre></div>
 </div>
-<p>So the first line means: let f be a function that given a value x returns <span class="math notranslate nohighlight">\(f(x) = x^2 - 1\)</span>.</p>
+<p>So the first line means: let f be a function that given a value x returns <img class="math" src="_images/math/60ebb627dc56c993d8e96eeaedd944e2c0017ad6.png" alt="f(x) = x^2 - 1"/>.</p>
 <p>This kind of notation for simple functions is an extension to the Lua syntax and is explained in a specific section about the <a class="reference internal" href="#short-func-notation"><span class="std std-ref">short function notation</span></a>.</p>
 <p>Now you may want to plot the function f.
 This is done very easily:</p>
@@ -98,7 +99,7 @@ So for example if you type:</p>
 <span class="go">&lt;plot: 0xb770eed8&gt;</span>
 </pre></div>
 </div>
-<p>Now let us suppose that we want to add to the same plot another curve to represent the function <span class="math notranslate nohighlight">\(y = 1/x\)</span>.
+<p>Now let us suppose that we want to add to the same plot another curve to represent the function <img class="math" src="_images/math/c47f23a9173b5f68dee1b8da0f4a68f703aac349.png" alt="y = 1/x"/>.
 In this case we don’t want to create another plot, but we need to create a “curve”.
 We can do that by using the function <a class="reference internal" href="graphics.html#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a> that works eaxctly like <a class="reference internal" href="graphics.html#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a> but it does return a graphical object instead of a plot.
 Once the curve is created we add it to the plot using the method <code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code>.</p>
@@ -123,7 +124,7 @@ This can be done with a couple of more commands:</p>
 <p>As you can see the graphical system is very flexible and it does offer a lot of possibilities.
 If you want to learn more about the graphical system you can read the chapter about <a class="reference internal" href="graphics.html#graphics-chapter"><span class="std std-ref">graphics</span></a>.</p>
 <section id="getting-help">
-<h3>Getting Help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h3>
+<h3>Getting Help<a class="headerlink" href="#getting-help" title="Permalink to this heading">¶</a></h3>
 <p>When you are using GSL Shell interactively you get easily help about any function by using the function:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">some_function</span><span class="p">)</span>
 </pre></div>
@@ -132,7 +133,7 @@ If you want to learn more about the graphical system you can read the chapter ab
 If the arguments are enclosed in square bracket it means that these arguments are optional.</p>
 </section>
 <section id="complex-numbers">
-<span id="id1"></span><h3>Complex numbers<a class="headerlink" href="#complex-numbers" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3>Complex numbers<a class="headerlink" href="#complex-numbers" title="Permalink to this heading">¶</a></h3>
 <p>When you need to define a complex number you can use a native syntax like in the following example:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="n">i</span>
 </pre></div>
@@ -150,7 +151,7 @@ You can work with both types as far as you understand the difference and use the
 <p>Most of the GSL functions operate on real or complex matrices because of the nature of the GSL library itself.</p>
 </section>
 <section id="a-couple-of-useful-tricks">
-<h3>A couple of useful tricks<a class="headerlink" href="#a-couple-of-useful-tricks" title="Permalink to this headline">¶</a></h3>
+<h3>A couple of useful tricks<a class="headerlink" href="#a-couple-of-useful-tricks" title="Permalink to this heading">¶</a></h3>
 <p>When you are working in an interactive session, GSL Shell will always remember the last result evaluated.
 You can access its value using the global variable “_”.
 When you evaluate a statement or an expression that returns no values, the variable “_” is not modified.</p>
@@ -158,7 +159,7 @@ When you evaluate a statement or an expression that returns no values, the varia
 This can be useful to avoid to show a large table or matrix if you don’t want to see them on the screen.</p>
 </section>
 <section id="working-with-matrices">
-<span id="matrices"></span><h3>Working with matrices<a class="headerlink" href="#working-with-matrices" title="Permalink to this headline">¶</a></h3>
+<span id="matrices"></span><h3>Working with matrices<a class="headerlink" href="#working-with-matrices" title="Permalink to this heading">¶</a></h3>
 <p>In order to define a matrix you have basically two options: you can enumerate all the values or you can provide a function that generates the terms of the matrix.
 In the first case you, should use the <a class="reference internal" href="matrices.html#matrix.def" title="matrix.def"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.def()</span></code></a> like in the following example:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
@@ -220,7 +221,7 @@ Of course, you are not forced to define the function in the same line; you can d
 <p>where we have used again the short function notation and the Lua logical operators <code class="docutils literal notranslate"><span class="pre">and</span></code> and <code class="docutils literal notranslate"><span class="pre">or</span></code>.</p>
 </section>
 <section id="matrix-operations">
-<h3>Matrix operations<a class="headerlink" href="#matrix-operations" title="Permalink to this headline">¶</a></h3>
+<h3>Matrix operations<a class="headerlink" href="#matrix-operations" title="Permalink to this heading">¶</a></h3>
 <p>If we want to obtain the inverse of the matrix defined above we can use the function <a class="reference internal" href="linalg.html#matrix.inv" title="matrix.inv"><code class="xref py py-func docutils literal notranslate"><span class="pre">matrix.inv()</span></code></a>.
 Let us see how it works by using the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> defined above and taking its inverse:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
@@ -294,7 +295,7 @@ So in the example above we could have used the function <a class="reference inte
 <p>to obtain the same result of above.</p>
 </section>
 <section id="working-with-complex-matrices">
-<h3>Working with complex matrices<a class="headerlink" href="#working-with-complex-matrices" title="Permalink to this headline">¶</a></h3>
+<h3>Working with complex matrices<a class="headerlink" href="#working-with-complex-matrices" title="Permalink to this heading">¶</a></h3>
 <p>In the example above we have shown how to solve a linear system in the form <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code>.
 We may wonder how to manage the case when <code class="docutils literal notranslate"><span class="pre">m</span></code> or <code class="docutils literal notranslate"><span class="pre">b</span></code> are complex.
 The answer is easy, since GSL Shell always checks the type of the matrix, and the appropriate algorithm is selected.</p>
@@ -317,7 +318,7 @@ The reason is that we need to inform GSL Shell in advance if we want a complex m
 <p>In general, GSL Shell tries to ensure that all the common matrix operations transparently handle real or complex matrices.</p>
 </section>
 <section id="matrix-indexing">
-<h3>Matrix indexing<a class="headerlink" href="#matrix-indexing" title="Permalink to this headline">¶</a></h3>
+<h3>Matrix indexing<a class="headerlink" href="#matrix-indexing" title="Permalink to this heading">¶</a></h3>
 <p>When indexing the matrix, only one index is permitted, so the syntax <code class="docutils literal notranslate"><span class="pre">m[2]</span></code> is OK but <code class="docutils literal notranslate"><span class="pre">m[2,3]</span></code> will not be accepted.
 This is a limitation of GSL Shell that is related to the Lua programming language on which it is based.</p>
 <p>So when you write <code class="docutils literal notranslate"><span class="pre">m[2]</span></code> you will obtain the second row of the matrix <code class="docutils literal notranslate"><span class="pre">m</span></code> but in <em>column</em> form.
@@ -354,7 +355,7 @@ Another opportunity is to directly address matrix data by using its <code class=
 <p>You can find more details in the chapter about <a class="reference internal" href="gsl-ffi.html#gsl-ffi-interface"><span class="std std-ref">GSL FFI interface</span></a>.</p>
 </section>
 <section id="plotting-functions">
-<span id="plotting"></span><h3>Plotting functions<a class="headerlink" href="#plotting-functions" title="Permalink to this headline">¶</a></h3>
+<span id="plotting"></span><h3>Plotting functions<a class="headerlink" href="#plotting-functions" title="Permalink to this heading">¶</a></h3>
 <p>The plotting functions live in the <code class="docutils literal notranslate"><span class="pre">graph</span></code> module. The more common and useful functions are probably <a class="reference internal" href="graphics.html#graph.fxplot" title="graph.fxplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxplot()</span></code></a> and <a class="reference internal" href="graphics.html#graph.fxline" title="graph.fxline"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph.fxline()</span></code></a>.
 The first one can used to create a plot while the second one just creates a graphical object of type line.
 A graphical object is visible only when it is added into a plot.
@@ -389,7 +390,7 @@ In the following instruction, we add the second line to the plot using the <code
 <p>You can refer to the <a class="reference internal" href="graphics.html#graphics-chapter"><span class="std std-ref">Graphics chapter</span></a> for more details about the plotting functions.</p>
 </section>
 <section id="short-function-notation">
-<span id="short-func-notation"></span><h3>Short Function Notation<a class="headerlink" href="#short-function-notation" title="Permalink to this headline">¶</a></h3>
+<span id="short-func-notation"></span><h3>Short Function Notation<a class="headerlink" href="#short-function-notation" title="Permalink to this heading">¶</a></h3>
 <p>In numerical environments, one often needs simple functions that just return a value. In this case GSL Shell introduces a special notation:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">...</span><span class="o">|</span> <span class="n">expr</span>
 </pre></div>
@@ -415,8 +416,8 @@ In the following instruction, we add the second line to the plot using the <code
 </section>
 </section>
 <section id="an-example">
-<h2>An Example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h2>
-<p>To illustrate most of the key features of GSL Shell, let us write a short script to calculate the volume of an <cite>n</cite>-dimensional unit sphere and compare it with the analytical solution of <span class="math notranslate nohighlight">\(V_n=\pi^{n/2}/ \Gamma(1+n/2)\)</span>.</p>
+<h2>An Example<a class="headerlink" href="#an-example" title="Permalink to this heading">¶</a></h2>
+<p>To illustrate most of the key features of GSL Shell, let us write a short script to calculate the volume of an <cite>n</cite>-dimensional unit sphere and compare it with the analytical solution of <img class="math" src="_images/math/afa24ac1692e8a23b58426641463503b6d2bd5fa.png" alt="V_n=\pi^{n/2}/ \Gamma(1+n/2)"/>.</p>
 <p>For the integration in high dimensions, we will use the <a class="reference internal" href="vegas.html#monte-vegas"><span class="std std-ref">Monte Carlo VEGAS</span></a> implementation, that is included in GSL Shell.</p>
 <p>At the beginning of each script, you should think about which sections of GSL Shell you want to use.
 If you utilize functions from certain modules more often, you might want to call those functions directly with the help of the <a class="reference internal" href="general.html#use" title="use"><code class="xref py py-func docutils literal notranslate"><span class="pre">use()</span></code></a> directive:</p>
@@ -432,7 +433,7 @@ Since we want to calculate the volume of an <cite>n</cite>-dimensional sphere, t
 To work correctly, the VEGAS algorithm assumes that the integrand function takes a single argument that is a table with the <cite>n</cite> coordinates.
 Since the computation depends on the dimension <cite>n</cite> of the space, we need to take this into account.
 The solution is to define a function that we can call <cite>getunitsphere</cite>, that returns the integrand function for the <cite>n</cite>-dimension space.</p>
-<p>The <cite>n</cite>-dimensional integrand function itself calculates the summed square of the table values for a given size which equals <span class="math notranslate nohighlight">\(R^2=\sum_{i=1}^nx_i^2\)</span>.
+<p>The <cite>n</cite>-dimensional integrand function itself calculates the summed square of the table values for a given size which equals <img class="math" src="_images/math/bf156f7c14de65088cabbebfc23d16d35b321414.png" alt="R^2=\sum_{i=1}^nx_i^2"/>.
 So <cite>getunitsphere</cite> can be defined as follows:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="kr">function</span> <span class="nf">getunitsphere</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
    <span class="kr">return</span> <span class="kr">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -607,7 +608,7 @@ The function <cite>cont</cite> returned my <cite>vegas_integ</cite> is also anot
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -627,13 +628,13 @@ The function <cite>cont</cite> returned my <cite>vegas_integ</cite> is also anot
         <li class="right" >
           <a href="index.html" title="Welcome to GSL shell documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">GSL Shell introduction</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

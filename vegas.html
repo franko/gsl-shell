@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Monte Carlo Integration &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Monte Carlo Integration &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="sf.html" title="Special functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Monte Carlo Integration</a></li> 
       </ul>
     </div>  
@@ -47,24 +48,24 @@
           <div class="body" role="main">
             
   <section id="monte-carlo-integration">
-<span id="monte-vegas"></span><h1>Monte Carlo Integration<a class="headerlink" href="#monte-carlo-integration" title="Permalink to this headline">¶</a></h1>
+<span id="monte-vegas"></span><h1>Monte Carlo Integration<a class="headerlink" href="#monte-carlo-integration" title="Permalink to this heading">¶</a></h1>
 <p>This chapter describes the VEGAS Monte Carlo integration method.</p>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>The VEGAS algorithm of Lepage is based on importance sampling. It samples points from the probability distribution described by the function <span class="math notranslate nohighlight">\(|f|\)</span>, so that the points are concentrated in the regions that make the largest contribution to the integral.</p>
-<p>In general, if the Monte Carlo integral of <span class="math notranslate nohighlight">\(f\)</span> is sampled with points distributed according to a probability distribution described by the function <span class="math notranslate nohighlight">\(g\)</span>, we obtain an estimate <span class="math notranslate nohighlight">\(E_g(f; N)\)</span>,</p>
-<div class="math notranslate nohighlight">
-\[E_g(f; N) = E(f/g; N)\]</div>
-<p>with a corresponding variance,</p>
-<div class="math notranslate nohighlight">
-\[\textrm{Var}_g(f; N) = \textrm{Var}(f/g; N).\]</div>
-<p>If the probability distribution is chosen as <span class="math notranslate nohighlight">\(g = |f|/\int(|f|)\)</span> then it can be shown that the variance <cite>textrm{Var}_g(f; N)</cite> vanishes, and the error in the estimate will be zero. In practice it is not possible to sample from the exact distribution g for an arbitrary function, so importance sampling algorithms aim to produce efficient approximations to the desired distribution.
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<p>The VEGAS algorithm of Lepage is based on importance sampling. It samples points from the probability distribution described by the function <img class="math" src="_images/math/0daa412d6dcd76123ba2f2f4fd9815e6d3770020.png" alt="|f|"/>, so that the points are concentrated in the regions that make the largest contribution to the integral.</p>
+<p>In general, if the Monte Carlo integral of <img class="math" src="_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> is sampled with points distributed according to a probability distribution described by the function <img class="math" src="_images/math/157ba5711de84b4c715a0478fd8ae440e596d96e.png" alt="g"/>, we obtain an estimate <img class="math" src="_images/math/4fe60d6c575aaf236f280338edeace0ce512d7ee.png" alt="E_g(f; N)"/>,</p>
+<div class="math">
+<p><img src="_images/math/282610d1a9b6771bdee5d62564ab026c9d4cc99b.png" alt="E_g(f; N) = E(f/g; N)"/></p>
+</div><p>with a corresponding variance,</p>
+<div class="math">
+<p><img src="_images/math/b1f514e68dfd893f0018e8c0837cc4dff587bad6.png" alt="\textrm{Var}_g(f; N) = \textrm{Var}(f/g; N)."/></p>
+</div><p>If the probability distribution is chosen as <img class="math" src="_images/math/9fa9bc3853ba5683f949c02301fa6569bc589883.png" alt="g = |f|/\int(|f|)"/> then it can be shown that the variance <cite>textrm{Var}_g(f; N)</cite> vanishes, and the error in the estimate will be zero. In practice it is not possible to sample from the exact distribution g for an arbitrary function, so importance sampling algorithms aim to produce efficient approximations to the desired distribution.
 The VEGAS algorithm uses a fixed number of calls to evaluate the integral.
-The VEGAS algorithm approximates the exact distribution by making a number of passes over the integration region while histogramming the function <span class="math notranslate nohighlight">\(f\)</span>. Each histogram is used to define a sampling distribution for the next pass. Asymptotically this procedure converges to the desired distribution. In order to avoid the number of histogram bins growing like <span class="math notranslate nohighlight">\(K^d\)</span> the probability distribution is approximated by a separable function: <span class="math notranslate nohighlight">\(g(x_1, x_2, ...) = g_1(x_1) g_2(x_2) ...\)</span> so that the number of bins required is only <span class="math notranslate nohighlight">\(Kd\)</span>. This is equivalent to locating the peaks of the function from the projections of the integrand onto the coordinate axes. The efficiency of VEGAS depends on the validity of this assumption. It is most efficient when the peaks of the integrand are well-localized. If an integrand can be rewritten in a form which is approximately separable this will increase the efficiency of integration with VEGAS.</p>
+The VEGAS algorithm approximates the exact distribution by making a number of passes over the integration region while histogramming the function <img class="math" src="_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/>. Each histogram is used to define a sampling distribution for the next pass. Asymptotically this procedure converges to the desired distribution. In order to avoid the number of histogram bins growing like <img class="math" src="_images/math/bc56952bcc4d2eda7144b3a47096f5fefe4ba507.png" alt="K^d"/> the probability distribution is approximated by a separable function: <img class="math" src="_images/math/d5fa24c8e1af6375bc87b30b3fb4725849f650ff.png" alt="g(x_1, x_2, ...) = g_1(x_1) g_2(x_2) ..."/> so that the number of bins required is only <img class="math" src="_images/math/1ea908d557ecbfbe0450e5f799a41bbbaf1ec06a.png" alt="Kd"/>. This is equivalent to locating the peaks of the function from the projections of the integrand onto the coordinate axes. The efficiency of VEGAS depends on the validity of this assumption. It is most efficient when the peaks of the integrand are well-localized. If an integrand can be rewritten in a form which is approximately separable this will increase the efficiency of integration with VEGAS.</p>
 <p>VEGAS incorporates a number of additional features, and combines both stratified sampling and importance sampling. The integration region is divided into a number of “boxes”, with each box getting a fixed number of points (the goal is 2). Each box can then have a fractional number of bins, but if the ratio of bins-per-box is less than two, VEGAS switches to a kind variance reduction (rather than importance sampling).</p>
 </section>
 <section id="errors-and-consistency">
-<h2>Errors and consistency<a class="headerlink" href="#errors-and-consistency" title="Permalink to this headline">¶</a></h2>
+<h2>Errors and consistency<a class="headerlink" href="#errors-and-consistency" title="Permalink to this heading">¶</a></h2>
 <p>The VEGAS algorithm computes a number of independent estimates of the integral internally, and returns their weighted average. Random sampling of the integrand can occasionally produce an estimate where the error is zero, particularly if the function is constant in some regions. An estimate with zero error causes the weighted average to break down and must be handled separately. In the original FORTRAN implementations of VEGAS, the error estimate is made non-zero by substituting a small value (typically 1e-30). The implementation in GSL differs from this and avoids the use of an arbitrary constant – it either assigns the value a weight which is the average weight of the preceding estimates or discards it according to the following procedure,</p>
 <ul>
 <li><p>current estimate has zero error, weighted average has finite error</p>
@@ -84,10 +85,10 @@ The VEGAS algorithm approximates the exact distribution by making a number of pa
 </li>
 </ul>
 <p>The convergence of the algorithm can be tested using the overall chi-squared value of the results. A value which differs significantly from 1 indicates that the values from different iterations are inconsistent. In this case the weighted error will be underestimated, and further iterations of the algorithm are needed to obtain reliable results.</p>
-<p>The VEGAS algorithm uses a fixed number of calls to evaluate the integral. It is possible to call the continuation function, which is returned by <code class="xref py py-func docutils literal notranslate"><span class="pre">num.vegas_integ()</span></code>, with a higher number of calls to increase the accuracy of the result. Keep in mind that reducing <span class="math notranslate nohighlight">\(\sigma\)</span> by a certain factor typically increases the number of calls quadratically, because <span class="math notranslate nohighlight">\(\sigma \propto 1/\sqrt{n}\)</span>.</p>
+<p>The VEGAS algorithm uses a fixed number of calls to evaluate the integral. It is possible to call the continuation function, which is returned by <code class="xref py py-func docutils literal notranslate"><span class="pre">num.vegas_integ()</span></code>, with a higher number of calls to increase the accuracy of the result. Keep in mind that reducing <img class="math" src="_images/math/b52df27bfb0b1e3af0c2c68a7b9da459178c2a7d.png" alt="\sigma"/> by a certain factor typically increases the number of calls quadratically, because <img class="math" src="_images/math/b0f4a182061a8bd2d8f480299340d93e671d09cf.png" alt="\sigma \propto 1/\sqrt{n}"/>.</p>
 </section>
 <section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="vegas_integ">
 <span class="sig-name descname"><span class="pre">vegas_integ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">calls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas_integ" title="Permalink to this definition">¶</a></dt>
@@ -122,17 +123,17 @@ Grid flexibility for rebinning, typically between 1 and 2. Higher is more adapti
 
 </section>
 <section id="usage-example">
-<h2>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h2>
-<p>The subject of statistical physics features many intractable multiple integrals. One example of such an integral is the partition function of a real (interacting) gas. The partition function is an essential quantity in statistical physics, from which other quantities such as the free energy and the pressure can be derived. In the case of an ideal (non-interacting) gas, the partition function factorizes to a product of single integrals. In a real gas, the interactions introduce correlations between the particles, and the multiple integral no longer factorizes. The partition function for a system with a temperature <span class="math notranslate nohighlight">\(T\)</span>, a volume <span class="math notranslate nohighlight">\(V\)</span> and a number of particles <span class="math notranslate nohighlight">\(N\)</span> assumes the following form:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\mathcal{Z}(T,V,N) &amp;= \frac{1}{N! h^{3N}} \int dp_1 dp_2 ... dp_N \int dr_1 dr_2 ... dr_N exp(-E/kT) \\
+<h2>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this heading">¶</a></h2>
+<p>The subject of statistical physics features many intractable multiple integrals. One example of such an integral is the partition function of a real (interacting) gas. The partition function is an essential quantity in statistical physics, from which other quantities such as the free energy and the pressure can be derived. In the case of an ideal (non-interacting) gas, the partition function factorizes to a product of single integrals. In a real gas, the interactions introduce correlations between the particles, and the multiple integral no longer factorizes. The partition function for a system with a temperature <img class="math" src="_images/math/e8dea8254118f111b5fb20895b03528c17566f06.png" alt="T"/>, a volume <img class="math" src="_images/math/e4762cec46619bf7781cae62216214f909395368.png" alt="V"/> and a number of particles <img class="math" src="_images/math/3bfb3a64189a14b2704f4610827762d5e3145114.png" alt="N"/> assumes the following form:</p>
+<div class="math">
+<p><img src="_images/math/45661649f1595c8739effdf6850fad24d202963b.png" alt="\mathcal{Z}(T,V,N) &amp;= \frac{1}{N! h^{3N}} \int dp_1 dp_2 ... dp_N \int dr_1 dr_2 ... dr_N exp(-E/kT) \\
                    &amp;= \frac{1}{N! h^{3N}} \int \exp( -\frac{1}{kT} \frac{1}{2m} (p_1^2 + p_2^2 + ... + p_N^2)) dp_1 dp_2 ... dp_N \\
-                   &amp;\times \int \exp( -\frac{1}{kT} \frac{1}{2}\sum_{i,j}^{N} U(r_i,r_j)) dr_1 dr_2 ... dr_N.\end{split}\]</div>
-<p>The integral over the momenta <span class="math notranslate nohighlight">\(p_i\)</span> factorizes, but the presence of the potential <span class="math notranslate nohighlight">\(U(r_i,r_j)\)</span> prevents the integral over the coordinates to be written as a product of single integrals. This integral is called the configurational partition function:</p>
-<div class="math notranslate nohighlight">
-\[Q(T,V,N) = \frac{1}{V^N} \int \exp( -\frac{1}{kT} \sum_{i&gt;j}^{N} U(r_i,r_j)) dr_1 dr_2 ... dr_N\]</div>
-<p>so that <span class="math notranslate nohighlight">\(\mathcal{Z}(T,V,N) = \mathcal{Z}_{\textrm{ideal}}(T,V,N) \times Q(T,V,N)\)</span>.</p>
-<p>Using the VEGAS algorithm, we can perform a naive calculation of <span class="math notranslate nohighlight">\(Q(T,V,N)\)</span> for a one-dimensional box containing 5 particles with a Gaussian repulsive interaction:</p>
+                   &amp;\times \int \exp( -\frac{1}{kT} \frac{1}{2}\sum_{i,j}^{N} U(r_i,r_j)) dr_1 dr_2 ... dr_N."/></p>
+</div><p>The integral over the momenta <img class="math" src="_images/math/5247131b3b1b9cc457d29a9b08a19c2062ed3d16.png" alt="p_i"/> factorizes, but the presence of the potential <img class="math" src="_images/math/05b5f56eedfc56a2539c4708d9b64d75ebd2607c.png" alt="U(r_i,r_j)"/> prevents the integral over the coordinates to be written as a product of single integrals. This integral is called the configurational partition function:</p>
+<div class="math">
+<p><img src="_images/math/8cab97baf548c8582e34b3d7190a7ef5f03a52ad.png" alt="Q(T,V,N) = \frac{1}{V^N} \int \exp( -\frac{1}{kT} \sum_{i&gt;j}^{N} U(r_i,r_j)) dr_1 dr_2 ... dr_N"/></p>
+</div><p>so that <img class="math" src="_images/math/a5f00687572dae6e37c4a772fe2387df6efc1279.png" alt="\mathcal{Z}(T,V,N) = \mathcal{Z}_{\textrm{ideal}}(T,V,N) \times Q(T,V,N)"/>.</p>
+<p>Using the VEGAS algorithm, we can perform a naive calculation of <img class="math" src="_images/math/029e099e40d84c2f3010b63fd94add208bbe93c8.png" alt="Q(T,V,N)"/> for a one-dimensional box containing 5 particles with a Gaussian repulsive interaction:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="n">exp</span> <span class="o">=</span> <span class="nb">math.exp</span>
 <span class="kd">local</span> <span class="n">T</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">N</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">5</span>
 
@@ -178,7 +179,11 @@ Grid flexibility for rebinning, typically between 1 and 2. Higher is more adapti
 <li><a class="reference internal" href="#">Monte Carlo Integration</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#errors-and-consistency">Errors and consistency</a></li>
-<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#functions">Functions</a><ul>
+<li><a class="reference internal" href="#vegas_integ"><code class="docutils literal notranslate"><span class="pre">vegas_integ()</span></code></a></li>
+<li><a class="reference internal" href="#num.vegas_prepare"><code class="docutils literal notranslate"><span class="pre">vegas_prepare()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#usage-example">Usage example</a></li>
 </ul>
 </li>
@@ -211,7 +216,7 @@ Grid flexibility for rebinning, typically between 1 and 2. Higher is more adapti
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -231,13 +236,13 @@ Grid flexibility for rebinning, typically between 1 and 2. Higher is more adapti
         <li class="right" >
           <a href="sf.html" title="Special functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Monte Carlo Integration</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

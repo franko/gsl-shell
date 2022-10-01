@@ -1,19 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Welcome to GSL shell documentation &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Welcome to GSL shell documentation &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -31,7 +33,7 @@
         <li class="right" >
           <a href="intro.html" title="GSL Shell introduction"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to GSL shell documentation</a></li> 
       </ul>
     </div>  
@@ -42,7 +44,7 @@
           <div class="body" role="main">
             
   <section id="welcome-to-gsl-shell-documentation">
-<h1>Welcome to GSL shell documentation<a class="headerlink" href="#welcome-to-gsl-shell-documentation" title="Permalink to this headline">¶</a></h1>
+<h1>Welcome to GSL shell documentation<a class="headerlink" href="#welcome-to-gsl-shell-documentation" title="Permalink to this heading">¶</a></h1>
 <p>GSL shell is an interactive command line interface that provides easy access
 to the GNU Scientific Library (GSL) collection of mathematical methods for
 numerical computations.</p>
@@ -53,6 +55,7 @@ scripting interpreter.</p>
 advanced functionalities like closures and metamethods. Lua is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL library more effectively.</p>
+<p><a class="reference external" href="https://github.com/franko/gsl-shell/">GSL Shell github project</a>.</p>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -63,6 +66,12 @@ to use the GSL library more effectively.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="general.html">General Purpose Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="general.html#overview">Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">Projects Utility Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project.html#project.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#project.chdir"><code class="docutils literal notranslate"><span class="pre">chdir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="project.html#project.getcwd"><code class="docutils literal notranslate"><span class="pre">getcwd()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="complex.html">Complex Numbers</a><ul>
@@ -87,6 +96,11 @@ to use the GSL library more effectively.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lua-base.html">Iterators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lua-base.html#iter.sequence"><code class="docutils literal notranslate"><span class="pre">sequence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="lua-base.html#iter.sample"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="lua-base.html#iter.isample"><code class="docutils literal notranslate"><span class="pre">isample()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="lua-base.html#iter.ilist"><code class="docutils literal notranslate"><span class="pre">ilist()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="lua-base.html#iter.isum"><code class="docutils literal notranslate"><span class="pre">isum()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="lua-base.html#more-complex-iterators">More complex iterators</a></li>
 </ul>
 </li>
@@ -110,7 +124,24 @@ to use the GSL library more effectively.</p>
 <li class="toctree-l2"><a class="reference internal" href="random.html#random-number-generator-algorithms">Random Number Generator Algorithms</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="randist.html">Random Number Distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="randist.html">Random Number Distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.gaussian"><code class="docutils literal notranslate"><span class="pre">gaussian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.exponential"><code class="docutils literal notranslate"><span class="pre">exponential()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.chisq"><code class="docutils literal notranslate"><span class="pre">chisq()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.laplace"><code class="docutils literal notranslate"><span class="pre">laplace()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.tdist"><code class="docutils literal notranslate"><span class="pre">tdist()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.cauchy"><code class="docutils literal notranslate"><span class="pre">cauchy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.rayleigh"><code class="docutils literal notranslate"><span class="pre">rayleigh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.fdist"><code class="docutils literal notranslate"><span class="pre">fdist()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.gamma"><code class="docutils literal notranslate"><span class="pre">gamma()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.beta"><code class="docutils literal notranslate"><span class="pre">beta()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.gaussian_tail"><code class="docutils literal notranslate"><span class="pre">gaussian_tail()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.exppow"><code class="docutils literal notranslate"><span class="pre">exppow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.lognormal"><code class="docutils literal notranslate"><span class="pre">lognormal()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.binomial"><code class="docutils literal notranslate"><span class="pre">binomial()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="randist.html#rnd.poisson"><code class="docutils literal notranslate"><span class="pre">poisson()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="pdf.html">Probability Distribution Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pdf.html#naming-conventions">Naming Conventions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pdf.html#functions-index">Functions Index</a></li>
@@ -146,6 +177,7 @@ to use the GSL library more effectively.</p>
 <li class="toctree-l2"><a class="reference internal" href="ode.html#creating-a-ode-system-solver">Creating a ODE system solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ode.html#ode-solver-usage-example">ODE solver usage example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ode.html#a-slightly-improved-example">A Slightly Improved Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ode.html#ode-value-logger">ODE value logger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ode.html#ode-solver-class-definition">ODE Solver Class Definition</a></li>
 </ul>
 </li>
@@ -188,7 +220,21 @@ to use the GSL library more effectively.</p>
 <li class="toctree-l2"><a class="reference internal" href="contour.html#overview">Overview</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="csv.html">Comma Separated Values Parsing Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csv.html">Comma Separated Values Parsing Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="csv.html#csv.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="csv.html#csv.line"><code class="docutils literal notranslate"><span class="pre">line()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="record.html">Records</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="record.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="record.html#record-class">Record class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interp2d.html">2D Interpolation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interp2d.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interp2d.html#d-interpolation-class">2D Interpolation class</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">GSL Shell Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#home-made-bessel-functions">Home-made Bessel Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#the-von-koch-curve">The Von-Koch curve</a></li>
@@ -234,7 +280,7 @@ to use the GSL library more effectively.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -251,13 +297,13 @@ to use the GSL library more effectively.</p>
         <li class="right" >
           <a href="intro.html" title="GSL Shell introduction"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to GSL shell documentation</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

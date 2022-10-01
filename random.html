@@ -1,19 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Random Numbers &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Random Numbers &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +37,7 @@
         <li class="right" >
           <a href="eigen.html" title="Eigensystems"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Random Numbers</a></li> 
       </ul>
     </div>  
@@ -46,7 +48,7 @@
           <div class="body" role="main">
             
   <section id="random-numbers">
-<h1>Random Numbers<a class="headerlink" href="#random-numbers" title="Permalink to this headline">¶</a></h1>
+<h1>Random Numbers<a class="headerlink" href="#random-numbers" title="Permalink to this heading">¶</a></h1>
 <p>This chapter describes routines for generating random numbers. GSL
 provides a large collection of random number generators that can be
 accessed through a uniform interface. You can choose very easily the
@@ -59,7 +61,7 @@ uniform random numbers into samples from continuous or discrete
 probability distributions such as the Gaussian, log-normal or Poisson
 distributions.</p>
 <section id="general-comments-on-random-numbers">
-<h2>General comments on random numbers<a class="headerlink" href="#general-comments-on-random-numbers" title="Permalink to this headline">¶</a></h2>
+<h2>General comments on random numbers<a class="headerlink" href="#general-comments-on-random-numbers" title="Permalink to this heading">¶</a></h2>
 <p>In 1988, Park and Miller wrote a paper entitled “Random number
 generators: good ones are hard to find.” <a class="reference internal" href="#park-miller" id="id1"><span>[park-miller]</span></a>.
 Fortunately, some excellent random number generators are available,
@@ -88,7 +90,7 @@ provides an exact answer.  Comparison to this exact answer provides a
 measure of “randomness”.</p>
 </section>
 <section id="the-random-number-generator-interface">
-<h2>The Random Number Generator Interface<a class="headerlink" href="#the-random-number-generator-interface" title="Permalink to this headline">¶</a></h2>
+<h2>The Random Number Generator Interface<a class="headerlink" href="#the-random-number-generator-interface" title="Permalink to this heading">¶</a></h2>
 <p>In order to generate random numbers you need a “Random Number
 Generator” or <code class="docutils literal notranslate"><span class="pre">rng</span></code> for short. A random number generator is an
 object that can be used to generate number whenever is needed. Of
@@ -148,7 +150,7 @@ integers in the range [0,n-1] are produced with equal probability.</p>
 
 </section>
 <section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
 <p>So here a simple example that prints 20 integer numbers between 0 and 999:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">rng</span><span class="p">.</span><span class="n">new</span><span class="p">()</span> <span class="c1">-- we create a random number generator</span>
 <span class="kr">for</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="mi">20</span> <span class="kr">do</span>
@@ -164,7 +166,7 @@ integers in the range [0,n-1] are produced with equal probability.</p>
 </div>
 </section>
 <section id="random-number-generator-algorithms">
-<span id="rng-algorithms"></span><h2>Random Number Generator Algorithms<a class="headerlink" href="#random-number-generator-algorithms" title="Permalink to this headline">¶</a></h2>
+<span id="rng-algorithms"></span><h2>Random Number Generator Algorithms<a class="headerlink" href="#random-number-generator-algorithms" title="Permalink to this heading">¶</a></h2>
 <p>The following generators are recommended for use in simulation.  They
 have extremely long periods, low correlation and pass most statistical
 tests.  For the most reliable source of uncorrelated numbers, the
@@ -333,11 +335,12 @@ Jul/Aug 1998, pp 385-392.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="citation">
-<dt class="label" id="park-miller"><span class="brackets"><a class="fn-backref" href="#id1">park-miller</a></span></dt>
-<dd><p>Commun. ACM, 31, 1192-1201</p>
-</dd>
-</dl>
+<div role="list" class="citation-list">
+<div class="citation" id="park-miller" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">park-miller</a><span class="fn-bracket">]</span></span>
+<p>Commun. ACM, 31, 1192-1201</p>
+</div>
+</div>
 </section>
 </section>
 
@@ -353,7 +356,17 @@ Jul/Aug 1998, pp 385-392.</p></li>
     <ul>
 <li><a class="reference internal" href="#">Random Numbers</a><ul>
 <li><a class="reference internal" href="#general-comments-on-random-numbers">General comments on random numbers</a></li>
-<li><a class="reference internal" href="#the-random-number-generator-interface">The Random Number Generator Interface</a></li>
+<li><a class="reference internal" href="#the-random-number-generator-interface">The Random Number Generator Interface</a><ul>
+<li><a class="reference internal" href="#rng.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+<li><a class="reference internal" href="#rng.Rng"><code class="docutils literal notranslate"><span class="pre">Rng</span></code></a><ul>
+<li><a class="reference internal" href="#rng.Rng.get"><code class="docutils literal notranslate"><span class="pre">Rng.get()</span></code></a></li>
+<li><a class="reference internal" href="#rng.Rng.getint"><code class="docutils literal notranslate"><span class="pre">Rng.getint()</span></code></a></li>
+<li><a class="reference internal" href="#rng.Rng.set"><code class="docutils literal notranslate"><span class="pre">Rng.set()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rng.list"><code class="docutils literal notranslate"><span class="pre">list()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#random-number-generator-algorithms">Random Number Generator Algorithms</a></li>
 </ul>
@@ -387,7 +400,7 @@ Jul/Aug 1998, pp 385-392.</p></li>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -407,13 +420,13 @@ Jul/Aug 1998, pp 385-392.</p></li>
         <li class="right" >
           <a href="eigen.html" title="Eigensystems"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Random Numbers</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Graphics &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Graphics &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="vegas.html" title="Monte Carlo Integration"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Graphics</a></li> 
       </ul>
     </div>  
@@ -47,20 +48,20 @@
           <div class="body" role="main">
             
   <section id="graphics">
-<span id="graphics-chapter"></span><h1>Graphics<a class="headerlink" href="#graphics" title="Permalink to this headline">¶</a></h1>
+<span id="graphics-chapter"></span><h1>Graphics<a class="headerlink" href="#graphics" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>When you are working with a lot of numbers and complicated functions, it is often useful to visualize the data.
 GSL Shell offers a graphics module that allows you to produce beautiful graphics with a very rich interface and almost unlimited possibilities.</p>
 <p>The graphics module in GSL Shell is implemented using the excellent <a class="reference external" href="http://www.antigrain.com/">Anti-Grain Geometry</a> library, version 2.5, of Maxim Shemanarev.</p>
 <p>GSL Shell offers a graphics interface with few but powerful functions that, if used appropriately, allow the user to produce a wide range of plot types.</p>
 </section>
 <section id="module-graph">
-<span id="a-first-example"></span><h2>A First Example<a class="headerlink" href="#module-graph" title="Permalink to this headline">¶</a></h2>
+<span id="a-first-example"></span><h2>A First Example<a class="headerlink" href="#module-graph" title="Permalink to this heading">¶</a></h2>
 <p>Let’s start with a simple example. Suppose that we want to plot the function:</p>
-<div class="math notranslate nohighlight">
-\[f(x) = \exp(-\alpha \, t) \, \sin(\omega \, t)\]</div>
-<p>where α and ω are constants and t varies from 0 to t1.</p>
+<div class="math">
+<p><img src="_images/math/164cf6a7166963a2b3d64d7689be31587a4449e5.png" alt="f(x) = \exp(-\alpha \, t) \, \sin(\omega \, t)"/></p>
+</div><p>where α and ω are constants and t varies from 0 to t1.</p>
 <p>Before starting we need to note a couple of things.</p>
 <p>The mathematical functions like exp, sin, cos are contained in the ‘math’ module.
 You can use <code class="docutils literal notranslate"><span class="pre">use</span> <span class="pre">'math'</span></code> to make them directly available.
@@ -107,7 +108,7 @@ arguments are the limits of the range of the independent variable x.</p>
 </div>
 </section>
 <section id="graphics-functions">
-<h2>Graphics Functions<a class="headerlink" href="#graphics-functions" title="Permalink to this headline">¶</a></h2>
+<h2>Graphics Functions<a class="headerlink" href="#graphics-functions" title="Permalink to this heading">¶</a></h2>
 <p>For many types of plots, you don’t need to use the graphics primitives, as GSL Shell provides higher level plotting functions.
 In this section, we give an overview and a description of all the higher level plotting functions.</p>
 <dl class="py function">
@@ -331,7 +332,7 @@ A limited number of colors is available and they are repeated cyclically.</p>
 
 </section>
 <section id="multiple-plot-window">
-<h2>Multiple plot window<a class="headerlink" href="#multiple-plot-window" title="Permalink to this headline">¶</a></h2>
+<h2>Multiple plot window<a class="headerlink" href="#multiple-plot-window" title="Permalink to this heading">¶</a></h2>
 <p>With GSL Shell, it is possible to tile several plots in a given window, and also to display a given plot on several windows. To better understand what follows, we will first clarify the relations between plots and windows.</p>
 <p>In GSL Shell, a plot can exist independently of any window and vice versa, a window can exists without being associated to any plot. When you create a plot using the “plot” function, the plot is not shown and it is not associated to any window. When you call the method <a class="reference internal" href="#graph.Plot.show" title="graph.Plot.show"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show()</span></code></a> what happens is that:</p>
 <blockquote>
@@ -371,7 +372,7 @@ A limited number of colors is available and they are repeated cyclically.</p>
 </figure>
 </section>
 <section id="window-class">
-<h2>Window class<a class="headerlink" href="#window-class" title="Permalink to this headline">¶</a></h2>
+<h2>Window class<a class="headerlink" href="#window-class" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graph.Window">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">Window</span></span><a class="headerlink" href="#graph.Window" title="Permalink to this definition">¶</a></dt>
@@ -420,7 +421,7 @@ If the “svg” extension is not given it will be automatically added.</p>
 </dd></dl>
 
 <section id="layout-string">
-<span id="id1"></span><h3>Layout string<a class="headerlink" href="#layout-string" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3>Layout string<a class="headerlink" href="#layout-string" title="Permalink to this heading">¶</a></h3>
 <p>The layout string is a string that is used to specify the layout of the drawing area in a window. This string is used by the <a class="reference internal" href="#graph.Window.layout" title="graph.Window.layout"><code class="xref py py-meth docutils literal notranslate"><span class="pre">layout()</span></code></a> method or, during the creation of the window, by the function <code class="xref py py-func docutils literal notranslate"><span class="pre">window()</span></code> itself.</p>
 <p>A valid string layout is defined recursively and it is either:</p>
 <ul class="simple">
@@ -449,7 +450,7 @@ If the “svg” extension is not given it will be automatically added.</p>
 </section>
 </section>
 <section id="graphics-primitives">
-<h2>Graphics primitives<a class="headerlink" href="#graphics-primitives" title="Permalink to this headline">¶</a></h2>
+<h2>Graphics primitives<a class="headerlink" href="#graphics-primitives" title="Permalink to this heading">¶</a></h2>
 <dl class="simple">
 <dt>In order to better understand the way GSL Shell graphics work, it is better to take a step back. Let use suppose that we want to plot an equilateral triangle. We can proceed as follows:</dt><dd><ul class="simple">
 <li><p>define a ‘path’ that describe the contour that we want to plot</p></li>
@@ -504,7 +505,7 @@ If the “svg” extension is not given it will be automatically added.</p>
 <p>Some transformations are naturally expressed as post-transforms because they operate naturally in terms of pixels, while others are usually expressed as pre-transforms because they operates in the user coordinates space.</p>
 </section>
 <section id="plot">
-<h2>Plot<a class="headerlink" href="#plot" title="Permalink to this headline">¶</a></h2>
+<h2>Plot<a class="headerlink" href="#plot" title="Permalink to this heading">¶</a></h2>
 <p>We have seen in the previous paragraph that you can add more graphical elements in a plot by using the methods <a class="reference internal" href="#graph.Plot.add" title="graph.Plot.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> and <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a>. The method <a class="reference internal" href="#graph.Plot.addline" title="graph.Plot.addline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addline()</span></code></a> is just a shortcut to add elements with a ‘stroke’ post transform of unitary width.</p>
 <p>You can add elements to a plot at any time, even when it is already shown. GSL Shell will automatically calculate the bounding box so that every element is shown on the window.</p>
 <dl class="py function">
@@ -752,7 +753,7 @@ The default value is <code class="docutils literal notranslate"><span class="pre
 </dd></dl>
 
 <section id="graphical-layers">
-<span id="graphical-layer"></span><h3>Graphical Layers<a class="headerlink" href="#graphical-layers" title="Permalink to this headline">¶</a></h3>
+<span id="graphical-layer"></span><h3>Graphical Layers<a class="headerlink" href="#graphical-layers" title="Permalink to this heading">¶</a></h3>
 <p>When you want to perform animations with plots you can take advantage of the <a class="reference internal" href="#graphical-layer"><span class="std std-ref">graphical layers</span></a>. These enable you to clear and redraw only some graphical elements while keeping other elements always present in the background. The idea is that if you want to make an animation, you will probably repeatedly clear and redraw some graphical elements, but you may want to keep some of them fixed in the background. In order to obtain that you can</p>
 <blockquote>
 <div><ul class="simple">
@@ -788,7 +789,7 @@ The default value is <code class="docutils literal notranslate"><span class="pre
 </section>
 </section>
 <section id="graphical-objects">
-<span id="graphics-objects"></span><h2>Graphical Objects<a class="headerlink" href="#graphical-objects" title="Permalink to this headline">¶</a></h2>
+<span id="graphics-objects"></span><h2>Graphical Objects<a class="headerlink" href="#graphical-objects" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="graph.path">
 <span class="sig-prename descclassname"><span class="pre">graph.</span></span><span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#graph.path" title="Permalink to this definition">¶</a></dt>
@@ -910,7 +911,7 @@ The accepted symbol strings are the same of those accepted by the ‘marker’ g
 
 </section>
 <section id="graphical-transformations">
-<span id="graphics-transforms"></span><h2>Graphical transformations<a class="headerlink" href="#graphical-transformations" title="Permalink to this headline">¶</a></h2>
+<span id="graphics-transforms"></span><h2>Graphical transformations<a class="headerlink" href="#graphical-transformations" title="Permalink to this heading">¶</a></h2>
 <p>A generic graphical transformation is expressed in the form of a table with the following layout:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">,</span>
  <span class="n">property1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">,</span>
@@ -989,18 +990,92 @@ An expansion if positive, otherwise a shrink.</p></li>
 <li><a class="reference internal" href="#">Graphics</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#module-graph">A First Example</a></li>
-<li><a class="reference internal" href="#graphics-functions">Graphics Functions</a></li>
+<li><a class="reference internal" href="#graphics-functions">Graphics Functions</a><ul>
+<li><a class="reference internal" href="#graph.fxplot"><code class="docutils literal notranslate"><span class="pre">fxplot()</span></code></a></li>
+<li><a class="reference internal" href="#graph.fiplot"><code class="docutils literal notranslate"><span class="pre">fiplot()</span></code></a></li>
+<li><a class="reference internal" href="#graph.fibars"><code class="docutils literal notranslate"><span class="pre">fibars()</span></code></a></li>
+<li><a class="reference internal" href="#graph.fxline"><code class="docutils literal notranslate"><span class="pre">fxline()</span></code></a></li>
+<li><a class="reference internal" href="#graph.filine"><code class="docutils literal notranslate"><span class="pre">filine()</span></code></a></li>
+<li><a class="reference internal" href="#graph.xyline"><code class="docutils literal notranslate"><span class="pre">xyline()</span></code></a></li>
+<li><a class="reference internal" href="#graph.ipath"><code class="docutils literal notranslate"><span class="pre">ipath()</span></code></a></li>
+<li><a class="reference internal" href="#graph.ipathp"><code class="docutils literal notranslate"><span class="pre">ipathp()</span></code></a></li>
+<li><a class="reference internal" href="#graph.ibars"><code class="docutils literal notranslate"><span class="pre">ibars()</span></code></a></li>
+<li><a class="reference internal" href="#graph.rgb"><code class="docutils literal notranslate"><span class="pre">rgb()</span></code></a></li>
+<li><a class="reference internal" href="#graph.rgba"><code class="docutils literal notranslate"><span class="pre">rgba()</span></code></a></li>
+<li><a class="reference internal" href="#graph.rainbow"><code class="docutils literal notranslate"><span class="pre">rainbow()</span></code></a></li>
+<li><a class="reference internal" href="#graph.webcolor"><code class="docutils literal notranslate"><span class="pre">webcolor()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#multiple-plot-window">Multiple plot window</a></li>
 <li><a class="reference internal" href="#window-class">Window class</a><ul>
+<li><a class="reference internal" href="#graph.Window"><code class="docutils literal notranslate"><span class="pre">Window</span></code></a><ul>
+<li><a class="reference internal" href="#graph.Window.window"><code class="docutils literal notranslate"><span class="pre">Window.window()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Window.layout"><code class="docutils literal notranslate"><span class="pre">Window.layout()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Window.attach"><code class="docutils literal notranslate"><span class="pre">Window.attach()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Window.save_svg"><code class="docutils literal notranslate"><span class="pre">Window.save_svg()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#layout-string">Layout string</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#graphics-primitives">Graphics primitives</a></li>
 <li><a class="reference internal" href="#plot">Plot</a><ul>
+<li><a class="reference internal" href="#graph.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li><a class="reference internal" href="#graph.canvas"><code class="docutils literal notranslate"><span class="pre">canvas()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot"><code class="docutils literal notranslate"><span class="pre">Plot</span></code></a><ul>
+<li><a class="reference internal" href="#graph.Plot.add"><code class="docutils literal notranslate"><span class="pre">Plot.add()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.addline"><code class="docutils literal notranslate"><span class="pre">Plot.addline()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.limits"><code class="docutils literal notranslate"><span class="pre">Plot.limits()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.show"><code class="docutils literal notranslate"><span class="pre">Plot.show()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.clear"><code class="docutils literal notranslate"><span class="pre">Plot.clear()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.flush"><code class="docutils literal notranslate"><span class="pre">Plot.flush()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.pushlayer"><code class="docutils literal notranslate"><span class="pre">Plot.pushlayer()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.poplayer"><code class="docutils literal notranslate"><span class="pre">Plot.poplayer()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.save"><code class="docutils literal notranslate"><span class="pre">Plot.save()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.save_svg"><code class="docutils literal notranslate"><span class="pre">Plot.save_svg()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.set_legend"><code class="docutils literal notranslate"><span class="pre">Plot.set_legend()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.get_legend"><code class="docutils literal notranslate"><span class="pre">Plot.get_legend()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.legend"><code class="docutils literal notranslate"><span class="pre">Plot.legend()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.set_categories"><code class="docutils literal notranslate"><span class="pre">Plot.set_categories()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.title"><code class="docutils literal notranslate"><span class="pre">Plot.title</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.xtitle"><code class="docutils literal notranslate"><span class="pre">Plot.xtitle</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.ytitle"><code class="docutils literal notranslate"><span class="pre">Plot.ytitle</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.xlab_angle"><code class="docutils literal notranslate"><span class="pre">Plot.xlab_angle</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.ylab_angle"><code class="docutils literal notranslate"><span class="pre">Plot.ylab_angle</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.xlab_format"><code class="docutils literal notranslate"><span class="pre">Plot.xlab_format</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.ylab_format"><code class="docutils literal notranslate"><span class="pre">Plot.ylab_format</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.units"><code class="docutils literal notranslate"><span class="pre">Plot.units</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.sync"><code class="docutils literal notranslate"><span class="pre">Plot.sync</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.pad"><code class="docutils literal notranslate"><span class="pre">Plot.pad</span></code></a></li>
+<li><a class="reference internal" href="#graph.Plot.clip"><code class="docutils literal notranslate"><span class="pre">Plot.clip</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#graphical-layers">Graphical Layers</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#graphical-objects">Graphical Objects</a></li>
+<li><a class="reference internal" href="#graphical-objects">Graphical Objects</a><ul>
+<li><a class="reference internal" href="#graph.path"><code class="docutils literal notranslate"><span class="pre">path()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path"><code class="docutils literal notranslate"><span class="pre">Path</span></code></a><ul>
+<li><a class="reference internal" href="#graph.Path.move_to"><code class="docutils literal notranslate"><span class="pre">Path.move_to()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path.line_to"><code class="docutils literal notranslate"><span class="pre">Path.line_to()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path.close"><code class="docutils literal notranslate"><span class="pre">Path.close()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path.arc_to"><code class="docutils literal notranslate"><span class="pre">Path.arc_to()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path.curve3"><code class="docutils literal notranslate"><span class="pre">Path.curve3()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Path.curve4"><code class="docutils literal notranslate"><span class="pre">Path.curve4()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph.text"><code class="docutils literal notranslate"><span class="pre">text()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Text"><code class="docutils literal notranslate"><span class="pre">Text</span></code></a><ul>
+<li><a class="reference internal" href="#graph.Text.angle"><code class="docutils literal notranslate"><span class="pre">Text.angle</span></code></a></li>
+<li><a class="reference internal" href="#graph.Text.justif"><code class="docutils literal notranslate"><span class="pre">Text.justif()</span></code></a></li>
+<li><a class="reference internal" href="#graph.Text.set"><code class="docutils literal notranslate"><span class="pre">Text.set()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph.textshape"><code class="docutils literal notranslate"><span class="pre">textshape()</span></code></a></li>
+<li><a class="reference internal" href="#graph.TextShape"><code class="docutils literal notranslate"><span class="pre">TextShape</span></code></a></li>
+<li><a class="reference internal" href="#graph.marker"><code class="docutils literal notranslate"><span class="pre">marker()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#graphical-transformations">Graphical transformations</a></li>
 </ul>
 </li>
@@ -1033,7 +1108,7 @@ An expansion if positive, otherwise a shrink.</p></li>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1053,13 +1128,13 @@ An expansion if positive, otherwise a shrink.</p></li>
         <li class="right" >
           <a href="vegas.html" title="Monte Carlo Integration"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Graphics</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

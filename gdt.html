@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>General Data Tables &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>General Data Tables &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="matrices.html" title="Matrices"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
       </ul>
     </div>  
@@ -47,9 +48,9 @@
           <div class="body" role="main">
             
   <section id="general-data-tables">
-<h1>General Data Tables<a class="headerlink" href="#general-data-tables" title="Permalink to this headline">¶</a></h1>
+<h1>General Data Tables<a class="headerlink" href="#general-data-tables" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>General Data Tables, GDT in short, are used in GSL Shell to store data in tabular format.
 They are somewhat similar to matrices but have some notable differences.</p>
 <p>While in matrices columns are always unnamed in GDT tables they have names so that you can refer to a specific column by name.
@@ -96,11 +97,11 @@ They can be grouped into families:</p>
 <p>The the chapter <a class="reference internal" href="#gdt-plot"><span class="std std-ref">GDT plots</span></a> you will find an introductions to plotting functions.
 In the chapter about <a class="reference internal" href="#gdt-lm"><span class="std std-ref">Linear Models</span></a> the function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> in described in details.
 The function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> is very function to analyze data in term of a linear model.
-You can think it as a generalization of the familiar linear regression of the form <span class="math notranslate nohighlight">\(y = a \, x + b\)</span>.</p>
+You can think it as a generalization of the familiar linear regression of the form <img class="math" src="_images/math/1fff9022c73132199d8952905c11df7ba3330710.png" alt="y = a \, x + b"/>.</p>
 <p>The function <a class="reference internal" href="#gdt.filter" title="gdt.filter"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.filter()</span></code></a> and <a class="reference internal" href="#gdt.reduce" title="gdt.reduce"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.reduce()</span></code></a> are also very useful to manipulate tables in a similar way to what you can do with spreadsheet applications.</p>
 </section>
 <section id="module-gdt">
-<span id="gdt-functions"></span><h2>GDT Functions<a class="headerlink" href="#module-gdt" title="Permalink to this headline">¶</a></h2>
+<span id="gdt-functions"></span><h2>GDT Functions<a class="headerlink" href="#module-gdt" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="gdt.new">
 <span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.new" title="Permalink to this definition">¶</a></dt>
@@ -129,7 +130,7 @@ In the second form <code class="docutils literal notranslate"><span class="pre">
 The function <code class="docutils literal notranslate"><span class="pre">f_init</span></code> should return, for each value of “i”, a table in the form <code class="docutils literal notranslate"><span class="pre">{field1=</span> <span class="pre">&lt;expr&gt;,</span> <span class="pre">field2=</span> <span class="pre">&lt;expr&gt;,</span> <span class="pre">...}</span></code>.
 The GDT table will be created filling each rows with the provided expressions.
 For each named field a column will be created in the table.</p>
-<p>For example let us create a table that computes the value of <span class="math notranslate nohighlight">\(\sin(x)\)</span> and <span class="math notranslate nohighlight">\(\cos(x)\)</span> for x going from 0 to <span class="math notranslate nohighlight">\(2 \pi\)</span>.
+<p>For example let us create a table that computes the value of <img class="math" src="_images/math/9314ca660b611052b4a9ed9ae795f327954121f9.png" alt="\sin(x)"/> and <img class="math" src="_images/math/87518ff41df619a10168f78a3c254f5276549490.png" alt="\cos(x)"/> for x going from 0 to <img class="math" src="_images/math/bf4d6dded1f2769dd9942a7e0071045945dbeb9a.png" alt="2 \pi"/>.
 This can done with <a class="reference internal" href="#gdt.create" title="gdt.create"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.create()</span></code></a> like in the following example:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">use</span> <span class="s1">&#39;math&#39;</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">16</span> <span class="c1">-- # of sampling points</span>
@@ -242,6 +243,37 @@ The function will determine automatically is the first line should be considered
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gdt.read_string">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">read_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.read_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a table by parsing the text as a multi-lines list of values separated by spaces
+or tabs. Values can be either string or numeric values. In case
+of strings they can be either unquoted or quoted using the <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> symbol.
+If the first non empty line consists entirely of string it is interpreted as headers.</p>
+<p>Below an example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">gdt</span><span class="o">.</span><span class="n">read_string</span> <span class="p">[[</span>
+<span class="go">           sin        x          cos</span>
+<span class="go">           0        0            1</span>
+<span class="go">    0.382683 0.392699      0.92388</span>
+<span class="go">    0.707107 0.785398     0.707107</span>
+<span class="go">     0.92388   1.1781     0.382683</span>
+<span class="go">           1   1.5708  6.12303e-17</span>
+<span class="go">     0.92388   1.9635    -0.382683</span>
+<span class="go">    0.707107  2.35619    -0.707107</span>
+<span class="go">    0.382683  2.74889     -0.92388</span>
+<span class="go"> 1.22461e-16  3.14159           -1</span>
+<span class="go">   -0.382683  3.53429     -0.92388</span>
+<span class="go">   -0.707107  3.92699    -0.707107</span>
+<span class="go">    -0.92388  4.31969    -0.382683</span>
+<span class="go">          -1  4.71239 -1.83691e-16</span>
+<span class="go">    -0.92388  5.10509     0.382683</span>
+<span class="go">   -0.707107  5.49779     0.707107</span>
+<span class="go">   -0.382683  5.89049      0.92388</span>
+<span class="go">]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gdt.write_csv">
 <span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">write_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.write_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a CSV file with the given <code class="docutils literal notranslate"><span class="pre">filename</span></code> with the content of the table <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
@@ -252,7 +284,7 @@ The function will determine automatically is the first line should be considered
 <span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.interp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a function that perform an interpolation based of the data in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> and the <code class="docutils literal notranslate"><span class="pre">description</span></code> string.
 The description should be of the form <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">~</span> <span class="pre">x&quot;</span></code> where “y” and “x” are variables defined in the table.</p>
-<p>Given the set of data points <span class="math notranslate nohighlight">\((x_1, y_1) \dots (x_n, y_n)\)</span> the routines described in this section compute a continuous interpolating function <span class="math notranslate nohighlight">\(y(x)\)</span> such that <span class="math notranslate nohighlight">\(y(x_i) = y_i\)</span>. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.</p>
+<p>Given the set of data points <img class="math" src="_images/math/8c5379368abbafdf7b9429ea52e2994e1b976f52.png" alt="(x_1, y_1) \dots (x_n, y_n)"/> the routines described in this section compute a continuous interpolating function <img class="math" src="_images/math/86484ba226ccb541164cc70dd7a2f4b291509c62.png" alt="y(x)"/> such that <img class="math" src="_images/math/d0e6bf5d7c15c768e2a688e2aa1b6aa0b4935730.png" alt="y(x_i) = y_i"/>. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.</p>
 <p>The interpolation method is specified by the optional argument <code class="docutils literal notranslate"><span class="pre">interp_method</span></code>.
 The accepted methods are “linear”, “polynomial”, “cspline”, “cspline_periodic”, “akima”, “akima_periodic”.
 The default method is “cspline” if none is specified.</p>
@@ -260,7 +292,7 @@ The default method is “cspline” if none is specified.</p>
 
 </section>
 <section id="gdt-methods">
-<h2>GDT Methods<a class="headerlink" href="#gdt-methods" title="Permalink to this headline">¶</a></h2>
+<h2>GDT Methods<a class="headerlink" href="#gdt-methods" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="gdt.Gdt">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">Gdt</span></span><a class="headerlink" href="#gdt.Gdt" title="Permalink to this definition">¶</a></dt>
@@ -412,7 +444,7 @@ The values are given in the column’s order so that the index of each element c
 
 </section>
 <section id="gdt-plots">
-<span id="gdt-plot"></span><h2>GDT Plots<a class="headerlink" href="#gdt-plots" title="Permalink to this headline">¶</a></h2>
+<span id="gdt-plot"></span><h2>GDT Plots<a class="headerlink" href="#gdt-plots" title="Permalink to this heading">¶</a></h2>
 <p>With GSL Shell it is relatively easy to plot data from a GDT table based on the name of the columns.
 A mini language is used to express the type of plot that should be realized.
 In this chapter we will illustrate its usage with some examples.</p>
@@ -546,7 +578,7 @@ More conditions can be given, separated by a comma, to filter the data.
 In addition the logical operators ‘and’ and ‘or’ can be used to combine the logical relations.</p>
 </section>
 <section id="histogram-plots">
-<h2>Histogram plots<a class="headerlink" href="#histogram-plots" title="Permalink to this headline">¶</a></h2>
+<h2>Histogram plots<a class="headerlink" href="#histogram-plots" title="Permalink to this heading">¶</a></h2>
 <p>Histogram plots can be created using the function <code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.hist()</span></code>.
 Its usage is simple, you just need to give the tables and an expression whose values will be plotted in the form of an histogram.</p>
 <p>Here an example of the kind of plot that you can obtain:</p>
@@ -557,7 +589,7 @@ Its usage is simple, you just need to give the tables and an expression whose va
 The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.</p>
 </section>
 <section id="plotting-options">
-<span id="gdt-plot-opts"></span><h2>Plotting options<a class="headerlink" href="#plotting-options" title="Permalink to this headline">¶</a></h2>
+<span id="gdt-plot-opts"></span><h2>Plotting options<a class="headerlink" href="#plotting-options" title="Permalink to this heading">¶</a></h2>
 <p>Plotting options are passed in the form of a table as the last arguments.
 The table should be of the form <code class="docutils literal notranslate"><span class="pre">{option_1=</span> <span class="pre">value_1,</span> <span class="pre">option_2=</span> <span class="pre">value_2,</span> <span class="pre">...}</span></code>.</p>
 <p>The options accepted by plots are:</p>
@@ -568,7 +600,7 @@ The table should be of the form <code class="docutils literal notranslate"><span
 </ul>
 </section>
 <section id="gdt-linear-model">
-<span id="gdt-lm"></span><h2>GDT Linear Model<a class="headerlink" href="#gdt-linear-model" title="Permalink to this headline">¶</a></h2>
+<span id="gdt-lm"></span><h2>GDT Linear Model<a class="headerlink" href="#gdt-linear-model" title="Permalink to this heading">¶</a></h2>
 <p>The linear model function <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> is a generic function to perform a linear least square fit based on a linear model description.</p>
 <p>It does return a special type of object that store the result of the fit.
 The fit object can be used to print a summary or performing other operations like evaluating the predicted values. The details about the fit objects are given in the <a class="reference internal" href="#gdt-fit-obj"><span class="std std-ref">fit objects</span></a> specific section.</p>
@@ -595,32 +627,32 @@ The first level is chosen as a reference and a coefficient is added in the fit f
 The enumeration can have a scalar part that multiply the coefficient in the model.
 For purely enumeration factors the scalar part is equal to 1.</p>
 <p>In mathematical terms the more general linear fit form is given by the formula:</p>
-<div class="math notranslate nohighlight">
-\[f_i = \sum_{k} a_k \, A_{k i} + \sum_{k} \sum_{p = 1}^{P_k} b_{k p} F_{k p i} B_{k i}\]</div>
-<p>where <span class="math notranslate nohighlight">\(A_{k i}\)</span> is the matrix of the scalar factors, <span class="math notranslate nohighlight">\(B_{k i}\)</span> is the matrix of the scalar part of the enumeration factors and <span class="math notranslate nohighlight">\(F_{k p i}\)</span> is the “level matrix”.
-The index <span class="math notranslate nohighlight">\(p\)</span> will assume the values <span class="math notranslate nohighlight">\(1, ..., P_k\)</span> where <span class="math notranslate nohighlight">\(P_k\)</span> are the number of levels for the k-th enumerated factor.
-The value <span class="math notranslate nohighlight">\(F_{k p i}\)</span> will be always equal to 1 for <span class="math notranslate nohighlight">\(p = 1\)</span> since the first level is taken as a reference.
-For the other levels <span class="math notranslate nohighlight">\(F_{k p i}\)</span> will be 1 if the level in the i-th row match the p-level and 0 otherwise.
-The coefficient determined by the fit are <span class="math notranslate nohighlight">\(a_k\)</span> and <span class="math notranslate nohighlight">\(b_{k p}\)</span> for the scalar and enumerated factors respectively.
+<div class="math">
+<p><img src="_images/math/d1fdc869e48ed6ddc0ef38447903988b88a7c8a7.png" alt="f_i = \sum_{k} a_k \, A_{k i} + \sum_{k} \sum_{p = 1}^{P_k} b_{k p} F_{k p i} B_{k i}"/></p>
+</div><p>where <img class="math" src="_images/math/c72a0a0e660b0ba0b0c8f8e3cf1ba1c0fdda5360.png" alt="A_{k i}"/> is the matrix of the scalar factors, <img class="math" src="_images/math/0e196f9b48e55167acf200eb71b5d6bd151f1a74.png" alt="B_{k i}"/> is the matrix of the scalar part of the enumeration factors and <img class="math" src="_images/math/b2cd4811af9a02b175ca2b74434b23499a4f30f2.png" alt="F_{k p i}"/> is the “level matrix”.
+The index <img class="math" src="_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> will assume the values <img class="math" src="_images/math/c6002d3bde5dad9ad8958a9bab776f5ecd62a4e1.png" alt="1, ..., P_k"/> where <img class="math" src="_images/math/44c51de7d52b34b036407ed51ad35a150d171274.png" alt="P_k"/> are the number of levels for the k-th enumerated factor.
+The value <img class="math" src="_images/math/b2cd4811af9a02b175ca2b74434b23499a4f30f2.png" alt="F_{k p i}"/> will be always equal to 1 for <img class="math" src="_images/math/129ce145c008edab7996fa6727204b6657cfd39f.png" alt="p = 1"/> since the first level is taken as a reference.
+For the other levels <img class="math" src="_images/math/b2cd4811af9a02b175ca2b74434b23499a4f30f2.png" alt="F_{k p i}"/> will be 1 if the level in the i-th row match the p-level and 0 otherwise.
+The coefficient determined by the fit are <img class="math" src="_images/math/a98925eb39113e5bc345d8166ad489f6622ac14a.png" alt="a_k"/> and <img class="math" src="_images/math/7539ba9990e8ed0864ffc05d3d6b5981b3287ed9.png" alt="b_{k p}"/> for the scalar and enumerated factors respectively.
 The index <code class="docutils literal notranslate"><span class="pre">i</span></code> span each row in the tables by excluding only rows where one of the factors or the observation is undefined.</p>
 <p>For example, in the case of a linear fit of the form:</p>
-<div class="math notranslate nohighlight">
-\[y = a + b x\]</div>
-<p>let us suppose that in our table we have two columns named “x” and “y”.
+<div class="math">
+<p><img src="_images/math/f65c221298dba19462f7f3edfbfe308f5c3eb514.png" alt="y = a + b x"/></p>
+</div><p>let us suppose that in our table we have two columns named “x” and “y”.
 In this case we can make the fit by using the model:</p>
 <blockquote>
 <div><p>“y ~ 1, x”</p>
 </div></blockquote>
 <p>and the general mathematical form given above simplifies to:</p>
-<div class="math notranslate nohighlight">
-\[y_i = a_1 \cdot 1 + a_2 \, x_i\]</div>
-<p>since only two scalar factors are used.
+<div class="math">
+<p><img src="_images/math/7ea0007985f6fae3b29ae20e30f55df471661cab.png" alt="y_i = a_1 \cdot 1 + a_2 \, x_i"/></p>
+</div><p>since only two scalar factors are used.
 In this case the model matrix has two columns, the first identically equal to 1 and the second equal to the <code class="docutils literal notranslate"><span class="pre">x</span></code> column.</p>
 <p>For this fit we could have omitted the scalar factor <code class="docutils literal notranslate"><span class="pre">1</span></code> as it is automatically added from the <code class="docutils literal notranslate"><span class="pre">x</span></code> factor.
 In general for each expression factor all the multiplicative factor of inferior degree are added.
 So, for example, if you add a factor <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">*</span> <span class="pre">z^2&quot;</span></code> the factors <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">z^2</span></code> will be automatically added.</p>
 <section id="gdt-linear-fit-example">
-<h3>GDT linear fit example<a class="headerlink" href="#gdt-linear-fit-example" title="Permalink to this headline">¶</a></h3>
+<h3>GDT linear fit example<a class="headerlink" href="#gdt-linear-fit-example" title="Permalink to this heading">¶</a></h3>
 <p>In this example we illustrate the more general case of linear model with scalar and enumerated factors.</p>
 <p>Let us suppose that we have a measured quantity <code class="docutils literal notranslate"><span class="pre">y</span></code> taken at different moment of time <code class="docutils literal notranslate"><span class="pre">t</span></code>.
 We suspect that the speciman evolve with time and <code class="docutils literal notranslate"><span class="pre">y</span></code> varies linearly with <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
@@ -655,13 +687,13 @@ We suspect that the speciman evolve with time and <code class="docutils literal 
 </pre></div>
 </div>
 <p>Based on out knowledge we suspect that the data can be explained with a linear model of the form:</p>
-<div class="math notranslate nohighlight">
-\[y_i = a + b \, t_i + \delta_p F_{p i}\]</div>
-<p>where <span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(b_i\)</span> are the linear coefficient and <span class="math notranslate nohighlight">\(\delta_p\)</span> are the coefficients for the levels of the enumerated factor, the tool.
+<div class="math">
+<p><img src="_images/math/758319d323a9218978331338a184a04d2971fbdd.png" alt="y_i = a + b \, t_i + \delta_p F_{p i}"/></p>
+</div><p>where <img class="math" src="_images/math/8a0ac94597494eec7882eb3baaf5e42c5bf0e314.png" alt="a_i"/> and <img class="math" src="_images/math/7f5dd17f04daee06d4c2d26a6bdf6bdc4a04876f.png" alt="b_i"/> are the linear coefficient and <img class="math" src="_images/math/63dd7a53bf649c3f8520a4df01370ef8ba0f85d7.png" alt="\delta_p"/> are the coefficients for the levels of the enumerated factor, the tool.
 These latter describe de tool effect by taking “tool A” as a reference so that
 <code class="docutils literal notranslate"><span class="pre">p</span></code> can take two values: 1, 2 for tools B et C respectively.</p>
-<p>The expression <span class="math notranslate nohighlight">\(F_{p i}\)</span> is equal to 1 when the tool in the i-th column correspond to the tool “p” and 0 otherwise.
-Therefore the coefficients <span class="math notranslate nohighlight">\(\delta_1\)</span> and <span class="math notranslate nohighlight">\(\delta_2\)</span> represents the average delta of tools “B” and “C” versus the tool “A”.</p>
+<p>The expression <img class="math" src="_images/math/cc2b571c7483be2576e4e4035dfcef5f5209e8a3.png" alt="F_{p i}"/> is equal to 1 when the tool in the i-th column correspond to the tool “p” and 0 otherwise.
+Therefore the coefficients <img class="math" src="_images/math/58c2381dd974aa9efd849ab982f4660d90c58118.png" alt="\delta_1"/> and <img class="math" src="_images/math/ab9ede642202c60f69bd0f027d8983a79ea1af3f.png" alt="\delta_2"/> represents the average delta of tools “B” and “C” versus the tool “A”.</p>
 <p>Here a way to perform the linear fit and make a plot of the data:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- make a plot of the data</span>
 <span class="n">p</span> <span class="o">=</span> <span class="n">gdt</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;y ~ t | tool&quot;</span><span class="p">,</span> <span class="p">{</span><span class="n">show</span><span class="o">=</span> <span class="kc">false</span><span class="p">})</span>
@@ -718,12 +750,12 @@ At the bottom the residual R square of the fit and the residual standard error a
 </div></blockquote>
 <p>So the difference from the example made before would be that, for each tool, a different coefficient is evaluated.</p>
 <p>The corresponding model would be:</p>
-<div class="math notranslate nohighlight">
-\[y_i = a + b \, t_i + (\delta_p + c \, t_i) F_{p i}\]</div>
-<p>so that a different linear coefficient is attributed to each tool.</p>
+<div class="math">
+<p><img src="_images/math/257c477eb3fc48dfd76a57daed7e34c117b26a56.png" alt="y_i = a + b \, t_i + (\delta_p + c \, t_i) F_{p i}"/></p>
+</div><p>so that a different linear coefficient is attributed to each tool.</p>
 </section>
 <section id="gdt-fit-object">
-<span id="gdt-fit-obj"></span><h3>GDT Fit Object<a class="headerlink" href="#gdt-fit-object" title="Permalink to this headline">¶</a></h3>
+<span id="gdt-fit-obj"></span><h3>GDT Fit Object<a class="headerlink" href="#gdt-fit-object" title="Permalink to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="gdt.LMFit">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">LMFit</span></span><a class="headerlink" href="#gdt.LMFit" title="Permalink to this definition">¶</a></dt>
@@ -798,7 +830,7 @@ This latter can be different from the table used for the fit.</p>
 
 </section>
 <section id="gdt-linear-model-options">
-<span id="gdt-lm-opts"></span><h3>GDT Linear Model Options<a class="headerlink" href="#gdt-linear-model-options" title="Permalink to this headline">¶</a></h3>
+<span id="gdt-lm-opts"></span><h3>GDT Linear Model Options<a class="headerlink" href="#gdt-linear-model-options" title="Permalink to this heading">¶</a></h3>
 <p>The options accepted by the <a class="reference internal" href="#gdt.lm" title="gdt.lm"><code class="xref py py-func docutils literal notranslate"><span class="pre">gdt.lm()</span></code></a> functions are:</p>
 <blockquote>
 <div><ul class="simple">
@@ -821,14 +853,62 @@ This latter can be different from the table used for the fit.</p>
     <ul>
 <li><a class="reference internal" href="#">General Data Tables</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#module-gdt">GDT Functions</a></li>
-<li><a class="reference internal" href="#gdt-methods">GDT Methods</a></li>
+<li><a class="reference internal" href="#module-gdt">GDT Functions</a><ul>
+<li><a class="reference internal" href="#gdt.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.alloc"><code class="docutils literal notranslate"><span class="pre">alloc()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.filter"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.reduce"><code class="docutils literal notranslate"><span class="pre">reduce()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.lm"><code class="docutils literal notranslate"><span class="pre">lm()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.barplot"><code class="docutils literal notranslate"><span class="pre">barplot()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.boxplot"><code class="docutils literal notranslate"><span class="pre">boxplot()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.read_csv"><code class="docutils literal notranslate"><span class="pre">read_csv()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.read_string"><code class="docutils literal notranslate"><span class="pre">read_string()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.write_csv"><code class="docutils literal notranslate"><span class="pre">write_csv()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.interp"><code class="docutils literal notranslate"><span class="pre">interp()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gdt-methods">GDT Methods</a><ul>
+<li><a class="reference internal" href="#gdt.Gdt"><code class="docutils literal notranslate"><span class="pre">Gdt</span></code></a><ul>
+<li><a class="reference internal" href="#gdt.Gdt.dim"><code class="docutils literal notranslate"><span class="pre">Gdt.dim()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.get"><code class="docutils literal notranslate"><span class="pre">Gdt.get()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.set"><code class="docutils literal notranslate"><span class="pre">Gdt.set()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.header"><code class="docutils literal notranslate"><span class="pre">Gdt.header()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.set_header"><code class="docutils literal notranslate"><span class="pre">Gdt.set_header()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.column"><code class="docutils literal notranslate"><span class="pre">Gdt.column()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.col_index"><code class="docutils literal notranslate"><span class="pre">Gdt.col_index()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.col_insert"><code class="docutils literal notranslate"><span class="pre">Gdt.col_insert()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.col_append"><code class="docutils literal notranslate"><span class="pre">Gdt.col_append()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.col_define"><code class="docutils literal notranslate"><span class="pre">Gdt.col_define()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.insert"><code class="docutils literal notranslate"><span class="pre">Gdt.insert()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.append"><code class="docutils literal notranslate"><span class="pre">Gdt.append()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.cursor"><code class="docutils literal notranslate"><span class="pre">Gdt.cursor()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.rows"><code class="docutils literal notranslate"><span class="pre">Gdt.rows()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.headers"><code class="docutils literal notranslate"><span class="pre">Gdt.headers()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.Gdt.levels"><code class="docutils literal notranslate"><span class="pre">Gdt.levels()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gdt-plots">GDT Plots</a></li>
 <li><a class="reference internal" href="#histogram-plots">Histogram plots</a></li>
 <li><a class="reference internal" href="#plotting-options">Plotting options</a></li>
 <li><a class="reference internal" href="#gdt-linear-model">GDT Linear Model</a><ul>
 <li><a class="reference internal" href="#gdt-linear-fit-example">GDT linear fit example</a></li>
-<li><a class="reference internal" href="#gdt-fit-object">GDT Fit Object</a></li>
+<li><a class="reference internal" href="#gdt-fit-object">GDT Fit Object</a><ul>
+<li><a class="reference internal" href="#gdt.LMFit"><code class="docutils literal notranslate"><span class="pre">LMFit</span></code></a><ul>
+<li><a class="reference internal" href="#gdt.LMFit.summary"><code class="docutils literal notranslate"><span class="pre">LMFit.summary()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.eval"><code class="docutils literal notranslate"><span class="pre">LMFit.eval()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.model"><code class="docutils literal notranslate"><span class="pre">LMFit.model()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.predict"><code class="docutils literal notranslate"><span class="pre">LMFit.predict()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.SE"><code class="docutils literal notranslate"><span class="pre">LMFit.SE</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.R2"><code class="docutils literal notranslate"><span class="pre">LMFit.R2</span></code></a></li>
+<li><a class="reference internal" href="#gdt.LMFit.R2_adj"><code class="docutils literal notranslate"><span class="pre">LMFit.R2_adj</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gdt-linear-model-options">GDT Linear Model Options</a></li>
 </ul>
 </li>
@@ -863,7 +943,7 @@ This latter can be different from the table used for the fit.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -883,13 +963,13 @@ This latter can be different from the table used for the fit.</p>
         <li class="right" >
           <a href="matrices.html" title="Matrices"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

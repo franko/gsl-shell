@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Records &#8212; GSL Shell 2.3.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2D Interpolation" href="interp2d.html" />
+    <link rel="prev" title="Comma Separated Values Parsing Utilities" href="csv.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="interp2d.html" title="2D Interpolation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Records</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="records">
+<span id="record-chapter"></span><h1>Records<a class="headerlink" href="#records" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>The record module is an utility to record and plot time dependent data.
+It was initially done in relation to the ODE solving module to store
+derived quantitis but it can be used also in other contexts.
+The module is implemented as a thin layer on top of a gdt table.</p>
+<span class="target" id="module-record"></span><dl class="py function">
+<dt class="sig sig-object py" id="record.new">
+<span class="sig-prename descclassname"><span class="pre">record.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#record.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new, empty, <a class="reference internal" href="#record.Record" title="record.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a> object.</p>
+<p>The field <code class="docutils literal notranslate"><span class="pre">tab</span></code> can be used to access the underlying gdt data table.</p>
+</dd></dl>
+
+</section>
+<section id="record-class">
+<h2>Record class<a class="headerlink" href="#record-class" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="record.Record">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">record.</span></span><span class="sig-name descname"><span class="pre">Record</span></span><a class="headerlink" href="#record.Record" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py function">
+<dt class="sig sig-object py" id="record.Record.store">
+<span class="sig-name descname"><span class="pre">store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a new row of data corresponding to the time <code class="docutils literal notranslate"><span class="pre">t</span></code> and with values from the
+corresponding <code class="docutils literal notranslate"><span class="pre">values</span></code> argument.
+This latter should be a table in the form of:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="n">var1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">,</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">value2</span><span class="p">,</span> <span class="p">...</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>When the values are store each variable’s name will correspond to a column name
+in the underlying table.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="record.Record.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the values corresponding the the most recent entry, in the same form used
+by the store method.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="record.Record.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">t_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the data given in <cite>plot_spec</cite> by grouping them in different plots.
+It does optionally filter the data to take only values whose time t belongs
+between <code class="docutils literal notranslate"><span class="pre">t_min</span></code> and <code class="docutils literal notranslate"><span class="pre">t_max</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">plot_spec</span></code> argument should be a table in the form:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{{</span><span class="s2">&quot;var_1&quot;</span><span class="p">,</span> <span class="s2">&quot;var_2&quot;</span><span class="p">,</span> <span class="p">...},</span> <span class="p">{</span><span class="s2">&quot;var_5&quot;</span><span class="p">,</span> <span class="s2">&quot;var_6&quot;</span><span class="p">,</span> <span class="p">...},</span> <span class="p">...}</span>
+</pre></div>
+</div>
+<p>where the variable’s name to plot are given so that when they are grouped
+together are plotted in the same plot.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Records</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#record.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#record-class">Record class</a><ul>
+<li><a class="reference internal" href="#record.Record"><code class="docutils literal notranslate"><span class="pre">Record</span></code></a><ul>
+<li><a class="reference internal" href="#record.Record.store"><code class="docutils literal notranslate"><span class="pre">Record.store()</span></code></a></li>
+<li><a class="reference internal" href="#record.Record.values"><code class="docutils literal notranslate"><span class="pre">Record.values()</span></code></a></li>
+<li><a class="reference internal" href="#record.Record.plot"><code class="docutils literal notranslate"><span class="pre">Record.plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="csv.html"
+                          title="previous chapter">Comma Separated Values Parsing Utilities</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="interp2d.html"
+                          title="next chapter">2D Interpolation</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/record.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="interp2d.html" title="2D Interpolation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="csv.html" title="Comma Separated Values Parsing Utilities"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Records</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+    </div>
+  </body>
+</html>

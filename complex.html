@@ -1,25 +1,26 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Complex Numbers &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Complex Numbers &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Matrices" href="matrices.html" />
-    <link rel="prev" title="General Purpose Functions" href="general.html" /> 
+    <link rel="prev" title="Projects Utility Functions" href="project.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -34,9 +35,9 @@
           <a href="matrices.html" title="Matrices"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="general.html" title="General Purpose Functions"
+          <a href="project.html" title="Projects Utility Functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Complex Numbers</a></li> 
       </ul>
     </div>  
@@ -47,20 +48,20 @@
           <div class="body" role="main">
             
   <section id="complex-numbers">
-<h1>Complex Numbers<a class="headerlink" href="#complex-numbers" title="Permalink to this headline">¶</a></h1>
+<h1>Complex Numbers<a class="headerlink" href="#complex-numbers" title="Permalink to this heading">¶</a></h1>
 <p>The functions described in this chapter provide support for complex numbers.
 The algorithms take care to avoid unnecessary intermediate underflows and overflows, allowing the functions to be evaluated over as much of the complex plane as possible.</p>
 <p>For multiple-valued functions the branch cuts have been chosen to follow the conventions of Abramowitz and Stegun in the ‘Handbook of Mathematical Functions’.
 The functions return principal values which are the same as those in GNU Calc, which in turn are the same as those in ‘Common Lisp, The Language (Second Edition)’ and the HP-28/48 series of calculators.</p>
 <section id="module-complex">
-<span id="complex-functions"></span><h2>Complex Functions<a class="headerlink" href="#module-complex" title="Permalink to this headline">¶</a></h2>
+<span id="complex-functions"></span><h2>Complex Functions<a class="headerlink" href="#module-complex" title="Permalink to this heading">¶</a></h2>
 <p>In this section we describe the mathematical functions on complex numbers.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Please note that the standard functions from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">math</span></code> do <em>not</em> accept complex numbers.</p>
 </div>
 <section id="basic-functions">
-<h3>Basic Functions<a class="headerlink" href="#basic-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Basic Functions<a class="headerlink" href="#basic-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.new">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.new" title="Permalink to this definition">¶</a></dt>
@@ -82,14 +83,14 @@ The functions return principal values which are the same as those in GNU Calc, w
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.abs">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.abs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the norm of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code> calculated as <span class="math notranslate nohighlight">\(\sqrt{z \, z^\star}\)</span>.
+<dd><p>Returns the norm of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code> calculated as <img class="math" src="_images/math/110c4b147bea4febfa0a29653dd127857f74c3ef.png" alt="\sqrt{z \, z^\star}"/>.
 This function accepts a real or complex number as argument.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.norm2">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">norm2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.norm2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the square norm of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code> calculated as <span class="math notranslate nohighlight">\(z \, z^\star\)</span>.
+<dd><p>Returns the square norm of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code> calculated as <img class="math" src="_images/math/197e7f82758f31f64cd71d8ca2e7432023eef398.png" alt="z \, z^\star"/>.
 This function accepts a real or complex number as argument.</p>
 </dd></dl>
 
@@ -103,7 +104,7 @@ If <code class="docutils literal notranslate"><span class="pre">z</span></code> 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.conj">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">conj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.conj" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the complex conjugate <span class="math notranslate nohighlight">\(z^\star\)</span> of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code>.</p>
+<dd><p>Returns the complex conjugate <img class="math" src="_images/math/37575e28d34d0028b9fc7d11c7b867312c5a6b90.png" alt="z^\star"/> of the complex number <code class="docutils literal notranslate"><span class="pre">z</span></code>.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -114,12 +115,12 @@ If <code class="docutils literal notranslate"><span class="pre">z</span></code> 
 
 </section>
 <section id="elementary-complex-functions">
-<h3>Elementary Complex Functions<a class="headerlink" href="#elementary-complex-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Elementary Complex Functions<a class="headerlink" href="#elementary-complex-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.sqrt">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.sqrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function returns the square root of the complex number z,
-<span class="math notranslate nohighlight">\(\sqrt{z}\)</span>.
+<img class="math" src="_images/math/35ab32e06861dd4674004ec3022f8230c3e2a9f8.png" alt="\sqrt{z}"/>.
 The branch cut is the negative real axis.
 The result always lies in the right half of the complex plane.</p>
 </dd></dl>
@@ -127,122 +128,122 @@ The result always lies in the right half of the complex plane.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.exp">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.exp" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex exponential of the complex number z, <span class="math notranslate nohighlight">\(\exp(z)\)</span>.</p>
+<dd><p>This function returns the complex exponential of the complex number z, <img class="math" src="_images/math/96ca7cf42455396d5251ab6427ff2f64db603a64.png" alt="\exp(z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.log">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.log" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex natural logarithm (base e) of the complex number z, <span class="math notranslate nohighlight">\(\log(z)\)</span>.
+<dd><p>This function returns the complex natural logarithm (base e) of the complex number z, <img class="math" src="_images/math/7c4e3ebb24b2f98d7cb05bd0608ed82af49d0826.png" alt="\log(z)"/>.
 The branch cut is the negative real axis.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.log10">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">log10</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.log10" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex base-10 logarithm of the complex number z, <span class="math notranslate nohighlight">\(\log_{10}(z)\)</span>.</p>
+<dd><p>This function returns the complex base-10 logarithm of the complex number z, <img class="math" src="_images/math/3922678e8f5ecacedc2ba9431dd8f56609f85d81.png" alt="\log_{10}(z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.pow">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.pow" title="Permalink to this definition">¶</a></dt>
-<dd><p>The function returns the complex number z raised to the complex power a, <span class="math notranslate nohighlight">\(z^a\)</span>.
-This is computed as <span class="math notranslate nohighlight">\(\exp(a \, \log(z))\)</span> using complex logarithms and complex exponentials.</p>
+<dd><p>The function returns the complex number z raised to the complex power a, <img class="math" src="_images/math/7f3561dc30b6b94b118097bd57ae423e57746fcd.png" alt="z^a"/>.
+This is computed as <img class="math" src="_images/math/bf7521964bb1e694d4368b0bc0dd0401245e66eb.png" alt="\exp(a \, \log(z))"/> using complex logarithms and complex exponentials.</p>
 </dd></dl>
 
 </section>
 <section id="complex-trigonometric-functions">
-<h3>Complex Trigonometric Functions<a class="headerlink" href="#complex-trigonometric-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Complex Trigonometric Functions<a class="headerlink" href="#complex-trigonometric-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.sin">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.sin" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function returns the complex sine of the complex number z,</p>
-<div class="math notranslate nohighlight">
-\[\sin(z) = \frac{e^{i \, z} - e^{-i\, z}}{2 \, i}\]</div>
-</dd></dl>
+<div class="math">
+<p><img src="_images/math/8a7022ca773d8b4068a859f7cecb5a64a0d3aa3e.png" alt="\sin(z) = \frac{e^{i \, z} - e^{-i\, z}}{2 \, i}"/></p>
+</div></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.cos">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">cos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.cos" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function returns the complex cosine of the complex number z,</p>
-<div class="math notranslate nohighlight">
-\[\cos(z) = \frac{e^{i \, z} + e^{-i\, z}}{2}\]</div>
-</dd></dl>
+<div class="math">
+<p><img src="_images/math/33ad3c7f515424b3455874f6455682d38891d419.png" alt="\cos(z) = \frac{e^{i \, z} + e^{-i\, z}}{2}"/></p>
+</div></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.tan">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">tan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.tan" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex tangent of the complex number z, <span class="math notranslate nohighlight">\(\tan(z) = \sin(z)/\cos(z)\)</span>.</p>
+<dd><p>This function returns the complex tangent of the complex number z, <img class="math" src="_images/math/c4beb8429e55d2e26f6e89caca5bb2972f358a4c.png" alt="\tan(z) = \sin(z)/\cos(z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.sec">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">sec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.sec" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex secant of the complex number z, <span class="math notranslate nohighlight">\(\sec(z) = 1/\cos(z)\)</span>.</p>
+<dd><p>This function returns the complex secant of the complex number z, <img class="math" src="_images/math/b0695cbb98a6af87c9b870e622abac4dff591ae4.png" alt="\sec(z) = 1/\cos(z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.csc">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">csc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.csc" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex cosecant of the complex number z, <span class="math notranslate nohighlight">\(\csc(z) = 1/\sin(z)\)</span>.</p>
+<dd><p>This function returns the complex cosecant of the complex number z, <img class="math" src="_images/math/ffaa9802844e79eaa6e2934f15809d51d35387f8.png" alt="\csc(z) = 1/\sin(z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.cot">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">cot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.cot" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex cotangent of the complex number z, <span class="math notranslate nohighlight">\(\cot(z) = 1/\tan(z)\)</span>.</p>
+<dd><p>This function returns the complex cotangent of the complex number z, <img class="math" src="_images/math/a622d0423d20c303ca8446c0fff364f593ce1dae.png" alt="\cot(z) = 1/\tan(z)"/>.</p>
 </dd></dl>
 
 </section>
 <section id="inverse-complex-trigonometric-functions">
-<h3>Inverse Complex Trigonometric Functions<a class="headerlink" href="#inverse-complex-trigonometric-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Inverse Complex Trigonometric Functions<a class="headerlink" href="#inverse-complex-trigonometric-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.asin">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">asin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.asin" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arcsine of the complex number z, <span class="math notranslate nohighlight">\(\arcsin(z)\)</span>.
+<dd><p>This function returns the complex arcsine of the complex number z, <img class="math" src="_images/math/226fa878a0cd50e386e46e88a3ec625effa22392.png" alt="\arcsin(z)"/>.
 The branch cuts are on the real axis, less than -1 and greater than 1.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acos">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acos" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arccosine of the complex number z, <span class="math notranslate nohighlight">\(\arccos(z)\)</span>.
+<dd><p>This function returns the complex arccosine of the complex number z, <img class="math" src="_images/math/b00657e26f5d44909179121a19e3a9d122ee57a8.png" alt="\arccos(z)"/>.
 The branch cuts are on the real axis, less than -1 and greater than 1.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.atan">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">atan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.atan" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arctangent of the complex number z, <span class="math notranslate nohighlight">\(\arctan(z)\)</span>.
+<dd><p>This function returns the complex arctangent of the complex number z, <img class="math" src="_images/math/df4fb9825bc8f7cf03fd98ff6b02e4e639dd86af.png" alt="\arctan(z)"/>.
 The branch cuts are on the imaginary axis, below -i and above i.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.asec">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">asec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.asec" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arcsecant of the complex number z, <span class="math notranslate nohighlight">\(\textrm{asec}(z) = \textrm{acos}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex arcsecant of the complex number z, <img class="math" src="_images/math/5467462701897245ec7a08ca93da810bd22455d3.png" alt="\textrm{asec}(z) = \textrm{acos}(1/z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acsc">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acsc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acsc" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arccosecant of the complex number z, <span class="math notranslate nohighlight">\(\textrm{acsc}(z) = \textrm{asin}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex arccosecant of the complex number z, <img class="math" src="_images/math/ac26d72e42b30ac3e2fb4600cbc1a9860ca53ba8.png" alt="\textrm{acsc}(z) = \textrm{asin}(1/z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acot">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acot" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex arccotangent of the complex number z, <span class="math notranslate nohighlight">\(\textrm{acot}(z) = \textrm{atan}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex arccotangent of the complex number z, <img class="math" src="_images/math/f0b67c5a05eac1cd7becf06a1c86a23b9aab4d33.png" alt="\textrm{acot}(z) = \textrm{atan}(1/z)"/>.</p>
 </dd></dl>
 
 </section>
 <section id="complex-hyperbolic-functions">
-<h3>Complex Hyperbolic Functions<a class="headerlink" href="#complex-hyperbolic-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Complex Hyperbolic Functions<a class="headerlink" href="#complex-hyperbolic-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.sinh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">sinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.sinh" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic sine of the complex</dt><dd><p>number z, <span class="math notranslate nohighlight">\(\sinh(z) = (\exp(z) - \exp(-z))/2\)</span>.</p>
+<dt>This function returns the complex hyperbolic sine of the complex</dt><dd><p>number z, <img class="math" src="_images/math/9efe2dde0aaef3b9982dc6c7e8c3d66012647a46.png" alt="\sinh(z) = (\exp(z) - \exp(-z))/2"/>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,7 +252,7 @@ The branch cuts are on the imaginary axis, below -i and above i.</p>
 <dt class="sig sig-object py" id="complex.cosh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">cosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.cosh" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic cosine of the complex</dt><dd><p>number z, <span class="math notranslate nohighlight">\(\cosh(z) = (\exp(z) + \exp(-z))/2\)</span>.</p>
+<dt>This function returns the complex hyperbolic cosine of the complex</dt><dd><p>number z, <img class="math" src="_images/math/d61ecd0e205648720bfd4f5f6cb9a03bda8076c0.png" alt="\cosh(z) = (\exp(z) + \exp(-z))/2"/>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -260,7 +261,7 @@ The branch cuts are on the imaginary axis, below -i and above i.</p>
 <dt class="sig sig-object py" id="complex.tanh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">tanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.tanh" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic tangent of the</dt><dd><p>complex number z, <span class="math notranslate nohighlight">\(\tanh(z) = \sinh(z)/\cosh(z)\)</span>.</p>
+<dt>This function returns the complex hyperbolic tangent of the</dt><dd><p>complex number z, <img class="math" src="_images/math/256b7e87a18acc0936e1da4fd047e9d99877b8e7.png" alt="\tanh(z) = \sinh(z)/\cosh(z)"/>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -269,7 +270,7 @@ The branch cuts are on the imaginary axis, below -i and above i.</p>
 <dt class="sig sig-object py" id="complex.sech">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">sech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.sech" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic secant of the complex</dt><dd><p>number z, <span class="math notranslate nohighlight">\(\textrm{sech}(z) = 1/\cosh(z)\)</span>.</p>
+<dt>This function returns the complex hyperbolic secant of the complex</dt><dd><p>number z, <img class="math" src="_images/math/4dd2c75ede0c95812417f2ad69624df55ec34f99.png" alt="\textrm{sech}(z) = 1/\cosh(z)"/>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -278,7 +279,7 @@ The branch cuts are on the imaginary axis, below -i and above i.</p>
 <dt class="sig sig-object py" id="complex.csch">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">csch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.csch" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic cosecant of the</dt><dd><p>complex number z, <span class="math notranslate nohighlight">\(\textrm{csch}(z) = 1/\sinh(z)\)</span>.</p>
+<dt>This function returns the complex hyperbolic cosecant of the</dt><dd><p>complex number z, <img class="math" src="_images/math/fea9440eafdbc31fbf8c847bb0f0ac18803f440a.png" alt="\textrm{csch}(z) = 1/\sinh(z)"/>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -287,52 +288,52 @@ The branch cuts are on the imaginary axis, below -i and above i.</p>
 <dt class="sig sig-object py" id="complex.coth">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">coth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.coth" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>This function returns the complex hyperbolic cotangent of the</dt><dd><p>complex number z, <span class="math notranslate nohighlight">\(\coth(z) = 1/\tanh(z)\)</span>.</p>
+<dt>This function returns the complex hyperbolic cotangent of the</dt><dd><p>complex number z, <img class="math" src="_images/math/bf3b01c6d04836574125aa948880f9d4827b002e.png" alt="\coth(z) = 1/\tanh(z)"/>.</p>
 </dd>
 </dl>
 </dd></dl>
 
 </section>
 <section id="inverse-complex-hyperbolic-functions">
-<h3>Inverse Complex Hyperbolic Functions<a class="headerlink" href="#inverse-complex-hyperbolic-functions" title="Permalink to this headline">¶</a></h3>
+<h3>Inverse Complex Hyperbolic Functions<a class="headerlink" href="#inverse-complex-hyperbolic-functions" title="Permalink to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.asinh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">asinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.asinh" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arcsine of the complex number z, <span class="math notranslate nohighlight">\(\textrm{asinh}(z)\)</span>.
+<dd><p>This function returns the complex hyperbolic arcsine of the complex number z, <img class="math" src="_images/math/5d9213da9b17ab1bdb8ff7b6ad9143d844e34e32.png" alt="\textrm{asinh}(z)"/>.
 The branch cuts are on the imaginary axis, below -i and above i.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acosh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acosh" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arccosine of the complex number z, <span class="math notranslate nohighlight">\(\textrm{acosh}(z)\)</span>.
+<dd><p>This function returns the complex hyperbolic arccosine of the complex number z, <img class="math" src="_images/math/d2c0df617e3c2bcc3db4f1fe326748c5879ed671.png" alt="\textrm{acosh}(z)"/>.
 The branch cut is on the real axis, less than 1.
-Note that in this case we use the negative square root in formula 4.6.21 of Abramowitz &amp; Stegun giving <span class="math notranslate nohighlight">\(\textrm{acosh}(z)=\log(z-\sqrt{z^2-1})\)</span>.</p>
+Note that in this case we use the negative square root in formula 4.6.21 of Abramowitz &amp; Stegun giving <img class="math" src="_images/math/ce7f20dc3e087678b2fcc69d85be129901eb9618.png" alt="\textrm{acosh}(z)=\log(z-\sqrt{z^2-1})"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.atanh">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">atanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.atanh" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arctangent of the complex number z, <span class="math notranslate nohighlight">\(\textrm{atanh}(z)\)</span>.
+<dd><p>This function returns the complex hyperbolic arctangent of the complex number z, <img class="math" src="_images/math/8de6265f32bf8b405aae22b0e4a02f3c16c4ab09.png" alt="\textrm{atanh}(z)"/>.
 The branch cuts are on the real axis, less than -1 and greater than 1.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.asech">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">asech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.asech" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arcsecant of the complex number z, <span class="math notranslate nohighlight">\(\textrm{asech}(z) = \textrm{acosh}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex hyperbolic arcsecant of the complex number z, <img class="math" src="_images/math/0bc4237085434fddb957587233ddf9da21f94eb5.png" alt="\textrm{asech}(z) = \textrm{acosh}(1/z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acsch">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acsch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acsch" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arccosecant of the complex number z, <span class="math notranslate nohighlight">\(\textrm{acsch}(z) = \textrm{asin}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex hyperbolic arccosecant of the complex number z, <img class="math" src="_images/math/eaf50e1c472b35b21d1e403316501c1bb2e85e45.png" alt="\textrm{acsch}(z) = \textrm{asin}(1/z)"/>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="complex.acoth">
 <span class="sig-prename descclassname"><span class="pre">complex.</span></span><span class="sig-name descname"><span class="pre">acoth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#complex.acoth" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the complex hyperbolic arccotangent of the complex number z, <span class="math notranslate nohighlight">\(\textrm{acoth}(z) = \textrm{atanh}(1/z)\)</span>.</p>
+<dd><p>This function returns the complex hyperbolic arccotangent of the complex number z, <img class="math" src="_images/math/1390053ac8247a614557e5299806af9d3dc14c87.png" alt="\textrm{acoth}(z) = \textrm{atanh}(1/z)"/>.</p>
 </dd></dl>
 
 </section>
@@ -351,12 +352,61 @@ The branch cuts are on the real axis, less than -1 and greater than 1.</p>
     <ul>
 <li><a class="reference internal" href="#">Complex Numbers</a><ul>
 <li><a class="reference internal" href="#module-complex">Complex Functions</a><ul>
-<li><a class="reference internal" href="#basic-functions">Basic Functions</a></li>
-<li><a class="reference internal" href="#elementary-complex-functions">Elementary Complex Functions</a></li>
-<li><a class="reference internal" href="#complex-trigonometric-functions">Complex Trigonometric Functions</a></li>
-<li><a class="reference internal" href="#inverse-complex-trigonometric-functions">Inverse Complex Trigonometric Functions</a></li>
-<li><a class="reference internal" href="#complex-hyperbolic-functions">Complex Hyperbolic Functions</a></li>
-<li><a class="reference internal" href="#inverse-complex-hyperbolic-functions">Inverse Complex Hyperbolic Functions</a></li>
+<li><a class="reference internal" href="#basic-functions">Basic Functions</a><ul>
+<li><a class="reference internal" href="#complex.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+<li><a class="reference internal" href="#complex.real"><code class="docutils literal notranslate"><span class="pre">real()</span></code></a></li>
+<li><a class="reference internal" href="#complex.imag"><code class="docutils literal notranslate"><span class="pre">imag()</span></code></a></li>
+<li><a class="reference internal" href="#complex.abs"><code class="docutils literal notranslate"><span class="pre">abs()</span></code></a></li>
+<li><a class="reference internal" href="#complex.norm2"><code class="docutils literal notranslate"><span class="pre">norm2()</span></code></a></li>
+<li><a class="reference internal" href="#complex.rect"><code class="docutils literal notranslate"><span class="pre">rect()</span></code></a></li>
+<li><a class="reference internal" href="#complex.conj"><code class="docutils literal notranslate"><span class="pre">conj()</span></code></a></li>
+<li><a class="reference internal" href="#complex.i"><code class="docutils literal notranslate"><span class="pre">i</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#elementary-complex-functions">Elementary Complex Functions</a><ul>
+<li><a class="reference internal" href="#complex.sqrt"><code class="docutils literal notranslate"><span class="pre">sqrt()</span></code></a></li>
+<li><a class="reference internal" href="#complex.exp"><code class="docutils literal notranslate"><span class="pre">exp()</span></code></a></li>
+<li><a class="reference internal" href="#complex.log"><code class="docutils literal notranslate"><span class="pre">log()</span></code></a></li>
+<li><a class="reference internal" href="#complex.log10"><code class="docutils literal notranslate"><span class="pre">log10()</span></code></a></li>
+<li><a class="reference internal" href="#complex.pow"><code class="docutils literal notranslate"><span class="pre">pow()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#complex-trigonometric-functions">Complex Trigonometric Functions</a><ul>
+<li><a class="reference internal" href="#complex.sin"><code class="docutils literal notranslate"><span class="pre">sin()</span></code></a></li>
+<li><a class="reference internal" href="#complex.cos"><code class="docutils literal notranslate"><span class="pre">cos()</span></code></a></li>
+<li><a class="reference internal" href="#complex.tan"><code class="docutils literal notranslate"><span class="pre">tan()</span></code></a></li>
+<li><a class="reference internal" href="#complex.sec"><code class="docutils literal notranslate"><span class="pre">sec()</span></code></a></li>
+<li><a class="reference internal" href="#complex.csc"><code class="docutils literal notranslate"><span class="pre">csc()</span></code></a></li>
+<li><a class="reference internal" href="#complex.cot"><code class="docutils literal notranslate"><span class="pre">cot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inverse-complex-trigonometric-functions">Inverse Complex Trigonometric Functions</a><ul>
+<li><a class="reference internal" href="#complex.asin"><code class="docutils literal notranslate"><span class="pre">asin()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acos"><code class="docutils literal notranslate"><span class="pre">acos()</span></code></a></li>
+<li><a class="reference internal" href="#complex.atan"><code class="docutils literal notranslate"><span class="pre">atan()</span></code></a></li>
+<li><a class="reference internal" href="#complex.asec"><code class="docutils literal notranslate"><span class="pre">asec()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acsc"><code class="docutils literal notranslate"><span class="pre">acsc()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acot"><code class="docutils literal notranslate"><span class="pre">acot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#complex-hyperbolic-functions">Complex Hyperbolic Functions</a><ul>
+<li><a class="reference internal" href="#complex.sinh"><code class="docutils literal notranslate"><span class="pre">sinh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.cosh"><code class="docutils literal notranslate"><span class="pre">cosh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.tanh"><code class="docutils literal notranslate"><span class="pre">tanh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.sech"><code class="docutils literal notranslate"><span class="pre">sech()</span></code></a></li>
+<li><a class="reference internal" href="#complex.csch"><code class="docutils literal notranslate"><span class="pre">csch()</span></code></a></li>
+<li><a class="reference internal" href="#complex.coth"><code class="docutils literal notranslate"><span class="pre">coth()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inverse-complex-hyperbolic-functions">Inverse Complex Hyperbolic Functions</a><ul>
+<li><a class="reference internal" href="#complex.asinh"><code class="docutils literal notranslate"><span class="pre">asinh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acosh"><code class="docutils literal notranslate"><span class="pre">acosh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.atanh"><code class="docutils literal notranslate"><span class="pre">atanh()</span></code></a></li>
+<li><a class="reference internal" href="#complex.asech"><code class="docutils literal notranslate"><span class="pre">asech()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acsch"><code class="docutils literal notranslate"><span class="pre">acsch()</span></code></a></li>
+<li><a class="reference internal" href="#complex.acoth"><code class="docutils literal notranslate"><span class="pre">acoth()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -366,8 +416,8 @@ The branch cuts are on the real axis, less than -1 and greater than 1.</p>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="general.html"
-                          title="previous chapter">General Purpose Functions</a></p>
+    <p class="topless"><a href="project.html"
+                          title="previous chapter">Projects Utility Functions</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
@@ -390,7 +440,7 @@ The branch cuts are on the real axis, less than -1 and greater than 1.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -408,15 +458,15 @@ The branch cuts are on the real axis, less than -1 and greater than 1.</p>
           <a href="matrices.html" title="Matrices"
              >next</a> |</li>
         <li class="right" >
-          <a href="general.html" title="General Purpose Functions"
+          <a href="project.html" title="Projects Utility Functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Complex Numbers</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

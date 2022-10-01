@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Nonlinear Least Squares fit &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Nonlinear Least Squares fit &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="linfit.html" title="Linear Least Squares fit"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Nonlinear Least Squares fit</a></li> 
       </ul>
     </div>  
@@ -47,20 +48,20 @@
           <div class="body" role="main">
             
   <section id="nonlinear-least-squares-fit">
-<h1>Nonlinear Least Squares fit<a class="headerlink" href="#nonlinear-least-squares-fit" title="Permalink to this headline">¶</a></h1>
+<h1>Nonlinear Least Squares fit<a class="headerlink" href="#nonlinear-least-squares-fit" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>GSL Shell provides support for nonlinear least squares fitting for user-defined data and functions.</p>
 <p>The problem of multidimensional nonlinear least-squares fitting requires
 the minimization of the squared residuals of n functions, f<sub>i</sub>, in p
 parameters, x<sub>i</sub>,</p>
-<div class="math notranslate nohighlight">
-\[\Phi(x) = \frac{1}{2} || F(x) ||^2
-        = \frac{1}{2} \sum_{i=1}^{n} f_i(x_1, ..., x_p)^2\]</div>
-<p>All algorithms proceed from an initial guess using the linearization,</p>
-<div class="math notranslate nohighlight">
-\[\psi(p) = || F(x+p) || \simeq || F(x) + J p ||\]</div>
-<p>where x is the initial point, p is the proposed step and J is the
+<div class="math">
+<p><img src="_images/math/acd84065a9d64fe68d7fa5a10ac454d5f810f6b2.png" alt="\Phi(x) = \frac{1}{2} || F(x) ||^2
+        = \frac{1}{2} \sum_{i=1}^{n} f_i(x_1, ..., x_p)^2"/></p>
+</div><p>All algorithms proceed from an initial guess using the linearization,</p>
+<div class="math">
+<p><img src="_images/math/405cbb944c5161b6a3afbf2eea78fd4d08dd2858.png" alt="\psi(p) = || F(x+p) || \simeq || F(x) + J p ||"/></p>
+</div><p>where x is the initial point, p is the proposed step and J is the
 Jacobian matrix J<sub>ij</sub> = df<sub>i</sub> / dx<sub>j</sub>.
 Additional strategies are used
 to enlarge the region of convergence.  These include requiring a
@@ -70,21 +71,21 @@ avoid steps which fall outside the linear regime.</p>
 to data (t<sub>i</sub>, y<sub>i</sub>) with independent Gaussian errors
 σ<sub>i</sub>, use
 function components of the following form</p>
-<div class="math notranslate nohighlight">
-\[f_i = (Y(x, t_i) - y_i) / \sigma_i\]</div>
-<p>Note that the model parameters are denoted by x in this chapter since
+<div class="math">
+<p><img src="_images/math/dc814ca5ad3fc8fcc6df2d6490687ff2d3bf3a31.png" alt="f_i = (Y(x, t_i) - y_i) / \sigma_i"/></p>
+</div><p>Note that the model parameters are denoted by x in this chapter since
 the non-linear least-squares algorithms are described geometrically
 (i.e. finding the minimum of a surface).  The independent variable of
 any data to be fitted is denoted by t.</p>
 <p>With the definition above the Jacobian is
-<span class="math notranslate nohighlight">\(J_{ij} =(1 / \sigma_i)  d Y_i / d x_j\)</span>, where <span class="math notranslate nohighlight">\(Y_i = Y(x,t_i)\)</span>.</p>
+<img class="math" src="_images/math/595b381ae54ebc927a8df9162dd46f051df77e92.png" alt="J_{ij} =(1 / \sigma_i)  d Y_i / d x_j"/>, where <img class="math" src="_images/math/5625016a9b9f013dcd6f858e693685fc88a94888.png" alt="Y_i = Y(x,t_i)"/>.</p>
 </section>
 <section id="performing-a-non-linear-fit">
-<h2>Performing a non-linear fit<a class="headerlink" href="#performing-a-non-linear-fit" title="Permalink to this headline">¶</a></h2>
-<p>To perform a non-linear fit with GSL Shell you should define before a function that computes the values <span class="math notranslate nohighlight">\(f_i\)</span> and <span class="math notranslate nohighlight">\(J_{ij}\)</span> for some given values of the parameters. The details about the function are given in the following section.</p>
+<h2>Performing a non-linear fit<a class="headerlink" href="#performing-a-non-linear-fit" title="Permalink to this heading">¶</a></h2>
+<p>To perform a non-linear fit with GSL Shell you should define before a function that computes the values <img class="math" src="_images/math/a960eb612c236288975208781dc321395934f356.png" alt="f_i"/> and <img class="math" src="_images/math/acd502acd7f80f6468bc1d557eab275ca77a0287.png" alt="J_{ij}"/> for some given values of the parameters. The details about the function are given in the following section.</p>
 <section id="user-defined-function">
-<span id="fdf-non-linear-descr"></span><h3>User defined function<a class="headerlink" href="#user-defined-function" title="Permalink to this headline">¶</a></h3>
-<p>The user supplied function for the non-linear fit should calculates the values <span class="math notranslate nohighlight">\(f_i\)</span> and the elements of the Jacobian <span class="math notranslate nohighlight">\(J_{ij}\)</span> for a given set values of the parameters.
+<span id="fdf-non-linear-descr"></span><h3>User defined function<a class="headerlink" href="#user-defined-function" title="Permalink to this heading">¶</a></h3>
+<p>The user supplied function for the non-linear fit should calculates the values <img class="math" src="_images/math/a960eb612c236288975208781dc321395934f356.png" alt="f_i"/> and the elements of the Jacobian <img class="math" src="_images/math/acd502acd7f80f6468bc1d557eab275ca77a0287.png" alt="J_{ij}"/> for a given set values of the parameters.
 The function is called with the following calling convention:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span> <span class="nf">fdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
    <span class="c1">-- user defined function</span>
@@ -92,12 +93,12 @@ The function is called with the following calling convention:</p>
 <span class="kr">end</span>
 </pre></div>
 </div>
-<p>where the function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> is the function that you provide, <code class="docutils literal notranslate"><span class="pre">x</span></code> is column matrix that contains the P parameters, <code class="docutils literal notranslate"><span class="pre">f</span></code> is a column matrix of size N used to store the values <span class="math notranslate nohighlight">\(f_i\)</span>  and J is a matrix of size N x P whose generic element <span class="math notranslate nohighlight">\(J_{ij}\)</span> is the derivative of <span class="math notranslate nohighlight">\(f_i\)</span> with respect of the j-th fit parameter.</p>
+<p>where the function <code class="docutils literal notranslate"><span class="pre">fdf</span></code> is the function that you provide, <code class="docutils literal notranslate"><span class="pre">x</span></code> is column matrix that contains the P parameters, <code class="docutils literal notranslate"><span class="pre">f</span></code> is a column matrix of size N used to store the values <img class="math" src="_images/math/a960eb612c236288975208781dc321395934f356.png" alt="f_i"/>  and J is a matrix of size N x P whose generic element <img class="math" src="_images/math/acd502acd7f80f6468bc1d557eab275ca77a0287.png" alt="J_{ij}"/> is the derivative of <img class="math" src="_images/math/a960eb612c236288975208781dc321395934f356.png" alt="f_i"/> with respect of the j-th fit parameter.</p>
 <p>In some cases the function can be called with <code class="docutils literal notranslate"><span class="pre">f</span></code> or <code class="docutils literal notranslate"><span class="pre">J</span></code> equal to <code class="docutils literal notranslate"><span class="pre">nil</span></code> because their values does not need to be computed. This imply that the user defined function should always check the argument <code class="docutils literal notranslate"><span class="pre">f</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> and set their values only if the variable is not <code class="docutils literal notranslate"><span class="pre">nil</span></code>.</p>
 <p>For example let us suppose that we want to fit the function</p>
-<div class="math notranslate nohighlight">
-\[f(t) = A \, e^{ - \lambda t} + b\]</div>
-<p>where A, λ and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t<sub>1</sub>, …, t<sub>i</sub>, …, t<sub>N</sub>. If this case the vector <code class="docutils literal notranslate"><span class="pre">x</span></code> will have size P, <code class="docutils literal notranslate"><span class="pre">f</span></code> size N and <code class="docutils literal notranslate"><span class="pre">J</span></code> size N x P. The function for the non-linear fit can be therefore defined as follows:</p>
+<div class="math">
+<p><img src="_images/math/1cfd14cd16bfeedae475fde84bb967ba1ae3a502.png" alt="f(t) = A \, e^{ - \lambda t} + b"/></p>
+</div><p>where A, λ and b are the fit parameters. Let us suppose also that we have samples the data at N different values of t = t<sub>1</sub>, …, t<sub>i</sub>, …, t<sub>N</sub>. If this case the vector <code class="docutils literal notranslate"><span class="pre">x</span></code> will have size P, <code class="docutils literal notranslate"><span class="pre">f</span></code> size N and <code class="docutils literal notranslate"><span class="pre">J</span></code> size N x P. The function for the non-linear fit can be therefore defined as follows:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="s1">&#39;math&#39;</span>
 
 <span class="kr">function</span> <span class="nf">fdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
@@ -182,7 +183,7 @@ The function is called with the following calling convention:</p>
 </section>
 </section>
 <section id="solver-class-definition">
-<h2>Solver class definition<a class="headerlink" href="#solver-class-definition" title="Permalink to this headline">¶</a></h2>
+<h2>Solver class definition<a class="headerlink" href="#solver-class-definition" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="num.nlinfit">
 <span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">nlinfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.nlinfit" title="Permalink to this definition">¶</a></dt>
@@ -247,7 +248,18 @@ did not reach the optimal point and <code class="docutils literal notranslate"><
 <li><a class="reference internal" href="#user-defined-function">User defined function</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#solver-class-definition">Solver class definition</a></li>
+<li><a class="reference internal" href="#solver-class-definition">Solver class definition</a><ul>
+<li><a class="reference internal" href="#num.nlinfit"><code class="docutils literal notranslate"><span class="pre">nlinfit()</span></code></a></li>
+<li><a class="reference internal" href="#num.NLinFit"><code class="docutils literal notranslate"><span class="pre">NLinFit</span></code></a><ul>
+<li><a class="reference internal" href="#num.NLinFit.set"><code class="docutils literal notranslate"><span class="pre">NLinFit.set()</span></code></a></li>
+<li><a class="reference internal" href="#num.NLinFit.iterate"><code class="docutils literal notranslate"><span class="pre">NLinFit.iterate()</span></code></a></li>
+<li><a class="reference internal" href="#num.NLinFit.test"><code class="docutils literal notranslate"><span class="pre">NLinFit.test()</span></code></a></li>
+<li><a class="reference internal" href="#num.NLinFit.x"><code class="docutils literal notranslate"><span class="pre">NLinFit.x</span></code></a></li>
+<li><a class="reference internal" href="#num.NLinFit.f"><code class="docutils literal notranslate"><span class="pre">NLinFit.f</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -279,7 +291,7 @@ did not reach the optimal point and <code class="docutils literal notranslate"><
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -299,13 +311,13 @@ did not reach the optimal point and <code class="docutils literal notranslate"><
         <li class="right" >
           <a href="linfit.html" title="Linear Least Squares fit"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Nonlinear Least Squares fit</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

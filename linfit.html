@@ -1,19 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Linear Least Squares fit &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Linear Least Squares fit &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +37,7 @@
         <li class="right" >
           <a href="pdf.html" title="Probability Distribution Functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Linear Least Squares fit</a></li> 
       </ul>
     </div>  
@@ -46,13 +48,13 @@
           <div class="body" role="main">
             
   <section id="linear-least-squares-fit">
-<h1>Linear Least Squares fit<a class="headerlink" href="#linear-least-squares-fit" title="Permalink to this headline">¶</a></h1>
+<h1>Linear Least Squares fit<a class="headerlink" href="#linear-least-squares-fit" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>This chapter describes routines for performing least squares fits to experimental data using linear combinations of functions.  The data may be weighted or unweighted, i.e. with known or unknown errors.  For weighted data, the functions compute the best fit parameters and their associated covariance matrix.  For unweighted data, the covariance matrix is estimated from the scatter of the points, giving a variance-covariance matrix.</p>
 </section>
 <section id="linear-fit-functions">
-<h2>Linear Fit Functions<a class="headerlink" href="#linear-fit-functions" title="Permalink to this headline">¶</a></h2>
+<h2>Linear Fit Functions<a class="headerlink" href="#linear-fit-functions" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="linfit">
 <span class="sig-name descname"><span class="pre">linfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#linfit" title="Permalink to this definition">¶</a></dt>
@@ -70,7 +72,7 @@
 
 </section>
 <section id="complete-example">
-<h2>Complete Example<a class="headerlink" href="#complete-example" title="Permalink to this headline">¶</a></h2>
+<h2>Complete Example<a class="headerlink" href="#complete-example" title="Permalink to this heading">¶</a></h2>
 <p>We give a complete example where a set of (x, y) observations are simulated and a linear fit is done:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">12.5</span><span class="p">,</span> <span class="mi">32</span>
 <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">0.55</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.4</span>
@@ -112,7 +114,10 @@
     <ul>
 <li><a class="reference internal" href="#">Linear Least Squares fit</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#linear-fit-functions">Linear Fit Functions</a></li>
+<li><a class="reference internal" href="#linear-fit-functions">Linear Fit Functions</a><ul>
+<li><a class="reference internal" href="#linfit"><code class="docutils literal notranslate"><span class="pre">linfit()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#complete-example">Complete Example</a></li>
 </ul>
 </li>
@@ -145,7 +150,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -165,13 +170,13 @@
         <li class="right" >
           <a href="pdf.html" title="Probability Distribution Functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Linear Least Squares fit</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

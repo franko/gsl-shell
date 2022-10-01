@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Ordinary Differential Equations &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Ordinary Differential Equations &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="fft.html" title="Fast Fourier Transform"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Ordinary Differential Equations</a></li> 
       </ul>
     </div>  
@@ -47,9 +48,9 @@
           <div class="body" role="main">
             
   <section id="ordinary-differential-equations">
-<h1>Ordinary Differential Equations<a class="headerlink" href="#ordinary-differential-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Ordinary Differential Equations<a class="headerlink" href="#ordinary-differential-equations" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>This chapter describes functions for solving ordinary differential equation (ODE) initial value problems.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -61,34 +62,34 @@ Only a few integration methods are actually available for the moment such as Run
 The ODE solver store internally the state of the solver and you can advance the solution step-by-step until, eventually, the desired value of t is reached.</p>
 </section>
 <section id="creating-a-ode-system-solver">
-<h2>Creating a ODE system solver<a class="headerlink" href="#creating-a-ode-system-solver" title="Permalink to this headline">¶</a></h2>
+<h2>Creating a ODE system solver<a class="headerlink" href="#creating-a-ode-system-solver" title="Permalink to this heading">¶</a></h2>
 <p>An ODE solver allows users to obtain a numerical solution of an Ordinary
 Differential Equation (ODE) system. The ODE solver lets you solve the
 general n-dimensional first-order system,</p>
-<div class="math notranslate nohighlight">
-\[\frac{\textrm{d}y_i(t)}{\textrm{d}t} = f_i(t, y_1(t), ..., y_n(t))\]</div>
-<p>for <span class="math notranslate nohighlight">\(i = 1, \dots, n\)</span>.
-The stepping functions rely on the vector of derivatives <span class="math notranslate nohighlight">\(f_i\)</span> and, for some methods, also on the Jacobian matrix,</p>
-<div class="math notranslate nohighlight">
-\[J_{ij} = \frac{\partial f_i}{\partial y_j}\left(t,y(t)\right)\]</div>
-<p>For the moment all the methods implemented in GSL Shell does not use the Jacobian matrix.</p>
+<div class="math">
+<p><img src="_images/math/8fd7ecdf2cb7dbd50f85e01ad864efdb16309ce0.png" alt="\frac{\textrm{d}y_i(t)}{\textrm{d}t} = f_i(t, y_1(t), ..., y_n(t))"/></p>
+</div><p>for <img class="math" src="_images/math/bb489445a6e51f1c27f9b331a1b488d8aedff18f.png" alt="i = 1, \dots, n"/>.
+The stepping functions rely on the vector of derivatives <img class="math" src="_images/math/a960eb612c236288975208781dc321395934f356.png" alt="f_i"/> and, for some methods, also on the Jacobian matrix,</p>
+<div class="math">
+<p><img src="_images/math/8add3422a0e912bfc3a6f7b7db8c47cad059f8b9.png" alt="J_{ij} = \frac{\partial f_i}{\partial y_j}\left(t,y(t)\right)"/></p>
+</div><p>For the moment all the methods implemented in GSL Shell does not use the Jacobian matrix.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The current implementation is limited to systems with a few number of variables.
 Probably you should avoid to use it if you have more than 20 variables.
-An implementation for ODE systems in array form should be available in the near future.</p>
+An implementation for ODE systems in array form may be available in the future.</p>
 </div>
 </section>
 <section id="ode-solver-usage-example">
-<h2>ODE solver usage example<a class="headerlink" href="#ode-solver-usage-example" title="Permalink to this headline">¶</a></h2>
+<h2>ODE solver usage example<a class="headerlink" href="#ode-solver-usage-example" title="Permalink to this heading">¶</a></h2>
 <p>Here an examples about the usage of an ODE solver. The differential equation that we want integrate is:</p>
 <blockquote>
-<div><div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{ll}
+<div><div class="math">
+<p><img src="_images/math/7fb1caac9ff0879ab156076be64ce4814b1b1bf3.png" alt="\begin{array}{ll}
    x' = &amp; -y - x^2 \\
    y' = &amp; 2 x - y^3
-\end{array}\end{split}\]</div>
-</div></blockquote>
+\end{array}"/></p>
+</div></div></blockquote>
 <p>and here the code that we can write to implement it:</p>
 <div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- define the ODE function</span>
 <span class="kr">function</span> <span class="nf">odef</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -134,7 +135,7 @@ An implementation for ODE systems in array form should be available in the near 
 </figure>
 </section>
 <section id="a-slightly-improved-example">
-<h2>A Slightly Improved Example<a class="headerlink" href="#a-slightly-improved-example" title="Permalink to this headline">¶</a></h2>
+<h2>A Slightly Improved Example<a class="headerlink" href="#a-slightly-improved-example" title="Permalink to this heading">¶</a></h2>
 <p>In the example given above we have used the <a class="reference internal" href="#num.ODE.step" title="num.ODE.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> method to advance the ODE integrator.
 When you use <a class="reference internal" href="#num.ODE.step" title="num.ODE.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ODE.step()</span></code></a> the ODE integrator will adapt at each step the step size in order to respect the maximum absolute and relative error that you requested.
 This is a quite convenient behaviour but it can have a drawback since the sampling points can be very tightly packed or very largely spaced depending on the ODE system and the integration method.
@@ -152,8 +153,30 @@ In this case you can use the <a class="reference internal" href="#num.ODE.evolve
 <p>You can see that the <a class="reference internal" href="#num.ODE.evolve" title="num.ODE.evolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evolve()</span></code></a> method works actually as a Lua iterator.</p>
 <p>You may also note that the <a class="reference internal" href="#num.ODE.evolve" title="num.ODE.evolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evolve()</span></code></a> iterator provides at each iteration the value t and each of the system variables in the standard order.</p>
 </section>
+<section id="ode-value-logger">
+<h2>ODE value logger<a class="headerlink" href="#ode-value-logger" title="Permalink to this heading">¶</a></h2>
+<p>During the solution of the differential equation it may be useful to store the values of some
+user-defined derived quantities. To this purpose the ODE function will be called, at some steps
+with an additional argument of Record type. The record argument can be used by calling its <cite>store</cite>
+method in the form:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">odef</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y_1</span><span class="p">,</span> <span class="p">...,</span> <span class="n">y_N</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+   <span class="c1">-- compute whatever is needed here</span>
+   <span class="kr">if</span> <span class="n">log</span> <span class="kr">then</span>
+      <span class="c1">-- store some values if the log argument is provided</span>
+      <span class="n">log</span><span class="p">:</span><span class="n">store</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">{</span><span class="n">der_value1</span> <span class="o">=</span> <span class="n">some_value</span><span class="p">,</span> <span class="n">der_value2</span> <span class="o">=</span> <span class="p">...}</span>
+   <span class="kr">end</span>
+   <span class="c1">-- return the derivatives</span>
+   <span class="kr">return</span> <span class="n">dy_1</span><span class="p">,</span> <span class="p">...,</span> <span class="n">dy_N</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p>Please note that the additional argument will be provided only at some specific steps when the final
+time of the integration step actually meets the required final time provided to the step function.
+You are therefore required into the ODE function to check if the additional argument to record
+the value is not nil.</p>
+</section>
 <section id="ode-solver-class-definition">
-<h2>ODE Solver Class Definition<a class="headerlink" href="#ode-solver-class-definition" title="Permalink to this headline">¶</a></h2>
+<h2>ODE Solver Class Definition<a class="headerlink" href="#ode-solver-class-definition" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="num.ODE">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">num.</span></span><span class="sig-name descname"><span class="pre">ODE</span></span><a class="headerlink" href="#num.ODE" title="Permalink to this definition">¶</a></dt>
@@ -170,11 +193,15 @@ containing the following fields:</p>
 </dd>
 <dt>eps_rel, <em>optional</em></dt><dd><p>The maximum relative error in the y that should be tolerated.</p>
 </dd>
-<dt>method, <em>optional</em></dt><dd><p>The low-level integration method used. Can be chosen between:</p>
-<ul class="simple">
-<li><p>rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.</p></li>
-<li><p>rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.</p></li>
-</ul>
+<dt>method, <em>optional</em></dt><dd><p>The low-level integration method used. Can be chosen between:
+- rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.
+- rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.</p>
+</dd>
+<dt>step_min, <em>optional</em></dt><dd><p>The smaller step the solver is allowed to use.
+Please note that if set the accuracy may be degraded bacause the solver may need to set a
+smaller step to meet the required precision.
+This option is useful to avoid excessively increase the computation time by making a
+compromise with the accuracy.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -187,6 +214,9 @@ The second argument <code class="docutils literal notranslate"><span class="pre"
 The function <code class="docutils literal notranslate"><span class="pre">f</span></code> is the function that defines the ODE system.
 It will be called like <code class="docutils literal notranslate"><span class="pre">f(t,</span> <span class="pre">y_1,</span> <span class="pre">y_2,</span> <span class="pre">...,</span> <span class="pre">y_N)</span></code> where <code class="docutils literal notranslate"><span class="pre">t</span></code> is the time and <code class="docutils literal notranslate"><span class="pre">y_1,</span> <span class="pre">y_2,</span> <span class="pre">...</span></code> are the values of the N independent values conventionally denoted here by ‘y’.
 The function <code class="docutils literal notranslate"><span class="pre">f</span></code> should return N values that correspond to values <code class="docutils literal notranslate"><span class="pre">f_i(t,</span> <span class="pre">y_1,</span> <span class="pre">...,</span> <span class="pre">y_N)</span></code> for each component <code class="docutils literal notranslate"><span class="pre">f_i</span></code> of the ODE system function.</p>
+<p>The function <code class="docutils literal notranslate"><span class="pre">f</span></code> can be called with an additional argument of Record type at the end to log the
+ODE values. In this case it will be called with arguments: <code class="docutils literal notranslate"><span class="pre">f(t,</span> <span class="pre">y_1,</span> <span class="pre">y_2,</span> <span class="pre">...,</span> <span class="pre">y_N,</span> <span class="pre">log)</span></code>. The
+additional argument will be provided only for some specific calls.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -233,7 +263,17 @@ The iterators returns the value <code class="docutils literal notranslate"><span
 <li><a class="reference internal" href="#creating-a-ode-system-solver">Creating a ODE system solver</a></li>
 <li><a class="reference internal" href="#ode-solver-usage-example">ODE solver usage example</a></li>
 <li><a class="reference internal" href="#a-slightly-improved-example">A Slightly Improved Example</a></li>
-<li><a class="reference internal" href="#ode-solver-class-definition">ODE Solver Class Definition</a></li>
+<li><a class="reference internal" href="#ode-value-logger">ODE value logger</a></li>
+<li><a class="reference internal" href="#ode-solver-class-definition">ODE Solver Class Definition</a><ul>
+<li><a class="reference internal" href="#num.ODE"><code class="docutils literal notranslate"><span class="pre">ODE</span></code></a><ul>
+<li><a class="reference internal" href="#num.ODE.ode"><code class="docutils literal notranslate"><span class="pre">ODE.ode()</span></code></a></li>
+<li><a class="reference internal" href="#num.ODE.init"><code class="docutils literal notranslate"><span class="pre">ODE.init()</span></code></a></li>
+<li><a class="reference internal" href="#num.ODE.step"><code class="docutils literal notranslate"><span class="pre">ODE.step()</span></code></a></li>
+<li><a class="reference internal" href="#num.ODE.evolve"><code class="docutils literal notranslate"><span class="pre">ODE.evolve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -265,7 +305,7 @@ The iterators returns the value <code class="docutils literal notranslate"><span
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -285,13 +325,13 @@ The iterators returns the value <code class="docutils literal notranslate"><span
         <li class="right" >
           <a href="fft.html" title="Fast Fourier Transform"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Ordinary Differential Equations</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>

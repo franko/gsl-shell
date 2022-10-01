@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>2D Interpolation &#8212; GSL Shell 2.3.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GSL Shell Examples" href="examples.html" />
+    <link rel="prev" title="Records" href="record.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="GSL Shell Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="record.html" title="Records"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">2D Interpolation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="d-interpolation">
+<h1>2D Interpolation<a class="headerlink" href="#d-interpolation" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>The 2D interpolation module provides some methods to load 2D tables of data
+and computing values by interpolating.
+It only works for data provided in a rectangular grid.</p>
+<span class="target" id="module-interp2d"></span><dl class="py function">
+<dt class="sig sig-object py" id="interp2d.new">
+<span class="sig-prename descclassname"><span class="pre">interp2d.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#interp2d.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <a class="reference internal" href="#interp2d.Interp2D" title="interp2d.Interp2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interp2D</span></code></a> object based on the provided data.
+<code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> must be vectors containing the x and y values
+of the cartesian grid where the data lies.
+<code class="docutils literal notranslate"><span class="pre">z</span></code> must be a matrix containing the data to be interpolated.
+To be acceptable the vectors and matrix <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code>
+must have respectively dimensions N, M and N x M.</p>
+<p>The optional argument <code class="docutils literal notranslate"><span class="pre">options</span></code> can provide the field <code class="docutils literal notranslate"><span class="pre">type</span></code> to
+be a string between “linear” and “cubic” to choose the kind of interpolation.
+It can also provide the field <code class="docutils literal notranslate"><span class="pre">extrapolate</span></code> to a boolean that indicate
+if extrapolation outside of the domain is allowed. The <code class="docutils literal notranslate"><span class="pre">extrapolate</span></code>
+option is set to <code class="docutils literal notranslate"><span class="pre">true</span></code> by default.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="interp2d.new_from_csv">
+<span class="sig-prename descclassname"><span class="pre">interp2d.</span></span><span class="sig-name descname"><span class="pre">new_from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#interp2d.new_from_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#interp2d.Interp2D" title="interp2d.Interp2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interp2D</span></code></a> object based on a csv file.
+The data should be arranged in the following way:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>      <span class="n">x1</span>     <span class="n">x2</span>     <span class="n">x3</span>     <span class="p">...</span>     <span class="n">xn</span>
+<span class="n">y1</span>     <span class="n">z11</span>    <span class="n">z21</span>    <span class="n">z31</span>    <span class="p">...</span>     <span class="n">zn1</span>
+<span class="n">y2</span>     <span class="n">z12</span>    <span class="n">z22</span>    <span class="n">z32</span>    <span class="p">...</span>     <span class="n">zn2</span>
+<span class="n">y3</span>     <span class="n">z13</span>    <span class="n">z23</span>    <span class="n">z33</span>    <span class="p">...</span>     <span class="n">zn3</span>
+<span class="p">...</span>    <span class="p">...</span>    <span class="p">...</span>    <span class="p">...</span>    <span class="p">...</span>     <span class="p">...</span>
+<span class="n">ym</span>     <span class="n">z1m</span>    <span class="n">z2n</span>    <span class="n">z3n</span>    <span class="p">...</span>     <span class="n">znn</span>
+</pre></div>
+</div>
+<p>The first cell in the table can be set to any value or left empty as it is not used.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">options</span></code> optional arguments is the same than for the <a class="reference internal" href="#interp2d.new" title="interp2d.new"><code class="xref py py-func docutils literal notranslate"><span class="pre">interp2d.new()</span></code></a> function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="interp2d.read_csv">
+<span class="sig-prename descclassname"><span class="pre">interp2d.</span></span><span class="sig-name descname"><span class="pre">read_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#interp2d.read_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a csv file formatted like for the function <a class="reference internal" href="#interp2d.new_from_csv" title="interp2d.new_from_csv"><code class="xref py py-func docutils literal notranslate"><span class="pre">new_from_csv()</span></code></a> and returns the
+vectors and matrix <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code>.</p>
+</dd></dl>
+
+</section>
+<section id="d-interpolation-class">
+<h2>2D Interpolation class<a class="headerlink" href="#d-interpolation-class" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="interp2d.Interp2D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">interp2d.</span></span><span class="sig-name descname"><span class="pre">Interp2D</span></span><a class="headerlink" href="#interp2d.Interp2D" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py function">
+<dt class="sig sig-object py" id="interp2d.Interp2D.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#interp2d.Interp2D.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the interpolated value for the given x and y values.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="interp2d.Interp2D.eval_deriv">
+<span class="sig-name descname"><span class="pre">eval_deriv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#interp2d.Interp2D.eval_deriv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the interpolated derivatives with respect to x and y respectively
+for the given x and y values.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">2D Interpolation</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#interp2d.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+<li><a class="reference internal" href="#interp2d.new_from_csv"><code class="docutils literal notranslate"><span class="pre">new_from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#interp2d.read_csv"><code class="docutils literal notranslate"><span class="pre">read_csv()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#d-interpolation-class">2D Interpolation class</a><ul>
+<li><a class="reference internal" href="#interp2d.Interp2D"><code class="docutils literal notranslate"><span class="pre">Interp2D</span></code></a><ul>
+<li><a class="reference internal" href="#interp2d.Interp2D.eval"><code class="docutils literal notranslate"><span class="pre">Interp2D.eval()</span></code></a></li>
+<li><a class="reference internal" href="#interp2d.Interp2D.eval_deriv"><code class="docutils literal notranslate"><span class="pre">Interp2D.eval_deriv()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="record.html"
+                          title="previous chapter">Records</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="examples.html"
+                          title="next chapter">GSL Shell Examples</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/interp2d.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="GSL Shell Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="record.html" title="Records"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">2D Interpolation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2013, Francesco Abbate.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+    </div>
+  </body>
+</html>

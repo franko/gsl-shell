@@ -1,0 +1,57 @@
+.. highlight:: lua
+
+.. _record-chapter:
+
+Records
+=======
+
+Overview
+--------
+
+The record module is an utility to record and plot time dependent data.
+It was initially done in relation to the ODE solving module to store
+derived quantitis but it can be used also in other contexts.
+The module is implemented as a thin layer on top of a gdt table.
+
+.. module:: record
+
+.. function:: new()
+
+   Creates a new, empty, :class:`Record` object.
+
+   The field ``tab`` can be used to access the underlying gdt data table.
+
+Record class
+------------
+
+.. class:: Record
+
+   .. function:: store(t, values)
+
+      Store a new row of data corresponding to the time ``t`` and with values from the
+      corresponding ``values`` argument.
+      This latter should be a table in the form of::
+
+        { var1 = value1, var2 = value2, ... }
+
+      When the values are store each variable's name will correspond to a column name
+      in the underlying table.
+
+   .. function:: values()
+
+      Returns the values corresponding the the most recent entry, in the same form used
+      by the store method.
+
+   .. function:: plot(plot_spec[, t_min, t_max])
+
+      Plots the data given in `plot_spec` by grouping them in different plots.
+      It does optionally filter the data to take only values whose time t belongs
+      between ``t_min`` and ``t_max``.
+
+      The ``plot_spec`` argument should be a table in the form::
+
+        {{"var_1", "var_2", ...}, {"var_5", "var_6", ...}, ...}
+
+      where the variable's name to plot are given so that when they are grouped
+      together are plotted in the same plot.
+

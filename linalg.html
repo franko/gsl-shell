@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Linear Algebra &#8212; GSL Shell 2.3.3 documentation</title>
+    <title>Linear Algebra &#8212; GSL Shell 2.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +37,7 @@
         <li class="right" >
           <a href="lua-base.html" title="Iterators"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Linear Algebra</a></li> 
       </ul>
     </div>  
@@ -47,9 +48,9 @@
           <div class="body" role="main">
             
   <section id="linear-algebra">
-<h1>Linear Algebra<a class="headerlink" href="#linear-algebra" title="Permalink to this headline">¶</a></h1>
+<h1>Linear Algebra<a class="headerlink" href="#linear-algebra" title="Permalink to this heading">¶</a></h1>
 <section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h2>
 <p>GSL Shell gives access to some functions of linear algebra based on GSL itself or on the BLAS routines.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="matrix.inv">
@@ -78,9 +79,9 @@ is a column matrix. It returns the solution x of the system.</p>
 decomposition (SVD) into the product of an M-by-N orthogonal matrix U,
 an N-by-N diagonal matrix of singular values S and the transpose of an
 N-by-N orthogonal square matrix V,</p>
-<div class="math notranslate nohighlight">
-\[A = U \Sigma V^T\]</div>
-<p>The singular values σ<sub>i</sub> = Σ<sub>ii</sub>
+<div class="math">
+<p><img src="_images/math/0180a8d207acbed4754cb88e654219c4df9b7ce3.png" alt="A = U \Sigma V^T"/></p>
+</div><p>The singular values σ<sub>i</sub> = Σ<sub>ii</sub>
 are all non-negative and are
 generally chosen to form a non-increasing sequence
 σ<sub>1</sub> &gt;= σ<sub>2</sub> &gt;= … &gt;= σ<sub>N</sub> &gt;= 0.</p>
@@ -132,8 +133,8 @@ write something like this:</p>
 <span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">cholesky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.cholesky" title="Permalink to this definition">¶</a></dt>
 <dd><p>A symmetric, positive definite square matrix A has a Cholesky decomposition into a product of a
 lower triangular matrix L and its transpose L^T,</p>
-<p>real: <span class="math notranslate nohighlight">\(A = L L^T\)</span>
-complex: <span class="math notranslate nohighlight">\(A = L L^\star\)</span></p>
+<p>real: <img class="math" src="_images/math/f67154fce7fa7768118f49eb1079911af05bb69a.png" alt="A = L L^T"/>
+complex: <img class="math" src="_images/math/9bcd27ac2c64f6baa7d53bef36be44636e65f8cc.png" alt="A = L L^\star"/></p>
 <p>This is sometimes referred to as taking the square-root of a matrix.
 The Cholesky decomposition can only be carried out when all the eigenvalues of the matrix are positive.
 This decomposition can be used to convert the linear system A x = b into a pair of triangular systems (L y = b, L^T x = y),
@@ -147,8 +148,8 @@ If the matrix is not positive-definite then the decomposition will fail.</p>
 <dt class="sig sig-object py" id="matrix.td_decomp">
 <span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">td_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.td_decomp" title="Permalink to this definition">¶</a></dt>
 <dd><p>A matrix A can be factorized by similarity transformations into the form,</p>
-<p>real: <span class="math notranslate nohighlight">\(A = Q T Q^T\)</span>
-complex: <span class="math notranslate nohighlight">\(A = U T U^T\)</span></p>
+<p>real: <img class="math" src="_images/math/3433cd3d58d12fbd3c1569bf6b3bdf5c47e9aca5.png" alt="A = Q T Q^T"/>
+complex: <img class="math" src="_images/math/d354cd7fcee5022a48ba8674346bfb5d14f9f5ec.png" alt="A = U T U^T"/></p>
 <p>where</p>
 <p>real: Q is an orthogonal matrix and T is a symmetric tridiagonal matrix.
 complex: U is a unitary matrix and T is a real symmetric tridiagonal matrix.</p>
@@ -159,7 +160,7 @@ complex: U is a unitary matrix and T is a real symmetric tridiagonal matrix.</p>
 <dt class="sig sig-object py" id="matrix.hessenberg_decomp">
 <span class="sig-prename descclassname"><span class="pre">matrix.</span></span><span class="sig-name descname"><span class="pre">hessenberg_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#matrix.hessenberg_decomp" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general real matrix A can be decomposed by orthogonal similarity transformations into the form</p>
-<p><span class="math notranslate nohighlight">\(A = U H U^T\)</span></p>
+<p><img class="math" src="_images/math/d2a626cb1e57a1662c078bec62227bb945aac596.png" alt="A = U H U^T"/></p>
 <p>where U is orthogonal and H is an upper Hessenberg matrix, meaning that it has zeros below the first subdiagonal.
 The Hessenberg reduction is the first step in the Schur decomposition for the nonsymmetric eigenvalue problem,
 but has applications in other areas as well.
@@ -193,7 +194,19 @@ The function returns H, R, U and V.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Linear Algebra</a><ul>
-<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#functions">Functions</a><ul>
+<li><a class="reference internal" href="#matrix.inv"><code class="docutils literal notranslate"><span class="pre">inv()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.det"><code class="docutils literal notranslate"><span class="pre">det()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.svd"><code class="docutils literal notranslate"><span class="pre">svd()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.lu"><code class="docutils literal notranslate"><span class="pre">lu()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.qr"><code class="docutils literal notranslate"><span class="pre">qr()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.cholesky"><code class="docutils literal notranslate"><span class="pre">cholesky()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.td_decomp"><code class="docutils literal notranslate"><span class="pre">td_decomp()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.hessenberg_decomp"><code class="docutils literal notranslate"><span class="pre">hessenberg_decomp()</span></code></a></li>
+<li><a class="reference internal" href="#matrix.hesstri_decomp"><code class="docutils literal notranslate"><span class="pre">hesstri_decomp()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -225,7 +238,7 @@ The function returns H, R, U and V.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -245,13 +258,13 @@ The function returns H, R, U and V.</p>
         <li class="right" >
           <a href="lua-base.html" title="Iterators"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Linear Algebra</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
     </div>
   </body>
 </html>
