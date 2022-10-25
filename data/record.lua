@@ -15,6 +15,33 @@ function Record:store(t, values)
     self.tab:append(values)
 end
 
+local function has_value(tab, val)
+    for i = 1, #tab do
+        if tab[i] == val then return true end
+    end
+end
+
+function Record:store_add(t, values)
+    if not self.tab then return end
+    for key in pairs(values) do
+        if not has_value(self.headers, key) then
+            self.headers[#self.headers + 1] = key
+            self.tab:col_append(key)
+        end
+    end
+    local index = #self.tab
+    while index > 0 and self.tab:get(index, "t") ~= t do
+        index = index - 1
+    end
+    if index == 0 then
+        print(self.tab)
+        error("Invalid value of t = " .. t .. " : not present in the table")
+    end
+    for key, value in pairs(values) do
+        self.tab:set(index, key, value)
+    end
+end
+
 local function record_plot(self, pll, t_min, t_max)
     local np = #pll
     local plots = {}
