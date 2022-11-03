@@ -44,10 +44,7 @@
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
-#include "lua-graph.h"
 #include "platform.h"
-#include "window_hooks.h"
-#include "window.h"
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -107,21 +104,6 @@ static void my_freeline (lua_State *L, char *b) { }
 lua_State *globalL = NULL;
 struct gsl_shell_state gsl_shell[1];
 static const char *progname = LUA_PROGNAME;
-
-struct window_hooks app_window_hooks[1] = {{
-        window_new, window_show, window_attach,
-        window_slot_update, window_slot_refresh,
-        window_close_wait, window_wait,
-        window_save_slot_image, window_restore_slot_image,
-        window_register,
-    }
-};
-
-static void gsl_shell_openlibs(lua_State *L)
-{
-    luaopen_gsl (L);
-    register_graph (L);
-}
 
 static void lstop(lua_State *L, lua_Debug *ar)
 {
@@ -688,7 +670,7 @@ static int pmain(lua_State *L)
     lua_pushstring(L, exename);
     lua_setglobal(L, "EXEFILE");
 
-    gsl_shell_openlibs(L);
+    luaopen_gsl (L);
     lua_gc(L, LUA_GCRESTART, -1);
     run_start_script(L);
 
@@ -747,7 +729,6 @@ int main(int argc, char **argv)
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
 
-    gsl_shell_close_with_graph(gsl_shell, !smain.keep_windows);
     gsl_shell_free(gsl_shell);
 
     return (status || smain.status) ? EXIT_FAILURE : EXIT_SUCCESS;

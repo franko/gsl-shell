@@ -2,7 +2,7 @@
 
 set -o errexit
 
-exe_name=gsl-shell-gui
+exe_name=gsl-shell
 
 pargs=()
 while [[ "$#" -gt 0 ]]; do
@@ -50,7 +50,6 @@ ninja -C "$builddir"
 rm -fr "$rundir"
 mkdir -p "$bindir" "$datadir"
 cp "$builddir/src/console/gsl-shell$ext" "$bindir"
-cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
 cp -r data/. "$datadir"
 
 "$bindir/$exe_name"
