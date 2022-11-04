@@ -1,0 +1,5 @@
+[wrap-git]
+directory = elem
+url = https://github.com/franko/elementary-plotlib
+revision = v1.0-beta6
+

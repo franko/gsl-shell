@@ -37,6 +37,8 @@
 
 #define luajit_c
 
+#include "elem/elem.h"
+#include "elem/elem_lua.h"
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
@@ -664,6 +666,9 @@ static int pmain(lua_State *L)
     }
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
+
+    elem_lua_open_library(L);
+    elem_initialize_fonts();
 
     char exename[2048];
     get_exe_filename(exename, sizeof(exename));
