@@ -1,4 +1,4 @@
-project('gsl-shell', ['cpp', 'c'], version : '2.3.4', default_options : ['cpp_std=c++11', 'c_std=gnu11'])
+project('gsl-shell', ['cpp', 'c'], version : '2.3.4', default_options : ['cpp_std=c++17', 'c_std=gnu11'])
 
 gsl_shell_defines = [
     # '-DDISABLE_GAMMA_CORR',
@@ -24,10 +24,13 @@ gsl_shell_include = include_directories('include', 'src/gdt', 'src/lua-gsl')
 cpp_utils_include = include_directories('src/cpp-utils')
 
 threads_dep  = dependency('threads')
-luajit_dep  = dependency('luajit', required: false)
+
+luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
+luajit_dep = luajit_proj.get_variable('lua_dep')
+sol_dep = dependency('sol2')
 
 libelem_proj = subproject('elem', default_options: ['default_library=static'])
-libelem_dep = libelem_proj.get_variable('libelemlua_dep')
+libelem_dep = libelem_proj.get_variable('libelemwin_dep')
 
 libgsl_options = ['default_library=static', 'blas=' + get_option('blas')]
 foreach module_name : ['siman', 'wavelet', 'sparse', 'ode', 'monte', 'integ', 'min', 'fit']

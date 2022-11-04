@@ -8,6 +8,6 @@ CXX="${CXX:-g++}"
 BUILD_TYPE=Release
 
 packages+=(
-  "sdl2 -render -opengl -threads" "libagg" "freetype2" "luajit 2.1.0-beta3.1" "sol2"
+  "sdl2 -render -opengl -threads" "libagg" "freetype2" "sol2"
 )
 
