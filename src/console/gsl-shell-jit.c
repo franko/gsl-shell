@@ -646,6 +646,8 @@ static struct Smain {
     int keep_windows;
 } smain;
 
+extern int luaopen_graph(lua_State *L);
+
 static int pmain(lua_State *L)
 {
     struct Smain *s = &smain;
@@ -668,6 +670,7 @@ static int pmain(lua_State *L)
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
 
+    luaopen_graph(L);
     luaopen_elem(L);
     elem_initialize_fonts();
 
