@@ -1,6 +1,6 @@
 # Readline not supported with meson build.
 
-executable('gsl-shell', ['elem_plot.cpp', 'gsl-shell-jit.c'],
+executable('gsl-shell', ['elem_plot.cpp', 'elem_api.cpp', 'gsl-shell-jit.c'],
     dependencies: [libgsl_dep, threads_dep, luajit_dep, sol_dep, libelem_dep],
     include_directories: gsl_shell_include,
     c_args: gsl_shell_defines,
