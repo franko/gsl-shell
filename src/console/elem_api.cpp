@@ -7,12 +7,15 @@ extern "C" {
 #include <lua.h>
 }
 
-#define API_TYPE_PATH "Path"
-#define API_TYPE_CURVE "Curve"
-#define API_TYPE_DASH "Dash"
+#define API_TYPE_PATH    "Path"
+#define API_TYPE_CURVE   "Curve"
+#define API_TYPE_DASH    "Dash"
+#define API_TYPE_MARKERS "Markers"
+#define API_TYPE_PLOT    "Plot"
 
 extern "C" {
 static int f_object_gc(lua_State *L);
+static int f_null(lua_State *L);
 
 static int f_path_new(lua_State *L);
 static int f_path_move_to(lua_State *L);
@@ -30,13 +33,36 @@ static int f_curve_arc_to(lua_State *L);
 static int f_dash_new(lua_State *L);
 static int f_dash_add_dash(lua_State *L);
 
+static int f_plot_new(lua_State *L);
+static int f_plot_gc(lua_State *L);
+static int f_plot_add(lua_State *L);
+static int f_plot_addline(lua_State *L);
+static int f_plot_show(lua_State *L);
+
 extern int luaopen_graph(lua_State *L);
+}
+
+int f_null(lua_State *L) {
+    return 0;
 }
 
 int f_object_gc(lua_State *L) {
     elem::Object *self = (elem::Object *) lua_touserdata(L, 1);
     self->~Object();
     return 0;
+}
+
+static elem::Object *check_object_userdata(lua_State *L, int arg) {
+    void *obj = nullptr;
+    obj = luaL_testudata(L, arg, API_TYPE_PATH);
+    if (obj) goto return_obj;
+    obj = luaL_testudata(L, arg, API_TYPE_CURVE);
+    if (obj) goto return_obj;
+    obj = luaL_testudata(L, arg, API_TYPE_DASH);
+    if (obj) goto return_obj;
+    luaL_error(L, "expected argument of type Object");
+return_obj:
+    return (elem::Object *) obj;
 }
 
 static elem::Path *check_path_userdata(lua_State *L, int arg) {
@@ -161,38 +187,91 @@ int f_dash_add_dash(lua_State *L) {
     return 0;
 }
 
+int f_plot_new(lua_State *L) {
+    void *buf = lua_newuserdata(L, sizeof(elem::Plot));
+    new(buf) elem::Plot;
+    luaL_setmetatable(L, API_TYPE_PLOT);
+    return 1;
+}
+
+int f_plot_gc(lua_State *L) {
+    elem::Plot *self = (elem::Plot *) lua_touserdata(L, 1);
+    self->~Plot();
+    return 0;
+}
+
+int f_plot_add(lua_State *L) {
+    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
+    elem::Object *element = check_object_userdata(L, 2);
+    uint32_t stroke_color = luaL_checknumber(L, 3);
+    double stroke_width = luaL_checknumber(L, 4);
+    uint32_t fill_color = luaL_checknumber(L, 5);
+    plot->Add(*element, stroke_color, stroke_width, fill_color);
+    return 0;
+}
+
+int f_plot_addline(lua_State *L) {
+    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
+    elem::Object *element = check_object_userdata(L, 2);
+    uint32_t stroke_color = luaL_checknumber(L, 3);
+    double stroke_width = luaL_checknumber(L, 4);
+    plot->AddStroke(*element, stroke_color, stroke_width);
+    return 0;
+}
+
+int f_plot_show(lua_State *L) {
+    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
+    int w = luaL_checkint(L, 2);
+    int h = luaL_checkint(L, 3);
+    plot->Show(w, h, elem::WindowResize);
+    return 0;
+}
+
 static const luaL_Reg path_lib[] = {
-    { "__gc",               f_object_gc          },
-    { "move_to",            f_path_move_to       },
-    { "line_to",            f_path_line_to       },
-    { "close",              f_path_close         },
+    { "__gc",               f_object_gc         },
+    { "__metatable",        f_null              },
+    { "move_to",            f_path_move_to      },
+    { "line_to",            f_path_line_to      },
+    { "close",              f_path_close        },
     { nullptr, nullptr }
 };
 
 static const luaL_Reg curve_lib[] = {
-    { "__gc",               f_object_gc            },
-    { "move_to",            f_curve_move_to       },
-    { "line_to",            f_curve_line_to       },
-    { "close",              f_curve_close         },
-    { "curve3",             f_curve_curve3        },
-    { "curve4",             f_curve_curve4        },
-    { "arc_to",             f_curve_arc_to        },
+    { "__gc",               f_object_gc         },
+    { "__metatable",        f_null              },
+    { "move_to",            f_curve_move_to     },
+    { "line_to",            f_curve_line_to     },
+    { "close",              f_curve_close       },
+    { "curve3",             f_curve_curve3      },
+    { "curve4",             f_curve_curve4      },
+    { "arc_to",             f_curve_arc_to      },
     { nullptr, nullptr }
 };
 
 static const luaL_Reg dash_lib[] = {
-    { "__gc",               f_object_gc           },
-    { "move_to",            f_path_move_to       },
-    { "line_to",            f_path_line_to       },
-    { "close",              f_path_close         },
-    { "add_dash",           f_dash_add_dash       },
+    { "__gc",               f_object_gc         },
+    { "__metatable",        f_null              },
+    { "move_to",            f_path_move_to      },
+    { "line_to",            f_path_line_to      },
+    { "close",              f_path_close        },
+    { "add_dash",           f_dash_add_dash     },
+    { nullptr, nullptr }
+};
+
+static const luaL_Reg plot_lib[] = {
+    { "__gc",               f_plot_gc           },
+    { "__metatable",        f_null              },
+    { "add",                f_plot_add          },
+    { "addline",            f_plot_addline      },
+    { "show",               f_plot_show         },
     { nullptr, nullptr }
 };
 
 static const luaL_Reg graph_lib[] = {
-    {"path",                f_path_new           },
-    {"curve",               f_curve_new          },
+    {"path",                f_path_new          },
+    {"curve",               f_curve_new         },
     {"dashed_path",         f_dash_new          },
+    {"plot",                f_plot_new          },
     { nullptr, nullptr }
 };
 
@@ -208,6 +287,7 @@ int luaopen_graph(lua_State *L) {
     register_api_type(L, path_lib,  API_TYPE_PATH);
     register_api_type(L, curve_lib, API_TYPE_CURVE);
     register_api_type(L, dash_lib,  API_TYPE_DASH);
+    register_api_type(L, plot_lib,  API_TYPE_PLOT);
 
     lua_createtable(L, 0, sizeof(graph_lib) / sizeof(luaL_Reg) - 1);
     luaL_setfuncs(L, graph_lib, 0);

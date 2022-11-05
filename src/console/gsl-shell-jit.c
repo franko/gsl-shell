@@ -714,26 +714,14 @@ static int pmain(lua_State *L)
     return 0;
 }
 
-int main(int argc, char **argv)
+int gsl_shell_main()
 {
-    int status;
-#ifdef _WIN32
-  HINSTANCE lib = LoadLibrary("user32.dll");
-  int (*SetProcessDPIAware)() = (void*) GetProcAddress(lib, "SetProcessDPIAware");
-  SetProcessDPIAware();
-#endif
-
-#ifdef USE_READLINE
-    initialize_readline();
-#endif
     gsl_shell_init(gsl_shell);
     gsl_shell_open(gsl_shell);
 
     pthread_mutex_lock(&gsl_shell->exec_mutex);
 
-    smain.argc = argc;
-    smain.argv = argv;
-    status = lua_cpcall(gsl_shell->L, pmain, NULL);
+    int status = lua_cpcall(gsl_shell->L, pmain, NULL);
     report(gsl_shell->L, status);
 
     pthread_mutex_unlock(&gsl_shell->exec_mutex);
@@ -741,4 +729,19 @@ int main(int argc, char **argv)
     gsl_shell_free(gsl_shell);
 
     return (status || smain.status) ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int main(int argc, char **argv) {
+#ifdef _WIN32
+  HINSTANCE lib = LoadLibrary("user32.dll");
+  int (*SetProcessDPIAware)() = (void*) GetProcAddress(lib, "SetProcessDPIAware");
+  SetProcessDPIAware();
+#endif
+#ifdef USE_READLINE
+    initialize_readline();
+#endif
+
+    smain.argc = argc;
+    smain.argv = argv;
+    return elem_initialize_and_run(gsl_shell_main);
 }
