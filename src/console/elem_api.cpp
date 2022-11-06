@@ -195,15 +195,63 @@ int f_dash_add_dash(lua_State *L) {
 }
 
 int f_plot_new(lua_State *L) {
-    void *buf = lua_newuserdata(L, sizeof(elem::Plot));
-    new(buf) elem::Plot;
+    elem::Plot *plot = (elem::Plot *) lua_newuserdata(L, sizeof(elem::Plot));
+    new(plot) elem::Plot;
     luaL_setmetatable(L, API_TYPE_PLOT);
+    if (lua_gettop(L) >= 2) {
+        const char *title = luaL_checkstring(L, 1);
+        plot->SetTitle(title);
+    }
     return 1;
 }
 
 int f_plot_gc(lua_State *L) {
     elem::Plot *self = (elem::Plot *) lua_touserdata(L, 1);
     self->~Plot();
+    return 0;
+}
+
+int f_plot_newindex(lua_State *L) {
+    static const char *properties[] = {
+        "title", "xtitle", "ytitle", "xlab_angle", "ylab_angle",
+        "xlab_format", "ylab_format", nullptr
+    };
+    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
+    int property_index = luaL_checkoption(L, 2, nullptr, properties);
+    switch (property_index) {
+        const char *sarg;
+        double narg;
+    case 0:
+        sarg = luaL_checkstring(L, 3);
+        plot->SetTitle(sarg);
+        break;
+    case 1:
+        sarg = luaL_checkstring(L, 3);
+        plot->SetXAxisTitle(sarg);
+        break;
+    case 2:
+        sarg = luaL_checkstring(L, 3);
+        plot->SetYAxisTitle(sarg);
+        break;
+    case 3:
+        narg = luaL_checknumber(L, 3);
+        plot->SetAxisLabelsAngle(elem::xAxis, narg);
+        break;
+    case 4:
+        narg = luaL_checknumber(L, 3);
+        plot->SetAxisLabelsAngle(elem::yAxis, narg);
+        break;
+    case 5:
+        sarg = luaL_checkstring(L, 3);
+        plot->EnableLabelFormat(elem::xAxis, sarg);
+        break;
+    case 6:
+        sarg = luaL_checkstring(L, 3);
+        plot->EnableLabelFormat(elem::yAxis, sarg);
+        break;
+    default:
+        /* */ ;
+    }
     return 0;
 }
 
@@ -270,6 +318,7 @@ static const luaL_Reg dash_lib[] = {
 
 static const luaL_Reg plot_lib[] = {
     { "__gc",               f_plot_gc           },
+    { "__newindex",         f_plot_newindex     },
     { "add",                f_plot_add          },
     { "addline",            f_plot_addline      },
     { "show",               f_plot_show         },
