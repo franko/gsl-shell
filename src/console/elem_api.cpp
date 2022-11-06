@@ -42,6 +42,12 @@ extern int luaopen_graph(lua_State *L);
 }
 
 int f_object_gc(lua_State *L) {
+    /* We should check that the userdata is actually an instance of a
+    ** derived Object type. In reality this method is normally only called
+    ** by the Lua's GC and is therefore safe but in theory the function is
+    ** accessible by inspecting the metatable and could therefore be
+    ** erroneously called with any argument.
+    ** For the moment we don't check assuming the method is not messed up. */
     elem::Object *self = (elem::Object *) lua_touserdata(L, 1);
     self->~Object();
     return 0;
@@ -70,8 +76,14 @@ static elem::Path *check_path_userdata(lua_State *L, int arg) {
 }
 
 int f_path_new(lua_State *L) {
-    void *path_buf = lua_newuserdata(L, sizeof(elem::Path));
-    new(path_buf) elem::Path;
+    int nargs = lua_gettop(L);
+    elem::Path *path = (elem::Path *) lua_newuserdata(L, sizeof(elem::Path));
+    new(path) elem::Path;
+    if (nargs >= 2) {
+        double x = luaL_checknumber(L, 1);
+        double y = luaL_checknumber(L, 2);
+        path->MoveTo(x, y);
+    }
     luaL_setmetatable(L, API_TYPE_PATH);
     return 1;
 }
@@ -216,8 +228,14 @@ int f_plot_addline(lua_State *L) {
 
 int f_plot_show(lua_State *L) {
     elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
-    int w = luaL_checkint(L, 2);
-    int h = luaL_checkint(L, 3);
+    int w, h;
+    if (lua_gettop(L) >= 3) {
+        w = luaL_checkint(L, 2);
+        h = luaL_checkint(L, 3);
+    } else {
+        w = 640;
+        h = 480;
+    }
     plot->Show(w, h, elem::WindowResize);
     return 0;
 }
