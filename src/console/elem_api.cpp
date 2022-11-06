@@ -269,7 +269,10 @@ int f_plot_addline(lua_State *L) {
     elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
     elem::Object *element = check_object_userdata(L, 2);
     uint32_t stroke_color = luaL_checknumber(L, 3);
-    double stroke_width = luaL_checknumber(L, 4);
+    double stroke_width = 1.5;
+    if (lua_gettop(L) >= 4) {
+        stroke_width = luaL_checknumber(L, 4);
+    }
     plot->AddStroke(*element, stroke_color, stroke_width);
     return 0;
 }

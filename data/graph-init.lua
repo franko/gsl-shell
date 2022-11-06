@@ -1,4 +1,3 @@
-
 local bit = require 'bit'
 
 local floor, pi = math.floor, math.pi
@@ -345,7 +344,7 @@ end
 
 local function redirect_plot()
    local reg = debug.getregistry()
-   local mt = reg['GSL.plot']
+   local mt = reg['Plot']
    local plot_index = mt.__index
 
    local function index_redirect(t, k)
@@ -360,4 +359,6 @@ local function redirect_plot()
    mt.__index = index_redirect
 end
 
-redirect_plot()
+print("warning: disabled plot legend mechanism")
+-- FIXME: currently does not work with new elementary plot API.
+-- redirect_plot()
