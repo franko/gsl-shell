@@ -15,7 +15,6 @@ extern "C" {
 
 extern "C" {
 static int f_object_gc(lua_State *L);
-static int f_null(lua_State *L);
 
 static int f_path_new(lua_State *L);
 static int f_path_move_to(lua_State *L);
@@ -40,10 +39,6 @@ static int f_plot_addline(lua_State *L);
 static int f_plot_show(lua_State *L);
 
 extern int luaopen_graph(lua_State *L);
-}
-
-int f_null(lua_State *L) {
-    return 0;
 }
 
 int f_object_gc(lua_State *L) {
@@ -229,7 +224,6 @@ int f_plot_show(lua_State *L) {
 
 static const luaL_Reg path_lib[] = {
     { "__gc",               f_object_gc         },
-    { "__metatable",        f_null              },
     { "move_to",            f_path_move_to      },
     { "line_to",            f_path_line_to      },
     { "close",              f_path_close        },
@@ -238,7 +232,6 @@ static const luaL_Reg path_lib[] = {
 
 static const luaL_Reg curve_lib[] = {
     { "__gc",               f_object_gc         },
-    { "__metatable",        f_null              },
     { "move_to",            f_curve_move_to     },
     { "line_to",            f_curve_line_to     },
     { "close",              f_curve_close       },
@@ -250,7 +243,6 @@ static const luaL_Reg curve_lib[] = {
 
 static const luaL_Reg dash_lib[] = {
     { "__gc",               f_object_gc         },
-    { "__metatable",        f_null              },
     { "move_to",            f_path_move_to      },
     { "line_to",            f_path_line_to      },
     { "close",              f_path_close        },
@@ -260,7 +252,6 @@ static const luaL_Reg dash_lib[] = {
 
 static const luaL_Reg plot_lib[] = {
     { "__gc",               f_plot_gc           },
-    { "__metatable",        f_null              },
     { "add",                f_plot_add          },
     { "addline",            f_plot_addline      },
     { "show",               f_plot_show         },
