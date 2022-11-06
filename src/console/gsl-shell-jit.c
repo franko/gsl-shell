@@ -67,8 +67,6 @@
 #define lua_stdin_is_tty()	1
 #endif
 
-extern void luaopen_elem(lua_State *L);
-
 #if defined(USE_READLINE)
 static char *
 my_readline (lua_State *L, char *b, const char *p)
@@ -671,8 +669,6 @@ static int pmain(lua_State *L)
     luaL_openlibs(L);  /* open libraries */
 
     luaopen_graph(L);
-    luaopen_elem(L);
-    elem_initialize_fonts();
 
     char exename[2048];
     get_exe_filename(exename, sizeof(exename));

@@ -345,6 +345,8 @@ static void register_api_type(lua_State *L, const luaL_Reg *lib, const char *tna
 }
 
 int luaopen_graph(lua_State *L) {
+    elem::InitializeFonts();
+
     register_api_type(L, path_lib,  API_TYPE_PATH);
     register_api_type(L, curve_lib, API_TYPE_CURVE);
     register_api_type(L, dash_lib,  API_TYPE_DASH);
