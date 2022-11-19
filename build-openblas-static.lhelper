@@ -1,15 +1,8 @@
 #!/bin/bash
 CC="${CC:-gcc}"
 CXX="${CXX:-g++}"
-# CFLAGS=
-# CXXFLAGS=
-# LDFLAGS=
 
-BUILD_TYPE=Release
-
-# Do not install the gsl package "gsl -blas=openblas" because it is built as a
-# subproject.
 packages+=(
-  "sdl2 -render -opengl -threads" "libagg" "freetype2" "sol2" "openblas -arch=static"
+  "sdl2 -render -opengl -threads" "libagg" "freetype2" "openblas -arch=static"
 )
 

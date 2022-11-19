@@ -1,13 +1,8 @@
 #!/bin/bash
 CC="${CC:-gcc}"
 CXX="${CXX:-g++}"
-# CFLAGS=
-# CXXFLAGS=
-# LDFLAGS=
-
-BUILD_TYPE=Release
 
 packages+=(
-  "sdl2 -render -opengl -threads" "libagg" "freetype2" "sol2" "openblas -arch=dynamic"
+  "sdl2 -render -opengl -threads" "libagg" "freetype2" "openblas -arch=dynamic"
 )
 
