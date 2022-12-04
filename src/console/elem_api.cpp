@@ -1,5 +1,7 @@
 #include <new>
 
+#include <string.h>
+
 #include <elem/elem.h>
 
 extern "C" {
@@ -265,10 +267,64 @@ int f_plot_add(lua_State *L) {
     return 0;
 }
 
+#define DEFAULT_PLOT_ADD_COLOR 0xb40000ff
+
+static uint32_t rgba8_lookup (lua_State *L, const char *color_str) {
+    const char *p = color_str;
+    const int a = 255;
+
+    if (strcmp(p, "white") == 0)
+        return 0xffffff00 | a;
+
+    int val = 180;
+    int r = 0, g = 0, b = 0;
+
+    if (strncmp(p, "light", 5) == 0) {
+        val = 255;
+        p += 5;
+    }
+    else if (strncmp (p, "dark", 4) == 0) {
+        val = 120;
+        p += 4;
+    }
+
+    if (strcmp (p, "red") == 0)
+        r = val;
+    else if (strcmp (p, "green") == 0)
+        g = val;
+    else if (strcmp (p, "blue") == 0)
+        b = val;
+    else if (strcmp (p, "cyan") == 0)
+        g = b = val;
+    else if (strcmp (p, "magenta") == 0)
+        r = b = val;
+    else if (strcmp (p, "yellow") == 0)
+        r = g = val;
+    else if (strcmp (p, "gray") == 0)
+        r = g = b = val;
+
+    return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+uint32_t color_arg_lookup(lua_State *L, int index) {
+    if (lua_isnoneornil (L, index))
+        return DEFAULT_PLOT_ADD_COLOR;
+
+    if (lua_isnumber(L, index)) {
+        return lua_tointeger (L, index);
+    }
+
+    const char *cstr = lua_tostring (L, index);
+    if (!cstr)
+        luaL_error (L, "invalid color specification");
+
+    return rgba8_lookup(L, cstr);
+}
+
 int f_plot_addline(lua_State *L) {
     elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
     elem::Object *element = check_object_userdata(L, 2);
-    uint32_t stroke_color = luaL_checknumber(L, 3);
+    uint32_t stroke_color = color_arg_lookup(L, 3);
     double stroke_width = 1.5;
     if (lua_gettop(L) >= 4) {
         stroke_width = luaL_checknumber(L, 4);
