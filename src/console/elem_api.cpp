@@ -257,16 +257,6 @@ int f_plot_newindex(lua_State *L) {
     return 0;
 }
 
-int f_plot_add(lua_State *L) {
-    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
-    elem::Object *element = check_object_userdata(L, 2);
-    uint32_t stroke_color = luaL_checknumber(L, 3);
-    double stroke_width = luaL_checknumber(L, 4);
-    uint32_t fill_color = luaL_checknumber(L, 5);
-    plot->Add(*element, stroke_color, stroke_width, fill_color);
-    return 0;
-}
-
 #define DEFAULT_PLOT_ADD_COLOR 0xb40000ff
 
 static uint32_t rgba8_lookup (lua_State *L, const char *color_str) {
@@ -321,12 +311,20 @@ uint32_t color_arg_lookup(lua_State *L, int index) {
     return rgba8_lookup(L, cstr);
 }
 
+int f_plot_add(lua_State *L) {
+    elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
+    elem::Object *element = check_object_userdata(L, 2);
+    uint32_t fill_color = color_arg_lookup(L, 3);
+    plot->Add(*element, elem::color::None, 0.0, fill_color);
+    return 0;
+}
+
 int f_plot_addline(lua_State *L) {
     elem::Plot *plot = (elem::Plot *) luaL_checkudata(L, 1, API_TYPE_PLOT);
     elem::Object *element = check_object_userdata(L, 2);
     uint32_t stroke_color = color_arg_lookup(L, 3);
     double stroke_width = 1.5;
-    if (lua_gettop(L) >= 4) {
+    if (!lua_isnoneornil(L, 4)) {
         stroke_width = luaL_checknumber(L, 4);
     }
     plot->AddStroke(*element, stroke_color, stroke_width);
