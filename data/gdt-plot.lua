@@ -49,6 +49,8 @@ local function f_var_fini(accu)
 end
 
 local stat_lookup = {
+    min     = {f = function(accu, x) return math.min(accu, x) end, f0 = ||  math.huge},
+    max     = {f = function(accu, x) return math.max(accu, x) end, f0 = || -math.huge},
     mean    = {f = function(accu, x, n) return (accu * (n-1) + x) / n end},
     stddev  = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddev_fini},
     stddevp = {f = f_stddev, f0 = || {0, 0, 0}, fini = f_stddevp_fini},
