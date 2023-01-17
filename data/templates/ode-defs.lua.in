@@ -80,9 +80,13 @@ end
 
 local function ode_evolve(s, t1, tsmp)
    local step, t0, y = s.step, s.t, s.y
-
+   local over = false
    local function it(s, t)
       t = t and t + tsmp or t0
+      if t >= t1 and not over then
+         t = t1
+         over = true
+      end
       if t <= t1 then
          while s.t < t do
             step(s, t)
