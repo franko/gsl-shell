@@ -206,3 +206,9 @@ ODE Solver Class Definition
          for t, y1, y2 in s:evolve(t1, 0.5) do
             print(t, y1, y2)
          end
+
+   .. method:: evolve_to(t)
+
+      Solve the ODE equations up to the time ``t`` and returns the corresponding system variables ``y0``, ``y1``, ... in the standard order.
+
+

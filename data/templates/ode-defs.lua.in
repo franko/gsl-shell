@@ -99,6 +99,13 @@ local function ode_evolve(s, t1, tsmp)
    return it, s
 end
 
+local function ode_evolve_to(s, t1)
+   while s.t < t1 do
+      s.step(s, t1)
+   end
+   return $(AL's.y.data')
+end
+
 local function hadjust(rmax, h)
    local S = 0.9
    if rmax > 1.1 then

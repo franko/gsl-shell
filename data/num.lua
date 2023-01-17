@@ -32,7 +32,7 @@ function num.ode(spec)
    REG['GSL.help_hook'].ODE = ode
 
    local mt = {
-      __index = {step = ode.step, init = ode.init, evolve = ode.evolve}
+      __index = {step = ode.step, init = ode.init, evolve = ode.evolve, evolve_to = ode.evolve_to}
    }
 
    return setmetatable(ode.new(), mt)

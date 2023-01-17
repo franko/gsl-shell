@@ -253,4 +253,4 @@ local function rk8pd_step(s, t1)
    s.h = hadj
 end
 
-return {new= ode_new, init= ode_init, evolve= ode_evolve, step= rk8pd_step}
+return {new= ode_new, init= ode_init, evolve= ode_evolve, evolve_to = ode_evolve_to, step= rk8pd_step}
