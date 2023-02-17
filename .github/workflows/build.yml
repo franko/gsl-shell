@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    name: Linux
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Python Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install -qq ninja-build python3-pip fuse make \
+          ninja-build pkg-config libx11-dev libxext-dev libxrandr-dev \
+          libxrender-dev libxcursor-dev libxfixes-dev libxi-dev libxft-dev \
+          gcc g++ gfortran
+          pip3 install --user meson
+      - name: Install Lhelper
+        run: |
+          git clone https://github.com/franko/lhelper
+          cd lhelper
+          bash install "$HOME/.local"
+      - name: Build
+        run: |
+          export CPU_TYPE=x86-64
+          export CPU_TARGET=x86-64
+          lhelper create build-openblas-static
+          source "$(lhelper env-source build-openblas-static)"
+          bash scripts/build-package.sh -appimage -name=dynamic -openblas -unix
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux Artifacts
+          path: |
+            gsl-shell-dynamic-linux-x86-64.tar.gz
+            GslShell-dynamic-x86-64.tar.gz

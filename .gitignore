@@ -2,6 +2,7 @@ debian_build/
 /subprojects/*/
 *~
 .*/
+!.github/
 _build
 www/
 doc/html/
