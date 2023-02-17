@@ -24,6 +24,7 @@ Contents:
 
    intro.rst
    general.rst
+   filesystem.rst
    complex.rst
    matrices.rst
    gdt.rst

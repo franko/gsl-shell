@@ -6,6 +6,7 @@ luagsl_sources = [
     'str.c',
     'fatal.c',
     'platform.c',
+    'lua-filesystem.c',
 ]
 
 libluagsl = static_library('luagsl',

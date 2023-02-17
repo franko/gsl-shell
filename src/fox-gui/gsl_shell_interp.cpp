@@ -13,6 +13,7 @@ extern "C" {
 
 #include "fatal.h"
 #include "gsl_shell_interp.h"
+#include "lua-filesystem.h"
 #include "lua-graph.h"
 #include "lua-gsl.h"
 #include "platform.h"
@@ -84,6 +85,7 @@ static int pinit(lua_State *L)
 
     luaopen_gsl (L);
     register_graph (L);
+    luaopen_filesystem (L);
     lua_gc(L, LUA_GCRESTART, -1);
     run_start_script(L);
     return 0;

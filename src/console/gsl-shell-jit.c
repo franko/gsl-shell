@@ -41,6 +41,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
+#include "lua-filesystem.h"
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
@@ -121,6 +122,7 @@ static void gsl_shell_openlibs(lua_State *L)
 {
     luaopen_gsl (L);
     register_graph (L);
+    luaopen_filesystem (L);
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
