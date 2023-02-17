@@ -7,7 +7,7 @@ to the GNU Scientific Library (GSL) collection of mathematical methods for
 numerical computations.
 
 GSL shell can be used interactively to perform calculations with matrices or
-vectors but it also allows for complex user-defined functions with the Lua 
+vectors but it also allows for complex user-defined functions with the Lua
 scripting interpreter.
 
 Lua is a very interesting and easy to learn scripting language that features
@@ -24,6 +24,7 @@ Contents:
 
    intro.rst
    general.rst
+   project.rst
    filesystem.rst
    complex.rst
    matrices.rst
@@ -46,5 +47,7 @@ Contents:
    plot3d.rst
    contour.rst
    csv.rst
+   record.rst
+   interp2d.rst
    examples.rst
    gsl-ffi.rst
