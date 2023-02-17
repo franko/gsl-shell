@@ -42,10 +42,14 @@ function Record:store_add(t, values)
     end
 end
 
-local function record_plot(self, pll, t_min, t_max)
+local function record_plot(self, pll, t_min, t_max, options)
+    local group_by = options and options.group_by or #pll
     local np = #pll
     local plots = {}
-    local w = graph.window("v" .. table.concat(iter.ilist(|| ".", np), ""))
+    local nrows = group_by
+    local ncols = math.divmod(np, group_by)
+    local plot_layout = "h" .. table.concat(iter.ilist(|| "(v" .. table.concat(iter.ilist(|| ".", nrows), "") .. ")", ncols), "")
+    local w = graph.window(plot_layout)
     local k_min, k_max = 1, #self.tab
     if t_min then
         while self.tab:get(k_min, "t") < t_min do k_min = k_min + 1 end
@@ -64,14 +68,20 @@ local function record_plot(self, pll, t_min, t_max)
             p:legend(var_name, graph.webcolor(j), "line")
         end
         p.pad = true
-        w:attach(p, np - i + 1)
+        if options and options.title then p.title = options.title[i] end
+        if options and options.xtitle and (i - 1) % nrows == ncols - 1 then
+            p.xtitle = options.xtitle
+        end
+        if options and options.ytitle then p.ytitle = options.ytitle[i] end
+        local wj, wi = math.divmod(i - 1, nrows)
+        w:attach(p, (wj + 1) .. "," .. (nrows - wi))
         plots[i] = p
     end
     return plots
 end
 
-function Record:plot(spec, t_min, t_max)
-    return record_plot(self, spec, t_min, t_max)
+function Record:plot(...)
+    return record_plot(self, ...)
 end
 
 function Record:values()
