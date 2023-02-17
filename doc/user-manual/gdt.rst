@@ -219,6 +219,12 @@ GDT Functions
          -0.382683  5.89049      0.92388
       ]]
 
+.. function:: from_table(data, headers)
+
+   Creates a data table using the given `data` and `headers`.
+   The argument `data` should be a table and each element a table with a fixed number of
+   elements equal to the nuber of elements in `headers`.
+
 .. function:: write_csv(t, filename)
 
     Write a CSV file with the given ``filename`` with the content of the table ``t``.
@@ -233,6 +239,31 @@ GDT Functions
     The interpolation method is specified by the optional argument ``interp_method``.
     The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
     The default method is "cspline" if none is specified.
+
+.. function:: integrate(t, x_name, y_name[, x1, x2])
+
+    Perform the integration of the variable `y_name` over the variable `x_name` from the
+    tabular data using linear interpolation between points.
+    The optional arguments `x1` and `x2` provides the integration limits but if omitted the first
+    and last value in the table will be used.
+
+    It is generally expected that the x values increase monotonically.
+
+.. function:: sampling_optimize(t, x_name, y_names, eps_rels)
+
+    Returns a new data table by optimizing the sampling points over the variable `x_name`
+    so that for each of the list of variables `y_names` a linear interpolation does not
+    introduce an error greater then the corresponding relative tolerances `eps_rels`.
+
+    The argument `y_names` should be table with a list of names or a string with a single
+    variable name.
+    The argument `eps_rels` should have the same form and number of terms and its values should
+    be positive numbers corresponding to the relative tolerance.
+
+-- function:: select_interval(t, x_name, x1, x2)
+
+    Returns a new tables by selecting the entries that meet the condition on `x_name` of
+    being within `x1` and `x2`.
 
 GDT Methods
 -----------
