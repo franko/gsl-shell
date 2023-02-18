@@ -250,16 +250,18 @@ GDT Functions
 
     It is generally expected that the x values increase monotonically.
 
-.. function:: sampling_optimize(t, x_name, y_names, eps_rels)
+.. function:: sampling_optimize(t, description, eps_rels)
 
-    Returns a new data table by optimizing the sampling points over the variable `x_name`
-    so that for each of the list of variables `y_names` a linear interpolation would not
+    Returns a new data table by optimizing the sampling points over an x variable
+    so that for a list of y variables a linear interpolation of each would not
     introduce an error greater then the corresponding relative tolerances `eps_rels`.
 
-    The argument `y_names` should be table with a list of names or a string with a single
-    variable name.
-    The argument `eps_rels` should have the same form and number of terms and its values should
-    be positive numbers corresponding to the relative tolerance.
+    The argument `description` should be a string in the form ``y1, y2, ... ~ x``
+    to identify the names of the x and y variables.
+
+    The argument `eps_rels` should have a number of terms equal to the number of y variables
+    and each corresponds to the variable's relative tolerance. Alternatively `eps_rels`
+    can be a single number to apply the same relative tolerance to all the y variables.
 
 .. function:: select_interval(t, x_name, x1, x2)
 

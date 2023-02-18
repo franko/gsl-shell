@@ -44,10 +44,11 @@ end
 
 -- for compatibility will accept arguments in the form:
 --    gdt_integrate(tab, x_name, y_name[, x1, x2])
-local function gdt_integrate(tab, expr_formula, x1, x2, ...)
+-- this compatibility layer should disappear after the 2.3.5 release
+local function gdt_integrate(tab, expr_formula, x1, x2, arg_adj)
     if type(x1) == "string" then
         local x_name, y_name = expr_formula, x1
-        x1, x2 = x2, select(1, ...)
+        x1, x2 = x2, arg_adj
         expr_formula = y_name .." ~ " .. x_name
     end
 

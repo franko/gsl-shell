@@ -1,3 +1,8 @@
+local expr_parse = require 'expr-parse'
+local gdt_expr = require 'gdt-expr'
+local gdt_factors = require 'gdt-factors'
+local AST = require 'expr-actions'
+
 local abs, max, min, sqrt = math.abs, math.max, math.min, math.sqrt
 
 local function tab_select_interval(tab, t_name, t1, t2)
@@ -17,16 +22,16 @@ local function tab_select_interval(tab, t_name, t1, t2)
     return new_tab
 end
 
-local function linear_resid(tab, x_name, i1, i2, y_names)
+local function linear_resid(tab, x_expr, i1, i2, y_exprs)
     local res_max_ls = {}
-    for q, y_name in ipairs(y_names) do
-        local x1, x2 = tab:get(i1, x_name), tab:get(i2, x_name)
-        local y1, y2 = tab:get(i1, y_name), tab:get(i2, y_name)
+    for q, y_expr in ipairs(y_exprs) do
+        local x1, x2 = gdt_expr.eval(tab, x_expr.scalar, i1), gdt_expr.eval(tab, x_expr.scalar, i2)
+        local y1, y2 = gdt_expr.eval(tab, y_expr.scalar, i1), gdt_expr.eval(tab, y_expr.scalar, i2)
         local dydx = (y2 - y1) / (x2 - x1)
         local res_max = 0
         for i = i1, i2 do
-            local x = tab:get(i, x_name)
-            local y = tab:get(i, y_name)
+            local x = gdt_expr.eval(tab, x_expr.scalar, i)
+            local y = gdt_expr.eval(tab, y_expr.scalar, i)
             local y_approx = y1 + dydx * (x - x1)
             res_max = max(res_max, abs(y - y_approx))
         end
@@ -44,12 +49,13 @@ local function res_within_eps_rels(res_max, ranges, eps_rels)
     return true
 end
 
-local function find_data_ranges(tab, y_names)
+local function find_data_ranges(tab, y_exprs)
     local ranges = {}
-    for q, y_name in ipairs(y_names) do
-        local data_min, data_max = tab:get(1, y_name), tab:get(1, y_name)
+    for q, y_expr in ipairs(y_exprs) do
+        local data_min = gdt_expr.eval(tab, y_expr.scalar, 1)
+        local data_max = data_min
         for i = 2, #tab do
-            local y = tab:get(i, y_name)
+            local y = gdt_expr.eval(tab, y_expr.scalar, i)
             data_min = min(data_min, y)
             data_max = max(data_max, y)
         end
@@ -58,9 +64,24 @@ local function find_data_ranges(tab, y_names)
     return ranges
 end
 
-local function sampling_opt(tab, x_name, y_names, eps_rels)
-    if type(y_names)  ~= "table" then y_names  = { y_names } end
-    if type(eps_rels) ~= "table" then eps_rels = iter.ilist(|| eps_rels, #y_names) end
+-- for compatibility will accept arguments in the form:
+--    sampling_opt(tab, x_name, y_names, eps_rels)
+-- this compatibility layer should disappear after the 2.3.5 release
+local function sampling_opt(tab, expr_formula, eps_rels, arg_adj)
+    if type(eps_rels) == "table" and type(eps_rels[1]) == "string" then
+        local x_name, y_names = expr_formula, eps_rels
+        eps_rels = arg_adj
+        expr_formula = table.concat(y_names, ", ") .." ~ " .. x_name
+    end
+
+    local schema = expr_parse.schema_multivar(expr_formula, AST)
+    local x_exprs = gdt_factors.compute(tab, schema.x)
+    local y_exprs = gdt_factors.compute(tab, schema.y)
+
+    if type(eps_rels) ~= "table" then eps_rels = iter.ilist(|| eps_rels, #y_exprs) end
+
+    assert(#x_exprs == 1 and not x_exprs.factor, 'only a single numeric x variable can be given')
+    local x_expr = x_exprs[1]
 
     local N, M = tab:dim()
     local hs = tab:headers()
@@ -74,12 +95,12 @@ local function sampling_opt(tab, x_name, y_names, eps_rels)
         new_tab:append(row)
     end
 
-    local ranges = find_data_ranges(tab, y_names)
+    local ranges = find_data_ranges(tab, y_exprs)
 
     local function add_from_lin_search(i1, i2_pass, i2)
         local i_select = i2
         for i2_lin = i2_pass + 1, i2 do
-            local res_max_lin = linear_resid(tab, x_name, i1, i2_lin, y_names)
+            local res_max_lin = linear_resid(tab, x_expr, i1, i2_lin, y_exprs)
             if not res_within_eps_rels(res_max_lin, ranges, eps_rels) then
                 i_select = i2_lin - 1
                 break
@@ -100,7 +121,7 @@ local function sampling_opt(tab, x_name, y_names, eps_rels)
             break
         end
         while true do
-            local res_max = linear_resid(tab, x_name, i1, i2, y_names)
+            local res_max = linear_resid(tab, x_expr, i1, i2, y_exprs)
             if not res_within_eps_rels(res_max, ranges, eps_rels) then
                 if i2 - i2_pass < 16 then
                     i1, i2_pass, i2 = add_from_lin_search(i1, i2_pass, i2)
