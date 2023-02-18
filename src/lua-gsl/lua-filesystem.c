@@ -190,6 +190,7 @@ struct luaL_Reg lib[] = {
   { "list_dir",            f_list_dir            },
   { "absolute_path",       f_absolute_path       },
   { "get_file_info",       f_get_file_info       },
+  { NULL,                  NULL       },
 };
 
 int luaopen_filesystem(lua_State *L) {
