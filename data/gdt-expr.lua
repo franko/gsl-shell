@@ -285,4 +285,8 @@ function gdt_expr.eval_matrix(t, info, expr_list, y_expr, index_map)
     return X, Y
 end
 
+function gdt_expr.eval(t, expr, i)
+    return expr_print.eval(expr, table_scope, t, i)
+end
+
 return gdt_expr

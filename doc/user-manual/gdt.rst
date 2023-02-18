@@ -240,10 +240,11 @@ GDT Functions
     The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
     The default method is "cspline" if none is specified.
 
-.. function:: integrate(t, x_name, y_name[, x1, x2])
+.. function:: integrate(t, description[, x1, x2])
 
-    Perform the integration of the variable `y_name` over the variable `x_name` from the
-    tabular data using linear interpolation between points.
+    Perform the integration of one of several y variables of a single x variable based on the
+    values in the table ``t`` and ``description``, a string in the form: ``"y1, y2 ~ x"``.
+
     The optional arguments `x1` and `x2` provides the integration limits but if omitted the first
     and last value in the table will be used.
 
