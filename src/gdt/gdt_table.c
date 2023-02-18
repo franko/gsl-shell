@@ -318,37 +318,39 @@ gdt_table_insert_columns(gdt_table *t, int j_in, int n)
     int *src, *dst;
     int i;
 
-    if (unlikely(sz <= 0)) return (-1);
-    gdt_block *new_block = gdt_block_new(sz);
-    if (unlikely(new_block == NULL)) return (-1);
-    gdt_block_ref(new_block);
+    if (sz > 0) {
+        gdt_block *new_block = gdt_block_new(sz);
+        if (unlikely(new_block == NULL)) return (-1);
+        gdt_block_ref(new_block);
 
-    src = (int *) t->data;
-    dst = (int *) new_block->data;
+        src = (int *) t->data;
+        dst = (int *) new_block->data;
 
-    for (i = 0; i < t->size1; i++)
-    {
-        int j;
-
-        for (j = 0; j < 2 * j_in; j++)
+        for (i = 0; i < t->size1; i++)
         {
-            dst[j] = src[j];
-        }
-        for (/* */; j < 2 * os2; j++)
-        {
-            dst[j + 2 * n] = src[j];
+            int j;
+
+            for (j = 0; j < 2 * j_in; j++)
+            {
+                dst[j] = src[j];
+            }
+            for (/* */; j < 2 * os2; j++)
+            {
+                dst[j + 2 * n] = src[j];
+            }
+
+            dst += 2 * ns2;
+            src += 2 * os2;
         }
 
-        dst += 2 * ns2;
-        src += 2 * os2;
+        gdt_block_unref(t->block);
+
+        t->block = new_block;
+        t->data = new_block->data;
     }
-
-    gdt_block_unref(t->block);
 
     t->size2 = ns2;
     t->tda = ns2;
-    t->block = new_block;
-    t->data = new_block->data;
 
     string_array_insert(t->headers, j_in, n);
 
