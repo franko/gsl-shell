@@ -5,7 +5,7 @@ on:
 
 jobs:
   build_linux:
-    name: Linux
+    name: Linux builds
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -38,4 +38,50 @@ jobs:
           name: Linux Artifacts
           path: |
             gsl-shell-dynamic-linux-x86-64.tar.gz
-            GslShell-dynamic-x86-64.tar.gz
+            GslShell-dynamic-x86-64.AppImage
+
+  build_windows:
+    name: Windows builds
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      PATH: ${{ github.workspace }}/.local/bin:$PATH
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            git
+            zip
+            unzip
+      - name: Python Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Dependencies
+        run: |
+          pacman --noconfirm -S \
+          ${MINGW_PACKAGE_PREFIX}-{gcc,meson,ninja,pkg-config}
+      - name: Install Lhelper
+        run: |
+          git clone https://github.com/franko/lhelper
+          cd lhelper
+          bash install "$HOME/.local"
+      - name: Build
+        run: |
+          export CPU_TYPE=x86-64
+          export CPU_TARGET=x86-64
+          lhelper create build-openblas-static
+          source "$(lhelper env-source build-openblas-static)"
+          bash scripts/build-package.sh -name=dynamic -openblas
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows Artifacts
+          path: |
+            gsl-shell-*.zip
