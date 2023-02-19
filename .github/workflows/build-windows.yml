@@ -1,25 +1,35 @@
-name: Linux Builds
+name: Windows Build
 
 on:
   workflow_dispatch:
 
 jobs:
-  build_linux:
-    name: Linux builds
-    runs-on: ubuntu-18.04
+  build_windows:
+    name: Windows builds
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      PATH: ${{ github.workspace }}/.local/bin:$PATH
     steps:
       - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            git
+            zip
       - name: Python Setup
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
       - name: Install Dependencies
         run: |
-          sudo apt-get install -qq ninja-build python3-pip fuse make \
-          ninja-build pkg-config libx11-dev libxext-dev libxrandr-dev \
-          libxrender-dev libxcursor-dev libxfixes-dev libxi-dev libxft-dev \
-          gcc g++ gfortran
-          pip3 install --user meson
+          pacman --noconfirm -S \
+          ${MINGW_PACKAGE_PREFIX}-{gcc,meson,ninja,pkg-config} unzip
       - name: Install Lhelper
         run: |
           git clone https://github.com/franko/lhelper
@@ -31,12 +41,10 @@ jobs:
           export CPU_TARGET=x86-64
           lhelper create build-openblas-static
           source "$(lhelper env-source build-openblas-static)"
-          bash scripts/build-package.sh -appimage -name=dynamic -openblas -unix
+          bash scripts/build-package.sh -name=dynamic -openblas
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: Linux Artifacts
+          name: Windows Artifacts
           path: |
-            gsl-shell-dynamic-linux-x86-64.tar.gz
-            GslShell-dynamic-x86-64.AppImage
-
+            gsl-shell-*.zip
