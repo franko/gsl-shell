@@ -13,6 +13,11 @@ jobs:
     env:
       PATH: ${{ github.workspace }}/.local/bin:$PATH
     steps:
+      - name: Add a fake 'git' to the PATH to force checkout to download zipball instead
+        shell: cmd
+        run: |
+          echo echo hello > git.bat
+          echo ::add-path::%CD%
       - uses: actions/checkout@v2
       - uses: msys2/setup-msys2@v2
         with:
