@@ -6,14 +6,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Records &#8212; GSL Shell 2.3.4 documentation</title>
+    <title>Records &#8212; GSL Shell 2.3.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     
@@ -37,7 +34,7 @@
         <li class="right" >
           <a href="csv.html" title="Comma Separated Values Parsing Utilities"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Records</a></li> 
       </ul>
     </div>  
@@ -71,14 +68,24 @@ The module is implemented as a thin layer on top of a gdt table.</p>
 <dd><dl class="py function">
 <dt class="sig sig-object py" id="record.Record.store">
 <span class="sig-name descname"><span class="pre">store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.store" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store a new row of data corresponding to the time <code class="docutils literal notranslate"><span class="pre">t</span></code> and with values from the
-corresponding <code class="docutils literal notranslate"><span class="pre">values</span></code> argument.
-This latter should be a table in the form of:</p>
-<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="n">var1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">,</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">value2</span><span class="p">,</span> <span class="p">...</span> <span class="p">}</span>
+<dd><p>Adds a new row of data to the table, with the time <cite>t</cite> and values provided in the <cite>values</cite> parameter.</p>
+<p>To use the function, you need to provide the <cite>values</cite> parameter as a table. Each element in the
+table should correspond to a column in the underlying table, with the variable’s name as the
+key and the variable’s value as the value. For example, if the table has columns name,
+age, and city, the values parameter should be in the form of:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="n">age</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">city</span> <span class="o">=</span> <span class="s2">&quot;New York&quot;</span> <span class="p">}</span>
 </pre></div>
 </div>
-<p>When the values are store each variable’s name will correspond to a column name
-in the underlying table.</p>
+<p>The function will store these values in a new row in the table, with the corresponding column names.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="record.Record.store_add">
+<span class="sig-name descname"><span class="pre">store_add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.store_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is similar to the <a class="reference internal" href="#record.Record.store" title="record.Record.store"><code class="xref py py-func docutils literal notranslate"><span class="pre">Record.store()</span></code></a> function, but it allows adding new fields for an entry that was already recorded at time <cite>t</cite>.</p>
+<p>To use the store_add function, you need to provide the <cite>t</cite> parameter as the time of the entry you want to modify, and the values parameter as a table containing the new field values to be added.</p>
+<p>This function is useful if you want to add more information to an existing entry without creating a new entry for the same time t.</p>
+<p>Please note that the store_add function will only work if an entry for the specified time t already exists in the Record module. If no entry exists for t, you should use the <a class="reference internal" href="#record.Record.store" title="record.Record.store"><code class="xref py py-func docutils literal notranslate"><span class="pre">store()</span></code></a> function instead.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -90,16 +97,11 @@ by the store method.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="record.Record.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">t_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the data given in <cite>plot_spec</cite> by grouping them in different plots.
-It does optionally filter the data to take only values whose time t belongs
-between <code class="docutils literal notranslate"><span class="pre">t_min</span></code> and <code class="docutils literal notranslate"><span class="pre">t_max</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">plot_spec</span></code> argument should be a table in the form:</p>
-<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="p">{{</span><span class="s2">&quot;var_1&quot;</span><span class="p">,</span> <span class="s2">&quot;var_2&quot;</span><span class="p">,</span> <span class="p">...},</span> <span class="p">{</span><span class="s2">&quot;var_5&quot;</span><span class="p">,</span> <span class="s2">&quot;var_6&quot;</span><span class="p">,</span> <span class="p">...},</span> <span class="p">...}</span>
-</pre></div>
-</div>
-<p>where the variable’s name to plot are given so that when they are grouped
-together are plotted in the same plot.</p>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_spec</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">t_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#record.Record.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>The plot_data function generates multiple plots arranged in rows and columns, based on the input provided in plot_spec. By default, it displays all the available data, but you can specify a time range by providing the optional parameters t_min and t_max.</p>
+<p>To use plot_spec, you need to provide a table with the names of the variables to be plotted. Each inner table should contain the names of the variables that will be grouped together in the same plot.</p>
+<p>You can customize the plots by providing an options table as a parameter. The options table should contain the group_by field to specify how many plots should be arranged in a column, the title field to set the plot titles, and the xtitle and ytitle fields to set the axis labels.</p>
+<p>The title and ytitle fields should be tables with as many elements as the number of plots. The xtitle field should be a string with the label for the x-axis.</p>
 </dd></dl>
 
 </dd></dl>
@@ -125,6 +127,7 @@ together are plotted in the same plot.</p>
 <li><a class="reference internal" href="#record-class">Record class</a><ul>
 <li><a class="reference internal" href="#record.Record"><code class="docutils literal notranslate"><span class="pre">Record</span></code></a><ul>
 <li><a class="reference internal" href="#record.Record.store"><code class="docutils literal notranslate"><span class="pre">Record.store()</span></code></a></li>
+<li><a class="reference internal" href="#record.Record.store_add"><code class="docutils literal notranslate"><span class="pre">Record.store_add()</span></code></a></li>
 <li><a class="reference internal" href="#record.Record.values"><code class="docutils literal notranslate"><span class="pre">Record.values()</span></code></a></li>
 <li><a class="reference internal" href="#record.Record.plot"><code class="docutils literal notranslate"><span class="pre">Record.plot()</span></code></a></li>
 </ul>
@@ -182,13 +185,13 @@ together are plotted in the same plot.</p>
         <li class="right" >
           <a href="csv.html" title="Comma Separated Values Parsing Utilities"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Records</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

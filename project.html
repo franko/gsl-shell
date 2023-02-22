@@ -6,20 +6,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Projects Utility Functions &#8212; GSL Shell 2.3.4 documentation</title>
+    <title>Projects Utility Functions &#8212; GSL Shell 2.3.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Complex Numbers" href="complex.html" />
+    <link rel="next" title="Filesystem Functions" href="filesystem.html" />
     <link rel="prev" title="General Purpose Functions" href="general.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -32,12 +29,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="complex.html" title="Complex Numbers"
+          <a href="filesystem.html" title="Filesystem Functions"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="general.html" title="General Purpose Functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Projects Utility Functions</a></li> 
       </ul>
     </div>  
@@ -53,25 +50,20 @@
 set of Lua scripts in a folder.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="project.run">
-<span class="sig-prename descclassname"><span class="pre">project.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#project.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Move into the directory of <cite>filename</cite>, add the path into the <cite>package.path</cite> and execute the given file using
+<span class="sig-prename descclassname"><span class="pre">project.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <span class="optional">]</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#project.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move into the directory <cite>path</cite>, add it into the <cite>package.path</cite> and execute the given <cite>filename</cite> using
 the Lua function <cite>dofile</cite>. When the script has completed the execution restore the original <cite>package.path</cite>
 and goes back to the previous working directory.</p>
+<p>If the function is called with a single argument the directory containing <cite>filename</cite> will be used for <cite>path</cite>.</p>
 <p>The advantage over a simple <cite>dofile</cite> is that the Lua scripts presents in the project’s directory will be
 available to be loaded using the <cite>require</cite> function. In this way there is no need to give explicit path of
 the modules’ filename.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="project.chdir">
-<span class="sig-prename descclassname"><span class="pre">project.</span></span><span class="sig-name descname"><span class="pre">chdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#project.chdir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes into the given directory.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="project.getcwd">
-<span class="sig-prename descclassname"><span class="pre">project.</span></span><span class="sig-name descname"><span class="pre">getcwd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#project.getcwd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the current working directory.</p>
+<dt class="sig sig-object py" id="project.activate">
+<span class="sig-prename descclassname"><span class="pre">project.</span></span><span class="sig-name descname"><span class="pre">activate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#project.activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>It acts like the function <a class="reference internal" href="#project.run" title="project.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">project.run()</span></code></a> but do not execute any file.</p>
 </dd></dl>
 
 </section>
@@ -88,8 +80,7 @@ the modules’ filename.</p>
     <ul>
 <li><a class="reference internal" href="#">Projects Utility Functions</a><ul>
 <li><a class="reference internal" href="#project.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
-<li><a class="reference internal" href="#project.chdir"><code class="docutils literal notranslate"><span class="pre">chdir()</span></code></a></li>
-<li><a class="reference internal" href="#project.getcwd"><code class="docutils literal notranslate"><span class="pre">getcwd()</span></code></a></li>
+<li><a class="reference internal" href="#project.activate"><code class="docutils literal notranslate"><span class="pre">activate()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -102,8 +93,8 @@ the modules’ filename.</p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="complex.html"
-                          title="next chapter">Complex Numbers</a></p>
+    <p class="topless"><a href="filesystem.html"
+                          title="next chapter">Filesystem Functions</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -136,18 +127,18 @@ the modules’ filename.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="complex.html" title="Complex Numbers"
+          <a href="filesystem.html" title="Filesystem Functions"
              >next</a> |</li>
         <li class="right" >
           <a href="general.html" title="General Purpose Functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Projects Utility Functions</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

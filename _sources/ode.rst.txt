@@ -164,9 +164,11 @@ ODE Solver Class Definition
           The maximum relative error in the y that should be tolerated.
       method, *optional*
           The low-level integration method used. Can be chosen between:
+
           - rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.
+
           - rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.
-      step_min, *optional*
+     step_min, *optional*
           The smaller step the solver is allowed to use.
           Please note that if set the accuracy may be degraded bacause the solver may need to set a
           smaller step to meet the required precision.
@@ -204,3 +206,9 @@ ODE Solver Class Definition
          for t, y1, y2 in s:evolve(t1, 0.5) do
             print(t, y1, y2)
          end
+
+   .. method:: evolve_to(t)
+
+      Solve the ODE equations up to the time ``t`` and returns the corresponding system variables ``y0``, ``y1``, ... in the standard order.
+
+

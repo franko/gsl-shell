@@ -219,6 +219,12 @@ GDT Functions
          -0.382683  5.89049      0.92388
       ]]
 
+.. function:: from_table(data, headers)
+
+   Creates a data table using the given `data` and `headers`.
+   The argument `data` should be a table and each element a table with a fixed number of
+   elements equal to the nuber of elements in `headers`.
+
 .. function:: write_csv(t, filename)
 
     Write a CSV file with the given ``filename`` with the content of the table ``t``.
@@ -233,6 +239,34 @@ GDT Functions
     The interpolation method is specified by the optional argument ``interp_method``.
     The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
     The default method is "cspline" if none is specified.
+
+.. function:: integrate(t, description[, x1, x2])
+
+    Perform the integration of one of several y variables of a single x variable based on the
+    values in the table ``t`` and ``description``, a string in the form: ``"y1, y2 ~ x"``.
+
+    The optional arguments `x1` and `x2` provides the integration limits but if omitted the first
+    and last value in the table will be used.
+
+    It is generally expected that the x values increase monotonically.
+
+.. function:: sampling_optimize(t, description, eps_rels)
+
+    Returns a new data table by optimizing the sampling points over an x variable
+    so that for a list of y variables a linear interpolation of each would not
+    introduce an error greater then the corresponding relative tolerances `eps_rels`.
+
+    The argument `description` should be a string in the form ``y1, y2, ... ~ x``
+    to identify the names of the x and y variables.
+
+    The argument `eps_rels` should have a number of terms equal to the number of y variables
+    and each corresponds to the variable's relative tolerance. Alternatively `eps_rels`
+    can be a single number to apply the same relative tolerance to all the y variables.
+
+.. function:: select_interval(t, x_name, x1, x2)
+
+    Returns a new tables by selecting the entries that meet the condition on `x_name` of
+    being within `x1` and `x2`.
 
 GDT Methods
 -----------

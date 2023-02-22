@@ -6,14 +6,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>General Data Tables &#8212; GSL Shell 2.3.4 documentation</title>
+    <title>General Data Tables &#8212; GSL Shell 2.3.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     
@@ -37,7 +34,7 @@
         <li class="right" >
           <a href="matrices.html" title="Matrices"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
       </ul>
     </div>  
@@ -274,6 +271,14 @@ If the first non empty line consists entirely of string it is interpreted as hea
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gdt.from_table">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">from_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.from_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a data table using the given <cite>data</cite> and <cite>headers</cite>.
+The argument <cite>data</cite> should be a table and each element a table with a fixed number of
+elements equal to the nuber of elements in <cite>headers</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gdt.write_csv">
 <span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">write_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.write_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a CSV file with the given <code class="docutils literal notranslate"><span class="pre">filename</span></code> with the content of the table <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
@@ -288,6 +293,36 @@ The description should be of the form <code class="docutils literal notranslate"
 <p>The interpolation method is specified by the optional argument <code class="docutils literal notranslate"><span class="pre">interp_method</span></code>.
 The accepted methods are “linear”, “polynomial”, “cspline”, “cspline_periodic”, “akima”, “akima_periodic”.
 The default method is “cspline” if none is specified.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.integrate">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#gdt.integrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the integration of one of several y variables of a single x variable based on the
+values in the table <code class="docutils literal notranslate"><span class="pre">t</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code>, a string in the form: <code class="docutils literal notranslate"><span class="pre">&quot;y1,</span> <span class="pre">y2</span> <span class="pre">~</span> <span class="pre">x&quot;</span></code>.</p>
+<p>The optional arguments <cite>x1</cite> and <cite>x2</cite> provides the integration limits but if omitted the first
+and last value in the table will be used.</p>
+<p>It is generally expected that the x values increase monotonically.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.sampling_optimize">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">sampling_optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_rels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.sampling_optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new data table by optimizing the sampling points over an x variable
+so that for a list of y variables a linear interpolation of each would not
+introduce an error greater then the corresponding relative tolerances <cite>eps_rels</cite>.</p>
+<p>The argument <cite>description</cite> should be a string in the form <code class="docutils literal notranslate"><span class="pre">y1,</span> <span class="pre">y2,</span> <span class="pre">...</span> <span class="pre">~</span> <span class="pre">x</span></code>
+to identify the names of the x and y variables.</p>
+<p>The argument <cite>eps_rels</cite> should have a number of terms equal to the number of y variables
+and each corresponds to the variable’s relative tolerance. Alternatively <cite>eps_rels</cite>
+can be a single number to apply the same relative tolerance to all the y variables.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gdt.select_interval">
+<span class="sig-prename descclassname"><span class="pre">gdt.</span></span><span class="sig-name descname"><span class="pre">select_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gdt.select_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new tables by selecting the entries that meet the condition on <cite>x_name</cite> of
+being within <cite>x1</cite> and <cite>x2</cite>.</p>
 </dd></dl>
 
 </section>
@@ -865,8 +900,12 @@ This latter can be different from the table used for the fit.</p>
 <li><a class="reference internal" href="#gdt.boxplot"><code class="docutils literal notranslate"><span class="pre">boxplot()</span></code></a></li>
 <li><a class="reference internal" href="#gdt.read_csv"><code class="docutils literal notranslate"><span class="pre">read_csv()</span></code></a></li>
 <li><a class="reference internal" href="#gdt.read_string"><code class="docutils literal notranslate"><span class="pre">read_string()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.from_table"><code class="docutils literal notranslate"><span class="pre">from_table()</span></code></a></li>
 <li><a class="reference internal" href="#gdt.write_csv"><code class="docutils literal notranslate"><span class="pre">write_csv()</span></code></a></li>
 <li><a class="reference internal" href="#gdt.interp"><code class="docutils literal notranslate"><span class="pre">interp()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.integrate"><code class="docutils literal notranslate"><span class="pre">integrate()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.sampling_optimize"><code class="docutils literal notranslate"><span class="pre">sampling_optimize()</span></code></a></li>
+<li><a class="reference internal" href="#gdt.select_interval"><code class="docutils literal notranslate"><span class="pre">select_interval()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gdt-methods">GDT Methods</a><ul>
@@ -963,13 +1002,13 @@ This latter can be different from the table used for the fit.</p>
         <li class="right" >
           <a href="matrices.html" title="Matrices"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">General Data Tables</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

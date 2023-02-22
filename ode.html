@@ -6,14 +6,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Ordinary Differential Equations &#8212; GSL Shell 2.3.4 documentation</title>
+    <title>Ordinary Differential Equations &#8212; GSL Shell 2.3.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     
@@ -37,7 +34,7 @@
         <li class="right" >
           <a href="fft.html" title="Fast Fourier Transform"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Ordinary Differential Equations</a></li> 
       </ul>
     </div>  
@@ -184,7 +181,8 @@ the value is not nil.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="num.ODE.ode">
 <span class="sig-name descname"><span class="pre">ode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.ODE.ode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a new solver for an ODE system. The <code class="docutils literal notranslate"><span class="pre">spec</span></code> should be a table
+<dd><blockquote>
+<div><p>Create a new solver for an ODE system. The <code class="docutils literal notranslate"><span class="pre">spec</span></code> should be a table
 containing the following fields:</p>
 <dl class="simple">
 <dt>N</dt><dd><p>The dimension of the ODE system.</p>
@@ -193,10 +191,15 @@ containing the following fields:</p>
 </dd>
 <dt>eps_rel, <em>optional</em></dt><dd><p>The maximum relative error in the y that should be tolerated.</p>
 </dd>
-<dt>method, <em>optional</em></dt><dd><p>The low-level integration method used. Can be chosen between:
-- rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.
-- rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.</p>
+<dt>method, <em>optional</em></dt><dd><p>The low-level integration method used. Can be chosen between:</p>
+<ul class="simple">
+<li><p>rkf45, Embedded Runge-Kutta-Fehlberg (4, 5) method. This method is a good general-purpose integrator.</p></li>
+<li><p>rk8pd, Embedded Runge-Kutta Prince-Dormand (8,9) method.</p></li>
+</ul>
 </dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
 <dt>step_min, <em>optional</em></dt><dd><p>The smaller step the solver is allowed to use.
 Please note that if set the accuracy may be degraded bacause the solver may need to set a
 smaller step to meet the required precision.
@@ -243,6 +246,12 @@ The iterators returns the value <code class="docutils literal notranslate"><span
 </div>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="num.ODE.evolve_to">
+<span class="sig-name descname"><span class="pre">evolve_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#num.ODE.evolve_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the ODE equations up to the time <code class="docutils literal notranslate"><span class="pre">t</span></code> and returns the corresponding system variables <code class="docutils literal notranslate"><span class="pre">y0</span></code>, <code class="docutils literal notranslate"><span class="pre">y1</span></code>, … in the standard order.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -270,6 +279,7 @@ The iterators returns the value <code class="docutils literal notranslate"><span
 <li><a class="reference internal" href="#num.ODE.init"><code class="docutils literal notranslate"><span class="pre">ODE.init()</span></code></a></li>
 <li><a class="reference internal" href="#num.ODE.step"><code class="docutils literal notranslate"><span class="pre">ODE.step()</span></code></a></li>
 <li><a class="reference internal" href="#num.ODE.evolve"><code class="docutils literal notranslate"><span class="pre">ODE.evolve()</span></code></a></li>
+<li><a class="reference internal" href="#num.ODE.evolve_to"><code class="docutils literal notranslate"><span class="pre">ODE.evolve_to()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -325,13 +335,13 @@ The iterators returns the value <code class="docutils literal notranslate"><span
         <li class="right" >
           <a href="fft.html" title="Fast Fourier Transform"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Ordinary Differential Equations</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2009-2013, Francesco Abbate.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

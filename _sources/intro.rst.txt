@@ -6,8 +6,9 @@ GSL Shell introduction
 ======================
 
 GSL Shell is an interactive interface that gives access to the GSL numerical routines using Lua, an easy to learn and powerful programming language.
-With GSL Shell, you can access the functions provided by the GSL library with great ease, without the need to write and compile a stand-alone C application.
-In addition, the power and expressiveness of the Lua language enables you to develop and test complex procedures to process your data and effectively use the GSL routines.
+With GSL Shell, you can directly access the functions provided by the GSL library without the need to write and compile a stand-alone C application.
+
+In addition, the power and expressiveness of the Lua language enables you to develop and test complex computations involving data and mathematical calculations.
 You will be also able to create plots in real-time using the powerful built-in graphical module.
 
 The underlying programming language, Lua, itself is a very cleverly designed programming language. It is therefore an excellent platform for programming.
@@ -21,7 +22,7 @@ First steps
 
 The most basic usage of GSL Shell is just like a calculator: you can type any expression and GSL Shell will print the results.
 GSL Shell is designed to work mainly with floating point numbers stored internally in double precision.
-Sometimes we will refer to this kind of number as a *real* number, as opposed to a *complex* number.
+Sometimes we will refer to these kind of numbers as a *real* number, as opposed to a *complex* number.
 
 For integer numbers, GSL Shell differs from many other programming environments because it does not have a distinct type to represent them.
 In other words, integer numbers are treated just like *real* numbers with all the implications that follow.
