@@ -14,8 +14,9 @@ agg::font_cache_manager<agg::font_engine_freetype_int32> global_font_man(global_
 int initialize_fonts(lua_State* L)
 {
     const char* font_name = gslshell::get_font_name();
-    if (!font_name)
-        luaL_error(L, "cannot find a suitable truetype font");
+    if (!font_name) {
+        return 1;
+    }
     agg::glyph_rendering gren = agg::glyph_ren_outline;
     if (!global_font_eng.load_font(font_name, 0, gren))
         luaL_error(L, "cannot load truetype font: %s", font_name);

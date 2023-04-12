@@ -121,7 +121,9 @@ struct window_hooks app_window_hooks[1] = {{
 static void gsl_shell_openlibs(lua_State *L)
 {
     luaopen_gsl (L);
-    register_graph (L);
+    if (register_graph (L) != 0) {
+        fprintf(stderr, "warning: running without graphics module\n");
+    }
     luaopen_filesystem (L);
 }
 

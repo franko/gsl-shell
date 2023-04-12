@@ -10,7 +10,7 @@ __BEGIN_DECLS
 #include <lua.h>
 
 extern void graph_close_windows (lua_State *L);
-extern void register_graph (lua_State *L);
+extern int register_graph (lua_State *L);
 extern void gsl_shell_close_with_graph (struct gsl_shell_state* gs, int send_close_req);
 
 extern int initialize_fonts(lua_State* L);
