@@ -1,4 +1,6 @@
 image: ubuntu/18.04
+secrets:
+  - <secret number for the ssh lhelper.cc key to be found in https://builds.sr.ht/secrets>
 packages:
   # xorg-dev can be used instead of the detailed list of x11 libraries
   # fuse needed to create appimage
@@ -9,6 +11,7 @@ sources:
 tasks:
   - enable-local: |
       echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.buildenv"
+      ssh-keyscan lhelper.cc >> ~/.ssh/known_hosts
   - prepare-setup: |
       pip3 install --user meson
   - lhelper-install: |
@@ -16,17 +19,17 @@ tasks:
       bash install "$HOME/.local"
   - build: |
       cd gsl-shell
-      lhelper create build
+      lhelper create --upload build
       source "$(lhelper env-source build)"
       bash scripts/build-package.sh -appimage -name=dynamic -openblas -unix
   - build-gslcblas: |
       cd gsl-shell
-      lhelper create build-gslcblas
+      lhelper create --upload build-gslcblas
       source "$(lhelper env-source build-gslcblas)"
       bash scripts/build-package.sh -appimage -unix
   - build-openblas-static: |
       cd gsl-shell
-      lhelper create build-openblas-static
+      lhelper create --upload build-openblas-static
       source "$(lhelper env-source build-openblas-static)"
       bash scripts/build-package.sh -appimage -openblas -unix
   - build-cpu-specific: |
@@ -35,7 +38,7 @@ tasks:
         (
           export CPU_TYPE=x86-64
           export CPU_TARGET="$cpu_target"
-          lhelper create build-openblas-static
+          lhelper create --upload build-openblas-static
           source "$(lhelper env-source build-openblas-static)"
           bash scripts/build-package.sh -appimage -name=$cpu_target -openblas -unix
         )
