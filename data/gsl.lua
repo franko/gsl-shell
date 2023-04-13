@@ -2581,6 +2581,7 @@ extern const gsl_interp_type * gsl_interp_cspline;
 extern const gsl_interp_type * gsl_interp_cspline_periodic;
 extern const gsl_interp_type * gsl_interp_akima;
 extern const gsl_interp_type * gsl_interp_akima_periodic;
+extern const gsl_interp_type * gsl_interp_steffen;
 
 gsl_interp_accel *
 gsl_interp_accel_alloc(void);

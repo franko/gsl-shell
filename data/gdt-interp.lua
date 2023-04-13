@@ -16,6 +16,7 @@ local interp_lookup = {
     cspline_periodic = cgsl.gsl_interp_cspline_periodic,
     akima            = cgsl.gsl_interp_akima,
     akima_periodic   = cgsl.gsl_interp_akima_periodic,
+    steffen          = cgsl.gsl_interp_steffen,
 }
 
 -- returns minimum, median and maximum values for x strides

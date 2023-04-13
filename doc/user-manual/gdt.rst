@@ -237,8 +237,8 @@ GDT Functions
     Given the set of data points :math:`(x_1, y_1) \dots (x_n, y_n)` the routines described in this section compute a continuous interpolating function :math:`y(x)` such that :math:`y(x_i) = y_i`. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.
 
     The interpolation method is specified by the optional argument ``interp_method``.
-    The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
-    The default method is "cspline" if none is specified.
+    The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic" and "steffen".
+    The default method is "linear" if none is specified.
 
 .. function:: integrate(t, description[, x1, x2])
 
