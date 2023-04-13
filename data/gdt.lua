@@ -134,6 +134,13 @@ local function gdt_table_column_iter(t, j)
     return f, t, 0
 end
 
+local function gdt_table_headers(t)
+    local m = size2(t)
+    local name = {}
+    for k = 1, m do name[k] = gdt_table_get_header(t, k) end
+    return name
+end
+
 local function gdt_table_eval_column(t, j, f)
     local n = #t
     if not f then
@@ -173,6 +180,24 @@ local function gdt_table_insert_row(t, i, row_values)
 end
 
 local function gdt_table_append_row(t, row_values)
+    local hs = gdt_table_headers(t)
+    local new_fields
+    for k in pairs(row_values) do
+        local found = false
+        for i = 1, #hs do
+            if hs[i] == k then found = true end
+        end
+        if not found then
+            new_fields = new_fields or { }
+            new_fields[#new_fields + 1] = k
+        end
+    end
+    if new_fields then
+        local m = size2(t)
+        for j = 1, #new_fields do
+            gdt_table_insert_column(t, new_fields[j], m + j)
+        end
+    end
     gdt_table_insert_row(t, size1(t) + 1, row_values)
 end
 
@@ -229,13 +254,6 @@ local function gdt_table_show(dt)
         lines[#lines + 1] = concat(t, ' ')
     end
     return concat(lines, '\n')
-end
-
-local function gdt_table_headers(t)
-    local m = size2(t)
-    local name = {}
-    for k = 1, m do name[k] = gdt_table_get_header(t, k) end
-    return name
 end
 
 local function cursor_iter(cursor, i)

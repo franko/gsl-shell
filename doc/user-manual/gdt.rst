@@ -351,6 +351,9 @@ GDT Methods
      Append a new row at the end of the table.
      The initialization of the values is done using the optional argument like for the :meth:`~Gdt.insert` method.
 
+     **Since version 2.3.6**: if ``values`` contains fields not already present in the table a new column
+     with the corresponding name will be added.
+
      If the second argument is not provided the values will be initialized to ``NA``.
 
      For example if we have a table with two columns named ``x`` and ``y`` we can insert a new row at the end of the table as follows::
