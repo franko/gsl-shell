@@ -38,7 +38,14 @@ local function verify_data_for_interpolation(x, y)
     -- 1e-2 and 1e-3 may be some reasonable values.
 
     local x_del_min, x_del_median, x_del_max = get_data_median_stride(x, n)
-    assert(x_del_max - x_del_min > 1.0e-38, "x data variations too small")
+    -- smallest positive normalized: float 1.175494e-38, double 2.225074e-308
+    -- we choose a value close to the smallest positive normalized double to empirically
+    -- detect when *probably* the values are not really changing except for numerical rounding.
+    local x_del_abs_min = 1.0e-250
+    assert(
+        (x_del_max < 0 or x_del_max > x_del_abs_min) and (x_del_min > 0 or x_del_min < -x_del_abs_min),
+        "x data variations too small"
+    )
     local x_del_eps = math.max(abs(x_del_median), math.max(abs(x_del_min), abs(x_del_max)) * 1e-2) * x_del_fraction
 
     local x_prev = x.data[0]
