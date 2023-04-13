@@ -71,7 +71,9 @@ local function gdt_table_hist(t, expr_formula, opt)
         p:add(r, graph.rgb(40,40,40), {{'stroke', width=0.75}})
     end
 
-    p:show()
+    if (not opt or opt.show == nil) or (opt and opt.show == true) then
+        p:show()
+    end
 
     return p
 end

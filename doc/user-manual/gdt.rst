@@ -536,14 +536,25 @@ Histogram plots
 ---------------
 
 Histogram plots can be created using the function :func:`gdt.hist`.
-Its usage is simple, you just need to give the tables and an expression whose values will be plotted in the form of an histogram.
+
+.. function:: hist(table, formula[, options])
+
+   Make an histogram plot based on a ``formula`` that indicate a single expression to use as a
+   variable whose distribution is to be plotted.
+   The function returns the plot itself.
+
+   The ``options`` can be provided as a table with the following fields:
+
+      * a, b, gives explicit limits for the values to be plotted
+      * title, the title for the plot
+      * color, the color of the histogram bars
+      * show, a boolean to indicate if the plot should be shown
+
+The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
 
 Here an example of the kind of plot that you can obtain:
 
 .. figure:: gdt-hist-example.png
-
-Currently the histogram function does not support any option but this may change in future.
-The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
 
 .. _gdt-plot-opts:
 
