@@ -80,7 +80,9 @@ local function gdt_table_set(t, i, j_name, val)
 end
 
 local function gdt_table_alloc(nrows, ncols, nalloc_rows)
-    nalloc_rows = nalloc_rows or max(nrows, 8)
+    nalloc_rows = nalloc_rows or max(nrows or 0, 8)
+    ncols = ncols or 0
+    nrows = nrows or 0
     local headers
     if type(ncols) == 'table' then
         headers = ncols
@@ -99,7 +101,7 @@ end
 local function gdt_table_new(nrows, cols_spec)
     local t = gdt_table_alloc(nrows, cols_spec)
     local ncols = size2(t)
-    for i = 1, nrows do
+    for i = 1, (nrows or 0) do
         for j = 1, ncols do
             cgdt.gdt_table_set_undef(t, i - 1, j - 1)
         end

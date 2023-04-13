@@ -69,17 +69,19 @@ GDT Functions
 
 .. module:: gdt
 
-.. function:: new(n, m)
-              new(n, headers)
+.. function:: new([n, m])
+              new([n, headers])
 
    Create a new data table with ``n`` rows and ``m`` columns.
    In the second form a table is provided with the column's names.
+   If the arguments are omitted the table will be created with the corresponding sizes to zero.
 
-.. function:: alloc(n, m)
-              alloc(n, headers)
+.. function:: alloc([n, m])
+              alloc([n, headers])
 
    Like the function :func:`gdt.new` but the table data is not initialized.
    It is left to the user to set the values for each rows and columns.
+   If the arguments are omitted the table will be created with the corresponding sizes to zero.
 
 .. function:: create(f_init, a, b)
               create(f_init, b)
