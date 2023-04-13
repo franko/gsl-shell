@@ -57,6 +57,7 @@ Record class
    .. function:: plot(plot_spec[, t_min, t_max, options])
 
       The plot_data function generates multiple plots arranged in rows and columns, based on the input provided in plot_spec. By default, it displays all the available data, but you can specify a time range by providing the optional parameters t_min and t_max.
+      The function returns a table containing the plots and the window created.
 
       To use plot_spec, you need to provide a table with the names of the variables to be plotted. Each inner table should contain the names of the variables that will be grouped together in the same plot.
 
