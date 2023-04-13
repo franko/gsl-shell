@@ -238,15 +238,14 @@ local function gdt_table_show(dt)
 
     local lines = {}
 
-    local row_ndig = #tostring(#dt)
-    local t = {string.rep(" ", row_ndig)}
+    local t = { }
     for j = 1, c do
         t[#t+1] = format(field_fmts[j], gdt_table_get_header(dt, j))
     end
     lines[1] = concat(t, ' ')
 
     for i = 1, r do
-        local t = {format("%-" .. row_ndig .. "d", i)}
+        local t = { }
         for j = 1, c do
             local x = gdt_table_get(dt, i, j)
             t[#t+1] = format(field_fmts[j], val_tostr(x))
