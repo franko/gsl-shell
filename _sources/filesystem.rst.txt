@@ -5,8 +5,12 @@
 Filesystem Functions
 ====================
 
+The module :mod:`filesystem` contains some functions for basic filesystem operations.
+
 Overview
 --------
+
+.. module:: filesystem
 
 .. function:: getcwd()
 

@@ -69,17 +69,19 @@ GDT Functions
 
 .. module:: gdt
 
-.. function:: new(n, m)
-              new(n, headers)
+.. function:: new([n, m])
+              new([n, headers])
 
    Create a new data table with ``n`` rows and ``m`` columns.
    In the second form a table is provided with the column's names.
+   If the arguments are omitted the table will be created with the corresponding sizes to zero.
 
-.. function:: alloc(n, m)
-              alloc(n, headers)
+.. function:: alloc([n, m])
+              alloc([n, headers])
 
    Like the function :func:`gdt.new` but the table data is not initialized.
    It is left to the user to set the values for each rows and columns.
+   If the arguments are omitted the table will be created with the corresponding sizes to zero.
 
 .. function:: create(f_init, a, b)
               create(f_init, b)
@@ -237,8 +239,8 @@ GDT Functions
     Given the set of data points :math:`(x_1, y_1) \dots (x_n, y_n)` the routines described in this section compute a continuous interpolating function :math:`y(x)` such that :math:`y(x_i) = y_i`. The interpolation is piecewise smooth, and its behavior at the end-points is determined by the type of interpolation used.
 
     The interpolation method is specified by the optional argument ``interp_method``.
-    The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic".
-    The default method is "cspline" if none is specified.
+    The accepted methods are "linear", "polynomial", "cspline", "cspline_periodic", "akima", "akima_periodic" and "steffen".
+    The default method is "linear" if none is specified.
 
 .. function:: integrate(t, description[, x1, x2])
 
@@ -348,6 +350,9 @@ GDT Methods
 
      Append a new row at the end of the table.
      The initialization of the values is done using the optional argument like for the :meth:`~Gdt.insert` method.
+
+     **Since version 2.3.6**: if ``values`` contains fields not already present in the table a new column
+     with the corresponding name will be added.
 
      If the second argument is not provided the values will be initialized to ``NA``.
 
@@ -536,14 +541,25 @@ Histogram plots
 ---------------
 
 Histogram plots can be created using the function :func:`gdt.hist`.
-Its usage is simple, you just need to give the tables and an expression whose values will be plotted in the form of an histogram.
+
+.. function:: hist(table, formula[, options])
+
+   Make an histogram plot based on a ``formula`` that indicate a single expression to use as a
+   variable whose distribution is to be plotted.
+   The function returns the plot itself.
+
+   The ``options`` can be provided as a table with the following fields:
+
+      * a, b, gives explicit limits for the values to be plotted
+      * title, the title for the plot
+      * color, the color of the histogram bars
+      * show, a boolean to indicate if the plot should be shown
+
+The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
 
 Here an example of the kind of plot that you can obtain:
 
 .. figure:: gdt-hist-example.png
-
-Currently the histogram function does not support any option but this may change in future.
-The histogram breaks are calculated accordingly to the Freedman-Diaconis rule.
 
 .. _gdt-plot-opts:
 

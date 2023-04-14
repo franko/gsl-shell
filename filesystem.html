@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Filesystem Functions &#8212; GSL Shell 2.3.5 documentation</title>
+    <title>Filesystem Functions &#8212; GSL Shell 2.3.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="project.html" title="Projects Utility Functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Filesystem Functions</a></li> 
       </ul>
     </div>  
@@ -46,29 +46,30 @@
             
   <section id="filesystem-functions">
 <span id="import-section"></span><h1>Filesystem Functions<a class="headerlink" href="#filesystem-functions" title="Permalink to this heading">¶</a></h1>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>The module <a class="reference internal" href="#module-filesystem" title="filesystem"><code class="xref py py-mod docutils literal notranslate"><span class="pre">filesystem</span></code></a> contains some functions for basic filesystem operations.</p>
+<section id="module-filesystem">
+<span id="overview"></span><h2>Overview<a class="headerlink" href="#module-filesystem" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="getcwd">
-<span class="sig-name descname"><span class="pre">getcwd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#getcwd" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="filesystem.getcwd">
+<span class="sig-prename descclassname"><span class="pre">filesystem.</span></span><span class="sig-name descname"><span class="pre">getcwd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#filesystem.getcwd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the name of the current working directory.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="chdir">
-<span class="sig-name descname"><span class="pre">chdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chdir" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="filesystem.chdir">
+<span class="sig-prename descclassname"><span class="pre">filesystem.</span></span><span class="sig-name descname"><span class="pre">chdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#filesystem.chdir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the working directory to <cite>dirname</cite>.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="list_dir">
-<span class="sig-name descname"><span class="pre">list_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#list_dir" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="filesystem.list_dir">
+<span class="sig-prename descclassname"><span class="pre">filesystem.</span></span><span class="sig-name descname"><span class="pre">list_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#filesystem.list_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a table with the name of the files or directory in the directory <cite>dirname</cite>.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="get_file_info">
-<span class="sig-name descname"><span class="pre">get_file_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#get_file_info" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="filesystem.get_file_info">
+<span class="sig-prename descclassname"><span class="pre">filesystem.</span></span><span class="sig-name descname"><span class="pre">get_file_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#filesystem.get_file_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a table with <cite>filename</cite> file’s or directory’s information.
 The table will include the fields <cite>type</cite>. It will have the value <cite>file</cite> or <cite>dir</cite>.
 Other fields will be <cite>modified</cite> and <cite>size</cite> and, on linux only, <cite>symlink</cite>.</p>
@@ -88,11 +89,11 @@ Other fields will be <cite>modified</cite> and <cite>size</cite> and, on linux o
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Filesystem Functions</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a><ul>
-<li><a class="reference internal" href="#getcwd"><code class="docutils literal notranslate"><span class="pre">getcwd()</span></code></a></li>
-<li><a class="reference internal" href="#chdir"><code class="docutils literal notranslate"><span class="pre">chdir()</span></code></a></li>
-<li><a class="reference internal" href="#list_dir"><code class="docutils literal notranslate"><span class="pre">list_dir()</span></code></a></li>
-<li><a class="reference internal" href="#get_file_info"><code class="docutils literal notranslate"><span class="pre">get_file_info()</span></code></a></li>
+<li><a class="reference internal" href="#module-filesystem">Overview</a><ul>
+<li><a class="reference internal" href="#filesystem.getcwd"><code class="docutils literal notranslate"><span class="pre">getcwd()</span></code></a></li>
+<li><a class="reference internal" href="#filesystem.chdir"><code class="docutils literal notranslate"><span class="pre">chdir()</span></code></a></li>
+<li><a class="reference internal" href="#filesystem.list_dir"><code class="docutils literal notranslate"><span class="pre">list_dir()</span></code></a></li>
+<li><a class="reference internal" href="#filesystem.get_file_info"><code class="docutils literal notranslate"><span class="pre">get_file_info()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -146,12 +147,12 @@ Other fields will be <cite>modified</cite> and <cite>size</cite> and, on linux o
         <li class="right" >
           <a href="project.html" title="Projects Utility Functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GSL Shell 2.3.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Filesystem Functions</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2009-2013, Francesco Abbate.
+        &#169; Copyright 2009-2023, Francesco Abbate.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
