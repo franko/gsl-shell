@@ -50,7 +50,9 @@ ninja -C "$builddir"
 rm -fr "$rundir"
 mkdir -p "$bindir" "$datadir"
 cp "$builddir/src/console/gsl-shell$ext" "$bindir"
-cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
+if [ -f "$builddir/src/fox-gui/gsl-shell-gui$ext" ]; then
+  cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
+fi
 cp -r data/. "$datadir"
 
 "$bindir/$exe_name"

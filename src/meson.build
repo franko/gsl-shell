@@ -1,6 +1,8 @@
 subdir('lua-gsl')
-subdir('agg-plot')
 subdir('gdt')
 subdir('console')
-subdir('fox-gui')
+if build_graphics
+    subdir('agg-plot')
+    subdir('fox-gui')
+endif
 

@@ -9,7 +9,9 @@ BUILD_TYPE=Release
 
 if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then
   packages=("freetype2" "fox")
-else
+elif [[ "$OSTYPE" == "linux"* || "$OSTYPE" == *"bsd" ]]; then
   packages=("freetype2" "expat" "fontconfig" "xft" "fox -xft")
+else
+  packages=()
 fi
 

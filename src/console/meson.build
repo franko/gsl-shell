@@ -1,10 +1,17 @@
 # Readline not supported with meson build.
 
+gsl_shell_console_deps = [libgsl_dep, threads_dep, luajit_dep]
+gsl_shell_console_libs = [libluagsl, libgdt]
+if build_graphics
+    gsl_shell_console_deps += [libagg_dep, freetype_dep]
+    gsl_shell_console_libs += libaggplot
+endif
+
 executable('gsl-shell', 'gsl-shell-jit.c',
-    dependencies: [libgsl_dep, libagg_dep, threads_dep, freetype_dep, luajit_dep],
+    dependencies: gsl_shell_console_deps,
     include_directories: gsl_shell_include,
-    cpp_args: gsl_shell_defines,
-    link_with: [libluagsl, libaggplot, libgdt],
+    c_args: gsl_shell_defines,
+    link_with: gsl_shell_console_libs,
     link_args: gsl_shell_link_args,
     export_dynamic: true,
     win_subsystem: 'console',

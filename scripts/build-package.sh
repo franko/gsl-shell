@@ -82,11 +82,16 @@ fi
 rm -fr "$rundir"
 mkdir -p "$bindir" "$datadir"
 cp "$builddir/src/console/gsl-shell$ext" "$bindir"
-cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
+if [ -f "$builddir/src/fox-gui/gsl-shell-gui$ext" ]; then
+  cp "$builddir/src/fox-gui/gsl-shell-gui$ext" "$bindir"
+fi
 cp -r data/. "$datadir"
 cp resources/gsl-shell.desktop resources/gsl-shell.svg "$rundir"
 
-$strip "$bindir/gsl-shell$ext" "$bindir/gsl-shell-gui$ext"
+$strip "$bindir/gsl-shell$ext"
+if [ -f "$builddir/src/fox-gui/gsl-shell-gui$ext" ]; then
+  $strip "$bindir/gsl-shell-gui$ext"
+fi
 
 package_suffix="$add_name$cblastag-$platform-$arch"
 if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "mingw"* ]]; then

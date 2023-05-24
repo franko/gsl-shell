@@ -45,10 +45,12 @@
 #include "lua-gsl.h"
 #include "gsl-shell.h"
 #include "completion.h"
-#include "lua-graph.h"
 #include "platform.h"
+#ifndef NO_GRAPHICS
+#include "lua-graph.h"
 #include "window_hooks.h"
 #include "window.h"
+#endif
 
 #if defined(USE_READLINE)
 #include <stdio.h>
@@ -68,6 +70,16 @@
 #endif
 #else
 #define lua_stdin_is_tty()	1
+#endif
+
+#ifdef NO_GRAPHICS
+static inline void
+gsl_shell_close_with_graph (struct gsl_shell_state* gs, int send_close_req)
+{
+    lua_close(gs->L);
+}
+
+static inline int register_graph(lua_State *L) { return 0; }
 #endif
 
 #if defined(USE_READLINE)
@@ -109,6 +121,7 @@ lua_State *globalL = NULL;
 struct gsl_shell_state gsl_shell[1];
 static const char *progname = LUA_PROGNAME;
 
+#ifndef NO_GRAPHICS
 struct window_hooks app_window_hooks[1] = {{
         window_new, window_show, window_attach,
         window_slot_update, window_slot_refresh,
@@ -117,6 +130,7 @@ struct window_hooks app_window_hooks[1] = {{
         window_register,
     }
 };
+#endif
 
 static void gsl_shell_openlibs(lua_State *L)
 {

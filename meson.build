@@ -24,9 +24,14 @@ gsl_shell_include = include_directories('include', 'src/gdt', 'src/agg-plot', 's
 cpp_utils_include = include_directories('src/cpp-utils')
 
 threads_dep  = dependency('threads')
-freetype_dep = dependency('freetype2')
-fox_dep      = dependency('fox')
-libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+build_graphics = (host_machine.system() != 'darwin')
+if build_graphics
+    freetype_dep = dependency('freetype2')
+    fox_dep      = dependency('fox')
+    libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+else
+    gsl_shell_defines += '-DNO_GRAPHICS'
+endif
 
 luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
 luajit_dep = luajit_proj.get_variable('lua_dep')
