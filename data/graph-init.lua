@@ -343,6 +343,41 @@ function graph.plot_lines(ln, title)
    return p
 end
 
+-- Compute two values "ref", "base" such that:
+--
+-- ref * base is close to delta
+-- ref is a integer power of 10
+-- base is one of 1, 2 and 5
+local function decimal_scale_round(delta)
+   local log_delta = math.log10(delta)
+   local ref = 10^(math.floor(log_delta))
+   local r_delta = delta / ref
+   local base_dist, base_value
+   for _, base in ipairs {1, 2, 5, 10} do
+      local dist = math.abs(r_delta - base)
+      if not base_dist or dist < base_dist then
+         base_dist = dist
+         base_value = base
+      end
+   end
+   if base_value == 10 then
+      ref = ref * 10
+      base_value = 1
+   end
+   return ref, base_value
+end
+
+local function find_plot_limits(value_min, value_max, n_intervals)
+   local ref, base = decimal_scale_round((value_max - value_min) / n_intervals)
+   local delta_round = ref * base
+   local vindex_min = math.floor(value_min / delta_round)
+   local vindex_max = math.ceil (value_max / delta_round)
+   return delta_round, vindex_min, vindex_max
+end
+
+graph.decimal_scale_round = decimal_scale_round
+graph.find_plot_limits = find_plot_limits
+
 local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
       return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)

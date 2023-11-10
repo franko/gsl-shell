@@ -23,7 +23,7 @@ use 'math'
 
 local insert = table.insert
 
-local default_color_map = graph.color_function('redyellow', 255)
+local default_color_map = graph.color_function('coolwarm', 255)
 
 local function reverse(ls)
    local k, n = 1, #ls
@@ -374,9 +374,11 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       for k=0, nlevels do zlevels[k] = nlevels_or_levels[k+1] end
       zstep = (zlevels[nlevels] - zlevels[0]) / nlevels
    else
-      nlevels = nlevels_or_levels
-      zstep = (g.zmax - g.zmin) / nlevels
-      for k=0, nlevels do zlevels[k] = g.zmin + k * zstep end
+      local nlevels_target = nlevels_or_levels
+      local value_step, i0, i1 = graph.find_plot_limits(g.zmin, g.zmax, nlevels_target)
+      zstep = value_step
+      nlevels = i1 - i0
+      for k = i0, i1 do zlevels[k - i0] = value_step * k end
    end
    z_eps = 1e-5 * zstep
 
