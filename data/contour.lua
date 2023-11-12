@@ -1,4 +1,3 @@
-
 -- contour.lua
 --
 -- Copyright (C) 2009, 2010 Francesco Abbate
@@ -20,6 +19,8 @@
 
 use 'strict'
 use 'math'
+
+local plot_utils = require "plot-utils"
 
 local insert = table.insert
 
@@ -375,7 +376,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
       zstep = (zlevels[nlevels] - zlevels[0]) / nlevels
    else
       local nlevels_target = nlevels_or_levels
-      local value_step, i0, i1 = graph.find_plot_limits(g.zmin, g.zmax, nlevels_target)
+      local value_step, i0, i1 = plot_utils.find_scale_limits(g.zmin, g.zmax, nlevels_target)
       zstep = value_step
       nlevels = i1 - i0
       for k = i0, i1 do zlevels[k - i0] = value_step * k end
@@ -751,36 +752,7 @@ local function grid_create(f_, lx1, ly1, rx2, ry2, nx, ny, nlevels_or_levels, co
    end
 
    local function create_legend()
-      local bs = 25
-      local p = graph.plot()
-      local tk = graph.path()
-      local ln = graph.path(0, 0)
-      ln:line_to(bs, 0)
-      for k = 0, nlevels do
-         local y = k * bs
-
-         if k < nlevels then
-            ln:move_to(0,  y)
-            ln:line_to(0,  y + bs)
-            ln:line_to(bs, y + bs)
-            ln:line_to(bs, y)
-
-            p:add(graph.rect(0, y, bs, y + bs), color((k+1)/(nlevels+1)))
-         end
-
-         tk:move_to(bs, y)
-         tk:line_to(bs+5, y)
-
-         local txt = string.format("%g", zlevels[k])
-         p:add(graph.textshape(bs+10, y - 3, txt, 12), 'black')
-      end
-
-      p:addline(ln, 'black')
-      p:addline(tk, 'black')
-
-      p.units, p.clip = false, false
-
-      return p
+      return plot_utils.create_colormap_legend(nlevels, zlevels, color)
    end
 
    return {

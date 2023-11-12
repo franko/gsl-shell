@@ -1,5 +1,5 @@
-
-local bit = require 'bit'
+local bit     = require 'bit'
+local cie_lab = require 'cie-lab'
 
 local floor, pi = math.floor, math.pi
 
@@ -198,6 +198,18 @@ local function color_blend(f1, r1, g1, b1, f2, r2, g2, b2, alpha)
    return rgba(r, g, b, alpha)
 end
 
+local function color_interp_lab(f1, r1, g1, b1, f2, r2, g2, b2, alpha)
+   local lab1 = cie_lab.rgb2lab({r1, g1, b1})
+   local lab2 = cie_lab.rgb2lab({r2, g2, b2})
+   local lab = {
+      f1 * lab1[1] + f2 * lab2[1],
+      f1 * lab1[2] + f2 * lab2[2],
+      f1 * lab1[3] + f2 * lab2[3],
+   }
+   local rgb_r = cie_lab.lab2rgb(lab)
+   return rgba(rgb_r[1], rgb_r[2], rgb_r[3], alpha)
+end
+
 local lum_std = 190
 
 graph.color = {
@@ -274,61 +286,64 @@ function graph.webcolor(n)
 end
 
 local color_schema = {
-   bluish    = {232, 229, 217, 88, 37, 153},
-   redyellow = {229, 229, 0, 229, 0, 0},
-   darkgreen = {229, 229, 0, 0, 102, 0}
-}
+   bluish    = { { 232, 229, 217 }, { 88, 37, 153 } },
+   redyellow = { { 229, 229, 0 }, { 229, 0, 0 } },
+   darkgreen = { { 229, 229, 0 }, { 0, 102, 0 } },
 
--- http://www.kennethmoreland.com/color-maps/ColorMapsExpanded.pdf
-local coolwarm = {
-   {0, 59, 76, 192},
-   {0.03125, 68, 90, 204},
-   {0.0625, 77, 104, 215},
-   {0.09375, 87, 117, 225},
-   {0.125, 98, 130, 234},
-   {0.15625, 108, 142, 241},
-   {0.1875, 119, 154, 247},
-   {0.21875, 130, 165, 251},
-   {0.25, 141, 176, 254},
-   {0.28125, 152, 185, 255},
-   {0.3125, 163, 194, 255},
-   {0.34375, 174, 201, 253},
-   {0.375, 184, 208, 249},
-   {0.40625, 194, 213, 244},
-   {0.4375, 204, 217, 238},
-   {0.46875, 213, 219, 230},
-   {0.5, 221, 221, 221},
-   {0.53125, 229, 216, 209},
-   {0.5625, 236, 211, 197},
-   {0.59375, 241, 204, 185},
-   {0.625, 245, 196, 173},
-   {0.65625, 247, 187, 160},
-   {0.6875, 247, 177, 148},
-   {0.71875, 247, 166, 135},
-   {0.75, 244, 154, 123},
-   {0.78125, 241, 141, 111},
-   {0.8125, 236, 127, 99},
-   {0.84375, 229, 112, 88},
-   {0.875, 222, 96, 77},
-   {0.90625, 213, 80, 66},
-   {0.9375, 203, 62, 56},
-   {0.96875, 192, 40, 47},
-   {1, 180, 4, 38},
+   -- http://www.kennethmoreland.com/color-maps/ColorMapsExpanded.pdf
+   coolwarm = {
+      { 59,  76,  192 },
+      { 68,  90,  204 },
+      { 77,  104, 215 },
+      { 87,  117, 225 },
+      { 98,  130, 234 },
+      { 108, 142, 241 },
+      { 119, 154, 247 },
+      { 130, 165, 251 },
+      { 141, 176, 254 },
+      { 152, 185, 255 },
+      { 163, 194, 255 },
+      { 174, 201, 253 },
+      { 184, 208, 249 },
+      { 194, 213, 244 },
+      { 204, 217, 238 },
+      { 213, 219, 230 },
+      { 221, 221, 221 },
+      { 229, 216, 209 },
+      { 236, 211, 197 },
+      { 241, 204, 185 },
+      { 245, 196, 173 },
+      { 247, 187, 160 },
+      { 247, 177, 148 },
+      { 247, 166, 135 },
+      { 244, 154, 123 },
+      { 241, 141, 111 },
+      { 236, 127, 99  },
+      { 229, 112, 88  },
+      { 222, 96,  77  },
+      { 213, 80,  66  },
+      { 203, 62,  56  },
+      { 180, 4,   38  },
+      { 192, 40,  47  },
+   },
 }
 
 function graph.color_function(schema, alpha)
-   if schema == "coolwarm" then
-      return function(a)
-         local n = #coolwarm
-         local index = math.floor(a * (n - 1) + 0.5) + 1
-         index = math.max(math.min(index, n), 1)
-         local cw_entry = coolwarm[index]
-         return rgba(cw_entry[2], cw_entry[3], cw_entry[4], alpha)
-      end
-   end
-   local c = color_schema[schema]
+   local color_list = color_schema[schema]
    return function(a)
-      return color_blend(1-a, c[1], c[2], c[3], a, c[4], c[5], c[6], alpha)
+      local n = #color_list
+      local index = math.floor(a * (n - 1)) + 1
+      if index < 1 then
+         local e = color_list[1]
+         return rgba(e[1], e[2], e[3])
+      end
+      if index > #color_list - 1 then
+         local e = color_list[#color_list]
+         return rgba(e[1], e[2], e[3])
+      end
+      local alpha = a * (n - 1) - (index - 1)
+      local e1, e2 = color_list[index], color_list[index + 1]
+      return color_interp_lab(1 - alpha, e1[1], e1[2], e1[3], alpha, e2[1], e2[2], e2[3])
    end
 end
 
@@ -342,41 +357,6 @@ function graph.plot_lines(ln, title)
    p:show()
    return p
 end
-
--- Compute two values "ref", "base" such that:
---
--- ref * base is close to delta
--- ref is a integer power of 10
--- base is one of 1, 2 and 5
-local function decimal_scale_round(delta)
-   local log_delta = math.log10(delta)
-   local ref = 10^(math.floor(log_delta))
-   local r_delta = delta / ref
-   local base_dist, base_value
-   for _, base in ipairs {1, 2, 5, 10} do
-      local dist = math.abs(r_delta - base)
-      if not base_dist or dist < base_dist then
-         base_dist = dist
-         base_value = base
-      end
-   end
-   if base_value == 10 then
-      ref = ref * 10
-      base_value = 1
-   end
-   return ref, base_value
-end
-
-local function find_plot_limits(value_min, value_max, n_intervals)
-   local ref, base = decimal_scale_round((value_max - value_min) / n_intervals)
-   local delta_round = ref * base
-   local vindex_min = math.floor(value_min / delta_round)
-   local vindex_max = math.ceil (value_max / delta_round)
-   return delta_round, vindex_min, vindex_max
-end
-
-graph.decimal_scale_round = decimal_scale_round
-graph.find_plot_limits = find_plot_limits
 
 local function legend_symbol(sym, dx, dy)
    if sym == 'square' then
