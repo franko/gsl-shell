@@ -1,6 +1,6 @@
 local plot_utils = require "plot-utils"
 
-local color_map = graph.color_function("coolwarm", 255)
+local color_map = graph.color_function("coolwarm")
 
 function pcolormesh(xs, ys, zs)
    local XN, YN

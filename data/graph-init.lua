@@ -198,16 +198,13 @@ local function color_blend(f1, r1, g1, b1, f2, r2, g2, b2, alpha)
    return rgba(r, g, b, alpha)
 end
 
-local function color_interp_lab(f1, r1, g1, b1, f2, r2, g2, b2, alpha)
-   local lab1 = cie_lab.rgb2lab({r1, g1, b1})
-   local lab2 = cie_lab.rgb2lab({r2, g2, b2})
-   local lab = {
-      f1 * lab1[1] + f2 * lab2[1],
-      f1 * lab1[2] + f2 * lab2[2],
-      f1 * lab1[3] + f2 * lab2[3],
-   }
-   local rgb_r = cie_lab.lab2rgb(lab)
-   return rgba(rgb_r[1], rgb_r[2], rgb_r[3], alpha)
+local function color_interp_lab(f1, r1, g1, b1, f2, r2, g2, b2)
+   local L1, a1, b1 = cie_lab.rgb2lab(r1, g1, b1)
+   local L2, a2, b2 = cie_lab.rgb2lab(r2, g2, b2)
+   local L = f1 * L1 + f2 * L2
+   local a = f1 * a1 + f2 * a2
+   local b = f1 * b1 + f2 * b2
+   return rgba(cie_lab.lab2rgb(L, a, b))
 end
 
 local lum_std = 190
@@ -293,42 +290,62 @@ local color_schema = {
    -- http://www.kennethmoreland.com/color-maps/ColorMapsExpanded.pdf
    coolwarm = {
       { 59,  76,  192 },
-      { 68,  90,  204 },
       { 77,  104, 215 },
-      { 87,  117, 225 },
       { 98,  130, 234 },
-      { 108, 142, 241 },
       { 119, 154, 247 },
-      { 130, 165, 251 },
       { 141, 176, 254 },
-      { 152, 185, 255 },
       { 163, 194, 255 },
-      { 174, 201, 253 },
       { 184, 208, 249 },
-      { 194, 213, 244 },
       { 204, 217, 238 },
-      { 213, 219, 230 },
       { 221, 221, 221 },
-      { 229, 216, 209 },
       { 236, 211, 197 },
-      { 241, 204, 185 },
       { 245, 196, 173 },
-      { 247, 187, 160 },
       { 247, 177, 148 },
-      { 247, 166, 135 },
       { 244, 154, 123 },
-      { 241, 141, 111 },
       { 236, 127, 99  },
-      { 229, 112, 88  },
       { 222, 96,  77  },
-      { 213, 80,  66  },
       { 203, 62,  56  },
       { 180, 4,   38  },
-      { 192, 40,  47  },
+   },
+
+   BrBG = {
+      {  84,  48,   5 },
+      { 140,  81,  10 },
+      { 191, 129,  45 },
+      { 223, 194, 125 },
+      { 246, 232, 195 },
+      { 245, 245, 245 },
+      { 199, 234, 229 },
+      { 128, 205, 193 },
+      {  53, 151, 143 },
+      {   1, 102,  94 },
+      {   0,  60,  48 },
+   },
+
+   RdBu = {
+      {   5,  48,  97 },
+      {  33, 102, 172 },
+      {  67, 147, 195 },
+      { 146, 197, 222 },
+      { 209, 229, 240 },
+      { 247, 247, 247 },
+      { 253, 219, 199 },
+      { 244, 165, 130 },
+      { 214,  96,  77 },
+      { 178,  24,  43 },
+      { 103,   0,  31 },
+   },
+
+   seismic = {
+      { 0,   0,   77  },
+      { 0,   0,   255 },
+      { 255, 255, 255 },
+      { 255, 0,   0   },
+      { 127, 0,   0   },
    },
 }
 
-function graph.color_function(schema, alpha)
+function graph.color_function(schema)
    local color_list = color_schema[schema]
    return function(a)
       local n = #color_list
@@ -341,9 +358,9 @@ function graph.color_function(schema, alpha)
          local e = color_list[#color_list]
          return rgba(e[1], e[2], e[3])
       end
-      local alpha = a * (n - 1) - (index - 1)
+      local mu = a * (n - 1) - (index - 1)
       local e1, e2 = color_list[index], color_list[index + 1]
-      return color_interp_lab(1 - alpha, e1[1], e1[2], e1[3], alpha, e2[1], e2[2], e2[3])
+      return color_interp_lab(1 - mu, e1[1], e1[2], e1[3], mu, e2[1], e2[2], e2[3])
    end
 end
 

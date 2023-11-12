@@ -1,61 +1,66 @@
 -- based on https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
--- color_channel_linear provided by chatGPT
+-- c2linear provided by chatGPT
 -- validated using http://colormine.org/convert/rgb-to-lab
+-- or better with:
+-- http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+-- Choosing Calc and "CIE Color Calculator"
+-- Scale RGB: check, Ref White: D65, RGB Model: sRGB, gamma: sRGB
 
-local function color_channel_linear(c)
+local function c2linear(c)
   return c < 0.04045 and c / 12.92 or ((c+0.055) / 1.055)^2.4
 end
 
-local function color_channel_linear_inv(d)
-  return d < 0.0031308 and d * 12.92 or d^(1/2.4) * 1.055 - 0.055
+local function c2linear_inv(lc)
+  return lc < 0.0031308 and lc * 12.92 or lc^(1/2.4) * 1.055 - 0.055
 end
 
-local function rgb_to_linrgb(rgb)
-  local linrgb = { }
-  for i = 1, 3 do
-    linrgb[i] = color_channel_linear(rgb[i] / 255)
-  end
-  return linrgb
+local function rgb_to_linrgb(r, g, b)
+  return c2linear(r / 255), c2linear(g / 255), c2linear(b / 255)
 end
 
-local function linrgb_to_rgb(linrgb)
-  local rgb = { }
-  for i = 1, 3 do
-    local c = 255 * color_channel_linear_inv(linrgb[i])
-    local cr = math.floor(c + 0.5)
-    rgb[i] = math.max(1, math.min(cr, 255))
-  end
-  return rgb
+-- Takes a single channel value from a linear RGB color and returns
+-- its RGB channel value. Its basically the function c2linear_inv and
+-- multiply by 255.
+local function linear2c8(lc)
+  local c = 255 * c2linear_inv(lc)
+  local cr = math.floor(c + 0.5)
+  return math.max(0, math.min(cr, 255))
 end
 
-local bb = {
-  { 0.412453, 0.357580, 0.180423 },
-  { 0.212671, 0.715160, 0.072169 },
-  { 0.019334, 0.119193, 0.950227 },
+local function linrgb_to_rgb(lr, lg, lb)
+  return linear2c8(lr), linear2c8(lg), linear2c8(lb)
+end
+
+-- based on https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
+-- Corresponds to https://en.wikipedia.org/wiki/Illuminant_D65 but
+-- normalized to 1 and with greater precision
+-- D65_xyz_gist = { 0.950456, 1, 1.088754 }
+-- Value from view-source:http://www.brucelindbloom.com/javascript/ColorConv.js
+local D65_xyz = { 0.95047, 1, 1.08883 }
+
+-- http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+-- RGB to XYZ [M] sRGB D65
+local bb_sRGB_D65_lindbloom = {
+  { 0.4124564,  0.3575761,  0.1804375 },
+  { 0.2126729,  0.7151522,  0.0721750 },
+  { 0.0193339,  0.1191920,  0.9503041 },
 }
 
-local bbinv = {
-  {   3.0799349,  -1.5371515, -0.54278342 },
-  { -0.92123418,     1.87599, 0.045244181 },
-  { 0.052889682, -0.20404134,   1.1511517 },
-}
+local bb = bb_sRGB_D65_lindbloom
+local bbinv = matrix.inv(matrix.inv(matrix.diag(D65_xyz)) * matrix.def(bb))
 
-local function linrgb_to_xyz(lrgb)
-  local xyz = { }
-  for i = 1, 3 do
-    xyz[i] = bb[i][1] * lrgb[1] + bb[i][2] * lrgb[2] + bb[i][3] * lrgb[3]
-  end
-  xyz[1] = xyz[1] / 0.950456
-  xyz[3] = xyz[3] / 1.088754
-  return xyz
+local function linrgb_to_xyz(lr, lg, lb)
+  local x = (bb[1][1] * lr + bb[1][2] * lg + bb[1][3] * lb) / D65_xyz[1]
+  local y = (bb[2][1] * lr + bb[2][2] * lg + bb[2][3] * lb) / D65_xyz[2]
+  local z = (bb[3][1] * lr + bb[3][2] * lg + bb[3][3] * lb) / D65_xyz[3]
+  return x, y, z
 end
 
-local function xyz_to_linrgb(xyz)
-  local lrgb = { }
-  for i = 1, 3 do
-    lrgb[i] = bbinv[i][1] * xyz[1] + bbinv[i][2] * xyz[2] + bbinv[i][3] * xyz[3]
-  end
-  return lrgb
+local function xyz_to_linrgb(x, y, z)
+  local lr = bbinv[1][1] * x + bbinv[1][2] * y + bbinv[1][3] * z
+  local lg = bbinv[2][1] * x + bbinv[2][2] * y + bbinv[2][3] * z
+  local lb = bbinv[3][1] * x + bbinv[3][2] * y + bbinv[3][3] * z
+  return lr, lg, lb
 end
 
 local function f(t)
@@ -66,40 +71,24 @@ local function finv(y)
   return y > 0.20689303442296 and y^3 or (y - 16/116) / 7.787
 end
 
-local function xyz_to_Lab(xyz)
-  return {
-    --[[ L  ]] 116 * f(xyz[2]) - 16,
-    --[[ a* ]] 500 * (f(xyz[1]) - f(xyz[2])),
-    --[[ b* ]] 200 * (f(xyz[2]) - f(xyz[3])),
-  }
+local function xyz_to_Lab(x, y, z)
+  local L = 116 * f(y) - 16
+  local a = 500 * (f(x) - f(y))
+  local b = 200 * (f(y) - f(z))
+  return L, a, b
 end
 
-local function Lab_to_xyz(Lab)
-  local fY = (Lab[1] + 16) / 116
-  return {
-    finv(Lab[2] / 500 + fY),
-    finv(fY),
-    finv(fY - Lab[3] / 200),
-  }
+local function Lab_to_xyz(L, a, b)
+  local fy = (L + 16) / 116
+  return finv(fy + a / 500), finv(fy), finv(fy - b / 200)
 end
 
-local function rgb_to_Lab(rgb)
-  return xyz_to_Lab(linrgb_to_xyz(rgb_to_linrgb(rgb)))
+local function rgb_to_Lab(r, g, b)
+  return xyz_to_Lab(linrgb_to_xyz(rgb_to_linrgb(r, g, b)))
 end
 
-local function Lab_to_rgb(Lab)
-  return linrgb_to_rgb(xyz_to_linrgb(Lab_to_xyz(Lab)))
+local function Lab_to_rgb(L, a, b)
+  return linrgb_to_rgb(xyz_to_linrgb(Lab_to_xyz(L, a, b)))
 end
-
---[[
-local rgb_test
-rgb_test = {180, 12, 36}
-print(rgb_test, rgb_to_Lab(rgb_test), 'EXPECT', {38.00993, 60.94216, 35.51627})
-print(rgb_test, Lab_to_rgb(rgb_to_Lab(rgb_test)), 'EXPECT', rgb_test)
-
-rgb_test = {36, 180, 12}
-print(rgb_test, rgb_to_Lab(rgb_test), 'EXPECT', {64.19662484363941, -63.327377053061355, 62.914515592352146})
-print(rgb_test, Lab_to_rgb(rgb_to_Lab(rgb_test)), 'EXPECT', rgb_test)
-]]
 
 return { rgb2lab = rgb_to_Lab, lab2rgb = Lab_to_rgb }

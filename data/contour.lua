@@ -24,7 +24,7 @@ local plot_utils = require "plot-utils"
 
 local insert = table.insert
 
-local default_color_map = graph.color_function('coolwarm', 255)
+local default_color_map = graph.color_function('coolwarm')
 
 local function reverse(ls)
    local k, n = 1, #ls
