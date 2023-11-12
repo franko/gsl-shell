@@ -52,14 +52,5 @@ function pcolormesh(xs, ys, zs)
    return p
 end
 
---[[
-local m = matrix.new(80, 40, function(i,j)
-   local x = (i-1)*math.pi*8/80 - 2*math.pi
-   local y = (j-1)*math.pi*8/80 - 2*math.pi
-   return math.sin(x) + math.cos(y) + 0.1*x + 0.3*y
-end)
+matrix.plot = pcolormesh
 
-pcolormesh(m)
-]]
-
-return { plot = pcolormesh }

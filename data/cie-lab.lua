@@ -64,11 +64,11 @@ local function xyz_to_linrgb(x, y, z)
 end
 
 local function f(t)
-  return t > 0.008856 and t^(1/3) or 7.787*t + 16/116
+  return t > 0.008856 and t^(1/3) or (903.3 * t + 16) / 116
 end
 
 local function finv(y)
-  return y > 0.20689303442296 and y^3 or (y - 16/116) / 7.787
+  return y > 0.20689303442296 and y^3 or (y * 116 - 16) / 903.3
 end
 
 local function xyz_to_Lab(x, y, z)

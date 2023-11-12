@@ -439,3 +439,5 @@ local function redirect_plot()
 end
 
 redirect_plot()
+
+require('pcolormesh')

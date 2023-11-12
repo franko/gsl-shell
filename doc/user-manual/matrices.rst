@@ -258,3 +258,11 @@ All the functions described in this section have an equivalent function for comp
    indexes of the matrix. Note that this function have the same
    semantic of the :func:`new` function with the difference that :func:`fset`
    operate on a matrix that already exists instead of creating a new one.
+
+.. function:: plot([xs, ys], m)
+
+   Render the matrix ``m`` in a plot using color levels. In the plot, the x-axis
+   represents the rows, and the y-axis represents the columns.
+   The parameters xs and ys are optional. They can be arrays or column matrices
+   used to map each row or column to a specific value along the respective axis.
+
