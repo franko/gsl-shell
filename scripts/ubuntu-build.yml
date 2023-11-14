@@ -45,7 +45,7 @@ tasks:
       done
   - package-all: |
       cd gsl-shell
-      tar cf gsl-shell-linux-2.3.5.tar gsl-shell-*.tar.gz *.AppImage
+      tar cf gsl-shell-linux.tar gsl-shell-*.tar.gz *.AppImage
 artifacts:
-  - gsl-shell/gsl-shell-linux-2.3.5.tar
+  - gsl-shell/gsl-shell-linux.tar
 

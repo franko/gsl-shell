@@ -1,4 +1,4 @@
-project('gsl-shell', ['cpp', 'c'], version : '2.3.6', default_options : ['cpp_std=c++11', 'c_std=gnu11'])
+project('gsl-shell', ['cpp', 'c'], version : '2.3.7', default_options : ['cpp_std=c++11', 'c_std=gnu11'])
 
 gsl_shell_defines = [
     # '-DDISABLE_GAMMA_CORR',
