@@ -33,6 +33,11 @@ function interp2d.read_csv(filename)
   local x
   for line in f:lines() do
     local values = csv.line(line)
+    -- We check below to avoid case of csv with an empty line at the end.
+    -- The first cell of the first row will be actually empty because its
+    -- the intersection of the first row (X values) and first column
+    -- (Y values).
+    if #values == 0 or (ysize >= 0 and values[1] == "") then break end
     if ysize == -1 then
       -- for some reason values will contain a lot of nil values at the end
       for i = 1, #line - 1 do
@@ -51,6 +56,11 @@ function interp2d.read_csv(filename)
   local i = 0
   for line in f:lines() do
     local values = csv.line(line)
+    -- We check below to avoid case of csv with an empty line at the end.
+    -- The first cell of the first row will be actually empty because its
+    -- the intersection of the first row (X values) and first column
+    -- (Y values).
+    if #values == 0 or (i > 0 and values[1] == "") then break end
     if i > 0 then
       y:set(i, 1, values[1])
       for j = 1, xsize do
