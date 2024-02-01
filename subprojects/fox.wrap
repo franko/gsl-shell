@@ -1,0 +1,5 @@
+[wrap-git]
+directory = fox
+url = https://github.com/franko/fox
+revision = v1.7.84-lhelper
+

@@ -1,6 +1,6 @@
 # GSL Shell
 
-![screenshot]
+[screenshot]
 
 An interactive application for maths and graphics based on the Lua programming language
 and the GNU Scientific Library.
@@ -9,21 +9,22 @@ and the GNU Scientific Library.
 
 ## Overview
 
-GSL shell is an interactive command line interface that gives easy access to a collection of
-numeric algorithms and functions based on the GNU Scientific Library (GSL).
-GSL Shell is able to work with matrices or vectors to perform linear algebra operations.
+GSL Shell is an interactive command-line interface that provides easy access to a collection
+of numeric algorithms and functions from the GNU Scientific Library (GSL).
+GSL Shell is capable of working with matrices or vectors for performing various linear
+algebra operations.
 
 **Fast**
-    GSL Shell is based on the outstanding Lua JIT compiler [LuaJIT2]. Thanks to LuaJIT2 the scripts defined with GSL Shell can run to at speed comparable to optimized C code.
+    GSL Shell is built upon the highly efficient Lua JIT compiler, [LuaJIT2]. Thanks to LuaJIT2, scripts created with GSL Shell can run at speeds comparable to optimized C code.
 
-**Easy to use*
-    Lua is a very interesting and easy to learn scripting language that features advanced functionalities like closures and metamethods. Lua is easy to learn and will give you the power of defining your own complex routines to use the GSL library more easily.
+**Easy to use**
+    Lua is an easy-to-learn scripting language that boasts advanced functionalities such as closures and metamethods. With the power and simplicity of Lua, it is straightforward to write your own functions or leverage those provided by the GSL library.
 
 **Fast numeric algorithms**
-    GSL Shell has a special implementation of the algorithms for numerical integration, ODE integration and non-linear fit. These algorithms are able to run at the speed of native code even if the functions are defined using a simple dynamic language like Lua.
+    GSL Shell features a specialized implementation of numeric algorithms for tasks such as numerical integration, ODE integration, and non-linear fitting. These algorithms are optimized to run at native code speeds using simple Lua functions.
 
 **Plotting functions**
-    You will be able also to create easily beautiful plots or animations using GSL Shell included graphical module.
+    Additionally, GSL Shell offers user-friendly tools for creating visually appealing plots and animations through its integrated graphical module.
 
 GSL Shell is hosted at Github, here is the [GSL Shell project page] and the [GSL Shell user manual].
 
@@ -31,7 +32,16 @@ You can download the latest release of GSL Shell in the [download section]. You 
 
 ## Build Instructions
 
-GSL Shell can be compiled using the ![Meson build system] and it requires the ![FOX toolkit] from the 1.7 branch.
+To build the GSL Shell project, you can use the [Meson build system].
+Meson simplifies the build process by automatically handling the download
+and compilation of required libraries, namely:
+
+- the FOX toolkit 1.7
+- the GSL library
+- LuaJIT2
+- libagg
+
+This means you do not need to install these libraries on your system.
 
 To build on a ubuntu ensure you have the following packages installed:
 
@@ -39,13 +49,12 @@ To build on a ubuntu ensure you have the following packages installed:
 sudo apt install meson pkg-config gcc g++ xorg-dev
 ```
 
-Unfortunately the FOX 1.7 dev libraries are not available from the standard ubuntu packages so you may
-need to compile the FOX library by yourself.
-
-Optionally, GSL Shell can use also the ![OpenBLAS library] for optimized matrix computations.
+Optionally, GSL Shell can use also the [OpenBLAS library] for optimized matrix computations.
 It can be installed on ubuntu using the package `libopenblas-dev`.
+To use OpenBLAS use the meson option `-Dblas=openblas` with the meson setup command
+shown below.
 
-Once the requirements are met GSL Shell can be compiled using the commands:
+Once these requirements are met GSL Shell can be compiled using the commands:
 
 ```sh
 meson setup build
@@ -58,7 +67,7 @@ To test the application locally, without installation use the script:
 bash scripts/run-local.sh build
 ```
 
-If you which to install the application we suggest to use the build-package script:
+If you which to install GSL Shell we suggest using the build-package script:
 
 ```sh
 bash scripts/build-package.sh
@@ -75,6 +84,6 @@ The folder can be moved in any location of your choice, no installation required
 [GSL Shell user manual]:      https://franko.github.io/gsl-shell/
 [download page]:              https://github.com/franko/gsl-shell/releases/latest
 [Meson build system]:         https://mesonbuild.com/
-[FOX toolkit]:                http://fox-toolkit.org/
+[FOX toolkit]:                http://www.fox-toolkit.org/
 [OpenBLAS library]:           https://www.openblas.net/
 

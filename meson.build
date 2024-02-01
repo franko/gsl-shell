@@ -25,8 +25,10 @@ cpp_utils_include = include_directories('src/cpp-utils')
 
 threads_dep  = dependency('threads')
 freetype_dep = dependency('freetype2')
-fox_dep      = dependency('fox')
 libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+
+fox_project = subproject('fox', default_options: ['apps=false', 'default_library=static', 'opengl=false'])
+fox_dep = fox_project.get_variable('libfox_dep')
 
 luajit_proj = subproject('luajit', default_options: ['default_library=static', 'app=false', 'portable=true', 'shortfnsyn=true'])
 luajit_dep = luajit_proj.get_variable('lua_dep')
