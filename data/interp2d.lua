@@ -19,17 +19,20 @@ function interp2d.new(x, y, z, options)
   interp.xaccel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
   interp.yaccel = ffi.gc(cgsl.gsl_interp_accel_alloc(), cgsl.gsl_interp_accel_free)
   interp.extrapolate = options.extrapolate == nil or options.extrapolate
+  interp.units = options.units
   return interp
 end
 
 function interp2d.new_from_csv(filename, options)
-  local x, y, z = interp2d.read_csv(filename)
+  local x, y, z
+  x, y, z, options.units = interp2d.read_csv(filename, options and options.read_units)
   return interp2d.new(x, y, z, options)
 end
 
-function interp2d.read_csv(filename)
+function interp2d.read_csv(filename, has_units)
   local f = assert(io.open(filename, "r"), "cannot open file " .. filename)
-  local xsize, ysize = -1, -1
+  local xsize, ysize = -1, -2
+  local units
   local x
   for line in f:lines() do
     local values = csv.line(line)
@@ -38,7 +41,7 @@ function interp2d.read_csv(filename)
     -- the intersection of the first row (X values) and first column
     -- (Y values).
     if #values == 0 or (ysize >= 0 and values[1] == "") then break end
-    if ysize == -1 then
+    if ysize == -2 then
       -- for some reason values will contain a lot of nil values at the end
       for i = 1, #line - 1 do
         if not values[i + 1] then
@@ -47,13 +50,23 @@ function interp2d.read_csv(filename)
         end
       end
       x = matrix.new(xsize, 1, |i| values[i + 1])
+      if has_units then
+        units = { x = values[1] }
+      end
+    elseif ysize == -1 then
+      if has_units then
+        units.y, units.z = values[1], values[2]
+        assert(units.y and not tonumber(units.y), "Invalid unit found for Y axis: " .. units.y)
+      else
+        ysize = ysize + 1
+      end
     end
     ysize = ysize + 1
   end
   f:seek("set", 0)
   local y = matrix.alloc(ysize, 1)
   local z = matrix.alloc(ysize, xsize)
-  local i = 0
+  local i = has_units and -1 or 0
   for line in f:lines() do
     local values = csv.line(line)
     -- We check below to avoid case of csv with an empty line at the end.
@@ -70,7 +83,7 @@ function interp2d.read_csv(filename)
     i = i + 1
   end
   f:close()
-  return x, y, z
+  return x, y, z, units
 end
 
 function Interp2d:eval(x, y)
